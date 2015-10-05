@@ -618,6 +618,7 @@ static void render_panel(goxel_t *goxel)
             (unsigned int*)&goxel->rend.material.effects, EFFECT_BORDERS_ALL);
     ImGui::CheckboxFlags("See back",
             (unsigned int*)&goxel->rend.material.effects, EFFECT_SEE_BACK);
+    ImGui::Checkbox("Fixed light", &goxel->rend.light.fixed);
 
     ImGui::Text("Other");
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {

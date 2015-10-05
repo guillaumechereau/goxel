@@ -424,6 +424,7 @@ struct renderer
 {
     struct {
         vec3_t direction;
+        bool   fixed;
         float  intensity;
     } light;
 

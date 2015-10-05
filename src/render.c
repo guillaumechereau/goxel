@@ -395,7 +395,10 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     block_t *block;
     mat4_t model = mat4_identity;
     int attr;
-    vec3_t light_dir = rend->light.direction;
+    vec4_t light_dir = vec4_zero;
+    light_dir.xyz = rend->light.direction;
+    if (!rend->light.fixed)
+        light_dir = mat4_mul_vec(*view, light_dir);
 
     prog = effects & EFFECT_RENDER_POS ? &prog_pos_data : &prog_render;
 
@@ -411,7 +414,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     if (effects & EFFECT_SEE_BACK) {
         GL(glCullFace(GL_FRONT));
-        vec3_imul(&light_dir, -0.5);
+        vec3_imul(&light_dir.xyz, -0.5);
     }
     if (effects & EFFECT_SEMI_TRANSPARENT) {
         GL(glEnable(GL_BLEND));
@@ -702,7 +705,7 @@ static const char *FSHADER =
     "    vec3 n, s, r, v, bump;                                         \n"
     "    float s_dot_n;                                                 \n"
     "    float l_amb, l_dif, l_spe;                                     \n"
-    "    s = normalize((u_view * vec4(u_l_dir, 0.0)).xyz);              \n"
+    "    s = normalize(u_l_dir);                                        \n"
     "    n = normalize((u_view * u_model * vec4(v_normal, 0.0)).xyz);   \n"
     "    bump = texture2D(u_bump_tex, v_bump_uv).xyz - 0.5;             \n"
     "    bump = normalize((u_view * u_model * vec4(bump, 0.0)).xyz);    \n"

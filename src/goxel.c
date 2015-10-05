@@ -225,6 +225,7 @@ void goxel_init(goxel_t *goxel)
         .border_shadow = 0.25,
         .light = {
             .direction = vec3_normalized(vec3(0.5, 0.7, 1)),
+            .fixed = true,
             .intensity = 1.
         },
         // XXX: find good values.
