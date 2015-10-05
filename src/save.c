@@ -334,7 +334,7 @@ void load_from_file(goxel_t *goxel, const char *path)
                 x = chunk_read_int32(&c, in);
                 y = chunk_read_int32(&c, in);
                 z = chunk_read_int32(&c, in);
-                assert(chunk_read_int32(&c, in) == 0);
+                chunk_read_int32(&c, in);
                 data = hash_find_at(blocks_table, index);
                 assert(data);
                 pos = vec3(x, y, z);
