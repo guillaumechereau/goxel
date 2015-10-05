@@ -1,0 +1,77 @@
+/* Goxel 3D voxels editor
+ *
+ * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>
+ *
+ * Goxel is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+
+ * Goxel is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+
+ * You should have received a copy of the GNU General Public License along with
+ * goxel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "goxel.h"
+
+static void hsl_to_rgb_f(const float hsl[3], float rgb[3])
+{
+    float r = 0, g = 0, b = 0, c, x, m;
+    const float h = hsl[0] / 60, s = hsl[1], l = hsl[2];
+    c = (1 - fabs(2 * l - 1)) * s;
+    x = c * (1 - fabs(fmod(h, 2) - 1));
+    if      (h < 1) {r = c; g = x; b = 0;}
+    else if (h < 2) {r = x; g = c; b = 0;}
+    else if (h < 3) {r = 0; g = c; b = x;}
+    else if (h < 4) {r = 0; g = x; b = c;}
+    else if (h < 5) {r = x; g = 0; b = c;}
+    else if (h < 6) {r = c; g = 0; b = x;}
+    m = l - 0.5 * c;
+    rgb[0] = r + m;
+    rgb[1] = g + m;
+    rgb[2] = b + m;
+}
+
+static void rgb_to_hsl_f(const float rgb[3], float hsl[3])
+{
+    float h = 0, s, v, m, c, l;
+    const float r = rgb[0], g = rgb[1], b = rgb[2];
+    v = max(max(r, g), b);
+    m = min(min(r, g), b);
+    l = (v + m) / 2;
+    c = v - m;
+    if (c == 0) {
+        memset(hsl, 0, 3 * sizeof(float));
+        return;
+    }
+    if      (v == r) {h = (g - b) / c + (g < b ? 6 : 0);}
+    else if (v == g) {h = (b - r) / c + 2;}
+    else if (v == b) {h = (r - g) / c + 4;}
+    h *= 60;
+    s = (l > 0.5) ? c / (2 - v - m) : c / (v + m);
+    hsl[0] = h;
+    hsl[1] = s;
+    hsl[2] = l;
+}
+
+uvec3b_t hsl_to_rgb(uvec3b_t hsl)
+{
+    // XXX: use an optimized function that use int operations.
+    float hsl_f[3] = {hsl.x / 255. * 360, hsl.y / 255., hsl.z / 255.};
+    float rgb_f[3];
+    hsl_to_rgb_f(hsl_f, rgb_f);
+    return uvec3b(rgb_f[0] * 255, rgb_f[1] * 255, rgb_f[2] * 255);
+}
+
+uvec3b_t rgb_to_hsl(uvec3b_t rgb)
+{
+    // XXX: use an optimized function that use int operations.
+    float rgb_f[3] = {rgb.x / 255., rgb.y / 255., rgb.z / 255.};
+    float hsl_f[3];
+    rgb_to_hsl_f(rgb_f, hsl_f);
+    return uvec3b(hsl_f[0] * 255 / 360, hsl_f[1] * 255, hsl_f[2] * 255);
+}
