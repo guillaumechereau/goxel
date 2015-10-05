@@ -15,9 +15,8 @@ if gprof or profile: debug = 0
 
 env = Environment(ENV = os.environ)
 
-env.Append(CCFLAGS= '-Wall -Werror',
-           CFLAGS=  '-std=gnu99',
-           CXXFLAGS='-Wno-narrowing'
+env.Append(CFLAGS= '-Wall -Werror -std=gnu99 -Wno-unknown-pragmas',
+           CXXFLAGS='-Wall -Werror -Wno-narrowing -Wno-unknown-pragmas'
         )
 
 if debug:
@@ -41,6 +40,10 @@ if target_os == 'msys':
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32'],
                LINKFLAGS='--static')
 
+if target_os == 'darwin':
+    env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
+    env.Append(LIBS=['m', 'z', 'argp', 'glfw3', 'objc'])
+
 env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 
@@ -57,6 +60,12 @@ if target_os == 'msys':
     sources += glob.glob('ext_src/glew/glew.c')
     env.Append(CPPPATH=['ext_src/glew'])
     env.Append(CCFLAGS='-DGLEW_STATIC')
+
+if target_os == 'darwin':
+    sources += glob.glob('ext_src/nativefiledialog/nfd_common.c')
+    sources += glob.glob('ext_src/nativefiledialog/nfd_cocoa.m')
+    env.Append(CPPPATH=['ext_src/nativefiledialog'])
+
 
 # Asan & Ubsan
 if debug and target_os == 'posix':

@@ -47,9 +47,9 @@ static double get_log_time()
 {
     static double origin = 0;
     double time;
-    struct timespec tp;
-    clock_gettime(CLOCK_REALTIME, &tp);
-    time = tp.tv_sec + (double)tp.tv_nsec / (1000 * 1000 * 1000);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    time = tv.tv_sec + (double)tv.tv_usec / (1000 * 1000);
     if (!origin) origin = time;
     return time - origin;
 }

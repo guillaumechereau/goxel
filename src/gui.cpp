@@ -120,8 +120,10 @@ static void init_prog(prog_t *p)
     GL(glUniform1i(p->u_tex_l, 0));
 }
 
+
 static void render_prepare_context(void)
 {
+    #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
     // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
     GL(glEnable(GL_BLEND));
     GL(glBlendEquation(GL_FUNC_ADD));
@@ -153,14 +155,14 @@ static void render_prepare_context(void)
     GL(glEnableVertexAttribArray(gui->prog.a_color_l));
     GL(glVertexAttribPointer(gui->prog.a_pos_l, 2, GL_FLOAT, false,
                              sizeof(ImDrawVert),
-                             (void*)offsetof(ImDrawVert, pos)));
+                             (void*)OFFSETOF(ImDrawVert, pos)));
     GL(glVertexAttribPointer(gui->prog.a_tex_pos_l, 2, GL_FLOAT, false,
                              sizeof(ImDrawVert),
-                             (void*)offsetof(ImDrawVert, uv)));
+                             (void*)OFFSETOF(ImDrawVert, uv)));
     GL(glVertexAttribPointer(gui->prog.a_color_l, 4, GL_UNSIGNED_BYTE,
                              true, sizeof(ImDrawVert),
-                             (void*)offsetof(ImDrawVert, col)));
-
+                             (void*)OFFSETOF(ImDrawVert, col)));
+    #undef OFFSETOF
 }
 
 static bool selectable(const char *name, bool *v, texture_t *tex = NULL)
@@ -632,7 +634,7 @@ static void render_panel(goxel_t *goxel)
             ImGui::EndPopup();
         }
         ImGui::SameLine();
-        ImGui::Text(COLORS[i].label);
+        ImGui::Text("%s", COLORS[i].label);
         ImGui::PopID();
     }
     ImGui::PopID();
@@ -840,7 +842,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     // Apparently there is a bug if we do not render anything.  So I render
     // a '.' if there is nothing.  This is a hack.
-    ImGui::Text(goxel->help_text ?: ".");
+    ImGui::Text("%s", goxel->help_text ?: ".");
     ImGui::EndChild();
 
     if (DEBUG || PROFILER) {
