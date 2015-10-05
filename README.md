@@ -1,3 +1,11 @@
+
+Goxel
+=====
+
+Version 0.1
+
+By Guillaume Chereau <guillaume@noctua-software.com>
+
                     _______  _______  __   __  _______  ___
                    |       ||       ||  |_|  ||       ||   |
                    |    ___||   _   ||       ||    ___||   |
@@ -6,19 +14,14 @@
                    |   |_| ||       ||   _   ||   |___ |       |
                    |_______||_______||__| |__||_______||_______|
 
-                           Goxel, a 3D voxel editor
-                           ========================
-
-                                  Version 0.1
-
-By Guillaume Chereau <guillaume@noctua-software.com>
-
-
 About
 -----
 
 You can use goxel to create voxel graphics (3D images formed of cubes).  It
 works on Linux and Windows.
+
+![goxel screenshot 0](/screenshots/screenshot-0.png?raw=true)
+![goxel screenshot 1](/screenshots/screenshot-1.png?raw=true)
 
 
 Licence
