@@ -80,7 +80,7 @@ namespace ImGui {
         ImGui::PopStyleColor();
         if (ret) *v = !*v;
         if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip(name);
+            ImGui::SetTooltip("%s", name);
             goxel_set_help_text(goxel(), name);
         }
         ImGui::PopID();
