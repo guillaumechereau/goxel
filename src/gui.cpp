@@ -746,18 +746,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     ImGui::NewFrame();
 
-    if (io.KeyCtrl && ImGui::IsKeyPressed('Z', false))
-        goxel_undo(goxel);
-    if (io.KeyCtrl && ImGui::IsKeyPressed('Y', false))
-        goxel_redo(goxel);
-
-    if (ImGui::GoxIsCharPressed('#'))
-        goxel->plane_hidden = !goxel->plane_hidden;
-    if (ImGui::IsKeyPressed(' ', false) && goxel->painter.op == OP_ADD)
-        goxel->painter.op = OP_SUB;
-    if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
-        goxel->painter.op = OP_ADD;
-
     // Create the root fullscreen window.
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
                                     ImGuiWindowFlags_NoResize |
@@ -859,7 +847,20 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     ImGui::End();
 
-
+    // Handle the shortcuts.  XXX: this should be done better.
+    if (ImGui::GoxIsCharPressed('#'))
+        goxel->plane_hidden = !goxel->plane_hidden;
+    if (ImGui::IsKeyPressed(' ', false) && goxel->painter.op == OP_ADD)
+        goxel->painter.op = OP_SUB;
+    if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
+        goxel->painter.op = OP_ADD;
+    // XXX: on some layouts (like Russian), there is no 'z' keys.  In that
+    // case we need to look for the physical key.  Not sure how we should
+    // do that.
+    if (io.KeyCtrl && ImGui::GoxIsCharPressed('z'))
+        goxel_undo(goxel);
+    if (io.KeyCtrl && ImGui::GoxIsCharPressed('y'))
+        goxel_redo(goxel);
 
 }
 
