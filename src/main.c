@@ -134,6 +134,7 @@ int main(int argc, char **argv)
     g_inputs = &inputs;
     int w = 640;
     int h = 480;
+    int fb_size[2], win_size[2];
     int i;
     double xpos, ypos;
 
@@ -164,13 +165,20 @@ int main(int argc, char **argv)
 
     while (!glfwWindowShouldClose(window)) {
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        glfwGetWindowSize(window, &inputs.window_size[0],
-                                  &inputs.window_size[1]);
+        // The input struct gets all the values in framebuffer coordinates,
+        // On retina display, this might not be the same as the window
+        // size.
+        glfwGetFramebufferSize(window, &fb_size[0], &fb_size[1]);
+        glfwGetWindowSize(window, &win_size[0], &win_size[1]);
+        inputs.window_size[0] = fb_size[0];
+        inputs.window_size[1] = fb_size[1];
+
         for (i = 0; i <= GLFW_KEY_LAST; i++) {
             inputs.keys[i] = glfwGetKey(window, i) == GLFW_PRESS;
         }
         glfwGetCursorPos(window, &xpos, &ypos);
-        inputs.mouse_pos = vec2(xpos, ypos);
+        inputs.mouse_pos = vec2(xpos * fb_size[0] / win_size[0],
+                                ypos * fb_size[1] / win_size[1]);
         inputs.mouse_down[0] =
             glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
         inputs.mouse_down[1] =
