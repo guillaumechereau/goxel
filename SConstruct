@@ -15,6 +15,11 @@ if gprof or profile: debug = 0
 
 env = Environment(ENV = os.environ)
 
+# Asan & Ubsan (need to come first).
+if debug and target_os == 'posix':
+    env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
+               LIBS=['asan', 'ubsan'])
+
 env.Append(CFLAGS= '-Wall -Werror -std=gnu99 -Wno-unknown-pragmas',
            CXXFLAGS='-Wall -Werror -Wno-narrowing -Wno-unknown-pragmas'
         )
@@ -66,10 +71,5 @@ if target_os == 'darwin':
     sources += glob.glob('ext_src/nativefiledialog/nfd_cocoa.m')
     env.Append(CPPPATH=['ext_src/nativefiledialog'])
 
-
-# Asan & Ubsan
-if debug and target_os == 'posix':
-    env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
-               LIBS=['asan', 'ubsan'])
 
 env.Program(target='goxel', source=sources)
