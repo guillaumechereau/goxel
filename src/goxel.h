@@ -16,8 +16,8 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _GOXEL_H_
-#define _GOXEL_H_
+#ifndef GOXEL_H
+#define GOXEL_H
 
 #ifndef _GNU_SOURCE
 #   define _GNU_SOURCE
@@ -736,4 +736,4 @@ static inline void profiler_cleanup_(profiler_block_t **p)
 
 // #############################
 
-#endif // _GOXEL_H_
+#endif // GOXEL_H

@@ -16,8 +16,8 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _BOX_H_
-#define _BOX_H_
+#ifndef BOX_H
+#define BOX_H
 
 #include "goxel.h"
 
@@ -193,4 +193,4 @@ static inline box_t box_swap_axis(box_t b, int x, int y, int z)
     return b;
 }
 
-#endif // _BOX_H_
+#endif // BOX_H
