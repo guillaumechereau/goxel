@@ -69,22 +69,6 @@ static int lines_count(UT_array *lines, const char *type)
     return ret;
 }
 
-static int line_cmp_score(const line_t *line)
-{
-    if (line->type[0] == 'v' && line->type[1] == ' ') return 0;
-    if (line->type[0] == 'v' && line->type[1] == 'n') return 1;
-    if (line->type[0] == 'f' && line->type[1] == ' ') return 2;
-    assert(false);
-    return 0;
-}
-
-static int line_cmp(const void *a_, const void *b_)
-{
-    const line_t *a = a_;
-    const line_t *b = b_;
-    return sign(line_cmp_score(a) - line_cmp_score(b));
-}
-
 void wavefront_export(const mesh_t *mesh, const char *path)
 {
     // XXX: Merge faces that can be merged into bigger ones.
@@ -130,15 +114,18 @@ void wavefront_export(const mesh_t *mesh, const char *path)
             lines_add(lines, &face);
         }
     }
-    utarray_sort(lines, line_cmp);
     out = fopen(path, "w");
     fprintf(out, "# Goxel " GOXEL_VERSION_STR "\n");
     line_ptr = NULL;
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "v ", 2) == 0)
             fprintf(out, "v %g %g %g\n", VEC3_SPLIT(line_ptr->v));
+    }
+    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "vn", 2) == 0)
             fprintf(out, "vn %g %g %g\n", VEC3_SPLIT(line_ptr->vn));
+    }
+    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "f ", 2) == 0)
             fprintf(out, "f %d//%d %d//%d %d//%d %d//%d\n",
                          line_ptr->vs[0], line_ptr->vns[0],
@@ -194,7 +181,6 @@ void ply_export(const mesh_t *mesh, const char *path)
             lines_add(lines, &face);
         }
     }
-    utarray_sort(lines, line_cmp);
     out = fopen(path, "w");
     fprintf(out, "ply\n");
     fprintf(out, "format ascii 1.0\n");
@@ -215,6 +201,8 @@ void ply_export(const mesh_t *mesh, const char *path)
             fprintf(out, "%g %g %g %d %d %d\n",
                     VEC3_SPLIT(line_ptr->v),
                     VEC3_SPLIT(line_ptr->c));
+    }
+    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "f ", 2) == 0)
             fprintf(out, "4 %d %d %d %d\n", line_ptr->vs[0] - 1,
                                             line_ptr->vs[1] - 1,
