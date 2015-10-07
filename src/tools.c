@@ -82,14 +82,13 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     const bool down = inputs->mouse_down[0];
     const bool up = !down;
     bool snaped = false;
-    vec3_t pos, pos2, normal;
+    vec3_t pos, normal;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
-    if (state != STATE_PAINT2)
-        snaped = inside && goxel_unproject(goxel, view_size,
-                                           &inputs->mouse_pos, &pos, &normal);
+    snaped = inside && goxel_unproject(goxel, view_size,
+                                       &inputs->mouse_pos, &pos, &normal);
     if (snaped) {
         if (goxel->painter.op == OP_ADD) vec3_iadd(&pos, normal);
         pos.x = nearbyint(pos.x - 0.5) + 0.5;
@@ -129,8 +128,6 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, false);
         if (up) {
-            goxel->tool_plane_hidden_restore = goxel->plane_hidden;
-            goxel->plane_hidden = true;
             state = STATE_PAINT2;
             goxel->tool_plane = plane_from_normal(pos, goxel->plane.u);
         } else return state;
@@ -138,21 +135,15 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
         render_plane(&goxel->rend, &goxel->tool_plane, &goxel->grid_color);
-        if (goxel_unproject_on_plane(goxel, view_size, &inputs->mouse_pos,
-                                     &goxel->tool_plane, &pos2, &normal)) {
-            pos2 = vec3_add(goxel->tool_plane.p,
-                    vec3_project(vec3_sub(pos2, goxel->tool_plane.p),
+        pos = vec3_add(goxel->tool_plane.p,
+                    vec3_project(vec3_sub(pos, goxel->tool_plane.p),
                                  goxel->plane.n));
-            pos2.x = nearbyint(pos2.x - 0.5) + 0.5;
-            pos2.y = nearbyint(pos2.y - 0.5) + 0.5;
-            pos2.z = nearbyint(pos2.z - 0.5) + 0.5;
-            box = get_box(&goxel->tool_start_pos, &pos2, &normal, 0,
-                          &goxel->plane);
-            render_box(&goxel->rend, &box, false, &box_color);
-            mesh_set(&mesh, goxel->tool_origin_mesh);
-            mesh_op(mesh, &goxel->painter, &box);
-            goxel_update_meshes(goxel, false);
-        }
+        box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
+                      &goxel->plane);
+        render_box(&goxel->rend, &box, false, &box_color);
+        mesh_set(&mesh, goxel->tool_origin_mesh);
+        mesh_op(mesh, &goxel->painter, &box);
+        goxel_update_meshes(goxel, false);
         if (down) {
             mesh_set(&mesh, goxel->tool_origin_mesh);
             mesh_op(mesh, &goxel->painter, &box);
@@ -163,7 +154,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         }
         return state;
     case STATE_WAIT_UP:
-        goxel->plane_hidden = goxel->tool_plane_hidden_restore;
+        goxel->tool_plane = plane_null;
         return up ? STATE_IDLE : STATE_WAIT_UP;
     default:
         assert(false);
@@ -383,9 +374,12 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
         goxel_update_meshes(goxel, true);
         ret = 0;
     }
-    if (ret == 0 && goxel->tool_origin_mesh) {
-        mesh_delete(goxel->tool_origin_mesh);
-        goxel->tool_origin_mesh = NULL;
+    if (ret == 0) {
+        goxel->tool_plane = plane_null;
+        if (goxel->tool_origin_mesh) {
+            mesh_delete(goxel->tool_origin_mesh);
+            goxel->tool_origin_mesh = NULL;
+        }
     }
     return ret;
 }
@@ -399,5 +393,6 @@ void tool_cancel(goxel_t *goxel, int tool, int state)
         mesh_delete(goxel->tool_origin_mesh);
         goxel->tool_origin_mesh = NULL;
     }
+    goxel->tool_plane = plane_null;
     goxel->tool_state = 0;
 }

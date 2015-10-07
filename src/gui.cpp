@@ -332,7 +332,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
         b = mesh_get_box(goxel->layers_mesh, false);
         render_box(rend, &b, false, &c);
     }
-    if (!goxel->plane_hidden)
+    if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
         render_plane(rend, &goxel->plane, &goxel->grid_color);
 
     render_render(rend, &goxel->camera.view_mat, &goxel->camera.proj_mat);

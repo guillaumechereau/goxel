@@ -167,6 +167,13 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
     bool r = false;
     mat4_t proj = mat4_mul(goxel->camera.proj_mat, goxel->camera.view_mat);
 
+    // If tool_plane is set, we specifically use it.
+    if (!plane_is_null(goxel->tool_plane)) {
+        r = goxel_unproject_on_plane(goxel, view_size, pos,
+                                     &goxel->tool_plane, out, normal);
+        return r ? SNAP_PLANE : 0;
+    }
+
     for (i = 0; i < 2; i++) {
         if (!(goxel->snap & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH)

@@ -65,6 +65,8 @@ typedef union {
     };
 } plane_t;
 
+static const plane_t plane_null = {};
+
 static inline plane_t plane(vec3_t pos, vec3_t u, vec3_t v)
 {
     plane_t ret;
@@ -74,6 +76,10 @@ static inline plane_t plane(vec3_t pos, vec3_t u, vec3_t v)
     ret.n = vec3_cross(u, v);
     ret.p = pos;
     return ret;
+}
+
+static inline bool plane_is_null(plane_t p) {
+    return p.mat.v[15] == 0;
 }
 
 // Check if a plane intersect a line.
