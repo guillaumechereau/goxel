@@ -309,6 +309,7 @@ enum {
     TOOL_LASER,
     TOOL_SET_PLANE,
     TOOL_MOVE,
+    TOOL_PICK_COLOR,
 };
 
 typedef struct shape {

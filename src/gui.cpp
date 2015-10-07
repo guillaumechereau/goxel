@@ -41,6 +41,7 @@ static texture_t *g_tex_brush = NULL;
 static texture_t *g_tex_grid = NULL;
 static texture_t *g_tex_laser = NULL;
 static texture_t *g_tex_move = NULL;
+static texture_t *g_tex_pick = NULL;
 
 static const int MiB = 1 << 20;
 
@@ -276,6 +277,7 @@ void gui_init(void)
     g_tex_grid = texture_create_from_image("data/icons/grid.png");
     g_tex_laser = texture_create_from_image("data/icons/laser.png");
     g_tex_move = texture_create_from_image("data/icons/move.png");
+    g_tex_pick = texture_create_from_image("data/icons/pick.png");
 }
 
 typedef struct view {
@@ -368,11 +370,12 @@ static void tools_panel(goxel_t *goxel)
         const char  *name;
         int         tex;
     } values[] = {
-        {TOOL_BRUSH,        "Brush",    g_tex_brush->tex},
-        {TOOL_CUBE,         "Cube",     g_tex_cube2->tex},
-        {TOOL_LASER,        "Laser",    g_tex_laser->tex},
-        {TOOL_SET_PLANE,    "Plane",    g_tex_grid->tex},
-        {TOOL_MOVE,         "Move",     g_tex_move->tex},
+        {TOOL_BRUSH,        "Brush",        g_tex_brush->tex},
+        {TOOL_CUBE,         "Cube",         g_tex_cube2->tex},
+        {TOOL_LASER,        "Laser",        g_tex_laser->tex},
+        {TOOL_SET_PLANE,    "Plane",        g_tex_grid->tex},
+        {TOOL_MOVE,         "Move",         g_tex_move->tex},
+        {TOOL_PICK_COLOR,   "Pick Color",   g_tex_pick->tex},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
@@ -423,7 +426,8 @@ static void tool_options_panel(goxel_t *goxel)
         op_panel(goxel);
         shapes_panel(goxel);
     }
-    if (goxel->tool == TOOL_BRUSH || goxel->tool == TOOL_CUBE) {
+    if (    goxel->tool == TOOL_BRUSH || goxel->tool == TOOL_CUBE ||
+            goxel->tool == TOOL_PICK_COLOR) {
         ImGui::Text("Color");
         color = uvec4b_to_imvec4(goxel->painter.color);
         ImGui::ColorButton(color);
