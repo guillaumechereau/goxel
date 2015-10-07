@@ -360,7 +360,7 @@ struct block_data
 typedef struct block block_t;
 struct block
 {
-    block_t         *next, *prev;   // All the blocks are in a list.
+    UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
     vec3_t          pos;
     int             id;
@@ -404,6 +404,9 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other);
 void mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
+
+#define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
+
 // #############################
 
 

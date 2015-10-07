@@ -38,10 +38,10 @@ static void mesh_prepare_write(mesh_t *mesh)
     *mesh->ref = 1;
     blocks = mesh->blocks;
     mesh->blocks = NULL;
-    DL_FOREACH(blocks, block) {
+    for (block = blocks; block; block = block->hh.next) {
         new_block = block_copy(block);
         new_block->id = block->id;
-        DL_APPEND(mesh->blocks, new_block);
+        HASH_ADD(hh, mesh->blocks, pos, sizeof(new_block->pos), new_block);
     }
 }
 
@@ -49,9 +49,9 @@ void mesh_remove_empty_blocks(mesh_t *mesh)
 {
     block_t *block, *tmp;
     mesh_prepare_write(mesh);
-    DL_FOREACH_SAFE(mesh->blocks, block, tmp) {
+    HASH_ITER(hh, mesh->blocks, block, tmp) {
         if (block_is_empty(block, false)) {
-            DL_DELETE(mesh->blocks, block);
+            HASH_DEL(mesh->blocks, block);
             block_delete(block);
         }
     }
@@ -72,7 +72,7 @@ void mesh_clear(mesh_t *mesh)
     assert(mesh);
     block_t *block, *tmp;
     mesh_prepare_write(mesh);
-    DL_FOREACH_SAFE(mesh->blocks, block, tmp) {
+    HASH_ITER(hh, mesh->blocks, block, tmp) {
         block_delete(block);
     }
     mesh->blocks = NULL;
@@ -85,7 +85,7 @@ void mesh_delete(mesh_t *mesh)
     if (!mesh) return;
     (*mesh->ref)--;
     if (*mesh->ref == 0) {
-        DL_FOREACH_SAFE(mesh->blocks, block, tmp) {
+        HASH_ITER(hh, mesh->blocks, block, tmp) {
             block_delete(block);
         }
         free(mesh->ref);
@@ -116,7 +116,7 @@ void mesh_set(mesh_t **mesh, const mesh_t *other)
     if (m->blocks == other->blocks) return; // Already the same.
     (*m->ref)--;
     if (*m->ref == 0) {
-        DL_FOREACH_SAFE(m->blocks, block, tmp) {
+        HASH_ITER(hh, m->blocks, block, tmp) {
             block_delete(block);
         }
         free(m->ref);
@@ -133,7 +133,7 @@ void mesh_fill(mesh_t *mesh,
 {
     mesh_prepare_write(mesh);
     block_t *block;
-    DL_FOREACH(mesh->blocks, block) {
+    MESH_ITER_BLOCKS(mesh, block) {
         block_fill(block, get_color, user_data);
     }
 }
@@ -144,11 +144,18 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     block_t *block;
     if (!mesh->blocks) return box_null();
     ret = block_get_box(mesh->blocks, exact);
-    DL_FOREACH(mesh->blocks, block) {
+    MESH_ITER_BLOCKS(mesh, block) {
         ret = bbox_merge(ret, block_get_box(block, exact));
     }
     // LOG_D("w:%f h:%f d:%f", ret.w.x, ret.h.y, ret.d.z);
     return ret;
+}
+
+static block_t *mesh_get_block_at(const mesh_t *mesh, const vec3_t *pos)
+{
+    block_t *block;
+    HASH_FIND(hh, mesh->blocks, pos, sizeof(*pos), block);
+    return block;
 }
 
 // Add blocks if needed to fill the box.
@@ -159,7 +166,6 @@ static void add_blocks(mesh_t *mesh, box_t box)
     int i;
     const int s = BLOCK_SIZE - 2;
     vec3_t p;
-    block_t *block;
 
     a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
     b = vec3(box.p.x + box.w.x, box.p.y + box.h.y, box.p.z + box.d.z);
@@ -167,16 +173,12 @@ static void add_blocks(mesh_t *mesh, box_t box)
         a.v[i] = nearbyint(a.v[i] / s) * s;
         b.v[i] = nearbyint(b.v[i] / s) * s;
     }
-    // Inefficient algo.
     for (z = a.z; z <= b.z; z += s)
     for (y = a.y; y <= b.y; y += s)
     for (x = a.x; x <= b.x; x += s)
     {
         p = vec3(x, y, z);
-        DL_FOREACH(mesh->blocks, block) {
-            if (vec3_equal(block->pos, p)) break;
-        }
-        if (!block)
+        if (!mesh_get_block_at(mesh, &p))
             mesh_add_block(mesh, NULL, &p);
     }
 }
@@ -206,24 +208,15 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     if (painter->op == OP_ADD) {
         add_blocks(mesh, bbox);
     }
-    DL_FOREACH_SAFE(mesh->blocks, block, tmp) {
+    HASH_ITER(hh, mesh->blocks, block, tmp) {
         if (!bbox_intersect(bbox, block_get_box(block, false))) continue;
         block_op(block, painter, box);
         if (block_is_empty(block, true)) {
-            DL_DELETE(mesh->blocks, block);
+            HASH_DEL(mesh->blocks, block);
             block_delete(block);
         }
     }
     mesh_set(&g_last_op.result, mesh);
-}
-
-static block_t *mesh_get_block_at(const mesh_t *mesh, const vec3_t *pos)
-{
-    block_t *block;
-    DL_FOREACH(mesh->blocks, block) {
-        if (vec3_equal(block->pos, *pos)) return block;
-    }
-    return NULL;
 }
 
 void mesh_merge(mesh_t *mesh, const mesh_t *other)
@@ -237,17 +230,17 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other)
     }
     mesh_prepare_write(mesh);
     // Add empty blocks if needed.
-    DL_FOREACH(other->blocks, block) {
+    MESH_ITER_BLOCKS(other, block) {
         if (!mesh_get_block_at(mesh, &block->pos)) {
             mesh_add_block(mesh, NULL, &block->pos);
         }
     }
 
-    DL_FOREACH_SAFE(mesh->blocks, block, tmp) {
+    HASH_ITER(hh, mesh->blocks, block, tmp) {
         other_block = mesh_get_block_at(other, &block->pos);
         if (    block_is_empty(block, true) &&
                 block_is_empty(other_block, true)) {
-            DL_DELETE(mesh->blocks, block);
+            HASH_DEL(mesh->blocks, block);
             block_delete(block);
             continue;
         }
@@ -260,17 +253,15 @@ void mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos)
     block_t *block;
     assert(!mesh_get_block_at(mesh, pos));
     mesh_prepare_write(mesh);
-    DL_FOREACH(mesh->blocks, block)
-        assert(block->id != mesh->next_block_id);
     block = block_new(pos, data);
     block->id = mesh->next_block_id++;
-    DL_APPEND(mesh->blocks, block);
+    HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
 }
 
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
 {
     block_t *block;
-    DL_FOREACH(mesh->blocks, block) {
+    MESH_ITER_BLOCKS(mesh, block) {
         if (bbox_contains_vec(block_get_box(block, false), *pos))
             return block_get_at(block, pos);
     }

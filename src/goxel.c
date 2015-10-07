@@ -147,7 +147,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 
     unpack_pos_data(pixel, &voxel_pos, &face, &block_id);
     if (!block_id) return false;
-    DL_FOREACH(mesh->blocks, block) {
+    MESH_ITER_BLOCKS(mesh, block) {
         if (block->id == block_id) break;
     }
     assert(block);

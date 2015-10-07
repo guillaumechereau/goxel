@@ -442,7 +442,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
 
-    DL_FOREACH(mesh->blocks, block) {
+    MESH_ITER_BLOCKS(mesh, block) {
         render_block_(rend, block, effects, prog, &model);
     }
 

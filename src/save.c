@@ -203,7 +203,7 @@ void save_to_file(goxel_t *goxel, const char *path)
     // Add all the blocks data into the hash table.
     index = 0;
     DL_FOREACH(goxel->image->layers, layer) {
-        DL_FOREACH(layer->mesh->blocks, block) {
+        MESH_ITER_BLOCKS(layer->mesh, block) {
             HASH_FIND_PTR(blocks_table, &block->data, data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
@@ -224,9 +224,9 @@ void save_to_file(goxel_t *goxel, const char *path)
     DL_FOREACH(goxel->image->layers, layer) {
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
-        DL_COUNT(layer->mesh->blocks, block, nb_blocks);
+        nb_blocks = HASH_COUNT(layer->mesh->blocks);
         chunk_write_int32(&c, out, nb_blocks);
-        DL_FOREACH(layer->mesh->blocks, block) {
+        MESH_ITER_BLOCKS(layer->mesh, block) {
             HASH_FIND_PTR(blocks_table, &block->data, data);
             chunk_write_int32(&c, out, data->index);
             chunk_write_int32(&c, out, block->pos.x);

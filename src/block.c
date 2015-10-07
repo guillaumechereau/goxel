@@ -174,7 +174,7 @@ block_t *block_copy(const block_t *other)
 {
     block_t *block = malloc(sizeof(*block));
     *block = *other;
-    block->next = block->prev = NULL;
+    memset(&block->hh, 0, sizeof(block->hh));
     block->data->ref++;
     return block;
 }
