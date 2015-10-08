@@ -472,6 +472,7 @@ static void tool_options_panel(goxel_t *goxel)
         if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
             mesh_move(goxel->image->active_layer->mesh, &mat);
             goxel_update_meshes(goxel, true);
+            image_history_push(goxel->image);
         }
     }
 }
