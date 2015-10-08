@@ -71,6 +71,7 @@ static render_item_t *g_items = NULL;
 
 static const int BATCH_QUAD_COUNT = 1 << 14;
 static model3d_t *g_cube_model;
+static model3d_t *g_line_model;
 static model3d_t *g_wire_cube_model;
 static model3d_t *g_sphere_model;
 static model3d_t *g_grid_model;
@@ -301,6 +302,7 @@ void render_init()
     init_bump_texture();
 
     g_cube_model = model3d_cube();
+    g_line_model = model3d_line();
     g_wire_cube_model = model3d_wire_cube();
     g_sphere_model = model3d_sphere(16, 16);
     g_grid_model = model3d_grid(8, 8);
@@ -388,8 +390,7 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
                       GL_UNSIGNED_SHORT, 0));
 }
 
-static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
-                         const mat4_t *view, const mat4_t *proj)
+static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
 {
     prog_t *prog;
     block_t *block;
@@ -398,7 +399,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     vec4_t light_dir = vec4_zero;
     light_dir.xyz = rend->light.direction;
     if (!rend->light.fixed)
-        light_dir = mat4_mul_vec(*view, light_dir);
+        light_dir = mat4_mul_vec(rend->view_mat, light_dir);
 
     prog = effects & EFFECT_RENDER_POS ? &prog_pos_data : &prog_render;
 
@@ -424,8 +425,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glUseProgram(prog->prog));
 
-    GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, proj->v));
-    GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, view->v));
+    GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, rend->proj_mat.v));
+    GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, rend->view_mat.v));
     GL(glUniform1i(prog->u_bshadow_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
     GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir.v));
@@ -452,7 +453,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     if (effects & EFFECT_SEE_BACK) {
         effects &= ~EFFECT_SEE_BACK;
         effects |= EFFECT_SEMI_TRANSPARENT;
-        render_mesh_(rend, mesh, effects, view, proj);
+        render_mesh_(rend, mesh, effects);
     }
 }
 
@@ -468,32 +469,31 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
     DL_APPEND(rend->items, item);
 }
 
-static void render_model_item(renderer_t *rend, const render_item_t *item,
-                              const mat4_t *model, const mat4_t *proj)
+static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
-    mat4_t model2 = *model;
-    mat4_imul(&model2, item->mat);
-    model3d_render(item->model3d, &model2, proj, &item->color, 0, NULL);
+    mat4_t view = rend->view_mat;
+    mat4_imul(&view, item->mat);
+    model3d_render(item->model3d, &view, &rend->proj_mat, &item->color,
+                   0, NULL);
 }
 
-static void render_grid_item(renderer_t *rend, const render_item_t *item,
-                              const mat4_t *model, const mat4_t *proj)
+static void render_grid_item(renderer_t *rend, const render_item_t *item)
 {
     vec4_t norm;
     int x, y, n;
-    mat4_t model2, model3;
-    model2 = *model;
+    mat4_t view2, view3;
+    view2 = rend->view_mat;
     vec3_t center;
 
-    mat4_imul(&model2, item->mat);
-    norm = mat4_mul_vec(mat4_mul(*proj, model2), vec4(0, 0, 1, 0));
-    mat4_itranslate(&model2, 0, 0, 0.5 * sign(norm.z));
-    center = mat4_mul_vec3(model2, vec3_zero);
+    mat4_imul(&view2, item->mat);
+    norm = mat4_mul_vec(mat4_mul(rend->proj_mat, view2), vec4(0, 0, 1, 0));
+    mat4_itranslate(&view2, 0, 0, 0.5 * sign(norm.z));
+    center = mat4_mul_vec3(view2, vec3_zero);
     n = 3;
     for (y = -n; y <= n; y++)
     for (x = -n; x <= n; x++) {
-        model3 = mat4_translate(model2, x, y, 0);
-        model3d_render(item->model3d, &model3, proj, &item->color,
+        view3 = mat4_translate(view2, x, y, 0);
+        model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
                        32, &center);
     }
 }
@@ -514,31 +514,22 @@ void render_plane(renderer_t *rend, const plane_t *plane,
 // Return a plane whose u vector is the line ab.
 static plane_t line_create_plane(const vec3_t *a, const vec3_t *b)
 {
-    int i;
     plane_t ret;
     ret.mat = mat4_identity;
-    const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
     ret.p = *a;
     ret.u = vec3_sub(*b, *a);
-    for (i = 0; i < 3; i++) {
-        ret.v = vec3_cross(ret.u, AXES[i]);
-        if (vec3_norm2(ret.v) > 0) break;
-    }
-    if (i == 3) return ret;
-    ret.v = vec3_normalized(ret.v);
-    ret.n = vec3_normalized(vec3_cross(ret.u, ret.v));
     return ret;
 }
 
-void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b)
+void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
+                 const uvec4b_t *color)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    item->model3d = g_cube_model;
+    item->model3d = g_line_model;
     item->mat = line_create_plane(a, b).mat;
-    item->color = HEXCOLOR(0xffffffff);
+    item->color = color ? *color : HEXCOLOR(0xffffffff);
     mat4_itranslate(&item->mat, 0.5, 0, 0);
-    mat4_iscale(&item->mat, 0.5, 0.2, 0.2);
     DL_APPEND(rend->items, item);
 }
 
@@ -593,7 +584,7 @@ static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
     return sign(item_sort_value(a) - item_sort_value(b));
 }
 
-void render_render(renderer_t *rend, const mat4_t *view, const mat4_t *proj)
+void render_render(renderer_t *rend)
 {
     PROFILED
     render_item_t *item, *tmp;
@@ -602,16 +593,16 @@ void render_render(renderer_t *rend, const mat4_t *view, const mat4_t *proj)
         item->last_used_frame = goxel()->frame_count;
         switch (item->type) {
         case ITEM_MESH:
-            render_mesh_(rend, item->mesh, item->effects, view, proj);
+            render_mesh_(rend, item->mesh, item->effects);
             DL_DELETE(rend->items, item);
             mesh_delete(item->mesh);
             break;
         case ITEM_MODEL3D:
-            render_model_item(rend, item, view, proj);
+            render_model_item(rend, item);
             DL_DELETE(rend->items, item);
             break;
         case ITEM_GRID:
-            render_grid_item(rend, item, view, proj);
+            render_grid_item(rend, item);
             DL_DELETE(rend->items, item);
             break;
         }

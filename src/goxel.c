@@ -124,7 +124,11 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
         texture_inc_ref(goxel->pick_fbo);
     }
 
-    renderer_t rend = {.material = goxel->rend.material};
+    renderer_t rend = {
+        .view_mat = goxel->rend.view_mat,
+        .proj_mat = goxel->rend.proj_mat,
+        .material = goxel->rend.material,
+    };
     uvec4b_t pixel;
     vec3b_t voxel_pos;
     block_t *block;
@@ -136,7 +140,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
     GL(glClearColor(0, 0, 0, 0));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
-    render_render(&rend, &goxel->camera.view_mat, &goxel->camera.proj_mat);
+    render_render(&rend);
 
     x = nearbyint(pos->x);
     y = view_size->y - nearbyint(pos->y) - 1;
@@ -217,8 +221,8 @@ void goxel_init(goxel_t *goxel)
     goxel->layers_mesh = mesh_copy(goxel->image->active_layer->mesh);
     goxel->pick_mesh = mesh_copy(goxel->image->active_layer->mesh);
 
-    goxel->back_color = HEXCOLOR(0x0000ffff);
-    goxel->grid_color = HEXCOLOR(0xffffffff);
+    goxel->back_color = HEXCOLOR(0x393939ff);
+    goxel->grid_color = HEXCOLOR(0x4a4a4aff);
 
     goxel->palette = palette_get();
     goxel->tool = TOOL_BRUSH;
@@ -262,6 +266,8 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     profiler_tick();
     goxel_set_help_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
+    goxel->rend.view_mat = goxel->camera.view_mat;
+    goxel->rend.proj_mat = goxel->camera.proj_mat;
     gui_iter(goxel, inputs);
     goxel->frame_count++;
 }
@@ -417,7 +423,7 @@ void goxel_export_as_png(goxel_t *goxel, const char *path)
     GL(glBindFramebuffer(GL_FRAMEBUFFER, fbo->framebuffer));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     render_mesh(rend, mesh, 0);
-    render_render(rend, &goxel->camera.view_mat, &goxel->camera.proj_mat);
+    render_render(rend);
     texture_save_to_file(fbo, path, 0);
 }
 

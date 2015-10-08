@@ -426,6 +426,9 @@ typedef struct renderer renderer_t;
 typedef struct render_item_t render_item_t;
 struct renderer
 {
+    mat4_t view_mat;
+    mat4_t proj_mat;
+
     struct {
         vec3_t direction;
         bool   fixed;
@@ -451,11 +454,12 @@ void render_deinit(void);
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
 void render_plane(renderer_t *rend, const plane_t *plane,
                   const uvec4b_t *color);
-void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b);
+void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
+                 const uvec4b_t *color);
 void render_box(renderer_t *rend, const box_t *box, bool solid,
                 const uvec4b_t *color);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
-void render_render(renderer_t *rend, const mat4_t *view, const mat4_t *proj);
+void render_render(renderer_t *rend);//, const mat4_t *view, const mat4_t *proj);
 
 // #############################
 
@@ -487,6 +491,7 @@ model3d_t *model3d_cube(void);
 model3d_t *model3d_wire_cube(void);
 model3d_t *model3d_sphere(int slices, int stacks);
 model3d_t *model3d_grid(int nx, int ny);
+model3d_t *model3d_line(void);
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,

@@ -204,7 +204,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         }
         if (!snaped) return STATE_CANCEL;
         if (inputs->keys[KEY_SHIFT])
-            render_line(&goxel->rend, &goxel->tool_start_pos, &pos);
+            render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
         if (check_can_skip(goxel, pos, down, goxel->painter.op))
             return state;
         box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
@@ -214,7 +214,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         goxel_update_meshes(goxel, false);
 
         if (inputs->keys[KEY_SHIFT]) {
-            render_line(&goxel->rend, &goxel->tool_start_pos, &pos);
+            render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
             if (pressed) {
                 painter2 = goxel->painter;
                 painter2.shape = &shape_cylinder;

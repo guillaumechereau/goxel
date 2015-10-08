@@ -171,6 +171,19 @@ model3d_t *model3d_grid(int nx, int ny)
     return model;
 }
 
+model3d_t *model3d_line(void)
+{
+    model3d_t *model = calloc(1, sizeof(*model));
+    model->nb_vertices = 2;
+    model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
+    model->vertices[0].pos = vec3(-0.5, 0, 0);
+    model->vertices[1].pos = vec3(+0.5, 0, 0);
+    model->vertices[0].color = uvec4b(255, 255, 255, 255);
+    model->vertices[1].color = uvec4b(255, 255, 255, 255);
+    model->dirty = true;
+    return model;
+}
+
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,

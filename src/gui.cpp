@@ -280,6 +280,29 @@ void gui_init(void)
     g_tex_pick = texture_create_from_image("data/icons/pick.png");
 }
 
+// XXX: Move this somewhere else.
+// XXX: It would be easier to project the pos manually and then tell the
+//      renderer to use screen coordinates.
+void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
+{
+    const vec3_t AXIS[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    int i;
+    const int d = 40;  // Distance to corner of the view.
+    float zoom;
+    vec2_t spos = vec2(d, view_size->y - d);
+    vec3_t pos, normal, b;
+    uvec4b_t c;
+    goxel_unproject_on_screen(goxel, view_size, &spos, &pos, &normal);
+    vec3_iaddk(&pos, normal, 100);
+    zoom = pow(1.25f, goxel->camera.zoom);
+
+    for (i = 0; i < 3; i++) {
+        b = vec3_addk(pos, AXIS[i], 2.0 / zoom);
+        c = uvec4b(AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
+        render_line(&goxel->rend, &pos, &b, &c);
+    }
+}
+
 typedef struct view {
     goxel_t *goxel;
     vec4_t  rect;
@@ -325,17 +348,17 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     if (DEBUG) {
         box_t b;
         uvec4b_t c;
-        c = HEXCOLOR(0x00FF00D0);
+        c = HEXCOLOR(0x00FF0050);
         b = mesh_get_box(goxel->layers_mesh, true);
         render_box(rend, &b, false, &c);
-        c = HEXCOLOR(0x00FFFFD0);
+        c = HEXCOLOR(0x00FFFF50);
         b = mesh_get_box(goxel->layers_mesh, false);
         render_box(rend, &b, false, &c);
     }
     if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
         render_plane(rend, &goxel->plane, &goxel->grid_color);
 
-    render_render(rend, &goxel->camera.view_mat, &goxel->camera.proj_mat);
+    render_render(rend);
 
     GL(glViewport(0, 0, width, height));
 }
@@ -823,8 +846,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     draw_list->AddCallback(render_view, &view);
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
+    vec2_t view_size = vec2(view.rect.z, view.rect.w);
     if (ImGui::IsItemHovered() || goxel->tool_state) {
-        vec2_t view_size = vec2(view.rect.z, view.rect.w);
         inputs_t rel_inputs = *inputs;
         rel_inputs.mouse_pos =
             vec2(ImGui::GetIO().MousePos.x - canvas_pos.x,
@@ -832,6 +855,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel_mouse_in_view(goxel, &view_size, &rel_inputs,
                 ImGui::IsItemHovered());
     }
+    render_axis_arrows(goxel, &view_size);
 
     // Apparently there is a bug if we do not render anything.  So I render
     // a '.' if there is nothing.  This is a hack.
