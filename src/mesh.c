@@ -287,7 +287,7 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat)
     mesh_move_data_t data = {mesh_copy(mesh), mat4_inverted(*mat)};
     mesh_prepare_write(mesh);
     box = mesh_get_box(mesh, true);
-    mat4_imul(&box.mat, *mat);
+    box.mat = mat4_mul(*mat, box.mat);
     box = box_get_bbox(box);
     add_blocks(mesh, box);
     mesh_fill(mesh, mesh_move_get_color, &data);
