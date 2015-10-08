@@ -213,8 +213,8 @@ void goxel_init(goxel_t *goxel)
     goxel->camera.ofs = vec3_zero;
     goxel->camera.rot = quat_identity;
     goxel->camera.dist = 128;
-    quat_irotate(&goxel->camera.rot, M_PI / 4, 1, 0, 0);
-    quat_irotate(&goxel->camera.rot, M_PI / 4, 0, 1, 0);
+    quat_irotate(&goxel->camera.rot, -M_PI / 4, 1, 0, 0);
+    quat_irotate(&goxel->camera.rot, -M_PI / 4, 0, 0, 1);
 
     goxel->image = image_new();
 
@@ -251,7 +251,7 @@ void goxel_init(goxel_t *goxel)
     };
 
     model3d_init();
-    goxel->plane = plane(vec3(0.5, 0.5, 0.5), vec3(1, 0, 0), vec3(0, 0, -1));
+    goxel->plane = plane(vec3(0.5, 0.5, 0.5), vec3(1, 0, 0), vec3(0, 1, 0));
     goxel->snap = SNAP_PLANE | SNAP_MESH;
     gui_init();
 }
@@ -277,15 +277,15 @@ static quat_t compute_view_rotation(const quat_t *rot,
         const vec2_t *view_size)
 {
     quat_t q1, q2;
-    float x1, y1, x2, y2, x_rot, y_rot;
+    float x1, y1, x2, y2, x_rot, z_rot;
     vec4_t x_axis;
     x1 = start_pos->x / view_size->x;
     y1 = start_pos->y / view_size->y;
     x2 =   end_pos->x / view_size->x;
     y2 =   end_pos->y / view_size->y;
-    y_rot = (x2 - x1) * 2 * M_PI;
+    z_rot = (x2 - x1) * 2 * M_PI;
     x_rot = (y2 - y1) * 2 * M_PI;
-    q1 = quat_from_axis(y_rot, 0, 1, 0);
+    q1 = quat_from_axis(z_rot, 0, 0, 1);
     x_axis = quat_mul_vec4(quat_conjugate(quat_mul(*rot, q1)),
                            vec4(1, 0, 0, 0));
     q2 = quat_from_axis(x_rot, x_axis.x, x_axis.y, x_axis.z);
