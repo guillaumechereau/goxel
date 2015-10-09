@@ -385,6 +385,10 @@ void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);
 void block_merge(block_t *block, const block_t *other);
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos);
+
+// XXX: I think we should clean up this one.
+void block_blit(block_t *block, uvec4b_t *data,
+                int x, int y, int z, int w, int h, int d);
 // #############################
 
 
@@ -411,6 +415,11 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other);
 void mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
+
+// XXX: clean up this.  We should use a struct to represent a data cube.
+void mesh_blit(mesh_t *mesh, uvec4b_t *data,
+               int x, int y, int z,
+               int w, int h, int d);
 
 #define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
 
@@ -708,6 +717,7 @@ void ply_export(const mesh_t *mesh, const char *path);
 // #### DICOM files support ####
 
 typedef struct {
+    int     instance_number;
     int     samples_per_pixel;
     int     rows;
     int     columns;
@@ -716,10 +726,13 @@ typedef struct {
     int     high_bit;
 
     int     data_size;
+    char    *path;      // If you set it, you have to remember to free it.
 } dicom_t;
 
-void dicom_parse(const char *path, dicom_t *dicom,
-                 char *out_buffer, int buffer_size);
+void dicom_load(const char *path, dicom_t *dicom,
+                char *out_buffer, int buffer_size);
+void dicom_import(const char *dir);
+
 
 // #############################
 

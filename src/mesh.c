@@ -296,3 +296,17 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat)
     mesh_delete(data.mesh);
     mesh_remove_empty_blocks(mesh);
 }
+
+void mesh_blit(mesh_t *mesh, uvec4b_t *data,
+               int x, int y, int z,
+               int w, int h, int d)
+{
+    box_t box;
+    block_t *block;
+    box = bbox_from_points(vec3(x, y, z), vec3(x + w, y + h, z + d));
+    add_blocks(mesh, box);
+    MESH_ITER_BLOCKS(mesh, block) {
+        block_blit(block, data, x, y, z, w, h, d);
+    }
+    mesh_remove_empty_blocks(mesh);
+}
