@@ -23,7 +23,6 @@
 // Convenience macro.
 #define READ(type, in) ({type v; fread(&v, sizeof(type), 1, in); v;})
 
-
 typedef union {
     struct {
         uint16_t group;
@@ -35,6 +34,12 @@ typedef union {
 typedef struct {
     tag_t tag;
     int   length;
+    char  vr[2];
+
+    union {
+        uint16_t us;
+    } value;
+
 } element_t;
 
 // Start of sequence item.
@@ -43,6 +48,9 @@ static const tag_t TAG_ITEM     = {{0xFFFE, 0xE000}};
 static const tag_t TAG_ITEM_DEL = {{0xFFFE, 0xE00D}};
 // End of Sequence of undefined length.
 static const tag_t TAG_SEQ_DEL  = {{0xFFFE, 0xE0DD}};
+
+static const tag_t TAG_ROWS     = {{0x0028, 0x0010}};
+static const tag_t TAG_COLUMNS  = {{0x0028, 0x0011}};
 
 static const char EXTRA_LEN_VRS[][2] = {"OB", "OW", "OF", "SQ", "UN", "UT"};
 
@@ -78,7 +86,9 @@ static bool parse_element(FILE *in, int state, element_t *out)
     int length;
     char vr[3] = "  ";
     bool extra_len = state & STATE_SEQUENCE_ITEM;
-    int i, r;
+    int i;
+
+    if (out) memset(out, 0, sizeof(*out));
 
     tag.group = READ(uint16_t, in);
     tag.element  = READ(uint16_t, in);
@@ -94,7 +104,7 @@ static bool parse_element(FILE *in, int state, element_t *out)
         }
     }
     if (extra_len) length = READ(uint32_t, in);
-    LOG_V("(%x, %x) %s, length:%d", tag.group, tag.element, vr, length);
+    LOG_V("(%.4x, %.4x) %s, length:%d", tag.group, tag.element, vr, length);
 
     // Read a sequence of undefined length.
     if (length == 0xffffffff && strncmp(vr, "SQ", 2) == 0) {
@@ -116,29 +126,42 @@ static bool parse_element(FILE *in, int state, element_t *out)
         }
     }
 
+    if (out) {
+        out->tag = tag;
+        out->length = length;
+        memcpy(out->vr, vr, 2);
+    }
+
     // For the moment we just skip the data.
     if (length != 0xffffffff) {
         assert(length >= 0);
         assert(length <= remain_size(in));
-        r = fseek(in, length, SEEK_CUR);
-        assert(r != -1);
+        if (out && length == 2 && strncmp(vr, "US", 2) == 0) {
+            out->value.us = READ(uint16_t, in);
+        } else {
+            // Skip the data.
+            fseek(in, length, SEEK_CUR);
+        }
     }
 
-    if (out) {
-        out->tag = tag;
-        out->length = length;
-    }
     if (tag.group == 0) return false;
     return true;
 }
 
-void dicom_parse(const char *path)
+void dicom_parse(const char *path, int *w, int *h)
 {
     FILE *in = fopen(path, "rb");
     parse_preamble(in);
+    element_t element;
 
     while (true) {
-        if (!parse_element(in, 0, NULL)) break;
+        if (!parse_element(in, 0, &element)) break;
+        if (element.tag.v == TAG_ROWS.v) {
+            *w = element.value.us;
+        }
+        if (element.tag.v == TAG_COLUMNS.v) {
+            *h = element.value.us;
+        }
     }
 
     fclose(in);
