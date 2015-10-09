@@ -705,6 +705,23 @@ void wavefront_export(const mesh_t *mesh, const char *path);
 void ply_export(const mesh_t *mesh, const char *path);
 
 
+// #### DICOM files support ####
+
+typedef struct {
+    int     samples_per_pixel;
+    int     rows;
+    int     columns;
+    int     bits_allocated;
+    int     bits_stored;
+    int     high_bit;
+
+    int     data_size;
+} dicom_t;
+
+void dicom_parse(const char *path, dicom_t *dicom,
+                 char *out_buffer, int buffer_size);
+
+// #############################
 
 // #### Profiler ###############
 

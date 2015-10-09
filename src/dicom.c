@@ -40,17 +40,29 @@ typedef struct {
         uint16_t us;
     } value;
 
+    // If set they we put the pixel data there.
+    char  *buffer;
+    int   buffer_size;
+
 } element_t;
 
 // Start of sequence item.
-static const tag_t TAG_ITEM     = {{0xFFFE, 0xE000}};
+static const tag_t TAG_ITEM                             = {{0xFFFE, 0xE000}};
 // End of sequence item.
-static const tag_t TAG_ITEM_DEL = {{0xFFFE, 0xE00D}};
+static const tag_t TAG_ITEM_DEL                         = {{0xFFFE, 0xE00D}};
 // End of Sequence of undefined length.
-static const tag_t TAG_SEQ_DEL  = {{0xFFFE, 0xE0DD}};
+static const tag_t TAG_SEQ_DEL                          = {{0xFFFE, 0xE0DD}};
 
-static const tag_t TAG_ROWS     = {{0x0028, 0x0010}};
-static const tag_t TAG_COLUMNS  = {{0x0028, 0x0011}};
+static const tag_t TAG_SAMPLES_PER_PIXEL                = {{0x0028, 0x0002}};
+static const tag_t TAG_PHOTOMETRIC_INTERPRETATION       = {{0x0028, 0x0004}};
+static const tag_t TAG_ROWS                             = {{0x0028, 0x0010}};
+static const tag_t TAG_COLUMNS                          = {{0x0028, 0x0011}};
+static const tag_t TAG_BITS_ALLOCATED                   = {{0x0028, 0x0100}};
+static const tag_t TAG_BITS_STORED                      = {{0x0028, 0x0101}};
+static const tag_t TAG_HIGH_BIT                         = {{0x0028, 0x0102}};
+static const tag_t TAG_PIXEL_REPRESENTATION             = {{0x0028, 0x0103}};
+static const tag_t TAG_PIXEL_DATA                       = {{0x7FE0, 0x0010}};
+
 
 static const char EXTRA_LEN_VRS[][2] = {"OB", "OW", "OF", "SQ", "UN", "UT"};
 
@@ -87,8 +99,6 @@ static bool parse_element(FILE *in, int state, element_t *out)
     char vr[3] = "  ";
     bool extra_len = state & STATE_SEQUENCE_ITEM;
     int i;
-
-    if (out) memset(out, 0, sizeof(*out));
 
     tag.group = READ(uint16_t, in);
     tag.element  = READ(uint16_t, in);
@@ -138,6 +148,9 @@ static bool parse_element(FILE *in, int state, element_t *out)
         assert(length <= remain_size(in));
         if (out && length == 2 && strncmp(vr, "US", 2) == 0) {
             out->value.us = READ(uint16_t, in);
+        } else if (out && tag.v == TAG_PIXEL_DATA.v && out->buffer) {
+            assert(out->buffer_size >= length);
+            fread(out->buffer, length, 1, in);
         } else {
             // Skip the data.
             fseek(in, length, SEEK_CUR);
@@ -148,20 +161,34 @@ static bool parse_element(FILE *in, int state, element_t *out)
     return true;
 }
 
-void dicom_parse(const char *path, int *w, int *h)
+void dicom_parse(const char *path, dicom_t *dicom,
+                 char *out_buffer, int buffer_size)
 {
     FILE *in = fopen(path, "rb");
     parse_preamble(in);
-    element_t element;
+    element_t element = {
+        .buffer = out_buffer,
+        .buffer_size = buffer_size,
+    };
 
     while (true) {
         if (!parse_element(in, 0, &element)) break;
-        if (element.tag.v == TAG_ROWS.v) {
-            *w = element.value.us;
-        }
-        if (element.tag.v == TAG_COLUMNS.v) {
-            *h = element.value.us;
-        }
+
+        #define S(attr, tag_) \
+            if (element.tag.v == tag_.v) \
+                dicom->attr = element.value.us;
+
+        S(samples_per_pixel,    TAG_SAMPLES_PER_PIXEL);
+        S(rows,                 TAG_ROWS);
+        S(columns,              TAG_COLUMNS);
+        S(bits_allocated,       TAG_BITS_ALLOCATED);
+        S(bits_stored,          TAG_BITS_STORED);
+        S(high_bit,             TAG_HIGH_BIT);
+
+        #undef S
+
+        if (element.tag.v == TAG_PIXEL_DATA.v)
+            dicom->data_size = element.length;
     }
 
     fclose(in);
