@@ -41,6 +41,7 @@ typedef struct {
     union {
         uint16_t us;
         int      is;
+        float    ds;
     } value;
 
     // If set they we put the pixel data there.
@@ -57,6 +58,7 @@ static const tag_t TAG_ITEM_DEL                         = {{0xFFFE, 0xE00D}};
 static const tag_t TAG_SEQ_DEL                          = {{0xFFFE, 0xE0DD}};
 
 static const tag_t TAG_INSTANCE_NUMBER                  = {{0x0020, 0x0013}};
+static const tag_t TAG_SLICE_LOCATION                   = {{0x0020, 0x1041}};
 static const tag_t TAG_SAMPLES_PER_PIXEL                = {{0x0028, 0x0002}};
 static const tag_t TAG_PHOTOMETRIC_INTERPRETATION       = {{0x0028, 0x0004}};
 static const tag_t TAG_ROWS                             = {{0x0028, 0x0010}};
@@ -70,14 +72,22 @@ static const tag_t TAG_PIXEL_DATA                       = {{0x7FE0, 0x0010}};
 
 static const char EXTRA_LEN_VRS[][2] = {"OB", "OW", "OF", "SQ", "UN", "UT"};
 
+static inline bool streq(const char *a, const char *b)
+{
+    return strncmp(a, b, strlen(b)) == 0;
+}
 
-static void parse_preamble(FILE *in)
+static bool parse_preamble(FILE *in)
 {
     char magic[4];
     // Skip the first 128 bytes.
     fseek(in, 128, SEEK_CUR);
     fread(magic, 4, 1, in);
-    assert(strncmp(magic, "DICM", 4) == 0);
+    if (!streq(magic, "DICM")) {
+        fseek(in, 0, SEEK_SET);
+        return false;
+    }
+    return true;
 }
 
 static int remain_size(FILE *in)
@@ -93,6 +103,7 @@ static int remain_size(FILE *in)
 
 enum {
     STATE_SEQUENCE_ITEM = 1 << 0,
+    STATE_IMPLICIT_VR   = 1 << 1,
 };
 
 static bool parse_element(FILE *in, int state, element_t *out)
@@ -102,30 +113,46 @@ static bool parse_element(FILE *in, int state, element_t *out)
     int length;
     char vr[3] = "  ";
     char tmp_buff[128];
-    bool extra_len = state & STATE_SEQUENCE_ITEM;
+    bool extra_len = false;
     int i;
 
     if (remain_size(in) == 0) return false;
     tag.group = READ(uint16_t, in);
     tag.element  = READ(uint16_t, in);
 
-    if (!(state & STATE_SEQUENCE_ITEM)) {
+    if (state & STATE_IMPLICIT_VR) {
+        length = READ(uint32_t, in);
+        // XXX: Handle this with a static table.
+        if (tag.v == TAG_INSTANCE_NUMBER.v) sprintf(vr, "IS");
+        if (tag.v == TAG_SLICE_LOCATION.v) sprintf(vr, "DS");
+        if (tag.v == TAG_SAMPLES_PER_PIXEL.v) sprintf(vr, "US");
+        if (tag.v == TAG_ROWS.v) sprintf(vr, "US");
+        if (tag.v == TAG_COLUMNS.v) sprintf(vr, "US");
+        if (tag.v == TAG_BITS_ALLOCATED.v) sprintf(vr, "US");
+        if (tag.v == TAG_BITS_STORED.v) sprintf(vr, "US");
+        if (tag.v == TAG_HIGH_BIT.v) sprintf(vr, "US");
+    } else {
         fread(vr, 2, 1, in);
-        length = READ(uint16_t, in);
         for (i = 0; i < ARRAY_SIZE(EXTRA_LEN_VRS); i++) {
             if (strncmp(vr, EXTRA_LEN_VRS[i], 2) == 0) {
                 extra_len = true;
                 break;
             }
         }
+        if (extra_len) {
+            READ(uint16_t, in);     // Reserved 2 bytes
+            length = READ(uint32_t, in);
+        } else {
+            length = READ(uint16_t, in);
+        }
     }
-    if (extra_len) length = READ(uint32_t, in);
+
     LOG_V("(%.4x, %.4x) %s, length:%d", tag.group, tag.element, vr, length);
 
     // Read a sequence of undefined length.
     if (length == 0xffffffff && strncmp(vr, "SQ", 2) == 0) {
         while (true) {
-            parse_element(in, STATE_SEQUENCE_ITEM, &item);
+            parse_element(in, STATE_SEQUENCE_ITEM | STATE_IMPLICIT_VR, &item);
             if (item.tag.v == TAG_SEQ_DEL.v) {
                 break;
             }
@@ -161,6 +188,11 @@ static bool parse_element(FILE *in, int state, element_t *out)
             fread(tmp_buff, length, 1, in);
             tmp_buff[length] = '\0';
             sscanf(tmp_buff, "%d", &out->value.is);
+        }  else if (out && strncmp(vr, "DS", 2) == 0) {
+            assert(length < sizeof(tmp_buff) - 1);
+            fread(tmp_buff, length, 1, in);
+            tmp_buff[length] = '\0';
+            sscanf(tmp_buff, "%f", &out->value.ds);
         } else if (out && tag.v == TAG_PIXEL_DATA.v && out->buffer) {
             assert(out->buffer_size >= length);
             fread(out->buffer, length, 1, in);
@@ -178,26 +210,31 @@ void dicom_load(const char *path, dicom_t *dicom,
                 char *out_buffer, int buffer_size)
 {
     FILE *in = fopen(path, "rb");
-    parse_preamble(in);
+    int state = 0;
+
     element_t element = {
         .buffer = out_buffer,
         .buffer_size = buffer_size,
     };
 
+    if (!parse_preamble(in)) {
+        state = STATE_IMPLICIT_VR;
+    }
+
     while (true) {
-        if (!parse_element(in, 0, &element)) break;
+        if (!parse_element(in, state, &element)) break;
 
         #define S(attr, tag_, v_) \
             if (element.tag.v == tag_.v) \
                 dicom->attr = element.value.v_;
 
         S(instance_number,      TAG_INSTANCE_NUMBER,    is);
+        S(slice_location,       TAG_SLICE_LOCATION,     ds);
         S(samples_per_pixel,    TAG_SAMPLES_PER_PIXEL,  us);
         S(rows,                 TAG_ROWS,               us);
         S(columns,              TAG_COLUMNS,            us);
         S(bits_allocated,       TAG_BITS_ALLOCATED,     us);
         S(bits_stored,          TAG_BITS_STORED,        us);
-        S(high_bit,             TAG_HIGH_BIT,           us);
         S(high_bit,             TAG_HIGH_BIT,           us);
 
         #undef S
@@ -213,7 +250,7 @@ static int dicom_sort(const void *a, const void *b)
 {
     const dicom_t *_a = a;
     const dicom_t *_b = b;
-    return sign(_a->instance_number - _b->instance_number);
+    return sign(_a->slice_location - _b->slice_location);
 }
 
 void dicom_import(const char *dirpath)
@@ -233,10 +270,10 @@ void dicom_import(const char *dirpath)
     utarray_new(all_files, &dicom_icd);
     dir = opendir(dirpath);
     while ((dirent = readdir(dir))) {
-        if (strcmp(dirent->d_name, ".") == 0) continue;
-        if (strcmp(dirent->d_name, "..") == 0) continue;
+        if (dirent->d_name[0] == '.') continue;
         asprintf(&dicom.path, "%s/%s", dirpath, dirent->d_name);
         dicom_load(dicom.path, &dicom, NULL, 0);
+        assert(dicom.rows && dicom.columns);
         utarray_push_back(all_files, &dicom);
     }
     closedir(dir);

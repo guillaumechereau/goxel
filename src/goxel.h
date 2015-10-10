@@ -721,6 +721,7 @@ void ply_export(const mesh_t *mesh, const char *path);
 
 typedef struct {
     int     instance_number;
+    float   slice_location;
     int     samples_per_pixel;
     int     rows;
     int     columns;
