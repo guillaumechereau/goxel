@@ -316,9 +316,11 @@ void render_deinit(void)
     index_buffer = 0;
 }
 
+// A global buffer large enough to contain all the vertices for any block.
+static voxel_vertex_t* g_vertices_buffer = NULL;
+
 static render_item_t *get_item_for_block(const block_t *block, int effects)
 {
-    voxel_vertex_t* vertices;
     render_item_t *item;
     // For the moment no effects affect the item vertice array.
     const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL;
@@ -333,20 +335,21 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
     item->key = key;
     GL(glGenBuffers(1, &item->vertex_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
-    // XXX: can we avoid this big alloc?
-    vertices = calloc(BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
-                      sizeof(*vertices));
-    item->nb_quads = block_generate_vertices(block->data, effects, vertices);
+    if (!g_vertices_buffer)
+        g_vertices_buffer = calloc(
+                BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
+                sizeof(*g_vertices_buffer));
+    item->nb_quads = block_generate_vertices(block->data, effects,
+                                             g_vertices_buffer);
     if (item->nb_quads > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
         item->nb_quads = BATCH_QUAD_COUNT;
     }
     if (item->nb_quads != 0) {
         GL(glBufferData(GL_ARRAY_BUFFER,
-                        item->nb_quads * 4 * sizeof(*vertices),
-                        vertices, GL_STATIC_DRAW));
+                        item->nb_quads * 4 * sizeof(*g_vertices_buffer),
+                        g_vertices_buffer, GL_STATIC_DRAW));
     }
-    free(vertices);
     HASH_ADD(hh, g_items, key, sizeof(key), item);
 end:
     item->last_used_frame = goxel()->frame_count;
