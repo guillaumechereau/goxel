@@ -261,7 +261,7 @@ void dicom_import(const char *dirpath)
     // XXX: we should maybe support voxel data in 2 bytes monochrome.
     cube = malloc(w * h * d * sizeof(*cube));
     for (i = 0; i < w * h * d; i++) {
-        cube[i] = uvec4b(255, 255, 255, data[i]);
+        cube[i] = uvec4b(255, 255, 255, clamp(data[i], 0, 255));
     }
     free(data);
 
