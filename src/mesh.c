@@ -186,6 +186,7 @@ static void add_blocks(mesh_t *mesh, box_t box)
 
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
+    PROFILED
     // In case we are doing the same operation as last time, we can just use
     // the value we buffered.
     #define EQUAL(a, b) (memcmp(&(a), &(b), sizeof(a)) == 0)
@@ -202,7 +203,9 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     g_last_op.box       = *box;
 
     box_t bbox = bbox_grow(box_get_bbox(*box), 1, 1, 1);
+    box_t block_box;
     block_t *block, *tmp;
+    bool empty;
     // In case of an add operation, we have to add blocks if they are not
     // there yet.
     mesh_prepare_write(mesh);
@@ -210,13 +213,22 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         add_blocks(mesh, bbox);
     }
     HASH_ITER(hh, mesh->blocks, block, tmp) {
-        if (!bbox_intersect(bbox, block_get_box(block, false))) continue;
-        block_op(block, painter, box);
-        if (block_is_empty(block, true)) {
+        block_box = block_get_box(block, false);
+        if (!bbox_intersect(bbox, block_box)) continue;
+        empty = false;
+        // Optimization for the case when we delete large blocks.
+        if (painter->op == OP_SUB && bbox_contains(bbox, block_box))
+            empty = true;
+        if (!empty) {
+            block_op(block, painter, box);
+            if (block_is_empty(block, true)) empty = true;
+        }
+        if (empty) {
             HASH_DEL(mesh->blocks, block);
             block_delete(block);
         }
     }
+
     mesh_set(&g_last_op.result, mesh);
 }
 

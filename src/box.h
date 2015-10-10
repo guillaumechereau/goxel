@@ -109,6 +109,19 @@ static inline bool bbox_intersect(box_t a, box_t b) {
            a0.z <= b1.z && b0.z <= a1.z;
 }
 
+static inline bool bbox_contains(box_t a, box_t b) {
+    assert(box_is_bbox(a));
+    assert(box_is_bbox(b));
+    vec3_t a0, a1, b0, b1;
+    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
+    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
+    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
+    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    return (a0.x <= b0.x && a1.x >= b1.x &&
+            a0.y <= b0.y && a1.y >= b1.y &&
+            a0.z <= b0.z && a1.z >= b1.z);
+}
+
 static inline box_t bbox_merge(box_t a, box_t b)
 {
     assert(box_is_bbox(a));
