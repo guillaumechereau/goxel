@@ -390,6 +390,7 @@ uvec4b_t block_get_at(const block_t *block, const vec3_t *pos);
 // XXX: I think we should clean up this one.
 void block_blit(block_t *block, uvec4b_t *data,
                 int x, int y, int z, int w, int h, int d);
+void block_shift_alpha(block_t *block, int v);
 // #############################
 
 
@@ -421,6 +422,7 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
 void mesh_blit(mesh_t *mesh, uvec4b_t *data,
                int x, int y, int z,
                int w, int h, int d);
+void mesh_shift_alpha(mesh_t *mesh, int v);
 
 #define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
 

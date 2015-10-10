@@ -322,3 +322,13 @@ void mesh_blit(mesh_t *mesh, uvec4b_t *data,
     }
     mesh_remove_empty_blocks(mesh);
 }
+
+void mesh_shift_alpha(mesh_t *mesh, int v)
+{
+    block_t *block;
+    mesh_prepare_write(mesh);
+    MESH_ITER_BLOCKS(mesh, block) {
+        block_shift_alpha(block, v);
+    }
+    mesh_remove_empty_blocks(mesh);
+}

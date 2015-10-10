@@ -753,9 +753,30 @@ static void render_profiler_info(void)
     }
 }
 
+static void shift_alpha_popup(goxel_t *goxel, bool just_open)
+{
+    static int v = 0;
+    static mesh_t *original_mesh;
+    mesh_t *mesh;
+    mesh = goxel->image->active_layer->mesh;
+    if (just_open)
+        original_mesh = mesh_copy(mesh);
+    if (ImGui::InputInt("shift", &v, 1)) {
+        mesh_set(&mesh, original_mesh);
+        mesh_shift_alpha(mesh, v);
+        goxel_update_meshes(goxel, true);
+    }
+    if (ImGui::Button("OK")) {
+        mesh_delete(original_mesh);
+        original_mesh = NULL;
+        ImGui::CloseCurrentPopup();
+    }
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     static view_t view;
+    bool open_shift_alpha = false;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -821,6 +842,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         if (ImGui::BeginMenu("Edit")) {
             if (ImGui::MenuItem("Undo", "Ctrl+Z")) goxel_undo(goxel);
             if (ImGui::MenuItem("Redo", "Ctrl+Y")) goxel_redo(goxel);
+            if (ImGui::MenuItem("Shift Alpha"))
+                open_shift_alpha = true;
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -888,6 +911,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
 
     ImGui::End();
+
+    if (open_shift_alpha)
+        ImGui::OpenPopup("Shift Alpha");
+    if (ImGui::BeginPopupModal("Shift Alpha", NULL,
+                ImGuiWindowFlags_AlwaysAutoResize)) {
+        shift_alpha_popup(goxel, open_shift_alpha);
+        ImGui::EndPopup();
+    }
 
     // Handle the shortcuts.  XXX: this should be done better.
     if (ImGui::GoxIsCharPressed('#'))

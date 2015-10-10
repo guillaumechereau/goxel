@@ -564,3 +564,12 @@ void block_blit(block_t *block, uvec4b_t *data,
         }
     }
 }
+
+void block_shift_alpha(block_t *block, int v)
+{
+    block_prepare_write(block);
+    int i;
+    for (i = 0; i < N * N * N; i++) {
+        block->data->voxels[i].a = clamp(block->data->voxels[i].a + v, 0, 255);
+    }
+}
