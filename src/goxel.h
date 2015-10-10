@@ -219,8 +219,15 @@ const char *sys_get_data_dir(void);
 bool sys_asset_exists(const char *path);
 char *sys_read_asset(const char *path, int *size);
 GLuint sys_get_screen_framebuffer(void);
-bool sys_save_dialog(const char *type, char **path);
-bool sys_open_dialog(const char *type, char **path);
+// #############################
+
+
+// #### Dialogs ################
+enum {
+    DIALOG_FLAG_SAVE    = 1 << 0,
+    DIALOG_FLAG_OPEN    = 1 << 1,
+};
+bool dialog_open(int flags, const char *filter, char **out);
 // #############################
 
 

@@ -23,52 +23,16 @@
 // GTK implementation.
 #include <gtk/gtk.h>
 
-bool sys_save_dialog(const char *type, char **path)
+bool dialog_open(int flags, const char *filters, char **out)
 {
     GtkWidget *dialog;
     GtkFileFilter *filter;
     GtkFileChooser *chooser;
-    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+    GtkFileChooserAction action;
     gint res;
 
-    gtk_init_check(NULL, NULL);
-    dialog = gtk_file_chooser_dialog_new("Save File",
-                                         NULL,
-                                         action,
-                                         "_Cancel", GTK_RESPONSE_CANCEL,
-                                         "_Save", GTK_RESPONSE_ACCEPT,
-                                         NULL );
-    chooser = GTK_FILE_CHOOSER(dialog);
-    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
-
-    chooser = GTK_FILE_CHOOSER(dialog);
-    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
-
-    while (type && *type) {
-        filter = gtk_file_filter_new();
-        gtk_file_filter_set_name(filter, type);
-        type += strlen(type) + 1;
-        gtk_file_filter_add_pattern(filter, type);
-        gtk_file_chooser_add_filter(chooser, filter);
-        type += strlen(type) + 1;
-    }
-
-    res = gtk_dialog_run(GTK_DIALOG(dialog));
-    if (res == GTK_RESPONSE_ACCEPT) {
-        *path = gtk_file_chooser_get_filename(chooser);
-    }
-    gtk_widget_destroy(dialog);
-    while (gtk_events_pending()) gtk_main_iteration();
-    return res == GTK_RESPONSE_ACCEPT;
-}
-
-bool sys_open_dialog(const char *type, char **path)
-{
-    GtkWidget *dialog;
-    GtkFileFilter *filter;
-    GtkFileChooser *chooser;
-    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-    gint res;
+    action = flags & DIALOG_FLAG_SAVE ? GTK_FILE_CHOOSER_ACTION_SAVE :
+                                        GTK_FILE_CHOOSER_ACTION_OPEN;
 
     gtk_init_check(NULL, NULL);
     dialog = gtk_file_chooser_dialog_new("Open File",
@@ -80,13 +44,13 @@ bool sys_open_dialog(const char *type, char **path)
     chooser = GTK_FILE_CHOOSER(dialog);
     gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
 
-    while (type && *type) {
+    while (filters && *filters) {
         filter = gtk_file_filter_new();
-        gtk_file_filter_set_name(filter, type);
-        type += strlen(type) + 1;
-        gtk_file_filter_add_pattern(filter, type);
+        gtk_file_filter_set_name(filter, filters);
+        filters += strlen(filters) + 1;
+        gtk_file_filter_add_pattern(filter, filters);
         gtk_file_chooser_add_filter(chooser, filter);
-        type += strlen(type) + 1;
+        filters += strlen(filters) + 1;
     }
     // Add a default 'any' file pattern.
     filter = gtk_file_filter_new();
@@ -96,7 +60,7 @@ bool sys_open_dialog(const char *type, char **path)
 
     res = gtk_dialog_run(GTK_DIALOG(dialog));
     if (res == GTK_RESPONSE_ACCEPT) {
-        *path = gtk_file_chooser_get_filename(chooser);
+        *out = gtk_file_chooser_get_filename(chooser);
     }
     gtk_widget_destroy(dialog);
     while (gtk_events_pending()) gtk_main_iteration();
@@ -106,65 +70,48 @@ bool sys_open_dialog(const char *type, char **path)
 #endif
 
 # if TARGET_OS_MAC == 1
+// On mac we still use nativefiledialog for the moment.
 #include "nfd.h"
-bool sys_save_dialog(const char *type, char **path)
+bool dialog_open(int flags, const char *filters, char **out)
 {
-    nfdresult_t result = NFD_SaveDialog(type, NULL, path);
+    nfdresult_t result;
+    if (flags & DIALOG_FLAG_OPEN)
+        result = NFD_OpenDialog(filters, NULL, out);
+    else
+        result = NFD_SaveDialog(filters, NULL, out);
     return result == NFD_OKAY;
 }
-
-bool sys_open_dialog(const char *type, char **path)
-{
-    nfdresult_t result = NFD_OpenDialog(type, NULL, path);
-    return result == NFD_OKAY;
-}
-
 #endif
+
 
 #ifdef WIN32
 
 #include "Commdlg.h"
 
-bool sys_save_dialog(const char *type, char **path)
+bool dialog_open(int flags, const char *filters, char **out)
 {
     OPENFILENAME ofn;       // common dialog box structure
     char szFile[260];       // buffer for file name
+    int ret;
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.lpstrFile = szFile;
     ofn.lpstrFile[0] = '\0';
     ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = type;
+    ofn.lpstrFilter = filters;
     ofn.nFilterIndex = 1;
     ofn.lpstrFileTitle = NULL;
     ofn.nMaxFileTitle = 0;
     ofn.lpstrInitialDir = NULL;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-    if (GetSaveFileName(&ofn) == TRUE) {
-        *path = strdup(szFile);
-        return true;
-    }
-    return false;
-}
 
-bool sys_open_dialog(const char *type, char **path)
-{
-    OPENFILENAME ofn;       // common dialog box structure
-    char szFile[260];       // buffer for file name
+    if (flags & DIALOG_FLAG_OPEN)
+        ret = GetOpenFileName(&ofn);
+    else
+        ret = GetSaveFileName(&ofn);
 
-    ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.lpstrFile = szFile;
-    ofn.lpstrFile[0] = '\0';
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = type;
-    ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-    if (GetOpenFileName(&ofn) == TRUE) {
+    if (ret == TRUE) {
         *path = strdup(szFile);
         return true;
     }

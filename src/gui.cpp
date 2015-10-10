@@ -683,7 +683,7 @@ static void save_as(goxel_t *goxel)
 {
     char *path = NULL;
     bool result;
-    result = sys_save_dialog("gox\0*.gox\0", &path);
+    result = dialog_open(DIALOG_FLAG_SAVE, "gox\0*.gox\0", &path);
     if (!result) return;
     free(goxel->image->path);
     goxel->image->path = path;
@@ -702,7 +702,7 @@ static void save(goxel_t *goxel)
 static void export_as(goxel_t *goxel, const char *type)
 {
     char *path = NULL;
-    bool result = sys_save_dialog(type, &path);
+    bool result = dialog_open(DIALOG_FLAG_SAVE, type, &path);
     if (!result) return;
     // XXX: use a dialog to set the size and other parameters.
     if (strcmp(type, "png") == 0)
@@ -717,7 +717,7 @@ static void export_as(goxel_t *goxel, const char *type)
 static void load(goxel_t *goxel)
 {
     char *path = NULL;
-    bool result = sys_open_dialog("gox\0*.gox\0", &path);
+    bool result = dialog_open(DIALOG_FLAG_OPEN, "gox\0*.gox\0", &path);
     if (!result) return;
     load_from_file(goxel, path);
     free(path);
