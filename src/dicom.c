@@ -50,6 +50,7 @@ typedef struct {
         uint16_t us;
         int      is;
         float    ds;
+        char     ui[256];
     } value;
 
     // If set they we put the pixel data there.
@@ -76,7 +77,15 @@ static const tag_t TAG_BITS_STORED                      = {{0x0028, 0x0101}};
 static const tag_t TAG_HIGH_BIT                         = {{0x0028, 0x0102}};
 static const tag_t TAG_PIXEL_REPRESENTATION             = {{0x0028, 0x0103}};
 static const tag_t TAG_PIXEL_DATA                       = {{0x7FE0, 0x0010}};
+static const tag_t TAG_TRANSFER_SYNTAX_UID              = {{0x0002, 0x0010}};
 
+typedef struct {
+    const char *uid;
+    const char *name;
+} dicom_uid_t;
+
+// Define at the bottom of this file.
+static const dicom_uid_t UIDS[];
 
 static const char EXTRA_LEN_VRS[][2] = {"OB", "OW", "OF", "SQ", "UN", "UT"};
 
@@ -84,6 +93,16 @@ static inline bool streq(const char *a, const char *b)
 {
     return strncmp(a, b, strlen(b)) == 0;
 }
+
+static const char *get_uid_name(const char *uid)
+{
+    const dicom_uid_t *pos;
+    for (pos = UIDS; pos->uid; pos++) {
+        if (strcmp(pos->uid, uid) == 0) return pos->name;
+    }
+    return false;
+}
+
 
 static bool parse_preamble(FILE *in)
 {
@@ -201,6 +220,10 @@ static bool parse_element(FILE *in, int state, element_t *out)
             fread(tmp_buff, length, 1, in);
             tmp_buff[length] = '\0';
             sscanf(tmp_buff, "%f", &out->value.ds);
+        }  else if (out && strncmp(vr, "UI", 2) == 0) {
+            CHECK(length < sizeof(out->value.ui) - 1);
+            fread(out->value.ui, length, 1, in);
+            out->value.ui[length] = '\0';
         } else if (out && tag.v == TAG_PIXEL_DATA.v && out->buffer) {
             CHECK(out->buffer_size >= length);
             fread(out->buffer, length, 1, in);
@@ -249,6 +272,14 @@ void dicom_load(const char *path, dicom_t *dicom,
 
         if (element.tag.v == TAG_PIXEL_DATA.v)
             dicom->data_size = element.length;
+
+        if (element.tag.v == TAG_TRANSFER_SYNTAX_UID.v) {
+            if (!streq(element.value.ui, "1.2.840.10008.1.2.1")) {
+                LOG_E("format not supported: %s",
+                        get_uid_name(element.value.ui));
+                CHECK(false);
+            }
+        }
     }
 
     fclose(in);
@@ -315,3 +346,12 @@ void dicom_import(const char *dirpath)
 
     free(cube);
 }
+
+
+
+
+static const dicom_uid_t UIDS[] = {
+    {"1.2.840.10008.1.2.1",     "Explicit VR Little Endian"},
+    {"1.2.840.10008.1.2.4.91",  "JPEG 2000 Image Compression"},
+    {NULL, NULL},
+};
