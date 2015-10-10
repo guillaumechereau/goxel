@@ -18,7 +18,94 @@
 
 #include "goxel.h"
 
-#ifndef WIN32
+#if defined __linux__
+
+// GTK implementation.
+#include <gtk/gtk.h>
+
+bool sys_save_dialog(const char *type, char **path)
+{
+    GtkWidget *dialog;
+    GtkFileFilter *filter;
+    GtkFileChooser *chooser;
+    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+    gint res;
+
+    gtk_init_check(NULL, NULL);
+    dialog = gtk_file_chooser_dialog_new("Save File",
+                                         NULL,
+                                         action,
+                                         "_Cancel", GTK_RESPONSE_CANCEL,
+                                         "_Save", GTK_RESPONSE_ACCEPT,
+                                         NULL );
+    chooser = GTK_FILE_CHOOSER(dialog);
+    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
+
+    chooser = GTK_FILE_CHOOSER(dialog);
+    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
+
+    while (type && *type) {
+        filter = gtk_file_filter_new();
+        gtk_file_filter_set_name(filter, type);
+        type += strlen(type) + 1;
+        gtk_file_filter_add_pattern(filter, type);
+        gtk_file_chooser_add_filter(chooser, filter);
+        type += strlen(type) + 1;
+    }
+
+    res = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (res == GTK_RESPONSE_ACCEPT) {
+        *path = gtk_file_chooser_get_filename(chooser);
+    }
+    gtk_widget_destroy(dialog);
+    while (gtk_events_pending()) gtk_main_iteration();
+    return res == GTK_RESPONSE_ACCEPT;
+}
+
+bool sys_open_dialog(const char *type, char **path)
+{
+    GtkWidget *dialog;
+    GtkFileFilter *filter;
+    GtkFileChooser *chooser;
+    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+    gint res;
+
+    gtk_init_check(NULL, NULL);
+    dialog = gtk_file_chooser_dialog_new("Open File",
+                                         NULL,
+                                         action,
+                                         "_Cancel", GTK_RESPONSE_CANCEL,
+                                         "_Open", GTK_RESPONSE_ACCEPT,
+                                         NULL );
+    chooser = GTK_FILE_CHOOSER(dialog);
+    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
+
+    while (type && *type) {
+        filter = gtk_file_filter_new();
+        gtk_file_filter_set_name(filter, type);
+        type += strlen(type) + 1;
+        gtk_file_filter_add_pattern(filter, type);
+        gtk_file_chooser_add_filter(chooser, filter);
+        type += strlen(type) + 1;
+    }
+    // Add a default 'any' file pattern.
+    filter = gtk_file_filter_new();
+    gtk_file_filter_set_name(filter, "*");
+    gtk_file_filter_add_pattern(filter, "*");
+    gtk_file_chooser_add_filter(chooser, filter);
+
+    res = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (res == GTK_RESPONSE_ACCEPT) {
+        *path = gtk_file_chooser_get_filename(chooser);
+    }
+    gtk_widget_destroy(dialog);
+    while (gtk_events_pending()) gtk_main_iteration();
+    return res == GTK_RESPONSE_ACCEPT;
+}
+
+#endif
+
+# if TARGET_OS_MAC == 1
 #include "nfd.h"
 bool sys_save_dialog(const char *type, char **path)
 {
@@ -31,7 +118,10 @@ bool sys_open_dialog(const char *type, char **path)
     nfdresult_t result = NFD_OpenDialog(type, NULL, path);
     return result == NFD_OKAY;
 }
-#else
+
+#endif
+
+#ifdef WIN32
 
 #include "Commdlg.h"
 
