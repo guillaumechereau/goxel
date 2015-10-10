@@ -154,7 +154,8 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
 static block_t *mesh_get_block_at(const mesh_t *mesh, const vec3_t *pos)
 {
     block_t *block;
-    HASH_FIND(hh, mesh->blocks, pos, sizeof(*pos), block);
+    vec3_t p = vec3((int)pos->x, (int)pos->y, (int)pos->z);
+    HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
     return block;
 }
 
@@ -251,9 +252,10 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other)
 void mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos)
 {
     block_t *block;
-    assert(!mesh_get_block_at(mesh, pos));
+    vec3_t p = vec3((int)pos->x, (int)pos->y, (int)pos->z);
+    assert(!mesh_get_block_at(mesh, &p));
     mesh_prepare_write(mesh);
-    block = block_new(pos, data);
+    block = block_new(&p, data);
     block->id = mesh->next_block_id++;
     HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
 }
