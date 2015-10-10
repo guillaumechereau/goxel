@@ -24,6 +24,14 @@
 // Convenience macro.
 #define READ(type, in) ({type v; fread(&v, sizeof(type), 1, in); v;})
 
+#if DEBUG
+    #define CHECK(c) assert(c)
+#else
+    #define CHECK(c) do { \
+        if (!(c)) { LOG_E("Error parsing dicom file"); exit(-1); } \
+    } while (0)
+#endif
+
 typedef union {
     struct {
         uint16_t group;
@@ -177,24 +185,24 @@ static bool parse_element(FILE *in, int state, element_t *out)
 
     // For the moment we just skip the data.
     if (length != 0xffffffff) {
-        assert(length >= 0);
+        CHECK(length >= 0);
         if (length > remain_size(in)) {
-            assert(false);
+            CHECK(false);
         }
         if (out && length == 2 && strncmp(vr, "US", 2) == 0) {
             out->value.us = READ(uint16_t, in);
         }  else if (out && strncmp(vr, "IS", 2) == 0) {
-            assert(length < sizeof(tmp_buff) - 1);
+            CHECK(length < sizeof(tmp_buff) - 1);
             fread(tmp_buff, length, 1, in);
             tmp_buff[length] = '\0';
             sscanf(tmp_buff, "%d", &out->value.is);
         }  else if (out && strncmp(vr, "DS", 2) == 0) {
-            assert(length < sizeof(tmp_buff) - 1);
+            CHECK(length < sizeof(tmp_buff) - 1);
             fread(tmp_buff, length, 1, in);
             tmp_buff[length] = '\0';
             sscanf(tmp_buff, "%f", &out->value.ds);
         } else if (out && tag.v == TAG_PIXEL_DATA.v && out->buffer) {
-            assert(out->buffer_size >= length);
+            CHECK(out->buffer_size >= length);
             fread(out->buffer, length, 1, in);
         } else {
             // Skip the data.
@@ -273,7 +281,7 @@ void dicom_import(const char *dirpath)
         if (dirent->d_name[0] == '.') continue;
         asprintf(&dicom.path, "%s/%s", dirpath, dirent->d_name);
         dicom_load(dicom.path, &dicom, NULL, 0);
-        assert(dicom.rows && dicom.columns);
+        CHECK(dicom.rows && dicom.columns);
         utarray_push_back(all_files, &dicom);
     }
     closedir(dir);
