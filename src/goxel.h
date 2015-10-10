@@ -226,6 +226,7 @@ GLuint sys_get_screen_framebuffer(void);
 enum {
     DIALOG_FLAG_SAVE    = 1 << 0,
     DIALOG_FLAG_OPEN    = 1 << 1,
+    DIALOG_FLAG_DIR     = 1 << 2,
 };
 bool dialog_open(int flags, const char *filter, char **out);
 // #############################

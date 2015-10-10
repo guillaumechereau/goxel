@@ -33,6 +33,8 @@ bool dialog_open(int flags, const char *filters, char **out)
 
     action = flags & DIALOG_FLAG_SAVE ? GTK_FILE_CHOOSER_ACTION_SAVE :
                                         GTK_FILE_CHOOSER_ACTION_OPEN;
+    if (flags & DIALOG_FLAG_DIR)
+        action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
 
     gtk_init_check(NULL, NULL);
     dialog = gtk_file_chooser_dialog_new("Open File",
