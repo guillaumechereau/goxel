@@ -699,6 +699,15 @@ static void save(goxel_t *goxel)
     save_to_file(goxel, goxel->image->path);
 }
 
+static void import_dicom(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN | DIALOG_FLAG_DIR, NULL, &path);
+    if (!result) return;
+    dicom_import(path);
+    free(path);
+}
+
 static void export_as(goxel_t *goxel, const char *type)
 {
     char *path = NULL;
@@ -796,6 +805,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             }
             if (ImGui::MenuItem("Load", "Ctrl+O")) {
                 load(goxel);
+            }
+            if (ImGui::BeginMenu("Import...")) {
+                if (ImGui::MenuItem("dicom")) import_dicom(goxel);
+                ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Export As..")) {
                 if (ImGui::MenuItem("png")) export_as(goxel, "png\0*.png\0");
