@@ -338,9 +338,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
     }
     // handle mouse rotations
     if (inputs->keys[KEY_LEFT])
-        quat_irotate(&goxel->camera.rot, 0.05, 0, +1, 0);
+        quat_irotate(&goxel->camera.rot, 0.05, 0, 0, +1);
     if (inputs->keys[KEY_RIGHT])
-        quat_irotate(&goxel->camera.rot, 0.05, 0, -1, 0);
+        quat_irotate(&goxel->camera.rot, 0.05, 0, 0, -1);
     if (inputs->keys[KEY_UP]) {
         x_axis = quat_mul_vec4(quat_conjugate(goxel->camera.rot),
                                vec4(1, 0, 0, 0));
