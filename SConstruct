@@ -58,19 +58,11 @@ env.Append(CPPPATH=['ext_src/imgui'])
 env.Append(CXXFLAGS='-DIMGUI_INCLUDE_IMGUI_USER_INL')
 
 if target_os == 'posix':
-    sources += glob.glob('ext_src/nativefiledialog/*.c')
-    env.Append(CPPPATH=['ext_src/nativefiledialog'])
     env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
 
 if target_os == 'msys':
     sources += glob.glob('ext_src/glew/glew.c')
     env.Append(CPPPATH=['ext_src/glew'])
     env.Append(CCFLAGS='-DGLEW_STATIC')
-
-if target_os == 'darwin':
-    sources += glob.glob('ext_src/nativefiledialog/nfd_common.c')
-    sources += glob.glob('ext_src/nativefiledialog/nfd_cocoa.m')
-    env.Append(CPPPATH=['ext_src/nativefiledialog'])
-
 
 env.Program(target='goxel', source=sources)
