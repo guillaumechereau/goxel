@@ -67,8 +67,9 @@ namespace ImGui {
         const ImRect image_bb(window->DC.CursorPos + padding, window->DC.CursorPos + padding + size); 
         bool ret;
         ImVec4 color;
-        if (*v) color = ImColor::HSV(0.5f, 0.6f, 0.6f);
-        else    color = ImColor::HSV(0.5f, 0.1f, 0.6f);
+
+        color = style.Colors[ImGuiCol_Button];
+        if (*v) color = style.Colors[ImGuiCol_ButtonActive];
         ImGui::PushStyleColor(ImGuiCol_Button, color);
         ImGui::PushID(name);
         if (tex) {
@@ -202,5 +203,17 @@ namespace ImGui {
     {
         ImGuiState& g = *GImGui;
         return g.IO.InputCharacters[0] == c;
+    }
+
+    bool GoxCollapsingHeader(const char *label, const char *str_id,
+                             bool display_frame,
+                             bool default_open)
+    {
+        bool ret;
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
+        ret = ImGui::CollapsingHeader(label, str_id, display_frame, default_open);
+        if (ret) ImGui::Dummy(ImVec2(0, 4));
+        ImGui::PopStyleColor();
+        return ret;
     }
 };

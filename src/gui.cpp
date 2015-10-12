@@ -23,11 +23,20 @@ extern "C" {
 
 #include "imgui.h"
 
+static inline ImVec4 IMHEXCOLOR(uint32_t v)
+{
+    uvec4b_t c = HEXCOLOR(v);
+    return ImVec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
+}
+
 namespace ImGui {
     bool GoxSelectable(const char *name, bool *v, int tex);
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
     bool GoxIsCharPressed(int c);
+    bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
+                             bool display_frame = true,
+                             bool default_open = false);
 };
 
 static texture_t *g_tex_sphere = NULL;
@@ -166,22 +175,6 @@ static void render_prepare_context(void)
     #undef OFFSETOF
 }
 
-static bool selectable(const char *name, bool *v, texture_t *tex = NULL)
-{
-    bool ret;
-    ImVec4 color;
-    if (*v) color = ImColor::HSV(0.5f, 0.6f, 0.6f);
-    else    color = ImColor::HSV(0.5f, 0.1f, 0.6f);
-    ImGui::PushStyleColor(ImGuiCol_Button, color);
-    if (!tex)
-        ret = ImGui::Button(name, ImVec2(32, 32));
-    else
-        ret = ImGui::ImageButton((void*)(intptr_t)tex->tex, ImVec2(32, 32));
-    ImGui::PopStyleColor();
-    if (ret) *v = !*v;
-    return ret;
-}
-
 static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
 {
     const float height = ImGui::GetIO().DisplaySize.y;
@@ -256,6 +249,13 @@ static void init_ImGui()
     ImGuiStyle& style = ImGui::GetStyle();
     style.FrameRounding = 4;
     style.WindowRounding = 0;
+    style.WindowFillAlphaDefault = 1.0;
+    style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x202020FF);
+    style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
+    style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0xD0D0D0FF);
+    style.Colors[ImGuiCol_Button] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
+    style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x6666FFFF);
 }
 
 void gui_init(void)
@@ -433,7 +433,7 @@ static void tool_options_panel(goxel_t *goxel)
         ImGui::Text("Snap on");
         for (i = 0; i < 2; i++) {
             s = goxel->snap & (1 << i);
-            if (selectable(snap[i], &s)) {
+            if (ImGui::GoxSelectable(snap[i], &s, 0)) {
                 goxel->snap = s ? goxel->snap | (1 << i) : goxel->snap & ~(1 << i);
             }
             if (i != 1)
@@ -781,8 +781,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    style.Colors[ImGuiCol_WindowBg] = ImVec4(0.5f, 0.0f, 0.5f, 1.0f);
-
     io.DisplaySize = ImVec2((float)goxel->screen_size.x, (float)goxel->screen_size.y);
 
     // Setup time step
@@ -853,19 +851,19 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     ImGui::BeginChild("left pane", ImVec2(180, 0), true);
     ImGui::PushItemWidth(75);
-    if (ImGui::CollapsingHeader("Tool", NULL, true, true))
+    if (ImGui::GoxCollapsingHeader("Tool", NULL, true, true))
         tools_panel(goxel);
     ImGui::Separator();
-    if (ImGui::CollapsingHeader("Tool Options", NULL, true, true))
+    if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
         tool_options_panel(goxel);
     ImGui::Separator();
-    if (ImGui::CollapsingHeader("Layers", NULL, true, true))
+    if (ImGui::GoxCollapsingHeader("Layers", NULL, true, true))
         layers_panel(goxel);
     ImGui::Separator();
-    if (ImGui::CollapsingHeader("Palette", NULL, true, true))
+    if (ImGui::GoxCollapsingHeader("Palette", NULL, true, true))
         palette_panel(goxel);
     ImGui::Separator();
-    if (ImGui::CollapsingHeader("Render", NULL, true, false))
+    if (ImGui::GoxCollapsingHeader("Render", NULL, true, false))
         render_panel(goxel);
     ImGui::EndChild();
     ImGui::SameLine();
