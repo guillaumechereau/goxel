@@ -618,11 +618,14 @@ typedef struct goxel
         float  dist;
         float  zoom;
         vec4_t view;
+        // If set, we smoothly update the offset to reach goxel->last_pos.
+        bool   move_to_last_pos;
 
         // Auto computed from other values:
         mat4_t view_mat;    // Model to view transformation.
         mat4_t proj_mat;    // Proj transform from camera coordinates.
     } camera;
+    vec3_t     last_pos;    // The last pos we painted to.
 
     uvec4b_t   back_color;
     uvec4b_t   grid_color;

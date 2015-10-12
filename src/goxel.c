@@ -268,6 +268,10 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
     goxel->rend.view_mat = goxel->camera.view_mat;
     goxel->rend.proj_mat = goxel->camera.proj_mat;
+    if (goxel->camera.move_to_last_pos) {
+        goxel->camera.move_to_last_pos = !vec3_ilerp_const(
+                &goxel->camera.ofs, vec3_neg(goxel->last_pos), 0.5);
+    }
     gui_iter(goxel, inputs);
     goxel->frame_count++;
 }
@@ -310,6 +314,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
             goxel->move_origin.rotation = goxel->camera.rot;
             goxel->move_origin.pos = inputs->mouse_pos;
         }
+        goxel->camera.move_to_last_pos = true;
         goxel->camera.rot= quat_mul(goxel->move_origin.rotation,
                 compute_view_rotation(&goxel->move_origin.rotation,
                     &goxel->move_origin.pos, &inputs->mouse_pos, view_size));
@@ -357,7 +362,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view_size, &inputs->mouse_pos,
                                     goxel->pick_mesh, &p, &n)) {
-            goxel->camera.ofs = vec3_neg(p);
+            goxel->last_pos = p;
+            goxel->camera.move_to_last_pos = true;
         }
     }
 
