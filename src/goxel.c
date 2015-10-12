@@ -263,14 +263,16 @@ goxel_t *goxel(void)
 
 void goxel_iter(goxel_t *goxel, inputs_t *inputs)
 {
+    float zoom;
     profiler_tick();
     goxel_set_help_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
     goxel->rend.view_mat = goxel->camera.view_mat;
     goxel->rend.proj_mat = goxel->camera.proj_mat;
     if (goxel->camera.move_to_last_pos) {
+        zoom = pow(1.25f, goxel->camera.zoom);
         goxel->camera.move_to_last_pos = !vec3_ilerp_const(
-                &goxel->camera.ofs, vec3_neg(goxel->last_pos), 0.5);
+                &goxel->camera.ofs, vec3_neg(goxel->last_pos), 1.0 / zoom);
     }
     gui_iter(goxel, inputs);
     goxel->frame_count++;
