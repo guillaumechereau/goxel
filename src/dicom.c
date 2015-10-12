@@ -69,13 +69,11 @@ static const tag_t TAG_SEQ_DEL                          = {{0xFFFE, 0xE0DD}};
 static const tag_t TAG_INSTANCE_NUMBER                  = {{0x0020, 0x0013}};
 static const tag_t TAG_SLICE_LOCATION                   = {{0x0020, 0x1041}};
 static const tag_t TAG_SAMPLES_PER_PIXEL                = {{0x0028, 0x0002}};
-static const tag_t TAG_PHOTOMETRIC_INTERPRETATION       = {{0x0028, 0x0004}};
 static const tag_t TAG_ROWS                             = {{0x0028, 0x0010}};
 static const tag_t TAG_COLUMNS                          = {{0x0028, 0x0011}};
 static const tag_t TAG_BITS_ALLOCATED                   = {{0x0028, 0x0100}};
 static const tag_t TAG_BITS_STORED                      = {{0x0028, 0x0101}};
 static const tag_t TAG_HIGH_BIT                         = {{0x0028, 0x0102}};
-static const tag_t TAG_PIXEL_REPRESENTATION             = {{0x0028, 0x0103}};
 static const tag_t TAG_PIXEL_DATA                       = {{0x7FE0, 0x0010}};
 static const tag_t TAG_TRANSFER_SYNTAX_UID              = {{0x0002, 0x0010}};
 
