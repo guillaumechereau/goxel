@@ -445,6 +445,35 @@ void goxel_export_as_ply(goxel_t *goxel, const char *path)
     ply_export(goxel->layers_mesh, path);
 }
 
+void goxel_export_as_txt(goxel_t *goxel, const char *path)
+{
+    FILE *out;
+    mesh_t *mesh = goxel->layers_mesh;
+    block_t *block;
+    int x, y, z;
+    uvec4b_t v;
+    const int N = BLOCK_SIZE;
+
+    out = fopen(path, "w");
+    fprintf(out, "# Goxel " GOXEL_VERSION_STR "\n");
+    fprintf(out, "# One line per voxel\n");
+    fprintf(out, "# X Y Z RRGGBB\n");
+
+    MESH_ITER_BLOCKS(mesh, block) {
+        for (z = 1; z < N - 1; z++)
+        for (y = 1; y < N - 1; y++)
+        for (x = 1; x < N - 1; x++) {
+            v = block->data->voxels[x + y * N + z * N * N];
+            if (v.a < 127) continue;
+            fprintf(out, "%d %d %d %2x%2x%2x\n",
+                    x + (int)block->pos.x,
+                    y + (int)block->pos.y,
+                    z + (int)block->pos.z,
+                    v.r, v.g, v.b);
+        }
+    }
+}
+
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
 {
     va_list args;

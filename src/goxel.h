@@ -691,6 +691,7 @@ void goxel_update_meshes(goxel_t *goxel, bool pick);
 void goxel_export_as_png(goxel_t *goxel, const char *path);
 void goxel_export_as_obj(goxel_t *goxel, const char *path);
 void goxel_export_as_ply(goxel_t *goxel, const char *path);
+void goxel_export_as_txt(goxel_t *goxel, const char *path);
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
 void goxel_undo(goxel_t *goxel);
 void goxel_redo(goxel_t *goxel);

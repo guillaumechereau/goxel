@@ -720,6 +720,8 @@ static void export_as(goxel_t *goxel, const char *type)
         goxel_export_as_obj(goxel, path);
     if (strcmp(type, "ply") == 0)
         goxel_export_as_ply(goxel, path);
+    if (strcmp(type, "txt") == 0)
+        goxel_export_as_txt(goxel, path);
     free(path);
 }
 
@@ -832,6 +834,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 if (ImGui::MenuItem("png")) export_as(goxel, "png\0*.png\0");
                 if (ImGui::MenuItem("obj")) export_as(goxel, "obj\0*.obj\0");
                 if (ImGui::MenuItem("ply")) export_as(goxel, "ply\0*.ply\0");
+                if (ImGui::MenuItem("txt")) export_as(goxel, "txt\0*.txt\0");
                 ImGui::EndMenu();
             }
             ImGui::EndMenu();
