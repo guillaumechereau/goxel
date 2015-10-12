@@ -779,7 +779,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     bool open_shift_alpha = false;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
 
     io.DisplaySize = ImVec2((float)goxel->screen_size.x, (float)goxel->screen_size.y);
 
