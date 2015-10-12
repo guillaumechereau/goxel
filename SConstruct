@@ -46,6 +46,7 @@ if target_os == 'msys':
                LINKFLAGS='--static')
 
 if target_os == 'darwin':
+    sources += glob.glob('src/*.m')
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
     env.Append(LIBS=['m', 'z', 'argp', 'glfw3', 'objc'])
 

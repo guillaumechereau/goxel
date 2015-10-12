@@ -71,21 +71,6 @@ bool dialog_open(int flags, const char *filters, char **out)
 
 #endif
 
-# if TARGET_OS_MAC == 1
-// On mac we still use nativefiledialog for the moment.
-#include "nfd.h"
-bool dialog_open(int flags, const char *filters, char **out)
-{
-    nfdresult_t result;
-    if (flags & DIALOG_FLAG_OPEN)
-        result = NFD_OpenDialog(filters, NULL, out);
-    else
-        result = NFD_SaveDialog(filters, NULL, out);
-    return result == NFD_OKAY;
-}
-#endif
-
-
 #ifdef WIN32
 
 #include "Commdlg.h"
