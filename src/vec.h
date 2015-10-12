@@ -456,9 +456,10 @@ NOC_DEF VT VNAME(_lerp_const)(VT a, VT b, real_t d)
     return VF(addk, a, VF(normalized, VF(sub, b, a)), d);
 }
 
-NOC_DEF void VNAME(_ilerp_const)(VT *a, VT b, real_t d)
+NOC_DEF bool VNAME(_ilerp_const)(VT *a, VT b, real_t d)
 {
     *a = VF(lerp_const, *a, b, d);
+    return VF(equal, *a, b);
 }
 
 NOC_DEF VT VNAME(_project)(VT a, VT b)
