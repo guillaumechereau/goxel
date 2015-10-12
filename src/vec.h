@@ -117,6 +117,7 @@
  * vecN_dist            Distance between two vectors
  * vecN_dist2           Square distance between two vectors
  * vecN_lerp            Linear interpolation
+ * vecN_[i]lerp_const   Interpolate by a constant distance
  * vecN_mix             Same as vecN_lerp
  * vec2_cross           2D cross product (return a scalar)
  * vec3_cross           3D cross product
@@ -446,6 +447,18 @@ NOC_DEF VT VNAME(_mix)(VT a, VT b, real_t t)
 NOC_DEF VT VNAME(_lerp)(VT a, VT b, real_t t)
 {
     return VF(mix, a, b, t);
+}
+
+NOC_DEF VT VNAME(_lerp_const)(VT a, VT b, real_t d)
+{
+    real_t d2 = VF(dist2, a, b);
+    if (d2 < d * d) return b;
+    return VF(addk, a, VF(normalized, VF(sub, b, a)), d);
+}
+
+NOC_DEF void VNAME(_ilerp_const)(VT *a, VT b, real_t d)
+{
+    *a = VF(lerp_const, *a, b, d);
 }
 
 NOC_DEF VT VNAME(_project)(VT a, VT b)
