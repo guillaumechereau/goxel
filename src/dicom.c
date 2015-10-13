@@ -145,6 +145,9 @@ static bool parse_element(FILE *in, int state, element_t *out)
     tag.group = READ(uint16_t, in);
     tag.element  = READ(uint16_t, in);
 
+    // The meta data is always in explicit form.
+    if (tag.group == 0x0002) state &= ~STATE_IMPLICIT_VR;
+
     if (state & STATE_IMPLICIT_VR) {
         length = READ(uint32_t, in);
         // XXX: Handle this with a static table.
@@ -156,6 +159,7 @@ static bool parse_element(FILE *in, int state, element_t *out)
         if (tag.v == TAG_BITS_ALLOCATED.v) sprintf(vr, "US");
         if (tag.v == TAG_BITS_STORED.v) sprintf(vr, "US");
         if (tag.v == TAG_HIGH_BIT.v) sprintf(vr, "US");
+        if (tag.v == TAG_PIXEL_DATA.v) sprintf(vr, "OB");
     } else {
         fread(vr, 2, 1, in);
         for (i = 0; i < ARRAY_SIZE(EXTRA_LEN_VRS); i++) {
@@ -175,7 +179,7 @@ static bool parse_element(FILE *in, int state, element_t *out)
     LOG_V("(%.4x, %.4x) %s, length:%d", tag.group, tag.element, vr, length);
 
     // Read a sequence of undefined length.
-    if (length == 0xffffffff && strncmp(vr, "SQ", 2) == 0) {
+    if (length == 0xffffffff && (streq(vr, "SQ") || streq(vr, "OW"))) {
         while (true) {
             parse_element(in, STATE_SEQUENCE_ITEM | STATE_IMPLICIT_VR, &item);
             if (item.tag.v == TAG_SEQ_DEL.v) {
@@ -240,6 +244,7 @@ void dicom_load(const char *path, dicom_t *dicom,
 {
     FILE *in = fopen(path, "rb");
     int state = 0;
+    const char *uid_name;
 
     element_t element = {
         .buffer = out_buffer,
@@ -247,7 +252,7 @@ void dicom_load(const char *path, dicom_t *dicom,
     };
 
     if (!parse_preamble(in)) {
-        state = STATE_IMPLICIT_VR;
+        state |= STATE_IMPLICIT_VR;
     }
 
     while (true) {
@@ -272,9 +277,12 @@ void dicom_load(const char *path, dicom_t *dicom,
             dicom->data_size = element.length;
 
         if (element.tag.v == TAG_TRANSFER_SYNTAX_UID.v) {
+            uid_name = get_uid_name(element.value.ui);
+            if (uid_name && strstr(uid_name, "Implicit")) {
+                state |= STATE_IMPLICIT_VR;
+            }
             if (!streq(element.value.ui, "1.2.840.10008.1.2.1")) {
-                LOG_E("format not supported: %s",
-                        get_uid_name(element.value.ui));
+                LOG_E("format not supported: %s", uid_name);
                 CHECK(false);
             }
         }
@@ -349,6 +357,8 @@ void dicom_import(const char *dirpath)
 
 
 static const dicom_uid_t UIDS[] = {
+
+    {"1.2.840.10008.1.2",       "Implicit VR Little Endian"},
     {"1.2.840.10008.1.2.1",     "Explicit VR Little Endian"},
     {"1.2.840.10008.1.2.4.91",  "JPEG 2000 Image Compression"},
     {NULL, NULL},
