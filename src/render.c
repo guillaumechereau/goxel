@@ -99,6 +99,7 @@ typedef struct {
     GLint u_bshadow_l;
     GLint u_bump_tex_l;
     GLint u_block_id_l;
+    GLint u_pos_scale_l;
 } prog_t;
 
 static prog_t prog_render, prog_pos_data;
@@ -252,9 +253,8 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
 {
     char include[128];
     int attr;
-    sprintf(include, "#define VOXEL_TEXTURE_SIZE %d.0\n"
-                     "#define VOXEL_SUB_POS %d.0\n",
-            VOXEL_TEXTURE_SIZE, VOXEL_SUB_POS);
+    sprintf(include, "#define VOXEL_TEXTURE_SIZE %d.0\n",
+                     VOXEL_TEXTURE_SIZE);
     prog->prog = create_program(vshader, fshader, include);
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glBindAttribLocation(prog->prog, attr, ATTRIBUTES[attr].name));
@@ -275,6 +275,7 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_bshadow);
     UNIFORM(u_bump_tex);
     UNIFORM(u_block_id);
+    UNIFORM(u_pos_scale);
 #undef UNIFORM
 }
 
@@ -408,10 +409,13 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
     block_t *block;
     mat4_t model = mat4_identity;
     int attr;
+    float pos_scale = 1.0f;
     vec4_t light_dir = vec4_zero;
     light_dir.xyz = rend->light.direction;
     if (!rend->light.fixed)
         light_dir = mat4_mul_vec(rend->view_mat, light_dir);
+    if (effects & EFFECT_MARCHING_CUBES)
+        pos_scale = 1.0 / MC_VOXEL_SUB_POS;
 
     prog = effects & EFFECT_RENDER_POS ? &prog_pos_data : &prog_render;
 
@@ -449,6 +453,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
     GL(glUniform1f(prog->u_m_shi_l, rend->material.shininess));
     GL(glUniform1f(prog->u_m_smo_l, rend->material.smoothness));
     GL(glUniform1f(prog->u_bshadow_l, rend->border_shadow));
+    GL(glUniform1f(prog->u_pos_scale_l, pos_scale));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));
@@ -656,6 +661,7 @@ static const char *VSHADER =
     "uniform   mat4 u_model;                                            \n"
     "uniform   mat4 u_view;                                             \n"
     "uniform   mat4 u_proj;                                             \n"
+    "uniform   float u_pos_scale;                                       \n"
     "                                                                   \n"
     "varying   vec3 v_pos;                                              \n"
     "varying   vec4 v_color;                                            \n"
@@ -670,7 +676,7 @@ static const char *VSHADER =
     "    v_bshadow_uv = (a_bshadow_uv + 0.5) /                          \n"
     "                          (16.0 * VOXEL_TEXTURE_SIZE);             \n"
     "    v_bump_uv = (a_bump_uv + 0.5) / (16.0 * 16.0);                 \n"
-    "    v_pos = a_pos / VOXEL_SUB_POS;                                 \n"
+    "    v_pos = a_pos * u_pos_scale;                                   \n"
     "    gl_Position = u_proj * u_view * u_model * vec4(v_pos, 1.0);    \n"
     "}                                                                  \n"
 ;
@@ -745,7 +751,7 @@ static const char *POS_DATA_VSHADER =
     "varying   vec2 v_pos_data;                                         \n"
     "void main()                                                        \n"
     "{                                                                  \n"
-    "    vec3 pos = a_pos / VOXEL_SUB_POS;                              \n"
+    "    vec3 pos = a_pos;                                              \n"
     "    gl_Position = u_proj * u_view * u_model * vec4(pos, 1.0);      \n"
     "    v_pos_data = a_pos_data;                                       \n"
     "}                                                                  \n"

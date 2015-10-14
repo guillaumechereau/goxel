@@ -149,8 +149,8 @@ static int mc_compute(uint8_t cube_index, const uint8_t neighboors[8],
         vec3b_t p0, p1;
         p0 = VERTICES_POSITIONS[EDGES_VERTICES[i][0]];
         p1 = VERTICES_POSITIONS[EDGES_VERTICES[i][1]];
-        vec3b_imul(&p0, VOXEL_SUB_POS);
-        vec3b_imul(&p1, VOXEL_SUB_POS);
+        vec3b_imul(&p0, MC_VOXEL_SUB_POS);
+        vec3b_imul(&p1, MC_VOXEL_SUB_POS);
         vertlist[i] = mc_interp(p0, p1,
                                 neighboors[EDGES_VERTICES[i][0]],
                                 neighboors[EDGES_VERTICES[i][1]]);
@@ -527,8 +527,6 @@ int block_generate_vertices(const block_data_t *data, int effects,
                 out[nb * 4 + i].pos = vec3b_add(
                         vec3b(x, y, z),
                         VERTICES_POSITIONS[FACES_VERTICES[f][i]]);
-                // The shader automatically scale the pos.
-                vec3b_imul(&out[nb * 4 + i].pos, VOXEL_SUB_POS);
                 out[nb * 4 + i].normal = normal;
                 out[nb * 4 + i].color = DATA_AT(data, x, y, z);
                 out[nb * 4 + i].color.a = out[nb * 4 + i].color.a ? 255 : 0;
