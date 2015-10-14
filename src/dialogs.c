@@ -74,35 +74,52 @@ bool dialog_open(int flags, const char *filters, char **out)
 #ifdef WIN32
 
 #include "Commdlg.h"
+#include "Shlobj.h"
+
 
 bool dialog_open(int flags, const char *filters, char **out)
 {
     OPENFILENAME ofn;       // common dialog box structure
+    BROWSEINFO   bif;       // only used to open directory
+    LPITEMIDLIST lpItem;    // only for open directory
     char szFile[260];       // buffer for file name
     int ret;
 
-    ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.lpstrFile = szFile;
-    ofn.lpstrFile[0] = '\0';
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = filters;
-    ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    if (!(flags & DIALOG_FLAG_DIR)) {
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.lpstrFile = szFile;
+        ofn.lpstrFile[0] = '\0';
+        ofn.nMaxFile = sizeof(szFile);
+        ofn.lpstrFilter = filters;
+        ofn.nFilterIndex = 1;
+        ofn.lpstrFileTitle = NULL;
+        ofn.nMaxFileTitle = 0;
+        ofn.lpstrInitialDir = NULL;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+        if (flags & DIALOG_FLAG_OPEN)
+            ret = GetOpenFileName(&ofn);
+        else
+            ret = GetSaveFileName(&ofn);
+        if (ret == TRUE) {
+            *out = strdup(szFile);
+            return true;
+        } else {
+            return false;
+        }
+    } else { // Open a directory.
+        ZeroMemory(&bif, sizeof(bif));
+        bif.pszDisplayName = szFile;
 
-    if (flags & DIALOG_FLAG_OPEN)
-        ret = GetOpenFileName(&ofn);
-    else
-        ret = GetSaveFileName(&ofn);
-
-    if (ret == TRUE) {
-        *path = strdup(szFile);
-        return true;
+        lpItem = SHBrowseForFolder(&bif);
+        if (lpItem) {
+            SHGetPathFromIDList(lpItem, szFile);
+            *out = strdup(szFile);
+            return true;
+        } else {
+            return false;
+        }
     }
-    return false;
 }
 
 #endif
