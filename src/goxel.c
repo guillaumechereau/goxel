@@ -341,6 +341,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
                                         &goxel->camera.proj_mat, &view);
         goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs,
                                      odelta);
+        goxel->last_pos = vec3_neg(goxel->camera.ofs);
         return;
     }
     // handle mouse rotations
