@@ -403,6 +403,7 @@ static void tools_panel(goxel_t *goxel)
     const int nb = ARRAY_SIZE(values);
     int i;
     bool v;
+    ImGui::PushID("tools_panel");
     for (i = 0; i < nb; i++) {
         v = goxel->tool == values[i].tool;
         if (ImGui::GoxSelectable(values[i].name, &v, values[i].tex)) {
@@ -411,6 +412,7 @@ static void tools_panel(goxel_t *goxel)
         }
         if ((i + 1) % 4 && i != nb - 1) ImGui::SameLine();
     }
+    ImGui::PopID();
 }
 
 static void shapes_panel(goxel_t *goxel);
