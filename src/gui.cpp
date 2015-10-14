@@ -933,12 +933,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel->painter.op = OP_SUB;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
         goxel->painter.op = OP_ADD;
-    // XXX: on some layouts (like Russian), there is no 'z' keys.  In that
-    // case we need to look for the physical key.  Not sure how we should
-    // do that.
-    if (io.KeyCtrl && ImGui::GoxIsCharPressed('z'))
+    // XXX: this won't map correctly to a French keyboard.  Unfortunately as
+    // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
+    // layout on Windows.  For the moment I just ignore the problem until I
+    // either find a solution, either find a replacement for GLFW.
+    if (io.KeyCtrl && ImGui::IsKeyPressed('Z', false))
         goxel_undo(goxel);
-    if (io.KeyCtrl && ImGui::GoxIsCharPressed('y'))
+    if (io.KeyCtrl && ImGui::IsKeyPressed('Y', false))
         goxel_redo(goxel);
 
 }
