@@ -123,7 +123,11 @@ static inline vec3b_t vec3b_addk(const vec3b_t a, const vec3b_t b, int k)
 static inline vec3b_t vec3b_mul(vec3b_t a, float k)
 {
     return vec3b(a.x * k, a.y * k, a.z * k);
+}
 
+static inline void vec3b_imul(vec3b_t *a, float k)
+{
+    *a = vec3b_mul(*a, k);
 }
 
 static inline vec3b_t vec3b_mix(vec3b_t a, vec3b_t b, float t)

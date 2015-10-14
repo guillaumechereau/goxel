@@ -341,6 +341,7 @@ typedef struct painter {
 // #### Block ##################
 // The block size can only be 16.
 #define BLOCK_SIZE 16
+#define VOXEL_SUB_POS 8
 #define VOXEL_TEXTURE_SIZE 8
 
 // Structure used for the OpenGL array data of blocks.
@@ -439,6 +440,7 @@ enum {
     EFFECT_BORDERS_ALL      = 1 << 4,
     EFFECT_SEMI_TRANSPARENT = 1 << 5,
     EFFECT_SEE_BACK         = 1 << 6,
+    EFFECT_MARCHING_CUBES   = 1 << 7,
 };
 
 typedef struct renderer renderer_t;
@@ -465,6 +467,7 @@ struct renderer
     } material;
 
     float            border_shadow;
+    int              effects;
     render_item_t    *items;
 };
 

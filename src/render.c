@@ -63,7 +63,8 @@ struct render_item_t
     int             last_used_frame;
 
     GLuint      vertex_buffer;
-    int         nb_quads;
+    int         size;           // 4 (quads) or 3 (triangles).
+    int         nb_elements;    // Number of quads or triangle.
 };
 
 // The buffered item hash table.  For the moment it is only used of the blocks.
@@ -251,7 +252,9 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
 {
     char include[128];
     int attr;
-    sprintf(include, "#define VOXEL_TEXTURE_SIZE %d.0\n", VOXEL_TEXTURE_SIZE);
+    sprintf(include, "#define VOXEL_TEXTURE_SIZE %d.0\n"
+                     "#define VOXEL_SUB_POS %d.0\n",
+            VOXEL_TEXTURE_SIZE, VOXEL_SUB_POS);
     prog->prog = create_program(vshader, fshader, include);
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glBindAttribLocation(prog->prog, attr, ATTRIBUTES[attr].name));
@@ -322,8 +325,8 @@ static voxel_vertex_t* g_vertices_buffer = NULL;
 static render_item_t *get_item_for_block(const block_t *block, int effects)
 {
     render_item_t *item;
-    // For the moment no effects affect the item vertice array.
-    const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL;
+    const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
+                             EFFECT_MARCHING_CUBES;
     block_item_key_t key = {
         .id = block->data->id,
         .effects = effects & effects_mask,
@@ -339,16 +342,17 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
         g_vertices_buffer = calloc(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
-    item->nb_quads = block_generate_vertices(block->data, effects,
-                                             g_vertices_buffer);
-    if (item->nb_quads > BATCH_QUAD_COUNT) {
+    item->nb_elements = block_generate_vertices(block->data, effects,
+                                                g_vertices_buffer);
+    item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
+    if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
-        item->nb_quads = BATCH_QUAD_COUNT;
+        item->nb_elements = BATCH_QUAD_COUNT;
     }
-    if (item->nb_quads != 0) {
+    if (item->nb_elements != 0) {
         GL(glBufferData(GL_ARRAY_BUFFER,
-                        item->nb_quads * 4 * sizeof(*g_vertices_buffer),
-                        g_vertices_buffer, GL_STATIC_DRAW));
+                item->nb_elements * item->size * sizeof(*g_vertices_buffer),
+                g_vertices_buffer, GL_STATIC_DRAW));
     }
     HASH_ADD(hh, g_items, key, sizeof(key), item);
 end:
@@ -365,7 +369,7 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
     int attr;
 
     item = get_item_for_block(block, effects);
-    if (item->nb_quads == 0) return;
+    if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
@@ -389,8 +393,13 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
                                   -BLOCK_SIZE / 2,
                                   -BLOCK_SIZE / 2);
     GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, block_model.v));
-    GL(glDrawElements(GL_TRIANGLES, item->nb_quads * 6,
-                      GL_UNSIGNED_SHORT, 0));
+    if (item->size == 4) {
+        // Use indexed triangles.
+        GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
+                          GL_UNSIGNED_SHORT, 0));
+    } else {
+        GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
+    }
 }
 
 static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
@@ -465,10 +474,12 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MESH;
     item->mesh = mesh_copy(mesh);
-    item->effects = effects | rend->material.effects | EFFECT_SMOOTH;
+    item->effects = effects | rend->material.effects | rend->effects |
+                    EFFECT_SMOOTH;
     // With EFFECT_RENDER_POS we need to remove some effects.
     if (item->effects & EFFECT_RENDER_POS)
-        item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK);
+        item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK |
+                           EFFECT_MARCHING_CUBES);
     DL_APPEND(rend->items, item);
 }
 
@@ -658,10 +669,9 @@ static const char *VSHADER =
     "    v_color = a_color;                                             \n"
     "    v_bshadow_uv = (a_bshadow_uv + 0.5) /                          \n"
     "                          (16.0 * VOXEL_TEXTURE_SIZE);             \n"
-    "    v_bump_uv = (a_bump_uv + 0.5) /                                \n"
-    "                          (16.0 * 16.0);             \n"
-    "    v_pos = a_pos;                                                 \n"
-    "    gl_Position = u_proj * u_view * u_model * vec4(a_pos, 1.0);    \n"
+    "    v_bump_uv = (a_bump_uv + 0.5) / (16.0 * 16.0);                 \n"
+    "    v_pos = a_pos / VOXEL_SUB_POS;                                 \n"
+    "    gl_Position = u_proj * u_view * u_model * vec4(v_pos, 1.0);    \n"
     "}                                                                  \n"
 ;
 
@@ -735,7 +745,8 @@ static const char *POS_DATA_VSHADER =
     "varying   vec2 v_pos_data;                                         \n"
     "void main()                                                        \n"
     "{                                                                  \n"
-    "    gl_Position = u_proj * u_view * u_model * vec4(a_pos, 1.0);    \n"
+    "    vec3 pos = a_pos / VOXEL_SUB_POS;                              \n"
+    "    gl_Position = u_proj * u_view * u_model * vec4(pos, 1.0);      \n"
     "    v_pos_data = a_pos_data;                                       \n"
     "}                                                                  \n"
 ;
