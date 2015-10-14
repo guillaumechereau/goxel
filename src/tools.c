@@ -237,10 +237,6 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     case STATE_PAINT:
         if (check_can_skip(goxel, pos, down, goxel->painter.op))
             return state;
-        box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
-        mesh_op(mesh, &goxel->painter, &box);
-        goxel_update_meshes(goxel, false);
-        goxel->tool_start_pos = pos;
         if (released) {
             image_history_push(goxel->image);
             goxel->painting = false;
@@ -250,6 +246,10 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
             return STATE_IDLE;
         }
+        box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
+        mesh_op(mesh, &goxel->painter, &box);
+        goxel_update_meshes(goxel, false);
+        goxel->tool_start_pos = pos;
         return state;
     case STATE_WAIT_KEY_UP:
         goxel->tool_t = 0;
