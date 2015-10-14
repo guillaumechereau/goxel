@@ -217,7 +217,10 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         if (!bbox_intersect(bbox, block_box)) continue;
         empty = false;
         // Optimization for the case when we delete large blocks.
-        if (painter->op == OP_SUB && bbox_contains(bbox, block_box))
+        // XXX: this is too specific.  we need a way to tell if a given
+        // shape totally contains a box.
+        if (    painter->shape == &shape_cube && painter->op == OP_SUB &&
+                box_contains(*box, block_box))
             empty = true;
         if (!empty) {
             block_op(block, painter, box);

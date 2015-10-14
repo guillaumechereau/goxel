@@ -122,6 +122,29 @@ static inline bool bbox_contains(box_t a, box_t b) {
             a0.z <= b0.z && a1.z >= b1.z);
 }
 
+static inline bool box_contains(box_t a, box_t b) {
+    const vec3_t PS[8] = {
+        vec3(-1, -1, +1),
+        vec3(+1, -1, +1),
+        vec3(+1, +1, +1),
+        vec3(-1, +1, +1),
+        vec3(-1, -1, -1),
+        vec3(+1, -1, -1),
+        vec3(+1, +1, -1),
+        vec3(-1, +1, -1),
+    };
+    vec3_t p;
+    int i;
+    mat4_t imat = mat4_inverted(a.mat);
+    for (i = 0; i < 8; i++) {
+        p = mat4_mul_vec3(b.mat, PS[i]);
+        p = mat4_mul_vec3(imat, p);
+        if (p.x < -1 || p.x > 1 || p.y < -1 || p.y > 1 || p.z < -1 || p.z > 1)
+            return false;
+    }
+    return true;
+}
+
 static inline box_t bbox_merge(box_t a, box_t b)
 {
     assert(box_is_bbox(a));
