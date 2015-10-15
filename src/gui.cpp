@@ -369,7 +369,7 @@ static void op_panel(goxel_t *goxel)
     struct {
         int        op;
         const char *name;
-        int        tex;
+        GLuint     tex;
     } values[] = {
         {OP_ADD,    "Add",  g_tex_add->tex},
         {OP_SUB,    "Sub",  g_tex_sub->tex},
@@ -391,7 +391,7 @@ static void tools_panel(goxel_t *goxel)
     const struct {
         int         tool;
         const char  *name;
-        int         tex;
+        GLuint      tex;
     } values[] = {
         {TOOL_BRUSH,        "Brush",        g_tex_brush->tex},
         {TOOL_CUBE,         "Cube",         g_tex_cube2->tex},
@@ -507,7 +507,7 @@ static void shapes_panel(goxel_t *goxel)
     struct {
         const char  *name;
         shape_t     *shape;
-        int         tex;
+        GLuint      tex;
     } shapes[] = {
         {"Sphere", &shape_sphere, g_tex_sphere->tex},
         {"Cube", &shape_cube, g_tex_cube->tex},
