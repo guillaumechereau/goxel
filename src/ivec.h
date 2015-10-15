@@ -45,7 +45,7 @@ typedef union {
     int8_t v[3];
 } vec3b_t;
 
-static inline vec3b_t vec3b(int x, int y, int z) {
+static inline vec3b_t vec3b(int8_t x, int8_t y, int8_t z) {
     return (vec3b_t)IVEC(x, y, z);
 }
 
@@ -56,7 +56,7 @@ typedef union {
     int8_t v[4];
 } vec4b_t;
 
-static inline vec4b_t vec4b(int x, int y, int z, int w) {
+static inline vec4b_t vec4b(int8_t x, int8_t y, int8_t z, int8_t w) {
     return (vec4b_t)IVEC(x, y, z, w);
 }
 
@@ -66,7 +66,7 @@ typedef union {
     uint8_t v[3];
 } uvec3b_t;
 
-static inline uvec3b_t uvec3b(int x, int y, int z) {
+static inline uvec3b_t uvec3b(uint8_t x, uint8_t y, uint8_t z) {
     return (uvec3b_t)IVEC(x, y, z);
 }
 
@@ -85,7 +85,7 @@ typedef union {
     uint8_t v[4];
 } uvec4b_t;
 
-static inline uvec4b_t uvec4b(int x, int y, int z, int w) {
+static inline uvec4b_t uvec4b(uint8_t x, uint8_t y, uint8_t z, uint8_t w) {
     return (uvec4b_t)IVEC(x, y, z, w);
 }
 
