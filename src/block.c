@@ -125,41 +125,61 @@ const int EDGES_VERTICES[12][2] = {
 static const int MC_EDGE_TABLE[256];
 static const int8_t MC_TRI_TABLE[256][16];
 
-static vec3b_t mc_interp(vec3b_t p0, vec3b_t p1, int f0, int f1)
+// Represent a marching cube vertex, by two vertex index and a factor
+// between them.  If mu = 0, the vertex is at v0, if mu = 1, the vertex is
+// at v1, otherwise the vertex is somewhere in between.
+typedef struct {
+    int     v0, v1;
+    float   mu;
+} mc_vert_t;
+
+static vec3b_t mc_interp_pos(const mc_vert_t *vert)
 {
-    float mu = (f0 - 127) / (float)(f0 - f1);
     int i;
     vec3b_t ret;
-    for (i = 0; i < 3; i++) {
-        ret.v[i] = p0.v[i] * (1 - mu) + p1.v[i] * mu;
-    }
+    vec3b_t p0 = VERTICES_POSITIONS[vert->v0];
+    vec3b_t p1 = VERTICES_POSITIONS[vert->v1];
+    const float mu = vert->mu;
+    for (i = 0; i < 3; i++)
+        ret.v[i] = (p0.v[i] * (1 - mu) + p1.v[i] * mu) * MC_VOXEL_SUB_POS;
     return ret;
 }
 
-static int mc_compute(uint8_t cube_index, const uint8_t neighboors[8],
-                      vec3b_t (*out)[3])
+static uvec4b_t mc_interp_color(const mc_vert_t *vert,
+                               const uvec4b_t neighboors[8])
+{
+    uvec4b_t ret;
+    const uvec4b_t v0 = neighboors[vert->v0];
+    const uvec4b_t v1 = neighboors[vert->v1];
+    ret.a = 255;
+    int i;
+    for (i = 0; i < 3; i++)
+        ret.v[i] = (v0.v[i] * v0.a + v1.v[i] * v1.a) / (v0.a + v1.a);
+    return ret;
+}
+
+
+static int mc_compute(uint8_t cube_index, const uvec4b_t neighboors[8],
+                      mc_vert_t (*out)[3])
 {
     int edges, i, nb_tri;
-    vec3b_t vertlist[12];
-
+    int f0, f1;
+    mc_vert_t verts[12];
     edges = MC_EDGE_TABLE[cube_index];
     if (!edges) return 0;
     for (i = 0; i < 12; i++) {
         if (!(edges & (1 << i))) continue;
-        vec3b_t p0, p1;
-        p0 = VERTICES_POSITIONS[EDGES_VERTICES[i][0]];
-        p1 = VERTICES_POSITIONS[EDGES_VERTICES[i][1]];
-        vec3b_imul(&p0, MC_VOXEL_SUB_POS);
-        vec3b_imul(&p1, MC_VOXEL_SUB_POS);
-        vertlist[i] = mc_interp(p0, p1,
-                                neighboors[EDGES_VERTICES[i][0]],
-                                neighboors[EDGES_VERTICES[i][1]]);
+        verts[i].v0 = EDGES_VERTICES[i][0];
+        verts[i].v1 = EDGES_VERTICES[i][1];
+        f0 = neighboors[verts[i].v0].a;
+        f1 = neighboors[verts[i].v1].a;
+        verts[i].mu = (f0 - 127) / (float)(f0 - f1);
     }
     nb_tri = 0;
     for (i = 0; MC_TRI_TABLE[cube_index][i] != -1; i += 3) {
-        out[nb_tri][0] = vertlist[MC_TRI_TABLE[cube_index][i + 0]];
-        out[nb_tri][1] = vertlist[MC_TRI_TABLE[cube_index][i + 1]];
-        out[nb_tri][2] = vertlist[MC_TRI_TABLE[cube_index][i + 2]];
+        out[nb_tri][0] = verts[MC_TRI_TABLE[cube_index][i + 0]];
+        out[nb_tri][1] = verts[MC_TRI_TABLE[cube_index][i + 1]];
+        out[nb_tri][2] = verts[MC_TRI_TABLE[cube_index][i + 2]];
         nb_tri++;
     }
     assert(nb_tri <= 5);
@@ -424,71 +444,51 @@ static uvec2b_t get_pos_as_vec2(int x, int y, int z, int f)
 
 static uint8_t block_get_neighboors_mc(const block_data_t *data,
                                        int x, int y, int z,
-                                       uint8_t neighboors[8])
+                                       uvec4b_t neighboors[8])
 {
     int i;
     vec3b_t npos;
     uint8_t ret = 0;
     for (i = 0; i < 8; i++) {
         npos = vec3b_add(vec3b(x, y, z), VERTICES_POSITIONS[i]);
-        neighboors[i] = DATA_AT(data, npos.x, npos.y, npos.z).a;
-        if (neighboors[i] > 127) ret |= 1 << i;
+        neighboors[i] = DATA_AT(data, npos.x, npos.y, npos.z);
+        if (neighboors[i].a > 127) ret |= 1 << i;
     }
     return ret;
 }
 
-static vec3b_t mc_normal(uint8_t neighboors_mask, uint8_t neighboors[8])
+// XXX: I could use an interpolation of the normal for a smooth effect.
+static vec3b_t mc_normal(uint8_t neighboors_mask, uvec4b_t neighboors[8])
 {
     int i;
     int ssum = 0;
     int sx = 0, sy = 0, sz = 0;
     for (i = 0; i < 8; i++) {
-        ssum += neighboors[i];
-        sx -= (VERTICES_POSITIONS[i].x * 2 - 1) * neighboors[i] / 4;
-        sy -= (VERTICES_POSITIONS[i].y * 2 - 1) * neighboors[i] / 4;
-        sz -= (VERTICES_POSITIONS[i].z * 2 - 1) * neighboors[i] / 4;
+        ssum += neighboors[i].a;
+        sx -= (VERTICES_POSITIONS[i].x * 2 - 1) * neighboors[i].a / 4;
+        sy -= (VERTICES_POSITIONS[i].y * 2 - 1) * neighboors[i].a / 4;
+        sz -= (VERTICES_POSITIONS[i].z * 2 - 1) * neighboors[i].a / 4;
     }
     return vec3b(sx * 256 / ssum, sy * 256 / ssum, sz * 256 / ssum);
-}
-
-static uvec4b_t mc_color(const block_data_t *data, int x, int y, int z)
-{
-    // For the moment the marching cube color is just the max color of all
-    // the 8 voxels around the point.
-    vec3b_t npos;
-    uvec4b_t v;
-    int i, r = 0, g = 0, b = 0, best = 0;
-    for (i = 0; i < 8; i++) {
-        npos = vec3b_add(vec3b(x, y, z), VERTICES_POSITIONS[i]);
-        v = DATA_AT(data, npos.x, npos.y, npos.z);
-        if (v.a > best) {
-            r = v.r;
-            g = v.g;
-            b = v.b;
-            best = v.a;
-        }
-    }
-    return uvec4b(r, g, b, 255);
 }
 
 static int block_generate_vertices_mc(const block_data_t *data, int effects,
                                       voxel_vertex_t *out)
 {
     uint8_t neighboors_mask;
-    uint8_t neighboors[8];
+    uvec4b_t neighboors[8];
     int x, y, z, nb_tri, i, v, nb_tri_tot = 0, vi;
-    vec3b_t tri[5][3];
+    mc_vert_t tri[5][3];
     BLOCK_ITER_INSIDE(x, y, z) {
         neighboors_mask = block_get_neighboors_mc(data, x, y, z, neighboors);
         nb_tri = mc_compute(neighboors_mask, neighboors, tri);
         for (i = 0; i < nb_tri; i++) {
             for (v = 0; v < 3; v++) {
                 vi = (nb_tri_tot + i) * 3 + v;
-                out[vi].pos = vec3b_addk(
-                                  tri[i][v],
-                                  vec3b(x, y, z), 8);
+                out[vi].pos = mc_interp_pos(&tri[i][v]);
+                vec3b_iaddk(&out[vi].pos, vec3b(x, y, z), MC_VOXEL_SUB_POS);
                 vec3b_iadd(&out[vi].pos, vec3b(4, 4, 4));
-                out[vi].color = mc_color(data, x, y, z);
+                out[vi].color = mc_interp_color(&tri[i][v], neighboors);
                 out[vi].normal = mc_normal(neighboors_mask, neighboors);
 
                 // XXX: this shouldn't matter.

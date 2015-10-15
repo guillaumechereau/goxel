@@ -111,13 +111,18 @@ static inline void vec3b_iadd(vec3b_t *a, const vec3b_t b)
     *a = vec3b_add(*a, b);
 }
 
-static inline vec3b_t vec3b_addk(const vec3b_t a, const vec3b_t b, int k)
+static inline vec3b_t vec3b_addk(const vec3b_t a, const vec3b_t b, float k)
 {
     vec3b_t ret;
     int i;
     for (i = 0; i < 3; i++)
         ret.v[i] = a.v[i] + b.v[i] * k;
     return ret;
+}
+
+static inline void vec3b_iaddk(vec3b_t *a, const vec3b_t b, float k)
+{
+    *a = vec3b_addk(*a, b, k);
 }
 
 static inline vec3b_t vec3b_mul(vec3b_t a, float k)
