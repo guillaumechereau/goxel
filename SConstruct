@@ -11,6 +11,7 @@ target_os = str(Platform())
 debug = int(ARGUMENTS.get('debug', 1))
 gprof = int(ARGUMENTS.get('gprof', 0))
 profile = int(ARGUMENTS.get('profile', 0))
+glut = int(ARGUMENTS.get('glut', 0))
 if gprof or profile: debug = 0
 
 env = Environment(ENV = os.environ)
@@ -40,6 +41,9 @@ sources = glob.glob('src/*.c') + glob.glob('src/*.cpp')
 
 if target_os == 'posix':
     env.Append(LIBS=['GL', 'glfw', 'm'])
+
+if glut:
+    env.Append(CCFLAGS='-DUSE_GLUT=1', LIBS='glut')
 
 if target_os == 'msys':
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32'],
