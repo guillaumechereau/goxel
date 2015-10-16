@@ -211,7 +211,12 @@ int main(int argc, char **argv)
 
 #else // GLUT implementation
 
-#include <GL/glut.h>
+#ifdef __APPLE__
+#   include <GLUT/glut.h>
+#else
+#   include <GL/glut.h>
+#endif
+
 
 static goxel_t  *g_goxel = NULL;
 static inputs_t *g_inputs = NULL;
@@ -271,7 +276,6 @@ static void on_special_key_up(int key, int x, int y)
 
 static void on_mouse_button(int button, int state, int x, int y)
 {
-    LOG_D("%d %d", button, state);
     if (button < 3) {
         g_inputs->mouse_pos = vec2(x, y);
         g_inputs->mouse_down[button] = state == GLUT_DOWN;
@@ -286,13 +290,11 @@ static void on_mouse_button(int button, int state, int x, int y)
 static void on_mouse_motion(int x, int y)
 {
     g_inputs->mouse_pos = vec2(x, y);
-    set_modifiers();
 }
 
 static void on_passive_motion(int x, int y)
 {
     g_inputs->mouse_pos = vec2(x, y);
-    set_modifiers();
 }
 
 static void on_timer(int value)

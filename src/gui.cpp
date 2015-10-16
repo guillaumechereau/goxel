@@ -937,9 +937,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
     // layout on Windows.  For the moment I just ignore the problem until I
     // either find a solution, either find a replacement for GLFW.
-    if (io.KeyCtrl && ImGui::IsKeyPressed('Z', false))
+    // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
+    // key 25 and 26, which might makes more sense.  Here I test for both.
+    if (    io.KeyCtrl && ImGui::IsKeyPressed('Z', false) ||
+            ImGui::GoxIsCharPressed(26))
         goxel_undo(goxel);
-    if (io.KeyCtrl && ImGui::IsKeyPressed('Y', false))
+    if (    io.KeyCtrl && ImGui::IsKeyPressed('Y', false) ||
+            ImGui::GoxIsCharPressed(25))
         goxel_redo(goxel);
 
 }
