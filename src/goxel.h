@@ -65,18 +65,18 @@
 // #### Logging macros #########
 
 enum {
-    LOG_VERBOSE = 2,
-    LOG_DEBUG   = 3,
-    LOG_INFO    = 4,
-    LOG_WARN    = 5,
-    LOG_ERROR   = 6,
+    GOX_LOG_VERBOSE = 2,
+    GOX_LOG_DEBUG   = 3,
+    GOX_LOG_INFO    = 4,
+    GOX_LOG_WARN    = 5,
+    GOX_LOG_ERROR   = 6,
 };
 
 #ifndef LOG_LEVEL
 #   if DEBUG
-#       define LOG_LEVEL LOG_DEBUG
+#       define LOG_LEVEL GOX_LOG_DEBUG
 #   else
-#       define LOG_LEVEL LOG_INFO
+#       define LOG_LEVEL GOX_LOG_INFO
 #   endif
 #endif
 
@@ -85,11 +85,11 @@ enum {
         dolog(level, msg, __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 } while(0)
 
-#define LOG_V(msg, ...) LOG(LOG_VERBOSE, msg, ##__VA_ARGS__)
-#define LOG_D(msg, ...) LOG(LOG_DEBUG,   msg, ##__VA_ARGS__)
-#define LOG_I(msg, ...) LOG(LOG_INFO,    msg, ##__VA_ARGS__)
-#define LOG_W(msg, ...) LOG(LOG_WARN,    msg, ##__VA_ARGS__)
-#define LOG_E(msg, ...) LOG(LOG_ERROR,   msg, ##__VA_ARGS__)
+#define LOG_V(msg, ...) LOG(GOX_LOG_VERBOSE, msg, ##__VA_ARGS__)
+#define LOG_D(msg, ...) LOG(GOX_LOG_DEBUG,   msg, ##__VA_ARGS__)
+#define LOG_I(msg, ...) LOG(GOX_LOG_INFO,    msg, ##__VA_ARGS__)
+#define LOG_W(msg, ...) LOG(GOX_LOG_WARN,    msg, ##__VA_ARGS__)
+#define LOG_E(msg, ...) LOG(GOX_LOG_ERROR,   msg, ##__VA_ARGS__)
 // #############################
 
 

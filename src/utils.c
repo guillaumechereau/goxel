@@ -67,7 +67,7 @@ void dolog(int level, const char *msg,
     vasprintf(&msg_formatted, msg, args);
     va_end(args);
 
-    if (use_colors && level >= LOG_WARN) {
+    if (use_colors && level >= GOX_LOG_WARN) {
         format = "\e[33;31m%s%-60s\e[m %s (%s:%d)";
     } else {
         format = "%s%-60s %s (%s:%d)";
