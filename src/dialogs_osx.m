@@ -13,7 +13,6 @@ bool dialog_open(int flags, const char *filters, char **out)
     NSMutableArray *types_array;
     // XXX: I don't know about memory management with cococa, need to check
     // if I leak memory here.
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
     *out = NULL;
     if (flags & DIALOG_FLAG_OPEN) {
@@ -45,7 +44,6 @@ bool dialog_open(int flags, const char *filters, char **out)
         *out = strdup(utf8_path);
     }
 
-    [pool release];
     return *out != NULL;
 }
 
