@@ -29,6 +29,8 @@ const char *sys_get_data_dir(void)
     return "./user_data";
 }
 
+#ifndef __APPLE__
+
 bool sys_asset_exists(const char *path)
 {
     FILE *file;
@@ -37,6 +39,8 @@ bool sys_asset_exists(const char *path)
         fclose(file);
     return (bool)file;
 }
+
+
 
 char *sys_read_asset(const char *path, int *size)
 {
@@ -59,6 +63,57 @@ char *sys_read_asset(const char *path, int *size)
     ret[*size] = '\0';
     return ret;
 }
+
+#else
+#include <CoreFoundation/CoreFoundation.h>
+
+bool sys_asset_exists(const char *path)
+{
+    CFBundleRef mainBundle;
+    CFURLRef url;
+    mainBundle = CFBundleGetMainBundle();
+    url = CFBundleCopyResourceURL(mainBundle,
+                                  CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8),
+                                  nil,
+                                  NULL);
+    return url != nil;
+}
+
+char *sys_read_asset(const char *path, int *size)
+{
+    FILE *file;
+    int read_size __attribute__((unused));
+    char *ret;
+    int default_size;
+    CFBundleRef main_bundle;
+    CFURLRef url;
+    CFStringRef asset_path;
+    CFStringEncoding encodingMethod;
+    main_bundle = CFBundleGetMainBundle();
+    url = CFBundleCopyResourceURL(main_bundle,
+                                  CFStringCreateWithCString(NULL, path, kCFStringEncodingUTF8),
+                                  nil,
+                                  NULL);
+    asset_path = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+    encodingMethod = CFStringGetSystemEncoding();
+    path = CFStringGetCStringPtr(asset_path, encodingMethod);
+
+    size = size ?: &default_size;
+    file = fopen(path, "rb");
+    if (!file) LOG_E("cannot file file %s", path);
+    assert(file);
+    fseek(file, 0, SEEK_END);
+    *size = (int)ftell(file);
+    fseek(file, 0, SEEK_SET);
+    ret = malloc(*size + 1);
+    read_size = (int)fread(ret, *size, 1, file);
+    assert(read_size == 1 || *size == 0);
+    fclose(file);
+    ret[*size] = '\0';
+    return ret;
+}
+
+#endif
 
 GLuint sys_get_screen_framebuffer(void)
 {
