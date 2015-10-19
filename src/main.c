@@ -103,7 +103,7 @@ typedef struct
     char    *args[1];
 } args_t;
 
-#ifndef WIN32
+#ifndef NO_ARGP
 #include <argp.h>
 
 const char *argp_program_version = "goxel " GOXEL_VERSION_STR;
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
     double xpos, ypos;
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
 
-#ifndef WIN32
+#ifndef NO_ARGP
     argp_parse (&argp, argc, argv, 0, 0, &args);
 #endif
 
