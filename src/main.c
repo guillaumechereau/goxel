@@ -18,6 +18,12 @@
 
 #include "goxel.h"
 
+#if DEBUG
+#   define DEBUG_ONLY(x) x
+#else
+#   define DEBUG_ONLY(x)
+#endif
+
 // For the moment I put an implementation using GLFW3 and one using GLUT.
 // Both have some annoying problems, so I am not sure which one I should
 // keep.  By default I use GLFW3, which is the that works the best so far.
@@ -150,6 +156,7 @@ int main(int argc, char **argv)
     int fb_size[2], win_size[2];
     int i;
     double xpos, ypos;
+    const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
 
 #ifndef WIN32
     argp_parse (&argp, argc, argv, 0, 0, &args);
@@ -158,7 +165,7 @@ int main(int argc, char **argv)
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 2);
 
-    window = glfwCreateWindow(w, h, "Goxel " GOXEL_VERSION_STR, NULL, NULL);
+    window = glfwCreateWindow(w, h, title, NULL, NULL);
     glfwMakeContextCurrent(window);
     glfwSetScrollCallback(window, on_scroll);
     glfwSetCharCallback(window, on_char);
