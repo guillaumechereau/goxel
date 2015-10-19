@@ -40,13 +40,13 @@ env.Append(CPPPATH=['src'])
 sources = glob.glob('src/*.c') + glob.glob('src/*.cpp')
 
 if target_os == 'posix':
-    env.Append(LIBS=['GL', 'glfw', 'm'])
+    env.Append(LIBS=['GL', 'glfw', 'm', 'z'])
 
 if glut:
     env.Append(CCFLAGS='-DUSE_GLUT=1', LIBS='glut')
 
 if target_os == 'msys':
-    env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32'],
+    env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32', 'z'],
                LINKFLAGS='--static')
 
 if target_os == 'darwin':
