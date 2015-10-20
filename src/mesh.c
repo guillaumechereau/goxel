@@ -142,7 +142,7 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
 {
     box_t ret;
     block_t *block;
-    if (!mesh->blocks) return box_null();
+    if (!mesh->blocks) return box_null;
     ret = block_get_box(mesh->blocks, exact);
     MESH_ITER_BLOCKS(mesh, block) {
         ret = bbox_merge(ret, block_get_box(block, exact));
@@ -304,6 +304,7 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat)
     mesh_move_data_t data = {mesh_copy(mesh), mat4_inverted(*mat)};
     mesh_prepare_write(mesh);
     box = mesh_get_box(mesh, true);
+    if (box_is_null(box)) return;
     box.mat = mat4_mul(*mat, box.mat);
     box = box_get_bbox(box);
     add_blocks(mesh, box);

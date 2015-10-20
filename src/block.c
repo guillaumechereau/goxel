@@ -272,7 +272,7 @@ box_t block_get_box(const block_t *block, bool exact)
             zmax = max(zmax, z);
         }
     }
-    if (xmin > xmax) return box_null();
+    if (xmin > xmax) return box_null;
     ret = bbox_from_points(vec3(xmin - 0.5, ymin - 0.5, zmin - 0.5),
                            vec3(xmax + 0.5, ymax + 0.5, zmax + 0.5));
     vec3_iadd(&ret.p, block->pos);

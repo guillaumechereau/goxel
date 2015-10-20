@@ -55,10 +55,17 @@ static inline box_t bbox_from_extents(vec3_t pos,
     return ret;
 }
 
-static inline box_t box_null() {
-    return bbox_from_extents(vec3_zero, -FLT_MAX, -FLT_MAX, -FLT_MAX);
-}
+static const box_t box_null = {{{
+    {{-FLT_MAX, 0, 0, 0}},
+    {{0, -FLT_MAX, 0, 0}},
+    {{0, 0, 0, -FLT_MAX}},
+    {{0, 0, 0, 0}},
+}}};
 
+static inline bool box_is_null(box_t b)
+{
+    return memcmp(&b, &box_null, sizeof(b)) == 0;
+}
 
 // XXX: remove?
 static inline box_t bbox_from_points(vec3_t a, vec3_t b)
