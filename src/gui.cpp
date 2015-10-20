@@ -266,18 +266,18 @@ void gui_init(void)
     GL(glGenBuffers(1, &gui->index_buffer));
     init_ImGui();
 
-    g_tex_sphere = texture_create_from_image("data/icons/sphere.png");
-    g_tex_cylinder = texture_create_from_image("data/icons/cylinder.png");
-    g_tex_cube = texture_create_from_image("data/icons/cube.png");
-    g_tex_cube2 = texture_create_from_image("data/icons/cube2.png");
-    g_tex_add = texture_create_from_image("data/icons/add.png");
-    g_tex_sub = texture_create_from_image("data/icons/sub.png");
-    g_tex_paint = texture_create_from_image("data/icons/paint.png");
-    g_tex_brush = texture_create_from_image("data/icons/brush.png");
-    g_tex_grid = texture_create_from_image("data/icons/grid.png");
-    g_tex_laser = texture_create_from_image("data/icons/laser.png");
-    g_tex_move = texture_create_from_image("data/icons/move.png");
-    g_tex_pick = texture_create_from_image("data/icons/pick.png");
+    g_tex_sphere = texture_new_image("data/icons/sphere.png");
+    g_tex_cylinder = texture_new_image("data/icons/cylinder.png");
+    g_tex_cube = texture_new_image("data/icons/cube.png");
+    g_tex_cube2 = texture_new_image("data/icons/cube2.png");
+    g_tex_add = texture_new_image("data/icons/add.png");
+    g_tex_sub = texture_new_image("data/icons/sub.png");
+    g_tex_paint = texture_new_image("data/icons/paint.png");
+    g_tex_brush = texture_new_image("data/icons/brush.png");
+    g_tex_grid = texture_new_image("data/icons/grid.png");
+    g_tex_laser = texture_new_image("data/icons/laser.png");
+    g_tex_move = texture_new_image("data/icons/move.png");
+    g_tex_pick = texture_new_image("data/icons/pick.png");
 }
 
 // XXX: Move this somewhere else.

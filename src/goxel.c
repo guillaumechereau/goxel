@@ -114,14 +114,13 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 
     if (goxel->pick_fbo && !vec2_equal(
                 vec2(goxel->pick_fbo->w, goxel->pick_fbo->h), *view_size)) {
-        texture_dec_ref(goxel->pick_fbo);
+        texture_delete(goxel->pick_fbo);
         goxel->pick_fbo = NULL;
     }
 
     if (!goxel->pick_fbo) {
-        goxel->pick_fbo = texture_create_buffer(
+        goxel->pick_fbo = texture_new_buffer(
                 view_size->x, view_size->y, TF_DEPTH);
-        texture_inc_ref(goxel->pick_fbo);
     }
 
     renderer_t rend = {
@@ -409,7 +408,7 @@ void goxel_export_as_png(goxel_t *goxel, const char *path)
     LOG_I("Exporting to file %s", path);
 
     mesh = goxel->layers_mesh;
-    fbo = texture_create_buffer(w, h, TF_DEPTH);
+    fbo = texture_new_buffer(w, h, TF_DEPTH);
 
     // XXX: this should be put somewhere else!
     goxel->camera.view = vec4(0, 0, w, h);
@@ -428,7 +427,7 @@ void goxel_export_as_png(goxel_t *goxel, const char *path)
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     render_mesh(rend, mesh, 0);
     render_render(rend);
-    texture_save_to_file(fbo, path, 0);
+    texture_save_to_file(fbo, path);
 }
 
 void goxel_export_as_obj(goxel_t *goxel, const char *path)

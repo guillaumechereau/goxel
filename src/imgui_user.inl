@@ -91,7 +91,7 @@ namespace ImGui {
     static int create_hsl_texture(int hue) {
         uint8_t *buffer;
         if (!g_hsl_tex) {
-            g_hsl_tex = texture_create_surface(256, 256, TF_RGB);
+            g_hsl_tex = texture_new_surface(256, 256, TF_RGB);
         }
         buffer = (uint8_t*)malloc(256 * 256 * 3); 
         hsl_bitmap(hue, buffer, 256, 256);
@@ -108,7 +108,7 @@ namespace ImGui {
     {
         uint8_t *buffer;
         if (!g_hue_tex) {
-            g_hue_tex = texture_create_surface(32, 256, TF_RGB);
+            g_hue_tex = texture_new_surface(32, 256, TF_RGB);
             buffer = (uint8_t*)malloc(32 * 256 * 3);
             hue_bitmap(buffer, 32, 256);
             glBindTexture(GL_TEXTURE_2D, g_hue_tex->tex);

@@ -256,28 +256,15 @@ enum {
     TF_RGB_565  = 1 << 5,
     TF_HAS_TEX  = 1 << 6,
     TF_HAS_FB   = 1 << 7,
-    TF_IS_DEFAULT_FB = 1 << 8,
 };
 
+typedef struct texture texture_t;
 typedef struct texture {
-    struct texture *next;
-    int ref;
-    char *key;
-    float last_used_time;
-    float life;
-    // Used to regenerate the tex after a suspend.
-    void (*regenerate_func)(struct texture *tex);
-    void *data; // Destroyed with the texture.
+    texture_t   *next;      // All the textures are in a global list.
+    int         ref;        // For reference copy.
 
-#ifdef DEBUG
-    struct {
-        const char *tag;
-    } debug;
-#endif
-
-    GLuint tex;
-    int format;
-    struct texture *parent; // Used for sub-textures.
+    int         format;
+    GLuint      tex;
     int tex_w, tex_h;       // The actual OpenGL texture size.
     int x, y, w, h;         // Position of the sub texture.
     int flags;
@@ -285,36 +272,13 @@ typedef struct texture {
     GLuint framebuffer, depth, stencil;
 } texture_t;
 
-texture_t *texture_create_from_image(const char *path);
-texture_t *texture_create_sub(texture_t *tex, int x, int y, int w, int h);
-texture_t *texture_create_surface(int w, int h, int flags);
-texture_t *texture_create_buffer(int w, int h, int flags);
-texture_t *texture_default_framebuffer(int w, int h);
-#ifdef DEBUG
-    void texture_debug_set_tag(const char *tag);
-#else
-#   define texture_debug_set_tag(t)
-#endif
+texture_t *texture_new_image(const char *path);
+texture_t *texture_new_surface(int w, int h, int flags);
+texture_t *texture_new_buffer(int w, int h, int flags);
+void texture_save_to_file(const texture_t *tex, const char *path);
 
-void texture_clear(texture_t *tex);
-void texture_discard(texture_t *tex);
-texture_t *texture_compress(const texture_t *tex, int compression);
-void texture_set_key(texture_t *tex, const char *key);
-texture_t *texture_search(const char *key);
-void texture_get_quad(const texture_t *tex, vec2_t quad[4]);
-
-void texture_set_timer(texture_t *tex, float timer);
-void texture_inc_ref(texture_t *tex);
-void texture_dec_ref(texture_t *tex);
-void texture_save_to_file(const texture_t *tex, const char *path, int flags);
-
-void textures_iter(float dt);
-void textures_vacuum();
-void textures_full_vacuum();
-int textures_count();
-
-void textures_release_all();
-void textures_regenerate_all();
+texture_t *texture_copy(texture_t *tex);
+void texture_delete(texture_t *tex);
 // #############################
 
 // #### Tool/Operation/Painter #
