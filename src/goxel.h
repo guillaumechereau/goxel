@@ -550,10 +550,14 @@ typedef struct history history_t;
 
 typedef struct layer layer_t;
 struct layer {
-    layer_t *next, *prev;
-    mesh_t  *mesh;
-    bool    visible;
-    char    name[128]; // 127 chars max.
+    layer_t     *next, *prev;
+    mesh_t      *mesh;
+    bool        visible;
+    char        name[128];  // 127 chars max.
+    // mat and image can be used to render a 2d image on top of the layer.
+    // This is convenient when want to draw something using a picture model.
+    mat4_t      mat;
+    texture_t   *image;
 };
 
 typedef struct image image_t;
@@ -573,7 +577,7 @@ struct image {
 image_t *image_new(void);
 image_t *image_copy(image_t *img);
 void image_delete(image_t *img);
-void image_add_layer(image_t *img);
+layer_t *image_add_layer(image_t *img);
 void image_delete_layer(image_t *img, layer_t *layer);
 void image_move_layer(image_t *img, layer_t *layer, int d);
 void image_duplicate_layer(image_t *img, layer_t *layer);
@@ -683,6 +687,7 @@ void goxel_export_as_txt(goxel_t *goxel, const char *path);
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
 void goxel_undo(goxel_t *goxel);
 void goxel_redo(goxel_t *goxel);
+void goxel_import_image_plane(goxel_t *goxel, const char *path);
 // #############################
 
 void save_to_file(goxel_t *goxel, const char *path);

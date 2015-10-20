@@ -316,6 +316,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     const float height = ImGui::GetIO().DisplaySize.y;
     const float size = 16;
     const float aspect = view->rect.z / view->rect.w;
+    layer_t *layer;
     vec4_t back_color;
     float zoom;
     goxel_t *goxel = view->goxel;
@@ -345,6 +346,13 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     render_mesh(rend, goxel->layers_mesh, 0);
+
+    // Render all the image layers.
+    DL_FOREACH(goxel->image->layers, layer) {
+        if (layer->visible && layer->image)
+            render_img(rend, layer->image, &layer->mat);
+    }
+
     if (DEBUG) {
         box_t b;
         uvec4b_t c;
@@ -423,6 +431,7 @@ static void tool_options_panel(goxel_t *goxel)
     bool s;
     const char *snap[] = {"mesh", "plane"};
     ImVec4 color;
+    layer_t *layer;
     mat4_t mat;
     if (goxel->tool == TOOL_BRUSH || goxel->tool == TOOL_LASER) {
         i = goxel->tool_radius * 2;
@@ -476,6 +485,7 @@ static void tool_options_panel(goxel_t *goxel)
     }
     if (goxel->tool == TOOL_MOVE) {
         mat = mat4_identity;
+        layer = goxel->image->active_layer;
         i = 0;
         if (ImGui::InputInt("Move X", &i))
             mat4_itranslate(&mat, i, 0, 0);
@@ -494,8 +504,13 @@ static void tool_options_panel(goxel_t *goxel)
         i = 0;
         if (ImGui::InputInt("Rot Z", &i))
             mat4_irotate(&mat, i * M_PI / 2, 0, 0, 1);
+        if (layer->image && ImGui::InputInt("Scale", &i)) {
+            v = pow(2, i);
+            mat4_iscale(&mat, v, v, v);
+        }
         if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
-            mesh_move(goxel->image->active_layer->mesh, &mat);
+            mesh_move(layer->mesh, &mat);
+            layer->mat = mat4_mul(mat, layer->mat);
             goxel_update_meshes(goxel, true);
             image_history_push(goxel->image);
         }
@@ -714,6 +729,15 @@ static void import_dicom(goxel_t *goxel)
     free(path);
 }
 
+static void import_image_plane(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
+    if (!result) return;
+    goxel_import_image_plane(goxel, path);
+    free(path);
+}
+
 static void export_as(goxel_t *goxel, const char *type)
 {
     char *path = NULL;
@@ -833,6 +857,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 load(goxel);
             }
             if (ImGui::BeginMenu("Import...")) {
+                if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
                 if (ImGui::MenuItem("dicom")) import_dicom(goxel);
                 ImGui::EndMenu();
             }

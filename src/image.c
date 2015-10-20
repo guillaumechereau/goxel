@@ -37,6 +37,7 @@ static layer_t *layer_new(const char *name)
     // XXX: potential bug here.
     strncpy(layer->name, name, sizeof(layer->name));
     layer->mesh = mesh_new();
+    layer->mat = mat4_identity;
     return layer;
 }
 
@@ -47,12 +48,14 @@ static layer_t *layer_copy(layer_t *other)
     memcpy(layer->name, other->name, sizeof(layer->name));
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
+    layer->image = texture_copy(other->image);
     return layer;
 }
 
 static void layer_delete(layer_t *layer)
 {
     mesh_delete(layer->mesh);
+    texture_delete(layer->image);
     free(layer);
 }
 
@@ -99,7 +102,7 @@ void image_delete(image_t *img)
     free(img);
 }
 
-void image_add_layer(image_t *img)
+layer_t *image_add_layer(image_t *img)
 {
     layer_t *layer;
     layer = layer_new("unamed");
@@ -108,6 +111,7 @@ void image_add_layer(image_t *img)
     img->active_layer = layer;
     image_history_push(img);
     goxel_update_meshes(goxel(), true);
+    return layer;
 }
 
 void image_delete_layer(image_t *img, layer_t *layer)
