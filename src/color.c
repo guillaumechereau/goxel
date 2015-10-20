@@ -64,7 +64,9 @@ uvec3b_t hsl_to_rgb(uvec3b_t hsl)
     float hsl_f[3] = {hsl.x / 255. * 360, hsl.y / 255., hsl.z / 255.};
     float rgb_f[3];
     hsl_to_rgb_f(hsl_f, rgb_f);
-    return uvec3b(rgb_f[0] * 255, rgb_f[1] * 255, rgb_f[2] * 255);
+    return uvec3b(nearbyint(rgb_f[0] * 255),
+                  nearbyint(rgb_f[1] * 255),
+                  nearbyint(rgb_f[2] * 255));
 }
 
 uvec3b_t rgb_to_hsl(uvec3b_t rgb)
@@ -73,5 +75,7 @@ uvec3b_t rgb_to_hsl(uvec3b_t rgb)
     float rgb_f[3] = {rgb.x / 255., rgb.y / 255., rgb.z / 255.};
     float hsl_f[3];
     rgb_to_hsl_f(rgb_f, hsl_f);
-    return uvec3b(hsl_f[0] * 255 / 360, hsl_f[1] * 255, hsl_f[2] * 255);
+    return uvec3b(nearbyint(hsl_f[0] * 255 / 360),
+                  nearbyint(hsl_f[1] * 255),
+                  nearbyint(hsl_f[2] * 255));
 }
