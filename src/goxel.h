@@ -125,10 +125,10 @@ enum {
 
 // #### GL macro ###############
 #ifdef DEBUG
-#  define GL(line) do {                                                 \
+#  define GL(line) ({                                                   \
        line;                                                            \
-       if (check_gl_errors(__FILE__, __LINE__)) assert(false);      \
-   } while(0)
+       if (check_gl_errors(__FILE__, __LINE__)) assert(false);          \
+   })
 #else
 #  define GL(line) line
 #endif
