@@ -165,11 +165,9 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
                     const vec2_t *pos, vec3_t *out, vec3_t *normal)
 {
-    int i, ret = 0;
-    float d, best = FLT_MAX;
+    int i;
     vec3_t p, n;
-    bool r = false;
-    mat4_t proj = mat4_mul(goxel->camera.proj_mat, goxel->camera.view_mat);
+    bool r;
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
@@ -193,14 +191,11 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         p.y = nearbyint(p.y - 0.5) + 0.5;
         p.z = nearbyint(p.z - 0.5) + 0.5;
 
-        d = mat4_mul_vec3(proj, p).z;
-        if (d >= best) continue;
-        ret = 1 << i;
-        best = d;
         *out = p;
         *normal = n;
+        return 1 << i;
     }
-    return ret;
+    return 0;
 }
 
 void goxel_init(goxel_t *goxel)
