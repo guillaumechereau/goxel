@@ -81,16 +81,19 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
 {
     const bool down = inputs->mouse_down[0];
     const bool up = !down;
-    bool snaped = false;
+    int snaped = 0;
     vec3_t pos, normal;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
-    snaped = inside && goxel_unproject(goxel, view_size,
-                                       &inputs->mouse_pos, &pos, &normal);
+    if (inside)
+        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
+                                 &pos, &normal);
     if (snaped) {
-        if (goxel->painter.op == OP_ADD) vec3_iadd(&pos, normal);
+        if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
+                !goxel->snap_offset)
+            vec3_iadd(&pos, normal);
         pos.x = nearbyint(pos.x - 0.5) + 0.5;
         pos.y = nearbyint(pos.y - 0.5) + 0.5;
         pos.z = nearbyint(pos.z - 0.5) + 0.5;
