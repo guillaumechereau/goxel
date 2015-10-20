@@ -482,6 +482,7 @@ typedef struct {
     int              nb_vertices;
     model_vertex_t   *vertices;
     bool             solid;
+    bool             cull;
 
     // Rendering buffers.
     // XXX: move this into the renderer, like for block_t

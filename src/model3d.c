@@ -88,6 +88,7 @@ model3d_t *model3d_cube(void)
     int f, i, v;
     model3d_t *model = calloc(1, sizeof(*model));
     model->solid = true;
+    model->cull = true;
     vec3b_t p;
     model->nb_vertices = 6 * 6;
     model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
@@ -125,6 +126,7 @@ model3d_t *model3d_wire_cube(void)
             model->vertices[f * 8 + i].uv = vec2(0.5, 0.5);
         }
     }
+    model->cull = true;
     model->dirty = true;
     return model;
 }
@@ -157,6 +159,7 @@ model3d_t *model3d_sphere(int slices, int stacks)
 
         }
     }
+    model->cull = true;
     model->dirty = true;
     return model;
 }
@@ -249,9 +252,10 @@ void model3d_render(model3d_t *model3d,
     GL(glEnable(GL_DEPTH_TEST));
     GL(glDepthFunc(GL_LESS));
     GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-    GL(glEnable(GL_CULL_FACE));
-    cf = vec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
     GL(glCullFace(GL_BACK));
+    model3d->cull ? GL(glEnable(GL_CULL_FACE)) :
+                    GL(glDisable(GL_CULL_FACE));
+    cf = vec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
     GL(glUniform4fv(prog.u_color_l, 1, cf.v));
     if (fade_center) {
         GL(glUniform1f(prog.u_fade_l, fade));
