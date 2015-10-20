@@ -473,6 +473,7 @@ void goxel_export_as_txt(goxel_t *goxel, const char *path)
                     v.r, v.g, v.b);
         }
     }
+    fclose(out);
 }
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
