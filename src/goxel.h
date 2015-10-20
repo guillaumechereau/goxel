@@ -92,7 +92,9 @@ enum {
 #define LOG_E(msg, ...) LOG(GOX_LOG_ERROR,   msg, ##__VA_ARGS__)
 // #############################
 
-
+#ifdef __EMSCRIPTEN__
+#   include <emscripten.h>
+#endif
 
 // #### Include OpenGL #########
 #define GL_GLEXT_PROTOTYPES

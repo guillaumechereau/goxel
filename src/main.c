@@ -29,9 +29,15 @@
 // keep.  By default I use GLFW3, which is the that works the best so far.
 
 #ifndef USE_GLUT
+
+#ifdef GLES2
+#   define GLFW_INCLUDE_ES2
+#endif
 #include <GLFW/glfw3.h>
 
-static inputs_t *g_inputs = NULL;
+static goxel_t      *g_goxel = NULL;
+static inputs_t     *g_inputs = NULL;
+static GLFWwindow   *g_window = NULL;
 
 void on_scroll(GLFWwindow *win, double x, double y)
 {
@@ -144,19 +150,68 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 static struct argp argp = { options, parse_opt, args_doc, doc };
 #endif
 
+static void loop_function(void) {
+
+    int fb_size[2], win_size[2];
+    int i;
+    double xpos, ypos;
+
+    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    // The input struct gets all the values in framebuffer coordinates,
+    // On retina display, this might not be the same as the window
+    // size.
+    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
+    glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
+    g_inputs->window_size[0] = fb_size[0];
+    g_inputs->window_size[1] = fb_size[1];
+
+    for (i = 0; i <= GLFW_KEY_LAST; i++) {
+        g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
+    }
+    glfwGetCursorPos(g_window, &xpos, &ypos);
+    g_inputs->mouse_pos = vec2(xpos * fb_size[0] / win_size[0],
+                            ypos * fb_size[1] / win_size[1]);
+    g_inputs->mouse_down[0] =
+        glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+    g_inputs->mouse_down[1] =
+        glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+    g_inputs->mouse_down[2] =
+        glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+    goxel_iter(g_goxel, g_inputs);
+    goxel_render(g_goxel);
+
+    memset(g_inputs, 0, sizeof(*g_inputs));
+    glfwSwapBuffers(g_window);
+    glfwPollEvents();
+}
+
+#ifndef __EMSCRIPTEN__
+static void start_main_loop(void (*func)(void))
+{
+    while (!glfwWindowShouldClose(g_window)) {
+        func();
+    }
+    glfwTerminate();
+}
+#else
+static void start_main_loop(void (*func)(void))
+{
+    emscripten_set_main_loop(func, 0, 1);
+}
+#endif
+
 int main(int argc, char **argv)
 {
     args_t args = {};
     GLFWwindow *window;
     goxel_t goxel;
     inputs_t inputs;
-    g_inputs = &inputs;
     int w = 640;
     int h = 480;
-    int fb_size[2], win_size[2];
-    int i;
-    double xpos, ypos;
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
+
+    g_inputs = &inputs;
+    g_goxel = &goxel;
 
 #ifndef NO_ARGP
     argp_parse (&argp, argc, argv, 0, 0, &args);
@@ -166,6 +221,7 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_SAMPLES, 2);
 
     window = glfwCreateWindow(w, h, title, NULL, NULL);
+    g_window = window;
     glfwMakeContextCurrent(window);
     glfwSetScrollCallback(window, on_scroll);
     glfwSetCharCallback(window, on_char);
@@ -182,37 +238,7 @@ int main(int argc, char **argv)
         glfwTerminate();
         return 0;
     }
-
-    while (!glfwWindowShouldClose(window)) {
-        GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        // The input struct gets all the values in framebuffer coordinates,
-        // On retina display, this might not be the same as the window
-        // size.
-        glfwGetFramebufferSize(window, &fb_size[0], &fb_size[1]);
-        glfwGetWindowSize(window, &win_size[0], &win_size[1]);
-        inputs.window_size[0] = fb_size[0];
-        inputs.window_size[1] = fb_size[1];
-
-        for (i = 0; i <= GLFW_KEY_LAST; i++) {
-            inputs.keys[i] = glfwGetKey(window, i) == GLFW_PRESS;
-        }
-        glfwGetCursorPos(window, &xpos, &ypos);
-        inputs.mouse_pos = vec2(xpos * fb_size[0] / win_size[0],
-                                ypos * fb_size[1] / win_size[1]);
-        inputs.mouse_down[0] =
-            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-        inputs.mouse_down[1] =
-            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
-        inputs.mouse_down[2] =
-            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-        goxel_iter(&goxel, &inputs);
-        goxel_render(&goxel);
-
-        memset(&inputs, 0, sizeof(inputs));
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-    glfwTerminate();
+    start_main_loop(loop_function);
     return 0;
 }
 

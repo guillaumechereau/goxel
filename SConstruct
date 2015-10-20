@@ -12,7 +12,10 @@ debug = int(ARGUMENTS.get('debug', 1))
 gprof = int(ARGUMENTS.get('gprof', 0))
 profile = int(ARGUMENTS.get('profile', 0))
 glut = int(ARGUMENTS.get('glut', 0))
+emscripten = ARGUMENTS.get('emscripten', 0)
+
 if gprof or profile: debug = 0
+if emscripten: target_os = 'js'
 
 env = Environment(ENV = os.environ)
 
@@ -69,5 +72,17 @@ if target_os == 'msys':
     sources += glob.glob('ext_src/glew/glew.c')
     env.Append(CPPPATH=['ext_src/glew'])
     env.Append(CCFLAGS='-DGLEW_STATIC')
+
+if target_os == 'js':
+    assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
+    env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
+    env.Append(CCFLAGS=['--preload-file', 'data',
+                        '-s', 'USE_GLFW=3',
+                        '-DGLES2 1', '-DNO_ZLIB', '-DNO_ARGP',
+                        '-s', '"EXPORTED_FUNCTIONS=[\'_main\']"'])
+    env.Append(LINKFLAGS=['--preload-file', 'data',
+                          '-s', 'USE_GLFW=3',
+                          '-s', '"EXPORTED_FUNCTIONS=[\'_main\']"'])
+    env.Append(LIBS=['GL'])
 
 env.Program(target='goxel', source=sources)
