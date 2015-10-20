@@ -196,6 +196,18 @@ static inline float mix(float x, float y, float t)
 void dolog(int level, const char *msg,
            const char *func, const char *file, int line, ...);
 int check_gl_errors(const char *file, int line);
+
+// Enum of all the gl extensions we care for.
+enum {
+    GOX_GL_QCOM_tiled_rendering,
+    GOX_GL_OES_packed_depth_stencil,
+    GOX_GL_EXT_discard_framebuffer,
+
+    GOX_GL_EXTENSIONS_COUNT
+};
+bool _has_gl_extension(int extension);
+#define has_gl_extension(x) (_has_gl_extension(GOX_##x))
+
 int create_program(const char *vertex_shader, const char *fragment_shader,
                    const char *include);
 void delete_program(int prog);
