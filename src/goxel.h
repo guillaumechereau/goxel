@@ -461,6 +461,7 @@ void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
 void render_box(renderer_t *rend, const box_t *box, bool solid,
                 const uvec4b_t *color);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
+void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat);
 void render_render(renderer_t *rend);//, const mat4_t *view, const mat4_t *proj);
 
 // #############################
@@ -474,6 +475,7 @@ typedef struct {
      vec3_t   pos       __attribute__((aligned(4)));
      vec3_t   normal    __attribute__((aligned(4)));
      uvec4b_t color     __attribute__((aligned(4)));
+     vec2_t   uv        __attribute__((aligned(4)));
 } model_vertex_t;
 
 typedef struct {
@@ -494,9 +496,11 @@ model3d_t *model3d_wire_cube(void);
 model3d_t *model3d_sphere(int slices, int stacks);
 model3d_t *model3d_grid(int nx, int ny);
 model3d_t *model3d_line(void);
+model3d_t *model3d_rect(void);
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
+                    const texture_t *tex,
                     float fade, const vec3_t *fade_center);
 
 

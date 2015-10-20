@@ -222,7 +222,7 @@ void texture_delete(texture_t *tex)
 texture_t *texture_copy(texture_t *tex)
 {
     // XXX: since texture are immutable, we just increase the ref counter.
-    tex->ref++;
+    if (tex) tex->ref++;
     return tex;
 }
 

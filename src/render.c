@@ -59,6 +59,7 @@ struct render_item_t
     vec3_t          grid;
     uvec4b_t        color;
     model3d_t       *model3d;
+    texture_t       *tex;
     int             effects;
     int             last_used_frame;
 
@@ -76,6 +77,7 @@ static model3d_t *g_line_model;
 static model3d_t *g_wire_cube_model;
 static model3d_t *g_sphere_model;
 static model3d_t *g_grid_model;
+static model3d_t *g_rect_model;
 
 // All the shaders code is at the bottom of the file.
 static const char *VSHADER;
@@ -310,6 +312,7 @@ void render_init()
     g_wire_cube_model = model3d_wire_cube();
     g_sphere_model = model3d_sphere(16, 16);
     g_grid_model = model3d_grid(8, 8);
+    g_rect_model = model3d_rect();
 }
 
 void render_deinit(void)
@@ -493,7 +496,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     mat4_t view = rend->view_mat;
     mat4_imul(&view, item->mat);
     model3d_render(item->model3d, &view, &rend->proj_mat, &item->color,
-                   0, NULL);
+                   item->tex, 0, NULL);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -513,7 +516,7 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     for (x = -n; x <= n; x++) {
         view3 = mat4_translate(view2, x, y, 0);
         model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
-                       32, &center);
+                       NULL, 32, &center);
     }
 }
 
@@ -527,6 +530,17 @@ void render_plane(renderer_t *rend, const plane_t *plane,
     mat4_iscale(&item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
     item->color = *color;
+    DL_APPEND(rend->items, item);
+}
+
+void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
+{
+    render_item_t *item = calloc(1, sizeof(*item));
+    item->type = ITEM_MODEL3D;
+    item->mat = *mat;
+    item->tex = texture_copy(tex);
+    item->model3d = g_rect_model;
+    item->color = uvec4b(255, 255, 255, 255);
     DL_APPEND(rend->items, item);
 }
 
@@ -625,6 +639,7 @@ void render_render(renderer_t *rend)
             DL_DELETE(rend->items, item);
             break;
         }
+        texture_delete(item->tex);
         free(item);
     }
     assert(rend->items == NULL);

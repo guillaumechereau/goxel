@@ -26,14 +26,17 @@ typedef struct {
     GLint a_pos_l;
     GLint a_color_l;
     GLint a_normal_l;
+    GLint a_uv_l;
     GLint u_color_l;
     GLint u_model_l;
     GLint u_proj_l;
+    GLint u_tex_l;
     GLint u_fade_l;
     GLint u_fade_center_l;
 } prog_t;
 
 static prog_t prog;
+static texture_t *g_white_tex = NULL;
 
 static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
 {
@@ -43,18 +46,38 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     ATTRIB(a_pos);
     ATTRIB(a_color);
     ATTRIB(a_normal);
+    ATTRIB(a_uv);
     UNIFORM(u_color);
     UNIFORM(u_model);
     UNIFORM(u_proj);
+    UNIFORM(u_tex);
     UNIFORM(u_fade);
     UNIFORM(u_fade_center);
 #undef ATTRIB
 #undef UNIFORM
+    GL(glUseProgram(prog->prog));
+    GL(glUniform1i(prog->u_tex_l, 0));
+}
+
+static texture_t *create_white_tex(void)
+{
+    texture_t *tex;
+    uint8_t *buffer;
+    const int s = 16;
+    tex = texture_new_surface(s, s, TF_RGB);
+    buffer = malloc(s * s * 3);
+    memset(buffer, 255, s * s * 3);
+    glBindTexture(GL_TEXTURE_2D, tex->tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, s, s, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, buffer);
+    free(buffer);
+    return tex;
 }
 
 void model3d_init(void)
 {
     init_prog(&prog, VSHADER, FSHADER);
+    g_white_tex = create_white_tex();
 }
 
 model3d_t *model3d_cube(void)
@@ -99,6 +122,7 @@ model3d_t *model3d_wire_cube(void)
             model->vertices[f * 8 + i].pos =
                 vec3((p.x - 0.5) * 2, (p.y - 0.5) * 2, (p.z - 0.5) * 2);
             model->vertices[f * 8 + i].color = uvec4b(255, 255, 255, 255);
+            model->vertices[f * 8 + i].uv = vec2(0.5, 0.5);
         }
     }
     model->dirty = true;
@@ -184,9 +208,35 @@ model3d_t *model3d_line(void)
     return model;
 }
 
+model3d_t *model3d_rect(void)
+{
+    int i, v;
+    model3d_t *model = calloc(1, sizeof(*model));
+    model->nb_vertices = 6;
+    model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
+    const vec2_t POS_UV[4][2] = {
+        {vec2(-0.5, -0.5), vec2(0, 1)},
+        {vec2(+0.5, -0.5), vec2(1, 1)},
+        {vec2(+0.5, +0.5), vec2(1, 0)},
+        {vec2(-0.5, +0.5), vec2(0, 0)},
+    };
+
+    for (i = 0; i < 6; i++) {
+        v = (int[]){0, 1, 2, 2, 3, 0}[i];
+        model->vertices[i].pos.xy = POS_UV[v][0];
+        model->vertices[i].uv = POS_UV[v][1];
+        model->vertices[i].color = uvec4b(255, 255, 255, 255);
+        model->vertices[i].normal = vec3(0, 1, 0);
+    }
+    model->solid = true;
+    model->dirty = true;
+    return model;
+}
+
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
+                    const texture_t *tex,
                     float fade, const vec3_t *fade_center)
 {
     uvec4b_t c = color ? *color : HEXCOLOR(0xffffffff);
@@ -210,6 +260,10 @@ void model3d_render(model3d_t *model3d,
         GL(glUniform1f(prog.u_fade_l, 0));
     }
 
+    tex = tex ?: g_white_tex;
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
+
     if (model3d->dirty) {
         if (!model3d->vertex_buffer)
             GL(glGenBuffers(1, &model3d->vertex_buffer));
@@ -226,6 +280,9 @@ void model3d_render(model3d_t *model3d,
     GL(glEnableVertexAttribArray(prog.a_color_l));
     GL(glVertexAttribPointer(prog.a_color_l, 4, GL_UNSIGNED_BYTE, true,
             sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, color)));
+    GL(glEnableVertexAttribArray(prog.a_uv_l));
+    GL(glVertexAttribPointer(prog.a_uv_l, 2, GL_FLOAT, false,
+            sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, uv)));
     if (model3d->solid)
         GL(glDrawArrays(GL_TRIANGLES, 0, model3d->nb_vertices));
     else
@@ -239,6 +296,7 @@ static const char *VSHADER =
     "                                                                   \n"
     "attribute vec3  a_pos;                                             \n"
     "attribute vec4  a_color;                                           \n"
+    "attribute vec2  a_uv;                                              \n"
     "uniform   mat4  u_model;                                           \n"
     "uniform   mat4  u_proj;                                            \n"
     "uniform   vec4  u_color;                                           \n"
@@ -246,7 +304,7 @@ static const char *VSHADER =
     "uniform   vec3  u_fade_center;                                     \n"
     "                                                                   \n"
     "varying   vec4 v_color;                                            \n"
-    "varying   vec3 v_pos;                                              \n"
+    "varying   vec2 v_uv;                                               \n"
     "                                                                   \n"
     "void main()                                                        \n"
     "{                                                                  \n"
@@ -258,22 +316,23 @@ static const char *VSHADER =
     "       float fade = smoothstep(u_fade, 0.0, fdist);                \n"
     "       v_color.a *= fade;                                          \n"
     "    }                                                              \n"
-    "    v_pos = a_pos;                                                 \n"
+    "    v_uv = a_uv;                                                   \n"
     "}                                                                  \n"
 ;
 
-
 static const char *FSHADER =
-    "                                                                 \n"
-    "#ifdef GL_ES                                                     \n"
-    "precision highp float;                                           \n"
-    "#endif                                                           \n"
-    "                                                                 \n"
-    "varying lowp vec4  v_color;                                      \n"
-    "varying      vec3  v_pos;                                        \n"
-    "                                                                 \n"
-    "void main()                                                      \n"
-    "{                                                                \n"
-    "    gl_FragColor = v_color;                                      \n"
-    "}                                                                \n"
+    "                                                                   \n"
+    "#ifdef GL_ES                                                       \n"
+    "precision highp float;                                             \n"
+    "#endif                                                             \n"
+    "                                                                   \n"
+    "uniform sampler2D u_tex;                                           \n"
+    "                                                                   \n"
+    "varying lowp vec4  v_color;                                        \n"
+    "varying      vec2  v_uv;                                           \n"
+    "                                                                   \n"
+    "void main()                                                        \n"
+    "{                                                                  \n"
+    "    gl_FragColor = v_color * texture2D(u_tex, v_uv);               \n"
+    "}                                                                  \n"
 ;
