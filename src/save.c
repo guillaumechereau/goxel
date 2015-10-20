@@ -18,7 +18,27 @@
 
 
 #include "goxel.h"
-#include <zlib.h>
+
+#ifndef NO_ZLIB
+#   include <zlib.h>
+#else
+
+// If we don't have zlib, we simulate the gz functions using normal file
+// operations.
+typedef FILE *gzFile;
+static gzFile gzopen(const char *path, const char *mode) {
+    return fopen(path, mode);
+}
+static void gzclose(gzFile file) {fclose(file);}
+static size_t gzread(gzFile file, void *buff, size_t size) {
+    return fread(buff, size, 1, file);
+}
+static size_t gzwrite(gzFile file, const void *buff, size_t size) {
+    return fwrite(buff, size, 1, file);
+}
+static int gzeof(gzFile file) {return feof(file);}
+
+#endif
 
 /*
  * File format, version 1:
