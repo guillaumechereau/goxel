@@ -30,15 +30,39 @@ static void print_history(const image_t *img)
     }
 }
 
+static layer_t *layer_new(const char *name)
+{
+    layer_t *layer;
+    layer = calloc(1, sizeof(*layer));
+    // XXX: potential bug here.
+    strncpy(layer->name, name, sizeof(layer->name));
+    layer->mesh = mesh_new();
+    return layer;
+}
+
+static layer_t *layer_copy(layer_t *other)
+{
+    layer_t *layer;
+    layer = calloc(1, sizeof(*layer));
+    memcpy(layer->name, other->name, sizeof(layer->name));
+    layer->visible = other->visible;
+    layer->mesh = mesh_copy(other->mesh);
+    return layer;
+}
+
+static void layer_delete(layer_t *layer)
+{
+    mesh_delete(layer->mesh);
+    free(layer);
+}
+
 image_t *image_new(void)
 {
     layer_t *layer;
     image_t *img = calloc(1, sizeof(*img));
     img->export_width = 256;
     img->export_height = 256;
-    layer = calloc(1, sizeof(*img->layers));
-    sprintf(layer->name, "background");
-    layer->mesh = mesh_new();
+    layer = layer_new("background");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
@@ -55,10 +79,7 @@ image_t *image_copy(image_t *other)
     img->layers = NULL;
     img->active_layer = NULL;
     DL_FOREACH(other->layers, other_layer) {
-        layer = calloc(1, sizeof(*layer));
-        *layer = *other_layer;
-        layer->next = layer->prev = NULL;
-        layer->mesh = mesh_copy(other_layer->mesh);
+        layer = layer_copy(other_layer);
         DL_APPEND(img->layers, layer);
         if (other_layer == other->active_layer)
             img->active_layer = layer;
@@ -72,8 +93,7 @@ void image_delete(image_t *img)
     layer_t *layer, *tmp;
     DL_FOREACH_SAFE(img->layers, layer, tmp) {
         DL_DELETE(img->layers, layer);
-        mesh_delete(layer->mesh);
-        free(layer);
+        layer_delete(layer);
     }
     free(img->path);
     free(img);
@@ -82,9 +102,7 @@ void image_delete(image_t *img)
 void image_add_layer(image_t *img)
 {
     layer_t *layer;
-    layer = (layer_t*)calloc(1, sizeof(*layer));
-    sprintf(layer->name, "unamed");
-    layer->mesh = mesh_new();
+    layer = layer_new("unamed");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
@@ -96,12 +114,9 @@ void image_delete_layer(image_t *img, layer_t *layer)
 {
     DL_DELETE(img->layers, layer);
     if (layer == img->active_layer) img->active_layer = NULL;
-    mesh_delete(layer->mesh);
-    free(layer);
+    layer_delete(layer);
     if (img->layers == NULL) {
-        layer = (layer_t*)calloc(1, sizeof(*layer));
-        layer->mesh = mesh_new();
-        sprintf(layer->name, "unamed");
+        layer = layer_new("unamed");
         layer->visible = true;
         DL_APPEND(img->layers, layer);
     }
@@ -130,9 +145,7 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
 void image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
-    layer = (layer_t*)calloc(1, sizeof(*layer));
-    sprintf(layer->name, "%s", other->name);
-    layer->mesh = mesh_copy(other->mesh);
+    layer = layer_copy(other);
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
@@ -148,8 +161,7 @@ void image_merge_visible_layers(image_t *img)
         if (last) {
             mesh_merge(layer->mesh, last->mesh);
             DL_DELETE(img->layers, last);
-            mesh_delete(last->mesh);
-            free(last);
+            layer_delete(last);
         }
         last = layer;
     }
@@ -163,14 +175,10 @@ void image_set(image_t *img, image_t *other)
     layer_t *layer, *tmp, *other_layer;
     DL_FOREACH_SAFE(img->layers, layer, tmp) {
         DL_DELETE(img->layers, layer);
-        mesh_delete(layer->mesh);
-        free(layer);
+        layer_delete(layer);
     }
     DL_FOREACH(other->layers, other_layer) {
-        layer = calloc(1, sizeof(*layer));
-        *layer = *other_layer;
-        layer->next = layer->prev = NULL;
-        layer->mesh = mesh_copy(other_layer->mesh);
+        layer = layer_copy(other_layer);
         DL_APPEND(img->layers, layer);
         if (other_layer == other->active_layer)
             img->active_layer = layer;
