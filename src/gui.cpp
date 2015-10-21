@@ -353,7 +353,8 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
             render_img(rend, layer->image, &layer->mat);
     }
 
-    if (DEBUG) {
+    // XXX: make a toggle for debug informations.
+    if (0) {
         box_t b;
         uvec4b_t c;
         c = HEXCOLOR(0x00FF0050);
