@@ -49,6 +49,7 @@ static layer_t *layer_copy(layer_t *other)
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
     layer->image = texture_copy(other->image);
+    layer->mat = other->mat;
     return layer;
 }
 
@@ -194,6 +195,7 @@ void image_history_push(image_t *img)
     image_t *snap = image_copy(img);
     if (!img->history_current) img->history_current = img->history;
     // Discard previous undo.
+    // XXX: also need to delete the images!
     while (img->history != img->history_current)
         DL_DELETE2(img->history, img->history, history_prev, history_next);
     DL_PREPEND2(img->history, snap, history_prev, history_next);

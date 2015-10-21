@@ -500,4 +500,5 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     sprintf(layer->name, "img");
     layer->image = texture_new_image(path);
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
+    image_history_push(goxel->image);
 }
