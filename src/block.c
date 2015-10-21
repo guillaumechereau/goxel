@@ -314,16 +314,16 @@ static bool block_is_face_visible(uint32_t neighboors_mask, int f)
 
 static vec3b_t block_get_normal(uint32_t neighboors_mask,
                                 const uint8_t neighboors[27], int f,
-                                float smooth)
+                                bool smooth)
 {
     int x, y, z, i = 0;
-    int sx = 0, sy = 0, sz = 0, ssum = 0;
+    int sx = 0, sy = 0, sz = 0;
+    int smax;
     if (!smooth) return FACES_NORMALS[f];
     for (z = -1; z <= +1; z++)
     for (y = -1; y <= +1; y++)
     for (x = -1; x <= +1; x++) {
         if (neighboors_mask & (1 << i)) {
-            ssum += neighboors[i];
             sx -= neighboors[i] * x;
             sy -= neighboors[i] * y;
             sz -= neighboors[i] * z;
@@ -332,7 +332,8 @@ static vec3b_t block_get_normal(uint32_t neighboors_mask,
     }
     if (sx == 0 && sy == 0 && sz == 0)
         return FACES_NORMALS[f];
-    return vec3b(sx * 127 / ssum, sy * 127 / ssum, sz * 127 / ssum);
+    smax = max(abs(sx), max(abs(sy), abs(sz)));
+    return vec3b(sx * 127 / smax, sy * 127 / smax, sz * 127 / smax);
 }
 
 static bool block_get_edge_border(uint32_t neighboors_mask, int f, int e)
