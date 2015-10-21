@@ -58,7 +58,7 @@ static inline box_t bbox_from_extents(vec3_t pos,
 static const box_t box_null = {{{
     {{-FLT_MAX, 0, 0, 0}},
     {{0, -FLT_MAX, 0, 0}},
-    {{0, 0, 0, -FLT_MAX}},
+    {{0, 0, -FLT_MAX, 0}},
     {{0, 0, 0, 0}},
 }}};
 
