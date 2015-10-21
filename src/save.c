@@ -173,7 +173,7 @@ static void chunk_write_int32(chunk_t *c, gzFile out, int32_t v)
 }
 
 static void chunk_write_dict_value(chunk_t *c, gzFile out, const char *name,
-                                   char *data, int size)
+                                   const void *data, int size)
 {
     chunk_write_int32(c, out, strlen(name));
     chunk_write(c, out, name, strlen(name));
@@ -252,6 +252,13 @@ void save_to_file(goxel_t *goxel, const char *path)
         }
         chunk_write_dict_value(&c, out, "name", layer->name,
                                strlen(layer->name));
+        chunk_write_dict_value(&c, out, "mat", &layer->mat,
+                               sizeof(layer->mat));
+        if (layer->image) {
+            chunk_write_dict_value(&c, out, "img-path", layer->image->path,
+                               strlen(layer->image->path));
+        }
+
         chunk_write_finish(&c, out);
     }
 
@@ -342,6 +349,13 @@ void load_from_file(goxel_t *goxel, const char *path)
                                                 dict_key, dict_value))) {
                 if (strcmp(dict_key, "name") == 0)
                     sprintf(layer->name, "%s", dict_value);
+                if (strcmp(dict_key, "mat") == 0) {
+                    assert(dict_value_size == sizeof(layer->mat));
+                    memcpy(&layer->mat, dict_value, dict_value_size);
+                }
+                if (strcmp(dict_key, "img-path") == 0) {
+                    layer->image = texture_new_image(dict_value);
+                }
             }
         } else assert(false);
         chunk_read_finish(&c, in);

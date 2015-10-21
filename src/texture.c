@@ -152,6 +152,7 @@ texture_t *texture_new_image(const char *path)
     int w, h, bpp = 0;
     img = img_read(path, &w, &h, &bpp);
     tex = calloc(1, sizeof(*tex));
+    tex->path = strdup(path);
     tex->tex_w = next_pow2(w);
     tex->tex_h = next_pow2(h);
     tex->w = w;
@@ -205,6 +206,7 @@ void texture_delete(texture_t *tex)
     tex->ref--;
     if (tex->ref > 0) return;
 
+    free(tex->path);
     if (tex->framebuffer) {
         GL(glBindFramebuffer(GL_FRAMEBUFFER, tex->framebuffer));
         if (tex->depth)
