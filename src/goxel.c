@@ -403,7 +403,7 @@ void goxel_export_as_png(goxel_t *goxel, const char *path)
     const float aspect = (float)w / h;
     float zoom;
     texture_t *fbo;
-    renderer_t *rend = &goxel->rend;
+    renderer_t rend = goxel->rend;
     mesh_t *mesh;
     LOG_I("Exporting to file %s", path);
 
@@ -411,22 +411,22 @@ void goxel_export_as_png(goxel_t *goxel, const char *path)
     fbo = texture_new_buffer(w, h, TF_DEPTH);
 
     // XXX: this should be put somewhere else!
-    goxel->camera.view = vec4(0, 0, w, h);
-    goxel->camera.view_mat = mat4_identity;
-    mat4_itranslate(&goxel->camera.view_mat, 0, 0, -goxel->camera.dist);
-    mat4_imul_quat(&goxel->camera.view_mat, goxel->camera.rot);
-    mat4_itranslate(&goxel->camera.view_mat,
+    rend.view_mat = mat4_identity;
+    mat4_itranslate(&rend.view_mat, 0, 0, -goxel->camera.dist);
+    mat4_imul_quat(&rend.view_mat, goxel->camera.rot);
+    mat4_itranslate(&rend.view_mat,
            goxel->camera.ofs.x, goxel->camera.ofs.y, goxel->camera.ofs.z);
-    goxel->camera.proj_mat = mat4_ortho(
+    rend.proj_mat = mat4_ortho(
             -size, +size, -size / aspect, +size / aspect, 0, 1000);
     zoom = pow(1.25f, goxel->camera.zoom);
-    mat4_iscale(&goxel->camera.proj_mat, zoom, zoom, zoom);
+    mat4_iscale(&rend.proj_mat, zoom, zoom, zoom);
 
     GL(glViewport(0, 0, w, h));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, fbo->framebuffer));
+    GL(glClearColor(0, 0, 0, 0));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    render_mesh(rend, mesh, 0);
-    render_render(rend);
+    render_mesh(&rend, mesh, 0);
+    render_render(&rend);
     texture_save_to_file(fbo, path);
 }
 
