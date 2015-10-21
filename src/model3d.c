@@ -31,6 +31,7 @@ typedef struct {
     GLint u_model_l;
     GLint u_proj_l;
     GLint u_tex_l;
+    GLint u_uv_scale_l;
     GLint u_fade_l;
     GLint u_fade_center_l;
 } prog_t;
@@ -51,6 +52,7 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_model);
     UNIFORM(u_proj);
     UNIFORM(u_tex);
+    UNIFORM(u_uv_scale);
     UNIFORM(u_fade);
     UNIFORM(u_fade_center);
 #undef ATTRIB
@@ -267,6 +269,8 @@ void model3d_render(model3d_t *model3d,
     tex = tex ?: g_white_tex;
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
+    GL(glUniform2f(prog.u_uv_scale_l, (float)tex->w / tex->tex_w,
+                                      (float)tex->h / tex->tex_h));
 
     if (model3d->dirty) {
         if (!model3d->vertex_buffer)
@@ -304,6 +308,7 @@ static const char *VSHADER =
     "uniform   mat4  u_model;                                           \n"
     "uniform   mat4  u_proj;                                            \n"
     "uniform   vec4  u_color;                                           \n"
+    "uniform   vec2  u_uv_scale;                                        \n"
     "uniform   float u_fade;                                            \n"
     "uniform   vec3  u_fade_center;                                     \n"
     "                                                                   \n"
@@ -320,7 +325,7 @@ static const char *VSHADER =
     "       float fade = smoothstep(u_fade, 0.0, fdist);                \n"
     "       v_color.a *= fade;                                          \n"
     "    }                                                              \n"
-    "    v_uv = a_uv;                                                   \n"
+    "    v_uv = a_uv * u_uv_scale;                                      \n"
     "}                                                                  \n"
 ;
 
