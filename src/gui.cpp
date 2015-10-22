@@ -959,6 +959,18 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel->painter.op = OP_SUB;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
         goxel->painter.op = OP_ADD;
+    if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
+        goxel->painter.op = OP_ADD;
+    if (ImGui::IsKeyPressed(KEY_CONTROL, false)) {
+        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+        goxel->prev_tool = goxel->tool;
+        goxel->tool = TOOL_PICK_COLOR;
+    }
+    if (ImGui::IsKeyReleased(KEY_CONTROL) && goxel->prev_tool) {
+        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+        goxel->tool = goxel->prev_tool;
+        goxel->prev_tool = 0;
+    }
     // XXX: this won't map correctly to a French keyboard.  Unfortunately as
     // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
     // layout on Windows.  For the moment I just ignore the problem until I

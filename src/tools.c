@@ -180,7 +180,8 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     if (inside)
         snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
                                  &pos, &normal);
-    goxel_set_help_text(goxel, "Brush: use shift to draw lines");
+    goxel_set_help_text(goxel, "Brush: use shift to draw lines, "
+                               "ctrl to pick color");
     if (snaped) {
         if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
                 !goxel->snap_offset)

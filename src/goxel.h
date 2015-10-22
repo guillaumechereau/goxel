@@ -311,6 +311,7 @@ enum {
 };
 
 enum {
+    TOOL_NONE = 0,
     TOOL_BRUSH,
     TOOL_CUBE,
     TOOL_LASER,
@@ -648,6 +649,8 @@ typedef struct goxel
     renderer_t rend;
 
     int        tool;
+    // Used when we change the effective tool with ctrl.
+    int        prev_tool;
     float      tool_radius;
 
     // Some state for the tool iter functions.
