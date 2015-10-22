@@ -183,6 +183,10 @@ namespace ImGui {
         ImGui::SameLine();
         c_pos = ImGui::GetCursorScreenPos();
         ImGui::Image((void*)create_hue_texture(), ImVec2(32, 256));
+        draw_list->AddLine(c_pos + ImVec2( 0, 255 - hsl.x * 256 / 255),
+                           c_pos + ImVec2(31, 255 - hsl.x * 256 / 255),
+                           0xFFFFFFFF, 2.0f);
+
         if (ImGui::IsItemHovered() && io.MouseDown[0]) {
             ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
                                 ImGui::GetIO().MousePos.y - c_pos.y);
