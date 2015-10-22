@@ -22,15 +22,10 @@
 // Very basic implementation of DICOM files reader.
 
 // Convenience macro.
-#define READ(type, in) ({type v; fread(&v, sizeof(type), 1, in); v;})
-
-#if DEBUG
-    #define CHECK(c) assert(c)
-#else
-    #define CHECK(c) do { \
-        if (!(c)) { LOG_E("Error parsing dicom file"); exit(-1); } \
-    } while (0)
-#endif
+#define READ(type, in) ({ \
+        type v; \
+        CHECK(fread(&v, sizeof(type), 1, in) == 1); \
+        v;})
 
 typedef union {
     struct {
@@ -107,7 +102,7 @@ static bool parse_preamble(FILE *in)
     char magic[4];
     // Skip the first 128 bytes.
     fseek(in, 128, SEEK_CUR);
-    fread(magic, 4, 1, in);
+    CHECK(fread(magic, 4, 1, in) == 1);
     if (!streq(magic, "DICM")) {
         fseek(in, 0, SEEK_SET);
         return false;
@@ -161,7 +156,7 @@ static bool parse_element(FILE *in, int state, element_t *out)
         if (tag.v == TAG_HIGH_BIT.v) sprintf(vr, "US");
         if (tag.v == TAG_PIXEL_DATA.v) sprintf(vr, "OB");
     } else {
-        fread(vr, 2, 1, in);
+        CHECK(fread(vr, 2, 1, in) == 1);
         for (i = 0; i < ARRAY_SIZE(EXTRA_LEN_VRS); i++) {
             if (strncmp(vr, EXTRA_LEN_VRS[i], 2) == 0) {
                 extra_len = true;
@@ -214,21 +209,21 @@ static bool parse_element(FILE *in, int state, element_t *out)
             out->value.us = READ(uint16_t, in);
         }  else if (out && strncmp(vr, "IS", 2) == 0) {
             CHECK(length < sizeof(tmp_buff) - 1);
-            fread(tmp_buff, length, 1, in);
+            CHECK(fread(tmp_buff, length, 1, in) == 1);
             tmp_buff[length] = '\0';
             sscanf(tmp_buff, "%d", &out->value.is);
         }  else if (out && strncmp(vr, "DS", 2) == 0) {
             CHECK(length < sizeof(tmp_buff) - 1);
-            fread(tmp_buff, length, 1, in);
+            CHECK(fread(tmp_buff, length, 1, in) == 1);
             tmp_buff[length] = '\0';
             sscanf(tmp_buff, "%f", &out->value.ds);
         }  else if (out && strncmp(vr, "UI", 2) == 0) {
             CHECK(length < sizeof(out->value.ui) - 1);
-            fread(out->value.ui, length, 1, in);
+            CHECK(fread(out->value.ui, length, 1, in) == 1);
             out->value.ui[length] = '\0';
         } else if (out && tag.v == TAG_PIXEL_DATA.v && out->buffer) {
             CHECK(out->buffer_size >= length);
-            fread(out->buffer, length, 1, in);
+            CHECK(fread(out->buffer, length, 1, in) == 1);
         } else {
             // Skip the data.
             fseek(in, length, SEEK_CUR);

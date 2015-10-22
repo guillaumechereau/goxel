@@ -90,6 +90,26 @@ enum {
 #define LOG_I(msg, ...) LOG(GOX_LOG_INFO,    msg, ##__VA_ARGS__)
 #define LOG_W(msg, ...) LOG(GOX_LOG_WARN,    msg, ##__VA_ARGS__)
 #define LOG_E(msg, ...) LOG(GOX_LOG_ERROR,   msg, ##__VA_ARGS__)
+
+// CHECK is similar to an assert, but the condition is tested even in release
+// mode.
+#if DEBUG
+    #define CHECK(c) assert(c)
+#else
+    #define CHECK(c) do { \
+        if (!(c)) { \
+            LOG_E("Error %s %s %d", __func__,  __FILE__, __LINE__); \
+            exit(-1); \
+        } \
+    } while (0)
+#endif
+
+// I redefine asprintf so that if the function fails, we just crash the
+// application.  I don't see how we can recover from an asprintf fails
+// anyway.
+#define asprintf(...) CHECK(asprintf(__VA_ARGS__) != -1)
+#define vasprintf(...) CHECK(vasprintf(__VA_ARGS__) != -1)
+
 // #############################
 
 #ifdef __EMSCRIPTEN__
