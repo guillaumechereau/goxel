@@ -347,33 +347,34 @@ static int tool_pick_color_iter(goxel_t *goxel, const inputs_t *inputs,
     return 0;
 }
 
+static int tool_move_iter(goxel_t *goxel, const inputs_t *inputs,
+                          int state, const vec2_t *view_size,
+                          bool inside)
+{
+    return 0;
+}
+
+
 int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
               const vec2_t *view_size, bool inside)
 {
     int ret;
-    switch (tool) {
-    case TOOL_CUBE:
-        ret = tool_cube_iter(goxel, inputs, state, view_size, inside);
-        break;
-    case TOOL_BRUSH:
-        ret = tool_brush_iter(goxel, inputs, state, view_size, inside);
-        break;
-    case TOOL_LASER:
-        ret = tool_laser_iter(goxel, inputs, state, view_size, inside);
-        break;
-    case TOOL_SET_PLANE:
-        ret = tool_set_plane_iter(goxel, inputs, state, view_size, inside);
-        break;
-    case TOOL_MOVE:
-        ret = 0;
-        break;
-    case TOOL_PICK_COLOR:
-        ret = tool_pick_color_iter(goxel, inputs, state, view_size, inside);
-        break;
-    default:
-        ret = 0;
-        assert(false);
-    }
+
+    typedef int (*tool_func_t)(goxel_t *goxel, const inputs_t *inputs,
+                               int state, const vec2_t *view_size,
+                               bool inside);
+    static const tool_func_t FUNCS[] = {
+        [TOOL_CUBE]         = tool_cube_iter,
+        [TOOL_BRUSH]        = tool_brush_iter,
+        [TOOL_LASER]        = tool_laser_iter,
+        [TOOL_SET_PLANE]    = tool_set_plane_iter,
+        [TOOL_MOVE]         = tool_move_iter,
+        [TOOL_PICK_COLOR]   = tool_pick_color_iter,
+    };
+
+    assert(tool >= 0 && tool < ARRAY_SIZE(FUNCS));
+    assert(FUNCS[tool]);
+    ret = FUNCS[tool](goxel, inputs, state, view_size, inside);
     if (ret == STATE_CANCEL && goxel->tool_origin_mesh) {
         mesh_set(&goxel->image->active_layer->mesh, goxel->tool_origin_mesh);
         goxel_update_meshes(goxel, true);
