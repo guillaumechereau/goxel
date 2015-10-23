@@ -98,13 +98,11 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         pos.y = nearbyint(pos.y - 0.5) + 0.5;
         pos.z = nearbyint(pos.z - 0.5) + 0.5;
     }
-    switch (state) {
-    case STATE_IDLE:
+    if (state == STATE_IDLE) {
         goxel->tool_t = 0;
         if (snaped) state = STATE_SNAPED;
-        else return state;
-        // Fall through.
-    case STATE_SNAPED:
+    }
+    if (state == STATE_SNAPED) {
         if (goxel->tool_t == 0) {
             goxel->tool_t = 1;
             mesh_set(&goxel->tool_origin_mesh, mesh);
@@ -121,9 +119,8 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             state = STATE_PAINT;
             goxel->painting = true;
         }
-        else return state;
-        // Fall through.
-    case STATE_PAINT:
+    }
+    if (state == STATE_PAINT) {
         goxel_set_help_text(goxel, "Drag.");
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0, &goxel->plane);
         render_box(&goxel->rend, &box, false, &box_color);
@@ -133,9 +130,9 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (up) {
             state = STATE_PAINT2;
             goxel->tool_plane = plane_from_normal(pos, goxel->plane.u);
-        } else return state;
-        // Fall through.
-    case STATE_PAINT2:
+        }
+    }
+    if (state == STATE_PAINT2) {
         goxel_set_help_text(goxel, "Adjust height.");
         render_plane(&goxel->rend, &goxel->tool_plane, &goxel->grid_color);
         pos = vec3_add(goxel->tool_plane.p,
@@ -155,14 +152,12 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             image_history_push(goxel->image);
             return STATE_WAIT_UP;
         }
-        return state;
-    case STATE_WAIT_UP:
-        goxel->tool_plane = plane_null;
-        return up ? STATE_IDLE : STATE_WAIT_UP;
-    default:
-        assert(false);
-        return 0;
     }
+    if (state == STATE_WAIT_UP) {
+        goxel->tool_plane = plane_null;
+        if (up) state = STATE_IDLE;
+    }
+    return state;
 }
 
 static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
@@ -192,13 +187,11 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         pos.y = nearbyint(pos.y - 0.5) + 0.5;
         pos.z = nearbyint(pos.z - 0.5) + 0.5;
     }
-    switch (state) {
-    case STATE_IDLE:
+    if (state == STATE_IDLE) {
         goxel->tool_t = 0;
         if (snaped) state = STATE_SNAPED;
-        else return state;
-        // Fall through.
-    case STATE_SNAPED:
+    }
+    if (state == STATE_SNAPED) {
         if (goxel->tool_t == 0) {
             goxel->tool_t = 1;
             mesh_set(&goxel->tool_origin_mesh, mesh);
@@ -236,9 +229,8 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             goxel->tool_last_op.op = 0;
             goxel->painting = true;
         }
-        else return state;
-        // Fall through.
-    case STATE_PAINT:
+    }
+    if (state == STATE_PAINT) {
         if (check_can_skip(goxel, pos, down, goxel->painter.op))
             return state;
         if (released) {
@@ -254,16 +246,13 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, false);
         goxel->tool_start_pos = pos;
-        return state;
-    case STATE_WAIT_KEY_UP:
+    }
+    if (state == STATE_WAIT_KEY_UP) {
         goxel->tool_t = 0;
         if (!inputs->keys[KEY_SHIFT]) state = STATE_IDLE;
         if (snaped) state = STATE_SNAPED;
-        return state;
-    default:
-        assert(false);
-        return 0;
     }
+    return state;
 }
 
 static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
@@ -291,22 +280,18 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     mat4_itranslate(&box.mat, 0, 0, -128);
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 128);
     render_box(&goxel->rend, &box, false, NULL);
-    switch (state) {
-    case STATE_IDLE:
+    if (state == STATE_IDLE) {
         if (down) state = STATE_PAINT;
-        else return state;
-    case STATE_PAINT:
+    }
+    if (state == STATE_PAINT) {
         if (!down) {
             image_history_push(goxel->image);
             return STATE_IDLE;
         }
         mesh_op(mesh, &painter, &box);
         goxel_update_meshes(goxel, false);
-        return state;
-    default:
-        assert(false);
-        return 0;
     }
+    return state;
 }
 
 static int tool_set_plane_iter(goxel_t *goxel, const inputs_t *inputs,
