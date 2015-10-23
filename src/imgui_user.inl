@@ -220,4 +220,17 @@ namespace ImGui {
         ImGui::PopStyleColor();
         return ret;
     }
+
+    bool GoxAction(const char *id, const char *label, const arg_t *args)
+    {
+        assert(action_get(id));
+        if (ImGui::Button(label)) {
+            action_exec(action_get(id), args);
+            return true;
+        }
+        if (ImGui::IsItemHovered()) {
+            goxel_set_help_text(goxel(), action_get(id)->help);
+        }
+        return false;
+    }
 };

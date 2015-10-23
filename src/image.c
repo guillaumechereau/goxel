@@ -110,8 +110,6 @@ layer_t *image_add_layer(image_t *img)
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
-    image_history_push(img);
-    goxel_update_meshes(goxel(), true);
     return layer;
 }
 
@@ -126,8 +124,6 @@ void image_delete_layer(image_t *img, layer_t *layer)
         DL_APPEND(img->layers, layer);
     }
     if (!img->active_layer) img->active_layer = img->layers->prev;
-    image_history_push(img);
-    goxel_update_meshes(goxel(), true);
 }
 
 void image_move_layer(image_t *img, layer_t *layer, int d)
@@ -143,8 +139,6 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
     if (!other || !layer) return;
     DL_DELETE(img->layers, layer);
     DL_PREPEND_ELEM(img->layers, other, layer);
-    image_history_push(img);
-    goxel_update_meshes(goxel(), true);
 }
 
 void image_duplicate_layer(image_t *img, layer_t *other)
@@ -154,8 +148,6 @@ void image_duplicate_layer(image_t *img, layer_t *other)
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
-    image_history_push(img);
-    goxel_update_meshes(goxel(), true);
 }
 
 void image_merge_visible_layers(image_t *img)
@@ -171,8 +163,6 @@ void image_merge_visible_layers(image_t *img)
         last = layer;
     }
     if (last) img->active_layer = last;
-    image_history_push(img);
-    goxel_update_meshes(goxel(), true);
 }
 
 void image_set(image_t *img, image_t *other)
@@ -221,3 +211,37 @@ void image_redo(image_t *img)
     goxel_update_meshes(goxel(), true);
     print_history(img);
 }
+
+ACTION_REGISTER(img_new_layer,
+    .help = "Add a new layer to the image",
+    .func = image_add_layer,
+    .sig = SIG(TYPE_LAYER, ARG("image", TYPE_IMAGE)),
+)
+
+ACTION_REGISTER(img_del_layer,
+    .help = "Delete the active layer",
+    .func = image_delete_layer,
+    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
+                          ARG("layer", TYPE_LAYER)),
+)
+
+ACTION_REGISTER(img_move_layer,
+    .help = "Move the active layer",
+    .func = image_move_layer,
+    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
+                          ARG("layer", TYPE_LAYER),
+                          ARG("ofs", TYPE_INT)),
+)
+
+ACTION_REGISTER(img_duplicate_layer,
+    .help = "Duplicate the active layer",
+    .func = image_duplicate_layer,
+    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
+                          ARG("layer", TYPE_LAYER)),
+)
+
+ACTION_REGISTER(img_merge_visible_layers,
+    .help = "Merge all the visible layers",
+    .func = image_merge_visible_layers,
+    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE)),
+)

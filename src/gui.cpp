@@ -37,6 +37,7 @@ namespace ImGui {
     bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
                              bool display_frame = true,
                              bool default_open = false);
+    bool GoxAction(const char *id, const char *label, const arg_t *args);
 };
 
 static texture_t *g_tex_sphere = NULL;
@@ -589,24 +590,16 @@ static void layers_panel(goxel_t *goxel)
         i++;
         ImGui::PopID();
     }
-    if (ImGui::Button("Add")) {
-        image_add_layer(goxel->image);
-    }
+    ImGui::GoxAction("img_new_layer", "Add", NULL);
     ImGui::SameLine();
-    if (ImGui::Button("Del")) {
-        image_delete_layer(goxel->image, goxel->image->active_layer);
-    }
+    ImGui::GoxAction("img_del_layer", "Del", NULL);
     ImGui::SameLine();
-    if (ImGui::Button("^"))
-        image_move_layer(goxel->image, goxel->image->active_layer, +1);
+    ImGui::GoxAction("img_move_layer", "^", ARGS(ARG("ofs", +1)));
     ImGui::SameLine();
-    if (ImGui::Button("v"))
-        image_move_layer(goxel->image, goxel->image->active_layer, -1);
-    if (ImGui::Button("Duplicate"))
-        image_duplicate_layer(goxel->image, goxel->image->active_layer);
+    ImGui::GoxAction("img_move_layer", "v", ARGS(ARG("ofs", -1)));
+    ImGui::GoxAction("img_duplicate_layer", "Duplicate", NULL);
     ImGui::SameLine();
-    if (ImGui::Button("Merge visible"))
-        image_merge_visible_layers(goxel->image);
+    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", NULL);
     ImGui::PopID();
 }
 

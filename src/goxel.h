@@ -302,6 +302,81 @@ texture_t *texture_copy(texture_t *tex);
 void texture_delete(texture_t *tex);
 // #############################
 
+
+// #### Action #################
+
+// We support some basic reflexion of functions.  We do this by registering the
+// functions with the ACTION_REGISTER macro.  Once a function has been
+// registered, it is possible to query it (action_get) and call it
+// (action_exec).  There is some basic support for default and named arguments.
+// Check the end of image.c to see some examples.  The idea is that this will
+// make it much easier to add meta information to functions, like
+// documentation, shortcuts.  Also in theory this should allow to add a
+// scripting engine on top of goxel quite easily.
+
+// XXX: this is still pretty experimental.  This might change in the future.
+
+// For reflexion, we need to keep an id for all the types we can pass to
+// actions.
+enum {
+    TYPE_VOID,
+    TYPE_INT,
+    TYPE_LAYER,
+    TYPE_IMAGE,
+};
+
+// Structure used both to define an action argument signature (name, type),
+// or an action call argument value (name, value).  In that case the type
+// can be inferred from the action signature.
+typedef struct {
+    const char  *name;
+    union {
+        long        type;
+        long        value;
+    };
+} arg_t;
+
+#define ARG(n, v) {n, {v}}
+#define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
+
+// Represent a function signature with return type and arguments.
+typedef struct {
+    int         ret;
+    int         nb_args;
+    const arg_t *args;      // Terminated by a argument of type VOID
+} action_sig_t;
+
+// Convenience macro to create a function signature:
+// SIG(ret_type, ARG(arg1_name, arg1_type), ARG(arg2_name, arg2_type), ...)
+#define SIG(ret_, ...) { \
+        ret_, \
+        ARRAY_SIZE(((arg_t[]){__VA_ARGS__})), \
+        (const arg_t[]){__VA_ARGS__, ARG(0, 0)} \
+    }
+
+// Represent an action.
+typedef struct action action_t;
+struct action {
+    const char      *id;    // Globally unique id.
+    const char      *help;  // Help text.
+    void            *func;  // Pointer to the function to call.
+    action_sig_t    sig;    // Signature of the function.
+};
+
+void action_register(const action_t *action);
+const action_t *action_get(const char *id);
+void *action_exec(const action_t *action, const arg_t *args);
+
+// Convenience macro to register an action from anywere in a c file.
+#define ACTION_REGISTER(id_, ...) \
+    static const action_t action_##id_ = {.id = #id_, __VA_ARGS__}; \
+    static void register_action_##id_() __attribute__((constructor)); \
+    static void register_action_##id_() { \
+        action_register(&action_##id_); \
+    }
+
+// #############################
+
 // #### Tool/Operation/Painter #
 enum {
     OP_NULL,
