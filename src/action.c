@@ -42,20 +42,6 @@ const action_t *action_get(const char *id)
     return item ? item->action : NULL;
 }
 
-static bool sig_equ(action_sig_t a, action_sig_t b)
-{
-    int i;
-    if (a.ret != b.ret || a.nb_args != b.nb_args) return false;
-    for (i = 0; i < a.nb_args; i++)
-        if (a.args[i].type != b.args[i].type) return false;
-    return true;
-}
-
-#define SIG_EQU(a, ...) ({  \
-        action_sig_t b = SIG(__VA_ARGS__); \
-        sig_equ(a, b); \
-    })
-
 static long get_arg_value(arg_t arg, const arg_t *args)
 {
     const arg_t *argp;
@@ -78,53 +64,43 @@ static long get_arg_value(arg_t arg, const arg_t *args)
 void *action_exec(const action_t *action, const arg_t *args)
 {
     void *ret = NULL;
+    int i, nb_args;
     long vals[3];
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
+    // XXX: not sure this is actually legal in C.  func will be called with
+    // a variable number or arguments, that might be of any registered types!
+    void *(*func)() = action->func;
+    bool is_void;
 
     assert(action);
+    nb_args = action->sig.nb_args;
+    assert(nb_args <= ARRAY_SIZE(vals));
+    is_void = action->sig.ret == TYPE_VOID;
     reentry++;
-    // For the moment we handle all the different signatures manually.
-    // Is there a way to make it automatic?
-    if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_IMAGE))) {
-        void (*func)(image_t *) = action->func;
-        vals[0] = get_arg_value(action->sig.args[0], args);
-        func((image_t*)vals[0]);
-    } else if (SIG_EQU(action->sig, TYPE_LAYER, ARG(NULL, TYPE_IMAGE))) {
-        layer_t *(*func)(image_t *) = action->func;
-        vals[0] = get_arg_value(action->sig.args[0], args);
-        ret = func((image_t*)vals[0]);
-    } else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_IMAGE),
-                                               ARG(NULL, TYPE_LAYER))) {
-        void (*func)(image_t *, layer_t *) = action->func;
-        vals[0] = get_arg_value(action->sig.args[0], args);
-        vals[1] = get_arg_value(action->sig.args[1], args);
-        func((image_t*)vals[0], (layer_t*)vals[1]);
-    } else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_IMAGE),
-                                               ARG(NULL, TYPE_LAYER),
-                                               ARG(NULL, TYPE_INT))) {
-        void (*func)(image_t *, layer_t *, int) = action->func;
-        vals[0] = get_arg_value(action->sig.args[0], args);
-        vals[1] = get_arg_value(action->sig.args[1], args);
-        vals[2] = get_arg_value(action->sig.args[2], args);
-        func((image_t*)vals[0], (layer_t*)vals[1], vals[2]);
-    } else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_GOXEL),
-                                               ARG(NULL, TYPE_STRING),
-                                               ARG(NULL, TYPE_FILE_PATH))) {
-        void (*func)(goxel_t *, const char *, const char *) = action->func;
-        vals[0] = get_arg_value(action->sig.args[0], args);
-        vals[1] = get_arg_value(action->sig.args[1], args);
-        vals[2] = get_arg_value(action->sig.args[2], args);
-        func((goxel_t*)vals[0], (const char *)vals[1], (const char *)vals[2]);
-    } else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_GOXEL),
-                                               ARG(NULL, TYPE_FILE_PATH))) {
-        void (*func)(goxel_t *, const char *) = action->func;
-        vals[0] = get_arg_value(action->sig.args[0], args);
-        vals[1] = get_arg_value(action->sig.args[1], args);
-        func((goxel_t*)vals[0], (const char *)vals[1]);
-    } else {
-        LOG_W("Cannot handle signature for action %s", action->id);
-    }
+
+    for (i = 0; i < nb_args; i++)
+        vals[i] = get_arg_value(action->sig.args[i], args);
+
+    if (is_void && nb_args == 0)
+        func();
+    else if (is_void && nb_args == 1)
+        func(vals[0]);
+    else if (is_void && nb_args == 2)
+        func(vals[0], vals[1]);
+    else if (is_void && nb_args == 3)
+        func(vals[0], vals[1], vals[2]);
+    else if (!is_void && nb_args == 0)
+        ret = func();
+    else if (!is_void && nb_args == 1)
+        ret = func(vals[0]);
+    else if (!is_void && nb_args == 2)
+        ret = func(vals[0], vals[1]);
+    else if (!is_void && nb_args == 3)
+        ret = func(vals[0], vals[1], vals[2]);
+    else
+        LOG_E("Cannot handle signature for action %s", action->id);
+
 
     reentry--;
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
