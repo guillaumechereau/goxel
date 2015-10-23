@@ -737,15 +737,7 @@ static void export_as(goxel_t *goxel, const char *type)
     char *path = NULL;
     bool result = dialog_open(DIALOG_FLAG_SAVE, type, &path);
     if (!result) return;
-    // XXX: use a dialog to set the size and other parameters.
-    if (strcmp(type, "png") == 0)
-        goxel_export_as_png(goxel, path);
-    if (strcmp(type, "obj") == 0)
-        goxel_export_as_obj(goxel, path);
-    if (strcmp(type, "ply") == 0)
-        goxel_export_as_ply(goxel, path);
-    if (strcmp(type, "txt") == 0)
-        goxel_export_as_txt(goxel, path);
+    action_exec2("export_as", ARG("type", type), ARG("path", path));
     free(path);
 }
 

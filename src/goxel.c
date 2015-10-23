@@ -394,8 +394,25 @@ void goxel_update_meshes(goxel_t *goxel, bool pick)
         mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
 }
 
+static void export_as(goxel_t *goxel, const char *type, const char *path)
+{
+    char id[128];
+    sprintf(id, "export_as_%s", type);
+    action_exec2(id, ARG("path", path));
+}
+
+ACTION_REGISTER(export_as,
+    .help = "Export the image",
+    .func = export_as,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("type", TYPE_STRING),
+                          ARG("path", TYPE_FILE_PATH)),
+    .flags = ACTION_NO_CHANGE,
+)
+
+
 // XXX: this function has to be rewritten.
-void goxel_export_as_png(goxel_t *goxel, const char *path)
+static void export_as_png(goxel_t *goxel, const char *path)
 {
     const float size = 16;
     int w = goxel->image->export_width;
@@ -430,17 +447,41 @@ void goxel_export_as_png(goxel_t *goxel, const char *path)
     texture_save_to_file(fbo, path);
 }
 
-void goxel_export_as_obj(goxel_t *goxel, const char *path)
+ACTION_REGISTER(export_as_png,
+    .help = "Save the image as a png file",
+    .func = export_as_png,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("path", TYPE_FILE_PATH)),
+    .flags = ACTION_NO_CHANGE,
+)
+
+static void export_as_obj(goxel_t *goxel, const char *path)
 {
     wavefront_export(goxel->layers_mesh, path);
 }
 
-void goxel_export_as_ply(goxel_t *goxel, const char *path)
+ACTION_REGISTER(export_as_obj,
+    .help = "Save the image as a wavefront obj file",
+    .func = export_as_obj,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("path", TYPE_FILE_PATH)),
+    .flags = ACTION_NO_CHANGE,
+)
+
+static void export_as_ply(goxel_t *goxel, const char *path)
 {
     ply_export(goxel->layers_mesh, path);
 }
 
-void goxel_export_as_txt(goxel_t *goxel, const char *path)
+ACTION_REGISTER(export_as_ply,
+    .help = "Save the image as a ply file",
+    .func = export_as_ply,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("path", TYPE_FILE_PATH)),
+    .flags = ACTION_NO_CHANGE,
+)
+
+static void export_as_txt(goxel_t *goxel, const char *path)
 {
     FILE *out;
     mesh_t *mesh = goxel->layers_mesh;
@@ -469,6 +510,14 @@ void goxel_export_as_txt(goxel_t *goxel, const char *path)
     }
     fclose(out);
 }
+
+ACTION_REGISTER(export_as_txt,
+    .help = "Save the image as a txt file",
+    .func = export_as_txt,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("path", TYPE_FILE_PATH)),
+    .flags = ACTION_NO_CHANGE,
+)
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
 {

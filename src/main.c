@@ -99,7 +99,7 @@ static void generate_icons(goxel_t *goxel)
 
         goxel_update_meshes(goxel, true);
         sprintf(path, "./data/icons/%s.png", layer->name);
-        goxel_export_as_png(goxel, path);
+        action_exec2("export_as_png", ARG("path", path));
     }
 }
 

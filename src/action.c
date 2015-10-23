@@ -66,6 +66,8 @@ static long get_arg_value(arg_t arg, const arg_t *args)
         }
     }
     // Default values for some types.
+    if (arg.type == TYPE_GOXEL)
+        return (long)goxel();
     if (arg.type == TYPE_IMAGE)
         return (long)goxel()->image;
     if (arg.type == TYPE_LAYER)
@@ -92,9 +94,8 @@ void *action_exec(const action_t *action, const arg_t *args)
         layer_t *(*func)(image_t *) = action->func;
         vals[0] = get_arg_value(action->sig.args[0], args);
         ret = func((image_t*)vals[0]);
-    }
-    else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_IMAGE),
-                                             ARG(NULL, TYPE_LAYER))) {
+    } else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_IMAGE),
+                                               ARG(NULL, TYPE_LAYER))) {
         void (*func)(image_t *, layer_t *) = action->func;
         vals[0] = get_arg_value(action->sig.args[0], args);
         vals[1] = get_arg_value(action->sig.args[1], args);
@@ -107,13 +108,26 @@ void *action_exec(const action_t *action, const arg_t *args)
         vals[1] = get_arg_value(action->sig.args[1], args);
         vals[2] = get_arg_value(action->sig.args[2], args);
         func((image_t*)vals[0], (layer_t*)vals[1], vals[2]);
+    } else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_GOXEL),
+                                               ARG(NULL, TYPE_STRING),
+                                               ARG(NULL, TYPE_FILE_PATH))) {
+        void (*func)(goxel_t *, const char *, const char *) = action->func;
+        vals[0] = get_arg_value(action->sig.args[0], args);
+        vals[1] = get_arg_value(action->sig.args[1], args);
+        vals[2] = get_arg_value(action->sig.args[2], args);
+        func((goxel_t*)vals[0], (const char *)vals[1], (const char *)vals[2]);
+    } else if (SIG_EQU(action->sig, TYPE_VOID, ARG(NULL, TYPE_GOXEL),
+                                               ARG(NULL, TYPE_FILE_PATH))) {
+        void (*func)(goxel_t *, const char *) = action->func;
+        vals[0] = get_arg_value(action->sig.args[0], args);
+        vals[1] = get_arg_value(action->sig.args[1], args);
+        func((goxel_t*)vals[0], (const char *)vals[1]);
     } else {
         LOG_W("Cannot handle signature for action %s", action->id);
     }
 
     reentry--;
-    if (reentry == 0) {
-        // XXX: some actions do not need that.
+    if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
         image_history_push(goxel()->image);
         goxel_update_meshes(goxel(), true);
     }

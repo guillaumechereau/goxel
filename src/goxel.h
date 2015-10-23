@@ -321,8 +321,11 @@ void texture_delete(texture_t *tex);
 enum {
     TYPE_VOID,
     TYPE_INT,
+    TYPE_STRING,
+    TYPE_GOXEL,
     TYPE_LAYER,
     TYPE_IMAGE,
+    TYPE_FILE_PATH,
 };
 
 // Structure used both to define an action argument signature (name, type),
@@ -333,10 +336,11 @@ typedef struct {
     union {
         long        type;
         long        value;
+        const char  *s;
     };
 } arg_t;
 
-#define ARG(n, v) {n, {v}}
+#define ARG(n, v) {n, {(long)v}}
 #define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
 
 // Represent a function signature with return type and arguments.
@@ -354,6 +358,10 @@ typedef struct {
         (const arg_t[]){__VA_ARGS__, ARG(0, 0)} \
     }
 
+enum {
+    ACTION_NO_CHANGE    = 1 << 0,  // The action does not touch the image.
+};
+
 // Represent an action.
 typedef struct action action_t;
 struct action {
@@ -361,11 +369,21 @@ struct action {
     const char      *help;  // Help text.
     void            *func;  // Pointer to the function to call.
     action_sig_t    sig;    // Signature of the function.
+    int             flags;
 };
 
 void action_register(const action_t *action);
 const action_t *action_get(const char *id);
 void *action_exec(const action_t *action, const arg_t *args);
+
+// Convenience macro to call action_exec directly from an id and a list of
+// arguments.
+#define action_exec2(id, ...) ({ \
+        const arg_t args[] = {__VA_ARGS__, ARG(0, 0)}; \
+        action_exec(action_get(id), args); \
+    })
+
+
 
 // Convenience macro to register an action from anywere in a c file.
 #define ACTION_REGISTER(id_, ...) \
@@ -779,10 +797,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const plane_t *plane,
                      vec3_t *out, vec3_t *normal);
 void goxel_update_meshes(goxel_t *goxel, bool pick);
-void goxel_export_as_png(goxel_t *goxel, const char *path);
-void goxel_export_as_obj(goxel_t *goxel, const char *path);
-void goxel_export_as_ply(goxel_t *goxel, const char *path);
-void goxel_export_as_txt(goxel_t *goxel, const char *path);
+
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
 void goxel_undo(goxel_t *goxel);
 void goxel_redo(goxel_t *goxel);
