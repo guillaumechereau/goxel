@@ -161,6 +161,16 @@ enum {
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define SWAP(x0, x) {typeof(x0) tmp = x0; x0 = x; x = tmp;}
 
+// IS_IN(x, ...): returns true if x is equal to any of the other arguments.
+#define IS_IN(x, ...) ({ \
+        bool _ret = false; \
+        const typeof(x) _V[] = {__VA_ARGS__}; \
+        int _i; \
+        for (_i = 0; _i < (int)ARRAY_SIZE(_V); _i++) \
+            if (x == _V[_i]) _ret = true; \
+        _ret; \
+    })
+
 static inline uvec4b_t HEXCOLOR(uint32_t v)
 {
     return uvec4b((v >> 24) & 0xff,

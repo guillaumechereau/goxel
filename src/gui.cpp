@@ -435,14 +435,14 @@ static void tool_options_panel(goxel_t *goxel)
     ImVec4 color;
     layer_t *layer;
     mat4_t mat;
-    if (goxel->tool == TOOL_BRUSH || goxel->tool == TOOL_LASER) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_LASER)) {
         i = goxel->tool_radius * 2;
         if (ImGui::InputInt("Size", &i, 1)) {
             i = clamp(i, 1, 128);
             goxel->tool_radius = i / 2.0;
         }
     }
-    if (goxel->tool == TOOL_BRUSH || goxel->tool == TOOL_CUBE) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_CUBE)) {
         ImGui::Text("Snap on");
         for (i = 0; i < 2; i++) {
             s = goxel->snap & (1 << i);
@@ -458,12 +458,11 @@ static void tool_options_panel(goxel_t *goxel)
         if (ImGui::InputFloat("Snap offset", &v, 0.1))
             goxel->snap_offset = clamp(v, -1, +1);
     }
-    if (goxel->tool == TOOL_BRUSH || goxel->tool == TOOL_CUBE) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_CUBE)) {
         op_panel(goxel);
         shapes_panel(goxel);
     }
-    if (    goxel->tool == TOOL_BRUSH || goxel->tool == TOOL_CUBE ||
-            goxel->tool == TOOL_PICK_COLOR) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_CUBE, TOOL_PICK_COLOR)) {
         ImGui::Text("Color");
         color = uvec4b_to_imvec4(goxel->painter.color);
         ImGui::ColorButton(color);
