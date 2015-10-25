@@ -199,6 +199,8 @@
 #include <stdbool.h>
 
 #ifndef N
+    #define MAT(...) {.v = {__VA_ARGS__}}
+
     #define N 2
     #include "vec.h"
     #undef N
