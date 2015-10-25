@@ -105,6 +105,16 @@ const vec3b_t FACES_NORMALS[6] = {
     IVEC(-1,  0,  0),
 };
 
+// Matrices of transformation: unity plane => cube face plane.
+const mat4_t FACES_MATS[6] = {
+    MAT(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, -1, 0, 1),
+    MAT(-1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1),
+    MAT(0, 1, 0, 0, 1, 0, 0, 0, 0, 0, -1, 0, 0, 0, -1, 1),
+    MAT(0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1),
+    MAT(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1),
+    MAT(0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0, -1, 0, 0, 1),
+};
+
 // XXX: Keep orientation.
 const vec4b_t FACES_ROTATIONS[6] = {
     IVEC( 1,  1,  0,  0),
