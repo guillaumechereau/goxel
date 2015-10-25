@@ -354,6 +354,8 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
             render_img(rend, layer->image, &layer->mat);
     }
 
+    render_box(rend, &goxel->selection, false, NULL);
+
     // XXX: make a toggle for debug informations.
     if (0) {
         box_t b;
@@ -409,6 +411,7 @@ static void tools_panel(goxel_t *goxel)
         {TOOL_SET_PLANE,    "Plane",        g_tex_grid->tex},
         {TOOL_MOVE,         "Move",         g_tex_move->tex},
         {TOOL_PICK_COLOR,   "Pick Color",   g_tex_pick->tex},
+        {TOOL_SELECTION,    "Selection",    g_tex_cube2->tex},
     };
     const int nb = ARRAY_SIZE(values);
     int i;

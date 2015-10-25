@@ -105,6 +105,42 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
     return true;
 }
 
+bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
+                     const vec2_t *pos, const box_t *box,
+                     vec3_t *out, vec3_t *normal,
+                     int *face)
+{
+    extern const mat4_t FACES_MATS[6];
+    int f;
+    vec3_t wpos = vec3(pos->x, view_size->y - pos->y, 0);
+    vec3_t opos;
+    vec4_t onorm;
+    plane_t plane;
+    vec4_t view = vec4(0, 0, view_size->x, view_size->y);
+
+    opos = unproject(&wpos, &goxel->camera.view_mat,
+                            &goxel->camera.proj_mat, &view);
+    onorm = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
+                         vec4(0, 0, -1, 0));
+
+    for (f = 0; f < 6; f++) {
+        plane.mat = box->mat;
+        mat4_imul(&plane.mat, FACES_MATS[f]);
+
+        if (vec3_dot(plane.n, onorm.xyz) >= 0)
+            continue;
+        if (!plane_line_intersection(plane, opos, onorm.xyz, out))
+            continue;
+        if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
+            continue;
+        *face = f;
+        *out = mat4_mul_vec3(plane.mat, *out);
+        *normal = vec3_normalized(plane.n);
+        return true;
+    }
+    return false;
+}
+
 bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
                              const vec2_t *pos, mesh_t *mesh,
                              vec3_t *out, vec3_t *normal)
@@ -214,6 +250,7 @@ void goxel_init(goxel_t *goxel)
 
     goxel->layers_mesh = mesh_copy(goxel->image->active_layer->mesh);
     goxel->pick_mesh = mesh_copy(goxel->image->active_layer->mesh);
+    goxel->selection = box_null;
 
     goxel->back_color = HEXCOLOR(0x393939ff);
     goxel->grid_color = HEXCOLOR(0x4a4a4aff);

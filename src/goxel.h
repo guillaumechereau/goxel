@@ -421,6 +421,7 @@ enum {
     TOOL_SET_PLANE,
     TOOL_MOVE,
     TOOL_PICK_COLOR,
+    TOOL_SELECTION,
 };
 
 typedef struct shape {
@@ -757,8 +758,10 @@ typedef struct goxel
     float      tool_radius;
 
     // Some state for the tool iter functions.
+    // XXX: move this into tool.c
     int        tool_state;
     int        tool_t;
+    int        tool_snape_face;
     mesh_t     *tool_origin_mesh;
     // Structure used to skip rendering when don't move the mouse.
     struct     {
@@ -768,6 +771,8 @@ typedef struct goxel
     }          tool_last_op;
     vec3_t     tool_start_pos;
     plane_t    tool_plane;
+
+    box_t      selection;   // The selection box.
 
     struct {
         quat_t rotation;
@@ -806,6 +811,9 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const plane_t *plane,
                      vec3_t *out, vec3_t *normal);
+bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
+                     const vec2_t *pos, const box_t *box,
+                     vec3_t *out, vec3_t *normal, int *face);
 void goxel_update_meshes(goxel_t *goxel, bool pick);
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
