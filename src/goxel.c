@@ -588,3 +588,29 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
     image_history_push(goxel->image);
 }
+
+static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
+                                 layer_t *layer, box_t *box)
+{
+    layer_t *new_layer;
+    painter_t painter;
+
+    new_layer = image_duplicate_layer(img, layer);
+    painter = (painter_t) {
+        .shape = &shape_cube,
+        .op = OP_INTERSECT,
+    };
+    mesh_op(new_layer->mesh, &painter, box);
+    painter.op = OP_SUB;
+    mesh_op(layer->mesh, &painter, box);
+    return new_layer;
+}
+
+ACTION_REGISTER(cut_as_new_layer,
+    .help = "Cut into a new layer",
+    .func = cut_as_new_layer,
+    .sig = SIG(TYPE_LAYER, ARG("goxel", TYPE_GOXEL),
+                           ARG("img", TYPE_IMAGE),
+                           ARG("layer", TYPE_LAYER),
+                           ARG("box", TYPE_BOX)),
+)

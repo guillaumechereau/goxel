@@ -336,6 +336,7 @@ enum {
     TYPE_LAYER,
     TYPE_IMAGE,
     TYPE_FILE_PATH,
+    TYPE_BOX,
 };
 
 // Structure used both to define an action argument signature (name, type),

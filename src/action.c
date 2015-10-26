@@ -58,6 +58,8 @@ static long get_arg_value(arg_t arg, const arg_t *args)
         return (long)goxel()->image;
     if (arg.type == TYPE_LAYER)
         return (long)goxel()->image->active_layer;
+    if (arg.type == TYPE_BOX)
+        return (long)&goxel()->selection;
     return 0;
 }
 
@@ -65,7 +67,7 @@ void *action_exec(const action_t *action, const arg_t *args)
 {
     void *ret = NULL;
     int i, nb_args;
-    long vals[3];
+    long vals[4];
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
     // XXX: not sure this is actually legal in C.  func will be called with
@@ -90,6 +92,8 @@ void *action_exec(const action_t *action, const arg_t *args)
         func(vals[0], vals[1]);
     else if (is_void && nb_args == 3)
         func(vals[0], vals[1], vals[2]);
+    else if (is_void && nb_args == 4)
+        func(vals[0], vals[1], vals[2], vals[3]);
     else if (!is_void && nb_args == 0)
         ret = func();
     else if (!is_void && nb_args == 1)
@@ -98,6 +102,8 @@ void *action_exec(const action_t *action, const arg_t *args)
         ret = func(vals[0], vals[1]);
     else if (!is_void && nb_args == 3)
         ret = func(vals[0], vals[1], vals[2]);
+    else if (!is_void && nb_args == 4)
+        ret = func(vals[0], vals[1], vals[2], vals[3]);
     else
         LOG_E("Cannot handle signature for action %s", action->id);
 

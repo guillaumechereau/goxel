@@ -519,6 +519,9 @@ static void tool_options_panel(goxel_t *goxel)
             image_history_push(goxel->image);
         }
     }
+    if (goxel->tool == TOOL_SELECTION) {
+        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", NULL);
+    }
 }
 
 static void shapes_panel(goxel_t *goxel)
