@@ -96,6 +96,9 @@ static void generate_icons(goxel_t *goxel)
             quat_irotate(&goxel->camera.rot, M_PI / 4, 0, 1, 0);
             goxel->rend.material.smoothness = 0;
         }
+        if (strcmp(layer->name, "selection") == 0) {
+            goxel->rend.material.smoothness = 0;
+        }
 
         goxel_update_meshes(goxel, true);
         sprintf(path, "./data/icons/%s.png", layer->name);

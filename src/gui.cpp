@@ -52,6 +52,7 @@ static texture_t *g_tex_grid = NULL;
 static texture_t *g_tex_laser = NULL;
 static texture_t *g_tex_move = NULL;
 static texture_t *g_tex_pick = NULL;
+static texture_t *g_tex_selection = NULL;
 
 static const int MiB = 1 << 20;
 
@@ -279,6 +280,7 @@ void gui_init(void)
     g_tex_laser = texture_new_image("data/icons/laser.png");
     g_tex_move = texture_new_image("data/icons/move.png");
     g_tex_pick = texture_new_image("data/icons/pick.png");
+    g_tex_selection = texture_new_image("data/icons/selection.png");
 }
 
 // XXX: Move this somewhere else.
@@ -411,7 +413,7 @@ static void tools_panel(goxel_t *goxel)
         {TOOL_SET_PLANE,    "Plane",        g_tex_grid->tex},
         {TOOL_MOVE,         "Move",         g_tex_move->tex},
         {TOOL_PICK_COLOR,   "Pick Color",   g_tex_pick->tex},
-        {TOOL_SELECTION,    "Selection",    g_tex_cube2->tex},
+        {TOOL_SELECTION,    "Selection",    g_tex_selection->tex},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
