@@ -214,7 +214,10 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     }
     HASH_ITER(hh, mesh->blocks, block, tmp) {
         block_box = block_get_box(block, false);
-        if (!bbox_intersect(bbox, block_box)) continue;
+        if (!bbox_intersect(bbox, block_box)) {
+            if (painter->op == OP_INTERSECT) empty = true;
+            else continue;
+        }
         empty = false;
         // Optimization for the case when we delete large blocks.
         // XXX: this is too specific.  we need a way to tell if a given

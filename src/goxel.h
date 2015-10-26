@@ -414,6 +414,7 @@ enum {
     OP_ADD,
     OP_SUB,
     OP_PAINT,
+    OP_INTERSECT,
 };
 
 enum {

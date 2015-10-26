@@ -623,6 +623,12 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     int op = painter->op;
     const uvec4b_t *c = &painter->color;
     float (*shape_func)(const vec3_t*, const vec3_t*) = painter->shape->func;
+    bool invert = false;
+
+    if (op == OP_INTERSECT) {
+        op = OP_SUB;
+        invert = true;
+    }
 
     size = box_get_size(*box);
     mat4_imul(&mat, box->mat);
@@ -635,6 +641,7 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
         if (can_skip(BLOCK_AT(block, x, y, z), op, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         v = shape_func(&p, &size) * 255;
+        if (invert) v = 255 - v;
         if (v) {
             block_prepare_write(block);
             apply_op(&BLOCK_AT(block, x, y, z), op, c, v);
