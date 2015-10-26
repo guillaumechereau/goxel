@@ -520,6 +520,7 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SELECTION) {
+        ImGui::GoxAction("clear_selection", "Clear selection", NULL);
         ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", NULL);
     }
 }

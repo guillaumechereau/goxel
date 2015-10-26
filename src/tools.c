@@ -201,7 +201,6 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         pos.z = nearbyint(pos.z - 0.5) + 0.5;
     }
 
-
     if (state == STATE_IDLE) {
         goxel->tool_t = 0;
         goxel->tool_snape_face = -1;

@@ -614,3 +614,16 @@ ACTION_REGISTER(cut_as_new_layer,
                            ARG("layer", TYPE_LAYER),
                            ARG("box", TYPE_BOX)),
 )
+
+static void clear_selection(goxel_t *goxel)
+{
+    if (goxel->tool == TOOL_SELECTION)
+        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+    goxel->selection = box_null;
+}
+
+ACTION_REGISTER(clear_selection,
+    .help = "Clear the selection",
+    .func = clear_selection,
+    .sig = SIG(TYPE_LAYER, ARG("goxel", TYPE_GOXEL)),
+)
