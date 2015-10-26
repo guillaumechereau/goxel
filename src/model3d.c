@@ -34,6 +34,8 @@ typedef struct {
     GLint u_uv_scale_l;
     GLint u_fade_l;
     GLint u_fade_center_l;
+    GLint u_strip_l;
+    GLint u_time_l;
 } prog_t;
 
 static prog_t prog;
@@ -55,6 +57,8 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_uv_scale);
     UNIFORM(u_fade);
     UNIFORM(u_fade_center);
+    UNIFORM(u_strip);
+    UNIFORM(u_time);
 #undef ATTRIB
 #undef UNIFORM
     GL(glUseProgram(prog->prog));
@@ -242,6 +246,7 @@ void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
                     const texture_t *tex,
+                    bool  strip,
                     float fade, const vec3_t *fade_center)
 {
     uvec4b_t c = color ? *color : HEXCOLOR(0xffffffff);
@@ -265,6 +270,8 @@ void model3d_render(model3d_t *model3d,
     } else {
         GL(glUniform1f(prog.u_fade_l, 0));
     }
+    GL(glUniform1f(prog.u_strip_l, strip ? 1.0 : 0.0));
+    GL(glUniform1f(prog.u_time_l, goxel()->frame_count * 16 / 1000.0));
 
     tex = tex ?: g_white_tex;
     GL(glActiveTexture(GL_TEXTURE0));
@@ -336,6 +343,8 @@ static const char *FSHADER =
     "#endif                                                             \n"
     "                                                                   \n"
     "uniform sampler2D u_tex;                                           \n"
+    "uniform float     u_strip;                                         \n"
+    "uniform float     u_time;                                             \n"
     "                                                                   \n"
     "varying lowp vec4  v_color;                                        \n"
     "varying      vec2  v_uv;                                           \n"
@@ -343,5 +352,10 @@ static const char *FSHADER =
     "void main()                                                        \n"
     "{                                                                  \n"
     "    gl_FragColor = v_color * texture2D(u_tex, v_uv);               \n"
+    "    if (u_strip > 0.0) {                                           \n"
+    "       float p = gl_FragCoord.x + gl_FragCoord.y + u_time * 4.0;   \n"
+    "       if (mod(p, 8.0) < 4.0)                                      \n"
+    "           gl_FragColor.rgb *= 0.5;                                \n"
+    "    }                                                              \n"
     "}                                                                  \n"
 ;

@@ -354,7 +354,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
             render_img(rend, layer->image, &layer->mat);
     }
 
-    render_box(rend, &goxel->selection, false, NULL);
+    render_box(rend, &goxel->selection, false, NULL, true);
 
     // XXX: make a toggle for debug informations.
     if (0) {
@@ -362,10 +362,10 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
         uvec4b_t c;
         c = HEXCOLOR(0x00FF0050);
         b = mesh_get_box(goxel->layers_mesh, true);
-        render_box(rend, &b, false, &c);
+        render_box(rend, &b, false, &c, false);
         c = HEXCOLOR(0x00FFFF50);
         b = mesh_get_box(goxel->layers_mesh, false);
-        render_box(rend, &b, false, &c);
+        render_box(rend, &b, false, &c, false);
     }
     if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
         render_plane(rend, &goxel->plane, &goxel->grid_color);

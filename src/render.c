@@ -58,6 +58,7 @@ struct render_item_t
     };
     vec3_t          grid;
     uvec4b_t        color;
+    bool            strip;  // XXX: move into effects?
     model3d_t       *model3d;
     texture_t       *tex;
     int             effects;
@@ -496,7 +497,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     mat4_t view = rend->view_mat;
     mat4_imul(&view, item->mat);
     model3d_render(item->model3d, &view, &rend->proj_mat, &item->color,
-                   item->tex, 0, NULL);
+                   item->tex, item->strip, 0, NULL);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -516,7 +517,7 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     for (x = -n; x <= n; x++) {
         view3 = mat4_translate(view2, x, y, 0);
         model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
-                       NULL, 32, &center);
+                       false, NULL, 32, &center);
     }
 }
 
@@ -567,12 +568,13 @@ void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
 }
 
 void render_box(renderer_t *rend, const box_t *box, bool solid,
-                const uvec4b_t *color)
+                const uvec4b_t *color, bool strip)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
     item->mat = box->mat;
     item->color = color ? *color : HEXCOLOR(0xffffffff);
+    item->strip = strip;
     item->model3d = solid ? g_cube_model : g_wire_cube_model;
     DL_APPEND(rend->items, item);
 }

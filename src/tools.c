@@ -117,7 +117,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                       &goxel->plane);
         mesh_set(&mesh, goxel->tool_origin_mesh);
         mesh_op(mesh, &goxel->painter, &box);
-        render_box(&goxel->rend, &box, false, &box_color);
+        render_box(&goxel->rend, &box, false, &box_color, false);
         if (down) {
             state = STATE_PAINT;
             goxel->painting = true;
@@ -126,7 +126,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     if (state == STATE_PAINT) {
         goxel_set_help_text(goxel, "Drag.");
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0, &goxel->plane);
-        render_box(&goxel->rend, &box, false, &box_color);
+        render_box(&goxel->rend, &box, false, &box_color, false);
         mesh_set(&mesh, goxel->tool_origin_mesh);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, false);
@@ -143,7 +143,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                                  goxel->plane.n));
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
-        render_box(&goxel->rend, &box, false, &box_color);
+        render_box(&goxel->rend, &box, false, &box_color, false);
         mesh_set(&mesh, goxel->tool_origin_mesh);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, false);
@@ -213,7 +213,7 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         goxel->tool_start_pos = pos;
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
-        render_box(&goxel->rend, &box, false, &box_color);
+        render_box(&goxel->rend, &box, false, &box_color, false);
         if (down) {
             state = STATE_PAINT;
             goxel->painting = true;
@@ -388,7 +388,7 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     box.p = pos;
     mat4_itranslate(&box.mat, 0, 0, -128);
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 128);
-    render_box(&goxel->rend, &box, false, NULL);
+    render_box(&goxel->rend, &box, false, NULL, false);
     if (state == STATE_IDLE) {
         if (down) state = STATE_PAINT;
     }
