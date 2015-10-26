@@ -388,9 +388,12 @@ void *action_exec(const action_t *action, const arg_t *args);
 
 // Convenience macro to call action_exec directly from an id and a list of
 // arguments.
+// I have to add a ARG(0, 0) at the beginning of the arg list so that the
+// macro works even with no action arguments.  Maybe I should add a nb_args
+// argument to action_exec to prevent that.
 #define action_exec2(id, ...) ({ \
-        const arg_t args[] = {__VA_ARGS__, ARG(0, 0)}; \
-        action_exec(action_get(id), args); \
+        const arg_t args[] = {ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)}; \
+        action_exec(action_get(id), args + 1); \
     })
 
 
