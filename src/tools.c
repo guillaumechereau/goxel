@@ -472,8 +472,8 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
     if (ret == STATE_CANCEL && goxel->tool_origin_mesh) {
         mesh_set(&goxel->image->active_layer->mesh, goxel->tool_origin_mesh);
         goxel_update_meshes(goxel, true);
-        ret = 0;
     }
+    if (ret == STATE_CANCEL) ret = 0;
     if (ret == 0) {
         goxel->tool_plane = plane_null;
         if (goxel->tool_origin_mesh) {
