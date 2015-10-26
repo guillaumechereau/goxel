@@ -141,13 +141,14 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
     DL_PREPEND_ELEM(img->layers, other, layer);
 }
 
-void image_duplicate_layer(image_t *img, layer_t *other)
+layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
     layer = layer_copy(other);
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
+    return layer;
 }
 
 void image_merge_visible_layers(image_t *img)
@@ -236,8 +237,8 @@ ACTION_REGISTER(img_move_layer,
 ACTION_REGISTER(img_duplicate_layer,
     .help = "Duplicate the active layer",
     .func = image_duplicate_layer,
-    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
-                          ARG("layer", TYPE_LAYER)),
+    .sig = SIG(TYPE_LAYER, ARG("image", TYPE_IMAGE),
+                           ARG("layer", TYPE_LAYER)),
 )
 
 ACTION_REGISTER(img_merge_visible_layers,
