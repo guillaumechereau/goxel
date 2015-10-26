@@ -595,21 +595,21 @@ void block_fill(block_t *block,
     }
 }
 
-static bool can_skip(uvec4b_t v, const painter_t *p)
+static bool can_skip(uvec4b_t v, int op, const uvec4b_t *c)
 {
-    return (v.a && (p->op == OP_ADD) && uvec4b_equal(p->color, v)) ||
-            (!v.a && (p->op == OP_SUB || p->op == OP_PAINT));
+    return (v.a && (op == OP_ADD) && uvec4b_equal(*c, v)) ||
+            (!v.a && (op == OP_SUB || op == OP_PAINT));
 }
 
-static void apply_op(uvec4b_t *v, const painter_t *p, uint8_t k)
+static void apply_op(uvec4b_t *v, int op, const uvec4b_t *c, uint8_t k)
 {
-    if (p->op == OP_PAINT)
-        v->rgb = uvec3b_mix(v->rgb, p->color.rgb, k / 255.);
-    if (p->op == OP_ADD) {
-        v->rgb = p->color.rgb;
+    if (op == OP_PAINT)
+        v->rgb = uvec3b_mix(v->rgb, c->rgb, k / 255.);
+    if (op == OP_ADD) {
+        v->rgb = c->rgb;
         v->a = max(v->a, k);
     }
-    if (p->op == OP_SUB)
+    if (op == OP_SUB)
         v->a = 0;
 }
 
@@ -620,6 +620,8 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     mat4_t mat = mat4_identity;
     vec3_t p, size;
     uint8_t v;
+    int op = painter->op;
+    const uvec4b_t *c = &painter->color;
     float (*shape_func)(const vec3_t*, const vec3_t*) = painter->shape->func;
 
     size = box_get_size(*box);
@@ -630,12 +632,12 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
     mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
     BLOCK_ITER(x, y, z) {
-        if (can_skip(BLOCK_AT(block, x, y, z), painter)) continue;
+        if (can_skip(BLOCK_AT(block, x, y, z), op, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         v = shape_func(&p, &size) * 255;
         if (v) {
             block_prepare_write(block);
-            apply_op(&BLOCK_AT(block, x, y, z), painter, v);
+            apply_op(&BLOCK_AT(block, x, y, z), op, c, v);
         }
     }
 }
