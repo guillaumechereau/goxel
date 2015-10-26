@@ -245,6 +245,8 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         goxel->selection = box_get_bbox(goxel->selection);
         return up ? STATE_IDLE : STATE_WAIT_UP;
     }
+    if (IS_IN(state, STATE_SNAPED_FACE, STATE_MOVE_FACE))
+        goxel_set_help_text(goxel, "Drag to move face");
     if (state == STATE_SNAPED_FACE) {
         if (face == -1) return STATE_IDLE;
         render_img(&goxel->rend, NULL, &face_plane.mat);
