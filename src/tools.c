@@ -258,9 +258,11 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
     }
     if (state == STATE_MOVE_FACE) {
         if (up) return STATE_IDLE;
+        goxel_unproject_on_plane(goxel, view_size, &inputs->mouse_pos,
+                                 &goxel->tool_plane, &pos, &normal);
         pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(pos, goxel->tool_plane.p),
-                                 face_plane.n));
+                                 vec3_normalized(face_plane.n)));
         pos.x = nearbyint(pos.x);
         pos.y = nearbyint(pos.y);
         pos.z = nearbyint(pos.z);
