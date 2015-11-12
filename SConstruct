@@ -13,6 +13,7 @@ gprof = int(ARGUMENTS.get('gprof', 0))
 profile = int(ARGUMENTS.get('profile', 0))
 glut = int(ARGUMENTS.get('glut', 0))
 emscripten = ARGUMENTS.get('emscripten', 0)
+static_glfw = int(ARGUMENTS.get('static_glfw', 0))
 
 if gprof or profile: debug = 0
 if emscripten: target_os = 'js'
@@ -43,7 +44,10 @@ env.Append(CPPPATH=['src'])
 sources = glob.glob('src/*.c') + glob.glob('src/*.cpp')
 
 if target_os == 'posix':
-    env.Append(LIBS=['GL', 'glfw', 'm', 'z'])
+    env.Append(LIBS=['GL', 'glfw3', 'm', 'z']) 
+    if static_glfw:
+        env.ParseConfig('pkg-config --static --libs glfw3')
+
 
 if glut:
     env.Append(CCFLAGS='-DUSE_GLUT=1', LIBS='glut')
