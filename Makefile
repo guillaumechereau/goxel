@@ -11,6 +11,9 @@ profile:
 gprof:
 	scons gprof=1
 
+static_glfw:
+	scons static_glfw=1
+
 run:
 	./goxel
 
