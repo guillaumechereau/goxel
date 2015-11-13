@@ -43,7 +43,9 @@ env.Append(CPPPATH=['src'])
 sources = glob.glob('src/*.c') + glob.glob('src/*.cpp')
 
 if target_os == 'posix':
-    env.Append(LIBS=['GL', 'glfw', 'm', 'z'])
+    env.Append(LIBS=['GL', 'm', 'z'])
+    # Note: add '--static' to link with all the libs needed by glfw3.
+    env.ParseConfig('pkg-config --libs glfw3')
 
 if glut:
     env.Append(CCFLAGS='-DUSE_GLUT=1', LIBS='glut')
