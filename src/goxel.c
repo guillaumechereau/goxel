@@ -162,7 +162,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
     renderer_t rend = {
         .view_mat = goxel->rend.view_mat,
         .proj_mat = goxel->rend.proj_mat,
-        .material = goxel->rend.material,
+        .settings = goxel->rend.settings,
     };
     uvec4b_t pixel;
     vec3b_t voxel_pos;
@@ -264,14 +264,14 @@ void goxel_init(goxel_t *goxel)
         .color = HEXCOLOR(0xEEEEECFF),
     };
     goxel->rend = (renderer_t) {
-        .border_shadow = 0.25,
         .light = {
             .direction = vec3_normalized(vec3(0.5, 0.7, 1)),
             .fixed = true,
             .intensity = 1.
         },
         // XXX: find good values.
-        .material = {
+        .settings = {
+            .border_shadow = 0.25,
             .ambient = 0.3,
             .diffuse = 0.8,
             .specular = 0.2,

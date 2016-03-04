@@ -625,6 +625,24 @@ static void palette_panel(goxel_t *goxel)
 
 static void render_panel(goxel_t *goxel)
 {
+    int i, current = 0;
+    int nb = render_get_default_settings(0, NULL, NULL);
+    char *name;
+    render_settings_t settings;
+
+    ImGui::PushID("RenderPanel");
+    for (i = 0; i < nb; i++) {
+        render_get_default_settings(i, &name, &settings);
+        current = memcmp(&goxel->rend.settings, &settings,
+                         sizeof(settings)) == 0;
+        if (ImGui::RadioButton(name, current) && !current)
+            goxel->rend.settings = settings;
+    }
+    ImGui::PopID();
+}
+
+static void render_advanced_panel(goxel_t *goxel)
+{
     float v;
     bool b;
     ImVec4 c;
@@ -637,20 +655,18 @@ static void render_panel(goxel_t *goxel)
         {&goxel->grid_color, "Grid color"},
     };
 
-    ImGui::PushID("RenderPanel");
+    ImGui::PushID("RenderAdvancedPanel");
 
-    ImGui::Text("Material");
-
-    v = goxel->rend.border_shadow;
+    v = goxel->rend.settings.border_shadow;
     if (ImGui::InputFloat("bshadow", &v, 0.1)) {
         v = clamp(v, 0, 1); \
-        goxel->rend.border_shadow = v;
+        goxel->rend.settings.border_shadow = v;
     }
 #define MAT_FLOAT(name, min, max) \
-    v = goxel->rend.material.name;  \
+    v = goxel->rend.settings.name;  \
     if (ImGui::InputFloat(#name, &v, 0.1)) { \
         v = clamp(v, min, max); \
-        goxel->rend.material.name = v; \
+        goxel->rend.settings.name = v; \
     }
 
     MAT_FLOAT(ambient, 0, 1);
@@ -662,14 +678,14 @@ static void render_panel(goxel_t *goxel)
 #undef MAT_FLOAT
 
     ImGui::CheckboxFlags("Borders",
-            (unsigned int*)&goxel->rend.material.effects, EFFECT_BORDERS);
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS);
     ImGui::CheckboxFlags("Borders all",
-            (unsigned int*)&goxel->rend.material.effects, EFFECT_BORDERS_ALL);
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS_ALL);
     ImGui::CheckboxFlags("See back",
-            (unsigned int*)&goxel->rend.material.effects, EFFECT_SEE_BACK);
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_SEE_BACK);
     if (ImGui::CheckboxFlags("Marching Cubes",
-            (unsigned int*)&goxel->rend.effects, EFFECT_MARCHING_CUBES)) {
-        goxel->rend.material.smoothness = 1;
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_MARCHING_CUBES)) {
+        goxel->rend.settings.smoothness = 1;
     }
     ImGui::Checkbox("Fixed light", &goxel->rend.light.fixed);
 
@@ -903,6 +919,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::Separator();
     if (ImGui::GoxCollapsingHeader("Render", NULL, true, false))
         render_panel(goxel);
+    if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
+        render_advanced_panel(goxel);
     ImGui::EndChild();
     ImGui::SameLine();
 

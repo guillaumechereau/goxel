@@ -68,11 +68,11 @@ static void generate_icons(goxel_t *goxel)
         DL_FOREACH(goxel->image->layers, tmp)
             tmp->visible = tmp == layer;
 
-        goxel->rend.border_shadow = 0;
-        goxel->rend.material.smoothness = 1;
-        goxel->rend.material.specular = 0.2;
-        goxel->rend.material.diffuse = 1;
-        goxel->rend.material.ambient = 0.2;
+        goxel->rend.settings.border_shadow = 0;
+        goxel->rend.settings.smoothness = 1;
+        goxel->rend.settings.specular = 0.2;
+        goxel->rend.settings.diffuse = 1;
+        goxel->rend.settings.ambient = 0.2;
         goxel->camera.ofs = vec3(-2, -8, 0);
         goxel->camera.rot = quat_identity;
         quat_irotate(&goxel->camera.rot, M_PI / 4, 1, 0, 0);
@@ -81,23 +81,23 @@ static void generate_icons(goxel_t *goxel)
             goxel->camera.ofs = vec3(0, 0, 0);
             goxel->camera.rot = quat_identity;
             quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
-            goxel->rend.material.smoothness = 0;
+            goxel->rend.settings.smoothness = 0;
         }
         if (strcmp(layer->name, "grid") == 0) {
             goxel->camera.ofs = vec3(0, 0, 0);
             goxel->camera.rot = quat_identity;
             quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
-            goxel->rend.material.smoothness = 0;
+            goxel->rend.settings.smoothness = 0;
         }
         if (strcmp(layer->name, "pick") == 0) {
             goxel->camera.ofs = vec3(0, 0, 0);
             goxel->camera.rot = quat_identity;
             quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
             quat_irotate(&goxel->camera.rot, M_PI / 4, 0, 1, 0);
-            goxel->rend.material.smoothness = 0;
+            goxel->rend.settings.smoothness = 0;
         }
         if (strcmp(layer->name, "selection") == 0) {
-            goxel->rend.material.smoothness = 0;
+            goxel->rend.settings.smoothness = 0;
         }
 
         goxel_update_meshes(goxel, true);

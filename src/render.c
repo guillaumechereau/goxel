@@ -451,12 +451,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
     GL(glUniform1i(prog->u_bump_tex_l, 1));
     GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir.v));
     GL(glUniform1f(prog->u_l_int_l, rend->light.intensity));
-    GL(glUniform1f(prog->u_m_amb_l, rend->material.ambient));
-    GL(glUniform1f(prog->u_m_dif_l, rend->material.diffuse));
-    GL(glUniform1f(prog->u_m_spe_l, rend->material.specular));
-    GL(glUniform1f(prog->u_m_shi_l, rend->material.shininess));
-    GL(glUniform1f(prog->u_m_smo_l, rend->material.smoothness));
-    GL(glUniform1f(prog->u_bshadow_l, rend->border_shadow));
+    GL(glUniform1f(prog->u_m_amb_l, rend->settings.ambient));
+    GL(glUniform1f(prog->u_m_dif_l, rend->settings.diffuse));
+    GL(glUniform1f(prog->u_m_spe_l, rend->settings.specular));
+    GL(glUniform1f(prog->u_m_shi_l, rend->settings.shininess));
+    GL(glUniform1f(prog->u_m_smo_l, rend->settings.smoothness));
+    GL(glUniform1f(prog->u_bshadow_l, rend->settings.border_shadow));
     GL(glUniform1f(prog->u_pos_scale_l, pos_scale));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
@@ -483,8 +483,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MESH;
     item->mesh = mesh_copy(mesh);
-    item->effects = effects | rend->material.effects | rend->effects |
-                    EFFECT_SMOOTH;
+    item->effects = effects | rend->settings.effects | EFFECT_SMOOTH;
     // With EFFECT_RENDER_POS we need to remove some effects.
     if (item->effects & EFFECT_RENDER_POS)
         item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK |
@@ -646,6 +645,41 @@ void render_render(renderer_t *rend)
     }
     assert(rend->items == NULL);
     cleanup_buffer();
+}
+
+int render_get_default_settings(int i, char **name, render_settings_t *out)
+{
+    if (!out) return 4;
+
+    *out = (render_settings_t) {
+        .border_shadow = 0.25,
+        .ambient = 0.3,
+        .diffuse = 0.8,
+        .specular = 0.2,
+        .shininess = 2.0,
+        .smoothness = 0.0,
+        .effects = EFFECT_BORDERS_ALL,
+    };
+    switch (i) {
+        case 0:
+            if (name) *name = "Cubes";
+            break;
+        case 1:
+            if (name) *name = "Plain";
+            out->effects = 0;
+            break;
+        case 2:
+            if (name) *name = "Smooth";
+            out->effects = 0;
+            out->smoothness = 0.9;
+            break;
+        case 3:
+            if (name) *name = "Marching";
+            out->smoothness = 1.0;
+            out->effects = EFFECT_MARCHING_CUBES;
+            break;
+    }
+    return 4;
 }
 
 

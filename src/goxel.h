@@ -554,6 +554,16 @@ enum {
     EFFECT_MARCHING_CUBES   = 1 << 7,
 };
 
+typedef struct {
+    float ambient;
+    float diffuse;
+    float specular;
+    float shininess;
+    float smoothness;
+    int   effects;
+    float border_shadow;
+} render_settings_t;
+
 typedef struct renderer renderer_t;
 typedef struct render_item_t render_item_t;
 struct renderer
@@ -567,18 +577,8 @@ struct renderer
         float  intensity;
     } light;
 
-    // For the moment there is just one global material.
-    struct {
-        float ambient;
-        float diffuse;
-        float specular;
-        float shininess;
-        float smoothness;
-        int   effects;
-    } material;
+    render_settings_t settings;
 
-    float            border_shadow;
-    int              effects;
     render_item_t    *items;
 };
 
@@ -594,6 +594,7 @@ void render_box(renderer_t *rend, const box_t *box, bool solid,
 void render_sphere(renderer_t *rend, const mat4_t *mat);
 void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat);
 void render_render(renderer_t *rend);//, const mat4_t *view, const mat4_t *proj);
+int render_get_default_settings(int i, char **name, render_settings_t *out);
 
 // #############################
 
