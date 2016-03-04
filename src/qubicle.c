@@ -21,6 +21,8 @@
 // Load qubicle files.
 
 #define READ(type, file) ({ type v; fread(&v, sizeof(v), 1, file); v;})
+#define WRITE(type, v, file) \
+    ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
 void qubicle_import(const char *path)
 {
@@ -45,6 +47,7 @@ void qubicle_import(const char *path)
     vmask = READ(uint32_t, file);
     (void)vmask;
     mat_count = READ(uint32_t, file);
+
     for (i = 0; i < mat_count; i++) {
         len = READ(uint8_t, file);
         fread(buff, len, 1, file);
@@ -83,8 +86,51 @@ void qubicle_import(const char *path)
                 }
             }
         }
+        mesh_blit(goxel()->image->active_layer->mesh, cube,
+                  pos[0], pos[1], pos[2], w, h, d);
+        free(cube);
     }
-    mesh_blit(goxel()->image->active_layer->mesh, cube,
-              -w / 2, -h / 2, -d / 2, w, h, d);
-    free(cube);
+}
+
+void qubicle_export(const mesh_t *mesh, const char *path)
+{
+    FILE *file;
+    block_t *block;
+    int i, count, x, y, z;
+    char buff[8];
+
+    count = HASH_COUNT(mesh->blocks);
+
+    file = fopen(path, "wb");
+    WRITE(uint32_t, 257, file); // version
+    WRITE(uint32_t, 0, file);   // color format RGBA
+    WRITE(uint32_t, 1, file);   // orientation right handed
+    WRITE(uint32_t, 0, file);   // no compression
+    WRITE(uint32_t, 0, file);   // vmask
+    WRITE(uint32_t, count, file);
+
+    i = 0;
+    MESH_ITER_BLOCKS(mesh, block) {
+
+        WRITE(uint8_t, 8, file);
+        memset(buff, 0, 8);
+        sprintf(buff, "%d", i);
+        fwrite(buff, 8, 1, file);
+
+        WRITE(uint32_t, BLOCK_SIZE - 2, file);
+        WRITE(uint32_t, BLOCK_SIZE - 2, file);
+        WRITE(uint32_t, BLOCK_SIZE - 2, file);
+        WRITE(int32_t, block->pos.x - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, block->pos.y - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, block->pos.z - BLOCK_SIZE / 2, file);
+        for (z = 1; z < BLOCK_SIZE - 1; z++)
+        for (y = 1; y < BLOCK_SIZE - 1; y++)
+        for (x = 1; x < BLOCK_SIZE - 1; x++) {
+            WRITE(uint32_t, block->data->voxels[
+                  x + y * BLOCK_SIZE + z * BLOCK_SIZE * BLOCK_SIZE].uint32,
+                  file);
+        }
+        i++;
+    }
+    fclose(file);
 }

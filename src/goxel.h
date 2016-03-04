@@ -876,6 +876,7 @@ void dicom_import(const char *dir);
 // #############################
 
 void qubicle_import(const char *path);
+void qubicle_export(const mesh_t *mesh, const char *path);
 
 // #### Profiler ###############
 
