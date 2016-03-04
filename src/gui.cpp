@@ -731,6 +731,15 @@ static void import_dicom(goxel_t *goxel)
     free(path);
 }
 
+static void import_qubicle(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
+    if (!result) return;
+    qubicle_import(path);
+    free(path);
+}
+
 static void import_image_plane(goxel_t *goxel)
 {
     char *path = NULL;
@@ -852,6 +861,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             }
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
+                if (ImGui::MenuItem("qubicle")) import_qubicle(goxel);
                 if (ImGui::MenuItem("dicom")) import_dicom(goxel);
                 ImGui::EndMenu();
             }

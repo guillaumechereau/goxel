@@ -83,6 +83,7 @@ typedef union {
     uvec3b_t xyz;
     uvec3b_t rgb;
     uint8_t v[4];
+    uint32_t uint32;
 } uvec4b_t;
 
 static inline uvec4b_t uvec4b(uint8_t x, uint8_t y, uint8_t z, uint8_t w) {

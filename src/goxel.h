@@ -875,6 +875,8 @@ void dicom_import(const char *dir);
 
 // #############################
 
+void qubicle_import(const char *path);
+
 // #### Profiler ###############
 
 typedef struct profiler_block profiler_block_t;

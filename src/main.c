@@ -234,8 +234,12 @@ int main(int argc, char **argv)
 #endif
 
     goxel_init(&goxel);
-    if (args.args[0])
-        load_from_file(&goxel, args.args[0]);
+    if (args.args[0]) {
+        if (str_endswith(args.args[0], ".qb"))
+            qubicle_import(args.args[0]);
+        else
+            load_from_file(&goxel, args.args[0]);
+    }
     if (args.icons) {
         generate_icons(&goxel);
         glfwTerminate();
