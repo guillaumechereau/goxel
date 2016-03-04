@@ -20,7 +20,8 @@
 
 // Load qubicle files.
 
-#define READ(type, file) ({ type v; fread(&v, sizeof(v), 1, file); v;})
+#define READ(type, file) \
+    ({ type v; int r = fread(&v, sizeof(v), 1, file); (void)r; v;})
 #define WRITE(type, v, file) \
     ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
@@ -28,7 +29,7 @@ void qubicle_import(const char *path)
 {
     FILE *file;
     int version, color_format, orientation, compression, vmask, mat_count;
-    int i, j, index, len, w, h, d, pos[3], x, y, z;
+    int i, j, r, index, len, w, h, d, pos[3], x, y, z;
     char buff[256];
     uint32_t v;
     uvec4b_t *cube;
@@ -50,7 +51,8 @@ void qubicle_import(const char *path)
 
     for (i = 0; i < mat_count; i++) {
         len = READ(uint8_t, file);
-        fread(buff, len, 1, file);
+        r = fread(buff, len, 1, file);
+        (void)r;
         w = READ(uint32_t, file);
         h = READ(uint32_t, file);
         d = READ(uint32_t, file);
