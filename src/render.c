@@ -671,7 +671,8 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
         case 2:
             if (name) *name = "Smooth";
             out->effects = 0;
-            out->smoothness = 0.9;
+            out->smoothness = 1;
+            out->border_shadow = 0;
             break;
         case 3:
             if (name) *name = "Marching";
