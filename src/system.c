@@ -120,3 +120,29 @@ GLuint sys_get_screen_framebuffer(void)
     return 0;
 }
 
+#ifdef __linux__
+
+#include <gtk/gtk.h>
+
+const char *sys_get_clipboard_text(void)
+{
+    GtkClipboard *cb;
+    static gchar *text = NULL;
+    gtk_init_check(NULL, NULL);
+    g_free(text);
+    cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    text = gtk_clipboard_wait_for_text(cb);
+    return text;
+}
+
+void sys_set_clipboard_text(const char *text)
+{
+    GtkClipboard *cb;
+    gtk_init_check(NULL, NULL);
+    cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    gtk_clipboard_set_can_store(cb, NULL, 0);
+    gtk_clipboard_set_text(cb, text, -1);
+    gtk_clipboard_store(cb);
+}
+
+#endif

@@ -259,6 +259,11 @@ static void init_ImGui()
     io.KeyMap[ImGuiKey_Y]           = 'Y';
     io.KeyMap[ImGuiKey_Z]           = 'Z';
 
+    if (DEFINED(__linux__)) {
+        io.SetClipboardTextFn = sys_set_clipboard_text;
+        io.GetClipboardTextFn = sys_get_clipboard_text;
+    }
+
     io.RenderDrawListsFn = ImImpl_RenderDrawLists;
     load_fonts_texture();
 
