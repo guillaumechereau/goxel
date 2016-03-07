@@ -253,6 +253,14 @@ uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp,
                           int *size);
 bool str_endswith(const char *str, const char *end);
 
+// XXX: I need to fix the API to read files and assets.
+char *read_file(const char *name, int *size, bool check_data_dir, ...);
+
+// List all the files in a directory.
+// flags: unused for the moment.
+int list_dir(const char *url, int flags, void *user,
+             int (*f)(const char *path, void *user));
+
 // #############################
 
 

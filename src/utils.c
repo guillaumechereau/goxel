@@ -23,6 +23,7 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <dirent.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -410,4 +411,21 @@ bool str_endswith(const char *str, const char *end)
     if (strlen(str) < strlen(end)) return false;
     const char *start = str + strlen(str) - strlen(end);
     return strcmp(start, end) == 0;
+}
+
+int list_dir(const char *url, int flags, void *user,
+             int (*f)(const char *path, void *user))
+{
+    DIR *dir;
+    struct dirent *dirent;
+    char *path;
+    dir = opendir(url);
+    while ((dirent = readdir(dir))) {
+        if (dirent->d_name[0] == '.') continue;
+        asprintf(&path, "%s/%s", url, dirent->d_name);
+        f(path, user);
+        free(path);
+    }
+    closedir(dir);
+    return 0;
 }
