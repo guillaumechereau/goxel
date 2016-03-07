@@ -444,9 +444,9 @@ static int tool_pick_color_iter(goxel_t *goxel, const inputs_t *inputs,
     return 0;
 }
 
-static int tool_move_iter(goxel_t *goxel, const inputs_t *inputs,
-                          int state, const vec2_t *view_size,
-                          bool inside)
+static int tool_dummy_iter(goxel_t *goxel, const inputs_t *inputs,
+                           int state, const vec2_t *view_size,
+                           bool inside)
 {
     return 0;
 }
@@ -465,9 +465,10 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
         [TOOL_BRUSH]        = tool_brush_iter,
         [TOOL_LASER]        = tool_laser_iter,
         [TOOL_SET_PLANE]    = tool_set_plane_iter,
-        [TOOL_MOVE]         = tool_move_iter,
+        [TOOL_MOVE]         = tool_dummy_iter,
         [TOOL_PICK_COLOR]   = tool_pick_color_iter,
         [TOOL_SELECTION]    = tool_selection_iter,
+        [TOOL_PROCEDURAL]   = tool_dummy_iter,
     };
 
     assert(tool >= 0 && tool < ARRAY_SIZE(FUNCS));

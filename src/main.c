@@ -68,6 +68,7 @@ static void generate_icons(goxel_t *goxel)
         DL_FOREACH(goxel->image->layers, tmp)
             tmp->visible = tmp == layer;
 
+        goxel->camera.zoom = 0;
         goxel->rend.settings.border_shadow = 0;
         goxel->rend.settings.smoothness = 1;
         goxel->rend.settings.specular = 0.2;
@@ -97,6 +98,14 @@ static void generate_icons(goxel_t *goxel)
             goxel->rend.settings.smoothness = 0;
         }
         if (strcmp(layer->name, "selection") == 0) {
+            goxel->rend.settings.smoothness = 0;
+        }
+        if (strcmp(layer->name, "proc") == 0) {
+            goxel->camera.ofs = vec3(-2, -2, 0);
+            goxel->camera.rot = quat_identity;
+            quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
+            quat_irotate(&goxel->camera.rot, M_PI, 1, 0, 0);
+            goxel->camera.zoom = 2;
             goxel->rend.settings.smoothness = 0;
         }
 

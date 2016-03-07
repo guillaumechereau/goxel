@@ -1,0 +1,147 @@
+# Goxel 3D voxels editor
+#
+# copyright (c) 2016 Guillaume Chereau <guillaume@noctua-software.com>
+#
+# Goxel is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Goxel is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# goxel.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+# This file contains the procedural rendering language parser generator code.
+# If you change it you need to rebuild procedural.inc with 'leg':
+# leg -o src/procedural.inc src/procedural.leg.
+#
+# I don't really like to use a code generator, but it makes it much easier
+# to quickly change the grammar of the language.
+#
+# TODO: fix all the memory bugs in the code.
+
+%{
+    // Do not edit the .inc file directly, instead edit procedural.leg.
+    #include <assert.h>
+    #include <stdio.h>
+    #include <stdarg.h>
+    #include <stdlib.h>
+    #include "utlist.h"
+
+    #define YYSTYPE node_t*
+    #define YY_CTX_LOCAL 1
+    #define YY_CTX_MEMBERS int line, read_line;
+
+    // XXX: I should move those into YY_CTX_MEMBERS.
+    static node_t *g_prog = NULL;
+    static const char *g_input = NULL;
+    static const char *g_cur = NULL;
+
+    // Redefine YY_INPUT to keep track of the last read line in the input.
+    #define YY_INPUT(ctx, buf, result, max_size)    \
+    {                                               \
+        int yyc = *g_cur;                           \
+        if (yyc == '\n') ctx->read_line++;          \
+        if (yyc) {g_cur++; *buf = yyc; result = 1;} \
+        else result = 0;                            \
+    }                                               \
+
+    static node_t *node_create(int type, const char *id, int line,
+                               int nb, node_t **children)
+    {
+        int i;
+        node_t *node = calloc(1, sizeof(*node));
+        node->type = type;
+        node->id = id ? strdup(id) : NULL;
+        node->line = line;
+        node->size = nb;
+        for (i = 0; i < nb; i++) {
+            assert(children[i]);
+            DL_APPEND(node->children, children[i]);
+        }
+        return node;
+    }
+
+    // Convenience macro to create a node.
+    #define N(type, id, ...) ({ \
+        node_t *nodes[] = {__VA_ARGS__}; \
+        node_create(NODE_##type, id, yy->line, ARRAY_SIZE(nodes), nodes); \
+    })
+
+    // Convenience function to append a node to an other one.
+    static void A(node_t *node, node_t *c)
+    {
+        assert(node);
+        assert(c);
+        assert(node != c);
+        node->size++;
+        DL_APPEND(node->children, c);
+    }
+%}
+
+Prog    =  p:-       {p = N(PROG, NULL)}
+           (s:Shape  {A(p, s)}                     )+
+            -        {g_prog = $$ = p}
+            EOF
+
+Shape   = s:- 'shape' i:Id       {s = N(SHAPE, i->id)}
+              (b:Block           {A(s, b)}
+               | (r:Rule         {A(s, r)} )+
+             )                   {$$ = s}
+
+Rule    = r:- 'rule'    {r = N(RULE, NULL); r->v = 1.0}
+          (w:Value      {r->v = w->v} ) ?
+          b:Block       {A(r, b); $$ = r}
+
+Block   = - '{' b:-      {b = N(BLOCK, NULL)}
+          (s:Stmt        {A(b, s)}                   )*
+          - '}' -        {$$ = b}
+
+Stmt    = 'loop' n:Value t:Transf b:Block   {$$ = N(LOOP, NULL, t, b);
+                                             $$->v = n->v}
+        | i:Id t:Transf                     {$$ = N(CALL, i->id, t)}
+        | t:Transf                          {$$ = t}
+
+Transf  = '[' t:-  {t = N(TRANSF, NULL)}
+          (o:Op    {A(t, o)}                )*
+          ']' -    {$$ = t}
+
+Op      = i:Id
+          o:-           {o = N(OP, i->id)}
+          (e:Expr       {A(o, e)}              )*
+          -             {$$ = o}
+
+Expr    = (a:Value '+-' b:Value)     {$$ = N(EXPR, "+-", a, b)}
+        | v:Value                    {$$ = v}
+
+Value   = - < [-.0-9]+ > -  {$$ = N(VALUE, NULL); $$->v = atof(yytext)}
+
+Id      = - < [a-zA-Z_][a-zA-Z_0-9]* > -  {$$ = N(ID, yytext)}
+
+-       = ( Comment | [ \t] | EOL )*
+
+Comment = '//' (!EOL .)*
+
+EOL     = '\n' {yy->line++}
+
+EOF     = !.
+
+%%
+
+static node_t *parse(const char *txt, int *err_line)
+{
+    yycontext yy;
+    memset(&yy, 0, sizeof(yy));
+    g_input = g_cur = txt;
+    g_prog = NULL;
+    while (yyparse(&yy))
+        ;
+    if (!g_prog && err_line) *err_line = yy.read_line;
+    yyrelease(&yy);
+    return g_prog;
+}

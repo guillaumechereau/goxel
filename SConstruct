@@ -25,7 +25,8 @@ if debug and target_os == 'posix':
                LIBS=['asan', 'ubsan'])
 
 env.Append(CFLAGS= '-Wall -Werror -std=gnu99 -Wno-unknown-pragmas',
-           CXXFLAGS='-Wall -Werror -Wno-narrowing -Wno-unknown-pragmas'
+           CXXFLAGS='-std=gnu++11 -Wall -Werror -Wno-narrowing '
+                    '-Wno-unknown-pragmas'
         )
 
 if debug:

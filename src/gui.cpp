@@ -53,6 +53,7 @@ static texture_t *g_tex_laser = NULL;
 static texture_t *g_tex_move = NULL;
 static texture_t *g_tex_pick = NULL;
 static texture_t *g_tex_selection = NULL;
+static texture_t *g_tex_procedural = NULL;
 
 static const int MiB = 1 << 20;
 
@@ -112,6 +113,8 @@ typedef struct gui_t {
     prog_t  prog;
     GLuint  array_buffer;
     GLuint  index_buffer;
+
+    char prog_buff[64 * 1024];
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -300,6 +303,7 @@ void gui_init(void)
     g_tex_move = texture_new_image("data/icons/move.png");
     g_tex_pick = texture_new_image("data/icons/pick.png");
     g_tex_selection = texture_new_image("data/icons/selection.png");
+    g_tex_procedural = texture_new_image("data/icons/proc.png");
 }
 
 // XXX: Move this somewhere else.
@@ -433,6 +437,7 @@ static void tools_panel(goxel_t *goxel)
         {TOOL_MOVE,         "Move",         g_tex_move->tex},
         {TOOL_PICK_COLOR,   "Pick Color",   g_tex_pick->tex},
         {TOOL_SELECTION,    "Selection",    g_tex_selection->tex},
+        {TOOL_PROCEDURAL,   "Procedural",   g_tex_procedural->tex},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
@@ -843,9 +848,89 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
     }
 }
 
+static void procedural_panel(goxel_t *goxel)
+{
+    static char **progs = NULL;
+    static char **names = NULL;
+    static int nb_progs = 0;
+    static bool first_time = true;
+    int i;
+    static int current = 0;
+    proc_t *proc = &goxel->proc;
+    bool enabled;
+    static bool auto_run;
+    static int timer = 0;
+
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    if (first_time) {
+        first_time = false;
+        for (i = 0; i < nb_progs; i++) {free(progs[i]); free(names[i]);}
+        free(progs);
+        free(names);
+        nb_progs = proc_list_saved(NULL, NULL);
+        progs = (char**)calloc(nb_progs, sizeof(*progs));
+        names = (char**)calloc(nb_progs, sizeof(*names));
+        proc_list_saved(NULL,
+                [](int i, const char *name, const char *code, void *user){
+                    progs[i] = strdup(code);
+                    names[i] = strdup(name);
+                });
+    }
+
+    if (ImGui::InputTextMultiline("", gui->prog_buff,
+                                  ARRAY_SIZE(gui->prog_buff),
+                                  ImVec2(-1, 400))) {
+        timer = 0;
+        proc_parse(gui->prog_buff, proc);
+    }
+    if (proc->error.str) {
+        float h = ImGui::CalcTextSize("").y;
+        ImVec2 rmin = ImGui::GetItemRectMin();
+        ImVec2 rmax = ImGui::GetItemRectMax();
+        rmin.y = rmin.y + goxel->proc.error.line * h + 2;
+        rmax.y = rmin.y + h;
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        draw_list->AddRect(rmin, rmax, 0x800000ff);
+    }
+    ImGui::Text(proc->error.str);
+    enabled = proc->state >= PROC_READY;
+
+    if (auto_run && proc->state == PROC_READY && timer == 0) timer = 1;
+    if (proc->state == PROC_RUNNING) {
+        if (ImGui::Button("Stop")) proc_stop(proc);
+    } else {
+        ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[
+                         enabled ? ImGuiCol_Text : ImGuiCol_TextDisabled]);
+        if (    (ImGui::Button("Run") && enabled) ||
+                (auto_run && proc->state == PROC_READY &&
+                 timer && timer++ >= 16)) {
+            mesh_clear(goxel->image->active_layer->mesh);
+            proc_start(proc);
+            timer = 0;
+        }
+        ImGui::PopStyleColor();
+    }
+    ImGui::SameLine();
+    if (ImGui::Checkbox("Auto", &auto_run))
+        proc_parse(gui->prog_buff, proc);
+
+    ImGui::PushItemWidth(-1);
+    if (ImGui::Combo("demos", &current, (const char**)names, nb_progs)) {
+        strcpy(gui->prog_buff, progs[current]);
+    }
+    ImGui::PopItemWidth();
+
+    if (proc->state == PROC_RUNNING) {
+        proc_iter(&goxel->proc, 10);
+        goxel_update_meshes(goxel, false);
+    }
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     static view_t view;
+    float left_pane_width;
     bool open_shift_alpha = false;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
@@ -921,12 +1006,17 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
     ImGui::Spacing();
 
-
-    ImGui::BeginChild("left pane", ImVec2(180, 0), true);
+    left_pane_width = 180;
+    if (goxel->tool == TOOL_PROCEDURAL) {
+        left_pane_width = clamp(ImGui::CalcTextSize(gui->prog_buff).x + 60,
+                                250, 600);
+    }
+    ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
     ImGui::PushItemWidth(75);
     if (ImGui::GoxCollapsingHeader("Tool", NULL, true, true))
         tools_panel(goxel);
     ImGui::Separator();
+    if (goxel->tool == TOOL_PROCEDURAL) goto tool_procedural;
     if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
         tool_options_panel(goxel);
     ImGui::Separator();
@@ -936,6 +1026,11 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (ImGui::GoxCollapsingHeader("Palette", NULL, true, true))
         palette_panel(goxel);
     ImGui::Separator();
+tool_procedural:
+    if (goxel->tool == TOOL_PROCEDURAL) {
+        if (ImGui::GoxCollapsingHeader("Procedural Rendering", NULL, true, true))
+            procedural_panel(goxel);
+    }
     if (ImGui::GoxCollapsingHeader("Render", NULL, true, false))
         render_panel(goxel);
     if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
@@ -972,7 +1067,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::EndChild();
 
     if (DEBUG || PROFILER) {
-        ImGui::SetCursorPos(ImVec2(200, 30));
+        ImGui::SetCursorPos(ImVec2(left_pane_width + 20, 30));
         ImGui::BeginChild("debug", ImVec2(0, 0), false,
                           ImGuiWindowFlags_NoInputs);
         ImGui::Text("Blocks: %d (%.2g MiB)", goxel->block_count,
@@ -1002,7 +1097,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel->painter.op = OP_ADD;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
         goxel->painter.op = OP_ADD;
-    if (ImGui::IsKeyPressed(KEY_CONTROL, false)) {
+    if (ImGui::IsKeyPressed(KEY_CONTROL, false) && goxel->tool == TOOL_BRUSH) {
         tool_cancel(goxel, goxel->tool, goxel->tool_state);
         goxel->prev_tool = goxel->tool;
         goxel->tool = TOOL_PICK_COLOR;

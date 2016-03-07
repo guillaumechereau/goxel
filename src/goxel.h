@@ -437,6 +437,7 @@ enum {
     TOOL_MOVE,
     TOOL_PICK_COLOR,
     TOOL_SELECTION,
+    TOOL_PROCEDURAL,
 };
 
 typedef struct shape {
@@ -737,6 +738,39 @@ void image_history_push(image_t *img);
 void image_undo(image_t *img);
 void image_redo(image_t *img);
 
+// ##### Procedural rendering ########################
+
+// The possible states of the procedural program.
+enum {
+    PROC_INIT,
+    PROC_PARSE_ERROR,
+    PROC_READY,
+    PROC_RUNNING,
+    PROC_DONE,
+};
+
+typedef struct proc {
+    struct proc_node *prog; // AST of the program.
+    struct proc_ctx  *ctxs; // Rendering stack during execution.
+    int              state;
+    struct {
+        char         *str;  // Set in case of parsing or execution error.
+        int          line;
+    } error;
+} proc_t;
+
+int proc_parse(const char *txt, proc_t *proc);
+int proc_start(proc_t *proc);
+int proc_stop(proc_t *proc);
+int proc_iter(proc_t *proc, int n);
+
+// Get the list of programs saved in data/procs.
+int proc_list_saved(void *user, void (*f)(int index,
+                                const char *name, const char *code,
+                                void *user));
+
+// #############################
+
 typedef struct goxel
 {
     vec2i_t    screen_size;
@@ -807,6 +841,7 @@ typedef struct goxel
 
     bool       painting;    // Set to true when we are in a painting operation.
     bool       moving;      // Set to true while in a movement operation.
+    proc_t     proc;        // The current procedural rendering (if any).
 
     palette_t  *palette;    // The current color palette
     char       *help_text;  // Seen in the bottom of the screen.
