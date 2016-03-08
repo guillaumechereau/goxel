@@ -544,11 +544,11 @@ int block_generate_vertices(const block_data_t *data, int effects,
                 out[nb * 4 + i].bshadow_uv = uvec2b(
                     shadow_mask % 16 * ts + VERTICE_UV[i].x * (ts - 1),
                     shadow_mask / 16 * ts + VERTICE_UV[i].y * (ts - 1));
+                out[nb * 4 + i].uv = uvec2b(VERTICE_UV[i].x * 255,
+                                            VERTICE_UV[i].y * 255);
                 // For testing:
                 // This put a border bump on all the edges of the voxel.
-                out[nb * 4 + i].bump_uv = uvec2b(
-                    borders_mask * 16 + VERTICE_UV[i].x * (16 - 1),
-                    f * 16 + VERTICE_UV[i].y * (16 - 1));
+                out[nb * 4 + i].bump_uv = uvec2b(borders_mask * 16, f * 16);
                 out[nb * 4 + i].pos_data = get_pos_as_vec2(x, y, z, f);
             }
             nb++;

@@ -124,8 +124,9 @@ static const struct {
     {"a_normal",        3, GL_BYTE,            false, OFFSET(normal)},
     {"a_color",         4, GL_UNSIGNED_BYTE,   true,  OFFSET(color)},
     {"a_pos_data",      2, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
-    {"a_bshadow_uv",    2, GL_UNSIGNED_BYTE,   false, OFFSET(bshadow_uv)},
+    {"a_uv",            2, GL_UNSIGNED_BYTE,   true,  OFFSET(uv)},
     {"a_bump_uv",       2, GL_UNSIGNED_BYTE,   false, OFFSET(bump_uv)},
+    {"a_bshadow_uv",    2, GL_UNSIGNED_BYTE,   false, OFFSET(bshadow_uv)},
 };
 
 /*
@@ -709,7 +710,8 @@ static const char *VSHADER =
     "attribute vec3 a_normal;                                           \n"
     "attribute vec4 a_color;                                            \n"
     "attribute vec2 a_bshadow_uv;                                       \n"
-    "attribute vec2 a_bump_uv;                                          \n"
+    "attribute vec2 a_bump_uv;   // bump tex base coordinates [0,255]   \n"
+    "attribute vec2 a_uv;        // uv coordinates [0,1]                \n"
     "uniform   mat4 u_model;                                            \n"
     "uniform   mat4 u_view;                                             \n"
     "uniform   mat4 u_proj;                                             \n"
@@ -718,6 +720,7 @@ static const char *VSHADER =
     "varying   vec3 v_pos;                                              \n"
     "varying   vec4 v_color;                                            \n"
     "varying   vec2 v_bshadow_uv;                                       \n"
+    "varying   vec2 v_uv;                                               \n"
     "varying   vec2 v_bump_uv;                                          \n"
     "varying   vec3 v_normal;                                           \n"
     "                                                                   \n"
@@ -727,8 +730,9 @@ static const char *VSHADER =
     "    v_color = a_color;                                             \n"
     "    v_bshadow_uv = (a_bshadow_uv + 0.5) /                          \n"
     "                          (16.0 * VOXEL_TEXTURE_SIZE);             \n"
-    "    v_bump_uv = (a_bump_uv + 0.5) / (16.0 * 16.0);                 \n"
     "    v_pos = a_pos * u_pos_scale;                                   \n"
+    "    v_uv = a_uv;                                                   \n"
+    "    v_bump_uv = a_bump_uv;                                         \n"
     "    gl_Position = u_proj * u_view * u_model * vec4(v_pos, 1.0);    \n"
     "}                                                                  \n"
 ;
@@ -756,20 +760,28 @@ static const char *FSHADER =
     "uniform sampler2D u_bshadow_tex;                                   \n"
     "uniform sampler2D u_bump_tex;                                      \n"
     "uniform float u_bshadow;                                           \n"
+    "                                                                   \n"
     "varying lowp vec3 v_pos;                                           \n"
     "varying lowp vec4 v_color;                                         \n"
+    "varying lowp vec2 v_uv;                                            \n"
     "varying lowp vec2 v_bshadow_uv;                                    \n"
     "varying lowp vec2 v_bump_uv;                                       \n"
     "varying lowp vec3 v_normal;                                        \n"
     "                                                                   \n"
+    "vec2 uv, bump_uv;                                                  \n"
+    "vec3 n, s, r, v, bump;                                             \n"
+    "float s_dot_n;                                                     \n"
+    "float l_amb, l_dif, l_spe;                                         \n"
+    "float bshadow;                                                     \n"
+    "                                                                   \n"
     "void main()                                                        \n"
     "{                                                                  \n"
-    "    vec3 n, s, r, v, bump;                                         \n"
-    "    float s_dot_n;                                                 \n"
-    "    float l_amb, l_dif, l_spe;                                     \n"
+    "    // clamp uv so to prevent overflow with multismapling.         \n"
+    "    uv = clamp(v_uv, 0.0, 1.0);                                    \n"
     "    s = normalize(u_l_dir);                                        \n"
     "    n = normalize((u_view * u_model * vec4(v_normal, 0.0)).xyz);   \n"
-    "    bump = texture2D(u_bump_tex, v_bump_uv).xyz - 0.5;             \n"
+    "    bump_uv = (v_bump_uv + 0.5 + uv * 15.0) / 256.0;               \n"
+    "    bump = texture2D(u_bump_tex, bump_uv).xyz - 0.5;               \n"
     "    bump = normalize((u_view * u_model * vec4(bump, 0.0)).xyz);    \n"
     "    n = mix(bump, n, u_m_smo);                                     \n"
     "    s_dot_n = dot(s, n);                                           \n"
@@ -784,7 +796,7 @@ static const char *FSHADER =
     "       l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);        \n"
     "                                                                   \n"
     "                                                                   \n"
-    "    float bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;      \n"
+    "    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;            \n"
     "    bshadow = sqrt(bshadow);                                       \n"
     "    bshadow = mix(1.0, bshadow, u_bshadow);                        \n"
     "    gl_FragColor = v_color;                                        \n"
