@@ -51,6 +51,7 @@
     X(sat,  1, 2) \
     X(hue,  1, 2) \
     X(sub,  0) \
+    X(seed, 1) \
 
 enum {
 #define X(x) NODE_##x,
@@ -105,6 +106,7 @@ struct proc_ctx {
     box_t       box;
     int         op;
     vec4_t      color;
+    uint16_t    seed[3];
     node_t      *prog;
 };
 
@@ -178,35 +180,39 @@ static void visit(node_t *node, int lev)
     }
 }
 
-// XXX: I should use my own rand implementation, so that the rendering
-// stays the same on all the machines.
-static float frand(float min, float max)
+static void set_seed(float v, uint16_t seed[3])
 {
-    return min + (rand() / (float)RAND_MAX) * (max - min);
+    memcpy(seed, &v, 4);
+    seed[2] = 0x330E;
 }
 
-static float plusmin(float a, float b)
+static float frand(float a, float b, uint16_t seed[3])
 {
-    return frand(a - b, a + b);
+    return a + erand48(seed) * (b - a);
+}
+
+static float plusmin(float a, float b, uint16_t seed[3])
+{
+    return frand(a - b, a + b, seed);
 }
 
 // Evaluate an expression node.
-static float evaluate(node_t *node)
+static float evaluate(node_t *node, ctx_t *ctx)
 {
     float a, b;
     if (node->type == NODE_VALUE) return node->v;
     assert(node->type == NODE_EXPR);
     if (strcmp(node->id, "+-") == 0) {
-        a = evaluate(node->children);
-        b = evaluate(node->children->next);
-        return plusmin(a, b);
+        a = evaluate(node->children, ctx);
+        b = evaluate(node->children->next, ctx);
+        return plusmin(a, b, ctx->seed);
     }
     assert(false);
     return 0;
 }
 
 
-static node_t *get_rule(node_t *prog, const char *id)
+static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
 {
     node_t *node, *c;
     float tot = 0;
@@ -224,7 +230,7 @@ static node_t *get_rule(node_t *prog, const char *id)
     }
     // Now pick one rule randomly.
     DL_FOREACH(node->children, c) {
-        if (frand(0, 1) <= c->v / tot)
+        if (frand(0, 1, ctx->seed) <= c->v / tot)
             return c->children;
         tot -= c->v;
     }
@@ -260,7 +266,7 @@ static int apply_transf(proc_t *proc, node_t *node, ctx_t *ctx)
                      "Op '%s' does not accept %d arguments", node->id, n);
 
     for (i = 0, c = node->children; i < n; i++, c = c->next)
-        v[i] = evaluate(c);
+        v[i] = evaluate(c, ctx);
 
     switch (op) {
 
@@ -309,6 +315,9 @@ static int apply_transf(proc_t *proc, node_t *node, ctx_t *ctx)
     case OP_sub:
         ctx->op = OP_SUB;
         break;
+    case OP_seed:
+        set_seed(v[0], ctx->seed);
+        break;
     }
     return 0;
 }
@@ -356,6 +365,7 @@ static float iter(proc_t *proc, ctx_t *ctx)
             TRY(apply_transf(proc, expr, ctx));
         }
         if (expr->type == NODE_CALL) {
+            nrand48(ctx->seed);
             ctx2 = *ctx;
             TRY(apply_transf(proc, expr->children, &ctx2));
             // Is it a basic shape?
@@ -371,7 +381,7 @@ static float iter(proc_t *proc, ctx_t *ctx)
             }
             if (i < ARRAY_SIZE(SHAPES)) continue;
 
-            rule = get_rule(proc->prog, expr->id);
+            rule = get_rule(proc->prog, expr->id, &ctx2);
             if (!rule)
                 return error(proc, NULL, "Cannot find rule %s", expr->id);
             ctx2.prog = rule;
@@ -419,7 +429,8 @@ int proc_start(proc_t *proc)
     ctx->box = bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
     ctx->color = vec4(0, 0, 1, 1);
     ctx->op = OP_ADD;
-    ctx->prog = get_rule(proc->prog, "main");
+    ctx->prog = get_rule(proc->prog, "main", ctx);
+    set_seed(rand(), ctx->seed);
     DL_APPEND(proc->ctxs, ctx);
     if (!ctx->prog) return error(proc, NULL, "No 'main' shape");
     proc->state = PROC_RUNNING;

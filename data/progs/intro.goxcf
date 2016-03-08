@@ -1,5 +1,9 @@
 // The 'main' shape is always the entry point of the program.
 shape main {
+    // Initial random seed of 2.
+    // Remove this line to use different seed each time.
+    [seed 2]
+
     // Render a single white voxel.
     cube []
 
