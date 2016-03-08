@@ -411,7 +411,7 @@ int proc_start(proc_t *proc)
     proc->ctxs = NULL;
     ctx = calloc(1, sizeof(*ctx));
     ctx->box = bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
-    ctx->color = vec4(0, 0, 0, 1);
+    ctx->color = vec4(0, 0, 1, 1);
     ctx->op = OP_ADD;
     ctx->prog = get_rule(proc->prog, "main");
     DL_APPEND(proc->ctxs, ctx);
