@@ -252,6 +252,8 @@ void img_write(const uint8_t *img, int w, int h, int bpp, const char *path);
 uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp,
                           int *size);
 bool str_endswith(const char *str, const char *end);
+bool str_startswith(const char *s1, const char *s2);
+
 static inline bool str_equ(const char *s1, const char *s2) {
     return strcmp(s1, s2) == 0;
 }
@@ -771,9 +773,8 @@ int proc_stop(gox_proc_t *proc);
 int proc_iter(gox_proc_t *proc);
 
 // Get the list of programs saved in data/procs.
-int proc_list_saved(void *user, void (*f)(int index,
-                                const char *name, const char *code,
-                                void *user));
+int proc_list_examples(void (*f)(int index,
+                                 const char *name, const char *code));
 
 // #############################
 
@@ -981,6 +982,16 @@ static inline void profiler_cleanup_(profiler_block_t **p)
 #endif
 #define PROFILED PROFILED2(__func__)
 
-// #############################
+// ##### Assets manager ########################
+// All the assets are saved in binary directly in the code, using
+// tool/create_assets.py.
+
+const void *assets_get(const char *url, int *size);
+
+// List all the assets in a given asset dir.
+// Return the number of assets.
+// If f returns not 0, the asset is skipped.
+int assets_list(const char *url, void *user,
+                int (*f)(int i, const char *path, void *user));
 
 #endif // GOXEL_H

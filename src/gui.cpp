@@ -868,11 +868,11 @@ static void procedural_panel(goxel_t *goxel)
         for (i = 0; i < nb_progs; i++) {free(progs[i]); free(names[i]);}
         free(progs);
         free(names);
-        nb_progs = proc_list_saved(NULL, NULL);
+        nb_progs = proc_list_examples(NULL);
         progs = (char**)calloc(nb_progs, sizeof(*progs));
         names = (char**)calloc(nb_progs, sizeof(*names));
-        proc_list_saved(NULL,
-                [](int i, const char *name, const char *code, void *user){
+        proc_list_examples(
+                [](int i, const char *name, const char *code){
                     progs[i] = strdup(code);
                     names[i] = strdup(name);
                 });
@@ -916,7 +916,7 @@ static void procedural_panel(goxel_t *goxel)
         proc_parse(gui->prog_buff, proc);
 
     ImGui::PushItemWidth(-1);
-    if (ImGui::Combo("demos", &current, (const char**)names, nb_progs)) {
+    if (ImGui::Combo("Examples", &current, (const char**)names, nb_progs)) {
         strcpy(gui->prog_buff, progs[current]);
         proc_parse(gui->prog_buff, proc);
     }

@@ -388,10 +388,9 @@ uint8_t *img_read_from_mem(const char *data, int size,
 uint8_t *img_read(const char *path, int *width, int *height, int *bpp)
 {
     int size;
-    char *data = read_file(path, &size, false);
+    const char *data = assets_get(path, &size);
     uint8_t *img;
     img = img_read_from_mem(data, size, width, height, bpp);
-    free(data);
     return img;
 }
 
@@ -411,6 +410,13 @@ bool str_endswith(const char *str, const char *end)
     if (strlen(str) < strlen(end)) return false;
     const char *start = str + strlen(str) - strlen(end);
     return strcmp(start, end) == 0;
+}
+
+bool str_startswith(const char *s1, const char *s2)
+{
+    if (!s1 || !s2) return false;
+    if (strlen(s1) < strlen(s2)) return false;
+    return strncmp(s1, s2, strlen(s2)) == 0;
 }
 
 int list_dir(const char *url, int flags, void *user,

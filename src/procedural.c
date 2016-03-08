@@ -483,25 +483,23 @@ int proc_iter(gox_proc_t *proc)
 
 static int list_saved_on_path(int i, const char *path, void *user)
 {
-   char *data, *name;
-   void (*f)(int, const char*, const char*, void*) = user;
+   const char *data, *name;
+   void (*f)(int, const char*, const char*) = user;
    if (!str_endswith(path, ".goxcf")) return -1;
    if (f) {
-       data = read_file(path, NULL, false);
+       data = assets_get(path, NULL);
        name = strrchr(path, '/') + 1;
-       f(i, name, data, user);
-       free(data);
+       f(i, name, data);
    }
    return 0;
 }
 
 // List all the programs in data/progs.  Not sure if this works on
 // windows.
-int proc_list_saved(void *user, void (*f)(int index,
-                                const char *name, const char *code,
-                                void *user))
+int proc_list_examples(void (*f)(int index,
+                                 const char *name, const char *code))
 {
-    return list_dir("data/progs", 0, user, list_saved_on_path);
+    return assets_list("data/progs", f, list_saved_on_path);
 }
 
 // The actual parser code come here, generated from procedural.leg
