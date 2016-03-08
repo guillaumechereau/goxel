@@ -288,6 +288,7 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
         break;
     case OP_y:
         mat4_itranslate(&ctx->box.mat, 0, 2 * v[0], 2 * v[1]);
+        break;
     case OP_z:
         mat4_itranslate(&ctx->box.mat, 0, 0, 2 * v[0]);
         break;
