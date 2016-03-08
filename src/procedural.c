@@ -355,6 +355,7 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
             ctx2 = *ctx;
             ctx2.prog = expr->children->next;
             for (i = 0; i < n; i++) {
+                nrand48(ctx2.seed);
                 new_ctx = calloc(1, sizeof(*new_ctx));
                 *new_ctx = ctx2;
                 DL_APPEND(proc->ctxs, new_ctx);
