@@ -457,9 +457,9 @@ extern shape_t shape_cylinder;
 // The painting context, including the tool, brush, operation, radius,
 // color, etc...
 typedef struct painter {
-    int         op;
-    shape_t     *shape;
-    uvec4b_t    color;
+    int             op;
+    const shape_t   *shape;
+    uvec4b_t        color;
 } painter_t;
 
 // #### Block ##################

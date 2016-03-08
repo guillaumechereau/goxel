@@ -82,6 +82,12 @@ static op_info_t OP_INFOS[] = {
 #undef X
 };
 
+static const shape_t *SHAPES[] = {
+    &shape_cube,
+    &shape_sphere,
+    &shape_cylinder,
+};
+
 typedef struct proc_node node_t;
 struct proc_node {
     int         type;
@@ -307,7 +313,7 @@ static int apply_transf(proc_t *proc, node_t *node, ctx_t *ctx)
     return 0;
 }
 
-static void call_shape(const ctx_t *ctx, shape_t *shape)
+static void call_shape(const ctx_t *ctx, const shape_t *shape)
 {
     mesh_t *mesh = goxel()->image->active_layer->mesh;
     uvec3b_t hsl = uvec3b(ctx->color.x / 360 * 255,
@@ -349,22 +355,23 @@ static int iter(proc_t *proc, ctx_t *ctx)
             ctx2 = *ctx;
             TRY(apply_transf(proc, expr->children, &ctx2));
             nb_ops++;
-            if (strcmp(expr->id, "cube") == 0)
-                call_shape(&ctx2, &shape_cube);
-            else if (strcmp(expr->id, "cylinder") == 0)
-                call_shape(&ctx2, &shape_cylinder);
-            else if (strcmp(expr->id, "sphere") == 0)
-                call_shape(&ctx2, &shape_sphere);
-            else {
-                nb_ops--;
-                rule = get_rule(proc->prog, expr->id);
-                if (!rule)
-                    return error(proc, NULL, "Cannot find rule %s", expr->id);
-                ctx2.prog = rule;
-                new_ctx = calloc(1, sizeof(*new_ctx));
-                *new_ctx = ctx2;
-                DL_APPEND(proc->ctxs, new_ctx);
+            // Is it a basic shape?
+            for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
+                if (str_equ(expr->id, SHAPES[i]->id)) {
+                    call_shape(&ctx2, SHAPES[i]);
+                    break;
+                }
             }
+            if (i < ARRAY_SIZE(SHAPES)) continue;
+
+            nb_ops--;
+            rule = get_rule(proc->prog, expr->id);
+            if (!rule)
+                return error(proc, NULL, "Cannot find rule %s", expr->id);
+            ctx2.prog = rule;
+            new_ctx = calloc(1, sizeof(*new_ctx));
+            *new_ctx = ctx2;
+            DL_APPEND(proc->ctxs, new_ctx);
         }
     }
 end:
@@ -385,14 +392,13 @@ int proc_parse(const char *txt, proc_t *proc)
 
     proc->prog = parse(txt, &proc->error.line);
     if (!proc->prog) {
-        LOG_E("Parse error");
         proc->state = PROC_PARSE_ERROR;
         free(proc->error.str);
         asprintf(&proc->error.str, "Parse error");
         return -1;
     }
     proc->state = PROC_READY;
-    visit(proc->prog, 0);
+    if (0) visit(proc->prog, 0);
     return 0;
 }
 
