@@ -893,7 +893,7 @@ static void procedural_panel(goxel_t *goxel)
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         draw_list->AddRect(rmin, rmax, 0x800000ff);
     }
-    ImGui::Text(proc->error.str);
+    ImGui::Text("%s", proc->error.str);
     enabled = proc->state >= PROC_READY;
 
     if (auto_run && proc->state == PROC_READY && timer == 0) timer = 1;
