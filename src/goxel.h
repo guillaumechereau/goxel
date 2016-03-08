@@ -252,6 +252,9 @@ void img_write(const uint8_t *img, int w, int h, int bpp, const char *path);
 uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp,
                           int *size);
 bool str_endswith(const char *str, const char *end);
+static inline bool str_equ(const char *s1, const char *s2) {
+    return strcmp(s1, s2) == 0;
+}
 
 // XXX: I need to fix the API to read files and assets.
 char *read_file(const char *name, int *size, bool check_data_dir, ...);
