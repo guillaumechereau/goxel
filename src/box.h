@@ -272,4 +272,16 @@ static inline box_t box_move_face(box_t b, int f, vec3_t p)
     return bbox_from_npoints(5, ps);
 }
 
+static inline float box_get_volume(box_t box)
+{
+    // The volume is the determinant of the 3x3 matrix of the box
+    // time 8 (because the unit cube has a volume of 8).
+    float *v = &box.mat.v[0];
+    float a, b, c, d, e, f, g, h, i;
+    a = v[0]; b = v[1]; c = v[2];
+    d = v[4]; e = v[5]; f = v[6];
+    g = v[8]; h = v[9]; i = v[10];
+    return 8 * fabs(a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h);
+}
+
 #endif // BOX_H
