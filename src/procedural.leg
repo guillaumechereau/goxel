@@ -100,18 +100,18 @@ Rule    = r:- 'rule'    {r = N(RULE, NULL); r->v = 1.0}
 
 Block   = - '{' b:-      {b = N(BLOCK, NULL)}
           (s:Stmt        {A(b, s)}                   )*
-          - '}' -        {$$ = b}
+          - '}'          {$$ = b}
 
-Stmt    = 'loop' n:Value t:Transf b:Block   {$$ = N(LOOP, NULL, t, b);
+Stmt    = - 'loop' n:Value t:Transf b:Block   {$$ = N(LOOP, NULL, t, b);
                                              $$->v = n->v}
         | i:Id t:Transf                     {$$ = N(CALL, i->id, t)}
         | t:Transf                          {$$ = t}
 
-Transf  = '[' t:-  {t = N(TRANSF, NULL)}
+Transf  = - '[' t:-  {t = N(TRANSF, NULL)}
           (o:Op    {A(t, o)}                )*
-          ']' -    {$$ = t}
+          ']'      {$$ = t}
 
-Op      = i:Id
+Op      = - i:Id
           o:-           {o = N(OP, i->id)}
           (e:Expr       {A(o, e)}              )*
           -             {$$ = o}
