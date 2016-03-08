@@ -17,8 +17,8 @@
 #
 
 # This file contains the procedural rendering language parser generator code.
-# If you change it you need to rebuild procedural.inc with 'leg':
-# leg -o src/procedural.inc src/procedural.leg.
+# If you change it you need to rebuild procedural.inl with 'leg':
+# leg -o src/procedural.inl src/procedural.leg.
 #
 # I don't really like to use a code generator, but it makes it much easier
 # to quickly change the grammar of the language.
@@ -26,7 +26,7 @@
 # TODO: fix all the memory bugs in the code.
 
 %{
-    // Do not edit the .inc file directly, instead edit procedural.leg.
+    // Do not edit the .inl file directly, instead edit procedural.leg.
     #include <assert.h>
     #include <stdio.h>
     #include <stdarg.h>

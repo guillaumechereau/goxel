@@ -414,18 +414,19 @@ bool str_endswith(const char *str, const char *end)
 }
 
 int list_dir(const char *url, int flags, void *user,
-             int (*f)(const char *path, void *user))
+             int (*f)(int i, const char *path, void *user))
 {
     DIR *dir;
     struct dirent *dirent;
     char *path;
+    int i = 0;
     dir = opendir(url);
     while ((dirent = readdir(dir))) {
         if (dirent->d_name[0] == '.') continue;
         asprintf(&path, "%s/%s", url, dirent->d_name);
-        f(path, user);
+        if (f(i, path, user) != 0) i++;
         free(path);
     }
     closedir(dir);
-    return 0;
+    return i;
 }

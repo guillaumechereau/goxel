@@ -150,7 +150,7 @@ static void ctxs_free(ctx_t *ctx)
     }
 }
 
-static int error(proc_t *proc, node_t *node, const char *msg, ...)
+static int error(gox_proc_t *proc, node_t *node, const char *msg, ...)
 {
     va_list args;
     va_start(args, msg);
@@ -238,7 +238,7 @@ static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
     return NULL;
 }
 
-static int apply_transf(proc_t *proc, node_t *node, ctx_t *ctx)
+static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
 {
     node_t *c;
     float v[3] = {0};
@@ -336,7 +336,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
 
 // Iter the program once.
 // Returns the total volume rendered or -1.0 in case of error.
-static float iter(proc_t *proc, ctx_t *ctx)
+static float iter(gox_proc_t *proc, ctx_t *ctx)
 {
     const float max_op_volume = 512 * 512 * 512;
     int n, i;
@@ -397,7 +397,7 @@ end:
 // Defined in procedural.leg
 static node_t *parse(const char *txt, int *err_line);
 
-int proc_parse(const char *txt, proc_t *proc)
+int proc_parse(const char *txt, gox_proc_t *proc)
 {
     node_free(proc->prog);
     ctxs_free(proc->ctxs);
@@ -418,7 +418,7 @@ int proc_parse(const char *txt, proc_t *proc)
     return 0;
 }
 
-int proc_start(proc_t *proc)
+int proc_start(gox_proc_t *proc)
 {
     // Reinit the context to a single ctx_t pointing at the main shape.
     ctx_t *ctx;
@@ -437,13 +437,13 @@ int proc_start(proc_t *proc)
     return 0;
 }
 
-int proc_stop(proc_t *proc)
+int proc_stop(gox_proc_t *proc)
 {
     proc->state = PROC_DONE;
     return 0;
 }
 
-int proc_iter(proc_t *proc)
+int proc_iter(gox_proc_t *proc)
 {
     float volume, volume_tot = 0;
     // Break the iteration if we rendered more that 64^3 voxels.
@@ -480,27 +480,27 @@ int proc_iter(proc_t *proc)
     return 0;
 }
 
+static int list_saved_on_path(int i, const char *path, void *user)
+{
+   char *data, *name;
+   void (*f)(int, const char*, const char*, void*) = user;
+   if (!str_endswith(path, ".goxcf")) return -1;
+   if (f) {
+       data = read_file(path, NULL, false);
+       name = strrchr(path, '/') + 1;
+       f(i, name, data, user);
+       free(data);
+   }
+   return 0;
+}
+
 // List all the programs in data/progs.  Not sure if this works on
 // windows.
 int proc_list_saved(void *user, void (*f)(int index,
                                 const char *name, const char *code,
                                 void *user))
 {
-    int nb = 0;
-    int callback(const char *path, void *user) {
-        char *data, *name;
-        if (!str_endswith(path, ".goxcf")) return 0;
-        if (f) {
-            data = read_file(path, NULL, false);
-            name = strrchr(path, '/') + 1;
-            f(nb, name, data, user);
-            free(data);
-        }
-        nb++;
-        return 0;
-    }
-    list_dir("data/progs", 0, user, callback);
-    return nb;
+    return list_dir("data/progs", 0, user, list_saved_on_path);
 }
 
 // The actual parser code come here, generated from procedural.leg
@@ -510,4 +510,4 @@ int proc_list_saved(void *user, void (*f)(int index,
 #pragma GCC diagnostic ignored "-Wunused-function"
 #endif
 
-#include "procedural.inc"
+#include "procedural.inl"

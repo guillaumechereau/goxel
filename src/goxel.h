@@ -261,8 +261,9 @@ char *read_file(const char *name, int *size, bool check_data_dir, ...);
 
 // List all the files in a directory.
 // flags: unused for the moment.
+// Return the number of directory found.
 int list_dir(const char *url, int flags, void *user,
-             int (*f)(const char *path, void *user));
+             int (*f)(int i, const char *path, void *user));
 
 // #############################
 
@@ -762,12 +763,12 @@ typedef struct proc {
         char         *str;  // Set in case of parsing or execution error.
         int          line;
     } error;
-} proc_t;
+} gox_proc_t;
 
-int proc_parse(const char *txt, proc_t *proc);
-int proc_start(proc_t *proc);
-int proc_stop(proc_t *proc);
-int proc_iter(proc_t *proc);
+int proc_parse(const char *txt, gox_proc_t *proc);
+int proc_start(gox_proc_t *proc);
+int proc_stop(gox_proc_t *proc);
+int proc_iter(gox_proc_t *proc);
 
 // Get the list of programs saved in data/procs.
 int proc_list_saved(void *user, void (*f)(int index,
@@ -846,7 +847,7 @@ typedef struct goxel
 
     bool       painting;    // Set to true when we are in a painting operation.
     bool       moving;      // Set to true while in a movement operation.
-    proc_t     proc;        // The current procedural rendering (if any).
+    gox_proc_t proc;        // The current procedural rendering (if any).
 
     palette_t  *palette;    // The current color palette
     char       *help_text;  // Seen in the bottom of the screen.

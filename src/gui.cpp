@@ -856,7 +856,7 @@ static void procedural_panel(goxel_t *goxel)
     static bool first_time = true;
     int i;
     static int current = -1;
-    proc_t *proc = &goxel->proc;
+    gox_proc_t *proc = &goxel->proc;
     bool enabled;
     static bool auto_run;
     static int timer = 0;
