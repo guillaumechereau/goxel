@@ -45,7 +45,16 @@ static float cylinder_func(const vec3_t *p, const vec3_t *s)
 
 void shapes_init(void)
 {
-    shape_sphere.func = sphere_func;
-    shape_cube.func = cube_func;
-    shape_cylinder.func = cylinder_func;
+    shape_sphere = (shape_t){
+        .id     = "sphere",
+        .func   = sphere_func,
+    };
+    shape_cube = (shape_t){
+        .id     = "cube",
+        .func   = cube_func,
+    };
+    shape_cylinder = (shape_t){
+        .id     = "cylinder",
+        .func = cylinder_func,
+    };
 }

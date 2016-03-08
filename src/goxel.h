@@ -441,6 +441,7 @@ enum {
 };
 
 typedef struct shape {
+    const char *id;
     float (*func)(const vec3_t *p, const vec3_t *s);
 } shape_t;
 
