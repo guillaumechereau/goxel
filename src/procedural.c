@@ -327,6 +327,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
 
 static int iter(proc_t *proc, ctx_t *ctx)
 {
+    const float max_op_volume = 512 * 512 * 512;
     int n, i, nb_ops = 0;
     ctx_t ctx2, *new_ctx;
     node_t *expr, *rule;
@@ -358,6 +359,9 @@ static int iter(proc_t *proc, ctx_t *ctx)
             // Is it a basic shape?
             for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
                 if (str_equ(expr->id, SHAPES[i]->id)) {
+                    if (box_get_volume(ctx2.box) > max_op_volume)
+                        return error(proc, expr,
+                                     "abort: volume too big!");
                     call_shape(&ctx2, SHAPES[i]);
                     break;
                 }
