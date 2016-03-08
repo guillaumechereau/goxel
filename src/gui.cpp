@@ -855,7 +855,7 @@ static void procedural_panel(goxel_t *goxel)
     static int nb_progs = 0;
     static bool first_time = true;
     int i;
-    static int current = 0;
+    static int current = -1;
     proc_t *proc = &goxel->proc;
     bool enabled;
     static bool auto_run;
@@ -918,6 +918,7 @@ static void procedural_panel(goxel_t *goxel)
     ImGui::PushItemWidth(-1);
     if (ImGui::Combo("demos", &current, (const char**)names, nb_progs)) {
         strcpy(gui->prog_buff, progs[current]);
+        proc_parse(gui->prog_buff, proc);
     }
     ImGui::PopItemWidth();
 
