@@ -923,7 +923,7 @@ static void procedural_panel(goxel_t *goxel)
     ImGui::PopItemWidth();
 
     if (proc->state == PROC_RUNNING) {
-        proc_iter(&goxel->proc, 10);
+        proc_iter(&goxel->proc);
         goxel_update_meshes(goxel, false);
     }
 }

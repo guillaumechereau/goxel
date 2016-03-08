@@ -325,10 +325,13 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
     mesh_op(mesh, &goxel()->painter, &ctx->box);
 }
 
-static int iter(proc_t *proc, ctx_t *ctx)
+// Iter the program once.
+// Returns the total volume rendered or -1.0 in case of error.
+static float iter(proc_t *proc, ctx_t *ctx)
 {
     const float max_op_volume = 512 * 512 * 512;
-    int n, i, nb_ops = 0;
+    int n, i;
+    float volume, volume_tot = 0;
     ctx_t ctx2, *new_ctx;
     node_t *expr, *rule;
 
@@ -355,20 +358,19 @@ static int iter(proc_t *proc, ctx_t *ctx)
         if (expr->type == NODE_CALL) {
             ctx2 = *ctx;
             TRY(apply_transf(proc, expr->children, &ctx2));
-            nb_ops++;
             // Is it a basic shape?
             for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
                 if (str_equ(expr->id, SHAPES[i]->id)) {
-                    if (box_get_volume(ctx2.box) > max_op_volume)
-                        return error(proc, expr,
-                                     "abort: volume too big!");
+                    volume = box_get_volume(ctx2.box);
+                    if (volume > max_op_volume)
+                        return error(proc, expr, "abort: volume too big!");
+                    volume_tot += volume;
                     call_shape(&ctx2, SHAPES[i]);
                     break;
                 }
             }
             if (i < ARRAY_SIZE(SHAPES)) continue;
 
-            nb_ops--;
             rule = get_rule(proc->prog, expr->id);
             if (!rule)
                 return error(proc, NULL, "Cannot find rule %s", expr->id);
@@ -379,7 +381,7 @@ static int iter(proc_t *proc, ctx_t *ctx)
         }
     }
 end:
-    return nb_ops;
+    return volume_tot;
 }
 
 // Defined in procedural.leg
@@ -430,13 +432,13 @@ int proc_stop(proc_t *proc)
     return 0;
 }
 
-// For the moment only max_op allows to limit the number of drawing operations
-// being done, so that we don't block the machine too long.  This is not
-// a good solution, instead I should look at the actual time spent in the
-// loop.
-int proc_iter(proc_t *proc, int max_op)
+int proc_iter(proc_t *proc)
 {
-    int n, nb_ops = 0;
+    float volume, volume_tot = 0;
+    // Break the iteration if we rendered more that 64^3 voxels.
+    // This is to prevent slow rendering.
+    // XXX: this should be configurable (maybe with a callback?).
+    const float max_volume = 64 * 64 * 64;
     ctx_t *ctx, *last_ctx;
 
     if (proc->state != PROC_RUNNING) return 0;
@@ -454,14 +456,14 @@ int proc_iter(proc_t *proc, int max_op)
             break;
         }
         DL_DELETE(proc->ctxs, ctx);
-        n = iter(proc, ctx);
-        nb_ops += n;
+        volume = iter(proc, ctx);
         free(ctx);
-        if (n == -1) {
+        if (volume < 0.0) {
             proc->state = PROC_DONE;
             break;
         }
-        if (nb_ops >= max_op) break;
+        volume_tot += volume;
+        if (volume_tot >= max_volume) break;
         if (ctx == last_ctx) break;
     }
     return 0;

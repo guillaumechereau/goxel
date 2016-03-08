@@ -767,7 +767,7 @@ typedef struct proc {
 int proc_parse(const char *txt, proc_t *proc);
 int proc_start(proc_t *proc);
 int proc_stop(proc_t *proc);
-int proc_iter(proc_t *proc, int n);
+int proc_iter(proc_t *proc);
 
 // Get the list of programs saved in data/procs.
 int proc_list_saved(void *user, void (*f)(int index,
