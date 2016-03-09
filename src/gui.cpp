@@ -865,6 +865,7 @@ static void procedural_panel(goxel_t *goxel)
 
     if (first_time) {
         first_time = false;
+        strcpy(gui->prog_buff, "shape main {\n    cube[s 3]\n}");
         for (i = 0; i < nb_progs; i++) {free(progs[i]); free(names[i]);}
         free(progs);
         free(names);
@@ -876,6 +877,7 @@ static void procedural_panel(goxel_t *goxel)
                     progs[i] = strdup(code);
                     names[i] = strdup(name);
                 });
+        proc_parse(gui->prog_buff, proc);
     }
 
     if (ImGui::InputTextMultiline("", gui->prog_buff,
