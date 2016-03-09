@@ -243,8 +243,6 @@ bool _has_gl_extension(int extension);
 int create_program(const char *vertex_shader, const char *fragment_shader,
                    const char *include);
 void delete_program(int prog);
-unsigned int gox_rand(void);
-float gox_frand(float min, float max);
 uint8_t *img_read(const char *path, int *width, int *height, int *bpp);
 uint8_t *img_read_from_mem(const char *data, int size,
                            int *w, int *h, int *bpp);
@@ -257,9 +255,6 @@ bool str_startswith(const char *s1, const char *s2);
 static inline bool str_equ(const char *s1, const char *s2) {
     return strcmp(s1, s2) == 0;
 }
-
-// XXX: I need to fix the API to read files and assets.
-char *read_file(const char *name, int *size, bool check_data_dir, ...);
 
 // List all the files in a directory.
 // flags: unused for the moment.
