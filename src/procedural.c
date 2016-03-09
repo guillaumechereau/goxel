@@ -207,7 +207,7 @@ static float plusmin(float a, float b, uint16_t seed[3])
 // Evaluate an expression node.
 static float evaluate(node_t *node, ctx_t *ctx)
 {
-    float a, b;
+    float a, b, c;
     if (node->type == NODE_VALUE) return node->v;
     assert(node->type == NODE_EXPR);
 
@@ -227,6 +227,23 @@ static float evaluate(node_t *node, ctx_t *ctx)
         return a / b;
     if (str_equ(node->id, "+-"))
         return plusmin(a, b, ctx->seed);
+    if (str_equ(node->id, "=="))
+        return (a == b) ? 1 : 0;
+    if (str_equ(node->id, "!="))
+        return (a != b) ? 1 : 0;
+    if (str_equ(node->id, "<"))
+        return (a < b) ? 1 : 0;
+    if (str_equ(node->id, ">"))
+        return (a > b) ? 1 : 0;
+    if (str_equ(node->id, "<="))
+        return (a <= b) ? 1 : 0;
+    if (str_equ(node->id, ">="))
+        return (a >= b) ? 1 : 0;
+
+    c = evaluate(node->children->next->next, ctx);
+    if (str_equ(node->id, "?:"))
+        return a ? b : c;
+
     assert(false);
     return 0;
 }

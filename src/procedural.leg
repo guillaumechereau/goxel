@@ -161,20 +161,33 @@ Op      = - i:Id
           -             {$$ = o}
 
 Expr    = a:Expr2 (
-              '+' b:Expr2      {$$ = N(EXPR, "+", a, b)}
-            | '-' b:Expr2      {$$ = N(EXPR, "-", a, b)}
-            | -                {$$ = a}
+              '?' b:Expr2 ':' c:Expr2 {$$ = N(EXPR, "?:", a, b, c)}
+            | -                       {$$ = a}
         )
 
-Expr2   = a:Value (
-              '*'  b:Value    {$$ = N(EXPR, "*",  a, b)}
-            | '/'  b:Value    {$$ = N(EXPR, "/",  a, b)}
-            | '+-' b:Value    {$$ = N(EXPR, "+-", a, b)}
-            | -               {$$ = a}
+Expr2    = a:Expr3 (
+              o:OpCmp b:Expr3      {$$ = N(EXPR, o->id, a, b)}
+            | -                    {$$ = a}
+        )
+
+Expr3   = a:Expr4 (
+              o:OpSum b:Expr4      {$$ = N(EXPR, o->id, a, b)}
+            | -                    {$$ = a}
+        )
+
+Expr4   = a:Value (
+              o:OpMul  b:Value    {$$ = N(EXPR, o->id,  a, b)}
+            | -                   {$$ = a}
          )
+
+OpCmp   = < ('==' | '!=' | '<' | '>' | '<=' | '>=') > {$$ = N(ID, yytext)}
+OpSum   = < ('+' | '-') >               {$$ = N(ID, yytext)}
+OpMul   = < ('*' | '/' | '+-') >        {$$ = N(ID, yytext)}
+
 
 Value   = n:Num {$$ = n}
         | x:Var {$$ = N(EXPR, "var"); get_var(&yy->vars, x->id, &($$->v))}
+        | - '(' e:Expr ')' - {$$ = e}
 
 Num     = - < [-.0-9]+ > -  {$$ = N(VALUE, NULL); $$->v = atof(yytext)}
 
