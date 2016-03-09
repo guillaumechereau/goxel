@@ -28,6 +28,7 @@
     X(RULE) \
     X(BLOCK) \
     X(CALL) \
+    X(ARGS) \
     X(TRANSF) \
     X(OP) \
     X(VALUE) \
@@ -93,7 +94,7 @@ typedef struct proc_node node_t;
 struct proc_node {
     int         type;
     const char  *id;
-    double      v;
+    float       v;
     int         size;
     node_t      *children, *next, *prev, *parent;
     // Pos in the source code.
@@ -108,6 +109,7 @@ struct proc_ctx {
     vec4_t      color;
     uint16_t    seed[3];
     node_t      *prog;
+    float       vars[4];
 };
 
 // Move a value toward a target.  If v is positive, move the value toward
@@ -202,6 +204,11 @@ static float evaluate(node_t *node, ctx_t *ctx)
     float a, b;
     if (node->type == NODE_VALUE) return node->v;
     assert(node->type == NODE_EXPR);
+
+    if (str_equ(node->id, "var")) {
+        return ctx->vars[(int)node->v];
+    }
+
     a = evaluate(node->children, ctx);
     b = evaluate(node->children->next, ctx);
     if (str_equ(node->id, "+"))
@@ -330,6 +337,18 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     return 0;
 }
 
+static int set_args(gox_proc_t *proc, node_t *node, ctx_t *ctx)
+{
+    assert(node->type == NODE_ARGS);
+    node_t *c;
+    int i = 0;
+    DL_FOREACH(node->children, c) {
+        ctx->vars[i] = evaluate(c, ctx);
+        i++;
+    }
+    return 0;
+}
+
 static void call_shape(const ctx_t *ctx, const shape_t *shape)
 {
     mesh_t *mesh = goxel()->image->active_layer->mesh;
@@ -391,12 +410,14 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
             }
             if (i < ARRAY_SIZE(SHAPES)) continue;
 
+            TRY(set_args(proc, expr->children->next, &ctx2));
             rule = get_rule(proc->prog, expr->id, &ctx2);
             if (!rule)
                 return error(proc, NULL, "Cannot find rule %s", expr->id);
             ctx2.prog = rule;
             new_ctx = calloc(1, sizeof(*new_ctx));
             *new_ctx = ctx2;
+
             DL_APPEND(proc->ctxs, new_ctx);
         }
     }
