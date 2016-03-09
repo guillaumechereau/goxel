@@ -202,11 +202,18 @@ static float evaluate(node_t *node, ctx_t *ctx)
     float a, b;
     if (node->type == NODE_VALUE) return node->v;
     assert(node->type == NODE_EXPR);
-    if (strcmp(node->id, "+-") == 0) {
-        a = evaluate(node->children, ctx);
-        b = evaluate(node->children->next, ctx);
+    a = evaluate(node->children, ctx);
+    b = evaluate(node->children->next, ctx);
+    if (str_equ(node->id, "+"))
+        return a + b;
+    if (str_equ(node->id, "-"))
+        return a - b;
+    if (str_equ(node->id, "*"))
+        return a * b;
+    if (str_equ(node->id, "/"))
+        return a / b;
+    if (str_equ(node->id, "+-"))
         return plusmin(a, b, ctx->seed);
-    }
     assert(false);
     return 0;
 }
@@ -352,15 +359,16 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
 
     DL_FOREACH(ctx->prog->children, expr) {
         if (expr->type == NODE_LOOP) {
-            n = expr->v;
+            // loop n tranf block
+            n = evaluate(expr->children, ctx);
             ctx2 = *ctx;
-            ctx2.prog = expr->children->next;
+            ctx2.prog = expr->children->next->next;
             for (i = 0; i < n; i++) {
                 nrand48(ctx2.seed);
                 new_ctx = calloc(1, sizeof(*new_ctx));
                 *new_ctx = ctx2;
                 DL_APPEND(proc->ctxs, new_ctx);
-                TRY(apply_transf(proc, expr->children, &ctx2));
+                TRY(apply_transf(proc, expr->children->next, &ctx2));
             }
         }
         if (expr->type == NODE_TRANSF) {

@@ -102,10 +102,9 @@ Block   = - '{' b:-      {b = N(BLOCK, NULL)}
           (s:Stmt        {A(b, s)}                   )*
           - '}'          {$$ = b}
 
-Stmt    = - 'loop' n:Value t:Transf b:Block   {$$ = N(LOOP, NULL, t, b);
-                                             $$->v = n->v}
-        | i:Id t:Transf                     {$$ = N(CALL, i->id, t)}
-        | t:Transf                          {$$ = t}
+Stmt    = - 'loop' e:Expr t:Transf b:Block   {$$ = N(LOOP, NULL, e, t, b)}
+        | i:Id t:Transf                      {$$ = N(CALL, i->id, t)}
+        | t:Transf                           {$$ = t}
 
 Transf  = - '[' t:-  {t = N(TRANSF, NULL)}
           (o:Op    {A(t, o)}                )*
@@ -116,8 +115,18 @@ Op      = - i:Id
           (e:Expr       {A(o, e)}              )*
           -             {$$ = o}
 
-Expr    = (a:Value '+-' b:Value)     {$$ = N(EXPR, "+-", a, b)}
-        | v:Value                    {$$ = v}
+Expr    = a:Expr2 (
+              '+' b:Expr2      {$$ = N(EXPR, "+", a, b)}
+            | '-' b:Expr2      {$$ = N(EXPR, "-", a, b)}
+            | -                {$$ = a}
+        )
+
+Expr2   = a:Value (
+              '*'  b:Value    {$$ = N(EXPR, "*",  a, b)}
+            | '/'  b:Value    {$$ = N(EXPR, "/",  a, b)}
+            | '+-' b:Value    {$$ = N(EXPR, "+-", a, b)}
+            | -               {$$ = a}
+         )
 
 Value   = - < [-.0-9]+ > -  {$$ = N(VALUE, NULL); $$->v = atof(yytext)}
 
