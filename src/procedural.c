@@ -448,10 +448,10 @@ int proc_stop(gox_proc_t *proc)
 int proc_iter(gox_proc_t *proc)
 {
     float volume, volume_tot = 0;
-    // Break the iteration if we rendered more that 64^3 voxels.
+    // Break the iteration if we rendered too much.
     // This is to prevent slow rendering.
     // XXX: this should be configurable (maybe with a callback?).
-    const float max_volume = 64 * 64 * 64;
+    const float max_volume = 32 * 32 * 32;
     ctx_t *ctx, *last_ctx;
 
     if (proc->state != PROC_RUNNING) return 0;
