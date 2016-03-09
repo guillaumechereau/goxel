@@ -953,7 +953,7 @@ static void procedural_panel(goxel_t *goxel)
         }
     }
 
-    ImGui::PushItemWidth(-1);
+    ImGui::PushItemWidth(-100);
     if (ImGui::Combo("Examples", &current, (const char**)names, nb_progs)) {
         strcpy(gui->prog_buff, progs[current]);
         proc_parse(gui->prog_buff, proc);
