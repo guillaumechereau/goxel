@@ -37,12 +37,14 @@ bool dialog_open(int flags, const char *filters, char **out)
         action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
 
     gtk_init_check(NULL, NULL);
-    dialog = gtk_file_chooser_dialog_new("Open File",
-                                         NULL,
-                                         action,
-                                         "_Cancel", GTK_RESPONSE_CANCEL,
-                                         "_Open", GTK_RESPONSE_ACCEPT,
-                                         NULL );
+    dialog = gtk_file_chooser_dialog_new(
+            flags & DIALOG_FLAG_SAVE ? "Save File" : "Open File",
+            NULL,
+            action,
+            "_Cancel", GTK_RESPONSE_CANCEL,
+            flags & DIALOG_FLAG_SAVE ? "_Save" : "_Open",
+            GTK_RESPONSE_ACCEPT,
+            NULL );
     chooser = GTK_FILE_CHOOSER(dialog);
     gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
 
