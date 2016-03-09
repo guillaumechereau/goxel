@@ -14,21 +14,19 @@
 
     #define YYSTYPE node_t*
     #define YY_CTX_LOCAL 1
-    #define YY_CTX_MEMBERS int line, read_line;
-
-    // XXX: I should move those into YY_CTX_MEMBERS.
-    static node_t *g_prog = NULL;
-    static const char *g_input = NULL;
-    static const char *g_cur = NULL;
+    #define YY_CTX_MEMBERS \
+        int line, read_line;    \
+        node_t *prog;           \
+        const char *cur;        \
 
     // Redefine YY_INPUT to keep track of the last read line in the input.
-    #define YY_INPUT(ctx, buf, result, max_size)    \
-    {                                               \
-        int yyc = *g_cur;                           \
-        if (yyc == '\n') ctx->read_line++;          \
-        if (yyc) {g_cur++; *buf = yyc; result = 1;} \
-        else result = 0;                            \
-    }                                               \
+    #define YY_INPUT(ctx, buf, result, max_size)        \
+    {                                                   \
+        int yyc = *ctx->cur;                            \
+        if (yyc == '\n') ctx->read_line++;              \
+        if (yyc) {ctx->cur++; *buf = yyc; result = 1;} \
+        else result = 0;                                \
+    }                                                   \
 
     static node_t *node_create(int type, const char *id, int line,
                                int nb, node_t **children)
@@ -876,7 +874,7 @@ YY_ACTION(void) yy_3_Prog(yycontext *yy, char *yytext, int yyleng)
 #define yythunkpos yy->__thunkpos
   yyprintf((stderr, "do yy_3_Prog\n"));
   {
-  g_prog = __ = p;
+  yy->prog = __ = p;
   }
 #undef yythunkpos
 #undef yypos
@@ -1218,12 +1216,11 @@ static node_t *parse(const char *txt, int *err_line)
 {
     yycontext yy;
     memset(&yy, 0, sizeof(yy));
-    g_input = g_cur = txt;
-    g_prog = NULL;
+    yy.cur = txt;
     while (yyparse(&yy))
         ;
-    if (!g_prog && err_line) *err_line = yy.read_line;
+    if (!yy.prog && err_line) *err_line = yy.read_line;
     yyrelease(&yy);
-    return g_prog;
+    return yy.prog;
 }
 
