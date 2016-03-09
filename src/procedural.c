@@ -35,6 +35,8 @@
     X(ID) \
     X(LOOP) \
     X(TRANSFB) \
+    X(IF) \
+    X(RETURN) \
     X(EXPR) \
 
 // List of operators and the number of args they support.
@@ -53,6 +55,7 @@
     X(sat,  1, 2) \
     X(hue,  1, 2) \
     X(sub,  0) \
+    X(paint,  0) \
     X(seed, 1) \
     X(wait, 1) \
 
@@ -333,6 +336,9 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     case OP_sub:
         ctx->op = OP_SUB;
         break;
+    case OP_paint:
+        ctx->op = OP_PAINT;
+        break;
     case OP_seed:
         set_seed(v[0], ctx->seed);
         break;
@@ -372,6 +378,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
 static float iter(gox_proc_t *proc, ctx_t *ctx)
 {
     const float max_op_volume = 512 * 512 * 512;
+    float v;
     int n, i;
     float volume, volume_tot = 0;
     ctx_t ctx2, *new_ctx;
@@ -410,6 +417,17 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
             new_ctx->prog = expr->children->next;
             TRY(apply_transf(proc, expr->children, new_ctx));
             DL_APPEND(proc->ctxs, new_ctx);
+        }
+        if (expr->type == NODE_IF) {
+            v = evaluate(expr->children, ctx);
+            if (v) {
+                ctx2 = *ctx;
+                ctx2.prog = expr->children->next;
+                iter(proc, &ctx2);
+            }
+        }
+        if (expr->type == NODE_RETURN) {
+            break;
         }
         if (expr->type == NODE_TRANSF) {
             TRY(apply_transf(proc, expr, ctx));
