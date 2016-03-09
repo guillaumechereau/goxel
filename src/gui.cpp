@@ -114,7 +114,8 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    char prog_buff[64 * 1024];
+    char prog_path[1024];       // "\0" if no loaded prog.
+    char prog_buff[64 * 1024];  // XXX: make it dynamic?
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -894,8 +895,8 @@ static void procedural_panel(goxel_t *goxel)
         rmax.y = rmin.y + h;
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         draw_list->AddRect(rmin, rmax, 0x800000ff);
+        ImGui::Text("%s", proc->error.str);
     }
-    ImGui::Text("%s", proc->error.str);
     enabled = proc->state >= PROC_READY;
 
     if (auto_run && proc->state == PROC_READY && timer == 0) timer = 1;
@@ -916,6 +917,41 @@ static void procedural_panel(goxel_t *goxel)
     ImGui::SameLine();
     if (ImGui::Checkbox("Auto", &auto_run))
         proc_parse(gui->prog_buff, proc);
+
+    // File load / save.  No error check yet!
+    if (*gui->prog_path) {
+        ImGui::PushItemWidth(-1);
+        ImGui::InputText("##path", gui->prog_path, sizeof(gui->prog_path));
+        ImGui::PopItemWidth();
+    }
+    if (ImGui::Button("Load")) {
+        char *path;
+        if (dialog_open(DIALOG_FLAG_OPEN, "goxcf\0*.goxcf\0", &path)) {
+            FILE *f = fopen(path, "r");
+            int nb;
+            nb = fread(gui->prog_buff, 1, sizeof(gui->prog_buff), f);
+            gui->prog_buff[nb] = '\0';
+            fclose(f);
+            strcpy(gui->prog_path, path);
+            free(path);
+        }
+        proc_parse(gui->prog_buff, proc);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Save")) {
+        if (!*gui->prog_path) {
+            char *path;
+            if (dialog_open(DIALOG_FLAG_SAVE, "goxcf\0*.goxcf\0", &path)) {
+                strcpy(gui->prog_path, path);
+                free(path);
+            }
+        }
+        if (*gui->prog_path) {
+            FILE *f = fopen(gui->prog_path, "w");
+            fwrite(gui->prog_buff, strlen(gui->prog_buff) + 1, 1, f);
+            fclose(f);
+        }
+    }
 
     ImGui::PushItemWidth(-1);
     if (ImGui::Combo("Examples", &current, (const char**)names, nb_progs)) {
