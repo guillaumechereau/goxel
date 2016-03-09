@@ -138,7 +138,8 @@ Block   = - '{' b:-      {b = N(BLOCK, NULL)}
           (s:Stmt        {A(b, s)}                   )*
           - '}'          {$$ = b}
 
-Stmt    = - 'loop' e:Expr t:Transf b:Block   {$$ = N(LOOP, NULL, e, t, b)}
+Stmt    = - 'loop' e:Expr t:Transf b:Block     {$$ = N(LOOP, NULL, e, t, b)}
+        | - 'transform' t:Transf b:Block       {$$ = N(TRANSFB, NULL, t, b)}
         | i:Id a:ArgsV t:Transf              {$$ = N(CALL, i->id, t, a)}
         | t:Transf                           {$$ = t}
 

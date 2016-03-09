@@ -34,6 +34,7 @@
     X(VALUE) \
     X(ID) \
     X(LOOP) \
+    X(TRANSFB) \
     X(EXPR) \
 
 // List of operators and the number of args they support.
@@ -53,6 +54,7 @@
     X(hue,  1, 2) \
     X(sub,  0) \
     X(seed, 1) \
+    X(wait, 1) \
 
 enum {
 #define X(x) NODE_##x,
@@ -110,6 +112,7 @@ struct proc_ctx {
     uint16_t    seed[3];
     node_t      *prog;
     float       vars[4];
+    int         wait;
 };
 
 // Move a value toward a target.  If v is positive, move the value toward
@@ -333,6 +336,9 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     case OP_seed:
         set_seed(v[0], ctx->seed);
         break;
+    case OP_wait:
+        ctx->wait += v[0];
+        break;
     }
     return 0;
 }
@@ -371,6 +377,14 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
     ctx_t ctx2, *new_ctx;
     node_t *expr, *rule;
 
+    if (ctx->wait > 0) {
+        new_ctx = calloc(1, sizeof(*new_ctx));
+        *new_ctx = *ctx;
+        new_ctx->wait--;
+        DL_APPEND(proc->ctxs, new_ctx);
+        return 0;
+    }
+
     // XXX: find a better stopping condition.
     if (vec3_norm2(ctx->box.w) < 0.2 ||
         vec3_norm2(ctx->box.h) < 0.2 ||
@@ -389,6 +403,13 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
                 DL_APPEND(proc->ctxs, new_ctx);
                 TRY(apply_transf(proc, expr->children->next, &ctx2));
             }
+        }
+        if (expr->type == NODE_TRANSFB) {
+            new_ctx = calloc(1, sizeof(*new_ctx));
+            *new_ctx = *ctx;
+            new_ctx->prog = expr->children->next;
+            TRY(apply_transf(proc, expr->children, new_ctx));
+            DL_APPEND(proc->ctxs, new_ctx);
         }
         if (expr->type == NODE_TRANSF) {
             TRY(apply_transf(proc, expr, ctx));
