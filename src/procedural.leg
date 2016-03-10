@@ -162,6 +162,7 @@ Op      = - i:Id
 
 Expr    = a:Expr2 (
               '?' b:Expr2 ':' c:Expr2 {$$ = N(EXPR, "?:", a, b, c)}
+            | o:OpLog b:Expr2         {$$ = N(EXPR, o->id, a, b)}
             | -                       {$$ = a}
         )
 
@@ -180,6 +181,7 @@ Expr4   = a:Value (
             | -                   {$$ = a}
          )
 
+OpLog   = < ('||' | '&&') >             {$$ = N(ID, yytext)}
 OpCmp   = < ('==' | '!=' | '<' | '>' | '<=' | '>=') > {$$ = N(ID, yytext)}
 OpSum   = < ('+' | '-') >               {$$ = N(ID, yytext)}
 OpMul   = < ('*' | '/' | '+-') >        {$$ = N(ID, yytext)}

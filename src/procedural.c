@@ -239,6 +239,10 @@ static float evaluate(node_t *node, ctx_t *ctx)
         return (a <= b) ? 1 : 0;
     if (str_equ(node->id, ">="))
         return (a >= b) ? 1 : 0;
+    if (str_equ(node->id, "||"))
+        return (a || b) ? 1 : 0;
+    if (str_equ(node->id, "&&"))
+        return (a && b) ? 1 : 0;
 
     c = evaluate(node->children->next->next, ctx);
     if (str_equ(node->id, "?:"))
