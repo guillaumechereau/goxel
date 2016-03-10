@@ -58,6 +58,7 @@
     X(paint,  0) \
     X(seed, 1) \
     X(wait, 1) \
+    X(life, 1)
 
 enum {
 #define X(x) NODE_##x,
@@ -116,6 +117,7 @@ struct proc_ctx {
     node_t      *prog;
     float       vars[4];
     int         wait;
+    int         life;
 };
 
 // Move a value toward a target.  If v is positive, move the value toward
@@ -366,6 +368,9 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     case OP_wait:
         ctx->wait += v[0];
         break;
+    case OP_life:
+        ctx->life += v[0];
+        break;
     }
     return 0;
 }
@@ -405,6 +410,11 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
     ctx_t ctx2, *new_ctx;
     node_t *expr, *rule;
 
+    if (ctx->life > 0) {
+        ctx->life--;
+        if (ctx->life <= 0)
+            return 0;
+    }
     if (ctx->wait > 0) {
         new_ctx = calloc(1, sizeof(*new_ctx));
         *new_ctx = *ctx;
