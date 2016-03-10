@@ -1,0 +1,26 @@
+// Simple planet
+shape main {
+    [s 20]
+    sphere [sat 0.5 light -0.75 hue 200]
+    loop 3 [] {
+        continent[rz 0+-180 ry 0+-180
+                  hue 1 40 sat 1 0.5
+                  light -0.5+-0.1]
+    }
+    loop 16 [] {
+        cloud [rz 0+-180 ry 0+-180
+               hue 200 light -0.1 sat 0.5]
+    }
+}
+
+shape continent {
+    loop 20 [rz 10 rx 0+-40] {
+        sphere[x 0.4 s 0.2+-0.05]
+    }
+}
+
+shape cloud {
+    loop 5 [rz 2 rx 0+-180] {
+       sphere[x 0.5 s 0.04 +- 0.01]
+    }
+}

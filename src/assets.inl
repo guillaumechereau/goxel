@@ -925,6 +925,36 @@ static const uint8_t DATA_data_icons_cylinder_png[1120]
     96,130,
 };
 
+static const uint8_t DATA_data_progs_planet_goxcf[499]
+                     __attribute__((aligned(4))) =
+    "// Simple planet\n"
+    "shape main {\n"
+    "    [s 20]\n"
+    "    sphere [sat 0.5 light -0.75 hue 200]\n"
+    "    loop 3 [] {\n"
+    "        continent[rz 0+-180 ry 0+-180\n"
+    "                  hue 1 40 sat 1 0.5\n"
+    "                  light -0.5+-0.1]\n"
+    "    }\n"
+    "    loop 16 [] {\n"
+    "        cloud [rz 0+-180 ry 0+-180\n"
+    "               hue 200 light -0.1 sat 0.5]\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape continent {\n"
+    "    loop 20 [rz 10 rx 0+-40] {\n"
+    "        sphere[x 0.4 s 0.2+-0.05]\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape cloud {\n"
+    "    loop 5 [rz 2 rx 0+-180] {\n"
+    "       sphere[x 0.5 s 0.04 +- 0.01]\n"
+    "    }\n"
+    "}\n"
+    "";
+
 static const uint8_t DATA_data_progs_intro_goxcf[2490]
                      __attribute__((aligned(4))) =
     "// The 'main' shape is always the entry point of the program.\n"
@@ -1074,6 +1104,29 @@ static const uint8_t DATA_data_progs_test2_goxcf[386]
     "}\n"
     "";
 
+static const uint8_t DATA_data_progs_test3_goxcf[283]
+                     __attribute__((aligned(4))) =
+    "shape main {\n"
+    "   loop 8 [rz 45] {\n"
+    "       test [s 20 x 2]\n"
+    "   }\n"
+    "}\n"
+    "\n"
+    "shape test {\n"
+    "    [sat 0.4 light -0.2 hue 240]\n"
+    "    sphere[]\n"
+    "    cube [z 0.5 sub]\n"
+    "    tige (15) [s 0.5 light -0.5]\n"
+    "}\n"
+    "\n"
+    "shape tige ($n) {\n"
+    "    cylinder[]\n"
+    "    if $n {\n"
+    "        tige($n - 1)[z 0.5 ry $n z 0.5 sat -0.1]\n"
+    "    }\n"
+    "}\n"
+    "";
+
 
 
 
@@ -1164,6 +1217,12 @@ static asset_t ASSETS[] = {
     },
 
     {
+        .path = "data/progs/planet.goxcf",
+        .data = DATA_data_progs_planet_goxcf,
+        .size = 499,
+    },
+
+    {
         .path = "data/progs/intro.goxcf",
         .data = DATA_data_progs_intro_goxcf,
         .size = 2490,
@@ -1179,6 +1238,12 @@ static asset_t ASSETS[] = {
         .path = "data/progs/test2.goxcf",
         .data = DATA_data_progs_test2_goxcf,
         .size = 386,
+    },
+
+    {
+        .path = "data/progs/test3.goxcf",
+        .data = DATA_data_progs_test3_goxcf,
+        .size = 283,
     },
 
     {0}
