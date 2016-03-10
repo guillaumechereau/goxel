@@ -917,6 +917,25 @@ static void procedural_panel(goxel_t *goxel)
     ImGui::SameLine();
     if (ImGui::Checkbox("Auto", &auto_run))
         proc_parse(gui->prog_buff, proc);
+    ImGui::SameLine();
+
+    if (ImGui::Button("Export Animation")) {
+        char *dir_path;
+        if (dialog_open(DIALOG_FLAG_SAVE | DIALOG_FLAG_DIR, NULL, &dir_path)) {
+            char path[1024];
+            int i = 0;
+            mesh_clear(goxel->image->active_layer->mesh);
+            proc_start(proc);
+            while (proc->state == PROC_RUNNING) {
+                proc_iter(&goxel->proc);
+                goxel_update_meshes(goxel, false);
+                sprintf(path, "%s/img_%04d.png", dir_path, i);
+                action_exec2("export_as", ARG("type", "png"), ARG("path", path));
+                i++;
+            }
+            free(dir_path);
+        }
+    }
 
     // File load / save.  No error check yet!
     if (*gui->prog_path) {
