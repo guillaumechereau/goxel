@@ -948,7 +948,7 @@ static void procedural_panel(goxel_t *goxel)
         }
         if (*gui->prog_path) {
             FILE *f = fopen(gui->prog_path, "w");
-            fwrite(gui->prog_buff, strlen(gui->prog_buff) + 1, 1, f);
+            fwrite(gui->prog_buff, strlen(gui->prog_buff), 1, f);
             fclose(f);
         }
     }
