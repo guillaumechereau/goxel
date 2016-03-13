@@ -216,7 +216,8 @@ static float evaluate(node_t *node, ctx_t *ctx)
     assert(node->type == NODE_EXPR);
 
     if (str_equ(node->id, "var")) {
-        return ctx->vars[(int)node->v];
+        assert(node->v > 0);
+        return ctx->vars[(int)node->v - 1];
     }
 
     a = evaluate(node->children, ctx);
@@ -444,6 +445,9 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
                 nrand48(ctx2.seed);
                 new_ctx = calloc(1, sizeof(*new_ctx));
                 *new_ctx = ctx2;
+                if (expr->v) {
+                    new_ctx->vars[(int)expr->v - 1] = i;
+                }
                 DL_APPEND(proc->ctxs, new_ctx);
                 TRY(apply_transf(proc, expr->children->next, &ctx2));
             }

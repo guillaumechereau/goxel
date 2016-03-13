@@ -87,6 +87,17 @@
         DL_APPEND(node->children, c);
     }
 
+    static void clear_vars(vars_t *vars)
+    {
+        int i;
+        for (i = 0; i < ARRAY_SIZE(vars->names); i++) {
+            free(vars->names[i]);
+            vars->names[i] = NULL;
+        }
+        vars->nb = 0;
+    }
+
+    /*
     static int push_var(vars_t *vars, node_t *var) {
         int i;
         if (!var) {
@@ -100,16 +111,17 @@
         vars->names[vars->nb++] = strdup(var->id);
         return 0;
     }
+    */
 
-    static int get_var(vars_t *vars, const char *id, float *ret) {
+    static int get_var(vars_t *vars, const char *id) {
         int i;
         for (i = 0; i < vars->nb; i++) {
             if (strcmp(vars->names[i], id) == 0) {
-                *ret = i;
-                return 0;
+                return i + 1;
             }
         }
-        return -1;
+        vars->names[vars->nb++] = strdup(id);
+        return vars->nb;
     }
 %}
 
@@ -118,15 +130,15 @@ Prog    =  p:-       {p = N(PROG, NULL)}
             -        {yy->prog = $$ = p}
             EOF
 
-Shape   = s:- 'shape' i:Id       {s = N(SHAPE, i->id)}
+Shape   = s:- 'shape' i:Id       {s = N(SHAPE, i->id); clear_vars(&yy->vars)}
           Args
           (
               b:Block         {A(s, b)}
             | (r:Rule         {A(s, r)} )+
           )                   {$$ = s}
 
-Args    = - {push_var(&yy->vars, NULL)} '('
-                (v:Var { push_var(&yy->vars, v) } (',' | &')') )*
+Args    = - {clear_vars(&yy->vars)} '('
+                (v:Var (',' | &')') )*
           ')'
         | -
 
@@ -138,7 +150,8 @@ Block   = - '{' b:-      {b = N(BLOCK, NULL)}
           (s:Stmt        {A(b, s)}                   )*
           - '}'          {$$ = b}
 
-Stmt    = - 'loop' e:Expr t:Transf b:Block {$$ = N(LOOP, NULL, e, t, b)}
+Stmt    = - 'loop' {x = NULL} (x:Var - '=')? e:Expr t:Transf b:Block
+                    {$$ = N(LOOP, NULL, e, t, b); $$->v = x ? x->v : 0}
         | - 'transform' t:Transf b:Block   {$$ = N(TRANSFB, NULL, t, b)}
         | - 'return'                       {$$ = N(RETURN, NULL)}
         | i:IfStmt                         {$$ = i}
@@ -188,14 +201,15 @@ OpMul   = < ('*' | '/' | '+-') >        {$$ = N(ID, yytext)}
 
 
 Value   = n:Num {$$ = n}
-        | x:Var {$$ = N(EXPR, "var"); get_var(&yy->vars, x->id, &($$->v))}
+        | x:Var {$$ = N(EXPR, "var"); $$->v = x->v}
         | - '(' e:Expr ')' - {$$ = e}
 
 Num     = - < [-.0-9]+ > -  {$$ = N(VALUE, NULL); $$->v = atof(yytext)}
 
 Id      = - < [a-zA-Z_][a-zA-Z_0-9]* > -  {$$ = N(ID, yytext)}
 
-Var     = - '$' < [a-zA-Z_][a-zA-Z_0-9]* > -  {$$ = N(ID, yytext)}
+Var     = - '$' < [a-zA-Z_][a-zA-Z_0-9]* > -
+                {$$ = N(ID, yytext); $$->v = get_var(&yy->vars, yytext)}
 
 -       = ( Comment | [ \t] | EOL )*
 
