@@ -202,10 +202,17 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     g_last_op.painter   = *painter;
     g_last_op.box       = *box;
 
-    box_t bbox = bbox_grow(box_get_bbox(*box), 1, 1, 1);
-    box_t block_box;
     block_t *block, *tmp;
+    box_t full_box, bbox, block_box;
     bool empty;
+
+    // Grow the box to take the smoothness into account.
+    full_box = *box;
+    mat4_igrow(&full_box.mat, painter->smoothness,
+                              painter->smoothness,
+                              painter->smoothness);
+    bbox = bbox_grow(box_get_bbox(full_box), 1, 1, 1);
+
     // In case of an add operation, we have to add blocks if they are not
     // there yet.
     mesh_prepare_write(mesh);
@@ -223,7 +230,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         // XXX: this is too specific.  we need a way to tell if a given
         // shape totally contains a box.
         if (    painter->shape == &shape_cube && painter->op == OP_SUB &&
-                box_contains(*box, block_box))
+                box_contains(full_box, block_box))
             empty = true;
         if (!empty) {
             block_op(block, painter, box);

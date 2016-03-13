@@ -610,7 +610,7 @@ static void apply_op(uvec4b_t *v, int op, const uvec4b_t *c, uint8_t k)
         v->a = max(v->a, k);
     }
     if (op == OP_SUB)
-        v->a = 0;
+        v->a = max(0, v->a - k);
 }
 
 // XXX: cleanup this function.
@@ -619,10 +619,12 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     int x, y, z;
     mat4_t mat = mat4_identity;
     vec3_t p, size;
+    float k;
     uint8_t v;
     int op = painter->op;
     const uvec4b_t *c = &painter->color;
-    float (*shape_func)(const vec3_t*, const vec3_t*) = painter->shape->func;
+    float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
+    shape_func = painter->shape->func;
     bool invert = false;
 
     if (op == OP_INTERSECT) {
@@ -640,7 +642,9 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     BLOCK_ITER(x, y, z) {
         if (can_skip(BLOCK_AT(block, x, y, z), op, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
-        v = shape_func(&p, &size) * 255;
+        k = shape_func(&p, &size, painter->smoothness);
+        k = clamp(k / painter->smoothness, -1, 1);
+        v = (k + 1) * 0.5 * 255;
         if (invert) v = 255 - v;
         if (v) {
             block_prepare_write(block);

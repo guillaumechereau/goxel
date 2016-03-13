@@ -1,4 +1,5 @@
 shape main {
+   [antialiased 1]
    loop 8 [rz 45] {
        test [s 20 x 2]
    }

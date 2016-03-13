@@ -18,6 +18,6 @@ rule 0.1 {
 }
 
 shape main {
-    [light 1]
+    [light 1 antialiased 1]
     branch [s 32]
 }

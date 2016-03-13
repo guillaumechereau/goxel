@@ -446,7 +446,7 @@ enum {
 
 typedef struct shape {
     const char *id;
-    float (*func)(const vec3_t *p, const vec3_t *s);
+    float (*func)(const vec3_t *p, const vec3_t *s, float smoothness);
 } shape_t;
 
 void shapes_init(void);
@@ -461,6 +461,7 @@ typedef struct painter {
     int             op;
     const shape_t   *shape;
     uvec4b_t        color;
+    float           smoothness;
 } painter_t;
 
 // #### Block ##################

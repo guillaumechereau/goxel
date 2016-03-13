@@ -1,4 +1,5 @@
 shape main {
+    [antialiased 1]
     [light 0.5 sat 0.5 s 100]
     loop 5 [s -0.95 light 0.1 sat 0.01 hue 5] {
        sphere [light -0.6 hue 30]

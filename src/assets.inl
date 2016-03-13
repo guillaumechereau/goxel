@@ -955,13 +955,15 @@ static const uint8_t DATA_data_progs_planet_goxcf[499]
     "}\n"
     "";
 
-static const uint8_t DATA_data_progs_intro_goxcf[2490]
+static const uint8_t DATA_data_progs_intro_goxcf[2551]
                      __attribute__((aligned(4))) =
     "// The 'main' shape is always the entry point of the program.\n"
     "shape main {\n"
     "    // Initial random seed of 2.\n"
     "    // Remove this line to use different seed each time.\n"
     "    [seed 2]\n"
+    "    // Improves marching cube rendering.\n"
+    "    [antialiased 1]\n"
     "\n"
     "    // Render a single white voxel.\n"
     "    cube []\n"
@@ -1057,7 +1059,7 @@ static const uint8_t DATA_data_progs_intro_goxcf[2490]
     "}\n"
     "";
 
-static const uint8_t DATA_data_progs_test_goxcf[309]
+static const uint8_t DATA_data_progs_test_goxcf[323]
                      __attribute__((aligned(4))) =
     "// Simple Test\n"
     "\n"
@@ -1079,14 +1081,15 @@ static const uint8_t DATA_data_progs_test_goxcf[309]
     "}\n"
     "\n"
     "shape main {\n"
-    "    [light 1]\n"
+    "    [light 1 antialiased 1]\n"
     "    branch [s 32]\n"
     "}\n"
     "";
 
-static const uint8_t DATA_data_progs_test2_goxcf[386]
+static const uint8_t DATA_data_progs_test2_goxcf[406]
                      __attribute__((aligned(4))) =
     "shape main {\n"
+    "    [antialiased 1]\n"
     "    [light 0.5 sat 0.5 s 100]\n"
     "    loop 5 [s -0.95 light 0.1 sat 0.01 hue 5] {\n"
     "       sphere [light -0.6 hue 30]\n"
@@ -1104,9 +1107,10 @@ static const uint8_t DATA_data_progs_test2_goxcf[386]
     "}\n"
     "";
 
-static const uint8_t DATA_data_progs_test3_goxcf[283]
+static const uint8_t DATA_data_progs_test3_goxcf[302]
                      __attribute__((aligned(4))) =
     "shape main {\n"
+    "   [antialiased 1]\n"
     "   loop 8 [rz 45] {\n"
     "       test [s 20 x 2]\n"
     "   }\n"
@@ -1225,25 +1229,25 @@ static asset_t ASSETS[] = {
     {
         .path = "data/progs/intro.goxcf",
         .data = DATA_data_progs_intro_goxcf,
-        .size = 2490,
+        .size = 2551,
     },
 
     {
         .path = "data/progs/test.goxcf",
         .data = DATA_data_progs_test_goxcf,
-        .size = 309,
+        .size = 323,
     },
 
     {
         .path = "data/progs/test2.goxcf",
         .data = DATA_data_progs_test2_goxcf,
-        .size = 386,
+        .size = 406,
     },
 
     {
         .path = "data/progs/test3.goxcf",
         .data = DATA_data_progs_test3_goxcf,
-        .size = 283,
+        .size = 302,
     },
 
     {0}

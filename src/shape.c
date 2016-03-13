@@ -22,25 +22,52 @@ shape_t shape_sphere;
 shape_t shape_cube;
 shape_t shape_cylinder;
 
-static float sphere_func(const vec3_t *p, const vec3_t *s)
+static float sphere_func(const vec3_t *p, const vec3_t *s, float smoothness)
 {
-    vec3_t pp = vec3(p->x / s->x, p->y / s->y, p->z / s->z);
-    return smoothstep(1 + 1 / s->x, 1 - 1 / s->x, vec3_norm2(pp));
+    float d = vec3_norm(*p);
+    vec3_t a;
+    if (p->x == 0 && p->y == 0 && p->z == 0) return max3(s->x, s->y, s->z);
+    a = vec3(s->x * p->x / d, s->y * p->y / d, s->z * p->z / d);
+    return vec3_norm(a) - d;
 }
 
-static float cube_func(const vec3_t *p, const vec3_t *s)
+static float cube_func(const vec3_t *p, const vec3_t *s, float sm)
 {
-    return (p->x >= -s->x && p->x < +s->x &&
-            p->y >= -s->y && p->y < +s->y &&
-            p->z >= -s->z && p->z < +s->z) ? 1 : 0;
+    int i;
+    float min_v = INFINITY;
+    float ret = INFINITY, v;
+
+    // Check if we are outside the max cube:
+    if  (p->x < -s->x - sm || p->x >= +s->x + sm ||
+         p->y < -s->y - sm || p->y >= +s->y + sm ||
+         p->z < -s->z - sm || p->z >= +s->z + sm) return -INFINITY;
+
+    // Or inside the min cube:
+    if  (p->x >= -s->x + sm && p->x < +s->x - sm &&
+         p->y >= -s->y + sm && p->y < +s->y - sm &&
+         p->z >= -s->z + sm && p->z < +s->z - sm) return +INFINITY;
+
+    for (i = 0; i < 3; i++) {
+        if (p->v[i]) {
+            v = s->v[i] / fabs(p->v[i]);
+            if (v < min_v) {
+                min_v = v;
+                ret = s->v[i] - fabs(p->v[i]);
+            }
+        }
+    }
+    return ret;
 }
 
-static float cylinder_func(const vec3_t *p, const vec3_t *s)
+static float cylinder_func(const vec3_t *p, const vec3_t *s, float smoothness)
 {
-    vec3_t pp = vec3(p->x / s->x, p->y / s->y, p->z / s->z);
-    if (pp.z <= -1 || pp.z > 1) return 0.0;
-    return smoothstep(1 + 1 / s->x, 1 - 1 / s->x, vec2_norm2(pp.xy));
-
+    float d = vec2_norm(p->xy);
+    float r;
+    r = s->z - fabs(p->z);
+    if (p->x == 0 && p->y == 0) return min(r, max3(s->x, s->y, s->z));
+    vec2_t a;
+    a = vec2(s->x * p->x / d, s->y * p->y / d);
+    return min(r, vec2_norm(a) - d);
 }
 
 void shapes_init(void)

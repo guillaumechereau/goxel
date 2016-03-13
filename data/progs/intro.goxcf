@@ -3,6 +3,8 @@ shape main {
     // Initial random seed of 2.
     // Remove this line to use different seed each time.
     [seed 2]
+    // Improves marching cube rendering.
+    [antialiased 1]
 
     // Render a single white voxel.
     cube []

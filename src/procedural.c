@@ -58,7 +58,8 @@
     X(paint,  0) \
     X(seed, 1) \
     X(wait, 1) \
-    X(life, 1)
+    X(life, 1) \
+    X(antialiased, 1) \
 
 enum {
 #define X(x) NODE_##x,
@@ -113,6 +114,7 @@ struct proc_ctx {
     box_t       box;
     int         op;
     vec4_t      color;
+    bool        antialiased;
     uint16_t    seed[3];
     node_t      *prog;
     float       vars[4];
@@ -371,6 +373,9 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     case OP_life:
         ctx->life += v[0];
         break;
+    case OP_antialiased:
+        ctx->antialiased = (bool)v[0];
+        break;
     }
     return 0;
 }
@@ -396,6 +401,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
     goxel()->painter.color.rgb = hsl_to_rgb(hsl);
     goxel()->painter.shape = shape;
     goxel()->painter.op = ctx->op;
+    goxel()->painter.smoothness = ctx->antialiased ? 1 : 0;
     mesh_op(mesh, &goxel()->painter, &ctx->box);
 }
 

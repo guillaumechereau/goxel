@@ -261,6 +261,7 @@ void goxel_init(goxel_t *goxel)
     goxel->painter = (painter_t) {
         .shape = &shape_cube,
         .op = OP_ADD,
+        .smoothness = 0,
         .color = HEXCOLOR(0xEEEEECFF),
     };
     goxel->rend = (renderer_t) {
