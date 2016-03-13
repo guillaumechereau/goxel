@@ -984,6 +984,21 @@ NOC_DEF void mat4_irotate(mat4_t *m, real_t a, real_t x, real_t y, real_t z)
     *m = mat4_rotate(*m, a, x, y, z);
 }
 
+#include <stdio.h>
+
+NOC_DEF void mat4_igrow(mat4_t *m, real_t x, real_t y, real_t z)
+{
+    // XXX: need to optimize this.
+    real_t sx, sy, sz;
+    sx = vec3_norm(mat4_mul_vec(*m, vec4(1, 0, 0, 0)).xyz);
+    sy = vec3_norm(mat4_mul_vec(*m, vec4(0, 1, 0, 0)).xyz);
+    sz = vec3_norm(mat4_mul_vec(*m, vec4(0, 0, 1, 0)).xyz);
+    sx = (2 * x + sx) / sx;
+    sy = (2 * y + sy) / sy;
+    sz = (2 * z + sz) / sz;
+    mat4_iscale(m, sx, sy, sz);
+}
+
 #endif
 
 #undef TAKEC
