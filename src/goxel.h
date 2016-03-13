@@ -196,6 +196,9 @@ static inline vec4_t uvec4b_to_vec4(uvec4b_t v)
       _a > _b ? _a : _b; \
       })
 
+#define max3(x, y, z) (max((x), max((y), (z))))
+#define min3(x, y, z) (min((x), min((y), (z))))
+
 #define clamp(x, a, b) (min(max(x, a), b))
 
 #define sign(x) ({ \
