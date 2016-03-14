@@ -447,6 +447,7 @@ static void export_as_png(goxel_t *goxel, const char *path)
     int w = goxel->image->export_width;
     int h = goxel->image->export_height;
     const float aspect = (float)w / h;
+    uint8_t *data2, *data;
     float zoom;
     texture_t *fbo;
     renderer_t rend = goxel->rend;
@@ -454,7 +455,7 @@ static void export_as_png(goxel_t *goxel, const char *path)
     LOG_I("Exporting to file %s", path);
 
     mesh = goxel->layers_mesh;
-    fbo = texture_new_buffer(w, h, TF_DEPTH);
+    fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
     // XXX: this should be put somewhere else!
     rend.view_mat = mat4_identity;
@@ -467,13 +468,18 @@ static void export_as_png(goxel_t *goxel, const char *path)
     zoom = pow(1.25f, goxel->camera.zoom);
     mat4_iscale(&rend.proj_mat, zoom, zoom, zoom);
 
-    GL(glViewport(0, 0, w, h));
+    GL(glViewport(0, 0, w * 2, h * 2));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, fbo->framebuffer));
     GL(glClearColor(0, 0, 0, 0));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     render_mesh(&rend, mesh, 0);
     render_render(&rend);
-    texture_save_to_file(fbo, path);
+    data2 = calloc(w * h * 4 , 4);
+    data = calloc(w * h, 4);
+    texture_get_data(fbo, w * 2, h * 2, 4, data2);
+    img_downsample(data2, w * 2, h * 2, 4, data);
+    img_write(data, w, h, 4, path);
+    free(data);
 }
 
 ACTION_REGISTER(export_as_png,

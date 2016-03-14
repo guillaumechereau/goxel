@@ -252,6 +252,8 @@ uint8_t *img_read_from_mem(const char *data, int size,
 void img_write(const uint8_t *img, int w, int h, int bpp, const char *path);
 uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp,
                           int *size);
+void img_downsample(const uint8_t *img, int w, int h, int bpp,
+                    uint8_t *out);
 bool str_endswith(const char *str, const char *end);
 bool str_startswith(const char *s1, const char *s2);
 
@@ -320,6 +322,8 @@ struct texture {
 texture_t *texture_new_image(const char *path);
 texture_t *texture_new_surface(int w, int h, int flags);
 texture_t *texture_new_buffer(int w, int h, int flags);
+void texture_get_data(const texture_t *tex, int w, int h, int bpp,
+                      uint8_t *buf);
 void texture_save_to_file(const texture_t *tex, const char *path);
 
 texture_t *texture_copy(texture_t *tex);

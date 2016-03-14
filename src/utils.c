@@ -288,3 +288,23 @@ int list_dir(const char *url, int flags, void *user,
     closedir(dir);
     return i;
 }
+
+void img_downsample(const uint8_t *img, int w, int h, int bpp,
+                    uint8_t *out)
+{
+#define IX(x, y, k) (((y) * w + (x)) * bpp + (k))
+    int i, j, k;
+
+    assert(w % 2 == 0 && h % 2 == 0);
+
+    for (i = 0; i < h; i += 2)
+    for (j = 0; j < w; j += 2)
+    for (k = 0; k < bpp; k++) {
+        out[(i * w / 4 + j / 2) * bpp + k] = (
+                            img[IX(j + 0, i + 0, k)] +
+                            img[IX(j + 0, i + 1, k)] +
+                            img[IX(j + 1, i + 0, k)] +
+                            img[IX(j + 1, i + 1, k)]) / 4;
+    }
+#undef IX
+}

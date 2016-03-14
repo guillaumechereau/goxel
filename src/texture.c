@@ -228,27 +228,30 @@ texture_t *texture_copy(texture_t *tex)
     return tex;
 }
 
-void texture_save_to_file(const texture_t *tex, const char *path)
+void texture_get_data(const texture_t *tex, int w, int h, int bpp,
+                      uint8_t *buf)
 {
-    LOG_I("save texture to %s", path);
-    int bpp;
-    uint8_t *data, *tmp;
-    int i, w, h;
-
-    w = tex->tex_w;
-    h = tex->tex_h;
+    uint8_t *tmp;
+    int i;
+    tmp = calloc(w * h, bpp);
     GL(glBindFramebuffer(GL_FRAMEBUFFER, tex->framebuffer));
-    bpp = 4;
-    data = calloc(w * h, bpp);
-    GL(glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data));
+    GL(glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, tmp));
     // Flip output y.
-    tmp = data;
-    data = calloc(w * h, bpp);
     for (i = 0; i < h; i++) {
-        memcpy(&data[i * w * bpp], &tmp[(h - i - 1) * w * bpp], bpp * w);
+        memcpy(&buf[i * w * bpp], &tmp[(h - i - 1) * w * bpp], bpp * w);
     }
     free(tmp);
+}
 
-    img_write(data, w, h, bpp, path);
+void texture_save_to_file(const texture_t *tex, const char *path)
+{
+    uint8_t *data;
+    int w, h;
+    LOG_I("save texture to %s", path);
+    w = tex->tex_w;
+    h = tex->tex_h;
+    data = calloc(w * h, 4);
+    texture_get_data(tex, w, h, 4, data);
+    img_write(data, w, h, 4, path);
     free(data);
 }
