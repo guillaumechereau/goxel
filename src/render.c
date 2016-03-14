@@ -659,15 +659,15 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
         .specular = 0.4,
         .shininess = 2.0,
         .smoothness = 0.0,
-        .effects = EFFECT_BORDERS_ALL,
+        .effects = EFFECT_BORDERS,
     };
     switch (i) {
         case 0:
-            if (name) *name = "Cubes";
+            if (name) *name = "Borders";
             break;
         case 1:
-            if (name) *name = "Borders";
-            out->effects = EFFECT_BORDERS;
+            if (name) *name = "Cubes";
+            out->effects = EFFECT_BORDERS_ALL;
             break;
         case 2:
             if (name) *name = "Plain";
