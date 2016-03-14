@@ -650,13 +650,13 @@ void render_render(renderer_t *rend)
 
 int render_get_default_settings(int i, char **name, render_settings_t *out)
 {
-    if (!out) return 4;
+    if (!out) return 5;
 
     *out = (render_settings_t) {
-        .border_shadow = 0.25,
-        .ambient = 0.3,
-        .diffuse = 0.8,
-        .specular = 0.2,
+        .border_shadow = 0.4,
+        .ambient = 0.1,
+        .diffuse = 0.9,
+        .specular = 0.4,
         .shininess = 2.0,
         .smoothness = 0.0,
         .effects = EFFECT_BORDERS_ALL,
@@ -666,22 +666,26 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             if (name) *name = "Cubes";
             break;
         case 1:
+            if (name) *name = "Borders";
+            out->effects = EFFECT_BORDERS;
+            break;
+        case 2:
             if (name) *name = "Plain";
             out->effects = 0;
             break;
-        case 2:
+        case 3:
             if (name) *name = "Smooth";
             out->effects = 0;
             out->smoothness = 1;
             out->border_shadow = 0;
             break;
-        case 3:
+        case 4:
             if (name) *name = "Marching";
             out->smoothness = 1.0;
             out->effects = EFFECT_MARCHING_CUBES;
             break;
     }
-    return 4;
+    return 5;
 }
 
 

@@ -270,17 +270,8 @@ void goxel_init(goxel_t *goxel)
             .fixed = true,
             .intensity = 1.
         },
-        // XXX: find good values.
-        .settings = {
-            .border_shadow = 0.25,
-            .ambient = 0.3,
-            .diffuse = 0.8,
-            .specular = 0.2,
-            .shininess = 2.0,
-            .smoothness = 0.0,
-            .effects = EFFECT_BORDERS_ALL,
-        },
     };
+    render_get_default_settings(0, NULL, &goxel->rend.settings);
 
     model3d_init();
     goxel->plane = plane(vec3(0.5, 0.5, 0.5), vec3(1, 0, 0), vec3(0, 1, 0));
