@@ -1131,6 +1131,84 @@ static const uint8_t DATA_data_progs_test3_goxcf[302]
     "}\n"
     "";
 
+static const uint8_t DATA_data_progs_city_goxcf[1186]
+                     __attribute__((aligned(4))) =
+    "shape main {\n"
+    "    [seed 4]\n"
+    "    city[]\n"
+    "}\n"
+    "\n"
+    "shape ground {\n"
+    "    [s 128 128 1\n"
+    "     light -0.6 sat 0.2 hue 50]\n"
+    "    cube[]\n"
+    "    loop 16 [] {\n"
+    "       cube[x 0+-0.4 0+-0.4 \n"
+    "            s 0.2+-0.1 0.2+-0.1 3+-1\n"
+    "            light -0.3+-0.2]\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape city {\n"
+    "    ground[]\n"
+    "    loop 128 [] {\n"
+    "        building[x 0+-58 0+-58 s 2+-0.5\n"
+    "                 sat 0.2+-0.1 hue 0+-180]\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape building\n"
+    "// Tall building\n"
+    "rule 1 {\n"
+    "    [s 3]\n"
+    "    $n = int(10+-5)\n"
+    "    loop $n [z 1] {\n"
+    "        $s = 2+-0.2\n"
+    "        floor[s $s $s 1 z 0.5]\n"
+    "    }\n"
+    "    [z $n - 0.5]\n"
+    "    loop 1+-2 [] {\n"
+    "        antenna[]\n"
+    "    }\n"
+    "}\n"
+    "// Low building\n"
+    "rule 1 {\n"
+    "   [s 8+-4 8+-4 4+-2 z 0.5]\n"
+    "   cube[light -0.3]\n"
+    "   windows(8)[]\n"
+    "   loop 2+-1 [] {antenna[]}\n"
+    "}\n"
+    "// Tree\n"
+    "rule 10 {\n"
+    "   [z 0.5 sn 1 z 0.5]\n"
+    "   [sat 1 0.5 light 1 0.2 hue 1 20]\n"
+    "   cube[z 0.5 sz 5]\n"
+    "   loop 2 [] {\n"
+    "       sphere[z 4 s 4+-1\n"
+    "              x 0+-0.1 0+-0.1\n"
+    "              hue 100+-40]\n"
+    "   }\n"
+    "}\n"
+    "\n"
+    "shape windows($n) {\n"
+    "    loop $n [rz 90] {\n"
+    "       cube[x 0.5 0+-0.4 sn s 1/3 x -0.5\n"
+    "            light 1 1 light 0+-0.2]\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape floor {\n"
+    "    cube[light -0.5+-0.1]\n"
+    "    windows(8)[]\n"
+    "}\n"
+    "\n"
+    "shape antenna {\n"
+    "    [z 0.5 x 0+-0.4 0+-0.4\n"
+    "     sn 1 sz 2+-1 z 0.5\n"
+    "     light -0.5]\n"
+    "    cube[]\n"
+    "}";
+
 
 
 
@@ -1248,6 +1326,12 @@ static asset_t ASSETS[] = {
         .path = "data/progs/test3.goxcf",
         .data = DATA_data_progs_test3_goxcf,
         .size = 302,
+    },
+
+    {
+        .path = "data/progs/city.goxcf",
+        .data = DATA_data_progs_city_goxcf,
+        .size = 1186,
     },
 
     {0}
