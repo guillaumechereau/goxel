@@ -157,6 +157,7 @@ Stmt    = - 'loop' {x = NULL} (x:Var - '=')? e:Expr t:Transf b:Block
         | i:IfStmt                         {$$ = i}
         | i:Id a:ArgsV t:Transf            {$$ = N(CALL, i->id, t, a)}
         | t:Transf                         {$$ = t}
+        | x:Var - '=' e:Expr          {$$ = N(SET, NULL, e); $$->v = x->v}
 
 IfStmt  = - 'if' e:Expr b:Block      {$$ = N(IF, NULL, e, b)}
 
@@ -203,6 +204,7 @@ OpMul   = < ('*' | '/' | '+-') >        {$$ = N(ID, yytext)}
 Value   = n:Num {$$ = n}
         | x:Var {$$ = N(EXPR, "var"); $$->v = x->v}
         | - '(' e:Expr ')' - {$$ = e}
+        | - i:Id '(' e:Expr ')' {$$ = N(EXPR, i->id, e)}
 
 Num     = - < [-.0-9]+ > -  {$$ = N(VALUE, NULL); $$->v = atof(yytext)}
 

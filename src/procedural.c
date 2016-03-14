@@ -37,7 +37,9 @@
     X(TRANSFB) \
     X(IF) \
     X(RETURN) \
+    X(SET) \
     X(EXPR) \
+    X(FUN_CALL) \
 
 // List of operators and the number of args they support.
 #define OPS \
@@ -45,6 +47,7 @@
     X(sx,   1) \
     X(sy,   1) \
     X(sz,   1) \
+    X(sn,   0, 1) \
     X(x,    1, 2, 3) \
     X(y,    1, 2) \
     X(z,    1) \
@@ -55,7 +58,7 @@
     X(sat,  1, 2) \
     X(hue,  1, 2) \
     X(sub,  0) \
-    X(paint,  0) \
+    X(paint,0) \
     X(seed, 1) \
     X(wait, 1) \
     X(life, 1) \
@@ -219,8 +222,11 @@ static float evaluate(node_t *node, ctx_t *ctx)
         assert(node->v > 0);
         return ctx->vars[(int)node->v - 1];
     }
-
     a = evaluate(node->children, ctx);
+
+    if (str_equ(node->id, "int"))
+        return nearbyint(a);
+
     b = evaluate(node->children->next, ctx);
     if (str_equ(node->id, "+"))
         return a + b;
@@ -284,6 +290,17 @@ static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
     return NULL;
 }
 
+static void scale_normalize(mat4_t *mat, float v)
+{
+    float x, y, z, m;
+    x = vec3_norm(mat4_mul_vec(*mat, vec4(1, 0, 0, 0)).xyz);
+    y = vec3_norm(mat4_mul_vec(*mat, vec4(0, 1, 0, 0)).xyz);
+    z = vec3_norm(mat4_mul_vec(*mat, vec4(0, 0, 1, 0)).xyz);
+    m = min3(x, y, z);
+    if (v) m = v / 2;
+    mat4_iscale(mat, m / x, m / y, m / z);
+}
+
 static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
 {
     node_t *c;
@@ -328,6 +345,9 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     case OP_s:
         if (n == 1) v[1] = v[2] = v[0];
         mat4_iscale(&ctx->box.mat, v[0], v[1], v[2]);
+        break;
+    case OP_sn:
+        scale_normalize(&ctx->box.mat, v[0]);
         break;
     case OP_x:
         mat4_itranslate(&ctx->box.mat, 2 * v[0], 2 * v[1], 2 * v[2]);
@@ -466,6 +486,9 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
                 ctx2.prog = expr->children->next;
                 iter(proc, &ctx2);
             }
+        }
+        if (expr->type == NODE_SET) {
+            ctx->vars[(int)expr->v - 1] = evaluate(expr->children, ctx);
         }
         if (expr->type == NODE_RETURN) {
             break;
