@@ -175,22 +175,22 @@ Op      = - i:Id
 
 Expr    = a:Expr2 (
               '?' b:Expr2 ':' c:Expr2 {$$ = N(EXPR, "?:", a, b, c)}
-            | o:OpLog b:Expr2         {$$ = N(EXPR, o->id, a, b)}
+            | o:OpLog b:Expr          {$$ = N(EXPR, o->id, a, b)}
             | -                       {$$ = a}
         )
 
 Expr2    = a:Expr3 (
-              o:OpCmp b:Expr3      {$$ = N(EXPR, o->id, a, b)}
+              o:OpCmp b:Expr2      {$$ = N(EXPR, o->id, a, b)}
             | -                    {$$ = a}
         )
 
 Expr3   = a:Expr4 (
-              o:OpSum b:Expr4      {$$ = N(EXPR, o->id, a, b)}
+              o:OpSum b:Expr3      {$$ = N(EXPR, o->id, a, b)}
             | -                    {$$ = a}
         )
 
 Expr4   = a:Value (
-              o:OpMul  b:Value    {$$ = N(EXPR, o->id,  a, b)}
+              o:OpMul  b:Expr4    {$$ = N(EXPR, o->id,  a, b)}
             | -                   {$$ = a}
          )
 
