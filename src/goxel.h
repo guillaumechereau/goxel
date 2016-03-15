@@ -144,7 +144,7 @@ enum {
 
 
 // #### GL macro ###############
-#ifdef DEBUG
+#if DEBUG
 #  define GL(line) ({                                                   \
        line;                                                            \
        if (check_gl_errors(__FILE__, __LINE__)) assert(false);          \
