@@ -79,8 +79,7 @@ if target_os == 'msys':
 if target_os == 'js':
     assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
     env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
-    env.Append(CCFLAGS=['--preload-file', 'data',
-                        '-s', 'USE_GLFW=3',
+    env.Append(CCFLAGS=['-s', 'USE_GLFW=3',
                         '-DGLES2 1', '-DNO_ZLIB', '-DNO_ARGP',
                         '-s', 'ALLOW_MEMORY_GROWTH=1',
                         '-s', '"EXPORTED_FUNCTIONS=[\'_main\']"'])
