@@ -412,6 +412,57 @@ void goxel_render(goxel_t *goxel)
     gui_render();
 }
 
+void goxel_render_view(goxel_t *goxel,  const vec4_t *rect)
+{
+    const float size = 16;
+    const float aspect = rect->z / rect->w;
+    float zoom;
+    layer_t *layer;
+    vec4_t back_color;
+    renderer_t *rend = &goxel->rend;
+
+    // Update the camera mats
+    goxel->camera.view = *rect;
+    goxel->camera.view_mat = mat4_identity;
+    mat4_itranslate(&goxel->camera.view_mat, 0, 0, -goxel->camera.dist);
+    mat4_imul_quat(&goxel->camera.view_mat, goxel->camera.rot);
+    mat4_itranslate(&goxel->camera.view_mat,
+           goxel->camera.ofs.x, goxel->camera.ofs.y, goxel->camera.ofs.z);
+
+    goxel->camera.proj_mat = mat4_ortho(
+            -size, +size, -size / aspect, +size / aspect, 0, 1000);
+    zoom = pow(1.25f, goxel->camera.zoom);
+    mat4_iscale(&goxel->camera.proj_mat, zoom, zoom, zoom);
+
+    back_color = uvec4b_to_vec4(goxel->back_color);
+    GL(glClearColor(back_color.r, back_color.g, back_color.b, back_color.a));
+    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+    render_mesh(rend, goxel->layers_mesh, 0);
+
+    // Render all the image layers.
+    DL_FOREACH(goxel->image->layers, layer) {
+        if (layer->visible && layer->image)
+            render_img(rend, layer->image, &layer->mat);
+    }
+
+    render_box(rend, &goxel->selection, false, NULL, true);
+
+    // XXX: make a toggle for debug informations.
+    if (0) {
+        box_t b;
+        uvec4b_t c;
+        c = HEXCOLOR(0x00FF0050);
+        b = mesh_get_box(goxel->layers_mesh, true);
+        render_box(rend, &b, false, &c, false);
+        c = HEXCOLOR(0x00FFFF50);
+        b = mesh_get_box(goxel->layers_mesh, false);
+        render_box(rend, &b, false, &c, false);
+    }
+    if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
+        render_plane(rend, &goxel->plane, &goxel->grid_color);
+}
+
 void goxel_update_meshes(goxel_t *goxel, bool pick)
 {
     layer_t *layer;

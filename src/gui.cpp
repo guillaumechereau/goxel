@@ -16,7 +16,6 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 extern "C" {
 #include "goxel.h"
 }
@@ -335,69 +334,19 @@ typedef struct view {
     vec4_t  rect;
 } view_t;
 
-// XXX: I would prefer the rendering to be done in goxel.c
 void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 {
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    const float size = 16;
-    const float aspect = view->rect.z / view->rect.w;
-    layer_t *layer;
-    vec4_t back_color;
-    float zoom;
-    goxel_t *goxel = view->goxel;
-
-    renderer_t *rend = &goxel->rend;
-
-    // Update the camera mats
-    goxel->camera.view = view->rect;
-    goxel->camera.view_mat = mat4_identity;
-    mat4_itranslate(&goxel->camera.view_mat, 0, 0, -goxel->camera.dist);
-    mat4_imul_quat(&goxel->camera.view_mat, goxel->camera.rot);
-    mat4_itranslate(&goxel->camera.view_mat,
-           goxel->camera.ofs.x, goxel->camera.ofs.y, goxel->camera.ofs.z);
-
-    goxel->camera.proj_mat = mat4_ortho(
-            -size, +size, -size / aspect, +size / aspect, 0, 1000);
-    zoom = pow(1.25f, goxel->camera.zoom);
-    mat4_iscale(&goxel->camera.proj_mat, zoom, zoom, zoom);
 
     GL(glViewport(view->rect.x, height - view->rect.y - view->rect.w,
                   view->rect.z, view->rect.w));
     GL(glScissor(view->rect.x, height - view->rect.y - view->rect.w,
                  view->rect.z, view->rect.w));
 
-    back_color = uvec4b_to_vec4(goxel->back_color);
-    GL(glClearColor(back_color.r, back_color.g, back_color.b, back_color.a));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
-    render_mesh(rend, goxel->layers_mesh, 0);
-
-    // Render all the image layers.
-    DL_FOREACH(goxel->image->layers, layer) {
-        if (layer->visible && layer->image)
-            render_img(rend, layer->image, &layer->mat);
-    }
-
-    render_box(rend, &goxel->selection, false, NULL, true);
-
-    // XXX: make a toggle for debug informations.
-    if (0) {
-        box_t b;
-        uvec4b_t c;
-        c = HEXCOLOR(0x00FF0050);
-        b = mesh_get_box(goxel->layers_mesh, true);
-        render_box(rend, &b, false, &c, false);
-        c = HEXCOLOR(0x00FFFF50);
-        b = mesh_get_box(goxel->layers_mesh, false);
-        render_box(rend, &b, false, &c, false);
-    }
-    if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
-        render_plane(rend, &goxel->plane, &goxel->grid_color);
-
-    render_render(rend);
-
+    goxel_render_view(view->goxel, &view->rect);
+    render_render(&view->goxel->rend);
     GL(glViewport(0, 0, width, height));
 }
 
