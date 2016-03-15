@@ -79,14 +79,19 @@ if target_os == 'msys':
 if target_os == 'js':
     assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
     env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
-    env.Append(CCFLAGS=['-s', 'USE_GLFW=3',
-                        '-DGLES2 1', '-DNO_ZLIB', '-DNO_ARGP',
-                        '-s', 'ALLOW_MEMORY_GROWTH=1',
-                        '-s', '"EXPORTED_FUNCTIONS=[\'_main\']"'])
-    env.Append(LINKFLAGS=['--preload-file', 'data',
-                          '-s', 'USE_GLFW=3',
-                          '-s', 'ALLOW_MEMORY_GROWTH=1',
-                          '-s', '"EXPORTED_FUNCTIONS=[\'_main\']"'])
+
+    funcs = ['_main']
+    funcs = ','.join("'{}'".format(x) for x in funcs)
+    flags = [
+             '-s', 'ALLOW_MEMORY_GROWTH=1',
+             '-s', 'USE_GLFW=3',
+             '-Os',
+             '-s', 'NO_EXIT_RUNTIME=1',
+             '-s', '"EXPORTED_FUNCTIONS=[{}]"'.format(funcs),
+            ]
+
+    env.Append(CCFLAGS=['-DGLES2 1', '-DNO_ZLIB', '-DNO_ARGP'] + flags)
+    env.Append(LINKFLAGS=flags)
     env.Append(LIBS=['GL'])
 
 env.Program(target='goxel', source=sources)
