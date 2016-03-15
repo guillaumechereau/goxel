@@ -97,9 +97,9 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
                 !goxel->snap_offset)
             vec3_iadd(&pos, normal);
-        pos.x = nearbyint(pos.x - 0.5) + 0.5;
-        pos.y = nearbyint(pos.y - 0.5) + 0.5;
-        pos.z = nearbyint(pos.z - 0.5) + 0.5;
+        pos.x = round(pos.x - 0.5) + 0.5;
+        pos.y = round(pos.y - 0.5) + 0.5;
+        pos.z = round(pos.z - 0.5) + 0.5;
     }
     if (state == STATE_IDLE) {
         goxel->tool_t = 0;
@@ -196,9 +196,9 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
                                  &pos, &normal);
     if (snaped) {
-        pos.x = nearbyint(pos.x - 0.5) + 0.5;
-        pos.y = nearbyint(pos.y - 0.5) + 0.5;
-        pos.z = nearbyint(pos.z - 0.5) + 0.5;
+        pos.x = round(pos.x - 0.5) + 0.5;
+        pos.y = round(pos.y - 0.5) + 0.5;
+        pos.z = round(pos.z - 0.5) + 0.5;
     }
 
     if (state == STATE_IDLE) {
@@ -263,9 +263,9 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(pos, goxel->tool_plane.p),
                                  vec3_normalized(face_plane.n)));
-        pos.x = nearbyint(pos.x);
-        pos.y = nearbyint(pos.y);
-        pos.z = nearbyint(pos.z);
+        pos.x = round(pos.x);
+        pos.y = round(pos.y);
+        pos.z = round(pos.z);
         goxel->selection = box_move_face(goxel->selection,
                                          goxel->tool_snape_face, pos);
     }
@@ -295,9 +295,9 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             vec3_iadd(&pos, normal);
         if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)
             vec3_iaddk(&pos, normal, goxel->snap_offset * goxel->tool_radius);
-        pos.x = nearbyint(pos.x - 0.5) + 0.5;
-        pos.y = nearbyint(pos.y - 0.5) + 0.5;
-        pos.z = nearbyint(pos.z - 0.5) + 0.5;
+        pos.x = round(pos.x - 0.5) + 0.5;
+        pos.y = round(pos.y - 0.5) + 0.5;
+        pos.z = round(pos.z - 0.5) + 0.5;
     }
     if (state == STATE_IDLE) {
         goxel->tool_t = 0;

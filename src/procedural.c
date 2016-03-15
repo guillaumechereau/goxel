@@ -225,7 +225,7 @@ static float evaluate(node_t *node, ctx_t *ctx)
     a = evaluate(node->children, ctx);
 
     if (str_equ(node->id, "int"))
-        return nearbyint(a);
+        return round(a);
 
     b = evaluate(node->children->next, ctx);
     if (str_equ(node->id, "+"))

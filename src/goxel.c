@@ -177,8 +177,8 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
     render_render(&rend);
 
-    x = nearbyint(pos->x);
-    y = view_size->y - nearbyint(pos->y) - 1;
+    x = round(pos->x);
+    y = view_size->y - round(pos->y) - 1;
     GL(glViewport(0, 0, goxel->screen_size.x, goxel->screen_size.y));
     if (x < 0 || x >= view_size->x ||
         y < 0 || y >= view_size->y) return false;
@@ -222,9 +222,9 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         if (!r)
             continue;
 
-        p.x = nearbyint(p.x - 0.5) + 0.5;
-        p.y = nearbyint(p.y - 0.5) + 0.5;
-        p.z = nearbyint(p.z - 0.5) + 0.5;
+        p.x = round(p.x - 0.5) + 0.5;
+        p.y = round(p.y - 0.5) + 0.5;
+        p.z = round(p.z - 0.5) + 0.5;
 
         *out = p;
         *normal = n;

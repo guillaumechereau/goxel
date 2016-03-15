@@ -689,9 +689,9 @@ uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)
     assert(bbox_contains_vec(block_get_box(block, false), *pos));
     vec3_isub(&p, block->pos);
     vec3_iadd(&p, vec3(N / 2 - 0.5, N / 2 - 0.5, N / 2 - 0.5));
-    x = nearbyint(p.x);
-    y = nearbyint(p.y);
-    z = nearbyint(p.z);
+    x = round(p.x);
+    y = round(p.y);
+    z = round(p.z);
     return BLOCK_AT(block, x, y, z);
 }
 

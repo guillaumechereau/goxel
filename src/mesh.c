@@ -171,8 +171,8 @@ static void add_blocks(mesh_t *mesh, box_t box)
     a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
     b = vec3(box.p.x + box.w.x, box.p.y + box.h.y, box.p.z + box.d.z);
     for (i = 0; i < 3; i++) {
-        a.v[i] = nearbyint(a.v[i] / s) * s;
-        b.v[i] = nearbyint(b.v[i] / s) * s;
+        a.v[i] = round(a.v[i] / s) * s;
+        b.v[i] = round(b.v[i] / s) * s;
     }
     for (z = a.z; z <= b.z; z += s)
     for (y = a.y; y <= b.y; y += s)
