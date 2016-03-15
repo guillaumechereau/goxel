@@ -227,6 +227,9 @@ static inline float mix(float x, float y, float t)
 
 // #### Utils ##################
 
+// Get the clock in nanoseconds
+int64_t get_clock(void);
+
 // Used internally by the LOG macro
 void dolog(int level, const char *msg,
            const char *func, const char *file, int line, ...);
@@ -857,6 +860,7 @@ typedef struct goxel
     char       *help_text;  // Seen in the bottom of the screen.
 
     int        frame_count;       // Global frames counter.
+    int64_t    frame_clock;       // Clock time at beginning of the frame.
     int        block_next_id;
 
     int        block_count; // Counter for the number of block data.

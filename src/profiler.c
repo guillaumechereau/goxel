@@ -24,27 +24,6 @@ static profiler_block_t *g_blocks = NULL;
 static profiler_block_t *g_current_block = NULL;
 static profiler_block_t g_root_block = {"root"};
 
-#ifndef __MACH__
-static int64_t get_clock(void)
-{
-    struct timespec tp;
-    clock_gettime(CLOCK_REALTIME, &tp);
-    return (int64_t)tp.tv_sec * 1000 * 1000 * 1000
-         + (int64_t)tp.tv_nsec;
-}
-#else
-
-// Apparently clock_gettime does not exists on OSX.
-#include <sys/time.h>
-static int64_t get_clock(void)
-{
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    return (int64_t)now.tv_sec * 1000 * 1000 * 1000 +
-           (int64_t)now.tv_usec * 1000;
-}
-#endif
-
 void profiler_start(void)
 {
     profiler_block_t *b, *tmp;

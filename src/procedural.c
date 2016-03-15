@@ -427,8 +427,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
 }
 
 // Iter the program once.
-// Returns the total volume rendered or -1.0 in case of error.
-static float iter(gox_proc_t *proc, ctx_t *ctx)
+static int iter(gox_proc_t *proc, ctx_t *ctx)
 {
     const float max_op_volume = 512 * 512 * 512;
     float v;
@@ -525,7 +524,7 @@ static float iter(gox_proc_t *proc, ctx_t *ctx)
         }
     }
 end:
-    return volume_tot;
+    return 0;
 }
 
 // Defined in procedural.leg
@@ -579,11 +578,7 @@ int proc_stop(gox_proc_t *proc)
 
 int proc_iter(gox_proc_t *proc)
 {
-    float volume, volume_tot = 0;
-    // Break the iteration if we rendered too much.
-    // This is to prevent slow rendering.
-    // XXX: this should be configurable (maybe with a callback?).
-    const float max_volume = 32 * 32 * 32;
+    int r;
     ctx_t *ctx, *last_ctx;
 
     if (proc->state != PROC_RUNNING) return 0;
@@ -601,15 +596,14 @@ int proc_iter(gox_proc_t *proc)
             break;
         }
         DL_DELETE(proc->ctxs, ctx);
-        volume = iter(proc, ctx);
+        r = iter(proc, ctx);
         free(ctx);
-        if (volume < 0.0) {
+        if (r != 0) {
             proc->state = PROC_DONE;
             break;
         }
-        volume_tot += volume;
-        if (volume_tot >= max_volume) break;
         if (ctx == last_ctx) break;
+        if (get_clock() - goxel()->frame_clock > 16000000) break;
     }
     return 0;
 }
