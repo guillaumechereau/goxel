@@ -118,7 +118,7 @@ struct proc_ctx {
     int         op;
     vec4_t      color;
     bool        antialiased;
-    uint16_t    seed[3];
+    uint32_t    seed;
     node_t      *prog;
     float       vars[4];
     int         wait;
@@ -195,18 +195,24 @@ static void visit(node_t *node, int lev)
     }
 }
 
-static void set_seed(float v, uint16_t seed[3])
+static void set_seed(float v, uint32_t *seed)
 {
     memcpy(seed, &v, 4);
-    seed[2] = 0x330E;
 }
 
-static float frand(float a, float b, uint16_t seed[3])
+#define SIMPLE_RAND_MAX 32767
+
+uint32_t simple_rand(uint32_t *seed) {
+    *seed = *seed * 1103515245 + 12345;
+    return (uint32_t)(*seed / 65536) % 32768;
+}
+
+static float frand(float a, float b, uint32_t *seed)
 {
-    return a + erand48(seed) * (b - a);
+    return a + simple_rand(seed) / (float)SIMPLE_RAND_MAX * (b - a);
 }
 
-static float plusmin(float a, float b, uint16_t seed[3])
+static float plusmin(float a, float b, uint32_t *seed)
 {
     return frand(a - b, a + b, seed);
 }
@@ -237,7 +243,7 @@ static float evaluate(node_t *node, ctx_t *ctx)
     if (str_equ(node->id, "/"))
         return a / b;
     if (str_equ(node->id, "+-"))
-        return plusmin(a, b, ctx->seed);
+        return plusmin(a, b, &ctx->seed);
     if (str_equ(node->id, "=="))
         return (a == b) ? 1 : 0;
     if (str_equ(node->id, "!="))
@@ -282,7 +288,7 @@ static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
     }
     // Now pick one rule randomly.
     DL_FOREACH(node->children, c) {
-        if (frand(0, 1, ctx->seed) <= c->v / tot)
+        if (frand(0, 1, &ctx->seed) <= c->v / tot)
             return c->children;
         tot -= c->v;
     }
@@ -386,7 +392,7 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
         ctx->op = OP_PAINT;
         break;
     case OP_seed:
-        set_seed(v[0], ctx->seed);
+        set_seed(v[0], &ctx->seed);
         break;
     case OP_wait:
         ctx->wait += v[0];
@@ -461,7 +467,7 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
             ctx2 = *ctx;
             ctx2.prog = expr->children->next->next;
             for (i = 0; i < n; i++) {
-                nrand48(ctx2.seed);
+                simple_rand(&ctx2.seed);
                 new_ctx = calloc(1, sizeof(*new_ctx));
                 *new_ctx = ctx2;
                 if (expr->v) {
@@ -496,7 +502,7 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
             TRY(apply_transf(proc, expr, ctx));
         }
         if (expr->type == NODE_CALL) {
-            nrand48(ctx->seed);
+            simple_rand(&ctx->seed);
             ctx2 = *ctx;
             TRY(apply_transf(proc, expr->children, &ctx2));
             // Is it a basic shape?
@@ -563,7 +569,7 @@ int proc_start(gox_proc_t *proc)
     ctx->color = vec4(0, 0, 1, 1);
     ctx->op = OP_ADD;
     ctx->prog = get_rule(proc->prog, "main", ctx);
-    set_seed(rand(), ctx->seed);
+    set_seed(rand(), &ctx->seed);
     DL_APPEND(proc->ctxs, ctx);
     if (!ctx->prog) return error(proc, NULL, "No 'main' shape");
     proc->state = PROC_RUNNING;
