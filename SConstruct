@@ -52,7 +52,7 @@ if glut:
     env.Append(CCFLAGS='-DUSE_GLUT=1', LIBS='glut')
 
 if target_os == 'msys':
-    env.Append(CCFLAGS='-DNO_ARPG')
+    env.Append(CCFLAGS='-DNO_ARGP')
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32', 'z'],
                LINKFLAGS='--static')
 
