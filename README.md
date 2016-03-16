@@ -2,7 +2,7 @@
 Goxel
 =====
 
-Version 0.1
+Version 0.2
 
 By Guillaume Chereau <guillaume@noctua-software.com>
 
@@ -18,10 +18,11 @@ About
 -----
 
 You can use goxel to create voxel graphics (3D images formed of cubes).  It
-works on Linux and Windows.
+works on Linux, Windows and OSX
 
-![goxel screenshot 0](/screenshots/screenshot-0.png?raw=true)
-![goxel screenshot 1](/screenshots/screenshot-1.png?raw=true)
+![goxel screenshot 0](/screenshots/screenshot-castle.png?raw=true)
+![goxel screenshot 1](/screenshots/screenshot-procedural-city.png?raw=true)
+![goxel screenshot 2](/screenshots/screenshot-dicom.png?raw=true)
 
 
 Licence
@@ -37,8 +38,9 @@ Features
 - Unlimited scene size.
 - Unlimited undo buffer.
 - Layers.
-- Smooth rendering mode.
-- Export to obj and pyl.
+- Marching Cube rendering.
+- Procedural rendering.
+- Export to obj, pyl, png, qubicle.
 
 
 Usage
