@@ -3,3 +3,5 @@
 *~
 *.obj
 oxel
+.sconsign.dblite
+goxel
