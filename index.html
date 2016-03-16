@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8">
+    <link href="http://bootswatch.com/slate/bootstrap.min.css" rel="stylesheet">
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+    <style>
+    textarea {
+        font-family: monospace;
+        font-size: 75% !important;
+    }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Procedural Voxels</h1>
+    <div class="row">
+        <div class="col-sm-6">
+            <p>This is a quick and dirty javascript compilation of the
+            procedural rendering code of
+            <a href="https://github.com/guillaumechereau/goxel">goxel</a>.
+            Use the mouse to navigate the view.  Some documentation is
+            available
+            <a href="http://blog.noctua-software.com/goxel-procedural.html">here</a>
+            .
+            <form>
+            <div class="form-group">
+                <textarea id="code" class="form-control" rows="20"></textarea>
+            </div>
+            <div class="form-group">
+                <input type="button" onClick="doRun();" value="Run">
+            </div>
+            <div class="form-group">
+                <label for="select">Examples</label>
+                <select id="select" class="form-control"> </select>
+            </div>
+            <div class="form-group">
+                <label for="render">Rendering mode</label>
+                <select id="render" class="form-control">
+                    <option value="0">Default</option>
+                    <option value="3">Smooth</option>
+                    <option value="4">Marching Cubes</option>
+                </select>
+            </div>
+            </form>
+        </div>
+        <div class="col-sm-6">
+            <div id="status">Init...</div>
+            <canvas class="emscripten" id="canvas"></canvas>
+        </div>
+    </div>
+</div>
+
+<script type='text/javascript'>
+
+    var Module = {
+        preRun: [],
+        postRun: [],
+        print: function(text) { console.log(text); },
+        printErr: function(text) { console.log(text); },
+        canvas: document.getElementById('canvas'),
+        setStatus: function(text) {
+            var statusElement = document.getElementById('status');
+            statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+            this.totalDependencies = Math.max(this.totalDependencies, left);
+            Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+    };
+    Module.setStatus('Downloading...');
+
+    Module['onRuntimeInitialized'] = function() {
+        var i;
+        var get_default_prog = Module.cwrap('js_get_default_prog', 'string',
+                                            ['number', 'number']);
+        var set_render_settings = Module.cwrap('js_set_render_settings',
+                                               'void', ['number']);
+        for (i = 0; ; i++) {
+            var name = get_default_prog(i, 1);
+            if (name == "") break;
+            $("#select").append('<option value="' + i + '">' + name + '</option>');
+        }
+        $("#select").change(function() {
+            var i = this.value;
+            var code = get_default_prog(i, 0);
+            $('#code').val(code);
+        });
+        $("#render").change(function() {
+            var i = this.value;
+            set_render_settings(i);
+        });
+
+        i = 5;
+        $('#select').val(i);
+        var code = get_default_prog(i, 0);
+        $('#code').val(code);
+    }
+
+    function doRun() {
+        var code = $('#code').val();
+        var set_prog = Module.cwrap('js_set_prog', 'string', ['string']);
+        var ret = set_prog(code);
+    }
+
+</script>
+<script type='text/javascript' src="goxel.js"></script>
+
+</body>
+</html>
+
