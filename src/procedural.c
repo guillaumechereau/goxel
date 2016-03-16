@@ -564,6 +564,7 @@ int proc_start(gox_proc_t *proc)
     assert(proc->state >= PROC_READY);
     ctxs_free(proc->ctxs);
     proc->ctxs = NULL;
+    proc->frame = 0;
     ctx = calloc(1, sizeof(*ctx));
     ctx->box = bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
     ctx->color = vec4(0, 0, 1, 1);
@@ -587,6 +588,7 @@ int proc_iter(gox_proc_t *proc)
     int r;
     ctx_t *ctx, *last_ctx;
 
+    proc->in_frame = false;
     if (proc->state != PROC_RUNNING) return 0;
 
     if (!proc->ctxs) {
@@ -609,8 +611,12 @@ int proc_iter(gox_proc_t *proc)
             break;
         }
         if (ctx == last_ctx) break;
-        if (get_clock() - goxel()->frame_clock > 16000000) break;
+        if (get_clock() - goxel()->frame_clock > 16000000) {
+            proc->in_frame = true;
+            return 0;
+        }
     }
+    proc->frame++;
     return 0;
 }
 

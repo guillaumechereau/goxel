@@ -767,6 +767,8 @@ typedef struct proc {
     struct proc_node *prog; // AST of the program.
     struct proc_ctx  *ctxs; // Rendering stack during execution.
     int              state;
+    int              frame; // Rendering frame.
+    bool             in_frame; // Set if the current frame is not finished.
     struct {
         char         *str;  // Set in case of parsing or execution error.
         int          line;

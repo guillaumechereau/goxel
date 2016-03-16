@@ -115,6 +115,8 @@ typedef struct gui_t {
 
     char prog_path[1024];       // "\0" if no loaded prog.
     char prog_buff[64 * 1024];  // XXX: make it dynamic?
+    bool prog_export_animation;
+    char prog_export_animation_path[1024];
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -875,17 +877,10 @@ static void procedural_panel(goxel_t *goxel)
     if (ImGui::Button("Export Animation")) {
         char *dir_path;
         if (dialog_open(DIALOG_FLAG_SAVE | DIALOG_FLAG_DIR, NULL, &dir_path)) {
-            char path[1024];
-            int i = 0;
             mesh_clear(goxel->image->active_layer->mesh);
             proc_start(proc);
-            while (proc->state == PROC_RUNNING) {
-                proc_iter(&goxel->proc);
-                goxel_update_meshes(goxel, false);
-                sprintf(path, "%s/img_%04d.png", dir_path, i);
-                action_exec2("export_as", ARG("type", "png"), ARG("path", path));
-                i++;
-            }
+            gui->prog_export_animation = true;
+            sprintf(gui->prog_export_animation_path, dir_path);
             free(dir_path);
         }
     }
@@ -932,9 +927,19 @@ static void procedural_panel(goxel_t *goxel)
     }
     ImGui::PopItemWidth();
 
+    if (proc->state == PROC_RUNNING && gui->prog_export_animation
+            && !proc->in_frame) {
+        char path[1024];
+        sprintf(path, "%s/img_%04d.png",
+                gui->prog_export_animation_path, proc->frame);
+        action_exec2("export_as", ARG("type", "png"), ARG("path", path));
+    }
+    if (proc->state != PROC_RUNNING) gui->prog_export_animation = false;
+
     if (proc->state == PROC_RUNNING) {
-        proc_iter(&goxel->proc);
-        goxel_update_meshes(goxel, false);
+        proc_iter(proc);
+        if (!proc->in_frame)
+            goxel_update_meshes(goxel, false);
     }
 }
 
