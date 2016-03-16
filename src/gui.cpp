@@ -880,7 +880,7 @@ static void procedural_panel(goxel_t *goxel)
             mesh_clear(goxel->image->active_layer->mesh);
             proc_start(proc);
             gui->prog_export_animation = true;
-            sprintf(gui->prog_export_animation_path, dir_path);
+            sprintf(gui->prog_export_animation_path, "Path: %s", dir_path);
             free(dir_path);
         }
     }
