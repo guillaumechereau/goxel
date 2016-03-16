@@ -123,6 +123,7 @@ struct proc_ctx {
     float       vars[4];
     int         wait;
     int         life;
+    bool        last;   // Mark the end of a frame.
 };
 
 // Move a value toward a target.  If v is positive, move the value toward
@@ -586,9 +587,9 @@ int proc_stop(gox_proc_t *proc)
 int proc_iter(gox_proc_t *proc)
 {
     int r;
-    ctx_t *ctx, *last_ctx;
+    bool last;
+    ctx_t *ctx;
 
-    proc->in_frame = false;
     if (proc->state != PROC_RUNNING) return 0;
 
     if (!proc->ctxs) {
@@ -596,7 +597,15 @@ int proc_iter(gox_proc_t *proc)
         return 0;
     }
 
-    last_ctx = proc->ctxs->prev;
+    // Mark the last context of this frame.
+    // XXX: This is for animations, but I think I should change the way it
+    // works anyway: we should only animate when 'wait' is used in the code,
+    // even for recursive shapes.
+    if (!proc->in_frame)
+        proc->ctxs->prev->last = true;
+
+    proc->in_frame = false;
+
     while (true) {
         ctx = proc->ctxs;
         if (!ctx) {
@@ -604,13 +613,15 @@ int proc_iter(gox_proc_t *proc)
             break;
         }
         DL_DELETE(proc->ctxs, ctx);
+        last = ctx->last;
+        ctx->last = false;
         r = iter(proc, ctx);
         free(ctx);
         if (r != 0) {
             proc->state = PROC_DONE;
             break;
         }
-        if (ctx == last_ctx) break;
+        if (last) break;
         if (get_clock() - goxel()->frame_clock > 16000000) {
             proc->in_frame = true;
             return 0;

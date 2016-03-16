@@ -925,31 +925,31 @@ static const uint8_t DATA_data_icons_cylinder_png[1120]
     96,130,
 };
 
-static const uint8_t DATA_data_progs_planet_goxcf[499]
+static const uint8_t DATA_data_progs_planet_goxcf[523]
                      __attribute__((aligned(4))) =
     "// Simple planet\n"
     "shape main {\n"
-    "    [s 20]\n"
+    "    [s 50]\n"
     "    sphere [sat 0.5 light -0.75 hue 200]\n"
     "    loop 3 [] {\n"
     "        continent[rz 0+-180 ry 0+-180\n"
-    "                  hue 1 40 sat 1 0.5\n"
+    "                  hue 1 40+-10 sat 1 0.5\n"
     "                  light -0.5+-0.1]\n"
     "    }\n"
-    "    loop 16 [] {\n"
+    "    loop 16 [wait 1] {\n"
     "        cloud [rz 0+-180 ry 0+-180\n"
     "               hue 200 light -0.1 sat 0.5]\n"
     "    }\n"
     "}\n"
     "\n"
     "shape continent {\n"
-    "    loop 20 [rz 10 rx 0+-40] {\n"
-    "        sphere[x 0.4 s 0.2+-0.05]\n"
+    "    loop 30 [rz 10 rx 0+-80 wait 1] {\n"
+    "        sphere[x 0.3 s 0.4+-0.05]\n"
     "    }\n"
     "}\n"
     "\n"
     "shape cloud {\n"
-    "    loop 5 [rz 2 rx 0+-180] {\n"
+    "    loop 5 [rz 2 rx 0+-180 wait 1] {\n"
     "       sphere[x 0.5 s 0.04 +- 0.01]\n"
     "    }\n"
     "}\n"
@@ -1086,7 +1086,7 @@ static const uint8_t DATA_data_progs_test_goxcf[323]
     "}\n"
     "";
 
-static const uint8_t DATA_data_progs_test2_goxcf[406]
+static const uint8_t DATA_data_progs_test2_goxcf[419]
                      __attribute__((aligned(4))) =
     "shape main {\n"
     "    [antialiased 1]\n"
@@ -1094,12 +1094,12 @@ static const uint8_t DATA_data_progs_test2_goxcf[406]
     "    loop 5 [s -0.95 light 0.1 sat 0.01 hue 5] {\n"
     "       sphere [light -0.6 hue 30]\n"
     "    }\n"
-    "    loop 30 [] {\n"
+    "    loop 30 [wait 1] {\n"
     "        sphere [sub rz 0+-180 ry 0+-180\n"
     "                z 0.5 s 0.3]\n"
     "    }\n"
     "    loop 2 [rz 90] {\n"
-    "        loop 120 [ry 10] {\n"
+    "        loop 120 [ry 10 wait 1] {\n"
     "            sphere [hue 30+-30 light -0.5+-0.4\n"
     "                    z 0.5 s 0.05+-0.01 z 4+-0.5]\n"
     "        }\n"
@@ -1131,7 +1131,7 @@ static const uint8_t DATA_data_progs_test3_goxcf[302]
     "}\n"
     "";
 
-static const uint8_t DATA_data_progs_city_goxcf[1186]
+static const uint8_t DATA_data_progs_city_goxcf[1199]
                      __attribute__((aligned(4))) =
     "shape main {\n"
     "    [seed 4]\n"
@@ -1151,7 +1151,7 @@ static const uint8_t DATA_data_progs_city_goxcf[1186]
     "\n"
     "shape city {\n"
     "    ground[]\n"
-    "    loop 128 [] {\n"
+    "    loop 128 [wait 1] {\n"
     "        building[x 0+-58 0+-58 s 2+-0.5\n"
     "                 sat 0.2+-0.1 hue 0+-180]\n"
     "    }\n"
@@ -1162,7 +1162,7 @@ static const uint8_t DATA_data_progs_city_goxcf[1186]
     "rule 1 {\n"
     "    [s 3]\n"
     "    $n = int(10+-5)\n"
-    "    loop $n [z 1] {\n"
+    "    loop $n [z 1 wait 1] {\n"
     "        $s = 2+-0.2\n"
     "        floor[s $s $s 1 z 0.5]\n"
     "    }\n"
@@ -1301,7 +1301,7 @@ static asset_t ASSETS[] = {
     {
         .path = "data/progs/planet.goxcf",
         .data = DATA_data_progs_planet_goxcf,
-        .size = 499,
+        .size = 523,
     },
 
     {
@@ -1319,7 +1319,7 @@ static asset_t ASSETS[] = {
     {
         .path = "data/progs/test2.goxcf",
         .data = DATA_data_progs_test2_goxcf,
-        .size = 406,
+        .size = 419,
     },
 
     {
@@ -1331,7 +1331,7 @@ static asset_t ASSETS[] = {
     {
         .path = "data/progs/city.goxcf",
         .data = DATA_data_progs_city_goxcf,
-        .size = 1186,
+        .size = 1199,
     },
 
     {0}

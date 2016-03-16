@@ -16,7 +16,7 @@ shape ground {
 
 shape city {
     ground[]
-    loop 128 [] {
+    loop 128 [wait 1] {
         building[x 0+-58 0+-58 s 2+-0.5
                  sat 0.2+-0.1 hue 0+-180]
     }
@@ -27,7 +27,7 @@ shape building
 rule 1 {
     [s 3]
     $n = int(10+-5)
-    loop $n [z 1] {
+    loop $n [z 1 wait 1] {
         $s = 2+-0.2
         floor[s $s $s 1 z 0.5]
     }
