@@ -343,6 +343,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         }
     }
     if (state == STATE_PAINT) {
+        if (!snaped) return state;
         if (check_can_skip(goxel, pos, down, goxel->painter.op))
             return state;
         if (released) {
