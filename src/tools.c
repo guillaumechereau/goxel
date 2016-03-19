@@ -125,6 +125,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     }
     if (state == STATE_PAINT) {
         goxel_set_help_text(goxel, "Drag.");
+        if (!snaped || !inside) return state;
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0, &goxel->plane);
         render_box(&goxel->rend, &box, false, &box_color, false);
         mesh_set(&mesh, goxel->tool_origin_mesh);
@@ -137,6 +138,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     }
     if (state == STATE_PAINT2) {
         goxel_set_help_text(goxel, "Adjust height.");
+        if (!snaped || !inside) return state;
         render_plane(&goxel->rend, &goxel->tool_plane, &goxel->grid_color);
         pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(pos, goxel->tool_plane.p),
@@ -220,6 +222,7 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
     }
     if (state == STATE_PAINT) {
         goxel_set_help_text(goxel, "Drag.");
+        if (!snaped || !inside) return state;
         goxel->selection = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                                    &goxel->plane);
         if (up) {
@@ -229,6 +232,7 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
     }
     if (state == STATE_PAINT2) {
         goxel_set_help_text(goxel, "Adjust height.");
+        if (!snaped || !inside) return state;
         render_plane(&goxel->rend, &goxel->tool_plane, &goxel->grid_color);
         pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(pos, goxel->tool_plane.p),
