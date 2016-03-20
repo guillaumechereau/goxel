@@ -1086,6 +1086,36 @@ static const uint8_t DATA_data_progs_test_goxcf[323]
     "}\n"
     "";
 
+static const uint8_t DATA_data_progs_cherry_goxcf[469]
+                     __attribute__((aligned(4))) =
+    "shape main {\n"
+    "    [seed 7]\n"
+    "    tree(0, 40, 10)[s 10 light -0.9]\n"
+    "}\n"
+    "\n"
+    "shape tree($n, $e, $f)\n"
+    "rule {\n"
+    "    cylinder[]\n"
+    "    if ($n < $e) {\n"
+    "        tree($n + 1)[rz 0+-10 z 0.5 s 0.95 z 0.5 rx 4]\n"
+    "    }\n"
+    "    if (($n >= $e) || ($n > $f && 0+-1 > 0.5)) {\n"
+    "        flower[]\n"
+    "    }\n"
+    "}\n"
+    "rule 0.1 {\n"
+    "    tree[rz 180]\n"
+    "}\n"
+    "rule 0.08 {\n"
+    "    tree[]\n"
+    "    tree($n + 1)[rz 0+-180 rx -45]\n"
+    "}\n"
+    "\n"
+    "shape flower {\n"
+    "     [light 0.5 sat 0.7 sn 1 s 6 z -0.5 x -1 hue -10]\n"
+    "     sphere[x 0+-0.5 0+-0.5 light 0+-0.2]\n"
+    "}";
+
 static const uint8_t DATA_data_progs_test2_goxcf[419]
                      __attribute__((aligned(4))) =
     "shape main {\n"
@@ -1314,6 +1344,12 @@ static asset_t ASSETS[] = {
         .path = "data/progs/test.goxcf",
         .data = DATA_data_progs_test_goxcf,
         .size = 323,
+    },
+
+    {
+        .path = "data/progs/cherry.goxcf",
+        .data = DATA_data_progs_cherry_goxcf,
+        .size = 469,
     },
 
     {
