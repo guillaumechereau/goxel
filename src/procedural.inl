@@ -1541,10 +1541,10 @@ if (!(YY_BEGIN)) goto l27;
   }
   {  int yypos28= yy->__pos, yythunkpos28= yy->__thunkpos;  if (!yymatchString(yy, "==")) goto l29;  goto l28;
   l29:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchString(yy, "!=")) goto l30;  goto l28;
-  l30:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchChar(yy, '<')) goto l31;  goto l28;
-  l31:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchChar(yy, '>')) goto l32;  goto l28;
-  l32:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchString(yy, "<=")) goto l33;  goto l28;
-  l33:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchString(yy, ">=")) goto l27;
+  l30:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchString(yy, "<=")) goto l31;  goto l28;
+  l31:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchString(yy, ">=")) goto l32;  goto l28;
+  l32:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchChar(yy, '<')) goto l33;  goto l28;
+  l33:;	  yy->__pos= yypos28; yy->__thunkpos= yythunkpos28;  if (!yymatchChar(yy, '>')) goto l27;
   }
   l28:;	  yyText(yy, yy->__begin, yy->__end);  {
 #define yytext yy->__text

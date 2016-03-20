@@ -196,7 +196,7 @@ Expr4   = a:Value (
          )
 
 OpLog   = < ('||' | '&&') >             {$$ = N(ID, yytext)}
-OpCmp   = < ('==' | '!=' | '<' | '>' | '<=' | '>=') > {$$ = N(ID, yytext)}
+OpCmp   = < ('==' | '!=' | '<=' | '>=' | '<' | '>') > {$$ = N(ID, yytext)}
 OpSum   = < ('+' | '-') >               {$$ = N(ID, yytext)}
 OpMul   = < ('*' | '/' | '+-') >        {$$ = N(ID, yytext)}
 
