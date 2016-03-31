@@ -3,8 +3,8 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta charset="utf-8">
-    <link href="bootstrap.min.css" rel="stylesheet">
-    <script src="jquery-2.1.4.min.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="js/jquery-2.1.4.min.js"></script>
 
     <style>
     textarea {
@@ -60,6 +60,7 @@
     var Module = {
         preRun: [],
         postRun: [],
+        memoryInitializerPrefixURL: "js/",
         print: function(text) { console.log(text); },
         printErr: function(text) { console.log(text); },
         canvas: document.getElementById('canvas'),
@@ -109,7 +110,7 @@
     }
 
 </script>
-<script type='text/javascript' src="goxel.js"></script>
+<script type='text/javascript' src="js/goxel.js"></script>
 
 </body>
 </html>
