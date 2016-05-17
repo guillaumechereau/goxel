@@ -316,16 +316,14 @@ void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
     const vec3_t AXIS[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
     int i;
     const int d = 40;  // Distance to corner of the view.
-    float zoom;
     vec2_t spos = vec2(d, view_size->y - d);
     vec3_t pos, normal, b;
     uvec4b_t c;
     goxel_unproject_on_screen(goxel, view_size, &spos, &pos, &normal);
     vec3_iaddk(&pos, normal, 100);
-    zoom = pow(1.25f, goxel->camera.zoom);
 
     for (i = 0; i < 3; i++) {
-        b = vec3_addk(pos, AXIS[i], 2.0 / zoom);
+        b = vec3_addk(pos, AXIS[i], 2.0);
         c = uvec4b(AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
         render_line(&goxel->rend, &pos, &b, &c);
     }
@@ -610,6 +608,7 @@ static void render_panel(goxel_t *goxel)
     char *name;
     render_settings_t settings;
 
+    ImGui::Checkbox("Ortho", &goxel->camera.ortho);
     ImGui::PushID("RenderPanel");
     for (i = 0; i < nb; i++) {
         render_get_default_settings(i, &name, &settings);

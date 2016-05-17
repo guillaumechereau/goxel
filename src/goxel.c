@@ -89,16 +89,13 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
     // XXX: pos should already be in windows coordinates.
     vec3_t wpos = vec3(pos->x, view_size->y - pos->y, 0);
     vec3_t opos;
-    vec4_t onorm;
+    vec3_t onorm;
 
-    opos = unproject(&wpos, &goxel->camera.view_mat,
-                            &goxel->camera.proj_mat, &view);
-    onorm = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
-                         vec4(0, 0, -1, 0));
-    if (fabs(vec3_dot(onorm.xyz, plane->n)) <= min_angle_cos)
+    camera_get_ray(&goxel->camera, &wpos.xy, &view, &opos, &onorm);
+    if (fabs(vec3_dot(onorm, plane->n)) <= min_angle_cos)
         return false;
 
-    if (!plane_line_intersection(*plane, opos, onorm.xyz, out))
+    if (!plane_line_intersection(*plane, opos, onorm, out))
         return false;
     *out = mat4_mul_vec3(plane->mat, *out);
     *normal = plane->n;
@@ -114,22 +111,18 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
     int f;
     vec3_t wpos = vec3(pos->x, view_size->y - pos->y, 0);
     vec3_t opos;
-    vec4_t onorm;
+    vec3_t onorm;
     plane_t plane;
     vec4_t view = vec4(0, 0, view_size->x, view_size->y);
 
-    opos = unproject(&wpos, &goxel->camera.view_mat,
-                            &goxel->camera.proj_mat, &view);
-    onorm = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
-                         vec4(0, 0, -1, 0));
-
+    camera_get_ray(&goxel->camera, &wpos.xy, &view, &opos, &onorm);
     for (f = 0; f < 6; f++) {
         plane.mat = box->mat;
         mat4_imul(&plane.mat, FACES_MATS[f]);
 
-        if (vec3_dot(plane.n, onorm.xyz) >= 0)
+        if (vec3_dot(plane.n, onorm) >= 0)
             continue;
-        if (!plane_line_intersection(plane, opos, onorm.xyz, out))
+        if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
         if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
             continue;
@@ -324,8 +317,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
     vec4_t x_axis;
 
     if (inputs->mouse_wheel) {
-        goxel->camera.zoom += inputs->mouse_wheel;
-        // XXX: update the camera.dist ?
+        goxel->camera.dist -= inputs->mouse_wheel * 10;
         return;
     }
     // Middle click: rotate the view.
@@ -481,7 +473,6 @@ static void export_as_png(goxel_t *goxel, const char *path)
     int h = goxel->image->export_height;
     const float aspect = (float)w / h;
     uint8_t *data2, *data;
-    float zoom;
     texture_t *fbo;
     renderer_t rend = goxel->rend;
     mesh_t *mesh;
@@ -498,8 +489,6 @@ static void export_as_png(goxel_t *goxel, const char *path)
            goxel->camera.ofs.x, goxel->camera.ofs.y, goxel->camera.ofs.z);
     rend.proj_mat = mat4_ortho(
             -size, +size, -size / aspect, +size / aspect, 0, 1000);
-    zoom = pow(1.25f, goxel->camera.zoom);
-    mat4_iscale(&rend.proj_mat, zoom, zoom, zoom);
 
     GL(glViewport(0, 0, w * 2, h * 2));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, fbo->framebuffer));

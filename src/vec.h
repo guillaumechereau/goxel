@@ -437,6 +437,20 @@ DECL mat4_t mat4_ortho(real_t left, real_t right, real_t bottom,
     return ret;
 }
 
+DECL mat4_t mat4_perspective(real_t fovy, real_t aspect,
+                             real_t near, real_t far_)
+{
+    real_t radian = fovy * M_PI / 180;
+    real_t f = 1. / tan(radian / 2.);
+    const mat4_t ret = mat4(
+        f / aspect, 0., 0., 0.,
+        0., f, 0., 0.,
+        0., 0., (far_ + near) / (near - far_), -1,
+        0., 0., 2. * far_ * near / (near - far_), 0.
+    );
+    return ret;
+}
+
 DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
 DECL mat4_t quat_to_mat4(quat_t q);
 DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)

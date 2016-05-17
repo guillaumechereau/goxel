@@ -20,16 +20,12 @@
 
 void camera_update(camera_t *camera)
 {
-    float zoom;
-    const float size = 16;
-
-    zoom = pow(1.25f, camera->zoom);
+    float size;
 
     if (camera->move_to_target) {
         camera->move_to_target = !vec3_ilerp_const(
-                &camera->ofs, vec3_neg(camera->target), 1.0 / zoom);
+                &camera->ofs, vec3_neg(camera->target), camera->dist / 128);
     }
-
     // Update the camera mats
     camera->view_mat = mat4_identity;
     mat4_itranslate(&camera->view_mat, 0, 0, -camera->dist);
@@ -37,9 +33,37 @@ void camera_update(camera_t *camera)
     mat4_itranslate(&camera->view_mat,
            camera->ofs.x, camera->ofs.y, camera->ofs.z);
 
-    camera->proj_mat = mat4_ortho(
-            -size, +size,
-            -size / camera->aspect, +size / camera->aspect,
-            0, 1000);
-    mat4_iscale(&camera->proj_mat, zoom, zoom, zoom);
+    if (camera->ortho) {
+        size = camera->dist;
+        camera->proj_mat = mat4_ortho(
+                -size, +size,
+                -size / camera->aspect, +size / camera->aspect,
+                0, 1000);
+    } else {
+        camera->proj_mat = mat4_perspective(20, camera->aspect, 1, 1000);
+    }
+}
+
+// Get the raytracing ray of the camera at a given screen position.
+void camera_get_ray(const camera_t *camera, const vec2_t *win,
+                    const vec4_t *view, vec3_t *o, vec3_t *d)
+{
+    // XXX: ugly algo.
+    mat4_t inv;
+    vec3_t p;
+    vec3_t norm_pos = vec3((2 * win->x - view->v[0]) / view->v[2] - 1,
+                           (2 * win->y - view->v[1]) / view->v[3] - 1,
+                           - 1);
+    if (camera->ortho) {
+        inv = mat4_inverted(mat4_mul(camera->proj_mat, camera->view_mat));
+        *o = mat4_mul_vec(inv, vec4(norm_pos.x, norm_pos.y, 0, 1)).xyz;
+        *d = mat4_mul_vec(inv, vec4(0, 0, -1, 0)).xyz;
+    } else {
+        inv = mat4_inverted(camera->view_mat);
+        *o = mat4_mul_vec(inv, vec4(0, 0, 0, 1)).xyz;
+        inv = mat4_mul(camera->proj_mat, camera->view_mat);
+        mat4_invert(&inv);
+        p = mat4_mul_vec3(inv, norm_pos);
+        *d = vec3_sub(p, *o);
+    }
 }

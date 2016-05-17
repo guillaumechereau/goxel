@@ -788,10 +788,10 @@ int proc_list_examples(void (*f)(int index,
 
 typedef struct camera
 {
+    bool   ortho; // Set to true for orthographic projection.
     float  dist;
     quat_t rot;
     vec3_t ofs;
-    float  zoom;
     float  aspect;
 
     // If set, we smoothly update the offset to reach target.
@@ -804,6 +804,14 @@ typedef struct camera
 } camera_t;
 
 void camera_update(camera_t *camera);
+
+// Get the raytracing ray of the camera at a given screen position.
+// win:     pixel position in screen coordinates.
+// view:    viewport rect: [min_x, min_y, max_x, max_y].
+// o:       output ray origin.
+// d:       output ray direction.
+void camera_get_ray(const camera_t *camera, const vec2_t *win,
+                    const vec4_t *view, vec3_t *o, vec3_t *d);
 
 typedef struct goxel
 {
