@@ -380,12 +380,16 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     painter_t painter = goxel->painter;
     mesh_t *mesh = goxel->image->active_layer->mesh;
     const bool down = inputs->mouse_down[0];
+    // XXX: would be nice if we got the vec4_t view instead of view_size,
+    // and why input->pos is not already in win pos?
+    vec4_t view = vec4(0, 0, view_size->x, view_size->y);
+    vec2_t win = inputs->mouse_pos;
+    win.y = view_size->y - win.y;
 
     painter.op = OP_SUB;
     painter.shape = &shape_cylinder;
-    // Create the laser box with an inifinity width.
-    goxel_unproject_on_screen(goxel, view_size, &inputs->mouse_pos,
-                              &pos, &normal);
+    // Create the tool box from the camera along the visible ray.
+    camera_get_ray(&goxel->camera, &win, &view, &pos, &normal);
     box.mat = mat4_identity;
     box.w = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
                      vec4(1, 0, 0, 0)).xyz;
@@ -393,6 +397,7 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                      vec4(0, 1, 0, 0)).xyz;
     box.d = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
                      vec4(0, 0, 1, 0)).xyz;
+    box.d = vec3_neg(normal);
     box.p = pos;
     mat4_itranslate(&box.mat, 0, 0, -128);
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 128);
