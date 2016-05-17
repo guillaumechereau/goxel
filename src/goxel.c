@@ -293,10 +293,11 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
     goxel->rend.view_mat = goxel->camera.view_mat;
     goxel->rend.proj_mat = goxel->camera.proj_mat;
-    if (goxel->camera.move_to_last_pos) {
+    if (goxel->camera.move_to_target) {
         zoom = pow(1.25f, goxel->camera.zoom);
-        goxel->camera.move_to_last_pos = !vec3_ilerp_const(
-                &goxel->camera.ofs, vec3_neg(goxel->last_pos), 1.0 / zoom);
+        goxel->camera.move_to_target = !vec3_ilerp_const(
+                &goxel->camera.ofs,
+                vec3_neg(goxel->camera.target), 1.0 / zoom);
     }
     gui_iter(goxel, inputs);
     goxel->frame_count++;
@@ -340,8 +341,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
             goxel->move_origin.rotation = goxel->camera.rot;
             goxel->move_origin.pos = inputs->mouse_pos;
         }
-        goxel->camera.move_to_last_pos = true;
-        goxel->camera.rot= quat_mul(goxel->move_origin.rotation,
+        goxel->camera.move_to_target = true;
+        goxel->camera.rot = quat_mul(goxel->move_origin.rotation,
                 compute_view_rotation(&goxel->move_origin.rotation,
                     &goxel->move_origin.pos, &inputs->mouse_pos, view_size));
         return;
@@ -365,7 +366,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
                                         &goxel->camera.proj_mat, &view);
         goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs,
                                      odelta);
-        goxel->last_pos = vec3_neg(goxel->camera.ofs);
+        goxel->camera.target = vec3_neg(goxel->camera.ofs);
         return;
     }
     // handle mouse rotations
@@ -389,8 +390,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view_size, &inputs->mouse_pos,
                                     goxel->pick_mesh, &p, &n)) {
-            goxel->last_pos = p;
-            goxel->camera.move_to_last_pos = true;
+            goxel->camera.target = p;
+            goxel->camera.move_to_target = true;
         }
     }
 
@@ -422,7 +423,6 @@ void goxel_render_view(goxel_t *goxel,  const vec4_t *rect)
     renderer_t *rend = &goxel->rend;
 
     // Update the camera mats
-    goxel->camera.view = *rect;
     goxel->camera.view_mat = mat4_identity;
     mat4_itranslate(&goxel->camera.view_mat, 0, 0, -goxel->camera.dist);
     mat4_imul_quat(&goxel->camera.view_mat, goxel->camera.rot);

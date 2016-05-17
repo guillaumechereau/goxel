@@ -353,7 +353,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (released) {
             image_history_push(goxel->image);
             goxel->painting = false;
-            goxel->last_pos = pos;
+            goxel->camera.target = pos;
             if (inputs->keys[KEY_SHIFT])
                 return STATE_WAIT_KEY_UP;
             mesh_set(&goxel->pick_mesh, goxel->layers_mesh);

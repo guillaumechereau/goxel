@@ -786,6 +786,22 @@ int proc_list_examples(void (*f)(int index,
 
 // #############################
 
+typedef struct camera
+{
+    float  dist;
+    quat_t rot;
+    vec3_t ofs;
+    float  zoom;
+
+    // If set, we smoothly update the offset to reach target.
+    bool   move_to_target;
+    vec3_t target;
+
+    // Auto computed from other values:
+    mat4_t view_mat;    // Model to view transformation.
+    mat4_t proj_mat;    // Proj transform from camera coordinates.
+} camera_t;
+
 typedef struct goxel
 {
     vec2i_t    screen_size;
@@ -801,23 +817,7 @@ typedef struct goxel
     plane_t    plane;         // The snapping plane.
     bool       plane_hidden;  // Set to true to hide the plane.
 
-    // For the moment we only support a single view, so the matrix and
-    // projection are here.  At some point I need to move this out in a
-    // separate structure.
-    struct {
-        vec3_t ofs;
-        quat_t rot;
-        float  dist;
-        float  zoom;
-        vec4_t view;
-        // If set, we smoothly update the offset to reach goxel->last_pos.
-        bool   move_to_last_pos;
-
-        // Auto computed from other values:
-        mat4_t view_mat;    // Model to view transformation.
-        mat4_t proj_mat;    // Proj transform from camera coordinates.
-    } camera;
-    vec3_t     last_pos;    // The last pos we painted to.
+    camera_t   camera;
 
     uvec4b_t   back_color;
     uvec4b_t   grid_color;
