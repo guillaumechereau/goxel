@@ -36,19 +36,6 @@ static void unpack_pos_data(const uvec4b_t data, vec3b_t *pos, int *face,
     *cube_id = i;
 }
 
-// Similar to gluUnproject.
-static vec3_t unproject(const vec3_t *win, const mat4_t *model,
-                        const mat4_t *proj, const vec4_t *view)
-{
-    mat4_t inv = mat4_mul(*proj, *model);
-    mat4_invert(&inv); // XXX: check for return value.
-    vec3_t norm_pos = vec3(
-            (2 * win->x - view->v[0]) / view->v[2] - 1,
-            (2 * win->y - view->v[1]) / view->v[3] - 1,
-            2 * win->z - 1);
-    return mat4_mul_vec3(inv, norm_pos);
-}
-
 // XXX: can we merge this with unproject?
 static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
                               const mat4_t *proj, const vec4_t *view)
@@ -60,21 +47,6 @@ static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
             win->y / view->v[3],
              0, 0);
     return mat4_mul_vec(inv, norm_pos).xyz;
-}
-
-// XXX: lot of cleanup to do here.
-bool goxel_unproject_on_screen(goxel_t *goxel, const vec2_t *view_size,
-                               const vec2_t *pos,
-                               vec3_t *out, vec3_t *normal)
-{
-    vec4_t view = vec4(0, 0, view_size->x, view_size->y);
-    // XXX: pos should already be in windows coordinates.
-    vec3_t wpos = vec3(pos->x, view_size->y - pos->y, 0);
-    *out = unproject(&wpos, &goxel->camera.view_mat,
-                            &goxel->camera.proj_mat, &view);
-    *normal = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
-                         vec4(0, 0, -1, 0)).xyz;
-    return true;
 }
 
 // XXX: lot of cleanup to do here.

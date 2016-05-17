@@ -890,9 +890,6 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
                          const inputs_t *inputs, bool inside);
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
                     const vec2_t *pos, vec3_t *out, vec3_t *normal);
-bool goxel_unproject_on_screen(goxel_t *goxel, const vec2_t *view_size,
-                               const vec2_t *pos,
-                               vec3_t *out, vec3_t *normal);
 bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, mesh_t *mesh,
                      vec3_t *out, vec3_t *normal);
