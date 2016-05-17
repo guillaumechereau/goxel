@@ -322,6 +322,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
         vec3_t wdelta = vec3_sub(wpos, worigin_pos);
         vec3_t odelta = unproject_delta(&wdelta, &goxel->camera.view_mat,
                                         &goxel->camera.proj_mat, &view);
+        vec3_imul(&odelta, 2); // XXX: why do I need that?
+        if (!goxel->camera.ortho)
+            vec3_imul(&odelta, goxel->camera.dist);
         goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs,
                                      odelta);
         goxel->camera.target = vec3_neg(goxel->camera.ofs);
