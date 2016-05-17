@@ -286,19 +286,13 @@ goxel_t *goxel(void)
 
 void goxel_iter(goxel_t *goxel, inputs_t *inputs)
 {
-    float zoom;
     goxel->frame_clock = get_clock();
     profiler_tick();
     goxel_set_help_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
+    camera_update(&goxel->camera);
     goxel->rend.view_mat = goxel->camera.view_mat;
     goxel->rend.proj_mat = goxel->camera.proj_mat;
-    if (goxel->camera.move_to_target) {
-        zoom = pow(1.25f, goxel->camera.zoom);
-        goxel->camera.move_to_target = !vec3_ilerp_const(
-                &goxel->camera.ofs,
-                vec3_neg(goxel->camera.target), 1.0 / zoom);
-    }
     gui_iter(goxel, inputs);
     goxel->frame_count++;
 }
@@ -415,29 +409,16 @@ void goxel_render(goxel_t *goxel)
 
 void goxel_render_view(goxel_t *goxel,  const vec4_t *rect)
 {
-    const float size = 16;
-    const float aspect = rect->z / rect->w;
-    float zoom;
     layer_t *layer;
     vec4_t back_color;
     renderer_t *rend = &goxel->rend;
-
-    // Update the camera mats
-    goxel->camera.view_mat = mat4_identity;
-    mat4_itranslate(&goxel->camera.view_mat, 0, 0, -goxel->camera.dist);
-    mat4_imul_quat(&goxel->camera.view_mat, goxel->camera.rot);
-    mat4_itranslate(&goxel->camera.view_mat,
-           goxel->camera.ofs.x, goxel->camera.ofs.y, goxel->camera.ofs.z);
-
-    goxel->camera.proj_mat = mat4_ortho(
-            -size, +size, -size / aspect, +size / aspect, 0, 1000);
-    zoom = pow(1.25f, goxel->camera.zoom);
-    mat4_iscale(&goxel->camera.proj_mat, zoom, zoom, zoom);
 
     back_color = uvec4b_to_vec4(goxel->back_color);
     GL(glClearColor(back_color.r, back_color.g, back_color.b, back_color.a));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+    goxel->camera.aspect = rect->z / rect->w;
+    camera_update(&goxel->camera);
     render_mesh(rend, goxel->layers_mesh, 0);
 
     // Render all the image layers.

@@ -792,6 +792,7 @@ typedef struct camera
     quat_t rot;
     vec3_t ofs;
     float  zoom;
+    float  aspect;
 
     // If set, we smoothly update the offset to reach target.
     bool   move_to_target;
@@ -801,6 +802,8 @@ typedef struct camera
     mat4_t view_mat;    // Model to view transformation.
     mat4_t proj_mat;    // Proj transform from camera coordinates.
 } camera_t;
+
+void camera_update(camera_t *camera);
 
 typedef struct goxel
 {
