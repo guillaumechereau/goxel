@@ -309,21 +309,24 @@ void gui_init(void)
 }
 
 // XXX: Move this somewhere else.
-// XXX: It would be easier to project the pos manually and then tell the
-//      renderer to use screen coordinates.
 void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
 {
     const vec3_t AXIS[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
     int i;
     const int d = 40;  // Distance to corner of the view.
-    vec2_t spos = vec2(d, view_size->y - d);
+    vec2_t spos = vec2(d, d);
     vec3_t pos, normal, b;
     uvec4b_t c;
-    goxel_unproject_on_screen(goxel, view_size, &spos, &pos, &normal);
-    vec3_iaddk(&pos, normal, 100);
+    float s = 1;
+    vec4_t view = vec4(0, 0, view_size->x, view_size->y);
+    camera_get_ray(&goxel->camera, &spos, &view, &pos, &normal);
+    if (goxel->camera.ortho)
+        s = goxel->camera.dist / 32;
+    else
+        vec3_iaddk(&pos, normal, 100);
 
     for (i = 0; i < 3; i++) {
-        b = vec3_addk(pos, AXIS[i], 2.0);
+        b = vec3_addk(pos, AXIS[i], 2.0 * s);
         c = uvec4b(AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
         render_line(&goxel->rend, &pos, &b, &c);
     }
