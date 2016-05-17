@@ -443,27 +443,23 @@ ACTION_REGISTER(export_as,
 // XXX: this function has to be rewritten.
 static void export_as_png(goxel_t *goxel, const char *path)
 {
-    const float size = 16;
     int w = goxel->image->export_width;
     int h = goxel->image->export_height;
-    const float aspect = (float)w / h;
     uint8_t *data2, *data;
     texture_t *fbo;
     renderer_t rend = goxel->rend;
     mesh_t *mesh;
+    camera_t camera = goxel->camera;
+
+    camera.aspect = (float)w / h;
     LOG_I("Exporting to file %s", path);
 
     mesh = goxel->layers_mesh;
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
-    // XXX: this should be put somewhere else!
-    rend.view_mat = mat4_identity;
-    mat4_itranslate(&rend.view_mat, 0, 0, -goxel->camera.dist);
-    mat4_imul_quat(&rend.view_mat, goxel->camera.rot);
-    mat4_itranslate(&rend.view_mat,
-           goxel->camera.ofs.x, goxel->camera.ofs.y, goxel->camera.ofs.z);
-    rend.proj_mat = mat4_ortho(
-            -size, +size, -size / aspect, +size / aspect, 0, 1000);
+    camera_update(&camera);
+    rend.view_mat = camera.view_mat;
+    rend.proj_mat = camera.proj_mat;
 
     GL(glViewport(0, 0, w * 2, h * 2));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, fbo->framebuffer));
