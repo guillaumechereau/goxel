@@ -60,3 +60,5 @@ The building system uses scons.  You can compile in debug with 'scons', and in
 release with 'scons debug=0'.  On Windows, I only tried to build with msys2.
 The code is in C99, using some gnu extensions, so it does not compile with
 msvc.
+
+Debian dependencies: scons pkg-config libglfw3-dev libgtk-3-dev
