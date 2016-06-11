@@ -342,18 +342,12 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
+    int rect[4] = {view->rect.x, height - view->rect.y - view->rect.w,
+                   view->rect.z, view->rect.w};
     vec4_t back_color;
     back_color = uvec4b_to_vec4(view->goxel->back_color);
-
-    GL(glViewport(view->rect.x, height - view->rect.y - view->rect.w,
-                  view->rect.z, view->rect.w));
-    GL(glScissor(view->rect.x, height - view->rect.y - view->rect.w,
-                 view->rect.z, view->rect.w));
-    GL(glClearColor(back_color.r, back_color.g, back_color.b, back_color.a));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
     goxel_render_view(view->goxel, &view->rect);
-    render_render(&view->goxel->rend);
+    render_render(&view->goxel->rend, rect, &back_color);
     GL(glViewport(0, 0, width, height));
 }
 

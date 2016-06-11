@@ -134,13 +134,11 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
     block_t *block;
     int face, block_id;
     int x, y;
+    int rect[4] = {0, 0, view_size->x, view_size->y};
 
-    GL(glViewport(0, 0, view_size->x, view_size->y));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel->pick_fbo->framebuffer));
-    GL(glClearColor(0, 0, 0, 0));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
-    render_render(&rend);
+    render_render(&rend, rect, &vec4_zero);
 
     x = round(pos->x);
     y = view_size->y - round(pos->y) - 1;
@@ -440,6 +438,7 @@ static void export_as_png(goxel_t *goxel, const char *path)
 {
     int w = goxel->image->export_width;
     int h = goxel->image->export_height;
+    int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *data2, *data;
     texture_t *fbo;
     renderer_t rend = goxel->rend;
@@ -456,12 +455,9 @@ static void export_as_png(goxel_t *goxel, const char *path)
     rend.view_mat = camera.view_mat;
     rend.proj_mat = camera.proj_mat;
 
-    GL(glViewport(0, 0, w * 2, h * 2));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, fbo->framebuffer));
-    GL(glClearColor(0, 0, 0, 0));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     render_mesh(&rend, mesh, 0);
-    render_render(&rend);
+    render_render(&rend, rect, &vec4_zero);
     data2 = calloc(w * h * 4 , 4);
     data = calloc(w * h, 4);
     texture_get_data(fbo, w * 2, h * 2, 4, data2);

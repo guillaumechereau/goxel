@@ -619,7 +619,11 @@ void render_box(renderer_t *rend, const box_t *box, bool solid,
                 const uvec4b_t *color, bool strip);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
 void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat);
-void render_render(renderer_t *rend);//, const mat4_t *view, const mat4_t *proj);
+// Flushes all the queued render items.  Actually calls opengl.
+//  rect: the viewport rect (passed to glViewport).
+//  clear_color: clear the screen with this first.
+void render_render(renderer_t *rend, const int rect[4],
+                   const vec4_t *clear_color);
 int render_get_default_settings(int i, char **name, render_settings_t *out);
 
 // #############################

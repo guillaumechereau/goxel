@@ -647,10 +647,22 @@ static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
     return sign(item_sort_value(a) - item_sort_value(b));
 }
 
-void render_render(renderer_t *rend)
+void render_render(renderer_t *rend, const int rect[4],
+                   const vec4_t *clear_color)
 {
     PROFILED
     render_item_t *item, *tmp;
+
+    GL(glViewport(rect[0], rect[1], rect[2], rect[3]));
+    GL(glScissor(rect[0], rect[1], rect[2], rect[3]));
+    if (clear_color) {
+        GL(glClearColor(clear_color->r,
+                        clear_color->g,
+                        clear_color->b,
+                        clear_color->a));
+        GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    }
+
     DL_SORT(rend->items, item_sort_cmp);
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         item->last_used_frame = goxel()->frame_count;
