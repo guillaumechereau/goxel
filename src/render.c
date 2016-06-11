@@ -87,6 +87,10 @@ static const char *POS_DATA_VSHADER;
 static const char *POS_DATA_FSHADER;
 
 typedef struct {
+    // Those values are used as a key to identify the shader.
+    const char *vshader;
+    const char *fshader;
+
     GLint prog;
     GLint u_model_l;
     GLint u_view_l;
@@ -105,7 +109,10 @@ typedef struct {
     GLint u_pos_scale_l;
 } prog_t;
 
-static prog_t prog_render, prog_pos_data;
+// Static list of programs.  Need to be big enough for all the possible
+// shaders we are going to use.
+static prog_t g_progs[2] = {};
+
 static GLuint index_buffer;
 static GLuint g_border_tex;
 static GLuint g_bump_tex;
@@ -259,11 +266,14 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     int attr;
     sprintf(include, "#define VOXEL_TEXTURE_SIZE %d.0\n",
                      VOXEL_TEXTURE_SIZE);
+    prog->vshader = vshader;
+    prog->fshader = fshader;
     prog->prog = create_program(vshader, fshader, include);
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glBindAttribLocation(prog->prog, attr, ATTRIBUTES[attr].name));
     }
     GL(glLinkProgram(prog->prog));
+    GL(glUseProgram(prog->prog));
 #define UNIFORM(x) GL(prog->x##_l = glGetUniformLocation(prog->prog, #x))
     UNIFORM(u_model);
     UNIFORM(u_view);
@@ -281,17 +291,28 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_block_id);
     UNIFORM(u_pos_scale);
 #undef UNIFORM
+    GL(glUniform1i(prog->u_bshadow_tex_l, 0));
+    GL(glUniform1i(prog->u_bump_tex_l, 1));
+}
+
+static prog_t *get_prog(const char *vshader, const char *fshader)
+{
+    int i;
+    prog_t *p;
+    for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
+        p = &g_progs[i];
+        if (!p->vshader) break;
+        if (p->vshader == vshader && p->fshader == fshader)
+            return p;
+    }
+    assert(i < ARRAY_SIZE(g_progs));
+    init_prog(p, vshader, fshader);
+    return p;
 }
 
 void render_init()
 {
     LOG_D("render init");
-    init_prog(&prog_render, VSHADER, FSHADER);
-    init_prog(&prog_pos_data, POS_DATA_VSHADER, POS_DATA_FSHADER);
-    GL(glUseProgram(prog_render.prog));
-    GL(glUniform1i(prog_render.u_bshadow_tex_l, 0));
-    GL(glUniform1i(prog_render.u_bump_tex_l, 1));
-
     GL(glGenBuffers(1, &index_buffer));
 
     // 6 vertices (2 triangles) per face.
@@ -319,8 +340,12 @@ void render_init()
 
 void render_deinit(void)
 {
-    delete_program(prog_render.prog);
-    memset(&prog_render, 0, sizeof(prog_render));
+    int i;
+    for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
+        if (g_progs[i].prog)
+            delete_program(g_progs[i].prog);
+    }
+    memset(&g_progs, 0, sizeof(g_progs));
     GL(glDeleteBuffers(1, &index_buffer));
     index_buffer = 0;
 }
@@ -422,7 +447,10 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
 
-    prog = effects & EFFECT_RENDER_POS ? &prog_pos_data : &prog_render;
+    if (effects & EFFECT_RENDER_POS)
+        prog = get_prog(POS_DATA_VSHADER, POS_DATA_FSHADER);
+    else
+        prog = get_prog(VSHADER, FSHADER);
 
     GL(glEnable(GL_DEPTH_TEST));
     GL(glDepthFunc(GL_LESS));
