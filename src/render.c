@@ -433,6 +433,22 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
     }
 }
 
+static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
+{
+    vec4_t light_dir = vec4_zero;
+    mat4_t m;
+    light_dir.xyz = rend->light.direction;
+    if (rend->light.fixed) {
+        m = mat4_identity;
+        mat4_imul(&m, mat4_inverted(rend->view_mat));
+        mat4_irotate(&m, -M_PI / 2, 1, 0, 0);
+        light_dir = mat4_mul_vec(m, light_dir);
+    }
+    if (model_view)
+        light_dir = mat4_mul_vec(rend->view_mat, light_dir);
+    return light_dir.xyz;
+}
+
 static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
 {
     prog_t *prog;
@@ -440,10 +456,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
     mat4_t model = mat4_identity;
     int attr;
     float pos_scale = 1.0f;
-    vec4_t light_dir = vec4_zero;
-    light_dir.xyz = rend->light.direction;
-    if (!rend->light.fixed)
-        light_dir = mat4_mul_vec(rend->view_mat, light_dir);
+    vec3_t light_dir = vec3_neg(get_light_dir(rend, true));
+
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
 
@@ -464,7 +478,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
 
     if (effects & EFFECT_SEE_BACK) {
         GL(glCullFace(GL_FRONT));
-        vec3_imul(&light_dir.xyz, -0.5);
+        vec3_imul(&light_dir, -0.5);
     }
     if (effects & EFFECT_SEMI_TRANSPARENT) {
         GL(glEnable(GL_BLEND));
@@ -822,7 +836,7 @@ static const char *FSHADER =
     "{                                                                  \n"
     "    // clamp uv so to prevent overflow with multismapling.         \n"
     "    uv = clamp(v_uv, 0.0, 1.0);                                    \n"
-    "    s = normalize(u_l_dir);                                        \n"
+    "    s = u_l_dir;                                                   \n"
     "    n = normalize((u_view * u_model * vec4(v_normal, 0.0)).xyz);   \n"
     "    bump_uv = (v_bump_uv + 0.5 + uv * 15.0) / 256.0;               \n"
     "    bump = texture2D(u_bump_tex, bump_uv).xyz - 0.5;               \n"

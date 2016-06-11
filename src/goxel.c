@@ -229,7 +229,7 @@ void goxel_init(goxel_t *goxel)
     };
     goxel->rend = (renderer_t) {
         .light = {
-            .direction = vec3_normalized(vec3(0.5, 0.7, 1)),
+            .direction = vec3_normalized(vec3(-0.5, 1, -0.3)),
             .fixed = true,
             .intensity = 1.
         },
