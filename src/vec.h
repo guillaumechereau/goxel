@@ -451,6 +451,32 @@ DECL mat4_t mat4_perspective(real_t fovy, real_t aspect,
     return ret;
 }
 
+DECL mat4_t mat4_transposed(mat4_t m)
+{
+    int i, j;
+    mat4_t ret;
+    for (i = 0; i < 4; i++)
+        for (j = 0; j < 4; j++)
+            ret.v[i * 4 + j] = m.v[j * 4 + i];
+    return ret;
+}
+
+// Similar to gluLookAt
+DECL mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up)
+{
+    vec3_t f, s, u;
+    mat4_t m = mat4_identity;
+    f = vec3_normalized(vec3_sub(center, eye));
+    vec3_normalize(&up);
+    s = vec3_cross(f, up);
+    u = vec3_cross(vec3_normalized(s), f);
+    m.vecs[0].xyz = s;
+    m.vecs[1].xyz = u;
+    m.vecs[2].xyz = vec3_neg(f);
+    m = mat4_transposed(m);
+    return mat4_translate(m, -eye.x, -eye.y, -eye.z);
+}
+
 DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
 DECL mat4_t quat_to_mat4(quat_t q);
 DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)
