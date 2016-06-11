@@ -377,12 +377,7 @@ void goxel_render(goxel_t *goxel)
 void goxel_render_view(goxel_t *goxel,  const vec4_t *rect)
 {
     layer_t *layer;
-    vec4_t back_color;
     renderer_t *rend = &goxel->rend;
-
-    back_color = uvec4b_to_vec4(goxel->back_color);
-    GL(glClearColor(back_color.r, back_color.g, back_color.b, back_color.a));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     goxel->camera.aspect = rect->z / rect->w;
     camera_update(&goxel->camera);

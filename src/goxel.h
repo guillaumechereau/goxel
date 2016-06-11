@@ -603,6 +603,7 @@ struct renderer
     } light;
 
     render_settings_t settings;
+    vec4_t back_color;
 
     render_item_t    *items;
 };
