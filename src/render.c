@@ -92,6 +92,7 @@ typedef struct {
     // Those values are used as a key to identify the shader.
     const char *vshader;
     const char *fshader;
+    const char *include;
 
     GLint prog;
     GLint u_model_l;
@@ -116,7 +117,7 @@ typedef struct {
 
 // Static list of programs.  Need to be big enough for all the possible
 // shaders we are going to use.
-static prog_t g_progs[3] = {};
+static prog_t g_progs[4] = {};
 
 
 static GLuint index_buffer;
@@ -268,15 +269,17 @@ static void init_bump_texture(void)
     free(data);
 }
 
-static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
+static void init_prog(prog_t *prog, const char *vshader, const char *fshader,
+                      const char *include)
 {
-    char include[128];
+    char include_full[256];
     int attr;
-    sprintf(include, "#define VOXEL_TEXTURE_SIZE %d.0\n",
-                     VOXEL_TEXTURE_SIZE);
+    sprintf(include_full, "#define VOXEL_TEXTURE_SIZE %d.0\n%s\n",
+            VOXEL_TEXTURE_SIZE, include ?: "");
     prog->vshader = vshader;
     prog->fshader = fshader;
-    prog->prog = create_program(vshader, fshader, include);
+    prog->include = include;
+    prog->prog = create_program(vshader, fshader, include_full);
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glBindAttribLocation(prog->prog, attr, ATTRIBUTES[attr].name));
     }
@@ -307,18 +310,20 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     GL(glUniform1i(prog->u_shadow_tex_l, 2));
 }
 
-static prog_t *get_prog(const char *vshader, const char *fshader)
+static prog_t *get_prog(const char *vshader, const char *fshader,
+                        const char *include)
 {
     int i;
     prog_t *p;
     for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
         p = &g_progs[i];
         if (!p->vshader) break;
-        if (p->vshader == vshader && p->fshader == fshader)
+        if (p->vshader == vshader && p->fshader == fshader &&
+            p->include == include)
             return p;
     }
     assert(i < ARRAY_SIZE(g_progs));
-    init_prog(p, vshader, fshader);
+    init_prog(p, vshader, fshader, include);
     return p;
 }
 
@@ -480,7 +485,6 @@ static void compute_shadow_map_box(
 
     render_item_t *item;
     block_t *block;
-    box_t box;
     vec3_t p;
     int i;
     mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
@@ -520,12 +524,13 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
 
     if (effects & EFFECT_RENDER_POS)
-        prog = get_prog(POS_DATA_VSHADER, POS_DATA_FSHADER);
+        prog = get_prog(POS_DATA_VSHADER, POS_DATA_FSHADER, NULL);
     else if (effects & EFFECT_SHADOW_MAP)
-        prog = get_prog(SHADOW_MAP_VSHADER, SHADOW_MAP_FSHADER);
+        prog = get_prog(SHADOW_MAP_VSHADER, SHADOW_MAP_FSHADER, NULL);
     else {
-        prog = get_prog(VSHADER, FSHADER);
         shadow = rend->settings.shadow;
+        prog = get_prog(VSHADER, FSHADER,
+                        shadow ? "#define SHADOW" : NULL);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
@@ -997,7 +1002,15 @@ static const char *FSHADER =
     "    if (s_dot_n > 0.0)                                             \n"
     "       l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);        \n"
     "                                                                   \n"
+    "    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;            \n"
+    "    bshadow = sqrt(bshadow);                                       \n"
+    "    bshadow = mix(1.0, bshadow, u_bshadow);                        \n"
+    "    gl_FragColor = v_color;                                        \n"
+    "    gl_FragColor.rgb *= (l_dif + l_amb + l_spe) * u_l_int;         \n"
+    "    gl_FragColor.rgb *= bshadow;                                   \n"
+    "                                                                   \n"
     "    // Shadow map.                                                 \n"
+    "    #ifdef SHADOW                                                  \n"
     "    visibility = 1.0;                                              \n"
     "    vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;         \n"
     "    shadow_coord.z -= 0.001;                                       \n"
@@ -1014,13 +1027,9 @@ static const char *FSHADER =
     "    if (texture2D(u_shadow_tex, v_shadow_coord.xy + P3).z <        \n"
     "            shadow_coord.z) visibility -= 0.2;                     \n"
     "    if (s_dot_n <= 0.0) visibility = 1.0;                          \n"
+    "    gl_FragColor.rgb *= mix(1.0, visibility, u_shadow_k);          \n"
+    "    #endif                                                         \n"
     "                                                                   \n"
-    "    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;            \n"
-    "    bshadow = sqrt(bshadow);                                       \n"
-    "    bshadow = mix(1.0, bshadow, u_bshadow);                        \n"
-    "    gl_FragColor = v_color;                                        \n"
-    "    gl_FragColor.rgb *= (l_dif + l_amb + l_spe) * u_l_int;         \n"
-    "    gl_FragColor.rgb *= bshadow * mix(1.0, visibility, u_shadow_k); \n"
     "}                                                                  \n"
 ;
 
