@@ -606,6 +606,7 @@ static void render_panel(goxel_t *goxel)
 {
     int i, current = 0;
     int nb = render_get_default_settings(0, NULL, NULL);
+    float v;
     char *name;
     render_settings_t settings;
 
@@ -617,6 +618,10 @@ static void render_panel(goxel_t *goxel)
                          sizeof(settings)) == 0;
         if (ImGui::RadioButton(name, current) && !current)
             goxel->rend.settings = settings;
+    }
+    v = goxel->rend.settings.shadow;
+    if (ImGui::InputFloat("shadow", &v, 0.1)) {
+        goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
     ImGui::PopID();
 }

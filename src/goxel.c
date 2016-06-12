@@ -136,6 +136,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
     int x, y;
     int rect[4] = {0, 0, view_size->x, view_size->y};
 
+    rend.settings.shadow = 0;
     GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel->pick_fbo->framebuffer));
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
     render_render(&rend, rect, &vec4_zero);
@@ -229,7 +230,7 @@ void goxel_init(goxel_t *goxel)
     };
     goxel->rend = (renderer_t) {
         .light = {
-            .direction = vec3_normalized(vec3(-0.5, 1, -0.3)),
+            .direction = vec3_normalized(vec3(-0.5, 1, -1.2)),
             .fixed = true,
             .intensity = 1.
         },

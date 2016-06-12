@@ -85,6 +85,8 @@ static const char *VSHADER;
 static const char *FSHADER;
 static const char *POS_DATA_VSHADER;
 static const char *POS_DATA_FSHADER;
+static const char *SHADOW_MAP_VSHADER;
+static const char *SHADOW_MAP_FSHADER;
 
 typedef struct {
     // Those values are used as a key to identify the shader.
@@ -107,15 +109,21 @@ typedef struct {
     GLint u_bump_tex_l;
     GLint u_block_id_l;
     GLint u_pos_scale_l;
+    GLint u_shadow_mvp_l;
+    GLint u_shadow_k_l;
+    GLint u_shadow_tex_l;
 } prog_t;
 
 // Static list of programs.  Need to be big enough for all the possible
 // shaders we are going to use.
-static prog_t g_progs[2] = {};
+static prog_t g_progs[3] = {};
+
 
 static GLuint index_buffer;
 static GLuint g_border_tex;
 static GLuint g_bump_tex;
+static GLuint g_shadow_map_fbo;
+static texture_t *g_shadow_map; // XXX: the fbo should be part of the tex.
 
 #define OFFSET(n) offsetof(voxel_vertex_t, n)
 
@@ -290,9 +298,13 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_bump_tex);
     UNIFORM(u_block_id);
     UNIFORM(u_pos_scale);
+    UNIFORM(u_shadow_mvp);
+    UNIFORM(u_shadow_k);
+    UNIFORM(u_shadow_tex);
 #undef UNIFORM
     GL(glUniform1i(prog->u_bshadow_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
+    GL(glUniform1i(prog->u_shadow_tex_l, 2));
 }
 
 static prog_t *get_prog(const char *vshader, const char *fshader)
@@ -437,7 +449,7 @@ static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
 {
     vec4_t light_dir = vec4_zero;
     mat4_t m;
-    light_dir.xyz = rend->light.direction;
+    light_dir.xyz = vec3_neg(rend->light.direction);
     if (rend->light.fixed) {
         m = mat4_identity;
         mat4_imul(&m, mat4_inverted(rend->view_mat));
@@ -449,22 +461,72 @@ static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
     return light_dir.xyz;
 }
 
-static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
+// Compute the minimum projection box to use for the shadow map.
+static void compute_shadow_map_box(
+                const renderer_t *rend,
+                float rect[6])
+{
+    const vec3_t POS[8] = {
+        VEC3(-0.5, -0.5, -0.5),
+        VEC3(+0.5, -0.5, -0.5),
+        VEC3(+0.5, -0.5, +0.5),
+        VEC3(-0.5, -0.5, +0.5),
+        VEC3(-0.5, +0.5, -0.5),
+        VEC3(+0.5, +0.5, -0.5),
+        VEC3(+0.5, +0.5, +0.5),
+        VEC3(-0.5, +0.5, +0.5)
+    };
+    const int N = BLOCK_SIZE;
+
+    render_item_t *item;
+    block_t *block;
+    box_t box;
+    vec3_t p;
+    int i;
+    mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
+                                  vec3(0, 0, 0), vec3(0, 1, 0));
+    for (i = 0; i < 6; i++)
+        rect[i] = NAN;
+
+    DL_FOREACH(rend->items, item) {
+        if (item->type != ITEM_MESH) continue;
+        MESH_ITER_BLOCKS(item->mesh, block) {
+            for (i = 0; i < 8; i++) {
+                p = vec3_addk(block->pos, POS[i], N);
+                p = mat4_mul_vec3(view_mat, p);
+                rect[0] = min(rect[0], p.x);
+                rect[1] = max(rect[1], p.x);
+                rect[2] = min(rect[2], p.y);
+                rect[3] = max(rect[3], p.y);
+                rect[4] = min(rect[4], p.z);
+                rect[5] = max(rect[5], p.z);
+            }
+        }
+    }
+}
+
+static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
+                         const mat4_t *shadow_mvp)
 {
     prog_t *prog;
     block_t *block;
     mat4_t model = mat4_identity;
     int attr;
     float pos_scale = 1.0f;
-    vec3_t light_dir = vec3_neg(get_light_dir(rend, true));
+    vec3_t light_dir = get_light_dir(rend, true);
+    bool shadow = false;
 
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
 
     if (effects & EFFECT_RENDER_POS)
         prog = get_prog(POS_DATA_VSHADER, POS_DATA_FSHADER);
-    else
+    else if (effects & EFFECT_SHADOW_MAP)
+        prog = get_prog(SHADOW_MAP_VSHADER, SHADOW_MAP_FSHADER);
+    else {
         prog = get_prog(VSHADER, FSHADER);
+        shadow = rend->settings.shadow;
+    }
 
     GL(glEnable(GL_DEPTH_TEST));
     GL(glDepthFunc(GL_LESS));
@@ -487,6 +549,15 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
     }
 
     GL(glUseProgram(prog->prog));
+
+    if (shadow) {
+        assert(shadow_mvp);
+        GL(glActiveTexture(GL_TEXTURE2));
+        GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
+        GL(glUniformMatrix4fv(prog->u_shadow_mvp_l, 1, 0, shadow_mvp->v));
+        GL(glUniform1i(prog->u_shadow_tex_l, 2));
+        GL(glUniform1f(prog->u_shadow_k_l, rend->settings.shadow));
+    }
 
     GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, rend->proj_mat.v));
     GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, rend->view_mat.v));
@@ -517,7 +588,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects)
     if (effects & EFFECT_SEE_BACK) {
         effects &= ~EFFECT_SEE_BACK;
         effects |= EFFECT_SEMI_TRANSPARENT;
-        render_mesh_(rend, mesh, effects);
+        render_mesh_(rend, mesh, effects, NULL);
     }
 }
 
@@ -661,12 +732,76 @@ static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
     return sign(item_sort_value(a) - item_sort_value(b));
 }
 
+
+static mat4_t render_shadow_map(renderer_t *rend)
+{
+    render_item_t *item;
+    float rect[6];
+    // Create a renderer looking at the scene from the light.
+    compute_shadow_map_box(rend, rect);
+    mat4_t bias_mat = mat4(0.5, 0.0, 0.0, 0.0,
+                           0.0, 0.5, 0.0, 0.0,
+                           0.0, 0.0, 0.5, 0.0,
+                           0.5, 0.5, 0.5, 1.0);
+    mat4_t proj_mat = mat4_ortho(rect[0], rect[1],
+                                 rect[2], rect[3],
+                                 rect[4], rect[5]);
+    mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
+                                  vec3(0, 0, 0), vec3(0, 1, 0));
+    renderer_t srend = {
+        .view_mat = view_mat,
+        .proj_mat = proj_mat,
+    };
+
+    // Generate the depth buffer.
+    if (!g_shadow_map_fbo) {
+        GL(glGenFramebuffers(1, &g_shadow_map_fbo));
+        GL(glBindFramebuffer(GL_FRAMEBUFFER, g_shadow_map_fbo));
+        GL(glDrawBuffer(GL_NONE));
+        GL(glReadBuffer(GL_NONE));
+        g_shadow_map = texture_new_surface(2048, 2048, 0);
+        GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
+        GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+                        2048, 2048, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0));
+        GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        GL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                 GL_TEXTURE_2D, g_shadow_map->tex, 0));
+    }
+
+    GL(glBindFramebuffer(GL_FRAMEBUFFER, g_shadow_map_fbo));
+    GL(glViewport(0, 0, 2048, 2048));
+    GL(glClear(GL_DEPTH_BUFFER_BIT));
+
+    DL_FOREACH(rend->items, item) {
+        if (item->type == ITEM_MESH) {
+            render_mesh_(&srend, item->mesh, EFFECT_SHADOW_MAP, NULL);
+        }
+    }
+    GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
+    mat4_t ret = bias_mat;
+    mat4_imul(&ret, proj_mat);
+    mat4_imul(&ret, view_mat);
+    return ret;
+}
 void render_render(renderer_t *rend, const int rect[4],
                    const vec4_t *clear_color)
 {
     PROFILED
     render_item_t *item, *tmp;
+    mat4_t shadow_mvp;
+    bool shadow = rend->settings.shadow &&
+        !(rend->settings.effects & (EFFECT_RENDER_POS | EFFECT_SHADOW_MAP));
 
+    if (shadow) {
+        GL(glDisable(GL_SCISSOR_TEST));
+        shadow_mvp = render_shadow_map(rend);
+    }
+
+    GL(glEnable(GL_SCISSOR_TEST));
     GL(glViewport(rect[0], rect[1], rect[2], rect[3]));
     GL(glScissor(rect[0], rect[1], rect[2], rect[3]));
     if (clear_color) {
@@ -682,7 +817,7 @@ void render_render(renderer_t *rend, const int rect[4],
         item->last_used_frame = goxel()->frame_count;
         switch (item->type) {
         case ITEM_MESH:
-            render_mesh_(rend, item->mesh, item->effects);
+            render_mesh_(rend, item->mesh, item->effects, &shadow_mvp);
             DL_DELETE(rend->items, item);
             mesh_delete(item->mesh);
             break;
@@ -708,12 +843,13 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
 
     *out = (render_settings_t) {
         .border_shadow = 0.4,
-        .ambient = 0.1,
+        .ambient = 0.2,
         .diffuse = 0.9,
         .specular = 0.4,
         .shininess = 2.0,
         .smoothness = 0.0,
         .effects = EFFECT_BORDERS,
+        .shadow = 0.5,
     };
     switch (i) {
         case 0:
@@ -732,6 +868,7 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             out->effects = 0;
             out->smoothness = 1;
             out->border_shadow = 0;
+            out->shadow = 0;
             break;
         case 4:
             if (name) *name = "Marching";
@@ -773,6 +910,7 @@ static const char *VSHADER =
     "uniform   mat4 u_model;                                            \n"
     "uniform   mat4 u_view;                                             \n"
     "uniform   mat4 u_proj;                                             \n"
+    "uniform   mat4 u_shadow_mvp;                                       \n"
     "uniform   float u_pos_scale;                                       \n"
     "                                                                   \n"
     "varying   vec3 v_pos;                                              \n"
@@ -781,6 +919,7 @@ static const char *VSHADER =
     "varying   vec2 v_uv;                                               \n"
     "varying   vec2 v_bump_uv;                                          \n"
     "varying   vec3 v_normal;                                           \n"
+    "varying   vec4 v_shadow_coord;  // Used for shadow mapping.        \n"
     "                                                                   \n"
     "void main()                                                        \n"
     "{                                                                  \n"
@@ -792,6 +931,7 @@ static const char *VSHADER =
     "    v_uv = a_uv;                                                   \n"
     "    v_bump_uv = a_bump_uv;                                         \n"
     "    gl_Position = u_proj * u_view * u_model * vec4(v_pos, 1.0);    \n"
+    "    v_shadow_coord = (u_shadow_mvp * u_model * vec4(v_pos, 1.0));  \n"
     "}                                                                  \n"
 ;
 
@@ -817,7 +957,9 @@ static const char *FSHADER =
     "                                                                   \n"
     "uniform sampler2D u_bshadow_tex;                                   \n"
     "uniform sampler2D u_bump_tex;                                      \n"
-    "uniform float u_bshadow;                                           \n"
+    "uniform float     u_bshadow;                                       \n"
+    "uniform sampler2D u_shadow_tex;                                    \n"
+    "uniform float     u_shadow_k;                                      \n"
     "                                                                   \n"
     "varying lowp vec3 v_pos;                                           \n"
     "varying lowp vec4 v_color;                                         \n"
@@ -825,12 +967,14 @@ static const char *FSHADER =
     "varying lowp vec2 v_bshadow_uv;                                    \n"
     "varying lowp vec2 v_bump_uv;                                       \n"
     "varying lowp vec3 v_normal;                                        \n"
+    "varying vec4 v_shadow_coord;                                       \n"
     "                                                                   \n"
     "vec2 uv, bump_uv;                                                  \n"
     "vec3 n, s, r, v, bump;                                             \n"
     "float s_dot_n;                                                     \n"
     "float l_amb, l_dif, l_spe;                                         \n"
     "float bshadow;                                                     \n"
+    "float visibility;                                                  \n"
     "                                                                   \n"
     "void main()                                                        \n"
     "{                                                                  \n"
@@ -853,13 +997,30 @@ static const char *FSHADER =
     "    if (s_dot_n > 0.0)                                             \n"
     "       l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);        \n"
     "                                                                   \n"
+    "    // Shadow map.                                                 \n"
+    "    visibility = 1.0;                                              \n"
+    "    vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;         \n"
+    "    shadow_coord.z -= 0.001;                                       \n"
+    "    vec2 P0 = vec2(-0.94201624, -0.39906216) / 1024.0;             \n"
+    "    vec2 P1 = vec2(+0.94558609, -0.76890725) / 1024.0;             \n"
+    "    vec2 P2 = vec2(-0.09418410, -0.92938870) / 1024.0;             \n"
+    "    vec2 P3 = vec2(+0.34495938, +0.29387760) / 1024.0;             \n"
+    "    if (texture2D(u_shadow_tex, v_shadow_coord.xy + P0).z <        \n"
+    "            shadow_coord.z) visibility -= 0.2;                     \n"
+    "    if (texture2D(u_shadow_tex, v_shadow_coord.xy + P1).z <        \n"
+    "            shadow_coord.z) visibility -= 0.2;                     \n"
+    "    if (texture2D(u_shadow_tex, v_shadow_coord.xy + P2).z <        \n"
+    "            shadow_coord.z) visibility -= 0.2;                     \n"
+    "    if (texture2D(u_shadow_tex, v_shadow_coord.xy + P3).z <        \n"
+    "            shadow_coord.z) visibility -= 0.2;                     \n"
+    "    if (s_dot_n <= 0.0) visibility = 1.0;                          \n"
     "                                                                   \n"
     "    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;            \n"
     "    bshadow = sqrt(bshadow);                                       \n"
     "    bshadow = mix(1.0, bshadow, u_bshadow);                        \n"
     "    gl_FragColor = v_color;                                        \n"
     "    gl_FragColor.rgb *= (l_dif + l_amb + l_spe) * u_l_int;         \n"
-    "    gl_FragColor.rgb *= bshadow;                                   \n"
+    "    gl_FragColor.rgb *= bshadow * mix(1.0, visibility, u_shadow_k); \n"
     "}                                                                  \n"
 ;
 
@@ -893,4 +1054,27 @@ static const char *POS_DATA_FSHADER =
     "    gl_FragColor.rg = v_pos_data;                                \n"
     "    gl_FragColor.ba = u_block_id;                                \n"
     "}                                                                \n"
+;
+
+static const char *SHADOW_MAP_VSHADER =
+    "                                                                   \n"
+    "attribute vec3 a_pos;                                              \n"
+    "uniform   mat4 u_model;                                            \n"
+    "uniform   mat4 u_view;                                             \n"
+    "uniform   mat4 u_proj;                                             \n"
+    "void main()                                                        \n"
+    "{                                                                  \n"
+    "    gl_Position = u_proj * u_view * u_model * vec4(a_pos, 1.0);    \n"
+    "}                                                                  \n"
+;
+
+static const char *SHADOW_MAP_FSHADER =
+    "                                                                   \n"
+    "#ifdef GL_ES                                                       \n"
+    "precision highp float;                                             \n"
+    "#endif                                                             \n"
+    "                                                                   \n"
+    "void main()                                                        \n"
+    "{                                                                  \n"
+    "}                                                                  \n"
 ;

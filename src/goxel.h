@@ -577,6 +577,7 @@ enum {
     EFFECT_SEMI_TRANSPARENT = 1 << 5,
     EFFECT_SEE_BACK         = 1 << 6,
     EFFECT_MARCHING_CUBES   = 1 << 7,
+    EFFECT_SHADOW_MAP       = 1 << 8,
 };
 
 typedef struct {
@@ -585,6 +586,7 @@ typedef struct {
     float specular;
     float shininess;
     float smoothness;
+    float shadow;
     int   effects;
     float border_shadow;
 } render_settings_t;
