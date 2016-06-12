@@ -374,7 +374,9 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
 {
     render_item_t *item;
     const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
-                             EFFECT_MARCHING_CUBES;
+                             EFFECT_MARCHING_CUBES | EFFECT_SMOOTH;
+    // For the moment we always compute the smooth normal no mater what.
+    effects |= EFFECT_SMOOTH;
     block_item_key_t key = {
         .id = block->data->id,
         .effects = effects & effects_mask,
@@ -602,7 +604,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MESH;
     item->mesh = mesh_copy(mesh);
-    item->effects = effects | rend->settings.effects | EFFECT_SMOOTH;
+    item->effects = effects | rend->settings.effects;
     // With EFFECT_RENDER_POS we need to remove some effects.
     if (item->effects & EFFECT_RENDER_POS)
         item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK |
