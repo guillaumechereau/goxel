@@ -502,8 +502,8 @@ static void compute_shadow_map_box(
                 rect[1] = max(rect[1], p.x);
                 rect[2] = min(rect[2], p.y);
                 rect[3] = max(rect[3], p.y);
-                rect[4] = min(rect[4], p.z);
-                rect[5] = max(rect[5], p.z);
+                rect[4] = min(rect[4], -p.z);
+                rect[5] = max(rect[5], -p.z);
             }
         }
     }
