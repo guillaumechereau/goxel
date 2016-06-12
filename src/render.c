@@ -744,6 +744,7 @@ static mat4_t render_shadow_map(renderer_t *rend)
 {
     render_item_t *item;
     float rect[6];
+    int effects;
     // Create a renderer looking at the scene from the light.
     compute_shadow_map_box(rend, rect);
     mat4_t bias_mat = mat4(0.5, 0.0, 0.0, 0.0,
@@ -784,7 +785,9 @@ static mat4_t render_shadow_map(renderer_t *rend)
 
     DL_FOREACH(rend->items, item) {
         if (item->type == ITEM_MESH) {
-            render_mesh_(&srend, item->mesh, EFFECT_SHADOW_MAP, NULL);
+            effects = (item->effects & EFFECT_MARCHING_CUBES);
+            effects |= EFFECT_SHADOW_MAP;
+            render_mesh_(&srend, item->mesh, effects, NULL);
         }
     }
     GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
@@ -1070,9 +1073,11 @@ static const char *SHADOW_MAP_VSHADER =
     "uniform   mat4 u_model;                                            \n"
     "uniform   mat4 u_view;                                             \n"
     "uniform   mat4 u_proj;                                             \n"
+    "uniform   float u_pos_scale;                                       \n"
     "void main()                                                        \n"
     "{                                                                  \n"
-    "    gl_Position = u_proj * u_view * u_model * vec4(a_pos, 1.0);    \n"
+    "    gl_Position = u_proj * u_view * u_model *                      \n"
+    "                   vec4(a_pos * u_pos_scale, 1.0);                 \n"
     "}                                                                  \n"
 ;
 
