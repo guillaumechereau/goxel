@@ -1043,10 +1043,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
         tool_options_panel(goxel);
     ImGui::Separator();
-    if (ImGui::GoxCollapsingHeader("Layers", NULL, true, true))
+    if (ImGui::GoxCollapsingHeader("Layers", NULL, true, false))
         layers_panel(goxel);
     ImGui::Separator();
-    if (ImGui::GoxCollapsingHeader("Palette", NULL, true, true))
+    if (ImGui::GoxCollapsingHeader("Palette", NULL, true, false))
         palette_panel(goxel);
     ImGui::Separator();
 tool_procedural:
