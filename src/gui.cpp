@@ -283,6 +283,7 @@ static void init_ImGui()
     style.FrameRounding = 0;
     style.WindowRounding = 0;
     style.WindowFillAlphaDefault = 1.0;
+    style.ItemSpacing = ImVec2(4, 4);
     style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x202020FF);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
     style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0xD0D0D0FF);
@@ -411,7 +412,7 @@ static void tool_options_panel(goxel_t *goxel)
     int i;
     float v;
     bool s;
-    const char *snap[] = {"mesh", "plane"};
+    const char *snap[] = {"Mesh", "Plane"};
     ImVec4 color;
     layer_t *layer;
     mat4_t mat;
