@@ -57,65 +57,8 @@ void on_char(GLFWwindow *win, unsigned int c)
     }
 }
 
-static void generate_icons(goxel_t *goxel)
-{
-    layer_t *layer, *tmp;
-    char path[256];
-    goxel->image->export_width = 64;
-    goxel->image->export_height = 64;
-
-    DL_FOREACH(goxel->image->layers, layer) {
-        DL_FOREACH(goxel->image->layers, tmp)
-            tmp->visible = tmp == layer;
-
-        goxel->rend.settings.border_shadow = 0;
-        goxel->rend.settings.smoothness = 1;
-        goxel->rend.settings.specular = 0.2;
-        goxel->rend.settings.diffuse = 1;
-        goxel->rend.settings.ambient = 0.2;
-        goxel->camera.ofs = vec3(-2, -8, 0);
-        goxel->camera.rot = quat_identity;
-        quat_irotate(&goxel->camera.rot, M_PI / 4, 1, 0, 0);
-        quat_irotate(&goxel->camera.rot, M_PI / 4, 0, 1, 0);
-        if (strcmp(layer->name, "move") == 0) {
-            goxel->camera.ofs = vec3(0, 0, 0);
-            goxel->camera.rot = quat_identity;
-            quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
-            goxel->rend.settings.smoothness = 0;
-        }
-        if (strcmp(layer->name, "grid") == 0) {
-            goxel->camera.ofs = vec3(0, 0, 0);
-            goxel->camera.rot = quat_identity;
-            quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
-            goxel->rend.settings.smoothness = 0;
-        }
-        if (strcmp(layer->name, "pick") == 0) {
-            goxel->camera.ofs = vec3(0, 0, 0);
-            goxel->camera.rot = quat_identity;
-            quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
-            quat_irotate(&goxel->camera.rot, M_PI / 4, 0, 1, 0);
-            goxel->rend.settings.smoothness = 0;
-        }
-        if (strcmp(layer->name, "selection") == 0) {
-            goxel->rend.settings.smoothness = 0;
-        }
-        if (strcmp(layer->name, "proc") == 0) {
-            goxel->camera.ofs = vec3(-2, -2, 0);
-            goxel->camera.rot = quat_identity;
-            quat_irotate(&goxel->camera.rot, M_PI / 2, 1, 0, 0);
-            quat_irotate(&goxel->camera.rot, M_PI, 1, 0, 0);
-            goxel->rend.settings.smoothness = 0;
-        }
-
-        goxel_update_meshes(goxel, true);
-        sprintf(path, "./data/icons/%s.png", layer->name);
-        action_exec2("export_as_png", ARG("path", path));
-    }
-}
-
 typedef struct
 {
-    bool    icons;
     char    *args[1];
 } args_t;
 
@@ -125,9 +68,7 @@ typedef struct
 const char *argp_program_version = "goxel " GOXEL_VERSION_STR;
 static char doc[] = "A 3D voxels editor";
 static char args_doc[] = "[FILE]";
-#define OPT_ICONS 1
 static struct argp_option options[] = {
-    {"icons", OPT_ICONS, NULL, 0, "Generate the icons" },
     { 0 }
 };
 
@@ -138,17 +79,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 
     switch (key)
     {
-    case OPT_ICONS:
-        args->icons = true;
-        break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 2)
             argp_usage(state);
         args->args[state->arg_num] = arg;
         break;
     case ARGP_KEY_END:
-        if (args->icons && !args->args[0])
-            argp_usage(state);
         break;
     default:
         return ARGP_ERR_UNKNOWN;
@@ -246,11 +182,6 @@ int main(int argc, char **argv)
             qubicle_import(args.args[0]);
         else
             load_from_file(&goxel, args.args[0]);
-    }
-    if (args.icons) {
-        generate_icons(&goxel);
-        glfwTerminate();
-        return 0;
     }
     start_main_loop(loop_function);
     return 0;

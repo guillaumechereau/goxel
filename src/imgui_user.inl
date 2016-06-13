@@ -56,7 +56,7 @@ static void hue_bitmap(uint8_t *buffer, int w, int h)
 }
 
 namespace ImGui {
-    bool GoxSelectable(const char *name, bool *v, int tex) {
+    bool GoxSelectable(const char *name, bool *v, int tex, int icon) {
         ImGuiWindow* window = GetCurrentWindow();
         ImGuiState& g = *GImGui;
         const ImGuiStyle& style = g.Style;
@@ -64,8 +64,10 @@ namespace ImGui {
         const ImVec4 tint_col = ImVec4(1,1,1,1);
 
         const ImVec2 padding = ImVec2(0, 0);//style.FramePadding;
-        const ImRect image_bb(window->DC.CursorPos + padding, window->DC.CursorPos + padding + size); 
+        const ImRect image_bb(window->DC.CursorPos + padding,
+                              window->DC.CursorPos + padding + size); 
         bool ret;
+        ImVec2 uv0, uv1; // The position in the icon texture.
         ImVec4 color;
 
         color = style.Colors[ImGuiCol_Button];
@@ -74,7 +76,11 @@ namespace ImGui {
         ImGui::PushID(name);
         if (tex) {
             ret = ImGui::Button("", size);
-            window->DrawList->AddImage((void*)tex, image_bb.Min, image_bb.Max, ImVec2(0, 0), ImVec2(1, 1), window->Color(tint_col));
+            uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
+            uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
+            window->DrawList->AddImage((void*)tex, image_bb.Min, image_bb.Max,
+                                       uv0, uv1,
+                                       window->Color(tint_col));
         } else {
             ret = ImGui::Button(name, size);
         }

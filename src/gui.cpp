@@ -29,7 +29,7 @@ static inline ImVec4 IMHEXCOLOR(uint32_t v)
 }
 
 namespace ImGui {
-    bool GoxSelectable(const char *name, bool *v, int tex);
+    bool GoxSelectable(const char *name, bool *v, int tex, int icon);
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
     bool GoxIsCharPressed(int c);
@@ -39,20 +39,27 @@ namespace ImGui {
     bool GoxAction(const char *id, const char *label, const arg_t *args);
 };
 
-static texture_t *g_tex_sphere = NULL;
-static texture_t *g_tex_cylinder = NULL;
-static texture_t *g_tex_cube = NULL;
-static texture_t *g_tex_cube2 = NULL;
-static texture_t *g_tex_add = NULL;
-static texture_t *g_tex_sub = NULL;
-static texture_t *g_tex_paint = NULL;
-static texture_t *g_tex_brush = NULL;
-static texture_t *g_tex_grid = NULL;
-static texture_t *g_tex_laser = NULL;
-static texture_t *g_tex_move = NULL;
-static texture_t *g_tex_pick = NULL;
-static texture_t *g_tex_selection = NULL;
-static texture_t *g_tex_procedural = NULL;
+static texture_t *g_tex_icons = NULL;
+
+// All the icons positions inside icon.png (as Y*8 + X).
+enum {
+    ICON_TOOL_BRUSH = 0,
+    ICON_TOOL_CUBE = 1,
+    ICON_TOOL_LASER = 2,
+    ICON_TOOL_PLANE = 3,
+    ICON_TOOL_MOVE = 4,
+    ICON_TOOL_PICK = 5,
+    ICON_TOOL_SELECTION = 6,
+    ICON_TOOL_PROCEDURAL = 7,
+
+    ICON_OP_ADD = 8,
+    ICON_OP_SUB = 9,
+    ICON_OP_PAINT = 10,
+
+    ICON_SHAPE_SPHERE = 16,
+    ICON_SHAPE_CUBE = 17,
+    ICON_SHAPE_CYLINDER = 18,
+};
 
 static const int MiB = 1 << 20;
 
@@ -273,7 +280,7 @@ static void init_ImGui()
     load_fonts_texture();
 
     ImGuiStyle& style = ImGui::GetStyle();
-    style.FrameRounding = 4;
+    style.FrameRounding = 0;
     style.WindowRounding = 0;
     style.WindowFillAlphaDefault = 1.0;
     style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x202020FF);
@@ -292,20 +299,10 @@ void gui_init(void)
     GL(glGenBuffers(1, &gui->index_buffer));
     init_ImGui();
 
-    g_tex_sphere = texture_new_image("data/icons/sphere.png");
-    g_tex_cylinder = texture_new_image("data/icons/cylinder.png");
-    g_tex_cube = texture_new_image("data/icons/cube.png");
-    g_tex_cube2 = texture_new_image("data/icons/cube2.png");
-    g_tex_add = texture_new_image("data/icons/add.png");
-    g_tex_sub = texture_new_image("data/icons/sub.png");
-    g_tex_paint = texture_new_image("data/icons/paint.png");
-    g_tex_brush = texture_new_image("data/icons/brush.png");
-    g_tex_grid = texture_new_image("data/icons/grid.png");
-    g_tex_laser = texture_new_image("data/icons/laser.png");
-    g_tex_move = texture_new_image("data/icons/move.png");
-    g_tex_pick = texture_new_image("data/icons/pick.png");
-    g_tex_selection = texture_new_image("data/icons/selection.png");
-    g_tex_procedural = texture_new_image("data/icons/proc.png");
+    g_tex_icons = texture_new_image("data/icons.png");
+    GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
+    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 }
 
 // XXX: Move this somewhere else.
@@ -354,19 +351,21 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 static void op_panel(goxel_t *goxel)
 {
     int i;
+    bool v;
     struct {
         int        op;
         const char *name;
-        GLuint     tex;
+        int        icon;
     } values[] = {
-        {OP_ADD,    "Add",  g_tex_add->tex},
-        {OP_SUB,    "Sub",  g_tex_sub->tex},
-        {OP_PAINT,  "Paint", g_tex_paint->tex},
+        {OP_ADD,    "Add",  ICON_OP_ADD},
+        {OP_SUB,    "Sub",  ICON_OP_SUB},
+        {OP_PAINT,  "Paint", ICON_OP_PAINT},
     };
     ImGui::Text("Operation");
     for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
-        bool v = goxel->painter.op == values[i].op;
-        if (ImGui::GoxSelectable(values[i].name, &v, values[i].tex)) {
+        v = goxel->painter.op == values[i].op;
+        if (ImGui::GoxSelectable(values[i].name, &v,
+                                 g_tex_icons->tex, values[i].icon)) {
             goxel->painter.op = values[i].op;
         }
         if (i != 2)
@@ -379,16 +378,16 @@ static void tools_panel(goxel_t *goxel)
     const struct {
         int         tool;
         const char  *name;
-        GLuint      tex;
+        int         icon;
     } values[] = {
-        {TOOL_BRUSH,        "Brush",        g_tex_brush->tex},
-        {TOOL_CUBE,         "Cube",         g_tex_cube2->tex},
-        {TOOL_LASER,        "Laser",        g_tex_laser->tex},
-        {TOOL_SET_PLANE,    "Plane",        g_tex_grid->tex},
-        {TOOL_MOVE,         "Move",         g_tex_move->tex},
-        {TOOL_PICK_COLOR,   "Pick Color",   g_tex_pick->tex},
-        {TOOL_SELECTION,    "Selection",    g_tex_selection->tex},
-        {TOOL_PROCEDURAL,   "Procedural",   g_tex_procedural->tex},
+        {TOOL_BRUSH,        "Brush",        ICON_TOOL_BRUSH},
+        {TOOL_CUBE,         "Cube",         ICON_TOOL_CUBE},
+        {TOOL_LASER,        "Laser",        ICON_TOOL_LASER},
+        {TOOL_SET_PLANE,    "Plane",        ICON_TOOL_PLANE},
+        {TOOL_MOVE,         "Move",         ICON_TOOL_MOVE},
+        {TOOL_PICK_COLOR,   "Pick Color",   ICON_TOOL_PICK},
+        {TOOL_SELECTION,    "Selection",    ICON_TOOL_SELECTION},
+        {TOOL_PROCEDURAL,   "Procedural",   ICON_TOOL_PROCEDURAL},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
@@ -396,7 +395,8 @@ static void tools_panel(goxel_t *goxel)
     ImGui::PushID("tools_panel");
     for (i = 0; i < nb; i++) {
         v = goxel->tool == values[i].tool;
-        if (ImGui::GoxSelectable(values[i].name, &v, values[i].tex)) {
+        if (ImGui::GoxSelectable(values[i].name, &v, g_tex_icons->tex,
+                                 values[i].icon)) {
             goxel->tool = values[i].tool;
             goxel->tool_state = 0;
         }
@@ -430,7 +430,7 @@ static void tool_options_panel(goxel_t *goxel)
         ImGui::Text("Snap on");
         for (i = 0; i < 2; i++) {
             s = goxel->snap & (1 << i);
-            if (ImGui::GoxSelectable(snap[i], &s, 0)) {
+            if (ImGui::GoxSelectable(snap[i], &s, 0, 0)) {
                 goxel->snap = s ? goxel->snap | (1 << i) : goxel->snap & ~(1 << i);
             }
             if (i != 1)
@@ -511,11 +511,11 @@ static void shapes_panel(goxel_t *goxel)
     struct {
         const char  *name;
         shape_t     *shape;
-        GLuint      tex;
+        int         icon;
     } shapes[] = {
-        {"Sphere", &shape_sphere, g_tex_sphere->tex},
-        {"Cube", &shape_cube, g_tex_cube->tex},
-        {"Cylinder", &shape_cylinder, g_tex_cylinder->tex},
+        {"Sphere", &shape_sphere, ICON_SHAPE_SPHERE},
+        {"Cube", &shape_cube, ICON_SHAPE_CUBE},
+        {"Cylinder", &shape_cylinder, ICON_SHAPE_CYLINDER},
     };
     int i;
     bool v;
@@ -523,7 +523,8 @@ static void shapes_panel(goxel_t *goxel)
     ImGui::PushID("shapes");
     for (i = 0; i < (int)ARRAY_SIZE(shapes); i++) {
         v = goxel->painter.shape == shapes[i].shape;
-        if (ImGui::GoxSelectable(shapes[i].name, &v, shapes[i].tex)) {
+        if (ImGui::GoxSelectable(shapes[i].name, &v, g_tex_icons->tex,
+                                 shapes[i].icon)) {
             goxel->painter.shape = shapes[i].shape;
         }
         if (i != ARRAY_SIZE(shapes) - 1)
