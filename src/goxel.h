@@ -599,8 +599,8 @@ struct renderer
     mat4_t proj_mat;
 
     struct {
-        vec3_t direction;
-        bool   fixed;
+        quat_t direction;
+        bool   fixed;       // If set, then the light moves with the view.
         float  intensity;
     } light;
 

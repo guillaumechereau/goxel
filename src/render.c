@@ -454,13 +454,16 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
 
 static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
 {
-    vec4_t light_dir = vec4_zero;
+    vec4_t light_dir;
     mat4_t m;
-    light_dir.xyz = vec3_neg(rend->light.direction);
+    // XXX: Is that the right way?
+    light_dir = quat_mul_vec4(rend->light.direction, vec4(0, 1, 0, 0));
+
     if (rend->light.fixed) {
         m = mat4_identity;
         mat4_imul(&m, mat4_inverted(rend->view_mat));
-        mat4_irotate(&m, -M_PI / 2, 1, 0, 0);
+        mat4_irotate(&m, -M_PI / 4, 1, 0, 0);
+        mat4_irotate(&m, -M_PI / 4, 0, 0, 1);
         light_dir = mat4_mul_vec(m, light_dir);
     }
     if (model_view)
