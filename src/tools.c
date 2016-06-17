@@ -311,8 +311,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (goxel->tool_t == 0) {
             goxel->tool_t = 1;
             mesh_set(&goxel->tool_origin_mesh, mesh);
-            if (!inputs->keys[KEY_SHIFT])
-                mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
+            mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
             goxel->tool_last_op.op = 0; // Discard last op.
         }
         if (!snaped) return STATE_CANCEL;
