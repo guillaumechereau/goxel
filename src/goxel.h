@@ -523,6 +523,7 @@ void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);
 void block_merge(block_t *block, const block_t *other);
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos);
+void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v);
 
 // XXX: I think we should clean up this one.
 void block_blit(block_t *block, uvec4b_t *data,
@@ -551,9 +552,11 @@ void mesh_fill(mesh_t *mesh,
                void *user_data);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other);
-void mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
+block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
+void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v);
+void mesh_remove_empty_blocks(mesh_t *mesh);
 
 // XXX: clean up this.  We should use a struct to represent a data cube.
 void mesh_blit(mesh_t *mesh, uvec4b_t *data,
@@ -962,6 +965,8 @@ void dicom_import(const char *dir);
 
 void qubicle_import(const char *path);
 void qubicle_export(const mesh_t *mesh, const char *path);
+
+void vox_import(const char *path);
 
 // #### Profiler ###############
 

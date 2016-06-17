@@ -180,9 +180,12 @@ int main(int argc, char **argv)
     if (args.args[0]) {
         if (str_endswith(args.args[0], ".qb"))
             qubicle_import(args.args[0]);
+        else if (str_endswith(args.args[0], ".vox"))
+            vox_import(args.args[0]);
         else
             load_from_file(&goxel, args.args[0]);
     }
+
     start_main_loop(loop_function);
     return 0;
 }

@@ -274,7 +274,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other)
     }
 }
 
-void mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos)
+block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos)
 {
     block_t *block;
     vec3_t p = vec3((int)pos->x, (int)pos->y, (int)pos->z);
@@ -283,6 +283,7 @@ void mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos)
     block = block_new(&p, data);
     block->id = mesh->next_block_id++;
     HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
+    return block;
 }
 
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
@@ -293,6 +294,17 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
             return block_get_at(block, pos);
     }
     return uvec4b(0, 0, 0, 0);
+}
+
+void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v)
+{
+    block_t *block;
+    mesh_prepare_write(mesh);
+    add_blocks(mesh, bbox_from_extents(*pos, 1, 1, 1));
+    MESH_ITER_BLOCKS(mesh, block) {
+        if (bbox_contains_vec(block_get_box(block, false), *pos))
+            block_set_at(block, pos, v);
+    }
 }
 
 typedef struct

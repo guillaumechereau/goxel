@@ -695,6 +695,20 @@ uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)
     return BLOCK_AT(block, x, y, z);
 }
 
+void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v)
+{
+    int x, y, z;
+    vec3_t p = *pos;
+    assert(bbox_contains_vec(block_get_box(block, false), *pos));
+    vec3_isub(&p, block->pos);
+    vec3_iadd(&p, vec3(N / 2 - 0.5, N / 2 - 0.5, N / 2 - 0.5));
+    block_prepare_write(block);
+    x = round(p.x);
+    y = round(p.y);
+    z = round(p.z);
+    BLOCK_AT(block, x, y, z) = v;
+}
+
 void block_blit(block_t *block, uvec4b_t *data,
                 int x, int y, int z, int w, int h, int d)
 {
