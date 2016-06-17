@@ -26,17 +26,16 @@ static const uint32_t DEFAULT_PALETTE[256];
     ({ type v; int r = fread(&v, sizeof(v), 1, file); (void)r; v;})
 
 typedef struct {
-    mesh_t      *mesh;
     int         w, h, d;
-    uvec4b_t    *cube;
+    uvec4b_t    *palette;
+    int         nb;
+    uint8_t     *voxels;
 } context_t;
 
 static void read_chunk(FILE *file, context_t *ctx)
 {
     char id[4], r;
-    int size, children_size, fpos, nbvox, i, x, y, z, c;
-    uvec4b_t color;
-    vec3_t pos;
+    int size, children_size, fpos, i;
 
     r = fread(id, 1, 4, file);
     (void)r;
@@ -48,17 +47,22 @@ static void read_chunk(FILE *file, context_t *ctx)
         ctx->w = READ(uint32_t, file);
         ctx->h = READ(uint32_t, file);
         ctx->d = READ(uint32_t, file);
+    } else if (strncmp(id, "RGBA", 4) == 0) {
+        ctx->palette = malloc(4 * 256);
+        for (i = 0; i < 256; i++) {
+            ctx->palette[i].r = READ(uint8_t, file);
+            ctx->palette[i].g = READ(uint8_t, file);
+            ctx->palette[i].b = READ(uint8_t, file);
+            ctx->palette[i].a = READ(uint8_t, file);
+        }
     } else if (strncmp(id, "XYZI", 4) == 0) {
-        assert(ctx->w && ctx->h && ctx->d);
-        nbvox = READ(uint32_t, file);
-        for (i = 0; i < nbvox; i++) {
-            x = READ(uint8_t, file);
-            y = READ(uint8_t, file);
-            z = READ(uint8_t, file);
-            c = READ(uint8_t, file);
-            pos = vec3(x + 0.5 - ctx->w / 2, y + 0.5 - ctx->h / 2, z + 0.5);
-            color = HEXCOLOR(DEFAULT_PALETTE[c]);
-            mesh_set_at(ctx->mesh, &pos, color);
+        ctx->nb = READ(uint32_t, file);
+        ctx->voxels = calloc(ctx->nb, 4);
+        for (i = 0; i < ctx->nb; i++) {
+            ctx->voxels[i * 4 + 0] = READ(uint8_t, file);
+            ctx->voxels[i * 4 + 1] = READ(uint8_t, file);
+            ctx->voxels[i * 4 + 2] = READ(uint8_t, file);
+            ctx->voxels[i * 4 + 3] = READ(uint8_t, file);
         }
 
     } else {
@@ -75,8 +79,13 @@ void vox_import(const char *path)
 {
     FILE *file;
     char magic[4];
-    int version, r;
-    context_t ctx = {.mesh = goxel()->image->active_layer->mesh};
+    vec3_t pos;
+    int version, r, i, x, y, z, c;
+    mesh_t      *mesh;
+    uvec4b_t color;
+    context_t ctx = {};
+
+    mesh = goxel()->image->active_layer->mesh;
     file = fopen(path, "r");
     r = fread(magic, 1, 4, file);
     (void)r;
@@ -84,7 +93,20 @@ void vox_import(const char *path)
     version = READ(uint32_t, file);
     (void)version;
     read_chunk(file, &ctx);
-    mesh_remove_empty_blocks(ctx.mesh);
+
+    assert(ctx.voxels);
+    for (i = 0; i < ctx.nb; i++) {
+        x = ctx.voxels[i * 4 + 0];
+        y = ctx.voxels[i * 4 + 1];
+        z = ctx.voxels[i * 4 + 2];
+        c = ctx.voxels[i * 4 + 3];
+        pos = vec3(x + 0.5 - ctx.w / 2, y + 0.5 - ctx.h / 2, z + 0.5);
+        color = ctx.palette ? ctx.palette[c] : HEXCOLOR(DEFAULT_PALETTE[c]);
+        mesh_set_at(mesh, &pos, color);
+    }
+    free(ctx.voxels);
+    free(ctx.palette);
+    mesh_remove_empty_blocks(mesh);
 }
 
 
