@@ -107,6 +107,7 @@ void vox_import(const char *path)
     free(ctx.voxels);
     free(ctx.palette);
     mesh_remove_empty_blocks(mesh);
+    goxel_update_meshes(goxel(), true);
 }
 
 
