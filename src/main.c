@@ -150,10 +150,10 @@ int main(int argc, char **argv)
 {
     args_t args = {};
     GLFWwindow *window;
+    GLFWmonitor *monitor;
+    const GLFWvidmode *mode;
     goxel_t goxel;
     inputs_t inputs;
-    int w = 640;
-    int h = 480;
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
 
     g_inputs = &inputs;
@@ -165,8 +165,9 @@ int main(int argc, char **argv)
 
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 2);
-
-    window = glfwCreateWindow(w, h, title, NULL, NULL);
+    monitor = glfwGetPrimaryMonitor();
+    mode = glfwGetVideoMode(monitor);
+    window = glfwCreateWindow(mode->width, mode->height, title, NULL, NULL);
     g_window = window;
     glfwMakeContextCurrent(window);
     glfwSetScrollCallback(window, on_scroll);
