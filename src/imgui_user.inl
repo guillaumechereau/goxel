@@ -56,7 +56,8 @@ static void hue_bitmap(uint8_t *buffer, int w, int h)
 }
 
 namespace ImGui {
-    bool GoxSelectable(const char *name, bool *v, int tex, int icon) {
+    bool GoxSelectable(const char *name, bool *v, int tex, int icon,
+                       const char *tooltip) {
         ImGuiWindow* window = GetCurrentWindow();
         ImGuiState& g = *GImGui;
         const ImGuiStyle& style = g.Style;
@@ -70,6 +71,7 @@ namespace ImGui {
         ImVec2 uv0, uv1; // The position in the icon texture.
         ImVec4 color;
 
+        if (!tooltip) tooltip = name;
         color = style.Colors[ImGuiCol_Button];
         if (*v) color = style.Colors[ImGuiCol_ButtonActive];
         ImGui::PushStyleColor(ImGuiCol_Button, color);
@@ -87,8 +89,8 @@ namespace ImGui {
         ImGui::PopStyleColor();
         if (ret) *v = !*v;
         if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("%s", name);
-            goxel_set_help_text(goxel(), name);
+            ImGui::SetTooltip("%s", tooltip);
+            goxel_set_help_text(goxel(), tooltip);
         }
         ImGui::PopID();
         return ret;

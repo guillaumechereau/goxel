@@ -29,7 +29,8 @@ static inline ImVec4 IMHEXCOLOR(uint32_t v)
 }
 
 namespace ImGui {
-    bool GoxSelectable(const char *name, bool *v, int tex, int icon);
+    bool GoxSelectable(const char *name, bool *v, int tex = 0, int icon = 0,
+                       const char *tooltip = NULL);
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
     bool GoxIsCharPressed(int c);
@@ -374,38 +375,6 @@ static void op_panel(goxel_t *goxel)
     }
 }
 
-static void tools_panel(goxel_t *goxel)
-{
-    const struct {
-        int         tool;
-        const char  *name;
-        int         icon;
-    } values[] = {
-        {TOOL_BRUSH,        "Brush",        ICON_TOOL_BRUSH},
-        {TOOL_CUBE,         "Cube",         ICON_TOOL_CUBE},
-        {TOOL_LASER,        "Laser",        ICON_TOOL_LASER},
-        {TOOL_SET_PLANE,    "Plane",        ICON_TOOL_PLANE},
-        {TOOL_MOVE,         "Move",         ICON_TOOL_MOVE},
-        {TOOL_PICK_COLOR,   "Pick Color",   ICON_TOOL_PICK},
-        {TOOL_SELECTION,    "Selection",    ICON_TOOL_SELECTION},
-        {TOOL_PROCEDURAL,   "Procedural",   ICON_TOOL_PROCEDURAL},
-    };
-    const int nb = ARRAY_SIZE(values);
-    int i;
-    bool v;
-    ImGui::PushID("tools_panel");
-    for (i = 0; i < nb; i++) {
-        v = goxel->tool == values[i].tool;
-        if (ImGui::GoxSelectable(values[i].name, &v, g_tex_icons->tex,
-                                 values[i].icon)) {
-            goxel->tool = values[i].tool;
-            goxel->tool_state = 0;
-        }
-        if ((i + 1) % 4 && i != nb - 1) ImGui::SameLine();
-    }
-    ImGui::PopID();
-}
-
 static void shapes_panel(goxel_t *goxel);
 static void tool_options_panel(goxel_t *goxel)
 {
@@ -532,302 +501,6 @@ static void shapes_panel(goxel_t *goxel)
             ImGui::SameLine();
     }
     ImGui::PopID();
-}
-
-static void toggle_layer_only_visible(goxel_t *goxel, layer_t *layer)
-{
-    layer_t *other;
-    bool others_all_invisible = true;
-    DL_FOREACH(goxel->image->layers, other) {
-        if (other == layer) continue;
-        if (other->visible) {
-            others_all_invisible = false;
-            break;
-        }
-    }
-    DL_FOREACH(goxel->image->layers, other)
-        other->visible = others_all_invisible;
-    layer->visible = true;
-}
-
-static void layers_panel(goxel_t *goxel)
-{
-    layer_t *layer;
-    int i = 0;
-    bool current;
-    ImGui::PushID("layers_planel");
-    DL_FOREACH(goxel->image->layers, layer) {
-        ImGui::PushID(i);
-        ImGui::AlignFirstTextHeightToWidgets();
-        current = goxel->image->active_layer == layer;
-        if (ImGui::Selectable(current ? "*" : " ", &current, 0,
-                              ImVec2(12, 12))) {
-            if (current) {
-                goxel->image->active_layer = layer;
-                goxel_update_meshes(goxel, true);
-            }
-        }
-        ImGui::SameLine();
-        if (ImGui::Selectable(layer->visible ? "v##v" : " ##v",
-                    &layer->visible, 0, ImVec2(12, 12))) {
-            if (ImGui::IsKeyDown(KEY_SHIFT))
-                toggle_layer_only_visible(goxel, layer);
-            goxel_update_meshes(goxel, true);
-        }
-        ImGui::SameLine();
-        ImGui::InputText("##name", layer->name, sizeof(layer->name));
-        i++;
-        ImGui::PopID();
-    }
-    ImGui::GoxAction("img_new_layer", "Add", NULL);
-    ImGui::SameLine();
-    ImGui::GoxAction("img_del_layer", "Del", NULL);
-    ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "^", ARGS(ARG("ofs", +1)));
-    ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "v", ARGS(ARG("ofs", -1)));
-    ImGui::GoxAction("img_duplicate_layer", "Duplicate", NULL);
-    ImGui::SameLine();
-    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", NULL);
-    ImGui::PopID();
-}
-
-static void palette_panel(goxel_t *goxel)
-{
-    palette_t *p = goxel->palette;
-    int i;
-    for (i = 0; i < p->size; i++) {
-        ImGui::PushID(i);
-        ImGui::GoxPaletteEntry(&p->values[i], &goxel->painter.color);
-        if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
-        ImGui::PopID();
-    }
-}
-
-static void render_panel(goxel_t *goxel)
-{
-    int i, current = 0;
-    int nb = render_get_default_settings(0, NULL, NULL);
-    float v;
-    char *name;
-    render_settings_t settings;
-
-    ImGui::Checkbox("Ortho", &goxel->camera.ortho);
-    ImGui::PushID("RenderPanel");
-    for (i = 0; i < nb; i++) {
-        render_get_default_settings(i, &name, &settings);
-        current = memcmp(&goxel->rend.settings, &settings,
-                         sizeof(settings)) == 0;
-        if (ImGui::RadioButton(name, current) && !current)
-            goxel->rend.settings = settings;
-    }
-    v = goxel->rend.settings.shadow;
-    if (ImGui::InputFloat("shadow", &v, 0.1)) {
-        goxel->rend.settings.shadow = clamp(v, 0, 1);
-    }
-    ImGui::PopID();
-}
-
-static void render_advanced_panel(goxel_t *goxel)
-{
-    float v;
-    bool b;
-    ImVec4 c;
-    int i;
-    const struct {
-        uvec4b_t   *color;
-        const char *label;
-    } COLORS[] = {
-        {&goxel->back_color, "Back color"},
-        {&goxel->grid_color, "Grid color"},
-    };
-
-    ImGui::PushID("RenderAdvancedPanel");
-
-    ImGui::Text("Light");
-    i = round(goxel->rend.light.pitch * DR2D);
-    ImGui::InputInt("Pitch", &i);
-    goxel->rend.light.pitch = clamp(i, -90, +90) * DD2R;
-    i = round(goxel->rend.light.yaw * DR2D);
-    ImGui::InputInt("Yaw", &i);
-    while (i < 0) i += 360;
-    goxel->rend.light.yaw = (i % 360) * DD2R;
-    ImGui::Checkbox("Fixed", &goxel->rend.light.fixed);
-
-
-    v = goxel->rend.settings.border_shadow;
-    if (ImGui::InputFloat("bshadow", &v, 0.1)) {
-        v = clamp(v, 0, 1); \
-        goxel->rend.settings.border_shadow = v;
-    }
-#define MAT_FLOAT(name, min, max) \
-    v = goxel->rend.settings.name;  \
-    if (ImGui::InputFloat(#name, &v, 0.1)) { \
-        v = clamp(v, min, max); \
-        goxel->rend.settings.name = v; \
-    }
-
-    MAT_FLOAT(ambient, 0, 1);
-    MAT_FLOAT(diffuse, 0, 1);
-    MAT_FLOAT(specular, 0, 1);
-    MAT_FLOAT(shininess, 0.1, 4);
-    MAT_FLOAT(smoothness, 0, 1);
-
-#undef MAT_FLOAT
-
-    ImGui::CheckboxFlags("Borders",
-            (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS);
-    ImGui::CheckboxFlags("Borders all",
-            (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS_ALL);
-    ImGui::CheckboxFlags("See back",
-            (unsigned int*)&goxel->rend.settings.effects, EFFECT_SEE_BACK);
-    if (ImGui::CheckboxFlags("Marching Cubes",
-            (unsigned int*)&goxel->rend.settings.effects, EFFECT_MARCHING_CUBES)) {
-        goxel->rend.settings.smoothness = 1;
-    }
-
-    ImGui::Text("Other");
-    for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
-        ImGui::PushID(COLORS[i].label);
-        c = uvec4b_to_imvec4(*COLORS[i].color);
-        ImGui::ColorButton(c);
-        if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            ImGui::GoxColorEdit("##edit", COLORS[i].color);
-            if (ImGui::Button("Close"))
-                ImGui::CloseCurrentPopup();
-            ImGui::EndPopup();
-        }
-        ImGui::SameLine();
-        ImGui::Text("%s", COLORS[i].label);
-        ImGui::PopID();
-    }
-    ImGui::PopID();
-
-    b = !goxel->plane_hidden;
-    if (ImGui::Checkbox("Show grid", &b)) goxel->plane_hidden = !b;
-
-    ImGui::Text("Export");
-    i = goxel->image->export_width;
-    if (ImGui::InputInt("width", &i, 1))
-        goxel->image->export_width = clamp(i, 1, 2048);
-    i = goxel->image->export_height;
-    if (ImGui::InputInt("height", &i, 1))
-        goxel->image->export_height = clamp(i, 1, 2048);
-}
-
-static void save_as(goxel_t *goxel)
-{
-    char *path = NULL;
-    bool result;
-    result = dialog_open(DIALOG_FLAG_SAVE, "gox\0*.gox\0", &path);
-    if (!result) return;
-    free(goxel->image->path);
-    goxel->image->path = path;
-    save_to_file(goxel, path);
-}
-
-static void save(goxel_t *goxel)
-{
-    if (!goxel->image->path) {
-        save_as(goxel);
-        return;
-    }
-    save_to_file(goxel, goxel->image->path);
-}
-
-static void import_dicom(goxel_t *goxel)
-{
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN | DIALOG_FLAG_DIR, NULL, &path);
-    if (!result) return;
-    dicom_import(path);
-    free(path);
-}
-
-static void import_qubicle(goxel_t *goxel)
-{
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
-    if (!result) return;
-    qubicle_import(path);
-    free(path);
-}
-
-static void import_vox(goxel_t *goxel)
-{
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
-    if (!result) return;
-    vox_import(path);
-    free(path);
-}
-
-static void import_image_plane(goxel_t *goxel)
-{
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
-    if (!result) return;
-    goxel_import_image_plane(goxel, path);
-    free(path);
-}
-
-static void export_as(goxel_t *goxel, const char *type)
-{
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_SAVE, type, &path);
-    if (!result) return;
-    action_exec2("export_as", ARG("type", type), ARG("path", path));
-    free(path);
-}
-
-static void load(goxel_t *goxel)
-{
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, "gox\0*.gox\0", &path);
-    if (!result) return;
-    load_from_file(goxel, path);
-    free(path);
-}
-
-static void render_profiler_info(void)
-{
-    profiler_block_t *block, *root;
-    int percent, fps;
-    double time_per_frame;
-    double self_time;
-
-    root = profiler_get_blocks();
-    if (!root) return;
-    time_per_frame = root->tot_time / root->count / (1000.0 * 1000.0);
-    fps = 1000.0 / time_per_frame;
-    ImGui::BulletText("%.1fms/frame (%dfps)", time_per_frame, fps);
-    for (block = root; block; block = block->next) {
-        self_time = block->self_time / root->count / (1000.0 * 1000.0);
-        percent = block->self_time * 100 / root->tot_time;
-        if (!percent) continue;
-        ImGui::BulletText("%s: self:%.1fms/frame (%d%%)",
-                block->name, self_time, percent);
-    }
-}
-
-static void shift_alpha_popup(goxel_t *goxel, bool just_open)
-{
-    static int v = 0;
-    static mesh_t *original_mesh;
-    mesh_t *mesh;
-    mesh = goxel->image->active_layer->mesh;
-    if (just_open)
-        original_mesh = mesh_copy(mesh);
-    if (ImGui::InputInt("shift", &v, 1)) {
-        mesh_set(&mesh, original_mesh);
-        mesh_shift_alpha(mesh, v);
-        goxel_update_meshes(goxel, true);
-    }
-    if (ImGui::Button("OK")) {
-        mesh_delete(original_mesh);
-        original_mesh = NULL;
-        ImGui::CloseCurrentPopup();
-    }
 }
 
 static void procedural_panel(goxel_t *goxel)
@@ -969,9 +642,350 @@ static void procedural_panel(goxel_t *goxel)
     }
 }
 
+
+static void tools_panel(goxel_t *goxel)
+{
+    const struct {
+        int         tool;
+        const char  *name;
+        int         icon;
+    } values[] = {
+        {TOOL_BRUSH,        "Brush",        ICON_TOOL_BRUSH},
+        {TOOL_CUBE,         "Cube",         ICON_TOOL_CUBE},
+        {TOOL_LASER,        "Laser",        ICON_TOOL_LASER},
+        {TOOL_SET_PLANE,    "Plane",        ICON_TOOL_PLANE},
+        {TOOL_MOVE,         "Move",         ICON_TOOL_MOVE},
+        {TOOL_PICK_COLOR,   "Pick Color",   ICON_TOOL_PICK},
+        {TOOL_SELECTION,    "Selection",    ICON_TOOL_SELECTION},
+        {TOOL_PROCEDURAL,   "Procedural",   ICON_TOOL_PROCEDURAL},
+    };
+    const int nb = ARRAY_SIZE(values);
+    int i;
+    bool v;
+    ImGui::PushID("tools_panel");
+    for (i = 0; i < nb; i++) {
+        v = goxel->tool == values[i].tool;
+        if (ImGui::GoxSelectable(values[i].name, &v, g_tex_icons->tex,
+                                 values[i].icon)) {
+            goxel->tool = values[i].tool;
+            goxel->tool_state = 0;
+        }
+        if ((i + 1) % 4 && i != nb - 1) ImGui::SameLine();
+    }
+    if (goxel->tool != TOOL_PROCEDURAL) {
+        if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
+            tool_options_panel(goxel);
+    } else {
+        if (ImGui::GoxCollapsingHeader("Procedural Rendering", NULL,
+                                       true, true))
+            procedural_panel(goxel);
+    }
+    ImGui::PopID();
+}
+
+static void toggle_layer_only_visible(goxel_t *goxel, layer_t *layer)
+{
+    layer_t *other;
+    bool others_all_invisible = true;
+    DL_FOREACH(goxel->image->layers, other) {
+        if (other == layer) continue;
+        if (other->visible) {
+            others_all_invisible = false;
+            break;
+        }
+    }
+    DL_FOREACH(goxel->image->layers, other)
+        other->visible = others_all_invisible;
+    layer->visible = true;
+}
+
+static void layers_panel(goxel_t *goxel)
+{
+    layer_t *layer;
+    int i = 0;
+    bool current;
+    ImGui::PushID("layers_planel");
+    DL_FOREACH(goxel->image->layers, layer) {
+        ImGui::PushID(i);
+        ImGui::AlignFirstTextHeightToWidgets();
+        current = goxel->image->active_layer == layer;
+        if (ImGui::Selectable(current ? "*" : " ", &current, 0,
+                              ImVec2(12, 12))) {
+            if (current) {
+                goxel->image->active_layer = layer;
+                goxel_update_meshes(goxel, true);
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Selectable(layer->visible ? "v##v" : " ##v",
+                    &layer->visible, 0, ImVec2(12, 12))) {
+            if (ImGui::IsKeyDown(KEY_SHIFT))
+                toggle_layer_only_visible(goxel, layer);
+            goxel_update_meshes(goxel, true);
+        }
+        ImGui::SameLine();
+        ImGui::InputText("##name", layer->name, sizeof(layer->name));
+        i++;
+        ImGui::PopID();
+    }
+    ImGui::GoxAction("img_new_layer", "Add", NULL);
+    ImGui::SameLine();
+    ImGui::GoxAction("img_del_layer", "Del", NULL);
+    ImGui::SameLine();
+    ImGui::GoxAction("img_move_layer", "^", ARGS(ARG("ofs", +1)));
+    ImGui::SameLine();
+    ImGui::GoxAction("img_move_layer", "v", ARGS(ARG("ofs", -1)));
+    ImGui::GoxAction("img_duplicate_layer", "Duplicate", NULL);
+    ImGui::SameLine();
+    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", NULL);
+    ImGui::PopID();
+}
+
+static void palette_panel(goxel_t *goxel)
+{
+    palette_t *p = goxel->palette;
+    int i;
+    for (i = 0; i < p->size; i++) {
+        ImGui::PushID(i);
+        ImGui::GoxPaletteEntry(&p->values[i], &goxel->painter.color);
+        if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
+        ImGui::PopID();
+    }
+}
+
+static void render_advanced_panel(goxel_t *goxel)
+{
+    float v;
+    bool b;
+    ImVec4 c;
+    int i;
+    const struct {
+        uvec4b_t   *color;
+        const char *label;
+    } COLORS[] = {
+        {&goxel->back_color, "Back color"},
+        {&goxel->grid_color, "Grid color"},
+    };
+
+    ImGui::PushID("RenderAdvancedPanel");
+
+    ImGui::Text("Light");
+    i = round(goxel->rend.light.pitch * DR2D);
+    ImGui::InputInt("Pitch", &i);
+    goxel->rend.light.pitch = clamp(i, -90, +90) * DD2R;
+    i = round(goxel->rend.light.yaw * DR2D);
+    ImGui::InputInt("Yaw", &i);
+    while (i < 0) i += 360;
+    goxel->rend.light.yaw = (i % 360) * DD2R;
+    ImGui::Checkbox("Fixed", &goxel->rend.light.fixed);
+
+
+    v = goxel->rend.settings.border_shadow;
+    if (ImGui::InputFloat("bshadow", &v, 0.1)) {
+        v = clamp(v, 0, 1); \
+        goxel->rend.settings.border_shadow = v;
+    }
+#define MAT_FLOAT(name, min, max) \
+    v = goxel->rend.settings.name;  \
+    if (ImGui::InputFloat(#name, &v, 0.1)) { \
+        v = clamp(v, min, max); \
+        goxel->rend.settings.name = v; \
+    }
+
+    MAT_FLOAT(ambient, 0, 1);
+    MAT_FLOAT(diffuse, 0, 1);
+    MAT_FLOAT(specular, 0, 1);
+    MAT_FLOAT(shininess, 0.1, 4);
+    MAT_FLOAT(smoothness, 0, 1);
+
+#undef MAT_FLOAT
+
+    ImGui::CheckboxFlags("Borders",
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS);
+    ImGui::CheckboxFlags("Borders all",
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS_ALL);
+    ImGui::CheckboxFlags("See back",
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_SEE_BACK);
+    if (ImGui::CheckboxFlags("Marching Cubes",
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_MARCHING_CUBES)) {
+        goxel->rend.settings.smoothness = 1;
+    }
+
+    ImGui::Text("Other");
+    for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
+        ImGui::PushID(COLORS[i].label);
+        c = uvec4b_to_imvec4(*COLORS[i].color);
+        ImGui::ColorButton(c);
+        if (ImGui::BeginPopupContextItem("color context menu", 0)) {
+            ImGui::GoxColorEdit("##edit", COLORS[i].color);
+            if (ImGui::Button("Close"))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+        ImGui::SameLine();
+        ImGui::Text("%s", COLORS[i].label);
+        ImGui::PopID();
+    }
+    ImGui::PopID();
+
+    b = !goxel->plane_hidden;
+    if (ImGui::Checkbox("Show grid", &b)) goxel->plane_hidden = !b;
+
+    ImGui::Text("Export");
+    i = goxel->image->export_width;
+    if (ImGui::InputInt("width", &i, 1))
+        goxel->image->export_width = clamp(i, 1, 2048);
+    i = goxel->image->export_height;
+    if (ImGui::InputInt("height", &i, 1))
+        goxel->image->export_height = clamp(i, 1, 2048);
+}
+
+
+static void render_panel(goxel_t *goxel)
+{
+    int i, current = 0;
+    int nb = render_get_default_settings(0, NULL, NULL);
+    float v;
+    char *name;
+    render_settings_t settings;
+
+    ImGui::Checkbox("Ortho", &goxel->camera.ortho);
+    ImGui::PushID("RenderPanel");
+    for (i = 0; i < nb; i++) {
+        render_get_default_settings(i, &name, &settings);
+        current = memcmp(&goxel->rend.settings, &settings,
+                         sizeof(settings)) == 0;
+        if (ImGui::RadioButton(name, current) && !current)
+            goxel->rend.settings = settings;
+    }
+    v = goxel->rend.settings.shadow;
+    if (ImGui::InputFloat("shadow", &v, 0.1)) {
+        goxel->rend.settings.shadow = clamp(v, 0, 1);
+    }
+    if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
+        render_advanced_panel(goxel);
+    ImGui::PopID();
+}
+
+static void save_as(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result;
+    result = dialog_open(DIALOG_FLAG_SAVE, "gox\0*.gox\0", &path);
+    if (!result) return;
+    free(goxel->image->path);
+    goxel->image->path = path;
+    save_to_file(goxel, path);
+}
+
+static void save(goxel_t *goxel)
+{
+    if (!goxel->image->path) {
+        save_as(goxel);
+        return;
+    }
+    save_to_file(goxel, goxel->image->path);
+}
+
+static void import_dicom(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN | DIALOG_FLAG_DIR, NULL, &path);
+    if (!result) return;
+    dicom_import(path);
+    free(path);
+}
+
+static void import_qubicle(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
+    if (!result) return;
+    qubicle_import(path);
+    free(path);
+}
+
+static void import_vox(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
+    if (!result) return;
+    vox_import(path);
+    free(path);
+}
+
+static void import_image_plane(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
+    if (!result) return;
+    goxel_import_image_plane(goxel, path);
+    free(path);
+}
+
+static void export_as(goxel_t *goxel, const char *type)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_SAVE, type, &path);
+    if (!result) return;
+    action_exec2("export_as", ARG("type", type), ARG("path", path));
+    free(path);
+}
+
+static void load(goxel_t *goxel)
+{
+    char *path = NULL;
+    bool result = dialog_open(DIALOG_FLAG_OPEN, "gox\0*.gox\0", &path);
+    if (!result) return;
+    load_from_file(goxel, path);
+    free(path);
+}
+
+static void render_profiler_info(void)
+{
+    profiler_block_t *block, *root;
+    int percent, fps;
+    double time_per_frame;
+    double self_time;
+
+    root = profiler_get_blocks();
+    if (!root) return;
+    time_per_frame = root->tot_time / root->count / (1000.0 * 1000.0);
+    fps = 1000.0 / time_per_frame;
+    ImGui::BulletText("%.1fms/frame (%dfps)", time_per_frame, fps);
+    for (block = root; block; block = block->next) {
+        self_time = block->self_time / root->count / (1000.0 * 1000.0);
+        percent = block->self_time * 100 / root->tot_time;
+        if (!percent) continue;
+        ImGui::BulletText("%s: self:%.1fms/frame (%d%%)",
+                block->name, self_time, percent);
+    }
+}
+
+static void shift_alpha_popup(goxel_t *goxel, bool just_open)
+{
+    static int v = 0;
+    static mesh_t *original_mesh;
+    mesh_t *mesh;
+    mesh = goxel->image->active_layer->mesh;
+    if (just_open)
+        original_mesh = mesh_copy(mesh);
+    if (ImGui::InputInt("shift", &v, 1)) {
+        mesh_set(&mesh, original_mesh);
+        mesh_shift_alpha(mesh, v);
+        goxel_update_meshes(goxel, true);
+    }
+    if (ImGui::Button("OK")) {
+        mesh_delete(original_mesh);
+        original_mesh = NULL;
+        ImGui::CloseCurrentPopup();
+    }
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     static view_t view;
+    static int current_panel = 0;
     float left_pane_width;
     bool open_shift_alpha = false;
     unsigned int i;
@@ -1056,28 +1070,29 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
     ImGui::PushItemWidth(75);
-    if (ImGui::GoxCollapsingHeader("Tool", NULL, true, true))
-        tools_panel(goxel);
-    ImGui::Separator();
-    if (goxel->tool == TOOL_PROCEDURAL) goto tool_procedural;
-    if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
-        tool_options_panel(goxel);
-    ImGui::Separator();
-    if (ImGui::GoxCollapsingHeader("Layers", NULL, true, false))
-        layers_panel(goxel);
-    ImGui::Separator();
-    if (ImGui::GoxCollapsingHeader("Palette", NULL, true, false))
-        palette_panel(goxel);
-    ImGui::Separator();
-tool_procedural:
-    if (goxel->tool == TOOL_PROCEDURAL) {
-        if (ImGui::GoxCollapsingHeader("Procedural Rendering", NULL, true, true))
-            procedural_panel(goxel);
+
+    const struct {
+        const char *name;
+        const char *tooltip;
+        void (*fn)(goxel_t *goxel);
+    } PANELS[] = {
+        {"T", "Tools", tools_panel},
+        {"P", "Palette", palette_panel},
+        {"L", "layers", layers_panel},
+        {"R", "Render", render_panel}
+    };
+
+    for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
+        bool b = (current_panel == (int)i);
+        if (i) ImGui::SameLine();
+        if (ImGui::GoxSelectable(PANELS[i].name, &b, 0, 0,
+                                 PANELS[i].tooltip))
+            current_panel = i;
     }
-    if (ImGui::GoxCollapsingHeader("Render", NULL, true, false))
-        render_panel(goxel);
-    if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
-        render_advanced_panel(goxel);
+
+    ImGui::Text(PANELS[current_panel].tooltip);
+    PANELS[current_panel].fn(goxel);
+
     ImGui::EndChild();
     ImGui::SameLine();
 
