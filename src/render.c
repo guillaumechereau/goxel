@@ -865,7 +865,7 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
         .shininess = 2.0,
         .smoothness = 0.0,
         .effects = EFFECT_BORDERS,
-        .shadow = 0.5,
+        .shadow = 0.3,
     };
     switch (i) {
         case 0:
@@ -1026,7 +1026,9 @@ static const char *FSHADER =
     "    #ifdef SHADOW                                                  \n"
     "    visibility = 1.0;                                              \n"
     "    vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;         \n"
-    "    shadow_coord.z -= 0.001;                                       \n"
+    "    float bias = 0.005 * tan(acos(clamp(s_dot_n, 0.0, 1.0)));      \n"
+    "    bias = clamp(bias, 0.0, 0.015);                                \n"
+    "    shadow_coord.z -= bias;                                        \n"
     "    PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;               \n"
     "    PS[1] = vec2(+0.94558609, -0.76890725) / 1024.0;               \n"
     "    PS[2] = vec2(-0.09418410, -0.92938870) / 1024.0;               \n"
@@ -1034,7 +1036,7 @@ static const char *FSHADER =
     "    for (i = 0; i < 4; i++)                                        \n"
     "        if (texture2D(u_shadow_tex, v_shadow_coord.xy +            \n"
     "           PS[i]).z < shadow_coord.z) visibility -= 0.2;           \n"
-    "    if (s_dot_n <= 0.0) visibility = 1.0;                          \n"
+    "    if (s_dot_n <= 0.0) visibility = 0.5;                          \n"
     "    gl_FragColor.rgb *= mix(1.0, visibility, u_shadow_k);          \n"
     "    #endif                                                         \n"
     "                                                                   \n"
