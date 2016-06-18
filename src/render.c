@@ -856,8 +856,8 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
 
     *out = (render_settings_t) {
         .border_shadow = 0.4,
-        .ambient = 0.1,
-        .diffuse = 0.9,
+        .ambient = 0.3,
+        .diffuse = 0.5,
         .specular = 0.4,
         .shininess = 2.0,
         .smoothness = 0.0,
