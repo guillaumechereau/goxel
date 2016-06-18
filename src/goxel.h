@@ -184,6 +184,10 @@ static inline vec4_t uvec4b_to_vec4(uvec4b_t v)
     return vec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255.);
 }
 
+// Convertion between radian and degree.
+#define DR2D (180 / M_PI)
+#define DD2R (M_PI / 180)
+
 #define min(a, b) ({ \
       __typeof__ (a) _a = (a); \
       __typeof__ (b) _b = (b); \
@@ -602,7 +606,8 @@ struct renderer
     mat4_t proj_mat;
 
     struct {
-        quat_t direction;
+        float  pitch;
+        float  yaw;
         bool   fixed;       // If set, then the light moves with the view.
         float  intensity;
     } light;

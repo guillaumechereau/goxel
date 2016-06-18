@@ -230,7 +230,8 @@ void goxel_init(goxel_t *goxel)
     };
     goxel->rend = (renderer_t) {
         .light = {
-            .direction = quat_from_axis(M_PI - M_PI / 4, 0.4, 0.5, 1),
+            .pitch = 10 * DD2R,
+            .yaw = 120 * DD2R,
             .fixed = true,
             .intensity = 1.
         },

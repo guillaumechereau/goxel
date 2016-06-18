@@ -456,8 +456,11 @@ static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
 {
     vec4_t light_dir;
     mat4_t m;
-    // XXX: Is that the right way?
-    light_dir = quat_mul_vec4(rend->light.direction, vec4(0, 1, 0, 0));
+
+    m = mat4_identity;
+    mat4_irotate(&m, rend->light.yaw, 0, 0, 1);
+    mat4_irotate(&m, rend->light.pitch, 1, 0, 0);
+    light_dir = mat4_mul_vec(m, vec4(0, 0, 1, 0));
 
     if (rend->light.fixed) {
         m = mat4_identity;

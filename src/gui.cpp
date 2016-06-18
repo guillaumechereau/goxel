@@ -644,6 +644,17 @@ static void render_advanced_panel(goxel_t *goxel)
 
     ImGui::PushID("RenderAdvancedPanel");
 
+    ImGui::Text("Light");
+    i = round(goxel->rend.light.pitch * DR2D);
+    ImGui::InputInt("Pitch", &i);
+    goxel->rend.light.pitch = clamp(i, -90, +90) * DD2R;
+    i = round(goxel->rend.light.yaw * DR2D);
+    ImGui::InputInt("Yaw", &i);
+    while (i < 0) i += 360;
+    goxel->rend.light.yaw = (i % 360) * DD2R;
+    ImGui::Checkbox("Fixed", &goxel->rend.light.fixed);
+
+
     v = goxel->rend.settings.border_shadow;
     if (ImGui::InputFloat("bshadow", &v, 0.1)) {
         v = clamp(v, 0, 1); \
@@ -674,7 +685,6 @@ static void render_advanced_panel(goxel_t *goxel)
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_MARCHING_CUBES)) {
         goxel->rend.settings.smoothness = 1;
     }
-    ImGui::Checkbox("Fixed light", &goxel->rend.light.fixed);
 
     ImGui::Text("Other");
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
