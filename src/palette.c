@@ -18,49 +18,51 @@
 
 #include "goxel.h"
 
-static const uvec4b_t TANGO[] = {
-    IVEC(0,     0,   0, 255),
-    IVEC(252, 233,  79, 255),
-    IVEC(237, 212,   0, 255),
-    IVEC(196, 160,   0, 255),
-    IVEC(138, 226,  52, 255),
-    IVEC(115, 210,  22, 255),
-    IVEC( 78, 154,   6, 255),
-    IVEC(252, 175,  62, 255),
-    IVEC(245, 121,   0, 255),
-    IVEC(206 , 92,   0, 255),
-    IVEC(114, 159, 207, 255),
-    IVEC( 52, 101, 164, 255),
-    IVEC( 32 , 74, 135, 255),
-    IVEC(173, 127, 168, 255),
-    IVEC(117 , 80, 123, 255),
-    IVEC( 92 , 53, 102, 255),
-    IVEC(233, 185, 110, 255),
-    IVEC(193, 125,  17, 255),
-    IVEC(143 , 89,   2, 255),
-    IVEC(239 , 41,  41, 255),
-    IVEC(204  , 0,   0, 255),
-    IVEC(164  , 0,   0, 255),
-    IVEC(238, 238, 236, 255),
-    IVEC(211, 215, 207, 255),
-    IVEC(186, 189, 182, 255),
-    IVEC(136, 138, 133, 255),
-    IVEC( 85 , 87,  83, 255),
-    IVEC( 46 , 52,  54, 255),
-};
+// Parse a gimp palette.
+// XXX: we don't check for buffer overflow!
+static int parse_gpl(const char *data, char *name, int *columns,
+                     palette_entry_t *entries)
+{
+    const char *start, *end;
+    int linen, r, g, b, nb = 0;
+    char entry_name[128];
+    start = data;
 
+    for (linen = 1, start = data; *start; start = end + 1, linen++) {
+        end = strchr(start, '\n');
+        if (!end) end = start + strlen(start);
+
+        if (name && sscanf(start, "Name: %[^\n]", name) == 1) {
+            name = NULL;
+            continue;
+        }
+        if (columns && sscanf(start, "Columns: %d", columns) == 1) {
+            columns = NULL;
+            continue;
+        }
+
+        if (sscanf(start, "%d %d %d %[^\n]", &r, &g, &b, entry_name) >= 3) {
+            if (entries) {
+                strcpy(entries[nb].name, entry_name);
+                entries[nb].color = uvec4b(r, g, b, 255);
+            }
+            nb++;
+        }
+        if (!*end) break;
+    }
+    return nb;
+}
 
 palette_t *palette_get()
 {
+    const char *data;
     static palette_t *ret = NULL;
-    int i;
     if (!ret) {
         ret = calloc(1, sizeof(*ret));
-        ret->size = ARRAY_SIZE(TANGO);
-        ret->values = calloc(ret->size, sizeof(*ret->values));
-        for (i = 0; i < ret->size; i++) {
-            ret->values[i] = TANGO[i];
-        }
+        data = assets_get("data/palettes/inkscape.gpl", NULL);
+        ret->size = parse_gpl(data, ret->name, &ret->columns, NULL);
+        ret->entries = calloc(ret->size, sizeof(*ret->entries));
+        parse_gpl(data, NULL, NULL, ret->entries);
     }
     return ret;
 }

@@ -747,7 +747,7 @@ static void palette_panel(goxel_t *goxel)
     int i;
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
-        ImGui::GoxPaletteEntry(&p->values[i], &goxel->painter.color);
+        ImGui::GoxPaletteEntry(&p->entries[i].color, &goxel->painter.color);
         if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
     }

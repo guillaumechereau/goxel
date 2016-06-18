@@ -26,7 +26,6 @@ import os
 
 File = namedtuple('File', 'path name data size')
 
-
 out = open("src/assets.inl", "w")
 
 print >>out, "// This file is auto generated from tools/create_assets.py\n"
@@ -34,7 +33,7 @@ print >>out, "// This file is auto generated from tools/create_assets.py\n"
 def list_files():
     for root, dirs, files in os.walk("data"):
         for f in files:
-            if any(f.endswith(x) for x in [".png", ".goxcf"]):
+            if any(f.endswith(x) for x in [".png", ".goxcf", ".gpl"]):
                 yield os.path.join(root, f)
 
 TEMPLATE = ("static const uint8_t DATA_{name}[{size}]\n"
@@ -67,7 +66,7 @@ def create_file(f):
     data = open(f).read()
     size = len(data)
     name = f.replace('/', '_').replace('.', '_')
-    if f.endswith(".goxcf"):
+    if f.endswith(".goxcf") or f.endswith('.gpl'):
         size += 1 # So that we NULL terminate the string.
         data = encode_str(data)
     else:

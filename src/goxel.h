@@ -679,9 +679,16 @@ void model3d_render(model3d_t *model3d,
 
 // #### Palette ################
 
+typedef struct {
+    uvec4b_t color;
+    char     name[32];
+} palette_entry_t;
+
 typedef struct palette {
-   int      size;
-   uvec4b_t *values;
+    char    name[128];
+    int     columns;
+    int     size;
+    palette_entry_t *entries;
 } palette_t;
 
 palette_t *palette_get();
