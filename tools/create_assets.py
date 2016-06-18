@@ -46,6 +46,7 @@ def encode_str(data):
         if c == '\n':
             ret += '\\n"\n    "'
             continue
+        if c == '"': c = '\\"'
         ret += c
     ret += '"'
     return ret
@@ -65,7 +66,7 @@ def encode_bin(data):
 def create_file(f):
     data = open(f).read()
     size = len(data)
-    name = f.replace('/', '_').replace('.', '_')
+    name = f.replace('/', '_').replace('.', '_').replace('-', '_')
     if f.endswith(".goxcf") or f.endswith('.gpl'):
         size += 1 # So that we NULL terminate the string.
         data = encode_str(data)
