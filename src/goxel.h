@@ -684,14 +684,17 @@ typedef struct {
     char     name[32];
 } palette_entry_t;
 
+typedef struct palette palette_t;
 typedef struct palette {
+    palette_t *next, *prev; // For the global list of palettes.
     char    name[128];
     int     columns;
     int     size;
     palette_entry_t *entries;
 } palette_t;
 
-palette_t *palette_get();
+// Load all the available palettes into a list.
+void palette_load_all(palette_t **list);
 
 // #############################
 
@@ -890,6 +893,7 @@ typedef struct goxel
     bool       moving;      // Set to true while in a movement operation.
     gox_proc_t proc;        // The current procedural rendering (if any).
 
+    palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
     char       *help_text;  // Seen in the bottom of the screen.
 

@@ -53,16 +53,22 @@ static int parse_gpl(const char *data, char *name, int *columns,
     return nb;
 }
 
-palette_t *palette_get()
+
+static int on_palette(int i, const char *path, void *user)
 {
+    palette_t **list = user;
     const char *data;
-    static palette_t *ret = NULL;
-    if (!ret) {
-        ret = calloc(1, sizeof(*ret));
-        data = assets_get("data/palettes/inkscape.gpl", NULL);
-        ret->size = parse_gpl(data, ret->name, &ret->columns, NULL);
-        ret->entries = calloc(ret->size, sizeof(*ret->entries));
-        parse_gpl(data, NULL, NULL, ret->entries);
-    }
-    return ret;
+    palette_t *pal;
+    pal = calloc(1, sizeof(*pal));
+    data = assets_get(path, NULL);
+    pal->size = parse_gpl(data, pal->name, &pal->columns, NULL);
+    pal->entries = calloc(pal->size, sizeof(*pal->entries));
+    parse_gpl(data, NULL, NULL, pal->entries);
+    DL_APPEND(*list, pal);
+    return 0;
+}
+
+void palette_load_all(palette_t **list)
+{
+    assets_list("data/palettes/", list, on_palette);
 }

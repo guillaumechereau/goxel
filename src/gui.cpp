@@ -743,8 +743,28 @@ static void layers_panel(goxel_t *goxel)
 
 static void palette_panel(goxel_t *goxel)
 {
-    palette_t *p = goxel->palette;
-    int i;
+    palette_t *p;
+    int i, current, nb = 0;
+    const char **names;
+
+    DL_COUNT(goxel->palettes, p, nb);
+    names = (const char**)calloc(nb, sizeof(*names));
+
+    i = 0;
+    DL_FOREACH(goxel->palettes, p) {
+        if (p == goxel->palette) current = i;
+        names[i++] = p->name;
+    }
+    ImGui::PushItemWidth(-1);
+    if (ImGui::Combo("", &current, names, nb)) {
+        goxel->palette = goxel->palettes;
+        for (i = 0; i < current; i++) goxel->palette = goxel->palette->next;
+    }
+    ImGui::PopItemWidth();
+    free(names);
+
+    p = goxel->palette;
+
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
         ImGui::GoxPaletteEntry(&p->entries[i].color, &goxel->painter.color);
@@ -1091,7 +1111,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
 
     ImGui::Text(PANELS[current_panel].tooltip);
+    ImGui::PushID("panel");
     PANELS[current_panel].fn(goxel);
+    ImGui::PopID();
 
     ImGui::EndChild();
     ImGui::SameLine();
