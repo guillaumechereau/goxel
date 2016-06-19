@@ -1067,6 +1067,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 if (ImGui::MenuItem("obj")) export_as(goxel, "obj\0*.obj\0");
                 if (ImGui::MenuItem("ply")) export_as(goxel, "ply\0*.ply\0");
                 if (ImGui::MenuItem("qubicle")) export_as(goxel, "qubicle\0*.qb\0");
+                if (ImGui::MenuItem("vox")) export_as(goxel, "vox\0*.vox\0");
                 if (ImGui::MenuItem("txt")) export_as(goxel, "txt\0*.txt\0");
                 ImGui::EndMenu();
             }

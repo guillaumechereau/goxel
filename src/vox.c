@@ -19,11 +19,14 @@
 // Magica voxel vox format support.
 
 #include "goxel.h"
+#include <limits.h>
 
 static const uint32_t DEFAULT_PALETTE[256];
 
 #define READ(type, file) \
     ({ type v; int r = fread(&v, sizeof(v), 1, file); (void)r; v;})
+#define WRITE(type, v, file) \
+    ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
 typedef struct {
     int         w, h, d;
@@ -109,6 +112,97 @@ void vox_import(const char *path)
     mesh_remove_empty_blocks(mesh);
     goxel_update_meshes(goxel(), true);
 }
+
+static int get_color_index(uvec4b_t v)
+{
+    uvec4b_t c;
+    int i, dist, best = 0, best_dist = 1024;
+    for (i = 0; i < 256; i++) {
+        c = HEXCOLOR(DEFAULT_PALETTE[i]);
+        dist = abs(c.r - v.r) + abs(c.g - v.g) + abs(c.b - v.b);
+        if (dist == 0) return i;
+        if (dist < best_dist) {
+            best_dist = dist;
+            best = i;
+        }
+    }
+    return best;
+}
+
+static void vox_export(const mesh_t *mesh, const char *path)
+{
+    FILE *file;
+    int children_size, nb_vox = 0, x, y, z, vx, vy, vz;
+    int xmin = INT_MAX, ymin = INT_MAX, zmin = INT_MAX;
+    int xmax = INT_MIN, ymax = INT_MIN, zmax = INT_MIN;
+    block_t *block;
+    uvec4b_t v;
+
+    // Iter all the voxels to get the count and the size.
+    MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
+        if (v.a < 127) continue;
+        nb_vox++;
+        vx = round(x + block->pos.x - BLOCK_SIZE / 2);
+        vy = round(y + block->pos.y - BLOCK_SIZE / 2);
+        vz = round(z + block->pos.z - BLOCK_SIZE / 2);
+        xmin = min(xmin, vx);
+        ymin = min(ymin, vy);
+        zmin = min(zmin, vz);
+        xmax = max(xmax, vx);
+        ymax = max(ymax, vy);
+        zmax = max(zmax, vz);
+    }
+    children_size = 12 + 4 * 3 +     // SIZE chunk
+                    12 + 4 * nb_vox; // XYZI chunk
+
+    file = fopen(path, "wb");
+    fprintf(file, "VOX ");
+    WRITE(uint32_t, 150, file);     // Version
+    fprintf(file, "MAIN");
+    WRITE(uint32_t, 0, file);       // Main chunck size.
+    WRITE(uint32_t, children_size, file);
+
+    fprintf(file, "XYZI");
+    WRITE(uint32_t, 4 * nb_vox, file);
+    WRITE(uint32_t, 0, file);
+    WRITE(uint32_t, nb_vox, file);
+    MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
+        if (v.a < 127) continue;
+        vx = round(x + block->pos.x - BLOCK_SIZE / 2) - xmin;
+        vy = round(y + block->pos.y - BLOCK_SIZE / 2) - ymin;
+        vz = round(z + block->pos.z - BLOCK_SIZE / 2) - zmin;
+        assert(vx >= 0 && vx < 255);
+        assert(vy >= 0 && vy < 255);
+        assert(vz >= 0 && vz < 255);
+
+        WRITE(uint8_t, vx, file);
+        WRITE(uint8_t, vy, file);
+        WRITE(uint8_t, vz, file);
+        WRITE(uint8_t, get_color_index(v), file);
+    }
+
+    fprintf(file, "SIZE");
+    WRITE(uint32_t, 4 * 3, file);
+    WRITE(uint32_t, 0, file);
+    WRITE(uint32_t, xmax - xmin, file);
+    WRITE(uint32_t, ymax - ymin, file);
+    WRITE(uint32_t, zmax - zmin, file);
+
+    fclose(file);
+}
+
+static void export_as_vox(goxel_t *goxel, const char *path)
+{
+    vox_export(goxel->layers_mesh, path);
+}
+
+ACTION_REGISTER(export_as_vox,
+    .help = "Save the image as a vox 3d file",
+    .func = export_as_vox,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("path", TYPE_FILE_PATH)),
+    .flags = ACTION_NO_CHANGE,
+)
 
 
 static const uint32_t DEFAULT_PALETTE[256] = {

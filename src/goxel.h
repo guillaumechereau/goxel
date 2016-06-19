@@ -570,6 +570,20 @@ void mesh_shift_alpha(mesh_t *mesh, int v);
 
 #define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
 
+// Convenience macro to iter all the voxels of a mesh.
+// Given:
+//    m         The mesh pointer.
+//    b         A block pointer.
+//    x, y, z   integer, set to the position of the voxel inside the block.
+//    v         uvec4b_t, set to the color of the voxel.
+#define MESH_ITER_VOXELS(m, b, x, y, z, v) \
+    MESH_ITER_BLOCKS(m, b) \
+        for (z = 1; z < BLOCK_SIZE - 1; z++) \
+        for (y = 1; y < BLOCK_SIZE - 1; y++) \
+        for (x = 1; x < BLOCK_SIZE - 1; x++) \
+            if ((v = block->data->voxels[ \
+                    x + y * BLOCK_SIZE + z * BLOCK_SIZE * BLOCK_SIZE]).a)
+
 // #############################
 
 
