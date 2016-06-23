@@ -427,6 +427,9 @@ static void tool_options_panel(goxel_t *goxel)
             ImGui::EndPopup();
         }
     }
+    if (goxel->tool == TOOL_CUBE) {
+        ImGui::GoxAction("fill_selection", "Fill selection", NULL);
+    }
     if (goxel->tool == TOOL_SET_PLANE) {
         i = 0;
         if (ImGui::InputInt("Move", &i))

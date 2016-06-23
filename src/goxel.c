@@ -625,3 +625,17 @@ ACTION_REGISTER(clear_selection,
     .func = clear_selection,
     .sig = SIG(TYPE_LAYER, ARG("goxel", TYPE_GOXEL)),
 )
+
+static void fill_selection(goxel_t *goxel, layer_t *layer)
+{
+    if (box_is_null(goxel->selection)) return;
+    mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
+    goxel_update_meshes(goxel, true);
+}
+
+ACTION_REGISTER(fill_selection,
+    .help = "Fill the selection with the current paint settings",
+    .func = fill_selection,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("layer", TYPE_LAYER)),
+)
