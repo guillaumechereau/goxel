@@ -144,3 +144,4 @@ static inline vec3b_t vec3b_mix(vec3b_t a, vec3b_t b, float t)
 }
 
 static const vec3b_t vec3b_zero = IVEC(0, 0, 0);
+static const uvec4b_t uvec4b_zero = IVEC(0, 0, 0, 0);
