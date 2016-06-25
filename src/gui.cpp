@@ -442,25 +442,26 @@ static void tool_options_panel(goxel_t *goxel)
             mat4_irotate(&goxel->plane.mat, i * M_PI / 2, 0, 1, 0);
     }
     if (goxel->tool == TOOL_MOVE) {
+        ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
         mat = mat4_identity;
         layer = goxel->image->active_layer;
         i = 0;
-        if (ImGui::InputInt("Move X", &i))
+        if (ImGui::InputInt("Move X", &i, 1, -1, flags))
             mat4_itranslate(&mat, i, 0, 0);
         i = 0;
-        if (ImGui::InputInt("Move Y", &i))
+        if (ImGui::InputInt("Move Y", &i, 1, -1, flags))
             mat4_itranslate(&mat, 0, i, 0);
         i = 0;
-        if (ImGui::InputInt("Move Z", &i))
+        if (ImGui::InputInt("Move Z", &i, 1, -1, flags))
             mat4_itranslate(&mat, 0, 0, i);
         i = 0;
-        if (ImGui::InputInt("Rot X", &i))
+        if (ImGui::InputInt("Rot X", &i, 1, -1, flags))
             mat4_irotate(&mat, i * M_PI / 2, 1, 0, 0);
         i = 0;
-        if (ImGui::InputInt("Rot Y", &i))
+        if (ImGui::InputInt("Rot Y", &i, 1, -1, flags))
             mat4_irotate(&mat, i * M_PI / 2, 0, 1, 0);
         i = 0;
-        if (ImGui::InputInt("Rot Z", &i))
+        if (ImGui::InputInt("Rot Z", &i, 1, -1, flags))
             mat4_irotate(&mat, i * M_PI / 2, 0, 0, 1);
         if (layer->image && ImGui::InputInt("Scale", &i)) {
             v = pow(2, i);
