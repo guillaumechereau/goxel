@@ -113,14 +113,17 @@ void vox_import(const char *path)
     goxel_update_meshes(goxel(), true);
 }
 
-static int get_color_index(uvec4b_t v)
+static int get_color_index(uvec4b_t v, const uvec4b_t *palette, bool exact)
 {
     uvec4b_t c;
-    int i, dist, best = 0, best_dist = 1024;
+    int i, dist, best = -1, best_dist = 1024;
     for (i = 0; i < 256; i++) {
-        c = HEXCOLOR(DEFAULT_PALETTE[i]);
-        dist = abs(c.r - v.r) + abs(c.g - v.g) + abs(c.b - v.b);
+        c = palette[i];
+        dist = abs((int)c.r - (int)v.r) +
+               abs((int)c.g - (int)v.g) +
+               abs((int)c.b - (int)v.b);
         if (dist == 0) return i;
+        if (exact) continue;
         if (dist < best_dist) {
             best_dist = dist;
             best = i;
@@ -132,15 +135,24 @@ static int get_color_index(uvec4b_t v)
 static void vox_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
-    int children_size, nb_vox = 0, x, y, z, vx, vy, vz;
+    int children_size, nb_vox = 0, i, x, y, z, vx, vy, vz;
     int xmin = INT_MAX, ymin = INT_MAX, zmin = INT_MAX;
     int xmax = INT_MIN, ymax = INT_MIN, zmax = INT_MIN;
+    uvec4b_t *palette;
+    bool use_default_palette = true;
     block_t *block;
     uvec4b_t v;
+
+    palette = calloc(256, sizeof(*palette));
+    for (i = 0; i < 256; i++)
+        palette[i] = HEXCOLOR(DEFAULT_PALETTE[i]);
 
     // Iter all the voxels to get the count and the size.
     MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
         if (v.a < 127) continue;
+        v.a = 255;
+        use_default_palette = use_default_palette &&
+                            get_color_index(v, palette, true) != -1;
         nb_vox++;
         vx = round(x + block->pos.x - BLOCK_SIZE / 2);
         vy = round(y + block->pos.y - BLOCK_SIZE / 2);
@@ -152,8 +164,12 @@ static void vox_export(const mesh_t *mesh, const char *path)
         ymax = max(ymax, vy);
         zmax = max(zmax, vz);
     }
-    children_size = 12 + 4 * 3 +     // SIZE chunk
-                    12 + 4 * nb_vox; // XYZI chunk
+    if (!use_default_palette)
+        quantization_gen_palette(mesh, 256, palette);
+
+    children_size = 12 + 4 * 3 +      // SIZE chunk
+                    12 + 4 * nb_vox + // XYZI chunk
+                    (use_default_palette ? 0 : (12 + 4 * 256)); // RGBA chunk.
 
     file = fopen(path, "wb");
     fprintf(file, "VOX ");
@@ -161,6 +177,14 @@ static void vox_export(const mesh_t *mesh, const char *path)
     fprintf(file, "MAIN");
     WRITE(uint32_t, 0, file);       // Main chunck size.
     WRITE(uint32_t, children_size, file);
+
+    if (!use_default_palette) {
+        fprintf(file, "RGBA");
+        WRITE(uint32_t, 4 * 256, file);
+        WRITE(uint32_t, 0, file);
+        for (i = 0; i < 256; i++)
+            WRITE(uint32_t, palette[i].uint32, file);
+    }
 
     fprintf(file, "XYZI");
     WRITE(uint32_t, 4 * nb_vox, file);
@@ -178,7 +202,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
         WRITE(uint8_t, vx, file);
         WRITE(uint8_t, vy, file);
         WRITE(uint8_t, vz, file);
-        WRITE(uint8_t, get_color_index(v), file);
+        WRITE(uint8_t, get_color_index(v, palette, false), file);
     }
 
     fprintf(file, "SIZE");
@@ -189,6 +213,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, zmax - zmin, file);
 
     fclose(file);
+    free(palette);
 }
 
 static void export_as_vox(goxel_t *goxel, const char *path)
