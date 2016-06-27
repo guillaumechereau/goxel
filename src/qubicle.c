@@ -65,6 +65,7 @@ void qubicle_import(const char *path)
             for (index = 0; index < w * h * d; index++) {
                 v = READ(uint32_t, file);
                 cube[index].uint32 = v;
+                cube[index].a = cube[index].a ? 255 : 0;
             }
         } else {
             for (z = 0; z < d; z++) {
