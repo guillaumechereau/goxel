@@ -390,6 +390,8 @@ static void tool_options_panel(goxel_t *goxel)
             i = clamp(i, 1, 128);
             goxel->tool_radius = i / 2.0;
         }
+    }
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_LASER, TOOL_CUBE)) {
         s = goxel->painter.smoothness;
         if (ImGui::Checkbox("Antialiased", &s)) {
             goxel->painter.smoothness = s ? 1 : 0;
