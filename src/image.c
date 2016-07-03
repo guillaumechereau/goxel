@@ -18,17 +18,35 @@
 
 #include "goxel.h"
 
-static void print_history(const image_t *img)
-{
-    if (!DEBUG) return;
-    const image_t *im;
-    int i = 0;
-    LOG_V("hist");
-    DL_FOREACH2(img->history, im, history_next) {
-        LOG_V("%s %d (%p)", im == img->history_current ? "*" : " ", i, im);
-        i++;
-    }
-}
+/* History
+    the images undo history is stored in a linked list.  Every time we call
+    image_history_push, we add the current image snapshot in the list.
+
+    For example, if we did three operations, A, B, C, and now the image is
+    in the D state, the history list looks like this:
+
+    img->history     img->history_current -> NULL      img
+        |                                               |
+        v                                               v
+    +--------+       +--------+       +--------+     +--------+
+    |        |       |        |       |        |     |        |
+    |   A    |------>|   B    |------>|   C    |     |   D    |
+    |        |       |        |       |        |     |        |
+    +--------+       +--------+       +--------+     +--------+
+
+    After an undo, we get:
+
+    img->history                        img->history_current
+        |                               img
+        v                                v
+    +--------+       +--------+       +--------+     +--------+
+    |        |       |        |       |        |     |        |
+    |   A    |------>|   B    |------>|   C    |---->|   D    |
+    |        |       |        |       |        |     |        |
+    +--------+       +--------+       +--------+     +--------+
+
+
+*/
 
 static layer_t *layer_new(const char *name)
 {
@@ -70,7 +88,6 @@ image_t *image_new(void)
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
-    image_history_push(img);
     return img;
 }
 
@@ -184,33 +201,46 @@ void image_set(image_t *img, image_t *other)
 void image_history_push(image_t *img)
 {
     image_t *snap = image_copy(img);
-    if (!img->history_current) img->history_current = img->history;
+    image_t *tmp;
+
     // Discard previous undo.
-    // XXX: also need to delete the images!
-    while (img->history != img->history_current)
-        DL_DELETE2(img->history, img->history, history_prev, history_next);
-    DL_PREPEND2(img->history, snap, history_prev, history_next);
-    img->history_current = img->history;
-    print_history(img);
+    // XXX: also need to delete the images!!
+    while (img->history_current) {
+        tmp = img->history_current;
+        img->history_current = tmp->history_next;
+        DL_DELETE2(img->history, tmp, history_prev, history_next);
+    }
+
+    DL_APPEND2(img->history, snap, history_prev, history_next);
+    img->history_current = NULL;
 }
 
 void image_undo(image_t *img)
 {
-    if (!img->history_current->history_next) return;
-    img->history_current = img->history_current->history_next;
-    image_set(img, img->history_current);
+    if (img->history_current == img->history) {
+        LOG_D("No more undo");
+        return;
+    }
+    if (!img->history_current) {
+        image_t *snap = image_copy(img);
+        DL_APPEND2(img->history, snap, history_prev, history_next);
+        img->history_current = img->history->history_prev;
+    }
+
+    image_set(img, img->history_current->history_prev);
+    img->history_current = img->history_current->history_prev;
     goxel_update_meshes(goxel(), true);
-    print_history(img);
 }
 
 void image_redo(image_t *img)
 {
-    image_t *cur = img->history_current;
-    if (!cur || cur == img->history) return;
-    img->history_current = cur->history_prev;
+    if (!img->history_current || !img->history_current->history_next) {
+        LOG_D("No more redo");
+        return;
+    }
+    img->history_current = img->history_current->history_next;
     image_set(img, img->history_current);
     goxel_update_meshes(goxel(), true);
-    print_history(img);
 }
 
 ACTION_REGISTER(img_new_layer,

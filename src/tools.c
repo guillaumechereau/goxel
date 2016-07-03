@@ -121,6 +121,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (down) {
             state = STATE_PAINT;
             goxel->painting = true;
+            image_history_push(goxel->image);
         }
     }
     if (state == STATE_PAINT) {
@@ -154,7 +155,6 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             mesh_op(mesh, &goxel->painter, &box);
             goxel_update_meshes(goxel, true);
             goxel->painting = false;
-            image_history_push(goxel->image);
             return STATE_WAIT_UP;
         }
     }
@@ -343,6 +343,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             state = STATE_PAINT;
             goxel->tool_last_op.op = 0;
             goxel->painting = true;
+            image_history_push(goxel->image);
         }
     }
     if (state == STATE_PAINT) {
@@ -350,7 +351,6 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (check_can_skip(goxel, pos, down, goxel->painter.op))
             return state;
         if (released) {
-            image_history_push(goxel->image);
             goxel->painting = false;
             goxel->camera.target = pos;
             if (inputs->keys[KEY_SHIFT])
@@ -492,6 +492,7 @@ static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
     if (state == STATE_SNAPED) {
         if (!snaped) return STATE_IDLE;
         if (down) {
+            image_history_push(goxel->image);
             proc_start(proc, &box);
             state = STATE_PAINT;
         }

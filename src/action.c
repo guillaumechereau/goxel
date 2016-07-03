@@ -79,6 +79,11 @@ void *action_exec(const action_t *action, const arg_t *args)
     nb_args = action->sig.nb_args;
     assert(nb_args <= ARRAY_SIZE(vals));
     is_void = action->sig.ret == TYPE_VOID;
+
+    if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
+        image_history_push(goxel()->image);
+    }
+
     reentry++;
 
     for (i = 0; i < nb_args; i++)
@@ -107,10 +112,8 @@ void *action_exec(const action_t *action, const arg_t *args)
     else
         LOG_E("Cannot handle signature for action %s", action->id);
 
-
     reentry--;
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
-        image_history_push(goxel()->image);
         goxel_update_meshes(goxel(), true);
     }
     return ret;

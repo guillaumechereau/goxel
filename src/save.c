@@ -296,6 +296,8 @@ void load_from_file(goxel_t *goxel, const char *path)
     char dict_key[256];
     char dict_value[256];
 
+    image_history_push(goxel->image);
+
     LOG_I("Load from file %s", path);
     in = gzopen(path, "rb");
 
@@ -370,6 +372,5 @@ void load_from_file(goxel_t *goxel, const char *path)
 
     goxel->image->path = strdup(path);
     goxel_update_meshes(goxel, true);
-    image_history_push(goxel->image);
     gzclose(in);
 }

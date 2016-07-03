@@ -468,10 +468,10 @@ static void tool_options_panel(goxel_t *goxel)
             mat4_iscale(&mat, v, v, v);
         }
         if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
+            image_history_push(goxel->image);
             mesh_move(layer->mesh, &mat);
             layer->mat = mat4_mul(mat, layer->mat);
             goxel_update_meshes(goxel, true);
-            image_history_push(goxel->image);
         }
     }
     if (goxel->tool == TOOL_SELECTION) {

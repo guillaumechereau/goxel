@@ -580,11 +580,11 @@ void goxel_redo(goxel_t *goxel)
 void goxel_import_image_plane(goxel_t *goxel, const char *path)
 {
     layer_t *layer;
+    image_history_push(goxel->image);
     layer = image_add_layer(goxel->image);
     sprintf(layer->name, "img");
     layer->image = texture_new_image(path);
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
-    image_history_push(goxel->image);
 }
 
 static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
