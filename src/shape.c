@@ -25,10 +25,12 @@ shape_t shape_cylinder;
 static float sphere_func(const vec3_t *p, const vec3_t *s, float smoothness)
 {
     float d = vec3_norm(*p);
-    vec3_t a;
+    float r;
     if (p->x == 0 && p->y == 0 && p->z == 0) return max3(s->x, s->y, s->z);
-    a = vec3(s->x * p->x / d, s->y * p->y / d, s->z * p->z / d);
-    return vec3_norm(a) - d;
+    r = s->x * s->y * s->z / vec3_norm(vec3(s->y * s->z * p->x / d,
+                                            s->x * s->z * p->y / d,
+                                            s->x * s->y * p->z / d));
+    return r - d;
 }
 
 static float cube_func(const vec3_t *p, const vec3_t *s, float sm)
