@@ -460,6 +460,47 @@ static int tool_dummy_iter(goxel_t *goxel, const inputs_t *inputs,
     return 0;
 }
 
+static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
+                                int state, const vec2_t *view_size,
+                                bool inside)
+{
+    int snaped = 0;
+    vec3_t pos, normal;
+    box_t box;
+    gox_proc_t *proc = &goxel->proc;
+    const bool down = inputs->mouse_down[0];
+
+    // XXX: duplicate code with tool_brush_iter.
+    if (inside)
+        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
+                                 &pos, &normal);
+    if (snaped) {
+        if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
+                !goxel->snap_offset)
+            vec3_iadd(&pos, normal);
+        if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)
+            vec3_iaddk(&pos, normal, goxel->snap_offset * goxel->tool_radius);
+        pos.x = round(pos.x - 0.5) + 0.5;
+        pos.y = round(pos.y - 0.5) + 0.5;
+        pos.z = round(pos.z - 0.5) + 0.5;
+        box = bbox_from_extents(pos, 0.5, 0.5, 0.5);
+        render_box(&goxel->rend, &box, false, NULL, false);
+    }
+    if (state == STATE_IDLE) {
+        if (snaped) state = STATE_SNAPED;
+    }
+    if (state == STATE_SNAPED) {
+        if (!snaped) return STATE_IDLE;
+        if (down) {
+            proc_start(proc, &box);
+            state = STATE_PAINT;
+        }
+    }
+    if (state == STATE_PAINT) {
+        if (!down) state = STATE_IDLE;
+    }
+    return state;
+}
 
 int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
               const vec2_t *view_size, bool inside)
@@ -477,7 +518,7 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
         [TOOL_MOVE]         = tool_dummy_iter,
         [TOOL_PICK_COLOR]   = tool_pick_color_iter,
         [TOOL_SELECTION]    = tool_selection_iter,
-        [TOOL_PROCEDURAL]   = tool_dummy_iter,
+        [TOOL_PROCEDURAL]   = tool_procedural_iter,
     };
 
     assert(tool >= 0 && tool < ARRAY_SIZE(FUNCS));

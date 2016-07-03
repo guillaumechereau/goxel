@@ -558,7 +558,7 @@ int proc_parse(const char *txt, gox_proc_t *proc)
     return 0;
 }
 
-int proc_start(gox_proc_t *proc)
+int proc_start(gox_proc_t *proc, const box_t *box)
 {
     // Reinit the context to a single ctx_t pointing at the main shape.
     ctx_t *ctx;
@@ -567,7 +567,7 @@ int proc_start(gox_proc_t *proc)
     proc->ctxs = NULL;
     proc->frame = 0;
     ctx = calloc(1, sizeof(*ctx));
-    ctx->box = bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
+    ctx->box = box ? *box : bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
     ctx->color = vec4(0, 0, 1, 1);
     ctx->op = OP_ADD;
     ctx->prog = get_rule(proc->prog, "main", ctx);

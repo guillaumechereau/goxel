@@ -567,7 +567,7 @@ static void procedural_panel(goxel_t *goxel)
                 (auto_run && proc->state == PROC_READY &&
                  timer && timer++ >= 16)) {
             mesh_clear(goxel->image->active_layer->mesh);
-            proc_start(proc);
+            proc_start(proc, NULL);
             timer = 0;
         }
         ImGui::PopStyleColor();
@@ -581,7 +581,7 @@ static void procedural_panel(goxel_t *goxel)
         char *dir_path;
         if (dialog_open(DIALOG_FLAG_SAVE | DIALOG_FLAG_DIR, NULL, &dir_path)) {
             mesh_clear(goxel->image->active_layer->mesh);
-            proc_start(proc);
+            proc_start(proc, NULL);
             gui->prog_export_animation = true;
             sprintf(gui->prog_export_animation_path, "Path: %s", dir_path);
             free(dir_path);
