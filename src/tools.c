@@ -116,7 +116,6 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
         mesh_set(&mesh, goxel->tool_origin_mesh);
-        mesh_op(mesh, &goxel->painter, &box);
         render_box(&goxel->rend, &box, false, &box_color, false);
         if (down) {
             state = STATE_PAINT;
