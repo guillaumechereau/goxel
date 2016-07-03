@@ -493,6 +493,7 @@ static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
         if (!snaped) return STATE_IDLE;
         if (down) {
             image_history_push(goxel->image);
+            proc_stop(proc);
             proc_start(proc, &box);
             state = STATE_PAINT;
         }
