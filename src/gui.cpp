@@ -283,7 +283,6 @@ static void init_ImGui()
     ImGuiStyle& style = ImGui::GetStyle();
     style.FrameRounding = 0;
     style.WindowRounding = 0;
-    style.WindowFillAlphaDefault = 1.0;
     style.ItemSpacing = ImVec2(4, 4);
     style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x202020FF);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];

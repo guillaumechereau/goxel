@@ -59,10 +59,9 @@ namespace ImGui {
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
                        const char *tooltip) {
         ImGuiWindow* window = GetCurrentWindow();
-        ImGuiState& g = *GImGui;
+        ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
         const ImVec2 size(32, 32);
-        const ImVec4 tint_col = ImVec4(1,1,1,1);
 
         const ImVec2 padding = ImVec2(0, 0);//style.FramePadding;
         const ImRect image_bb(window->DC.CursorPos + padding,
@@ -81,8 +80,7 @@ namespace ImGui {
             uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
             window->DrawList->AddImage((void*)tex, image_bb.Min, image_bb.Max,
-                                       uv0, uv1,
-                                       window->Color(tint_col));
+                                       uv0, uv1, 0xFFFFFFFF);
         } else {
             ret = ImGui::Button(name, size);
         }
@@ -213,7 +211,7 @@ namespace ImGui {
 
     bool GoxIsCharPressed(int c)
     {
-        ImGuiState& g = *GImGui;
+        ImGuiContext& g = *GImGui;
         return g.IO.InputCharacters[0] == c;
     }
 
