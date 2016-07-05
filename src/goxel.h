@@ -944,6 +944,8 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
 void goxel_update_meshes(goxel_t *goxel, bool pick);
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
+
+// XXX: use actions for all that!
 void goxel_undo(goxel_t *goxel);
 void goxel_redo(goxel_t *goxel);
 void goxel_import_image_plane(goxel_t *goxel, const char *path);

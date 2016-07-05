@@ -80,6 +80,9 @@ void *action_exec(const action_t *action, const arg_t *args)
     assert(nb_args <= ARRAY_SIZE(vals));
     is_void = action->sig.ret == TYPE_VOID;
 
+    // For the moment all action cancel the current tool, for simplicity.
+    tool_cancel(goxel(), goxel()->tool, goxel()->tool_state);
+
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
         image_history_push(goxel()->image);
     }

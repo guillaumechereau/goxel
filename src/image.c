@@ -243,6 +243,17 @@ void image_redo(image_t *img)
     goxel_update_meshes(goxel(), true);
 }
 
+void image_clear_layer(layer_t *layer)
+{
+    mesh_clear(layer->mesh);
+}
+
+ACTION_REGISTER(layer_clear,
+    .help = "Clear the current layer",
+    .func = image_clear_layer,
+    .sig = SIG(TYPE_VOID, ARG("layer", TYPE_LAYER)),
+)
+
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
     .func = image_add_layer,

@@ -1079,6 +1079,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::MenuItem("Clear", "Delete"))
+                action_exec2("layer_clear");
             if (ImGui::MenuItem("Undo", "Ctrl+Z")) goxel_undo(goxel);
             if (ImGui::MenuItem("Redo", "Ctrl+Y")) goxel_redo(goxel);
             if (ImGui::MenuItem("Shift Alpha"))
@@ -1177,6 +1179,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     // Handle the shortcuts.  XXX: this should be done better.
     if (ImGui::GoxIsCharPressed('#'))
         goxel->plane_hidden = !goxel->plane_hidden;
+    if (ImGui::IsKeyPressed(KEY_DELETE, false))
+        action_exec2("layer_clear");
     if (ImGui::IsKeyPressed(' ', false) && goxel->painter.op == OP_ADD)
         goxel->painter.op = OP_SUB;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
@@ -1205,7 +1209,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
             ImGui::GoxIsCharPressed(25))
         goxel_redo(goxel);
-
 }
 
 void gui_render(void)
