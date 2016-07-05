@@ -469,6 +469,8 @@ static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
     gox_proc_t *proc = &goxel->proc;
     const bool down = inputs->mouse_down[0];
 
+    if (proc->state == PROC_PARSE_ERROR) return 0;
+
     // XXX: duplicate code with tool_brush_iter.
     if (inside)
         snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
