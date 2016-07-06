@@ -45,7 +45,7 @@ static texture_t *g_tex_icons = NULL;
 // All the icons positions inside icon.png (as Y*8 + X).
 enum {
     ICON_TOOL_BRUSH = 0,
-    ICON_TOOL_CUBE = 1,
+    ICON_TOOL_SHAPE = 1,
     ICON_TOOL_LASER = 2,
     ICON_TOOL_PLANE = 3,
     ICON_TOOL_MOVE = 4,
@@ -391,18 +391,18 @@ static void tool_options_panel(goxel_t *goxel)
             goxel->tool_radius = i / 2.0;
         }
     }
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_LASER, TOOL_CUBE)) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_LASER, TOOL_SHAPE)) {
         s = goxel->painter.smoothness;
         if (ImGui::Checkbox("Antialiased", &s)) {
             goxel->painter.smoothness = s ? 1 : 0;
         }
     }
-    if (goxel->tool == TOOL_CUBE) {
-        ImGui::Checkbox("Two steps", &goxel->tool_cube_two_steps);
+    if (goxel->tool == TOOL_SHAPE) {
+        ImGui::Checkbox("Two steps", &goxel->tool_shape_two_steps);
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Second click set the height");
     }
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_CUBE)) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         ImGui::Text("Snap on");
         for (i = 0; i < 2; i++) {
             s = goxel->snap & (1 << i);
@@ -418,11 +418,11 @@ static void tool_options_panel(goxel_t *goxel)
         if (ImGui::InputFloat("Snap offset", &v, 0.1))
             goxel->snap_offset = clamp(v, -1, +1);
     }
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_CUBE)) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         op_panel(goxel);
         shapes_panel(goxel);
     }
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_CUBE, TOOL_PICK_COLOR)) {
+    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE, TOOL_PICK_COLOR)) {
         ImGui::Text("Color");
         color = uvec4b_to_imvec4(goxel->painter.color);
         ImGui::ColorButton(color);
@@ -433,7 +433,7 @@ static void tool_options_panel(goxel_t *goxel)
             ImGui::EndPopup();
         }
     }
-    if (goxel->tool == TOOL_CUBE) {
+    if (goxel->tool == TOOL_SHAPE) {
         ImGui::GoxAction("fill_selection", "Fill selection", NULL);
     }
     if (goxel->tool == TOOL_SET_PLANE) {
@@ -661,7 +661,7 @@ static void tools_panel(goxel_t *goxel)
         int         icon;
     } values[] = {
         {TOOL_BRUSH,        "Brush",        ICON_TOOL_BRUSH},
-        {TOOL_CUBE,         "Cube",         ICON_TOOL_CUBE},
+        {TOOL_SHAPE,        "Shape",        ICON_TOOL_SHAPE},
         {TOOL_LASER,        "Laser",        ICON_TOOL_LASER},
         {TOOL_SET_PLANE,    "Plane",        ICON_TOOL_PLANE},
         {TOOL_MOVE,         "Move",         ICON_TOOL_MOVE},

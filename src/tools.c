@@ -79,7 +79,7 @@ static bool check_can_skip(goxel_t *goxel, vec3_t pos, bool pressed, int op)
     return false;
 }
 
-static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
+static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                           const vec2_t *view_size, bool inside)
 {
     const bool down = inputs->mouse_down[0];
@@ -135,7 +135,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             state = STATE_PAINT2;
             goxel->tool_plane = plane_from_normal(pos, goxel->plane.u);
 
-            if (!goxel->tool_cube_two_steps) {
+            if (!goxel->tool_shape_two_steps) {
                 goxel_update_meshes(goxel, true);
                 goxel->painting = false;
                 state = STATE_IDLE;
@@ -170,7 +170,7 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     return state;
 }
 
-// XXX: this is very close to tool_cube_iter.
+// XXX: this is very close to tool_shape_iter.
 static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
                                int state, const vec2_t *view_size,
                                bool inside)
@@ -520,7 +520,7 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
                                int state, const vec2_t *view_size,
                                bool inside);
     static const tool_func_t FUNCS[] = {
-        [TOOL_CUBE]         = tool_cube_iter,
+        [TOOL_SHAPE]        = tool_shape_iter,
         [TOOL_BRUSH]        = tool_brush_iter,
         [TOOL_LASER]        = tool_laser_iter,
         [TOOL_SET_PLANE]    = tool_set_plane_iter,

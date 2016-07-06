@@ -446,7 +446,7 @@ enum {
 enum {
     TOOL_NONE = 0,
     TOOL_BRUSH,
-    TOOL_CUBE,
+    TOOL_SHAPE,
     TOOL_LASER,
     TOOL_SET_PLANE,
     TOOL_MOVE,
@@ -897,7 +897,7 @@ typedef struct goxel
     }          tool_last_op;
     vec3_t     tool_start_pos;
     plane_t    tool_plane;
-    bool       tool_cube_two_steps; // Param of the cube tool.
+    bool       tool_shape_two_steps; // Param of the shape tool.
 
     box_t      selection;   // The selection box.
 
