@@ -249,6 +249,27 @@ double get_unix_time(void)
     return tv.tv_sec + tv.tv_usec / 1000.0 / 1000.0;
 }
 
+char *read_file(const char *path, int *size)
+{
+    FILE *file;
+    char *ret = NULL;
+    int read_size __attribute__((unused));
+    int size_default;
+
+    size = size ?: &size_default; // Allow to pass NULL as size;
+    file = fopen(path, "rb");
+    if (!file) return NULL;
+    fseek(file, 0, SEEK_END);
+    *size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    ret = malloc(*size + 1);
+    read_size = fread(ret, *size, 1, file);
+    assert(read_size == 1 || *size == 0);
+    ret[*size] = '\0';
+    fclose(file);
+    return ret;
+}
+
 uint8_t *img_read_from_mem(const char *data, int size,
                            int *w, int *h, int *bpp)
 {
@@ -259,9 +280,20 @@ uint8_t *img_read_from_mem(const char *data, int size,
 uint8_t *img_read(const char *path, int *width, int *height, int *bpp)
 {
     int size;
-    const char *data = assets_get(path, &size);
+    char *data;
+    bool need_to_free = false;
     uint8_t *img;
+
+    if (str_startswith(path, "asset://")) {
+        data = (char*)assets_get(path, &size);
+    } else {
+        data = read_file(path, &size);
+        need_to_free = true;
+    }
+    if (!data) LOG_E("Cannot open image %s", path);
+    assert(data);
     img = img_read_from_mem(data, size, width, height, bpp);
+    if (need_to_free) free(data);
     return img;
 }
 

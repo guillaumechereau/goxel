@@ -300,7 +300,7 @@ void gui_init(void)
     GL(glGenBuffers(1, &gui->index_buffer));
     init_ImGui();
 
-    g_tex_icons = texture_new_image("data/icons.png");
+    g_tex_icons = texture_new_image("asset://data/icons.png");
     GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
     GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
     GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
