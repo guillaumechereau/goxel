@@ -295,6 +295,8 @@ enum {
     DIALOG_FLAG_OPEN    = 1 << 1,
     DIALOG_FLAG_DIR     = 1 << 2,
 };
+
+// out will be set to a newly allocated string of NULL.
 bool dialog_open(int flags, const char *filter, char **out);
 // #############################
 

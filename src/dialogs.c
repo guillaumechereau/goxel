@@ -30,6 +30,8 @@ bool dialog_open(int flags, const char *filters, char **out)
     GtkFileChooser *chooser;
     GtkFileChooserAction action;
     gint res;
+    const char *extension;
+    char default_name[128];
 
     action = flags & DIALOG_FLAG_SAVE ? GTK_FILE_CHOOSER_ACTION_SAVE :
                                         GTK_FILE_CHOOSER_ACTION_OPEN;
@@ -47,6 +49,12 @@ bool dialog_open(int flags, const char *filters, char **out)
             NULL );
     chooser = GTK_FILE_CHOOSER(dialog);
     gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
+
+    if ((flags & DIALOG_FLAG_SAVE) && filters) {
+        extension = filters + strlen(filters) + 3;
+        sprintf(default_name, "untitled.%s", extension);
+        gtk_file_chooser_set_current_name(chooser, default_name);
+    }
 
     while (filters && *filters) {
         filter = gtk_file_filter_new();
