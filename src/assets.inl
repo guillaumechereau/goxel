@@ -2887,6 +2887,40 @@ static const uint8_t DATA_data_progs_intro_goxcf[2551]
     "}\n"
     "";
 
+static const uint8_t DATA_data_progs_tree_big_goxcf[541]
+                     __attribute__((aligned(4))) =
+    "\n"
+    "shape leaf {\n"
+    "    cube[]\n"
+    "    leaf[x 0.5 s 0.9 0.9 0.8 ry 25 x 0.4]\n"
+    "}\n"
+    "\n"
+    "shape top {\n"
+    "    loop 8 [rz 360 / 8] {\n"
+    "        [life 8 sy 2 z 0+-5]\n"
+    "        leaf[s 5 light -0.4 sat 0.5 hue 60+-20 ry -45]\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape part($n) {\n"
+    "    loop $i = $n [z 1 rz 30+-10 rx 0+-10 wait 1] {\n"
+    "        cylinder[s 4 x 0.1 light 0+-0.1]\n"
+    "        if ($i == int($n - 2)) {\n"
+    "            top[]\n"
+    "        }\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape main {\n"
+    "    [antialiased 1 hue 40 light -0.5 sat 0.5]\n"
+    "    $n = 40+-10\n"
+    "    loop 3 [rz 120+-45] {\n"
+    "        [y 0.5]\n"
+    "        part($n)[light -0.3+-0.05]\n"
+    "    }\n"
+    "}\n"
+    "";
+
 static const uint8_t DATA_data_progs_test_goxcf[323]
                      __attribute__((aligned(4))) =
     "// Simple Test\n"
@@ -2962,6 +2996,35 @@ static const uint8_t DATA_data_progs_test2_goxcf[419]
     "                    z 0.5 s 0.05+-0.01 z 4+-0.5]\n"
     "        }\n"
     "    }\n"
+    "}\n"
+    "";
+
+static const uint8_t DATA_data_progs_tree_small_goxcf[372]
+                     __attribute__((aligned(4))) =
+    "shape branch2 {\n"
+    "    cube[]\n"
+    "    branch2 [z 0.5 s 0.8 rx 20+-4 z 0.5]\n"
+    "}\n"
+    "\n"
+    "shape branch {\n"
+    "   [rx 90]\n"
+    "   branch2[s 2]\n"
+    "}\n"
+    "\n"
+    "shape tree($s) {\n"
+    "    loop $s [z 1] {\n"
+    "       cube[s 1 light -0.8+-0.1 sat 0.5]\n"
+    "    }\n"
+    "    [z $s]\n"
+    "    [sat 1 light -0.5 hue 50+-30]\n"
+    "    loop 6 [rz 360 / 6 rz 0+-10] {\n"
+    "         branch[light 0+-0.3]\n"
+    "    }\n"
+    "}\n"
+    "\n"
+    "shape main {\n"
+    "    [antialiased 0]\n"
+    "    tree(8+-2)[]\n"
     "}\n"
     "";
 
@@ -3175,6 +3238,12 @@ static asset_t ASSETS[] = {
     },
 
     {
+        .path = "data/progs/tree-big.goxcf",
+        .data = DATA_data_progs_tree_big_goxcf,
+        .size = 541,
+    },
+
+    {
         .path = "data/progs/test.goxcf",
         .data = DATA_data_progs_test_goxcf,
         .size = 323,
@@ -3190,6 +3259,12 @@ static asset_t ASSETS[] = {
         .path = "data/progs/test2.goxcf",
         .data = DATA_data_progs_test2_goxcf,
         .size = 419,
+    },
+
+    {
+        .path = "data/progs/tree-small.goxcf",
+        .data = DATA_data_progs_tree_small_goxcf,
+        .size = 372,
     },
 
     {
