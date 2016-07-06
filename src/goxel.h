@@ -897,6 +897,7 @@ typedef struct goxel
     }          tool_last_op;
     vec3_t     tool_start_pos;
     plane_t    tool_plane;
+    bool       tool_cube_two_steps; // Param of the cube tool.
 
     box_t      selection;   // The selection box.
 

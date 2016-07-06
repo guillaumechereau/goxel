@@ -134,6 +134,12 @@ static int tool_cube_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (up) {
             state = STATE_PAINT2;
             goxel->tool_plane = plane_from_normal(pos, goxel->plane.u);
+
+            if (!goxel->tool_cube_two_steps) {
+                goxel_update_meshes(goxel, true);
+                goxel->painting = false;
+                state = STATE_IDLE;
+            }
         }
     }
     if (state == STATE_PAINT2) {

@@ -397,6 +397,11 @@ static void tool_options_panel(goxel_t *goxel)
             goxel->painter.smoothness = s ? 1 : 0;
         }
     }
+    if (goxel->tool == TOOL_CUBE) {
+        ImGui::Checkbox("Two steps", &goxel->tool_cube_two_steps);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Second click set the height");
+    }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_CUBE)) {
         ImGui::Text("Snap on");
         for (i = 0; i < 2; i++) {
