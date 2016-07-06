@@ -403,8 +403,9 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                      vec4(0, 0, 1, 0)).xyz;
     box.d = vec3_neg(normal);
     box.p = pos;
-    mat4_itranslate(&box.mat, 0, 0, -128);
-    mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 128);
+    // Just a large value for the size of the laser box.
+    mat4_itranslate(&box.mat, 0, 0, -1024);
+    mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
     render_box(&goxel->rend, &box, false, NULL, false);
     if (state == STATE_IDLE) {
         if (down) state = STATE_PAINT;
