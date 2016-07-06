@@ -796,7 +796,6 @@ static mat4_t render_shadow_map(renderer_t *rend)
             render_mesh_(&srend, item->mesh, effects, NULL);
         }
     }
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     mat4_t ret = bias_mat;
     mat4_imul(&ret, proj_mat);
@@ -817,6 +816,7 @@ void render_render(renderer_t *rend, const int rect[4],
         shadow_mvp = render_shadow_map(rend);
     }
 
+    GL(glBindFramebuffer(GL_FRAMEBUFFER, rend->fbo));
     GL(glEnable(GL_SCISSOR_TEST));
     GL(glViewport(rect[0], rect[1], rect[2], rect[3]));
     GL(glScissor(rect[0], rect[1], rect[2], rect[3]));

@@ -620,6 +620,7 @@ struct renderer
 {
     mat4_t view_mat;
     mat4_t proj_mat;
+    int    fbo;     // The renderer target framebuffer.
 
     struct {
         float  pitch;

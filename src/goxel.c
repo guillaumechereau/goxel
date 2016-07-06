@@ -137,7 +137,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
     int rect[4] = {0, 0, view_size->x, view_size->y};
 
     rend.settings.shadow = 0;
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel->pick_fbo->framebuffer));
+    rend.fbo = goxel->pick_fbo->framebuffer;
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
     render_render(&rend, rect, &vec4_zero);
 
@@ -457,8 +457,8 @@ static void export_as_png(goxel_t *goxel, const char *path)
     camera_update(&camera);
     rend.view_mat = camera.view_mat;
     rend.proj_mat = camera.proj_mat;
+    rend.fbo = fbo->framebuffer;
 
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, fbo->framebuffer));
     render_mesh(&rend, mesh, 0);
     render_render(&rend, rect, &vec4_zero);
     data2 = calloc(w * h * 4 , 4);
