@@ -29,14 +29,6 @@ typedef struct {
     UT_array *values;
 } bucket_t;
 
-static int value_cmp(const void *a_, const void *b_, void *k_)
-{
-    int k = *((int*)k_);
-    const value_t *a = a_;
-    const value_t *b = b_;
-    return sign(a->c.v[k] - b->c.v[k]);
-}
-
 static void bucket_add(bucket_t *b, uvec4b_t c, int n, bool check)
 {
     assert(b->values);
@@ -56,6 +48,16 @@ static void bucket_add(bucket_t *b, uvec4b_t c, int n, bool check)
     v.c = c;
     v.n = n;
     utarray_push_back(b->values, &v);
+}
+
+static int g_k; // Used in the sorting algo.
+                // qsort_r is not portable!
+static int value_cmp(const void *a_, const void *b_)
+{
+    int k = g_k;
+    const value_t *a = a_;
+    const value_t *b = b_;
+    return sign(a->c.v[k] - b->c.v[k]);
 }
 
 // Split a bucket into two new buckets.
@@ -79,7 +81,8 @@ static void bucket_split(const bucket_t *bucket, bucket_t *a, bucket_t *b)
         if (max_c.v[i] - min_c.v[i] > max_c.v[k] - min_c.v[k])
             k = i;
     // Sort the values by color.
-    qsort_r(values, size, sizeof(*values), value_cmp, &k);
+    g_k = k;
+    qsort(values, size, sizeof(*values), value_cmp);
     // Now take the bottom half into the first buket, and the top half into
     // the second one.
     utarray_new(a->values, &value_icd);
