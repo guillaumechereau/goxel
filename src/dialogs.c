@@ -93,6 +93,7 @@ bool dialog_open(int flags, const char *filters, char **out)
     BROWSEINFO   bif;       // only used to open directory
     LPITEMIDLIST lpItem;    // only for open directory
     char szFile[260];       // buffer for file name
+    const char *extension;
     int ret;
 
     if (!(flags & DIALOG_FLAG_DIR)) {
@@ -107,6 +108,10 @@ bool dialog_open(int flags, const char *filters, char **out)
         ofn.nMaxFileTitle = 0;
         ofn.lpstrInitialDir = NULL;
         ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+        if (filters) { // Set the default file name.
+            extension = filters + strlen(filters) + 3;
+            sprintf(ofn.lpstrFile, "untitled.%s", extension);
+        }
         if (flags & DIALOG_FLAG_OPEN)
             ret = GetOpenFileName(&ofn);
         else
