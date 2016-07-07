@@ -2,17 +2,9 @@
 Goxel
 =====
 
-Version 0.2
+Version 0.3
 
 By Guillaume Chereau <guillaume@noctua-software.com>
-
-                    _______  _______  __   __  _______  ___
-                   |       ||       ||  |_|  ||       ||   |
-                   |    ___||   _   ||       ||    ___||   |
-                   |   | __ |  | |  ||       ||   |___ |   |
-                   |   ||  ||  |_|  | |     | |    ___||   |___
-                   |   |_| ||       ||   _   ||   |___ |       |
-                   |_______||_______||__| |__||_______||_______|
 
 About
 -----
@@ -40,7 +32,7 @@ Features
 - Layers.
 - Marching Cube rendering.
 - Procedural rendering.
-- Export to obj, pyl, png, qubicle.
+- Export to obj, pyl, png, magica voxel, qubicle.
 
 
 Usage
