@@ -702,13 +702,13 @@ typedef struct {
 } palette_entry_t;
 
 typedef struct palette palette_t;
-typedef struct palette {
+struct palette {
     palette_t *next, *prev; // For the global list of palettes.
     char    name[128];
     int     columns;
     int     size;
     palette_entry_t *entries;
-} palette_t;
+};
 
 // Load all the available palettes into a list.
 void palette_load_all(palette_t **list);

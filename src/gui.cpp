@@ -1123,7 +1123,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             current_panel = i;
     }
 
-    ImGui::Text(PANELS[current_panel].tooltip);
+    ImGui::Text("%s", PANELS[current_panel].tooltip);
     ImGui::PushID("panel");
     PANELS[current_panel].fn(goxel);
     ImGui::PopID();
