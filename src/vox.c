@@ -21,7 +21,7 @@
 #include "goxel.h"
 #include <limits.h>
 
-static const uint32_t DEFAULT_PALETTE[256];
+static const uint32_t VOX_DEFAULT_PALETTE[256];
 
 #define READ(type, file) \
     ({ type v; int r = fread(&v, sizeof(v), 1, file); (void)r; v;})
@@ -105,7 +105,8 @@ void vox_import(const char *path)
         c = ctx.voxels[i * 4 + 3];
         pos = vec3(x + 0.5 - ctx.w / 2, y + 0.5 - ctx.h / 2, z + 0.5);
         if (!c) continue; // Not sure what c == 0 means.
-        color = ctx.palette ? ctx.palette[c - 1] : HEXCOLOR(DEFAULT_PALETTE[c]);
+        color = ctx.palette ? ctx.palette[c - 1] :
+                              HEXCOLOR(VOX_DEFAULT_PALETTE[c]);
         mesh_set_at(mesh, &pos, color);
     }
     free(ctx.voxels);
@@ -157,7 +158,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
 
     palette = calloc(256, sizeof(*palette));
     for (i = 0; i < 256; i++)
-        palette[i] = HEXCOLOR(DEFAULT_PALETTE[i]);
+        palette[i] = HEXCOLOR(VOX_DEFAULT_PALETTE[i]);
 
     // Iter all the voxels to get the count and the size.
     MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
@@ -250,7 +251,7 @@ ACTION_REGISTER(export_as_vox,
 )
 
 
-static const uint32_t DEFAULT_PALETTE[256] = {
+static const uint32_t VOX_DEFAULT_PALETTE[256] = {
     0xffffffff, 0xffffccff, 0xffff99ff, 0xffff66ff, 0xffff33ff, 0xffff00ff,
     0xffccffff, 0xffccccff, 0xffcc99ff, 0xffcc66ff, 0xffcc33ff, 0xffcc00ff,
     0xff99ffff, 0xff99ccff, 0xff9999ff, 0xff9966ff, 0xff9933ff, 0xff9900ff,

@@ -438,15 +438,15 @@ DECL mat4_t mat4_ortho(real_t left, real_t right, real_t bottom,
 }
 
 DECL mat4_t mat4_perspective(real_t fovy, real_t aspect,
-                             real_t near, real_t far_)
+                             real_t nearval, real_t farval)
 {
     real_t radian = fovy * M_PI / 180;
     real_t f = 1. / tan(radian / 2.);
     const mat4_t ret = mat4(
         f / aspect, 0., 0., 0.,
         0., f, 0., 0.,
-        0., 0., (far_ + near) / (near - far_), -1,
-        0., 0., 2. * far_ * near / (near - far_), 0.
+        0., 0., (farval + nearval) / (nearval - farval), -1,
+        0., 0., 2. * farval * nearval / (nearval - farval), 0.
     );
     return ret;
 }
