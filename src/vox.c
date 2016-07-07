@@ -104,7 +104,8 @@ void vox_import(const char *path)
         z = ctx.voxels[i * 4 + 2];
         c = ctx.voxels[i * 4 + 3];
         pos = vec3(x + 0.5 - ctx.w / 2, y + 0.5 - ctx.h / 2, z + 0.5);
-        color = ctx.palette ? ctx.palette[c] : HEXCOLOR(DEFAULT_PALETTE[c]);
+        if (!c) continue; // Not sure what c == 0 means.
+        color = ctx.palette ? ctx.palette[c - 1] : HEXCOLOR(DEFAULT_PALETTE[c]);
         mesh_set_at(mesh, &pos, color);
     }
     free(ctx.voxels);
@@ -117,7 +118,7 @@ static int get_color_index(uvec4b_t v, const uvec4b_t *palette, bool exact)
 {
     uvec4b_t c;
     int i, dist, best = -1, best_dist = 1024;
-    for (i = 0; i < 256; i++) {
+    for (i = 0; i < 255; i++) {
         c = palette[i];
         dist = abs((int)c.r - (int)v.r) +
                abs((int)c.g - (int)v.g) +
@@ -132,6 +133,16 @@ static int get_color_index(uvec4b_t v, const uvec4b_t *palette, bool exact)
     return best;
 }
 
+static int voxel_cmp(const void *a_, const void *b_)
+{
+    const uint8_t *a = a_;
+    const uint8_t *b = b_;
+    if (a[2] != b[2]) return sign(a[2] - b[2]);
+    if (a[1] != b[1]) return sign(a[1] - b[1]);
+    if (a[0] != b[0]) return sign(a[0] - b[0]);
+    return 0;
+}
+
 static void vox_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
@@ -140,6 +151,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
     int xmax = INT_MIN, ymax = INT_MIN, zmax = INT_MIN;
     uvec4b_t *palette;
     bool use_default_palette = true;
+    uint8_t *voxels;
     block_t *block;
     uvec4b_t v;
 
@@ -160,9 +172,9 @@ static void vox_export(const mesh_t *mesh, const char *path)
         xmin = min(xmin, vx);
         ymin = min(ymin, vy);
         zmin = min(zmin, vz);
-        xmax = max(xmax, vx);
-        ymax = max(ymax, vy);
-        zmax = max(zmax, vz);
+        xmax = max(xmax, vx + 1);
+        ymax = max(ymax, vy + 1);
+        zmax = max(zmax, vz + 1);
     }
     if (!use_default_palette)
         quantization_gen_palette(mesh, 256, palette);
@@ -178,18 +190,20 @@ static void vox_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, 0, file);       // Main chunck size.
     WRITE(uint32_t, children_size, file);
 
-    if (!use_default_palette) {
-        fprintf(file, "RGBA");
-        WRITE(uint32_t, 4 * 256, file);
-        WRITE(uint32_t, 0, file);
-        for (i = 0; i < 256; i++)
-            WRITE(uint32_t, palette[i].uint32, file);
-    }
+    fprintf(file, "SIZE");
+    WRITE(uint32_t, 4 * 3, file);
+    WRITE(uint32_t, 0, file);
+    WRITE(uint32_t, xmax - xmin, file);
+    WRITE(uint32_t, ymax - ymin, file);
+    WRITE(uint32_t, zmax - zmin, file);
 
     fprintf(file, "XYZI");
     WRITE(uint32_t, 4 * nb_vox, file);
     WRITE(uint32_t, 0, file);
     WRITE(uint32_t, nb_vox, file);
+
+    voxels = calloc(nb_vox, 4);
+    i = 0;
     MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
         if (v.a < 127) continue;
         vx = round(x + block->pos.x - BLOCK_SIZE / 2) - xmin;
@@ -199,18 +213,24 @@ static void vox_export(const mesh_t *mesh, const char *path)
         assert(vy >= 0 && vy < 255);
         assert(vz >= 0 && vz < 255);
 
-        WRITE(uint8_t, vx, file);
-        WRITE(uint8_t, vy, file);
-        WRITE(uint8_t, vz, file);
-        WRITE(uint8_t, get_color_index(v, palette, false), file);
+        voxels[i * 4 + 0] = vx;
+        voxels[i * 4 + 1] = vy;
+        voxels[i * 4 + 2] = vz;
+        voxels[i * 4 + 3] = get_color_index(v, palette, false) + 1;
+        i++;
     }
+    qsort(voxels, nb_vox, 4, voxel_cmp);
+    for (i = 0; i < nb_vox; i++)
+        fwrite(voxels + i * 4, 4, 1, file);
+    free(voxels);
 
-    fprintf(file, "SIZE");
-    WRITE(uint32_t, 4 * 3, file);
-    WRITE(uint32_t, 0, file);
-    WRITE(uint32_t, xmax - xmin, file);
-    WRITE(uint32_t, ymax - ymin, file);
-    WRITE(uint32_t, zmax - zmin, file);
+    if (!use_default_palette) {
+        fprintf(file, "RGBA");
+        WRITE(uint32_t, 4 * 256, file);
+        WRITE(uint32_t, 0, file);
+        for (i = 0; i < 256; i++)
+            WRITE(uint32_t, palette[i].uint32, file);
+    }
 
     fclose(file);
     free(palette);
