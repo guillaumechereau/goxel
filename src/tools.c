@@ -408,11 +408,13 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
     render_box(&goxel->rend, &box, false, NULL, false);
     if (state == STATE_IDLE) {
-        if (down) state = STATE_PAINT;
+        if (down) {
+            state = STATE_PAINT;
+            image_history_push(goxel->image);
+        }
     }
     if (state == STATE_PAINT) {
         if (!down) {
-            image_history_push(goxel->image);
             return STATE_IDLE;
         }
         mesh_op(mesh, &painter, &box);
