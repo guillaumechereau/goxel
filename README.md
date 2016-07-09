@@ -54,3 +54,10 @@ The code is in C99, using some gnu extensions, so it does not compile with
 msvc.
 
 Debian dependencies: scons pkg-config libglfw3-dev libgtk-3-dev
+
+
+Download
+--------
+
+The last release files can be downloaded from [here](
+https://github.com/guillaumechereau/goxel/releases/latest)
