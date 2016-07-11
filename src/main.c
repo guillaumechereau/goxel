@@ -152,12 +152,11 @@ int main(int argc, char **argv)
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
-    goxel_t goxel;
-    inputs_t inputs;
+    inputs_t inputs = {};
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
 
     g_inputs = &inputs;
-    g_goxel = &goxel;
+    g_goxel = calloc(1, sizeof(*g_goxel));
 
 #ifndef NO_ARGP
     argp_parse (&argp, argc, argv, 0, 0, &args);
@@ -177,14 +176,14 @@ int main(int argc, char **argv)
     glewInit();
 #endif
 
-    goxel_init(&goxel);
+    goxel_init(g_goxel);
     if (args.args[0]) {
         if (str_endswith(args.args[0], ".qb"))
             qubicle_import(args.args[0]);
         else if (str_endswith(args.args[0], ".vox"))
             vox_import(args.args[0]);
         else
-            load_from_file(&goxel, args.args[0]);
+            load_from_file(g_goxel, args.args[0]);
     }
 
     start_main_loop(loop_function);
