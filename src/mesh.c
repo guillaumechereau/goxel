@@ -31,6 +31,7 @@ static operation_t g_last_op= {};
 static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
+    assert(*mesh->ref > 0);
     if (*mesh->ref == 1)
         return;
     (*mesh->ref)--;
@@ -73,6 +74,7 @@ void mesh_clear(mesh_t *mesh)
     block_t *block, *tmp;
     mesh_prepare_write(mesh);
     HASH_ITER(hh, mesh->blocks, block, tmp) {
+        HASH_DEL(mesh->blocks, block);
         block_delete(block);
     }
     mesh->blocks = NULL;
@@ -86,6 +88,7 @@ void mesh_delete(mesh_t *mesh)
     (*mesh->ref)--;
     if (*mesh->ref == 0) {
         HASH_ITER(hh, mesh->blocks, block, tmp) {
+            HASH_DEL(mesh->blocks, block);
             block_delete(block);
         }
         free(mesh->ref);
@@ -117,6 +120,7 @@ void mesh_set(mesh_t **mesh, const mesh_t *other)
     (*m->ref)--;
     if (*m->ref == 0) {
         HASH_ITER(hh, m->blocks, block, tmp) {
+            HASH_DEL(m->blocks, block);
             block_delete(block);
         }
         free(m->ref);
@@ -187,6 +191,7 @@ static void add_blocks(mesh_t *mesh, box_t box)
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
     PROFILED
+
     // In case we are doing the same operation as last time, we can just use
     // the value we buffered.
     #define EQUAL(a, b) (memcmp(&(a), &(b), sizeof(a)) == 0)
