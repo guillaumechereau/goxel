@@ -1,0 +1,6 @@
+{
+  "name": "Goxel",
+  "tagline": "Open source 3D voxel editor ",
+  "body": "### Goxel, an Open Source Voxel Editor\r\n\r\n# Feature\r\n- 24 bits RGB colors.\r\n- Unlimited scene size.\r\n- Unlimited undo buffer.\r\n- Multiple layers support.\r\n- Marching Cube rendering.\r\n- Procedural rendering.\r\n- Export to obj, pyl, magica voxel, png, qubicle.\r\n\r\n![goxel screenshot 0](https://github.com/guillaumechereau/goxel/raw/master/screenshots/screenshot-castle.png?raw=true)\r\n\r\n# Dowloads\r\n\r\nVersion 0.3:\r\n- [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.3.0/goxel-0.3.0-windows.zip)\r\n- [Mac](https://github.com/guillaumechereau/goxel/releases/download/v0.3.0/goxel-0.3.0-mac.zip)\r\n\r\n\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}

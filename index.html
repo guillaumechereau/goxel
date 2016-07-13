@@ -1,129 +1,60 @@
 <!DOCTYPE html>
-
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Goxel by guillaumechereau</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta charset="utf-8">
-    <meta name="description" content="Goxel 3D voxel editor"/>
-    <meta name="keywords" content="graphics, voxel, editor, procedural"/>
-    <meta name="author" content="Guillaume Chereau"/>
-    <title>Goxel: an open source voxel editor</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <script src="js/jquery-2.1.4.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Goxel</h1>
+      <h2 class="project-tagline">Open source 3D voxel editor </h2>
+      <a href="https://github.com/guillaumechereau/goxel" class="btn">View on GitHub</a>
+      <a href="https://github.com/guillaumechereau/goxel/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/guillaumechereau/goxel/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
 
-    <style>
-        body {
-            padding-top: 20px;
-            padding-bottom: 20px;
-        }
-    </style>
+    <section class="main-content">
+      <h3>
+<a id="goxel-an-open-source-voxel-editor" class="anchor" href="#goxel-an-open-source-voxel-editor" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Goxel, an Open Source Voxel Editor</h3>
 
-</head>
+<h1>
+<a id="feature" class="anchor" href="#feature" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Feature</h1>
 
-
-<body>
-
-<div class="container">
-    <div class="header clearfix">
-        <nav>
-            <ul class="nav nav-pills pull-right">
-                <li role="presentation"><a href="#download">Download</a></li>
-                <li role="presentation"><a href="https://github.com/guillaumechereau/goxel">GitHub</a></li>
-            </ul>
-        </nav>
-        <h3 class="text-muted">Goxel</h3>
-    </div>
-</div>
-
-<div class="container">
-
-<div class="jumbotron">
-    <p class="lead text-center">Open source voxels 3D editor for Mac,
-                                Linux and Windows.</p>
-</div>
-
-<div id="carousel" class="carousel slide" data-ride="carousel">
-  <!-- Indicators -->
-  <ol class="carousel-indicators">
-    <li data-target="#carousel" data-slide-to="0" class="active"></li>
-    <li data-target="#carousel" data-slide-to="1"></li>
-    <li data-target="#carousel" data-slide-to="2"></li>
-  </ol>
-
-  <!-- Wrapper for slides -->
-  <div class="carousel-inner" role="listbox">
-    <div class="item active row">
-        <div class="col-md-6">
-            <img class="img-responsive" src="https://github.com/guillaumechereau/goxel/raw/master/screenshots/screenshot-castle.png?raw=true" />
-        </div>
-        <div class="col-md-6">
-            <h3>Features</h3>
-            <ul>
-                <li>24 bits RGB colors.</li>
-                <li>Unlimited scene size.</li>
-                <li>Unlimited undo buffer.</li>
-                <li>Multiple layers support.</li>
-                <li>Marching Cube rendering.</li>
-                <li>Procedural rendering.</li>
-                <li>Export to obj, pyl, png, qubicle.</li>
-            </ul>
-        </div>
-    </div>
-    <div class="item row">
-        <div class="col-md-6">
-            <img class="img-responsive" src="https://github.com/guillaumechereau/goxel/raw/master/screenshots/screenshot-procedural-city.png?raw=true" />
-        </div>
-        <div class="col-md-6 text-left">
-            <h3>Procedural Rendering</h3>
-            <p>You can use code to generate complex 3d shapes.</p>
-            <p>The syntax is inspired from
-            <a href="http://www.contextfreeart.org/">Context Free Art</a>.
-            <p>See the
-            <a href="http://blog.noctua-software.com/goxel-procedural.html">
-                documention</a>,
-            or check the
-            <a href="proc-demo.html">demo</a>
-            </p>
-        </div>
-    </div>
-    <div class="item row">
-        <div class="col-md-6">
-            <img class="img-responsive" src="https://github.com/guillaumechereau/goxel/raw/master/screenshots/screenshot-dicom.png?raw=true"/>
-        </div>
-        <div class="col-md-6 text-left">
-            <h3>Dicom images support</h3>
-        </div>
-    </div>
-
-  </div>
-
-  <!-- Controls -->
-  <a class="left carousel-control" href="#carousel" role="button" data-slide="prev">
-    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-    <span class="sr-only">Previous</span>
-  </a>
-  <a class="right carousel-control" href="#carousel" role="button" data-slide="next">
-    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-    <span class="sr-only">Next</span>
-  </a>
-</div>
-
-<h2 id="download">Download</h2>
-<p>Version 0.3.0</p>
 <ul>
-    <li><a href="https://github.com/guillaumechereau/goxel/releases/download/v0.3.0/goxel-0.3.0-mac.zip">Mac</a></li>
-    <li><a href="https://github.com/guillaumechereau/goxel/releases/download/v0.3.0/goxel-0.3.0-windows.zip">Windows</a></li>
+<li>24 bits RGB colors.</li>
+<li>Unlimited scene size.</li>
+<li>Unlimited undo buffer.</li>
+<li>Multiple layers support.</li>
+<li>Marching Cube rendering.</li>
+<li>Procedural rendering.</li>
+<li>Export to obj, pyl, magica voxel, png, qubicle.</li>
 </ul>
 
-<footer class="text-center">
-    Developed by <a href="https://noctua-software.com">noctua-software</a> (@guillaumecherea)
-</footer>
+<p><img src="https://github.com/guillaumechereau/goxel/raw/master/screenshots/screenshot-castle.png?raw=true" alt="goxel screenshot 0"></p>
 
-</div>
+<h1>
+<a id="dowloads" class="anchor" href="#dowloads" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Dowloads</h1>
 
+<p>Version 0.3:</p>
 
+<ul>
+<li><a href="https://github.com/guillaumechereau/goxel/releases/download/v0.3.0/goxel-0.3.0-windows.zip">Windows</a></li>
+<li><a href="https://github.com/guillaumechereau/goxel/releases/download/v0.3.0/goxel-0.3.0-mac.zip">Mac</a></li>
+</ul>
 
-</body>
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/guillaumechereau/goxel">Goxel</a> is maintained by <a href="https://github.com/guillaumechereau">guillaumechereau</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
 </html>
