@@ -66,7 +66,7 @@ typedef struct
 #include <argp.h>
 
 const char *argp_program_version = "goxel " GOXEL_VERSION_STR;
-const char *argp_program_bug_address = "guillaume@noctua-software.com";
+const char *argp_program_bug_address = "<guillaume@noctua-software.com>";
 static char doc[] = "A 3D voxels editor";
 static char args_doc[] = "[FILE]";
 
