@@ -66,11 +66,9 @@ typedef struct
 #include <argp.h>
 
 const char *argp_program_version = "goxel " GOXEL_VERSION_STR;
+const char *argp_program_bug_address = "guillaume@noctua-software.com";
 static char doc[] = "A 3D voxels editor";
 static char args_doc[] = "[FILE]";
-static struct argp_option options[] = {
-    { 0 }
-};
 
 /* Parse a single option. */
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
@@ -80,7 +78,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
     switch (key)
     {
     case ARGP_KEY_ARG:
-        if (state->arg_num >= 2)
+        if (state->arg_num >= 1)
             argp_usage(state);
         args->args[state->arg_num] = arg;
         break;
@@ -93,7 +91,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 }
 
 /* Our argp parser. */
-static struct argp argp = { options, parse_opt, args_doc, doc };
+static struct argp argp = { NULL, parse_opt, args_doc, doc };
 #endif
 
 static void loop_function(void) {
