@@ -865,14 +865,6 @@ static void render_advanced_panel(goxel_t *goxel)
 
     b = !goxel->plane_hidden;
     if (ImGui::Checkbox("Show grid", &b)) goxel->plane_hidden = !b;
-
-    ImGui::Text("Export");
-    i = goxel->image->export_width;
-    if (ImGui::InputInt("width", &i, 1))
-        goxel->image->export_width = clamp(i, 1, 2048);
-    i = goxel->image->export_height;
-    if (ImGui::InputInt("height", &i, 1))
-        goxel->image->export_height = clamp(i, 1, 2048);
 }
 
 
@@ -900,6 +892,17 @@ static void render_panel(goxel_t *goxel)
     if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
         render_advanced_panel(goxel);
     ImGui::PopID();
+}
+
+static void export_panel(goxel_t *goxel)
+{
+    int i;
+    i = goxel->image->export_width;
+    if (ImGui::InputInt("width", &i, 1))
+        goxel->image->export_width = clamp(i, 1, 2048);
+    i = goxel->image->export_height;
+    if (ImGui::InputInt("height", &i, 1))
+        goxel->image->export_height = clamp(i, 1, 2048);
 }
 
 static void save_as(goxel_t *goxel)
@@ -1101,7 +1104,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
     ImGui::Spacing();
 
-    left_pane_width = 180;
+    left_pane_width = 200;
     if (goxel->tool == TOOL_PROCEDURAL) {
         left_pane_width = clamp(ImGui::CalcTextSize(gui->prog_buff).x + 60,
                                 250, 600);
@@ -1117,7 +1120,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         {"T", "Tools", tools_panel},
         {"P", "Palette", palette_panel},
         {"L", "layers", layers_panel},
-        {"R", "Render", render_panel}
+        {"R", "Render", render_panel},
+        {"E", "Export", export_panel},
     };
 
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
