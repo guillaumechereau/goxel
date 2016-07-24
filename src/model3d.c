@@ -242,6 +242,29 @@ model3d_t *model3d_rect(void)
     return model;
 }
 
+model3d_t *model3d_wire_rect(void)
+{
+    int i, v;
+    model3d_t *model = calloc(1, sizeof(*model));
+    model->nb_vertices = 8;
+    model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
+    const vec2_t POS_UV[4][2] = {
+        {vec2(-0.5, -0.5), vec2(0, 1)},
+        {vec2(+0.5, -0.5), vec2(1, 1)},
+        {vec2(+0.5, +0.5), vec2(1, 0)},
+        {vec2(-0.5, +0.5), vec2(0, 0)},
+    };
+
+    for (i = 0; i < 8; i++) {
+        v = ((i + 1) / 2) % 4;
+        model->vertices[i].pos.xy = POS_UV[v][0];
+        model->vertices[i].uv = POS_UV[v][1];
+        model->vertices[i].color = uvec4b(255, 255, 255, 255);
+    }
+    model->dirty = true;
+    return model;
+}
+
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,

@@ -686,6 +686,7 @@ model3d_t *model3d_sphere(int slices, int stacks);
 model3d_t *model3d_grid(int nx, int ny);
 model3d_t *model3d_line(void);
 model3d_t *model3d_rect(void);
+model3d_t *model3d_wire_rect(void);
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
