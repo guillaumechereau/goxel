@@ -349,6 +349,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
                    view->rect.z, view->rect.w};
     vec4_t back_color;
     back_color = uvec4b_to_vec4(view->goxel->back_color);
+
     goxel_render_view(view->goxel, &view->rect);
     render_render(&view->goxel->rend, rect, &back_color);
     GL(glViewport(0, 0, width, height));
@@ -897,6 +898,7 @@ static void render_panel(goxel_t *goxel)
 static void export_panel(goxel_t *goxel)
 {
     int i;
+    goxel->show_export_viewport = true;
     i = goxel->image->export_width;
     if (ImGui::InputInt("width", &i, 1))
         goxel->image->export_width = clamp(i, 1, 2048);
@@ -1124,6 +1126,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         {"E", "Export", export_panel},
     };
 
+    goxel->show_export_viewport = false;
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
         if (i) ImGui::SameLine();

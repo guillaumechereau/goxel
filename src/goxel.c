@@ -397,7 +397,7 @@ static void render_export_viewport(goxel_t *goxel, const vec4_t *view)
         sy *= goxel->camera.aspect / aspect;
     }
     mat4_iscale(&plane.mat, sx, sy, 1);
-    render_rect(&goxel->rend, &plane);
+    render_rect(&goxel->rend, &plane, 1);
 }
 
 void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
@@ -415,7 +415,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
             render_img(rend, layer->image, &layer->mat);
     }
 
-    render_box(rend, &goxel->selection, false, NULL, true);
+    render_box(rend, &goxel->selection, false, NULL, 2);
 
     // XXX: make a toggle for debug informations.
     if (0) {
@@ -430,7 +430,8 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     }
     if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
         render_plane(rend, &goxel->plane, &goxel->grid_color);
-    render_export_viewport(goxel, rect);
+    if (goxel->show_export_viewport)
+        render_export_viewport(goxel, rect);
 }
 
 void goxel_update_meshes(goxel_t *goxel, bool pick)

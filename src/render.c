@@ -58,7 +58,7 @@ struct render_item_t
     };
     vec3_t          grid;
     uvec4b_t        color;
-    bool            strip;  // XXX: move into effects?
+    int             strip;  // XXX: move into effects?
     model3d_t       *model3d;
     texture_t       *tex;
     bool            fixed; // If true, render in the view ref.
@@ -675,7 +675,7 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
     DL_APPEND(rend->items, item);
 }
 
-void render_rect(renderer_t *rend, const plane_t *plane)
+void render_rect(renderer_t *rend, const plane_t *plane, int strip)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
@@ -683,7 +683,7 @@ void render_rect(renderer_t *rend, const plane_t *plane)
     item->model3d = g_wire_rect_model;
     item->color = uvec4b(255, 255, 255, 255);
     item->fixed = true;
-    // item->strip = true;
+    item->strip = strip;
     DL_APPEND(rend->items, item);
 }
 
@@ -710,7 +710,7 @@ void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
 }
 
 void render_box(renderer_t *rend, const box_t *box, bool solid,
-                const uvec4b_t *color, bool strip)
+                const uvec4b_t *color, int strip)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;

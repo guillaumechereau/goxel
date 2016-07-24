@@ -642,10 +642,10 @@ void render_plane(renderer_t *rend, const plane_t *plane,
 void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
                  const uvec4b_t *color);
 void render_box(renderer_t *rend, const box_t *box, bool solid,
-                const uvec4b_t *color, bool strip);
+                const uvec4b_t *color, int strip);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
 void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat);
-void render_rect(renderer_t *rend, const plane_t *plane);
+void render_rect(renderer_t *rend, const plane_t *plane, int strip);
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
@@ -692,7 +692,7 @@ void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
                     const texture_t *tex,
-                    bool  strip,
+                    int   strip, // 0: no, 1: fixed, 2: moving.
                     float fade, const vec3_t *fade_center);
 
 
@@ -874,6 +874,7 @@ typedef struct goxel
 
     plane_t    plane;         // The snapping plane.
     bool       plane_hidden;  // Set to true to hide the plane.
+    bool       show_export_viewport;
 
     camera_t   camera;
 
