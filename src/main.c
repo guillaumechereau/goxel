@@ -185,6 +185,7 @@ int main(int argc, char **argv)
     }
 
     start_main_loop(loop_function);
+    goxel_release(g_goxel);
     return 0;
 }
 

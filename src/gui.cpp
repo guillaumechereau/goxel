@@ -306,6 +306,11 @@ void gui_init(void)
     GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
 }
 
+void gui_release(void)
+{
+    ImGui::Shutdown();
+}
+
 // XXX: Move this somewhere else.
 void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
 {

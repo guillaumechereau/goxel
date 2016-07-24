@@ -926,6 +926,7 @@ typedef struct goxel
 } goxel_t;
 goxel_t *goxel(void);
 void goxel_init(goxel_t *goxel);
+void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);
 void goxel_render(goxel_t *goxel);
 void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
@@ -970,6 +971,7 @@ uvec3b_t rgb_to_hsl(uvec3b_t rgb);
 // #### Gui ####################
 
 void gui_init(void);
+void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);
 void gui_render(void);
 

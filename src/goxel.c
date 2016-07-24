@@ -245,6 +245,11 @@ void goxel_init(goxel_t *goxel)
     gui_init();
 }
 
+void goxel_release(goxel_t *goxel)
+{
+    gui_release();
+}
+
 goxel_t *goxel(void)
 {
     return g_goxel;
