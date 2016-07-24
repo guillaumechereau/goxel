@@ -838,6 +838,7 @@ typedef struct camera
     float  dist;
     quat_t rot;
     vec3_t ofs;
+    float  fovy;
     float  aspect;
 
     // If set, we smoothly update the offset to reach target.

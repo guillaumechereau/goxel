@@ -22,6 +22,7 @@ void camera_update(camera_t *camera)
 {
     float size;
 
+    camera->fovy = 20.;
     if (camera->move_to_target) {
         camera->move_to_target = !vec3_ilerp_const(
                 &camera->ofs, vec3_neg(camera->target), camera->dist / 128);
@@ -40,7 +41,8 @@ void camera_update(camera_t *camera)
                 -size / camera->aspect, +size / camera->aspect,
                 0, 1000);
     } else {
-        camera->proj_mat = mat4_perspective(20, camera->aspect, 1, 1000);
+        camera->proj_mat = mat4_perspective(
+                camera->fovy, camera->aspect, 1, 1000);
     }
 }
 

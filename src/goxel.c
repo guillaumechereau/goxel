@@ -380,7 +380,27 @@ void goxel_render(goxel_t *goxel)
     gui_render();
 }
 
-void goxel_render_view(goxel_t *goxel,  const vec4_t *rect)
+static void render_export_viewport(goxel_t *goxel, const vec4_t *view)
+{
+    // Render the export viewport.
+    int w = goxel->image->export_width;
+    int h = goxel->image->export_height;
+    float aspect = (float)w/h;
+    plane_t plane;
+    float sx, sy;
+    plane.mat = mat4_identity;
+    mat4_itranslate(&plane.mat, 0, 0, -1);
+    sy = 2 * tan(goxel->camera.fovy / 2. / 180. * M_PI);
+    sx = sy * w / h;
+    if (goxel->camera.aspect < aspect) {
+        sx *= goxel->camera.aspect / aspect;
+        sy *= goxel->camera.aspect / aspect;
+    }
+    mat4_iscale(&plane.mat, sx, sy, 1);
+    render_rect(&goxel->rend, &plane);
+}
+
+void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
 {
     layer_t *layer;
     renderer_t *rend = &goxel->rend;
@@ -410,6 +430,7 @@ void goxel_render_view(goxel_t *goxel,  const vec4_t *rect)
     }
     if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
         render_plane(rend, &goxel->plane, &goxel->grid_color);
+    render_export_viewport(goxel, rect);
 }
 
 void goxel_update_meshes(goxel_t *goxel, bool pick)
