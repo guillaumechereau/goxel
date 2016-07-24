@@ -243,15 +243,25 @@ void image_redo(image_t *img)
     goxel_update_meshes(goxel(), true);
 }
 
-void image_clear_layer(layer_t *layer)
+void image_clear_layer(layer_t *layer, const box_t *box)
 {
-    mesh_clear(layer->mesh);
+    painter_t painter;
+    if (!box || box_is_null(*box)) {
+        mesh_clear(layer->mesh);
+        return;
+    }
+    painter = (painter_t) {
+        .shape = &shape_cube,
+        .op = OP_SUB,
+    };
+    mesh_op(layer->mesh, &painter, box);
 }
 
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .func = image_clear_layer,
-    .sig = SIG(TYPE_VOID, ARG("layer", TYPE_LAYER)),
+    .sig = SIG(TYPE_VOID, ARG("layer", TYPE_LAYER),
+                          ARG("box", TYPE_BOX)),
 )
 
 ACTION_REGISTER(img_new_layer,
