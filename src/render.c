@@ -61,6 +61,7 @@ struct render_item_t
     bool            strip;  // XXX: move into effects?
     model3d_t       *model3d;
     texture_t       *tex;
+    bool            fixed; // If true, render in the view ref.
     int             effects;
     int             last_used_frame;
 
@@ -79,6 +80,7 @@ static model3d_t *g_wire_cube_model;
 static model3d_t *g_sphere_model;
 static model3d_t *g_grid_model;
 static model3d_t *g_rect_model;
+static model3d_t *g_wire_rect_model;
 
 // All the shaders code is at the bottom of the file.
 static const char *VSHADER;
@@ -353,6 +355,7 @@ void render_init()
     g_sphere_model = model3d_sphere(16, 16);
     g_grid_model = model3d_grid(8, 8);
     g_rect_model = model3d_rect();
+    g_wire_rect_model = model3d_wire_rect();
 }
 
 void render_deinit(void)
@@ -621,6 +624,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
     mat4_t view = rend->view_mat;
+    if (item->fixed) view = mat4_identity;
     mat4_imul(&view, item->mat);
     model3d_render(item->model3d, &view, &rend->proj_mat, &item->color,
                    item->tex, item->strip, 0, NULL);
@@ -668,6 +672,18 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
     item->color = uvec4b(255, 255, 255, 255);
+    DL_APPEND(rend->items, item);
+}
+
+void render_rect(renderer_t *rend, const plane_t *plane)
+{
+    render_item_t *item = calloc(1, sizeof(*item));
+    item->type = ITEM_MODEL3D;
+    item->mat = plane->mat;
+    item->model3d = g_wire_rect_model;
+    item->color = uvec4b(255, 255, 255, 255);
+    item->fixed = true;
+    // item->strip = true;
     DL_APPEND(rend->items, item);
 }
 

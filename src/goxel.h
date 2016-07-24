@@ -645,6 +645,7 @@ void render_box(renderer_t *rend, const box_t *box, bool solid,
                 const uvec4b_t *color, bool strip);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
 void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat);
+void render_rect(renderer_t *rend, const plane_t *plane);
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
