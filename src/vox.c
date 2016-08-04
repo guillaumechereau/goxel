@@ -199,7 +199,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, zmax - zmin, file);
 
     fprintf(file, "XYZI");
-    WRITE(uint32_t, 4 * nb_vox, file);
+    WRITE(uint32_t, 4 * nb_vox + 4, file);
     WRITE(uint32_t, 0, file);
     WRITE(uint32_t, nb_vox, file);
 
