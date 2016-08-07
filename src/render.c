@@ -647,7 +647,7 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     for (x = -n; x <= n; x++) {
         view3 = mat4_translate(view2, x, y, 0);
         model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
-                       false, NULL, 32, &center);
+                       NULL, 0, 32, &center);
     }
 }
 
