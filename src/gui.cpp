@@ -876,9 +876,73 @@ static void render_panel(goxel_t *goxel)
     float v;
     char *name;
     render_settings_t settings;
+    
+     ImGui::Text("Camera");
 
     ImGui::Checkbox("Ortho", &goxel->camera.ortho);
     ImGui::PushID("RenderPanel");
+    
+    if (goxel->camera.ortho) {
+        
+    }
+    
+    
+    ImGui::PopItemWidth();
+    ImGui::PushItemWidth(-1);
+    
+    
+    ImGui::Text("Distance");
+    v = goxel->camera.dist;
+    if (ImGui::InputFloat("Disc", &v, 0.1, 1)) {
+        goxel->camera.dist = v;
+    }
+    
+    ImGui::Text("Offset x");
+    v = goxel->camera.ofs.x;
+    if (ImGui::InputFloat("Ofs x", &v, 0.1, 1)) {
+        goxel->camera.ofs.x = v;
+    }
+    
+    ImGui::Text("Offset y");
+    v = goxel->camera.ofs.y;
+    if (ImGui::InputFloat("Ofs y", &v, 0.1, 1)) {
+        goxel->camera.ofs.y = v;
+    }
+    
+    ImGui::Text("Offset z");
+    v = goxel->camera.ofs.z;
+    if (ImGui::InputFloat("Ofs z", &v, 0.1, 1)) {
+        goxel->camera.ofs.z = v;
+    }
+    
+    ImGui::Text("Rotation x");
+    v = goxel->camera.rot.x;
+    if (ImGui::InputFloat("rot x", &v, 0.1, 1)) {
+        goxel->camera.rot.x = v;
+    }
+    
+    ImGui::Text("Rotation y");
+    v = goxel->camera.rot.y;
+    if (ImGui::InputFloat("rot y", &v, 0.1, 1)) {
+        goxel->camera.rot.y = v;
+    }
+    
+    ImGui::Text("Rotation z");
+    v = goxel->camera.rot.z;
+    if (ImGui::InputFloat("rot z", &v, 0.1, 1)) {
+        goxel->camera.rot.z = v;
+    }
+    
+    ImGui::Text("Rotation w");
+    v = goxel->camera.rot.w;
+    if (ImGui::InputFloat("rot w", &v, 0.1, 1)) {
+        goxel->camera.rot.w = v;
+    }
+    
+    ImGui::PushItemWidth(GUI_DEFAULT_ITEM_WIDTH);
+    
+    
+    ImGui::Text("Block types");
     for (i = 0; i < nb; i++) {
         render_get_default_settings(i, &name, &settings);
         current = memcmp(&goxel->rend.settings, &settings,
@@ -887,6 +951,7 @@ static void render_panel(goxel_t *goxel)
             goxel->rend.settings = settings;
     }
     v = goxel->rend.settings.shadow;
+    
     if (ImGui::InputFloat("shadow", &v, 0.1)) {
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
@@ -898,10 +963,13 @@ static void render_panel(goxel_t *goxel)
 static void export_panel(goxel_t *goxel)
 {
     int i;
+    
     goxel->show_export_viewport = true;
+    
     i = goxel->image->export_width;
     if (ImGui::InputInt("width", &i, 1))
         goxel->image->export_width = clamp(i, 1, 2048);
+    
     i = goxel->image->export_height;
     if (ImGui::InputInt("height", &i, 1))
         goxel->image->export_height = clamp(i, 1, 2048);
