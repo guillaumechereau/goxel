@@ -1112,7 +1112,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                                 250, 600);
     }
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
-    ImGui::PushItemWidth(75);
+    ImGui::PushItemWidth(GUI_DEFAULT_ITEM_WIDTH);
 
     const struct {
         const char *name;
