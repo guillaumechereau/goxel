@@ -38,6 +38,7 @@ namespace ImGui {
                              bool display_frame = true,
                              bool default_open = false);
     bool GoxAction(const char *id, const char *label, const arg_t *args);
+    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
 };
 
 static texture_t *g_tex_icons = NULL;
@@ -806,15 +807,9 @@ static void render_advanced_panel(goxel_t *goxel)
     ImGui::PushID("RenderAdvancedPanel");
 
     ImGui::Text("Light");
-    i = round(goxel->rend.light.pitch * DR2D);
-    ImGui::InputInt("Pitch", &i);
-    goxel->rend.light.pitch = clamp(i, -90, +90) * DD2R;
-    i = round(goxel->rend.light.yaw * DR2D);
-    ImGui::InputInt("Yaw", &i);
-    while (i < 0) i += 360;
-    goxel->rend.light.yaw = (i % 360) * DD2R;
+    ImGui::GoxInputAngle("Pitch", &goxel->rend.light.pitch, -90, +90);
+    ImGui::GoxInputAngle("Yaw", &goxel->rend.light.yaw, 0, 360);
     ImGui::Checkbox("Fixed", &goxel->rend.light.fixed);
-
 
     v = goxel->rend.settings.border_shadow;
     if (ImGui::InputFloat("bshadow", &v, 0.1)) {
