@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
-#include <unistd.h>
+#include <getopt.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -369,7 +369,7 @@ void opts_goxel(goxel_t* goxel, int argc, char **argv)
     {
         static struct option long_options[] =
         {
-            {"version", no_argument, 0, 'v'},
+            {"version", 0, 0, 'v'},
             {0, 0, 0, 0}
         };
         
@@ -383,7 +383,7 @@ void opts_goxel(goxel_t* goxel, int argc, char **argv)
         
         switch (c)
         {
-            case "v":
+            case 'v':
                 printf("Goxel " GOXEL_VERSION_STR);
                 exit(0);
                 break;
