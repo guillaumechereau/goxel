@@ -378,7 +378,7 @@ typedef struct {
     };
 } arg_t;
 
-#define ARG(n, v) {n, {(long)v}}
+#define ARG(n, v) {n, {(long)(v)}}
 #define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
 
 // Represent a function signature with return type and arguments.
@@ -420,8 +420,8 @@ void *action_exec(const action_t *action, const arg_t *args);
 // macro works even with no action arguments.  Maybe I should add a nb_args
 // argument to action_exec to prevent that.
 #define action_exec2(id, ...) ({ \
-        const arg_t args[] = {ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)}; \
-        action_exec(action_get(id), args + 1); \
+        const arg_t args_[] = {ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)}; \
+        action_exec(action_get(id), args_ + 1); \
     })
 
 
