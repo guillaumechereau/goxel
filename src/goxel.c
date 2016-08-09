@@ -464,7 +464,7 @@ ACTION_REGISTER(export_as,
 
 
 // XXX: this function has to be rewritten.
-static void export_as_png(goxel_t *goxel, const char *path)
+void export_as_png(goxel_t *goxel, const char *path)
 {
     int w = goxel->image->export_width;
     int h = goxel->image->export_height;
@@ -543,7 +543,7 @@ ACTION_REGISTER(export_as_qubicle,
     .flags = ACTION_NO_CHANGE,
 )
 
-static void export_as_txt(goxel_t *goxel, const char *path)
+void export_as_txt(goxel_t *goxel, const char *path)
 {
     FILE *out;
     mesh_t *mesh = goxel->layers_mesh;

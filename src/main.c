@@ -60,6 +60,7 @@ void on_char(GLFWwindow *win, unsigned int c)
 typedef struct
 {
     char    *args[1];
+    char    *export_file;
 } args_t;
 
 #ifndef NO_ARGP
@@ -70,6 +71,11 @@ const char *argp_program_bug_address = "<guillaume@noctua-software.com>";
 static char doc[] = "A 3D voxels editor";
 static char args_doc[] = "[FILE]";
 
+static struct argp_option options[] = {
+	{"export",   'e', "FILE", 0, "Export to FILE the source project." },
+	{0}
+};
+
 /* Parse a single option. */
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
@@ -77,6 +83,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 
     switch (key)
     {
+	case 'e':
+		args->export_file = arg;
+		break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
             argp_usage(state);
@@ -91,7 +100,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 }
 
 /* Our argp parser. */
-static struct argp argp = { NULL, parse_opt, args_doc, doc };
+static struct argp argp = { options, parse_opt, args_doc, doc };
 #endif
 
 static void loop_function(void) {
@@ -175,6 +184,9 @@ int main(int argc, char **argv)
 #endif
 
     goxel_init(g_goxel);
+    
+    
+    
     if (args.args[0]) {
         if (str_endswith(args.args[0], ".qb"))
             qubicle_import(args.args[0]);
@@ -183,6 +195,43 @@ int main(int argc, char **argv)
         else
             load_from_file(g_goxel, args.args[0]);
     }
+    
+    if (args.export_file)
+    {
+		// Checks if there is a loaded file.
+		if (g_goxel->image->path)
+		{
+			if (str_endswith(args.export_file, ".png")) {
+				export_as_png(g_goxel, args.export_file);
+				exit(0);
+			}
+			else if (str_endswith(args.export_file, ".obj")) {
+				wavefront_export(g_goxel->layers_mesh, args.export_file);
+				exit(0);
+			}
+			else if (str_endswith(args.export_file, ".ply")) {
+				ply_export(g_goxel->layers_mesh, args.export_file);
+				exit(0);
+			}
+			else if (str_endswith(args.export_file, ".qb")) {
+				qubicle_export(g_goxel->layers_mesh, args.export_file);
+				exit(0);
+			}
+			//~ else if (str_endswith(args.export_file, ".vox")) {
+				//~ vox_export(g_goxel->layers_mesh, args.export_file);
+				//~ exit(0);
+			//~ }
+			else if (str_endswith(args.export_file, ".txt")) {
+				export_as_txt(g_goxel, args.export_file);
+				exit(0);
+			}
+			else
+			{
+				printf("Unknow the file extension to export.\n");
+				exit(1);
+			}
+		}
+	}
 
     start_main_loop(loop_function);
     goxel_release(g_goxel);

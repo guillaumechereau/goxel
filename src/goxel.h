@@ -1070,4 +1070,8 @@ const void *assets_get(const char *url, int *size);
 int assets_list(const char *url, void *user,
                 int (*f)(int i, const char *path, void *user));
 
+// ############################################
+void export_as_png(goxel_t *goxel, const char *path);
+void export_as_txt(goxel_t *goxel, const char *path);
+
 #endif // GOXEL_H
