@@ -360,33 +360,3 @@ void img_downsample(const uint8_t *img, int w, int h, int bpp,
     }
 #undef IX
 }
-
-void opts_goxel(goxel_t* goxel, int argc, char **argv)
-{
-    int c;
-    
-    while (1)
-    {
-        static struct option long_options[] =
-        {
-            {"version", 0, 0, 'v'},
-            {0, 0, 0, 0}
-        };
-        
-        int option_index = 0;
-        
-        c = getopt_long (argc, argv, "v",
-            long_options, &option_index);
-        
-        if (c == -1)
-            break;
-        
-        switch (c)
-        {
-            case 'v':
-                printf("Goxel " GOXEL_VERSION_STR);
-                exit(0);
-                break;
-        }
-    }
-}
