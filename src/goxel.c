@@ -449,6 +449,16 @@ void goxel_update_meshes(goxel_t *goxel, bool pick)
 static void export_as(goxel_t *goxel, const char *type, const char *path)
 {
     char id[128];
+    assert(path);
+    // If not provided, try to guess the type from the path extension.
+    if (!type) {
+        type = strrchr(path, '.');
+        if (!type) {
+            LOG_E("Cannot guess file extension");
+            return;
+        }
+        type++;
+    }
     sprintf(id, "export_as_%s", type);
     action_exec2(id, ARG("path", path));
 }
