@@ -617,10 +617,13 @@ void goxel_redo(goxel_t *goxel)
 void goxel_import_image_plane(goxel_t *goxel, const char *path)
 {
     layer_t *layer;
+    texture_t *tex;
+    tex = texture_new_image(path);
+    if (!tex) return;
     image_history_push(goxel->image);
     layer = image_add_layer(goxel->image);
     sprintf(layer->name, "img");
-    layer->image = texture_new_image(path);
+    layer->image = tex;
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
 }
 
