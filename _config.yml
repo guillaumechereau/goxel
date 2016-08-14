@@ -5,6 +5,5 @@ description: >
 baseurl: "" # the subpath of your site, e.g. /blog
 twitter_username: guillaumecherea
 github_username:  guillaumechereau
-
-# Build settings
+encoding: UTF-8
 markdown: kramdown
