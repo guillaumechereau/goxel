@@ -7,7 +7,7 @@ layout: default
 <div class="photo-gallery">
   {% for image in page.images %}
     <div class="thumbnail">
-        <img src="/images/screenshots/{{ image.path }}"
+        <img src="{{site.baseurl}}/images/screenshots/{{ image.path }}"
              alt="{{ image.title}}"/>
         <div class="caption">
             <h3>{{ image.title }}</h3>
