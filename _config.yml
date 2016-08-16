@@ -2,7 +2,7 @@ title: Goxel
 email: guillaume@noctua-software.com
 description: >
   An open source voxel editor for Mac, Linux and Windows.
-baseurl: "" # the subpath of your site, e.g. /blog
+baseurl: "/goxel"
 twitter_username: guillaumecherea
 github_username:  guillaumechereau
 encoding: UTF-8
