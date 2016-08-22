@@ -535,6 +535,47 @@ DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z)
                 cos(a));
 }
 
+// Thanks to the developer of OpenGL Mathematics (http://glm.g-truc.net/)
+// I have been reading deeply your code, the files glm/gtc/quaternion.hpp .
+// He gave me the solution, the next code (functions euler_to_quat
+// and quat_to_euler) is inspired in your work.
+
+DECL vec3_t quat_to_euler(quat_t q)
+{
+	vec3_t result;
+	
+	result.x = atan2(2 * (q.y*q.z + q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z);
+	double temp = -2*(q.x*q.z - q.w*q.y);
+	if (temp < -1)
+		temp = -1;
+	else if (temp > 1)
+		temp = 1;
+	result.y = asin(temp);
+	
+	result.z = atan2(2 * (q.x*q.y + q.w*q.z), q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z);
+	
+	return result;
+} 
+
+DECL quat_t euler_to_quat(vec3_t v)
+{
+	real_t sx = sin(v.x / 2);
+	real_t sy = sin(v.y / 2);
+	real_t sz = sin(v.z / 2);
+	real_t cx = cos(v.x / 2);
+	real_t cy = cos(v.y / 2);
+	real_t cz = cos(v.z / 2);
+	
+	quat_t result;
+	
+	result.x = sx*cy*cz - cx*sy*sz;
+	result.y = cx*sy*cz + sx*cy*sz;
+	result.z = cx*cy*sz - sx*sy*cz;
+	result.w = cx*cy*cz + sx*sy*sz;
+	
+	return result; 
+}
+
 DECL mat4_t quat_to_mat4(quat_t q)
 {
     real_t x, y, z, w;
