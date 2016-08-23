@@ -387,7 +387,12 @@ static void tool_options_panel(goxel_t *goxel)
     int i;
     float v;
     bool s;
-    const char *snap[] = {"Mesh", "Plane", "Selection"};
+    const char *snap[][2] = {
+        {"Mesh", "M"},
+        {"Plane", "P"},
+        {"Selection Inside", "SI"},
+        {"Selection Outside", "SO"},
+    };
     ImVec4 color;
     layer_t *layer;
     mat4_t mat;
@@ -411,13 +416,13 @@ static void tool_options_panel(goxel_t *goxel)
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         ImGui::Text("Snap on");
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i < (int)ARRAY_SIZE(snap); i++) {
             s = goxel->snap & (1 << i);
-            if (ImGui::GoxSelectable(snap[i], &s, 0, 0)) {
+            if (ImGui::GoxSelectable(snap[i][1], &s, 0, 0, snap[i][0])) {
                 goxel->snap = s ? goxel->snap | (1 << i) :
                                   goxel->snap & ~(1 << i);
             }
-            if (i != 2)
+            if (i != ARRAY_SIZE(snap) - 1)
                 ImGui::SameLine();
         }
     }

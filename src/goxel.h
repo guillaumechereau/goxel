@@ -746,9 +746,10 @@ enum {
 
 // Flags to set where the mouse snap.
 enum {
-    SNAP_MESH       = 1 << 0,
-    SNAP_PLANE      = 1 << 1,
-    SNAP_SELECTION  = 1 << 2,
+    SNAP_MESH           = 1 << 0,
+    SNAP_PLANE          = 1 << 1,
+    SNAP_SELECTION_IN   = 1 << 2,
+    SNAP_SELECTION_OUT  = 1 << 3,
 };
 
 typedef struct inputs

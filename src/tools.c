@@ -85,7 +85,7 @@ static void set_snap_hint(goxel_t *goxel, int snap)
         goxel_set_hint_text(goxel, "[Snapped to mesh]");
     if (snap == SNAP_PLANE)
         goxel_set_hint_text(goxel, "[Snapped to plane]");
-    if (snap == SNAP_SELECTION)
+    if (snap == SNAP_SELECTION_IN || snap == SNAP_SELECTION_OUT)
         goxel_set_hint_text(goxel, "[Snapped to selection]");
 }
 

@@ -180,7 +180,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         return r ? SNAP_PLANE : 0;
     }
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < 4; i++) {
         if (!(goxel->snap & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH)
             r = goxel_unproject_on_mesh(goxel, view_size, pos,
@@ -188,11 +188,14 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, view_size, pos,
                                          &goxel->plane, &p, &n);
-        if ((1 << i) == SNAP_SELECTION) {
+        if ((1 << i) == SNAP_SELECTION_IN)
             r = goxel_unproject_on_box(goxel, view_size, pos,
                                        &goxel->selection, true,
                                        &p, &n, NULL);
-        }
+        if ((1 << i) == SNAP_SELECTION_OUT)
+            r = goxel_unproject_on_box(goxel, view_size, pos,
+                                       &goxel->selection, false,
+                                       &p, &n, NULL);
         if (!r)
             continue;
 
