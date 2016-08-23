@@ -171,7 +171,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
     int i, ret = 0;
     vec3_t p, n;
     float dist, best = INFINITY;
-    bool r;
+    bool r = false;
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
