@@ -923,6 +923,7 @@ typedef struct goxel
     palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
     char       *help_text;  // Seen in the bottom of the screen.
+    char       *hint_text;  // Seen in the bottom of the screen.
 
     int        frame_count;       // Global frames counter.
     int64_t    frame_clock;       // Clock time at beginning of the frame.
@@ -955,6 +956,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
 void goxel_update_meshes(goxel_t *goxel, bool pick);
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
+void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);
 
 // XXX: use actions for all that!
 void goxel_undo(goxel_t *goxel);

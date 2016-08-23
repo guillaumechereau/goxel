@@ -260,6 +260,7 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->frame_clock = get_clock();
     profiler_tick();
     goxel_set_help_text(goxel, NULL);
+    goxel_set_hint_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
     camera_update(&goxel->camera);
     goxel->rend.view_mat = goxel->camera.view_mat;
@@ -591,6 +592,7 @@ ACTION_REGISTER(export_as_txt,
     .flags = ACTION_NO_CHANGE,
 )
 
+// XXX: we could merge all the set_xxx_text function into a single one.
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
 {
     va_list args;
@@ -599,6 +601,17 @@ void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
     if (!msg) return;
     va_start(args, msg);
     vasprintf(&goxel->help_text, msg, args);
+    va_end(args);
+}
+
+void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
+{
+    va_list args;
+    free(goxel->hint_text);
+    goxel->hint_text = NULL;
+    if (!msg) return;
+    va_start(args, msg);
+    vasprintf(&goxel->hint_text, msg, args);
     va_end(args);
 }
 
