@@ -75,7 +75,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
 }
 
 bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
-                     const vec2_t *pos, const box_t *box,
+                     const vec2_t *pos, const box_t *box, bool inside,
                      vec3_t *out, vec3_t *normal,
                      int *face)
 {
@@ -87,20 +87,24 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
     plane_t plane;
     vec4_t view = vec4(0, 0, view_size->x, view_size->y);
 
+    if (box_is_null(*box)) return false;
     camera_get_ray(&goxel->camera, &wpos.xy, &view, &opos, &onorm);
     for (f = 0; f < 6; f++) {
         plane.mat = box->mat;
         mat4_imul(&plane.mat, FACES_MATS[f]);
 
-        if (vec3_dot(plane.n, onorm) >= 0)
+        if (!inside && vec3_dot(plane.n, onorm) >= 0)
+            continue;
+        if (inside && vec3_dot(plane.n, onorm) <= 0)
             continue;
         if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
         if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
             continue;
-        *face = f;
+        if (face) *face = f;
         *out = mat4_mul_vec3(plane.mat, *out);
         *normal = vec3_normalized(plane.n);
+        if (inside) vec3_imul(normal, -1);
         return true;
     }
     return false;
@@ -164,8 +168,9 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
                     const vec2_t *pos, vec3_t *out, vec3_t *normal)
 {
-    int i;
+    int i, ret = 0;
     vec3_t p, n;
+    float dist, best = INFINITY;
     bool r;
 
     // If tool_plane is set, we specifically use it.
@@ -175,7 +180,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         return r ? SNAP_PLANE : 0;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 3; i++) {
         if (!(goxel->snap & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH)
             r = goxel_unproject_on_mesh(goxel, view_size, pos,
@@ -183,18 +188,27 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, view_size, pos,
                                          &goxel->plane, &p, &n);
+        if ((1 << i) == SNAP_SELECTION) {
+            r = goxel_unproject_on_box(goxel, view_size, pos,
+                                       &goxel->selection, true,
+                                       &p, &n, NULL);
+        }
         if (!r)
             continue;
 
+        dist = -mat4_mul_vec3(goxel->camera.view_mat, p).z;
+        if (dist < 0 || dist > best) continue;
+
+        best = dist;
         p.x = round(p.x - 0.5) + 0.5;
         p.y = round(p.y - 0.5) + 0.5;
         p.z = round(p.z - 0.5) + 0.5;
 
         *out = p;
         *normal = n;
-        return 1 << i;
+        ret = 1 << i;
     }
-    return 0;
+    return ret;
 }
 
 void goxel_init(goxel_t *goxel)

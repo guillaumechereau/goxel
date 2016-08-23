@@ -744,10 +744,11 @@ enum {
     KEY_CONTROL     = 341,
 };
 
-// Flags to set where the mouse snap.  This might change in the future.
+// Flags to set where the mouse snap.
 enum {
-    SNAP_MESH  = 1 << 0,
-    SNAP_PLANE = 1 << 1,
+    SNAP_MESH       = 1 << 0,
+    SNAP_PLANE      = 1 << 1,
+    SNAP_SELECTION  = 1 << 2,
 };
 
 typedef struct inputs
@@ -951,7 +952,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const plane_t *plane,
                      vec3_t *out, vec3_t *normal);
 bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
-                     const vec2_t *pos, const box_t *box,
+                     const vec2_t *pos, const box_t *box, bool inside,
                      vec3_t *out, vec3_t *normal, int *face);
 void goxel_update_meshes(goxel_t *goxel, bool pick);
 

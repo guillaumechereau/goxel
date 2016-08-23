@@ -85,6 +85,8 @@ static void set_snap_hint(goxel_t *goxel, int snap)
         goxel_set_hint_text(goxel, "[Snapped to mesh]");
     if (snap == SNAP_PLANE)
         goxel_set_hint_text(goxel, "[Snapped to plane]");
+    if (snap == SNAP_SELECTION)
+        goxel_set_hint_text(goxel, "[Snapped to selection]");
 }
 
 static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
@@ -199,7 +201,8 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
             IS_IN(state, STATE_IDLE, STATE_SNAPED, STATE_SNAPED_FACE)) {
         goxel->tool_snape_face = -1;
         if (goxel_unproject_on_box(goxel, view_size, &inputs->mouse_pos,
-                               &goxel->selection, &pos, &normal, &face)) {
+                               &goxel->selection, false,
+                               &pos, &normal, &face)) {
             goxel->tool_snape_face = face;
             state = STATE_SNAPED_FACE;
         }

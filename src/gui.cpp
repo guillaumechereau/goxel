@@ -387,7 +387,7 @@ static void tool_options_panel(goxel_t *goxel)
     int i;
     float v;
     bool s;
-    const char *snap[] = {"Mesh", "Plane"};
+    const char *snap[] = {"Mesh", "Plane", "Selection"};
     ImVec4 color;
     layer_t *layer;
     mat4_t mat;
@@ -411,12 +411,13 @@ static void tool_options_panel(goxel_t *goxel)
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         ImGui::Text("Snap on");
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < 3; i++) {
             s = goxel->snap & (1 << i);
             if (ImGui::GoxSelectable(snap[i], &s, 0, 0)) {
-                goxel->snap = s ? goxel->snap | (1 << i) : goxel->snap & ~(1 << i);
+                goxel->snap = s ? goxel->snap | (1 << i) :
+                                  goxel->snap & ~(1 << i);
             }
-            if (i != 1)
+            if (i != 2)
                 ImGui::SameLine();
         }
     }
@@ -1165,7 +1166,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     // Apparently there is a bug if we do not render anything.  So I render
     // a '.' if there is nothing.  This is a hack.
     ImGui::Text("%s", goxel->hint_text ?: ".");
-    ImGui::SameLine(150);
+    ImGui::SameLine(180);
     ImGui::Text("%s", goxel->help_text ?: "");
 
     ImGui::EndChild();
