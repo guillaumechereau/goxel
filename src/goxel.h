@@ -378,7 +378,7 @@ typedef struct {
     };
 } arg_t;
 
-#define ARG(n, v) {n, {(long)v}}
+#define ARG(n, v) {n, {(long)(v)}}
 #define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
 
 // Represent a function signature with return type and arguments.
@@ -420,8 +420,8 @@ void *action_exec(const action_t *action, const arg_t *args);
 // macro works even with no action arguments.  Maybe I should add a nb_args
 // argument to action_exec to prevent that.
 #define action_exec2(id, ...) ({ \
-        const arg_t args[] = {ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)}; \
-        action_exec(action_get(id), args + 1); \
+        const arg_t args_[] = {ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)}; \
+        action_exec(action_get(id), args_ + 1); \
     })
 
 
@@ -652,6 +652,8 @@ void render_rect(renderer_t *rend, const plane_t *plane, int strip);
 void render_render(renderer_t *rend, const int rect[4],
                    const vec4_t *clear_color);
 int render_get_default_settings(int i, char **name, render_settings_t *out);
+// Compute the light direction in the model coordinates (toward the light)
+vec3_t render_get_light_dir(const renderer_t *rend);
 
 // #############################
 
@@ -742,10 +744,12 @@ enum {
     KEY_CONTROL     = 341,
 };
 
-// Flags to set where the mouse snap.  This might change in the future.
+// Flags to set where the mouse snap.
 enum {
-    SNAP_MESH  = 1 << 0,
-    SNAP_PLANE = 1 << 1,
+    SNAP_MESH           = 1 << 0,
+    SNAP_PLANE          = 1 << 1,
+    SNAP_SELECTION_IN   = 1 << 2,
+    SNAP_SELECTION_OUT  = 1 << 3,
 };
 
 typedef struct inputs
@@ -921,6 +925,7 @@ typedef struct goxel
     palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
     char       *help_text;  // Seen in the bottom of the screen.
+    char       *hint_text;  // Seen in the bottom of the screen.
 
     int        frame_count;       // Global frames counter.
     int64_t    frame_clock;       // Clock time at beginning of the frame.
@@ -948,11 +953,12 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const plane_t *plane,
                      vec3_t *out, vec3_t *normal);
 bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
-                     const vec2_t *pos, const box_t *box,
+                     const vec2_t *pos, const box_t *box, bool inside,
                      vec3_t *out, vec3_t *normal, int *face);
 void goxel_update_meshes(goxel_t *goxel, bool pick);
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
+void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);
 
 // XXX: use actions for all that!
 void goxel_undo(goxel_t *goxel);
@@ -1069,5 +1075,16 @@ const void *assets_get(const char *url, int *size);
 // If f returns not 0, the asset is skipped.
 int assets_list(const char *url, void *user,
                 int (*f)(int i, const char *path, void *user));
+
+// Basic mustache templates support
+// Check povray.c for an example of usage.
+
+typedef struct mustache mustache_t;
+mustache_t *mustache_root(void);
+mustache_t *mustache_add_dict(mustache_t *m, const char *key);
+mustache_t *mustache_add_list(mustache_t *m, const char *key);
+void mustache_add_str(mustache_t *m, const char *key, const char *fmt, ...);
+int mustache_render(const mustache_t *m, const char *templ, char *out);
+void mustache_free(mustache_t *m);
 
 #endif // GOXEL_H

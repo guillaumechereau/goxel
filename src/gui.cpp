@@ -38,6 +38,7 @@ namespace ImGui {
                              bool display_frame = true,
                              bool default_open = false);
     bool GoxAction(const char *id, const char *label, const arg_t *args);
+    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
 };
 
 static texture_t *g_tex_icons = NULL;
@@ -386,7 +387,12 @@ static void tool_options_panel(goxel_t *goxel)
     int i;
     float v;
     bool s;
-    const char *snap[] = {"Mesh", "Plane"};
+    const char *snap[][2] = {
+        {"Mesh", "M"},
+        {"Plane", "P"},
+        {"Selection Inside", "SI"},
+        {"Selection Outside", "SO"},
+    };
     ImVec4 color;
     layer_t *layer;
     mat4_t mat;
@@ -410,12 +416,13 @@ static void tool_options_panel(goxel_t *goxel)
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         ImGui::Text("Snap on");
-        for (i = 0; i < 2; i++) {
+        for (i = 0; i < (int)ARRAY_SIZE(snap); i++) {
             s = goxel->snap & (1 << i);
-            if (ImGui::GoxSelectable(snap[i], &s, 0, 0)) {
-                goxel->snap = s ? goxel->snap | (1 << i) : goxel->snap & ~(1 << i);
+            if (ImGui::GoxSelectable(snap[i][1], &s, 0, 0, snap[i][0])) {
+                goxel->snap = s ? goxel->snap | (1 << i) :
+                                  goxel->snap & ~(1 << i);
             }
-            if (i != 1)
+            if (i != ARRAY_SIZE(snap) - 1)
                 ImGui::SameLine();
         }
     }
@@ -806,15 +813,9 @@ static void render_advanced_panel(goxel_t *goxel)
     ImGui::PushID("RenderAdvancedPanel");
 
     ImGui::Text("Light");
-    i = round(goxel->rend.light.pitch * DR2D);
-    ImGui::InputInt("Pitch", &i);
-    goxel->rend.light.pitch = clamp(i, -90, +90) * DD2R;
-    i = round(goxel->rend.light.yaw * DR2D);
-    ImGui::InputInt("Yaw", &i);
-    while (i < 0) i += 360;
-    goxel->rend.light.yaw = (i % 360) * DD2R;
+    ImGui::GoxInputAngle("Pitch", &goxel->rend.light.pitch, -90, +90);
+    ImGui::GoxInputAngle("Yaw", &goxel->rend.light.yaw, 0, 360);
     ImGui::Checkbox("Fixed", &goxel->rend.light.fixed);
-
 
     v = goxel->rend.settings.border_shadow;
     if (ImGui::InputFloat("bshadow", &v, 0.1)) {
@@ -1156,6 +1157,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 if (ImGui::MenuItem("ply")) export_as(goxel, "ply\0*.ply\0");
                 if (ImGui::MenuItem("qubicle")) export_as(goxel, "qubicle\0*.qb\0");
                 if (ImGui::MenuItem("vox")) export_as(goxel, "vox\0*.vox\0");
+                if (ImGui::MenuItem("pov")) export_as(goxel, "pov\0*.pov\0");
                 if (ImGui::MenuItem("txt")) export_as(goxel, "txt\0*.txt\0");
                 ImGui::EndMenu();
             }
@@ -1236,7 +1238,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     // Apparently there is a bug if we do not render anything.  So I render
     // a '.' if there is nothing.  This is a hack.
-    ImGui::Text("%s", goxel->help_text ?: ".");
+    ImGui::Text("%s", goxel->hint_text ?: ".");
+    ImGui::SameLine(180);
+    ImGui::Text("%s", goxel->help_text ?: "");
+
     ImGui::EndChild();
 
     if (DEBUG || PROFILER) {
