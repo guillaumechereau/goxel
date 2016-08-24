@@ -151,6 +151,10 @@ texture_t *texture_new_image(const char *path)
     uint8_t *img;
     int w, h, bpp = 0;
     img = img_read(path, &w, &h, &bpp);
+    if (!img) {
+        LOG_W("Cannot open image '%s'", path);
+        return NULL;
+    }
     tex = calloc(1, sizeof(*tex));
     tex->path = strdup(path);
     tex->tex_w = next_pow2(w);

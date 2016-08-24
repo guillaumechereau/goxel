@@ -6,6 +6,8 @@ Version 0.3
 
 By Guillaume Chereau <guillaume@noctua-software.com>
 
+Webpage: https://guillaumechereau.github.io/goxel
+
 About
 -----
 

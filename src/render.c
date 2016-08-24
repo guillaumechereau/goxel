@@ -477,6 +477,11 @@ static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
     return light_dir.xyz;
 }
 
+vec3_t render_get_light_dir(const renderer_t *rend)
+{
+    return get_light_dir(rend, false);
+}
+
 // Compute the minimum projection box to use for the shadow map.
 static void compute_shadow_map_box(
                 const renderer_t *rend,
