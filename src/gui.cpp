@@ -887,7 +887,7 @@ static void render_panel(goxel_t *goxel)
     }
     
     
-    ImGui::PopItemWidth();
+    
     ImGui::PushItemWidth(-1);
     
     
@@ -897,47 +897,63 @@ static void render_panel(goxel_t *goxel)
         goxel->camera.dist = v;
     }
     
-    ImGui::Text("Offset x");
+    ImGui::PopItemWidth();
+    
+    ImGui::PushItemWidth(0);
+    
+    ImGui::PushID("RenderPanel_offset");
+    
+    ImGui::Text("Offset");
     v = goxel->camera.ofs.x;
-    if (ImGui::InputFloat("Ofs x", &v, 0.1, 1)) {
+    if (ImGui::InputFloat("X", &v, 0.1, 1)) {
         goxel->camera.ofs.x = v;
     }
     
-    ImGui::Text("Offset y");
     v = goxel->camera.ofs.y;
-    if (ImGui::InputFloat("Ofs y", &v, 0.1, 1)) {
+    if (ImGui::InputFloat("Y", &v, 0.1, 1)) {
         goxel->camera.ofs.y = v;
     }
     
-    ImGui::Text("Offset z");
     v = goxel->camera.ofs.z;
-    if (ImGui::InputFloat("Ofs z", &v, 0.1, 1)) {
+    if (ImGui::InputFloat("Z", &v, 0.1, 1)) {
         goxel->camera.ofs.z = v;
     }
+    ImGui::PopID();
     
-    ImGui::Text("Rotation x");
-    v = goxel->camera.rot.x;
-    if (ImGui::InputFloat("rot x", &v, 0.1, 1)) {
-        goxel->camera.rot.x = v;
+    
+    ImGui::PushID("RenderPanel_rotation");
+    
+    ImGui::Text("Rotation");
+    vec3_t rot_euler = quat_to_euler(goxel->camera.rot);
+    real_t rot_x = rot_euler.x * DR2D;
+    rot_x = fmod(rot_x + 360, 360);
+    real_t rot_y = rot_euler.y * DR2D;
+    rot_y = fmod(rot_y + 360, 360);
+    real_t rot_z = rot_euler.z * DR2D;
+    rot_z = fmod(rot_z + 360, 360);
+    
+    v = rot_x;
+    if (ImGui::InputFloat("X", &v, 0.1, 1)) {
+        rot_x = clamp(v, 0, 360);
     }
     
-    ImGui::Text("Rotation y");
-    v = goxel->camera.rot.y;
-    if (ImGui::InputFloat("rot y", &v, 0.1, 1)) {
-        goxel->camera.rot.y = v;
+    v = rot_y;
+    if (ImGui::InputFloat("Y", &v, 0.1, 1)) {
+        rot_y = clamp(v, 0, 360);
     }
     
-    ImGui::Text("Rotation z");
-    v = goxel->camera.rot.z;
-    if (ImGui::InputFloat("rot z", &v, 0.1, 1)) {
-        goxel->camera.rot.z = v;
+    v = rot_z;
+    if (ImGui::InputFloat("Z", &v, 0.1, 1)) {
+        rot_z = clamp(v, 0, 360);
     }
     
-    ImGui::Text("Rotation w");
-    v = goxel->camera.rot.w;
-    if (ImGui::InputFloat("rot w", &v, 0.1, 1)) {
-        goxel->camera.rot.w = v;
-    }
+    ImGui::PopID();
+    
+    rot_euler.x = rot_x * DD2R;
+    rot_euler.y = rot_y * DD2R;
+    rot_euler.z = rot_z * DD2R;
+    goxel->camera.rot = euler_to_quat(rot_euler);
+    
     
     ImGui::PushItemWidth(GUI_DEFAULT_ITEM_WIDTH);
     
