@@ -239,4 +239,21 @@ namespace ImGui {
         }
         return false;
     }
+
+    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax)
+    {
+        int a;
+        bool ret;
+        a = round(*v * DR2D);
+        ret = ImGui::InputInt(id, &a);
+        if (ret) {
+            if (vmin == 0 && vmax == 360) {
+                while (a < 0) a += 360;
+                a %= 360;
+            }
+            a = clamp(a, vmin, vmax);
+            *v = (float)(a * DD2R);
+        }
+        return ret;
+    }
 };

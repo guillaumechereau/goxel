@@ -79,6 +79,16 @@ static bool check_can_skip(goxel_t *goxel, vec3_t pos, bool pressed, int op)
     return false;
 }
 
+static void set_snap_hint(goxel_t *goxel, int snap)
+{
+    if (snap == SNAP_MESH)
+        goxel_set_hint_text(goxel, "[Snapped to mesh]");
+    if (snap == SNAP_PLANE)
+        goxel_set_hint_text(goxel, "[Snapped to plane]");
+    if (snap == SNAP_SELECTION_IN || snap == SNAP_SELECTION_OUT)
+        goxel_set_hint_text(goxel, "[Snapped to selection]");
+}
+
 static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                           const vec2_t *view_size, bool inside)
 {
@@ -93,6 +103,7 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     if (inside)
         snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
                                  &pos, &normal);
+    set_snap_hint(goxel, snaped);
     if (snaped) {
         if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
                 !goxel->snap_offset)
@@ -190,7 +201,8 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
             IS_IN(state, STATE_IDLE, STATE_SNAPED, STATE_SNAPED_FACE)) {
         goxel->tool_snape_face = -1;
         if (goxel_unproject_on_box(goxel, view_size, &inputs->mouse_pos,
-                               &goxel->selection, &pos, &normal, &face)) {
+                               &goxel->selection, false,
+                               &pos, &normal, &face)) {
             goxel->tool_snape_face = face;
             state = STATE_SNAPED_FACE;
         }
@@ -298,6 +310,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                                  &pos, &normal);
     goxel_set_help_text(goxel, "Brush: use shift to draw lines, "
                                "ctrl to pick color");
+    set_snap_hint(goxel, snaped);
     if (snaped) {
         if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
                 !goxel->snap_offset)

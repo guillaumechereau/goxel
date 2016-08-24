@@ -75,7 +75,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
 }
 
 bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
-                     const vec2_t *pos, const box_t *box,
+                     const vec2_t *pos, const box_t *box, bool inside,
                      vec3_t *out, vec3_t *normal,
                      int *face)
 {
@@ -87,20 +87,24 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
     plane_t plane;
     vec4_t view = vec4(0, 0, view_size->x, view_size->y);
 
+    if (box_is_null(*box)) return false;
     camera_get_ray(&goxel->camera, &wpos.xy, &view, &opos, &onorm);
     for (f = 0; f < 6; f++) {
         plane.mat = box->mat;
         mat4_imul(&plane.mat, FACES_MATS[f]);
 
-        if (vec3_dot(plane.n, onorm) >= 0)
+        if (!inside && vec3_dot(plane.n, onorm) >= 0)
+            continue;
+        if (inside && vec3_dot(plane.n, onorm) <= 0)
             continue;
         if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
         if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
             continue;
-        *face = f;
+        if (face) *face = f;
         *out = mat4_mul_vec3(plane.mat, *out);
         *normal = vec3_normalized(plane.n);
+        if (inside) vec3_imul(normal, -1);
         return true;
     }
     return false;
@@ -164,9 +168,10 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
                     const vec2_t *pos, vec3_t *out, vec3_t *normal)
 {
-    int i;
+    int i, ret = 0;
     vec3_t p, n;
-    bool r;
+    float dist, best = INFINITY;
+    bool r = false;
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
@@ -175,7 +180,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         return r ? SNAP_PLANE : 0;
     }
 
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 4; i++) {
         if (!(goxel->snap & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH)
             r = goxel_unproject_on_mesh(goxel, view_size, pos,
@@ -183,18 +188,30 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, view_size, pos,
                                          &goxel->plane, &p, &n);
+        if ((1 << i) == SNAP_SELECTION_IN)
+            r = goxel_unproject_on_box(goxel, view_size, pos,
+                                       &goxel->selection, true,
+                                       &p, &n, NULL);
+        if ((1 << i) == SNAP_SELECTION_OUT)
+            r = goxel_unproject_on_box(goxel, view_size, pos,
+                                       &goxel->selection, false,
+                                       &p, &n, NULL);
         if (!r)
             continue;
 
+        dist = -mat4_mul_vec3(goxel->camera.view_mat, p).z;
+        if (dist < 0 || dist > best) continue;
+
+        best = dist;
         p.x = round(p.x - 0.5) + 0.5;
         p.y = round(p.y - 0.5) + 0.5;
         p.z = round(p.z - 0.5) + 0.5;
 
         *out = p;
         *normal = n;
-        return 1 << i;
+        ret = 1 << i;
     }
-    return 0;
+    return ret;
 }
 
 void goxel_init(goxel_t *goxel)
@@ -260,6 +277,7 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->frame_clock = get_clock();
     profiler_tick();
     goxel_set_help_text(goxel, NULL);
+    goxel_set_hint_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
     camera_update(&goxel->camera);
     goxel->rend.view_mat = goxel->camera.view_mat;
@@ -449,6 +467,16 @@ void goxel_update_meshes(goxel_t *goxel, bool pick)
 static void export_as(goxel_t *goxel, const char *type, const char *path)
 {
     char id[128];
+    assert(path);
+    // If not provided, try to guess the type from the path extension.
+    if (!type) {
+        type = strrchr(path, '.');
+        if (!type) {
+            LOG_E("Cannot guess file extension");
+            return;
+        }
+        type++;
+    }
     sprintf(id, "export_as_%s", type);
     action_exec2(id, ARG("path", path));
 }
@@ -581,6 +609,7 @@ ACTION_REGISTER(export_as_txt,
     .flags = ACTION_NO_CHANGE,
 )
 
+// XXX: we could merge all the set_xxx_text function into a single one.
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
 {
     va_list args;
@@ -589,6 +618,17 @@ void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
     if (!msg) return;
     va_start(args, msg);
     vasprintf(&goxel->help_text, msg, args);
+    va_end(args);
+}
+
+void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
+{
+    va_list args;
+    free(goxel->hint_text);
+    goxel->hint_text = NULL;
+    if (!msg) return;
+    va_start(args, msg);
+    vasprintf(&goxel->hint_text, msg, args);
     va_end(args);
 }
 
@@ -607,10 +647,13 @@ void goxel_redo(goxel_t *goxel)
 void goxel_import_image_plane(goxel_t *goxel, const char *path)
 {
     layer_t *layer;
+    texture_t *tex;
+    tex = texture_new_image(path);
+    if (!tex) return;
     image_history_push(goxel->image);
     layer = image_add_layer(goxel->image);
     sprintf(layer->name, "img");
-    layer->image = texture_new_image(path);
+    layer->image = tex;
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
 }
 
