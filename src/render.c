@@ -1033,7 +1033,7 @@ static const char *FSHADER =
     "    v = normalize(-(u_view * u_model * vec4(v_pos, 1.0)).xyz);     \n"
     "    r = reflect(-s, n);                                            \n"
     "    l_spe = 0.0;                                                   \n"
-    "    if (s_dot_n > 0.0)                                             \n"
+    "    if (s_dot_n > 0.0 && u_m_spe > 0.0)                            \n"
     "       l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);        \n"
     "                                                                   \n"
     "    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;            \n"
