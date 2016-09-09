@@ -17,7 +17,7 @@ Goxel if free to use for any purpose.
 - Unlimited undo buffer.
 - Multiple layers support.
 - Marching Cube rendering.
-- Procedural rendering.
+- [Procedural rendering](https://blog.noctua-software.com/goxel-procedural.html).
 - Export to obj, pyl, magica voxel, png, qubicle.
 
 {: .clear }
