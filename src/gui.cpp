@@ -39,6 +39,7 @@ namespace ImGui {
                              bool default_open = false);
     bool GoxAction(const char *id, const char *label, const arg_t *args);
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
+    bool GoxTab(const char *label, bool *v);
 };
 
 static texture_t *g_tex_icons = NULL;
@@ -1118,31 +1119,34 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     const struct {
         const char *name;
-        const char *tooltip;
         void (*fn)(goxel_t *goxel);
     } PANELS[] = {
-        {"T", "Tools", tools_panel},
-        {"P", "Palette", palette_panel},
-        {"L", "layers", layers_panel},
-        {"R", "Render", render_panel},
-        {"E", "Export", export_panel},
+        {"Tools", tools_panel},
+        {"Palette", palette_panel},
+        {"layers", layers_panel},
+        {"Render", render_panel},
+        {"Export", export_panel},
     };
 
-    goxel->show_export_viewport = false;
+    ImGui::BeginGroup();
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
-        if (i) ImGui::SameLine();
-        if (ImGui::GoxSelectable(PANELS[i].name, &b, 0, 0,
-                                 PANELS[i].tooltip))
+        if (ImGui::GoxTab(PANELS[i].name, &b))
             current_panel = i;
     }
+    ImGui::EndGroup();
+    ImGui::SameLine();
+    ImGui::BeginGroup();
 
-    ImGui::Text("%s", PANELS[current_panel].tooltip);
+    goxel->show_export_viewport = false;
+
     ImGui::PushID("panel");
     PANELS[current_panel].fn(goxel);
     ImGui::PopID();
 
+    ImGui::EndGroup();
     ImGui::EndChild();
+
     ImGui::SameLine();
 
     ImGui::BeginChild("3d view", ImVec2(0, 0), false,
