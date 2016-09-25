@@ -26,6 +26,7 @@ static const char *TEMPLATE =
 
     "{{#camera}}"
     "camera {\n"
+    "    right x*{{width}}/{{height}}\n"
     "    location {{location}}\n"
     "    look_at {{look_at}}\n"
     "    angle {{angle}}\n"
@@ -67,14 +68,20 @@ static void export_as_pov(goxel_t *goxel, const char *path)
     FILE *file;
     layer_t *layer;
     block_t *block;
+    int w = goxel->image->export_width;
+    int h = goxel->image->export_height;
     int size, x, y, z, vx, vy, vz;
     char *buf;
     uvec4b_t v;
     mat4_t cam_to_view;
     vec3_t cam_pos, cam_look_at, light_dir;
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
+    camera_t camera = goxel->camera;
 
-    cam_to_view = mat4_inverted(goxel->camera.view_mat);
+    camera.aspect = (float)w / h;
+    camera_update(&camera);
+
+    cam_to_view = mat4_inverted(camera.view_mat);
     cam_pos = mat4_mul_vec(cam_to_view, vec4(0, 0, 0, 1)).xyz;
     cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
     light_dir = render_get_light_dir(&goxel->rend);
@@ -82,11 +89,13 @@ static void export_as_pov(goxel_t *goxel, const char *path)
     m = mustache_root();
     mustache_add_str(m, "version", GOXEL_VERSION_STR);
     m_cam = mustache_add_dict(m, "camera");
+    mustache_add_str(m_cam, "width", "%d", w);
+    mustache_add_str(m_cam, "height", "%d", h);
     mustache_add_str(m_cam, "location", "<%.1f, %.1f, %.1f>",
                      FIX_AXIS(cam_pos.x, cam_pos.y, cam_pos.z));
     mustache_add_str(m_cam, "look_at", "<%.1f, %.1f, %.1f>",
                      FIX_AXIS(cam_look_at.x, cam_look_at.y, cam_look_at.z));
-    mustache_add_str(m_cam, "angle", "%.1f", goxel->camera.fovy);
+    mustache_add_str(m_cam, "angle", "%.1f", camera.fovy);
     m_light = mustache_add_dict(m, "light");
     mustache_add_str(m_light, "ambient", "%.2f",
                      goxel->rend.settings.ambient);
