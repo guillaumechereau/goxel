@@ -492,10 +492,9 @@ ACTION_REGISTER(export_as,
 
 
 // XXX: this function has to be rewritten.
-static void export_as_png(goxel_t *goxel, const char *path)
+static void export_as_png(goxel_t *goxel, const char *path,
+                          int w, int h)
 {
-    int w = goxel->image->export_width;
-    int h = goxel->image->export_height;
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *data2, *data;
     texture_t *fbo;
@@ -528,7 +527,9 @@ ACTION_REGISTER(export_as_png,
     .help = "Save the image as a png file",
     .func = export_as_png,
     .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
+                          ARG("path", TYPE_FILE_PATH),
+                          ARG("width", TYPE_INT),
+                          ARG("height", TYPE_INT)),
     .flags = ACTION_NO_CHANGE,
 )
 

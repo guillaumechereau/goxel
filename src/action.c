@@ -60,6 +60,10 @@ static long get_arg_value(arg_t arg, const arg_t *args)
         return (long)goxel()->image->active_layer;
     if (arg.type == TYPE_BOX)
         return (long)&goxel()->selection;
+    if (str_equ(arg.name, "width"))
+        return (int)goxel()->image->export_width;
+    if (str_equ(arg.name, "height"))
+        return (int)goxel()->image->export_height;
     return 0;
 }
 

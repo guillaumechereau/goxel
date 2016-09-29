@@ -63,13 +63,12 @@ static const char *TEMPLATE =
 // Turn goxel coordinates into povray coordinates.
 #define FIX_AXIS(x, y, z) (y), (z), (-x)
 
-static void export_as_pov(goxel_t *goxel, const char *path)
+static void export_as_pov(goxel_t *goxel, const char *path,
+                          int w, int h)
 {
     FILE *file;
     layer_t *layer;
     block_t *block;
-    int w = goxel->image->export_width;
-    int h = goxel->image->export_height;
     int size, x, y, z, vx, vy, vz;
     char *buf;
     uvec4b_t v;
@@ -131,6 +130,8 @@ ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
     .func = export_as_pov,
     .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
+                          ARG("path", TYPE_FILE_PATH),
+                          ARG("width", TYPE_INT),
+                          ARG("height", TYPE_INT)),
     .flags = ACTION_NO_CHANGE,
 )
