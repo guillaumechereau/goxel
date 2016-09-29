@@ -94,7 +94,7 @@ static void export_as_pov(goxel_t *goxel, const char *path,
                      FIX_AXIS(cam_pos.x, cam_pos.y, cam_pos.z));
     mustache_add_str(m_cam, "look_at", "<%.1f, %.1f, %.1f>",
                      FIX_AXIS(cam_look_at.x, cam_look_at.y, cam_look_at.z));
-    mustache_add_str(m_cam, "angle", "%.1f", camera.fovy);
+    mustache_add_str(m_cam, "angle", "%.1f", camera.fovy * camera.aspect);
     m_light = mustache_add_dict(m, "light");
     mustache_add_str(m_light, "ambient", "%.2f",
                      goxel->rend.settings.ambient);
