@@ -51,11 +51,13 @@
 static layer_t *layer_new(const char *name)
 {
     layer_t *layer;
+    
     layer = calloc(1, sizeof(*layer));
     // XXX: potential bug here.
     strncpy(layer->name, name, sizeof(layer->name));
     layer->mesh = mesh_new();
     layer->mat = mat4_identity;
+    
     return layer;
 }
 
@@ -82,12 +84,14 @@ image_t *image_new(void)
 {
     layer_t *layer;
     image_t *img = calloc(1, sizeof(*img));
+    
     img->export_width = 256;
     img->export_height = 256;
     layer = layer_new("background");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
+    
     return img;
 }
 

@@ -980,6 +980,8 @@ uvec3b_t rgb_to_hsl(uvec3b_t rgb);
 
 // #### Gui ####################
 
+#define GUI_DEFAULT_ITEM_WIDTH 75
+
 void gui_init(void);
 void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);
@@ -1084,5 +1086,8 @@ mustache_t *mustache_add_list(mustache_t *m, const char *key);
 void mustache_add_str(mustache_t *m, const char *key, const char *fmt, ...);
 int mustache_render(const mustache_t *m, const char *templ, char *out);
 void mustache_free(mustache_t *m);
+// ############################################
+void export_as_png(goxel_t *goxel, const char *path);
+void export_as_txt(goxel_t *goxel, const char *path);
 
 #endif // GOXEL_H

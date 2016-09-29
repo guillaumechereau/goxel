@@ -878,9 +878,89 @@ static void render_panel(goxel_t *goxel)
     float v;
     char *name;
     render_settings_t settings;
+    
+     ImGui::Text("Camera");
 
     ImGui::Checkbox("Ortho", &goxel->camera.ortho);
     ImGui::PushID("RenderPanel");
+    
+    if (goxel->camera.ortho) {
+        
+    }
+    
+    
+    
+    ImGui::PushItemWidth(-1);
+    
+    
+    ImGui::Text("Distance");
+    v = goxel->camera.dist;
+    if (ImGui::InputFloat("Disc", &v, 0.1, 1)) {
+        goxel->camera.dist = v;
+    }
+    
+    ImGui::PopItemWidth();
+    
+    ImGui::PushItemWidth(0);
+    
+    ImGui::PushID("RenderPanel_offset");
+    
+    ImGui::Text("Offset");
+    v = goxel->camera.ofs.x;
+    if (ImGui::InputFloat("X", &v, 0.1, 1)) {
+        goxel->camera.ofs.x = v;
+    }
+    
+    v = goxel->camera.ofs.y;
+    if (ImGui::InputFloat("Y", &v, 0.1, 1)) {
+        goxel->camera.ofs.y = v;
+    }
+    
+    v = goxel->camera.ofs.z;
+    if (ImGui::InputFloat("Z", &v, 0.1, 1)) {
+        goxel->camera.ofs.z = v;
+    }
+    ImGui::PopID();
+    
+    
+    ImGui::PushID("RenderPanel_rotation");
+    
+    ImGui::Text("Rotation");
+    vec3_t rot_euler = quat_to_euler(goxel->camera.rot);
+    real_t rot_x = rot_euler.x * DR2D;
+    rot_x = fmod(rot_x + 360, 360);
+    real_t rot_y = rot_euler.y * DR2D;
+    rot_y = fmod(rot_y + 360, 360);
+    real_t rot_z = rot_euler.z * DR2D;
+    rot_z = fmod(rot_z + 360, 360);
+    
+    v = rot_x;
+    if (ImGui::InputFloat("X", &v, 0.1, 1)) {
+        rot_x = clamp(v, 0, 360);
+    }
+    
+    v = rot_y;
+    if (ImGui::InputFloat("Y", &v, 0.1, 1)) {
+        rot_y = clamp(v, 0, 360);
+    }
+    
+    v = rot_z;
+    if (ImGui::InputFloat("Z", &v, 0.1, 1)) {
+        rot_z = clamp(v, 0, 360);
+    }
+    
+    ImGui::PopID();
+    
+    rot_euler.x = rot_x * DD2R;
+    rot_euler.y = rot_y * DD2R;
+    rot_euler.z = rot_z * DD2R;
+    goxel->camera.rot = euler_to_quat(rot_euler);
+    
+    
+    ImGui::PushItemWidth(GUI_DEFAULT_ITEM_WIDTH);
+    
+    
+    ImGui::Text("Block types");
     for (i = 0; i < nb; i++) {
         render_get_default_settings(i, &name, &settings);
         current = memcmp(&goxel->rend.settings, &settings,
@@ -889,6 +969,7 @@ static void render_panel(goxel_t *goxel)
             goxel->rend.settings = settings;
     }
     v = goxel->rend.settings.shadow;
+    
     if (ImGui::InputFloat("shadow", &v, 0.1)) {
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
@@ -900,10 +981,13 @@ static void render_panel(goxel_t *goxel)
 static void export_panel(goxel_t *goxel)
 {
     int i;
+    
     goxel->show_export_viewport = true;
+    
     i = goxel->image->export_width;
     if (ImGui::InputInt("width", &i, 1))
         goxel->image->export_width = clamp(i, 1, 2048);
+    
     i = goxel->image->export_height;
     if (ImGui::InputInt("height", &i, 1))
         goxel->image->export_height = clamp(i, 1, 2048);
@@ -1115,7 +1199,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                                 250, 600);
     }
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
-    ImGui::PushItemWidth(75);
+    ImGui::PushItemWidth(GUI_DEFAULT_ITEM_WIDTH);
 
     const struct {
         const char *name;

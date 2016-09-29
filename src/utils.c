@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <dirent.h>
+#include <getopt.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
