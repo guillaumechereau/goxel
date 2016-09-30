@@ -371,6 +371,6 @@ void load_from_file(goxel_t *goxel, const char *path)
     }
 
     goxel->image->path = strdup(path);
-    goxel_update_meshes(goxel, true);
+    goxel_update_meshes(goxel, -1);
     gzclose(in);
 }

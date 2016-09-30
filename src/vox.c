@@ -112,7 +112,7 @@ void vox_import(const char *path)
     free(ctx.voxels);
     free(ctx.palette);
     mesh_remove_empty_blocks(mesh);
-    goxel_update_meshes(goxel(), true);
+    goxel_update_meshes(goxel(), -1);
 }
 
 static int get_color_index(uvec4b_t v, const uvec4b_t *palette, bool exact)
