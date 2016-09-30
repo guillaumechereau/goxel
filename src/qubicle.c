@@ -137,3 +137,16 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     }
     fclose(file);
 }
+
+static void export_as_qubicle(goxel_t *goxel, const char *path)
+{
+    qubicle_export(goxel->layers_mesh, path);
+}
+
+ACTION_REGISTER(export_as_qubicle,
+    .help = "Save the image as a qubicle 3d file",
+    .func = export_as_qubicle,
+    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
+                          ARG("path", TYPE_FILE_PATH)),
+    .flags = ACTION_NO_CHANGE,
+)

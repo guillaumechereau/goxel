@@ -550,45 +550,6 @@ ACTION_REGISTER(export_as_png,
     .flags = ACTION_NO_CHANGE,
 )
 
-static void export_as_obj(goxel_t *goxel, const char *path)
-{
-    wavefront_export(goxel->layers_mesh, path);
-}
-
-ACTION_REGISTER(export_as_obj,
-    .help = "Save the image as a wavefront obj file",
-    .func = export_as_obj,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
-)
-
-static void export_as_ply(goxel_t *goxel, const char *path)
-{
-    ply_export(goxel->layers_mesh, path);
-}
-
-ACTION_REGISTER(export_as_ply,
-    .help = "Save the image as a ply file",
-    .func = export_as_ply,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
-)
-
-static void export_as_qubicle(goxel_t *goxel, const char *path)
-{
-    qubicle_export(goxel->layers_mesh, path);
-}
-
-ACTION_REGISTER(export_as_qubicle,
-    .help = "Save the image as a qubicle 3d file",
-    .func = export_as_qubicle,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
-)
-
 static void export_as_txt(goxel_t *goxel, const char *path)
 {
     FILE *out;
