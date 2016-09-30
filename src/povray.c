@@ -20,9 +20,6 @@
 
 #include "goxel.h"
 
-// Turn goxel coordinates into povray coordinates.
-#define FIX_AXIS(x, y, z) (y), (z), (-x)
-
 static void export_as_pov(goxel_t *goxel, const char *path,
                           int w, int h)
 {
@@ -33,8 +30,8 @@ static void export_as_pov(goxel_t *goxel, const char *path,
     char *buf;
     const char *template;
     uvec4b_t v;
-    mat4_t cam_to_view;
-    vec3_t cam_pos, cam_look_at, light_dir;
+    mat4_t modelview;
+    vec3_t light_dir;
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = goxel->camera;
 
@@ -43,9 +40,9 @@ static void export_as_pov(goxel_t *goxel, const char *path,
     camera.aspect = (float)w / h;
     camera_update(&camera);
 
-    cam_to_view = mat4_inverted(camera.view_mat);
-    cam_pos = mat4_mul_vec(cam_to_view, vec4(0, 0, 0, 1)).xyz;
-    cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
+    modelview = camera.view_mat;
+    // cam_to_view = mat4_inverted(camera.view_mat);
+    // cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
     light_dir = render_get_light_dir(&goxel->rend);
 
     m = mustache_root();
@@ -53,16 +50,18 @@ static void export_as_pov(goxel_t *goxel, const char *path,
     m_cam = mustache_add_dict(m, "camera");
     mustache_add_str(m_cam, "width", "%d", w);
     mustache_add_str(m_cam, "height", "%d", h);
-    mustache_add_str(m_cam, "location", "<%.1f, %.1f, %.1f>",
-                     FIX_AXIS(cam_pos.x, cam_pos.y, cam_pos.z));
-    mustache_add_str(m_cam, "look_at", "<%.1f, %.1f, %.1f>",
-                     FIX_AXIS(cam_look_at.x, cam_look_at.y, cam_look_at.z));
     mustache_add_str(m_cam, "angle", "%.1f", camera.fovy * camera.aspect);
+    mustache_add_str(m_cam, "modelview",
+                     "<%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f>",
+                     modelview.v[0], modelview.v[1], modelview.v[2],
+                     modelview.v[4], modelview.v[5], modelview.v[6],
+                     modelview.v[8], modelview.v[9], modelview.v[10],
+                     modelview.v[12], modelview.v[13], modelview.v[14]);
     m_light = mustache_add_dict(m, "light");
     mustache_add_str(m_light, "ambient", "%.2f",
                      goxel->rend.settings.ambient);
-    mustache_add_str(m_light, "point_at", "<%.1f, %1.f + 1024, %.1f>",
-                     FIX_AXIS(-light_dir.x, -light_dir.y, -light_dir.z));
+    mustache_add_str(m_light, "point_at", "<%.1f, %.1f, %.1f + 1024>",
+                     -light_dir.x, -light_dir.y, -light_dir.z);
 
     m_voxels = mustache_add_list(m, "voxels");
     DL_FOREACH(goxel->image->layers, layer) {
@@ -73,7 +72,7 @@ static void export_as_pov(goxel_t *goxel, const char *path,
             vy = y + block->pos.y - BLOCK_SIZE / 2;
             vz = z + block->pos.z - BLOCK_SIZE / 2;
             mustache_add_str(m_voxel, "pos", "<%d, %d, %d>",
-                             FIX_AXIS(vx, vy, vz));
+                             vx, vy, vz);
             mustache_add_str(m_voxel, "color", "<%d, %d, %d>", v.r, v.g, v.b);
         }
     }

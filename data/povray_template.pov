@@ -3,18 +3,23 @@
 
 {{#camera}}
 camera {
+    perspective
     right x*{{width}}/{{height}}
-    location {{location}}
-    look_at {{look_at}}
+    direction <0, 0, -1>
     angle {{angle}}
+    transform {
+        matrix {{modelview}}
+        inverse
+    }
 }
-{{/camera}}"
+{{/camera}}
 
 #declare Voxel = box {<-0.5, -0.5, -0.5>, <0.5, 0.5, 0.5>}
 #macro Vox(Pos, Color)
     object {
         Voxel
         translate Pos
+        translate <0.5, 0.5, 0.5>
         texture { pigment {color rgb Color / 255} }
     }
 #end
@@ -22,7 +27,7 @@ camera {
 {{#light}}
 global_settings { ambient_light rgb<1, 1, 1> * {{ambient}} }
 light_source {
-    <0, 1024, 0> color rgb <2, 2, 2>
+    <0, 0, 1024> color rgb <2, 2, 2>
     parallel
     point_at {{point_at}}
 }

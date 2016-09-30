@@ -6631,25 +6631,30 @@ static const uint8_t DATA_data_icon_png[133981]
     68,174,66,96,130,
 };
 
-static const uint8_t DATA_data_povray_template_pov[657]
+static const uint8_t DATA_data_povray_template_pov[748]
                      __attribute__((aligned(4))) =
     "// Generated from goxel {{version}}\n"
     "// https://github.com/guillaumechereau/goxel\n"
     "\n"
     "{{#camera}}\n"
     "camera {\n"
+    "    perspective\n"
     "    right x*{{width}}/{{height}}\n"
-    "    location {{location}}\n"
-    "    look_at {{look_at}}\n"
+    "    direction <0, 0, -1>\n"
     "    angle {{angle}}\n"
+    "    transform {\n"
+    "        matrix {{modelview}}\n"
+    "        inverse\n"
+    "    }\n"
     "}\n"
-    "{{/camera}}\"\n"
+    "{{/camera}}\n"
     "\n"
     "#declare Voxel = box {<-0.5, -0.5, -0.5>, <0.5, 0.5, 0.5>}\n"
     "#macro Vox(Pos, Color)\n"
     "    object {\n"
     "        Voxel\n"
     "        translate Pos\n"
+    "        translate <0.5, 0.5, 0.5>\n"
     "        texture { pigment {color rgb Color / 255} }\n"
     "    }\n"
     "#end\n"
@@ -6657,7 +6662,7 @@ static const uint8_t DATA_data_povray_template_pov[657]
     "{{#light}}\n"
     "global_settings { ambient_light rgb<1, 1, 1> * {{ambient}} }\n"
     "light_source {\n"
-    "    <0, 1024, 0> color rgb <2, 2, 2>\n"
+    "    <0, 0, 1024> color rgb <2, 2, 2>\n"
     "    parallel\n"
     "    point_at {{point_at}}\n"
     "}\n"
@@ -9765,7 +9770,7 @@ static asset_t ASSETS[] = {
     {
         .path = "data/povray_template.pov",
         .data = DATA_data_povray_template_pov,
-        .size = 657,
+        .size = 748,
     },
 
     {
