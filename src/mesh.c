@@ -32,6 +32,7 @@ static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
     assert(*mesh->ref > 0);
+    mesh->id = goxel()->next_uid++;
     if (*mesh->ref == 1)
         return;
     (*mesh->ref)--;
@@ -64,6 +65,7 @@ mesh_t *mesh_new(void)
     mesh = calloc(1, sizeof(*mesh));
     mesh->next_block_id = 1;
     mesh->ref = calloc(1, sizeof(*mesh->ref));
+    mesh->id = goxel()->next_uid++;
     *mesh->ref = 1;
     return mesh;
 }

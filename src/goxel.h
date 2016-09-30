@@ -553,6 +553,7 @@ struct mesh
     block_t *blocks;
     int next_block_id;
     int *ref;   // Used to implement copy on write of the blocks.
+    int id;     // global uniq id, change each time a mesh changes.
 };
 mesh_t *mesh_new(void);
 void mesh_clear(mesh_t *mesh);
@@ -937,7 +938,9 @@ typedef struct goxel
 
     int        frame_count;       // Global frames counter.
     int64_t    frame_clock;       // Clock time at beginning of the frame.
-    int        block_next_id;
+
+    // Global uid counter.
+    int        next_uid;
 
     int        block_count; // Counter for the number of block data.
 } goxel_t;

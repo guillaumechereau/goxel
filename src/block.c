@@ -198,7 +198,7 @@ static int mc_compute(uint8_t cube_index, const uvec4b_t neighboors[8],
 
 static int make_id(void)
 {
-    return ++goxel()->block_next_id;
+    return ++goxel()->next_uid;
 }
 
 static block_data_t *get_empty_data(void)

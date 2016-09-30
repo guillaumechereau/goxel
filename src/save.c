@@ -323,7 +323,7 @@ void load_from_file(goxel_t *goxel, const char *path)
             data = calloc(1, sizeof(*data));
             data->v = calloc(1, sizeof(*data->v));
             memcpy(data->v->voxels, voxel_data, sizeof(data->v->voxels));
-            data->v->id = ++goxel->block_next_id;
+            data->v->id = ++goxel->next_uid;
             HASH_ADD_PTR(blocks_table, v, data);
             free(voxel_data);
             free(png);
