@@ -117,16 +117,11 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (snaped) state = STATE_SNAPED;
     }
     if (state == STATE_SNAPED) {
-        if (goxel->tool_t == 0) {
-            goxel->tool_t = 1;
-            mesh_set(&goxel->tool_origin_mesh, mesh);
-        }
         if (!snaped) return STATE_CANCEL;
         goxel_set_help_text(goxel, "Click and drag to draw.");
         goxel->tool_start_pos = pos;
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
-        mesh_set(&mesh, goxel->tool_origin_mesh);
         render_box(&goxel->rend, &box, false, &box_color, false);
         if (down) {
             state = STATE_PAINT;
@@ -139,15 +134,18 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (!snaped || !inside) return state;
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0, &goxel->plane);
         render_box(&goxel->rend, &box, false, &box_color, false);
-        mesh_set(&mesh, goxel->tool_origin_mesh);
-        mesh_op(mesh, &goxel->painter, &box);
-        goxel_update_meshes(goxel, false);
+        mesh_set(&goxel->brush_mesh, mesh);
+        mesh_op(goxel->brush_mesh, &goxel->painter, &box);
+        goxel_update_meshes(goxel, MESH_FULL);
         if (up) {
             state = STATE_PAINT2;
             goxel->tool_plane = plane_from_normal(pos, goxel->plane.u);
 
             if (!goxel->tool_shape_two_steps) {
-                goxel_update_meshes(goxel, true);
+                mesh_set(&mesh, goxel->brush_mesh);
+                mesh_delete(goxel->brush_mesh);
+                goxel->brush_mesh = NULL;
+                goxel_update_meshes(goxel, -1);
                 goxel->painting = false;
                 state = STATE_IDLE;
             }
@@ -163,13 +161,14 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, false, &box_color, false);
-        mesh_set(&mesh, goxel->tool_origin_mesh);
-        mesh_op(mesh, &goxel->painter, &box);
-        goxel_update_meshes(goxel, false);
+        mesh_set(&goxel->brush_mesh, mesh);
+        mesh_op(goxel->brush_mesh, &goxel->painter, &box);
+        goxel_update_meshes(goxel, MESH_FULL);
         if (down) {
-            mesh_set(&mesh, goxel->tool_origin_mesh);
-            mesh_op(mesh, &goxel->painter, &box);
-            goxel_update_meshes(goxel, true);
+            mesh_set(&mesh, goxel->brush_mesh);
+            mesh_delete(goxel->brush_mesh);
+            goxel->brush_mesh = NULL;
+            goxel_update_meshes(goxel, -1);
             goxel->painting = false;
             return STATE_WAIT_UP;
         }
@@ -328,8 +327,6 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     if (state == STATE_SNAPED) {
         if (goxel->tool_t == 0) {
             goxel->tool_t = 1;
-            mesh_set(&goxel->tool_origin_mesh, mesh);
-            mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
             goxel->tool_last_op.op = 0; // Discard last op.
         }
         if (!snaped) return STATE_CANCEL;
@@ -339,9 +336,9 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             return state;
         box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
 
-        mesh_set(&mesh, goxel->tool_origin_mesh);
-        mesh_op(mesh, &goxel->painter, &box);
-        goxel_update_meshes(goxel, false);
+        mesh_set(&goxel->brush_mesh, mesh);
+        mesh_op(goxel->brush_mesh, &goxel->painter, &box);
+        goxel_update_meshes(goxel, MESH_FULL);
 
         if (inputs->keys[KEY_SHIFT]) {
             render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
@@ -351,13 +348,13 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                 box = get_box(&goxel->tool_start_pos, &pos, &normal,
                               goxel->tool_radius, NULL);
                 mesh_op(mesh, &painter2, &box);
-                goxel_update_meshes(goxel, false);
+                goxel_update_meshes(goxel, MESH_FULL | MESH_LAYERS);
                 goxel->tool_start_pos = pos;
-                mesh_set(&goxel->tool_origin_mesh, mesh);
             }
         }
         if (pressed) {
-            mesh_set(&mesh, goxel->tool_origin_mesh);
+            mesh_delete(goxel->brush_mesh);
+            goxel->brush_mesh = NULL;
             state = STATE_PAINT;
             goxel->tool_last_op.op = 0;
             goxel->painting = true;
@@ -378,7 +375,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         }
         box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
         mesh_op(mesh, &goxel->painter, &box);
-        goxel_update_meshes(goxel, false);
+        goxel_update_meshes(goxel, MESH_LAYERS | MESH_FULL);
         goxel->tool_start_pos = pos;
     }
     if (state == STATE_WAIT_KEY_UP) {
@@ -431,7 +428,7 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             return STATE_IDLE;
         }
         mesh_op(mesh, &painter, &box);
-        goxel_update_meshes(goxel, false);
+        goxel_update_meshes(goxel, -1);
     }
     return state;
 }
@@ -549,16 +546,17 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
     assert(tool >= 0 && tool < ARRAY_SIZE(FUNCS));
     assert(FUNCS[tool]);
     ret = FUNCS[tool](goxel, inputs, state, view_size, inside);
-    if (ret == STATE_CANCEL && goxel->tool_origin_mesh) {
-        mesh_set(&goxel->image->active_layer->mesh, goxel->tool_origin_mesh);
-        goxel_update_meshes(goxel, true);
+    if (ret == STATE_CANCEL && goxel->brush_mesh) {
+        mesh_delete(goxel->brush_mesh);
+        goxel->brush_mesh = NULL;
+        goxel_update_meshes(goxel, -1);
     }
     if (ret == STATE_CANCEL) ret = 0;
     if (ret == 0) {
         goxel->tool_plane = plane_null;
-        if (goxel->tool_origin_mesh) {
-            mesh_delete(goxel->tool_origin_mesh);
-            goxel->tool_origin_mesh = NULL;
+        if (goxel->brush_mesh) {
+            mesh_delete(goxel->brush_mesh);
+            goxel->brush_mesh = NULL;
         }
     }
     return ret;
@@ -567,11 +565,10 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
 void tool_cancel(goxel_t *goxel, int tool, int state)
 {
     if (state == 0) return;
-    if (goxel->tool_origin_mesh) {
-        mesh_set(&goxel->image->active_layer->mesh, goxel->tool_origin_mesh);
-        goxel_update_meshes(goxel, true);
-        mesh_delete(goxel->tool_origin_mesh);
-        goxel->tool_origin_mesh = NULL;
+    if (goxel->brush_mesh) {
+        mesh_delete(goxel->brush_mesh);
+        goxel->brush_mesh = NULL;
+        goxel_update_meshes(goxel, -1);
     }
     goxel->tool_plane = plane_null;
     goxel->tool_state = 0;

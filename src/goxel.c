@@ -229,8 +229,10 @@ void goxel_init(goxel_t *goxel)
 
     goxel->image = image_new();
 
-    goxel->layers_mesh = mesh_copy(goxel->image->active_layer->mesh);
-    goxel->pick_mesh = mesh_copy(goxel->image->active_layer->mesh);
+    goxel->layers_mesh = mesh_new();
+    goxel->pick_mesh = mesh_new();
+    goxel->full_mesh = mesh_new();
+    goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
     goxel->back_color = HEXCOLOR(0x393939ff);
@@ -425,7 +427,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
 
     goxel->camera.aspect = rect->z / rect->w;
     camera_update(&goxel->camera);
-    render_mesh(rend, goxel->layers_mesh, 0);
+    render_mesh(rend, goxel->full_mesh, 0);
 
     // Render all the image layers.
     DL_FOREACH(goxel->image->layers, layer) {
@@ -452,16 +454,31 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
         render_export_viewport(goxel, rect);
 }
 
-void goxel_update_meshes(goxel_t *goxel, bool pick)
+void goxel_update_meshes(goxel_t *goxel, int mask)
 {
     layer_t *layer;
-    mesh_clear(goxel->layers_mesh);
-    DL_FOREACH(goxel->image->layers, layer) {
-        if (!layer->visible) continue;
-        mesh_merge(goxel->layers_mesh, layer->mesh);
+    if (mask & MESH_LAYERS) {
+        mesh_clear(goxel->layers_mesh);
+        DL_FOREACH(goxel->image->layers, layer) {
+            if (!layer->visible) continue;
+            mesh_merge(goxel->layers_mesh, layer->mesh);
+        }
     }
-    if (pick)
+    if (mask & MESH_PICK)
         mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
+    if (mask & MESH_FULL && !goxel->brush_mesh)
+        mesh_set(&goxel->full_mesh, goxel->layers_mesh);
+
+    if (mask & MESH_FULL && goxel->brush_mesh) {
+        mesh_clear(goxel->full_mesh);
+        DL_FOREACH(goxel->image->layers, layer) {
+            if (!layer->visible) continue;
+            if (layer == goxel->image->active_layer)
+                mesh_merge(goxel->full_mesh, goxel->brush_mesh);
+            else
+                mesh_merge(goxel->full_mesh, layer->mesh);
+        }
+    }
 }
 
 static void export_as(goxel_t *goxel, const char *type, const char *path)
@@ -701,7 +718,7 @@ static void fill_selection(goxel_t *goxel, layer_t *layer)
 {
     if (box_is_null(goxel->selection)) return;
     mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
-    goxel_update_meshes(goxel, true);
+    goxel_update_meshes(goxel, -1);
 }
 
 ACTION_REGISTER(fill_selection,

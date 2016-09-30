@@ -121,7 +121,7 @@ void *action_exec(const action_t *action, const arg_t *args)
 
     reentry--;
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
-        goxel_update_meshes(goxel(), true);
+        goxel_update_meshes(goxel(), -1);
     }
     return ret;
 }

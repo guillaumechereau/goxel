@@ -457,6 +457,13 @@ enum {
     TOOL_PROCEDURAL,
 };
 
+// Mesh mask for goxel_update_meshes function.
+enum {
+    MESH_LAYERS = 1 << 0,
+    MESH_PICK   = 1 << 1,
+    MESH_FULL   = 1 << 2,
+};
+
 typedef struct shape {
     const char *id;
     float (*func)(const vec3_t *p, const vec3_t *s, float smoothness);
@@ -870,7 +877,9 @@ typedef struct goxel
     image_t    *image;
 
     mesh_t     *layers_mesh; // All the layers combined.
-    mesh_t     *pick_mesh;
+    mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
+    mesh_t     *brush_mesh;  // Active layer with brush applied (can be NULL)
+    mesh_t     *full_mesh;   // All the layers + brush.
 
     history_t  *history;     // Undo/redo history.
     int        snap;
@@ -899,7 +908,6 @@ typedef struct goxel
     int        tool_state;
     int        tool_t;
     int        tool_snape_face;
-    mesh_t     *tool_origin_mesh;
     // Structure used to skip rendering when don't move the mouse.
     struct     {
         vec3_t     pos;
@@ -955,7 +963,8 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
 bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const box_t *box, bool inside,
                      vec3_t *out, vec3_t *normal, int *face);
-void goxel_update_meshes(goxel_t *goxel, bool pick);
+// Recompute the meshes.  mask from MESH_ enum.
+void goxel_update_meshes(goxel_t *goxel, int mask);
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
 void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);

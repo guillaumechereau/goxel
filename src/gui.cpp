@@ -491,7 +491,7 @@ static void tool_options_panel(goxel_t *goxel)
             image_history_push(goxel->image);
             mesh_move(layer->mesh, &mat);
             layer->mat = mat4_mul(mat, layer->mat);
-            goxel_update_meshes(goxel, true);
+            goxel_update_meshes(goxel, -1);
         }
     }
     if (goxel->tool == TOOL_SELECTION) {
@@ -662,7 +662,7 @@ static void procedural_panel(goxel_t *goxel)
     if (proc->state == PROC_RUNNING) {
         proc_iter(proc);
         if (!proc->in_frame)
-            goxel_update_meshes(goxel, false);
+            goxel_update_meshes(goxel, MESH_FULL);
     }
 }
 
@@ -737,7 +737,7 @@ static void layers_panel(goxel_t *goxel)
                               ImVec2(12, 12))) {
             if (current) {
                 goxel->image->active_layer = layer;
-                goxel_update_meshes(goxel, true);
+                goxel_update_meshes(goxel, -1);
             }
         }
         ImGui::SameLine();
@@ -745,7 +745,7 @@ static void layers_panel(goxel_t *goxel)
                     &layer->visible, 0, ImVec2(12, 12))) {
             if (ImGui::IsKeyDown(KEY_SHIFT))
                 toggle_layer_only_visible(goxel, layer);
-            goxel_update_meshes(goxel, true);
+            goxel_update_meshes(goxel, -1);
         }
         ImGui::SameLine();
         ImGui::InputText("##name", layer->name, sizeof(layer->name));
@@ -1015,7 +1015,7 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
     if (ImGui::InputInt("shift", &v, 1)) {
         mesh_set(&mesh, original_mesh);
         mesh_shift_alpha(mesh, v);
-        goxel_update_meshes(goxel, true);
+        goxel_update_meshes(goxel, -1);
     }
     if (ImGui::Button("OK")) {
         mesh_delete(original_mesh);
