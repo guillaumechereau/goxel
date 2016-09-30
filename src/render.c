@@ -58,7 +58,8 @@ struct render_item_t
     };
     vec3_t          grid;
     uvec4b_t        color;
-    int             strip;  // XXX: move into effects?
+    bool            strip;  // XXX: move into effects?
+    bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
     texture_t       *tex;
     bool            fixed; // If true, render in the view ref.
@@ -631,7 +632,19 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     mat4_t view = rend->view_mat;
     if (item->fixed) view = mat4_identity;
     mat4_imul(&view, item->mat);
-    model3d_render(item->model3d, &view, &rend->proj_mat, &item->color,
+    mat4_t proj;
+    mat4_t *proj_mat;
+
+    if (item->proj_screen) {
+        proj = mat4_ortho(-0.5, +0.5, -0.5, +0.5, -10, +10);
+        proj_mat = &proj;
+        view = mat4_identity;
+    } else {
+        proj_mat = &rend->proj_mat;
+        view = mat4_mul(rend->view_mat, item->mat);
+    }
+
+    model3d_render(item->model3d, &view, proj_mat, &item->color,
                    item->tex, item->strip, 0, NULL);
 }
 
@@ -673,7 +686,8 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    item->mat = *mat;
+    item->mat = mat ? *mat : mat4_identity;
+    item->proj_screen = !mat;
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
     item->color = uvec4b(255, 255, 255, 255);
@@ -753,6 +767,7 @@ static void cleanup_buffer(void)
 
 static int item_sort_value(const render_item_t *a)
 {
+    if (a->proj_screen)     return 10;
     switch (a->type) {
         case ITEM_MESH:     return 0;
         case ITEM_MODEL3D:  return 1;
