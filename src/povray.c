@@ -20,46 +20,6 @@
 
 #include "goxel.h"
 
-static const char *TEMPLATE =
-    "// Generated from goxel {{version}}\n"
-    "// https://github.com/guillaumechereau/goxel\n"
-
-    "{{#camera}}"
-    "camera {\n"
-    "    right x*{{width}}/{{height}}\n"
-    "    location {{location}}\n"
-    "    look_at {{look_at}}\n"
-    "    angle {{angle}}\n"
-    "}\n"
-    "{{/camera}}"
-
-    "\n"
-    "#declare Voxel = box {<-0.5, -0.5, -0.5>, <0.5, 0.5, 0.5>}\n"
-    "#macro Vox(Pos, Color)\n"
-    "    object {\n"
-    "        Voxel\n"
-    "        translate Pos\n"
-    "        texture { pigment {color rgb Color / 255} }\n"
-    "    }\n"
-    "#end\n"
-
-    "{{#light}}"
-    "global_settings { ambient_light rgb<1, 1, 1> * {{ambient}} }\n"
-    "light_source {\n"
-    "    <0, 1024, 0> color rgb <2, 2, 2>\n"
-    "    parallel\n"
-    "    point_at {{point_at}}\n"
-    "}\n"
-    "{{/light}}"
-
-    "union {\n"
-    "{{#voxels}}"
-    "    Vox({{pos}}, {{color}})\n"
-    "{{/voxels}}"
-    "}"
-;
-
-
 // Turn goxel coordinates into povray coordinates.
 #define FIX_AXIS(x, y, z) (y), (z), (-x)
 
@@ -71,12 +31,15 @@ static void export_as_pov(goxel_t *goxel, const char *path,
     block_t *block;
     int size, x, y, z, vx, vy, vz;
     char *buf;
+    const char *template;
     uvec4b_t v;
     mat4_t cam_to_view;
     vec3_t cam_pos, cam_look_at, light_dir;
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = goxel->camera;
 
+    template = assets_get("asset://data/povray_template.pov", NULL);
+    assert(template);
     camera.aspect = (float)w / h;
     camera_update(&camera);
 
@@ -115,9 +78,9 @@ static void export_as_pov(goxel_t *goxel, const char *path,
         }
     }
 
-    size = mustache_render(m, TEMPLATE, NULL);
+    size = mustache_render(m, template, NULL);
     buf = calloc(size + 1, 1);
-    mustache_render(m, TEMPLATE, buf);
+    mustache_render(m, template, buf);
     mustache_free(m);
 
     file = fopen(path, "wb");
