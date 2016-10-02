@@ -466,15 +466,15 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
     }
     if (mask & MESH_PICK)
         mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
-    if (mask & MESH_FULL && !goxel->brush_mesh)
+    if (mask & MESH_FULL && !goxel->preview_mesh)
         mesh_set(&goxel->full_mesh, goxel->layers_mesh);
 
-    if (mask & MESH_FULL && goxel->brush_mesh) {
+    if (mask & MESH_FULL && goxel->preview_mesh) {
         mesh_clear(goxel->full_mesh);
         DL_FOREACH(goxel->image->layers, layer) {
             if (!layer->visible) continue;
             if (layer == goxel->image->active_layer)
-                mesh_merge(goxel->full_mesh, goxel->brush_mesh);
+                mesh_merge(goxel->full_mesh, goxel->preview_mesh);
             else
                 mesh_merge(goxel->full_mesh, layer->mesh);
         }

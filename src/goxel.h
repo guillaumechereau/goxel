@@ -879,7 +879,7 @@ typedef struct goxel
 
     mesh_t     *layers_mesh; // All the layers combined.
     mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
-    mesh_t     *brush_mesh;  // Active layer with brush applied (can be NULL)
+    mesh_t     *preview_mesh;// Active layer with brush applied (can be NULL)
     mesh_t     *full_mesh;   // All the layers + brush.
 
     history_t  *history;     // Undo/redo history.
