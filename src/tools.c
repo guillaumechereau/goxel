@@ -101,13 +101,12 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
     if (inside)
-        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
-                                 &pos, &normal);
+        snaped = goxel_unproject(
+                goxel, view_size, &inputs->mouse_pos,
+                goxel->painter.op == OP_ADD && !goxel->snap_offset,
+                &pos, &normal);
     set_snap_hint(goxel, snaped);
     if (snaped) {
-        if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
-                !goxel->snap_offset)
-            vec3_iadd(&pos, normal);
         pos.x = round(pos.x - 0.5) + 0.5;
         pos.y = round(pos.y - 0.5) + 0.5;
         pos.z = round(pos.z - 0.5) + 0.5;
@@ -211,7 +210,7 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
                                   FACES_MATS[goxel->tool_snape_face]);
 
     if (inside && face == -1)
-        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
+        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos, false,
                                  &pos, &normal);
     if (snaped) {
         pos.x = round(pos.x - 0.5) + 0.5;
@@ -305,16 +304,15 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
     if (inside)
-        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
-                                 &pos, &normal);
+        snaped = goxel_unproject(
+                goxel, view_size, &inputs->mouse_pos,
+                goxel->painter.op == OP_ADD && !goxel->snap_offset,
+                &pos, &normal);
     goxel_set_help_text(goxel, "Brush: use shift to draw lines, "
                                "ctrl to pick color");
     set_snap_hint(goxel, snaped);
     if (snaped) {
-        if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
-                !goxel->snap_offset)
-            vec3_iadd(&pos, normal);
-        if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)
+        if (goxel->snap_offset)
             vec3_iaddk(&pos, normal, goxel->snap_offset * goxel->tool_radius);
         pos.x = round(pos.x - 0.5) + 0.5;
         pos.y = round(pos.y - 0.5) + 0.5;
@@ -492,12 +490,11 @@ static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
 
     // XXX: duplicate code with tool_brush_iter.
     if (inside)
-        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos,
-                                 &pos, &normal);
+        snaped = goxel_unproject(
+                goxel, view_size, &inputs->mouse_pos,
+                goxel->painter.op == OP_ADD && !goxel->snap_offset,
+                &pos, &normal);
     if (snaped) {
-        if (    snaped == SNAP_MESH && goxel->painter.op == OP_ADD &&
-                !goxel->snap_offset)
-            vec3_iadd(&pos, normal);
         if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)
             vec3_iaddk(&pos, normal, goxel->snap_offset * goxel->tool_radius);
         pos.x = round(pos.x - 0.5) + 0.5;

@@ -955,11 +955,15 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
 // the view.
 void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
                          const inputs_t *inputs, bool inside);
+
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
-                    const vec2_t *pos, vec3_t *out, vec3_t *normal);
+                    const vec2_t *pos, bool on_surface,
+                    vec3_t *out, vec3_t *normal);
+
 bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, mesh_t *mesh,
                      vec3_t *out, vec3_t *normal);
+
 bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const plane_t *plane,
                      vec3_t *out, vec3_t *normal);

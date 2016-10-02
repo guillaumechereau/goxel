@@ -105,6 +105,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
         *out = mat4_mul_vec3(plane.mat, *out);
         *normal = vec3_normalized(plane.n);
         if (inside) vec3_imul(normal, -1);
+        vec3_iaddk(out, *normal, 0.5);
         return true;
     }
     return false;
@@ -166,7 +167,8 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 }
 
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
-                    const vec2_t *pos, vec3_t *out, vec3_t *normal)
+                    const vec2_t *pos, bool on_surface,
+                    vec3_t *out, vec3_t *normal)
 {
     int i, ret = 0;
     vec3_t p, n;
@@ -182,9 +184,11 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
 
     for (i = 0; i < 4; i++) {
         if (!(goxel->snap & (1 << i))) continue;
-        if ((1 << i) == SNAP_MESH)
+        if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(goxel, view_size, pos,
                                         goxel->pick_mesh, &p, &n);
+            if (on_surface) vec3_iaddk(&p, n, 1);
+        }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, view_size, pos,
                                          &goxel->plane, &p, &n);
