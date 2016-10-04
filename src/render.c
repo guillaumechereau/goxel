@@ -752,11 +752,10 @@ void render_sphere(renderer_t *rend, const mat4_t *mat)
 // Evict item from g_items to save memory.
 static void cleanup_buffer(void)
 {
-    // XXX: do not evict all the items like that.
     render_item_t *item, *tmp;
     HASH_ITER(hh, g_items, item, tmp) {
         if (item->type == ITEM_BLOCK) {
-            if (item->last_used_frame < goxel()->frame_count) {
+            if (item->last_used_frame + 1 < goxel()->frame_count) {
                 GL(glDeleteBuffers(1, &item->vertex_buffer));
                 HASH_DEL(g_items, item);
                 free(item);
