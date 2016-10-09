@@ -378,7 +378,7 @@ typedef struct {
     };
 } arg_t;
 
-#define ARG(n, v) {n, {(long)(v)}}
+#define ARG(n, v) {n, {(intptr_t)(v)}}
 #define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
 
 // Represent a function signature with return type and arguments.

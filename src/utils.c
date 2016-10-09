@@ -28,6 +28,7 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
