@@ -25,10 +25,13 @@
 #include <errno.h>
 #include <dirent.h>
 
+// Prevent warnings in stb code.
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#ifdef WIN32
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#endif
 #endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
