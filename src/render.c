@@ -610,7 +610,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     if (effects & EFFECT_SEE_BACK) {
         effects &= ~EFFECT_SEE_BACK;
         effects |= EFFECT_SEMI_TRANSPARENT;
-        render_mesh_(rend, mesh, effects, NULL);
+        render_mesh_(rend, mesh, effects, shadow_mvp);
     }
 }
 
