@@ -347,8 +347,10 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    int rect[4] = {view->rect.x, height - view->rect.y - view->rect.w,
-                   view->rect.z, view->rect.w};
+    int rect[4] = {(int)view->rect.x,
+                   (int)(height - view->rect.y - view->rect.w),
+                   (int)view->rect.z,
+                   (int)view->rect.w};
     vec4_t back_color;
     back_color = uvec4b_to_vec4(view->goxel->back_color);
 
