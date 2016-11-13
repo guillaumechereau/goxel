@@ -21,7 +21,7 @@
 // Load qubicle files.
 
 #define READ(type, file) \
-    ({ type v; int r = fread(&v, sizeof(v), 1, file); (void)r; v;})
+    ({ type v; size_t r = fread(&v, sizeof(v), 1, file); (void)r; v;})
 #define WRITE(type, v, file) \
     ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
