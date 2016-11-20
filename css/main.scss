@@ -1,10 +1,21 @@
 ---
 ---
 
-@mixin color-primary {
-}
-
 @import 'materialize';
+
+// Fix fixed navbar in materializecss.
+.nav-fixed {
+    position: fixed;
+    right: 0;
+    left: 0;
+    top: 0;
+    margin-bottom: 0px;
+    z-index: 997;
+}
+body {
+    padding-top: 64px;
+}
+// End fix
 
 body {
     @extend .grey;
