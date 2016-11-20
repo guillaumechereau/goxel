@@ -1,11 +1,23 @@
-<header class="site-header">
-    <section class="page-header">
-        <a href="{{site.baseurl}}/">
-            <h1 class="project-name">Goxel</h1>
-        </a>
-        <h2 class="project-tagline">Open Source 3D Voxel Editor </h2>
-        <a href="https://github.com/guillaumechereau/goxel" class="btn">View on GitHub</a>
-        <a href="{{site.baseurl}}/#downloads" class="btn">Download</a>
-        <a href="{{site.baseurl}}/screenshots" class="btn">Screenshots</a>
-    </section>
-</header>
+<div class="navbar-fixed">
+<nav>
+  <div class="nav-wrapper">
+    <a href="{{site.baseurl}}/" class="brand-logo">
+        <div class="valign-wrapper">
+            <img class="valign left" src="{{site.baseurl}}/images/goxel.png" height="48">
+            <span class="valign name">goxel</span>
+        </div>
+    </a>
+    <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="material-icons">menu</i></a>
+    <ul id="nav-mobile" class="right hide-on-med-and-down">
+      <li><a href="https://github.com/guillaumechereau/goxel">View on GitHub</a></li>
+      <li><a href="{{site.baseurl}}/downloads">Download</a></li>
+      <li><a href="{{site.baseurl}}/screenshots">Screenshots</a></li>
+    </ul>
+    <ul class="side-nav" id="mobile-demo">
+      <li><a href="https://github.com/guillaumechereau/goxel">View on GitHub</a></li>
+      <li><a href="{{site.baseurl}}/downloads">Download</a></li>
+      <li><a href="{{site.baseurl}}/screenshots">Screenshots</a></li>
+    </ul>
+  </div>
+</nav>
+</div>

@@ -1,199 +1,46 @@
 ---
-# Only the main Sass file needs front matter (the dashes are enough)
 ---
 
-$body-text-color: #404040;
-$header-bg-color: #ffffff;
-$header-text-color: #ffffff;
-$blockquote-text-color: #819198;
-$hr-border-color: #eff0f1;
-
-$large-breakpoint: 64em;
-$medium-breakpoint: 42em;
-
-@mixin large {
-  @media screen and (min-width: #{$large-breakpoint}) {
-    @content;
-  }
+@mixin color-primary {
 }
 
-@mixin medium {
-  @media screen and (min-width: #{$medium-breakpoint}) and (max-width: #{$large-breakpoint}) {
-    @content;
-  }
-}
-
-@mixin small {
-  @media screen and (max-width: #{$medium-breakpoint}) {
-    @content;
-  }
-}
-
-* {
-  box-sizing: border-box;
-}
-
-a {
-  text-decoration: none;
-}
-
-dt {
-  float:left;
-  clear:left;
-  text-align:right;
-  overflow:hidden;
-}
-
-dd {
-  margin-left:8rem;
-}
+@import 'materialize';
 
 body {
-  padding: 0;
-  margin: 0;
-  font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  color: $body-text-color;
+    @extend .grey;
+    @extend .lighten-4;
 }
 
-.page-header {
-  color: $header-text-color;
-  font-family: Dejavu Sans;
-  font-weight: lighter;
-  text-align: center;
-
-  background-color: $header-bg-color;
-  background-image: url("../images/header.png");
-  background-position: center;
-
-  @include large  { padding: 2rem 4rem   1rem   4rem; }
-  @include medium { padding: 2rem 1rem   0.5rem 1rem; }
-  @include small  { padding: 1rem 0.5rem 0.5rem 0.5rem; }
+.brand-logo img {
+    margin-left: 32px;
+    margin-right: 8px;
 }
 
-.project-name {
-  font-size: 36px;
-  color: $header-text-color;
-  margin-top: 0;
-  margin-bottom: 0.1rem;
-  font-weight: lighter;
-  font-variant: small-caps;
-
-  @include large  { font-size: 3.25rem; }
-  @include medium { font-size: 2.25rem; }
-  @include small  { font-size: 1.75rem; }
+.card .card-title {
+    @extend .red-text;
+    @extend .text-darken-2;
 }
 
-.project-tagline {
-  font-size: 18px;
-  font-weight: 300;
+.nav-wrapper, .page-footer {
+    @extend .deep-purple;
+    @extend .lighten-1;
 }
 
-.project-logo {
-  vertical-align:middle;
-  width: 80px;
-  height: auto;
+.parallax-container {
+    height: 200px;
 }
 
-.main-content {
-  word-wrap: break-word;
-
-  :first-child {
-    margin-top: 0;
-  }
-
-  @include large {
-    max-width: 64rem;
-    padding: 2rem 6rem;
-    margin: 0 auto;
-    font-size: 1.1rem;
-  }
-
-  @include medium {
-    padding: 2rem 4rem;
-    font-size: 1.1rem;
-  }
-
-  @include small {
-    padding: 2rem 1rem;
-    font-size: 1rem;
-  }
+footer a {
+    @extend .white-text
 }
 
-.btn {
-  display: inline-block;
-  margin-bottom: 1rem;
-  color: rgba(255, 255, 255, 0.7);
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 0.3rem;
-  transition: color 0.2s, background-color 0.2s, border-color 0.2s;
-
-  &:hover {
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.3);
-  }
-
-  + .btn {
-    margin-left: 1rem;
-  }
-
-  @include large {
-    padding: 0.75rem 1rem;
-  }
-
-  @include medium {
-    padding: 0.6rem 0.9rem;
-    font-size: 0.9rem;
-  }
-
-  @include small {
-    display: block;
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 0.9rem;
-
-    + .btn {
-      margin-top: 1rem;
-      margin-left: 0;
-    }
-  }
+// Support for sticky footer:
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
 }
 
-.site-footer {
-  padding-top: 2rem;
-  margin-top: 2rem;
-  border-top: solid 1px $hr-border-color;
-  display: block;
-
-  @include large {
-    font-size: 1rem;
-  }
-
-  @include medium {
-    font-size: 1rem;
-  }
-
-  @include small {
-    font-size: 0.9rem;
-  }
-  color: $blockquote-text-color;
-}
-
-img.small-image {
-    width: 25rem;
-}
-
-img.float-left {
-    float: left;
-    padding-right: 2em;
-}
-
-.clear {
-    clear: both;
+main {
+    flex: 1 0 auto;
 }
