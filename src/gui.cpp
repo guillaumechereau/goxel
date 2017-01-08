@@ -664,7 +664,7 @@ static void procedural_panel(goxel_t *goxel)
     if (proc->state == PROC_RUNNING) {
         proc_iter(proc);
         if (!proc->in_frame)
-            goxel_update_meshes(goxel, MESH_FULL);
+            goxel_update_meshes(goxel, MESH_LAYERS | MESH_FULL);
     }
 }
 
