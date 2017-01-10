@@ -55,11 +55,31 @@ release with 'scons debug=0'.  On Windows, I only tried to build with msys2.
 The code is in C99, using some gnu extensions, so it does not compile with
 msvc.
 
-Debian dependencies: scons pkg-config libglfw3-dev libgtk-3-dev
+# Linux
+
+Install dependencies: scons pkg-config libglfw3-dev libgtk-3-dev
+
+Then to build:
+
+    make release
+
+# Windows
+
+You need to install msys2 mingw, and the following packages:
+
+    pacman -S mingw-w64-x86_64-gcc
+    pacman -S mingw-w64-x86_64-glfw
+    pacman -S mingw-w64-x86_64-libtre-git
+    pacman -S scons
+    pacman -S make
+
+Then to build:
+
+    make release
 
 
 Download
 --------
 
-The last release files can be downloaded from [here](
-https://github.com/guillaumechereau/goxel/releases/latest)
+The last release files can be downloaded from [there](
+https://github.com/guillaumechereau/goxel/releases/latest).

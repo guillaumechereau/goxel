@@ -54,7 +54,7 @@ if glut:
 if target_os == 'msys':
     env.Append(CCFLAGS='-DNO_ARGP')
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32',
-                     'z', 'regex', 'tre', 'intl', 'iconv'],
+                     'z', 'tre', 'intl', 'iconv'],
                LINKFLAGS='--static')
 
 if target_os == 'darwin':

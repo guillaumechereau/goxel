@@ -1,5 +1,9 @@
 #include "goxel.h"
-#include <regex.h>
+#ifdef WIN32
+#    include <tre/regex.h>
+#else
+#    include <regex.h>
+#endif
 #include <stdarg.h>
 
 enum {
