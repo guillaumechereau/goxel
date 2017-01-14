@@ -67,14 +67,14 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static bool check_can_skip(goxel_t *goxel, vec3_t pos, bool pressed, int op)
+static bool check_can_skip(goxel_t *goxel, vec3_t pos, bool pressed, int mode)
 {
     if (    pressed == goxel->tool_last_op.pressed &&
-            op == goxel->tool_last_op.op &&
+            mode == goxel->tool_last_op.mode &&
             vec3_equal(pos, goxel->tool_last_op.pos))
         return true;
     goxel->tool_last_op.pressed = pressed;
-    goxel->tool_last_op.op = op;
+    goxel->tool_last_op.mode = mode;
     goxel->tool_last_op.pos = pos;
     return false;
 }
@@ -103,7 +103,7 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     if (inside)
         snaped = goxel_unproject(
                 goxel, view_size, &inputs->mouse_pos,
-                goxel->painter.op == OP_ADD && !goxel->snap_offset,
+                goxel->painter.mode == MODE_ADD && !goxel->snap_offset,
                 &pos, &normal);
     set_snap_hint(goxel, snaped);
     if (snaped) {
@@ -306,7 +306,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     if (inside)
         snaped = goxel_unproject(
                 goxel, view_size, &inputs->mouse_pos,
-                goxel->painter.op == OP_ADD && !goxel->snap_offset,
+                goxel->painter.mode == MODE_ADD && !goxel->snap_offset,
                 &pos, &normal);
     goxel_set_help_text(goxel, "Brush: use shift to draw lines, "
                                "ctrl to pick color");
@@ -325,12 +325,12 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     if (state == STATE_SNAPED) {
         if (goxel->tool_t == 0) {
             goxel->tool_t = 1;
-            goxel->tool_last_op.op = 0; // Discard last op.
+            goxel->tool_last_op.mode = 0; // Discard last op.
         }
         if (!snaped) return STATE_CANCEL;
         if (inputs->keys[KEY_SHIFT])
             render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
-        if (check_can_skip(goxel, pos, down, goxel->painter.op))
+        if (check_can_skip(goxel, pos, down, goxel->painter.mode))
             return state;
         box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
 
@@ -354,14 +354,14 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             mesh_delete(goxel->preview_mesh);
             goxel->preview_mesh = NULL;
             state = STATE_PAINT;
-            goxel->tool_last_op.op = 0;
+            goxel->tool_last_op.mode = 0;
             goxel->painting = true;
             image_history_push(goxel->image);
         }
     }
     if (state == STATE_PAINT) {
         if (!snaped) return state;
-        if (check_can_skip(goxel, pos, down, goxel->painter.op))
+        if (check_can_skip(goxel, pos, down, goxel->painter.mode))
             return state;
         if (released) {
             goxel->painting = false;
@@ -398,7 +398,7 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     vec2_t win = inputs->mouse_pos;
     win.y = view_size->y - win.y;
 
-    painter.op = OP_SUB;
+    painter.mode = MODE_SUB;
     painter.shape = &shape_cylinder;
     // Create the tool box from the camera along the visible ray.
     camera_get_ray(&goxel->camera, &win, &view, &pos, &normal);
@@ -492,7 +492,7 @@ static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
     if (inside)
         snaped = goxel_unproject(
                 goxel, view_size, &inputs->mouse_pos,
-                goxel->painter.op == OP_ADD && !goxel->snap_offset,
+                goxel->painter.mode == MODE_ADD && !goxel->snap_offset,
                 &pos, &normal);
     if (snaped) {
         if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)

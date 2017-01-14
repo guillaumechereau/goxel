@@ -248,7 +248,7 @@ void goxel_init(goxel_t *goxel)
     goxel->tool_radius = 0.5;
     goxel->painter = (painter_t) {
         .shape = &shape_cube,
-        .op = OP_ADD,
+        .mode = MODE_ADD,
         .smoothness = 0,
         .color = HEXCOLOR(0xEEEEECFF),
     };
@@ -465,7 +465,7 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         mesh_clear(goxel->layers_mesh);
         DL_FOREACH(goxel->image->layers, layer) {
             if (!layer->visible) continue;
-            mesh_merge(goxel->layers_mesh, layer->mesh, OP_ADD);
+            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_ADD);
         }
     }
     if (mask & MESH_PICK)
@@ -478,9 +478,9 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         DL_FOREACH(goxel->image->layers, layer) {
             if (!layer->visible) continue;
             if (layer == goxel->image->active_layer)
-                mesh_merge(goxel->full_mesh, goxel->preview_mesh, OP_ADD);
+                mesh_merge(goxel->full_mesh, goxel->preview_mesh, MODE_ADD);
             else
-                mesh_merge(goxel->full_mesh, layer->mesh, OP_ADD);
+                mesh_merge(goxel->full_mesh, layer->mesh, MODE_ADD);
         }
     }
 }
@@ -649,10 +649,10 @@ static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
         .shape = &shape_cube,
-        .op = OP_INTERSECT,
+        .mode = MODE_INTERSECT,
     };
     mesh_op(new_layer->mesh, &painter, box);
-    painter.op = OP_SUB;
+    painter.mode = MODE_SUB;
     mesh_op(layer->mesh, &painter, box);
     return new_layer;
 }

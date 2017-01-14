@@ -223,20 +223,20 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     // In case of an add operation, we have to add blocks if they are not
     // there yet.
     mesh_prepare_write(mesh);
-    if (painter->op == OP_ADD) {
+    if (painter->mode == MODE_ADD) {
         add_blocks(mesh, bbox);
     }
     HASH_ITER(hh, mesh->blocks, block, tmp) {
         block_box = block_get_box(block, false);
         if (!bbox_intersect(bbox, block_box)) {
-            if (painter->op == OP_INTERSECT) empty = true;
+            if (painter->mode == MODE_INTERSECT) empty = true;
             else continue;
         }
         empty = false;
         // Optimization for the case when we delete large blocks.
         // XXX: this is too specific.  we need a way to tell if a given
         // shape totally contains a box.
-        if (    painter->shape == &shape_cube && painter->op == OP_SUB &&
+        if (    painter->shape == &shape_cube && painter->mode == MODE_SUB &&
                 box_contains(full_box, block_box))
             empty = true;
         if (!empty) {
@@ -252,7 +252,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     mesh_set(&g_last_op.result, mesh);
 }
 
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int op)
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 {
     assert(mesh && other);
     block_t *block, *other_block, *tmp;
@@ -277,7 +277,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int op)
             block_delete(block);
             continue;
         }
-        block_merge(block, other_block, op);
+        block_merge(block, other_block, mode);
     }
 }
 

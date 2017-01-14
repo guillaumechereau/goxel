@@ -55,9 +55,9 @@ enum {
     ICON_TOOL_SELECTION = 6,
     ICON_TOOL_PROCEDURAL = 7,
 
-    ICON_OP_ADD = 8,
-    ICON_OP_SUB = 9,
-    ICON_OP_PAINT = 10,
+    ICON_MODE_ADD = 8,
+    ICON_MODE_SUB = 9,
+    ICON_MODE_PAINT = 10,
 
     ICON_SHAPE_SPHERE = 16,
     ICON_SHAPE_CUBE = 17,
@@ -359,25 +359,25 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width, height));
 }
 
-static void op_panel(goxel_t *goxel)
+static void mode_panel(goxel_t *goxel)
 {
     int i;
     bool v;
     struct {
-        int        op;
+        int        mode;
         const char *name;
         int        icon;
     } values[] = {
-        {OP_ADD,    "Add",  ICON_OP_ADD},
-        {OP_SUB,    "Sub",  ICON_OP_SUB},
-        {OP_PAINT,  "Paint", ICON_OP_PAINT},
+        {MODE_ADD,    "Add",  ICON_MODE_ADD},
+        {MODE_SUB,    "Sub",  ICON_MODE_SUB},
+        {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
     };
-    ImGui::Text("Operation");
+    ImGui::Text("Mode");
     for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
-        v = goxel->painter.op == values[i].op;
+        v = goxel->painter.mode == values[i].mode;
         if (ImGui::GoxSelectable(values[i].name, &v,
                                  g_tex_icons->tex, values[i].icon)) {
-            goxel->painter.op = values[i].op;
+            goxel->painter.mode = values[i].mode;
         }
         if (i != 2)
             ImGui::SameLine();
@@ -435,7 +435,7 @@ static void tool_options_panel(goxel_t *goxel)
             goxel->snap_offset = clamp(v, -1, +1);
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
-        op_panel(goxel);
+        mode_panel(goxel);
         shapes_panel(goxel);
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE, TOOL_PICK_COLOR)) {
@@ -1209,12 +1209,12 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel->plane_hidden = !goxel->plane_hidden;
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
         action_exec2("layer_clear");
-    if (ImGui::IsKeyPressed(' ', false) && goxel->painter.op == OP_ADD)
-        goxel->painter.op = OP_SUB;
-    if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
-        goxel->painter.op = OP_ADD;
-    if (ImGui::IsKeyReleased(' ') && goxel->painter.op == OP_SUB)
-        goxel->painter.op = OP_ADD;
+    if (ImGui::IsKeyPressed(' ', false) && goxel->painter.mode == MODE_ADD)
+        goxel->painter.mode = MODE_SUB;
+    if (ImGui::IsKeyReleased(' ') && goxel->painter.mode == MODE_SUB)
+        goxel->painter.mode = MODE_ADD;
+    if (ImGui::IsKeyReleased(' ') && goxel->painter.mode == MODE_SUB)
+        goxel->painter.mode = MODE_ADD;
     if (ImGui::IsKeyPressed(KEY_CONTROL, false) && goxel->tool == TOOL_BRUSH) {
         tool_cancel(goxel, goxel->tool, goxel->tool_state);
         goxel->prev_tool = goxel->tool;

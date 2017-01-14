@@ -174,7 +174,7 @@ void image_merge_visible_layers(image_t *img)
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         if (last) {
-            mesh_merge(layer->mesh, last->mesh, OP_ADD);
+            mesh_merge(layer->mesh, last->mesh, MODE_ADD);
             DL_DELETE(img->layers, last);
             layer_delete(last);
         }
@@ -252,7 +252,7 @@ void image_clear_layer(layer_t *layer, const box_t *box)
     }
     painter = (painter_t) {
         .shape = &shape_cube,
-        .op = OP_SUB,
+        .mode = MODE_SUB,
     };
     mesh_op(layer->mesh, &painter, box);
 }

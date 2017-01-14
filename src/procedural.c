@@ -115,7 +115,7 @@ typedef struct proc_ctx ctx_t;
 struct proc_ctx {
     ctx_t       *next, *prev;
     box_t       box;
-    int         op;
+    int         mode;
     vec4_t      color;
     bool        antialiased;
     uint32_t    seed;
@@ -387,10 +387,10 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
         move_value(&ctx->color.z, v[0], v[1]);
         break;
     case OP_sub:
-        ctx->op = OP_SUB;
+        ctx->mode = MODE_SUB;
         break;
     case OP_paint:
-        ctx->op = OP_PAINT;
+        ctx->mode = MODE_PAINT;
         break;
     case OP_seed:
         set_seed(v[0], &ctx->seed);
@@ -428,7 +428,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
                           ctx->color.z * 255);
     goxel()->painter.color.rgb = hsl_to_rgb(hsl);
     goxel()->painter.shape = shape;
-    goxel()->painter.op = ctx->op;
+    goxel()->painter.mode = ctx->mode;
     goxel()->painter.smoothness = ctx->antialiased ? 1 : 0;
     mesh_op(mesh, &goxel()->painter, &ctx->box);
 }
@@ -569,7 +569,7 @@ int proc_start(gox_proc_t *proc, const box_t *box)
     ctx = calloc(1, sizeof(*ctx));
     ctx->box = box ? *box : bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
     ctx->color = vec4(0, 0, 1, 1);
-    ctx->op = OP_ADD;
+    ctx->mode = MODE_ADD;
     ctx->prog = get_rule(proc->prog, "main", ctx);
     set_seed(rand(), &ctx->seed);
     DL_APPEND(proc->ctxs, ctx);

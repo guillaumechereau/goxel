@@ -438,11 +438,11 @@ void *action_exec(const action_t *action, const arg_t *args);
 
 // #### Tool/Operation/Painter #
 enum {
-    OP_NULL,
-    OP_ADD,
-    OP_SUB,
-    OP_PAINT,
-    OP_INTERSECT,
+    MODE_NULL,
+    MODE_ADD,
+    MODE_SUB,
+    MODE_PAINT,
+    MODE_INTERSECT,
 };
 
 enum {
@@ -475,10 +475,10 @@ extern shape_t shape_cube;
 extern shape_t shape_cylinder;
 
 
-// The painting context, including the tool, brush, operation, radius,
+// The painting context, including the tool, brush, mode, radius,
 // color, etc...
 typedef struct painter {
-    int             op;
+    int             mode;
     const shape_t   *shape;
     uvec4b_t        color;
     float           smoothness;
@@ -913,7 +913,7 @@ typedef struct goxel
     struct     {
         vec3_t     pos;
         bool       pressed;
-        int        op;
+        int        mode;
     }          tool_last_op;
     vec3_t     tool_start_pos;
     plane_t    tool_plane;

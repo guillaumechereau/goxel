@@ -595,28 +595,28 @@ void block_fill(block_t *block,
     }
 }
 
-static bool can_skip(uvec4b_t v, int op, uvec4b_t c)
+static bool can_skip(uvec4b_t v, int mode, uvec4b_t c)
 {
-    return (v.a && (op == OP_ADD) && uvec4b_equal(c, v)) ||
-            (!v.a && (op == OP_SUB || op == OP_PAINT));
+    return (v.a && (mode == MODE_ADD) && uvec4b_equal(c, v)) ||
+            (!v.a && (mode == MODE_SUB || mode == MODE_PAINT));
 }
 
-static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int op)
+static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
 {
     uvec4b_t ret;
     int i, aa = a.a, ba = b.a;
-    if (op == OP_PAINT) {
+    if (mode == MODE_PAINT) {
         ret = a;
         ret.rgb = uvec3b_mix(a.rgb, b.rgb, ba / 255.);
     }
-    if (op == OP_ADD) {
+    if (mode == MODE_ADD) {
         ret = a;
         ret.a = min((int)a.a + b.a, 255);
         if (aa + ba)
             for (i = 0; i < 3; i++)
                 ret.v[i] = (a.v[i] * aa + b.v[i] * ba) / (aa + ba);
     }
-    if (op == OP_SUB) {
+    if (mode == MODE_SUB) {
         ret = a;
         ret.a = max(0, aa - ba);
     }
@@ -630,14 +630,14 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     mat4_t mat = mat4_identity;
     vec3_t p, size;
     float k, v;
-    int op = painter->op;
+    int mode = painter->mode;
     uvec4b_t c;
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
     shape_func = painter->shape->func;
     bool invert = false;
 
-    if (op == OP_INTERSECT) {
-        op = OP_SUB;
+    if (mode == MODE_INTERSECT) {
+        mode = MODE_SUB;
         invert = true;
     }
 
@@ -651,7 +651,7 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
 
     BLOCK_ITER(x, y, z) {
         c = painter->color;
-        if (can_skip(BLOCK_AT(block, x, y, z), op, c)) continue;
+        if (can_skip(BLOCK_AT(block, x, y, z), mode, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1, 1);
@@ -661,12 +661,12 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
             block_prepare_write(block);
             c.a *= v;
             BLOCK_AT(block, x, y, z) = combine(
-                BLOCK_AT(block, x, y, z), c, op);
+                BLOCK_AT(block, x, y, z), c, mode);
         }
     }
 }
 
-void block_merge(block_t *block, const block_t *other, int op)
+void block_merge(block_t *block, const block_t *other, int mode)
 {
     int x, y, z;
     if (!other || other->data == get_empty_data()) return;
@@ -679,7 +679,7 @@ void block_merge(block_t *block, const block_t *other, int op)
     BLOCK_ITER(x, y, z) {
         BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z),
                                            DATA_AT(other->data, x, y, z),
-                                           op);
+                                           mode);
     }
 }
 
