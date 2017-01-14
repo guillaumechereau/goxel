@@ -235,7 +235,6 @@ void goxel_init(goxel_t *goxel)
 
     goxel->layers_mesh = mesh_new();
     goxel->pick_mesh = mesh_new();
-    goxel->full_mesh = mesh_new();
     goxel->tool_mesh_orig = mesh_new();
     goxel->tool_mesh = mesh_new();
     goxel_update_meshes(goxel, -1);
@@ -433,7 +432,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
 
     goxel->camera.aspect = rect->z / rect->w;
     camera_update(&goxel->camera);
-    render_mesh(rend, goxel->full_mesh, 0);
+    render_mesh(rend, goxel->layers_mesh, 0);
 
     // Render all the image layers.
     DL_FOREACH(goxel->image->layers, layer) {
@@ -472,19 +471,6 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
     }
     if (mask & MESH_PICK)
         mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
-    if (mask & MESH_FULL && !goxel->preview_mesh)
-        mesh_set(&goxel->full_mesh, goxel->layers_mesh);
-
-    if (mask & MESH_FULL && goxel->preview_mesh) {
-        mesh_clear(goxel->full_mesh);
-        DL_FOREACH(goxel->image->layers, layer) {
-            if (!layer->visible) continue;
-            if (layer == goxel->image->active_layer)
-                mesh_merge(goxel->full_mesh, goxel->preview_mesh, MODE_ADD);
-            else
-                mesh_merge(goxel->full_mesh, layer->mesh, MODE_ADD);
-        }
-    }
 }
 
 static void export_as(goxel_t *goxel, const char *type, const char *path)
