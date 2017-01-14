@@ -603,26 +603,25 @@ static bool can_skip(uvec4b_t v, int mode, uvec4b_t c)
 
 static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
 {
-    uvec4b_t ret;
+    uvec4b_t ret = a;
     int i, aa = a.a, ba = b.a;
     if (mode == MODE_PAINT) {
-        ret = a;
         ret.rgb = uvec3b_mix(a.rgb, b.rgb, ba / 255.);
     }
-    if (mode == MODE_ADD) {
-        ret = a;
+    else if (mode == MODE_ADD) {
         ret.a = min((int)a.a + b.a, 255);
         if (aa + ba)
             for (i = 0; i < 3; i++)
                 ret.v[i] = (a.v[i] * aa + b.v[i] * ba) / (aa + ba);
     }
-    if (mode == MODE_SUB) {
-        ret = a;
+    else if (mode == MODE_SUB) {
         ret.a = max(0, aa - ba);
     }
-    if (mode == MODE_MAX) {
+    else if (mode == MODE_MAX) {
         ret.a = max(a.a, b.a);
         ret.rgb = b.rgb;
+    } else {
+        assert(false);
     }
     return ret;
 }
