@@ -601,16 +601,23 @@ static bool can_skip(uvec4b_t v, int op, const uvec4b_t *c)
             (!v.a && (op == OP_SUB || op == OP_PAINT));
 }
 
-static void apply_op(uvec4b_t *v, int op, const uvec4b_t *c, uint8_t k)
+static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int op, uint8_t k)
 {
-    if (op == OP_PAINT)
-        v->rgb = uvec3b_mix(v->rgb, c->rgb, k / 255.);
-    if (op == OP_ADD) {
-        v->rgb = c->rgb;
-        v->a = max(v->a, k);
+    uvec4b_t ret;
+    if (op == OP_PAINT) {
+        ret = a;
+        ret.rgb = uvec3b_mix(a.rgb, b.rgb, k / 255.);
     }
-    if (op == OP_SUB)
-        v->a = max(0, v->a - k);
+    if (op == OP_ADD) {
+        ret = a;
+        ret.rgb = b.rgb;
+        ret.a = max(ret.a, k);
+    }
+    if (op == OP_SUB) {
+        ret = a;
+        ret.a = max(0, ret.a - k);
+    }
+    return ret;
 }
 
 // XXX: cleanup this function.
@@ -648,7 +655,8 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
         if (invert) v = 255 - v;
         if (v) {
             block_prepare_write(block);
-            apply_op(&BLOCK_AT(block, x, y, z), op, c, v);
+            BLOCK_AT(block, x, y, z) = combine(
+                BLOCK_AT(block, x, y, z), *c, op, v);
         }
     }
 }
