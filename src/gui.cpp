@@ -1015,7 +1015,7 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
     if (just_open)
         original_mesh = mesh_copy(mesh);
     if (ImGui::InputInt("shift", &v, 1)) {
-        mesh_set(&mesh, original_mesh);
+        mesh_set(mesh, original_mesh);
         mesh_shift_alpha(mesh, v);
         goxel_update_meshes(goxel, -1);
     }

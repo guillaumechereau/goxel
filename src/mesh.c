@@ -108,29 +108,23 @@ mesh_t *mesh_copy(const mesh_t *other)
     return mesh;
 }
 
-void mesh_set(mesh_t **mesh, const mesh_t *other)
+void mesh_set(mesh_t *mesh, const mesh_t *other)
 {
     block_t *block, *tmp;
-    mesh_t *m;
-    assert(other);
-    if (!*mesh) {
-        *mesh = mesh_copy(other);
-        return;
-    }
-    m = *mesh;
-    if (m->blocks == other->blocks) return; // Already the same.
-    (*m->ref)--;
-    if (*m->ref == 0) {
-        HASH_ITER(hh, m->blocks, block, tmp) {
-            HASH_DEL(m->blocks, block);
+    assert(mesh && other);
+    if (mesh->blocks == other->blocks) return; // Already the same.
+    (*mesh->ref)--;
+    if (*mesh->ref == 0) {
+        HASH_ITER(hh, mesh->blocks, block, tmp) {
+            HASH_DEL(mesh->blocks, block);
             block_delete(block);
         }
-        free(m->ref);
+        free(mesh->ref);
     }
-    m->blocks = other->blocks;
-    m->ref = other->ref;
-    m->next_block_id = other->next_block_id;
-    (*m->ref)++;
+    mesh->blocks = other->blocks;
+    mesh->ref = other->ref;
+    mesh->next_block_id = other->next_block_id;
+    (*mesh->ref)++;
 }
 
 void mesh_fill(mesh_t *mesh,
@@ -196,16 +190,17 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 
     // In case we are doing the same operation as last time, we can just use
     // the value we buffered.
+    if (!g_last_op.origin) g_last_op.origin = mesh_new();
+    if (!g_last_op.result) g_last_op.result = mesh_new();
     #define EQUAL(a, b) (memcmp(&(a), &(b), sizeof(a)) == 0)
-    if (    g_last_op.origin &&
-            mesh->blocks == g_last_op.origin->blocks &&
+    if (    mesh->blocks == g_last_op.origin->blocks &&
             EQUAL(*painter, g_last_op.painter) &&
             EQUAL(*box, g_last_op.box)) {
-        mesh_set(&mesh, g_last_op.result);
+        mesh_set(mesh, g_last_op.result);
         return;
     }
     #undef EQUAL
-    mesh_set(&g_last_op.origin, mesh);
+    mesh_set(g_last_op.origin, mesh);
     g_last_op.painter   = *painter;
     g_last_op.box       = *box;
 
@@ -248,7 +243,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         }
     }
 
-    mesh_set(&g_last_op.result, mesh);
+    mesh_set(g_last_op.result, mesh);
 }
 
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)

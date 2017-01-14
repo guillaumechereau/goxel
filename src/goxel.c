@@ -470,7 +470,7 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         }
     }
     if (mask & MESH_PICK)
-        mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
+        mesh_set(goxel->pick_mesh, goxel->layers_mesh);
 }
 
 static void export_as(goxel_t *goxel, const char *type, const char *path)
