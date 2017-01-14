@@ -174,7 +174,7 @@ void image_merge_visible_layers(image_t *img)
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         if (last) {
-            mesh_merge(layer->mesh, last->mesh);
+            mesh_merge(layer->mesh, last->mesh, OP_ADD);
             DL_DELETE(img->layers, last);
             layer_delete(last);
         }

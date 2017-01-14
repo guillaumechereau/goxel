@@ -534,7 +534,7 @@ int block_generate_vertices(const block_data_t *data, int effects,
                             voxel_vertex_t *out);
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);
-void block_merge(block_t *block, const block_t *other);
+void block_merge(block_t *block, const block_t *other, int op);
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos);
 void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v);
 
@@ -565,7 +565,7 @@ void mesh_fill(mesh_t *mesh,
                uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
                void *user_data);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
-void mesh_merge(mesh_t *mesh, const mesh_t *other);
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);

@@ -252,7 +252,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     mesh_set(&g_last_op.result, mesh);
 }
 
-void mesh_merge(mesh_t *mesh, const mesh_t *other)
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int op)
 {
     assert(mesh && other);
     block_t *block, *other_block, *tmp;
@@ -277,7 +277,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other)
             block_delete(block);
             continue;
         }
-        block_merge(block, other_block);
+        block_merge(block, other_block, op);
     }
 }
 

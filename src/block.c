@@ -666,20 +666,7 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     }
 }
 
-static uvec4b_t merge(uvec4b_t a, uvec4b_t b)
-{
-    uvec4b_t ret;
-    int alpha = a.a;
-    if (b.a == 0) return a;
-    if (a.a == 0) return b;
-    ret.a = max(a.a, b.a);
-    ret.r = (a.r * alpha + b.r * (255 - alpha)) / 256;
-    ret.g = (a.g * alpha + b.g * (255 - alpha)) / 256;
-    ret.b = (a.b * alpha + b.b * (255 - alpha)) / 256;
-    return ret;
-}
-
-void block_merge(block_t *block, const block_t *other)
+void block_merge(block_t *block, const block_t *other, int op)
 {
     int x, y, z;
     if (!other || other->data == get_empty_data()) return;
@@ -690,8 +677,9 @@ void block_merge(block_t *block, const block_t *other)
 
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
-        BLOCK_AT(block, x, y, z) = merge(DATA_AT(block->data, x, y, z),
-                                         DATA_AT(other->data, x, y, z));
+        BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z),
+                                           DATA_AT(other->data, x, y, z),
+                                           op);
     }
 }
 
