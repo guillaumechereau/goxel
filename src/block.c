@@ -604,18 +604,21 @@ static bool can_skip(uvec4b_t v, int op, uvec4b_t c)
 static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int op)
 {
     uvec4b_t ret;
+    int i, aa = a.a, ba = b.a;
     if (op == OP_PAINT) {
         ret = a;
-        ret.rgb = uvec3b_mix(a.rgb, b.rgb, b.a / 255.);
+        ret.rgb = uvec3b_mix(a.rgb, b.rgb, ba / 255.);
     }
     if (op == OP_ADD) {
         ret = a;
-        ret.rgb = b.rgb;
-        ret.a = max(a.a, b.a);
+        ret.a = min((int)a.a + b.a, 255);
+        if (aa + ba)
+            for (i = 0; i < 3; i++)
+                ret.v[i] = (a.v[i] * aa + b.v[i] * ba) / (aa + ba);
     }
     if (op == OP_SUB) {
         ret = a;
-        ret.a = max(0, (int)a.a - (int)b.b);
+        ret.a = max(0, aa - ba);
     }
     return ret;
 }
