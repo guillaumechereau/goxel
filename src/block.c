@@ -595,27 +595,27 @@ void block_fill(block_t *block,
     }
 }
 
-static bool can_skip(uvec4b_t v, int op, const uvec4b_t *c)
+static bool can_skip(uvec4b_t v, int op, uvec4b_t c)
 {
-    return (v.a && (op == OP_ADD) && uvec4b_equal(*c, v)) ||
+    return (v.a && (op == OP_ADD) && uvec4b_equal(c, v)) ||
             (!v.a && (op == OP_SUB || op == OP_PAINT));
 }
 
-static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int op, uint8_t k)
+static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int op)
 {
     uvec4b_t ret;
     if (op == OP_PAINT) {
         ret = a;
-        ret.rgb = uvec3b_mix(a.rgb, b.rgb, k / 255.);
+        ret.rgb = uvec3b_mix(a.rgb, b.rgb, b.a / 255.);
     }
     if (op == OP_ADD) {
         ret = a;
         ret.rgb = b.rgb;
-        ret.a = max(ret.a, k);
+        ret.a = max(a.a, b.a);
     }
     if (op == OP_SUB) {
         ret = a;
-        ret.a = max(0, ret.a - k);
+        ret.a = max(0, (int)a.a - (int)b.b);
     }
     return ret;
 }
@@ -626,10 +626,9 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     int x, y, z;
     mat4_t mat = mat4_identity;
     vec3_t p, size;
-    float k;
-    uint8_t v;
+    float k, v;
     int op = painter->op;
-    const uvec4b_t *c = &painter->color;
+    uvec4b_t c;
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
     shape_func = painter->shape->func;
     bool invert = false;
@@ -646,17 +645,20 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
 
     mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
     mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
+
     BLOCK_ITER(x, y, z) {
+        c = painter->color;
         if (can_skip(BLOCK_AT(block, x, y, z), op, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1, 1);
-        v = (k + 1) * 0.5 * 255;
-        if (invert) v = 255 - v;
+        v = (k + 1) * 0.5;
+        if (invert) v = 1.0 - v;
         if (v) {
             block_prepare_write(block);
+            c.a *= v;
             BLOCK_AT(block, x, y, z) = combine(
-                BLOCK_AT(block, x, y, z), *c, op, v);
+                BLOCK_AT(block, x, y, z), c, op);
         }
     }
 }
