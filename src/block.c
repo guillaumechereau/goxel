@@ -620,6 +620,10 @@ static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
         ret = a;
         ret.a = max(0, aa - ba);
     }
+    if (mode == MODE_MAX) {
+        ret.a = max(a.a, b.a);
+        ret.rgb = b.rgb;
+    }
     return ret;
 }
 

@@ -442,6 +442,7 @@ enum {
     MODE_ADD,
     MODE_SUB,
     MODE_PAINT,
+    MODE_MAX,
     MODE_INTERSECT,
 };
 
@@ -881,6 +882,10 @@ typedef struct goxel
     mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
     mesh_t     *preview_mesh;// Active layer with brush applied (can be NULL)
     mesh_t     *full_mesh;   // All the layers + brush.
+
+    // Meshes used by the tools.
+    mesh_t     *tool_mesh_orig;
+    mesh_t     *tool_mesh;
 
     history_t  *history;     // Undo/redo history.
     int        snap;

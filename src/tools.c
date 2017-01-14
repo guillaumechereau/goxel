@@ -357,6 +357,8 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             goxel->tool_last_op.mode = 0;
             goxel->painting = true;
             image_history_push(goxel->image);
+            mesh_clear(goxel->tool_mesh);
+            mesh_set(&goxel->tool_mesh_orig, mesh);
         }
     }
     if (state == STATE_PAINT) {
@@ -372,7 +374,11 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
             return STATE_IDLE;
         }
         box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
-        mesh_op(mesh, &goxel->painter, &box);
+        painter2 = goxel->painter;
+        painter2.mode = MODE_MAX;
+        mesh_op(goxel->tool_mesh, &painter2, &box);
+        mesh_set(&mesh, goxel->tool_mesh_orig);
+        mesh_merge(mesh, goxel->tool_mesh, goxel->painter.mode);
         goxel_update_meshes(goxel, MESH_LAYERS | MESH_FULL);
         goxel->tool_start_pos = pos;
     }

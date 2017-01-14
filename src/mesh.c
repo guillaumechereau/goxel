@@ -220,10 +220,9 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
                               painter->smoothness);
     bbox = bbox_grow(box_get_bbox(full_box), 1, 1, 1);
 
-    // In case of an add operation, we have to add blocks if they are not
-    // there yet.
+    // For constructive modes, we have to add blocks if they are not present.
     mesh_prepare_write(mesh);
-    if (painter->mode == MODE_ADD) {
+    if (IS_IN(painter->mode, MODE_ADD, MODE_MAX)) {
         add_blocks(mesh, bbox);
     }
     HASH_ITER(hh, mesh->blocks, block, tmp) {
@@ -256,16 +255,14 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 {
     assert(mesh && other);
     block_t *block, *other_block, *tmp;
-    if (mesh->blocks == other->blocks) return;
-    if (mesh->blocks == NULL) {
-        mesh_set(&mesh, other);
-        return;
-    }
     mesh_prepare_write(mesh);
+
     // Add empty blocks if needed.
-    MESH_ITER_BLOCKS(other, block) {
-        if (!mesh_get_block_at(mesh, &block->pos)) {
-            mesh_add_block(mesh, NULL, &block->pos);
+    if (IS_IN(mode, MODE_ADD, MODE_MAX)) {
+        MESH_ITER_BLOCKS(other, block) {
+            if (!mesh_get_block_at(mesh, &block->pos)) {
+                mesh_add_block(mesh, NULL, &block->pos);
+            }
         }
     }
 

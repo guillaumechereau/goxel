@@ -236,6 +236,8 @@ void goxel_init(goxel_t *goxel)
     goxel->layers_mesh = mesh_new();
     goxel->pick_mesh = mesh_new();
     goxel->full_mesh = mesh_new();
+    goxel->tool_mesh_orig = mesh_new();
+    goxel->tool_mesh = mesh_new();
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
