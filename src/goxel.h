@@ -909,7 +909,6 @@ typedef struct goxel
     // Some state for the tool iter functions.
     // XXX: move this into tool.c
     int        tool_state;
-    int        tool_t;
     int        tool_snape_face;
     // Structure used to skip rendering when don't move the mouse.
     struct     {
