@@ -638,6 +638,7 @@ static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_INTERSECT,
+        .color = uvec4b(255, 255, 255, 255),
     };
     mesh_op(new_layer->mesh, &painter, box);
     painter.mode = MODE_SUB;
