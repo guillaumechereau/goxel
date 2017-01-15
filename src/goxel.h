@@ -512,7 +512,7 @@ typedef struct block_data block_data_t;
 struct block_data
 {
     int         ref;
-    int         id;
+    uint64_t    id;
     uvec4b_t    voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE]; // RGBA voxels.
 };
 
@@ -522,7 +522,7 @@ struct block
     UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
     vec3_t          pos;
-    uint64_t         id;
+    int             id;     // id of the block in the mesh it belongs.
 };
 block_t *block_new(const vec3_t *pos, block_data_t *data);
 void block_delete(block_t *block);
