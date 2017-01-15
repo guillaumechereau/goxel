@@ -196,11 +196,6 @@ static int mc_compute(uint8_t cube_index, const uvec4b_t neighboors[8],
     return nb_tri;
 }
 
-static int make_id(void)
-{
-    return ++goxel()->next_uid;
-}
-
 static block_data_t *get_empty_data(void)
 {
     static block_data_t *data = NULL;
@@ -576,7 +571,7 @@ static void block_prepare_write(block_t *block)
     memcpy(data->voxels, block->data->voxels, N * N * N * 4);
     data->ref = 1;
     block->data = data;
-    block->data->id = make_id();
+    block->data->id = ++goxel()->next_uid;
     goxel()->block_count++;
 }
 

@@ -1188,7 +1188,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                           ImGuiWindowFlags_NoInputs);
         ImGui::Text("Blocks: %d (%.2g MiB)", goxel->block_count,
                 (float)goxel->block_count * sizeof(block_data_t) / MiB);
-        ImGui::Text("uid: %d", goxel->next_uid);
+        ImGui::Text("uid: %ld", goxel->next_uid);
         if (PROFILER)
             render_profiler_info();
         ImGui::EndChild();

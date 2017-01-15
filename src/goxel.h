@@ -522,7 +522,7 @@ struct block
     UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
     vec3_t          pos;
-    int             id;
+    uint64_t         id;
 };
 block_t *block_new(const vec3_t *pos, block_data_t *data);
 void block_delete(block_t *block);
@@ -554,7 +554,7 @@ struct mesh
     block_t *blocks;
     int next_block_id;
     int *ref;   // Used to implement copy on write of the blocks.
-    int id;     // global uniq id, change each time a mesh changes.
+    uint64_t id;     // global uniq id, change each time a mesh changes.
 };
 mesh_t *mesh_new(void);
 void mesh_clear(mesh_t *mesh);
@@ -943,7 +943,7 @@ typedef struct goxel
     int64_t    frame_clock;       // Clock time at beginning of the frame.
 
     // Global uid counter.
-    int        next_uid;
+    uint64_t   next_uid;
 
     int        block_count; // Counter for the number of block data.
 } goxel_t;
