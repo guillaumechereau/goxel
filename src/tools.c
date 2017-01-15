@@ -443,18 +443,19 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     mat4_itranslate(&box.mat, 0, 0, -1024);
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
     render_box(&goxel->rend, &box, false, NULL, false);
-    if (state == STATE_IDLE) {
-        if (down) {
-            state = STATE_PAINT;
-            image_history_push(goxel->image);
-        }
-    }
-    if (state == STATE_PAINT) {
-        if (!down) {
-            return STATE_IDLE;
-        }
+
+    switch (state) {
+    case STATE_IDLE:
+        if (down) return STATE_PAINT;
+        break;
+    case STATE_PAINT | STATE_ENTER:
+        image_history_push(goxel->image);
+        break;
+    case STATE_PAINT:
+        if (!down) return STATE_IDLE;
         mesh_op(mesh, &painter, &box);
         goxel_update_meshes(goxel, -1);
+        break;
     }
     return state;
 }
