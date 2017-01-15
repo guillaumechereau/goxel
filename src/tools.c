@@ -118,11 +118,13 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         pos.z = round(pos.z - 0.5) + 0.5;
     }
     switch (state) {
+
     case STATE_IDLE:
-        if (snaped) {
-            mesh_set(goxel->tool_mesh_orig, mesh);
-            return STATE_SNAPED;
-        }
+        if (snaped) return STATE_SNAPED;
+        break;
+
+    case STATE_SNAPED | STATE_ENTER:
+        mesh_set(goxel->tool_mesh_orig, mesh);
         break;
 
     case STATE_SNAPED:
@@ -336,14 +338,11 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     }
     switch (state) {
     case STATE_IDLE:
-        if (snaped) {
-            // XXX: this should be done automatically.
-            mesh_set(goxel->tool_mesh_orig, mesh);
-            return STATE_SNAPED;
-        }
+        if (snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED | STATE_ENTER:
+        mesh_set(goxel->tool_mesh_orig, mesh);
         goxel->tool_last_op.mode = 0; // Discard last op.
         break;
 
@@ -532,21 +531,27 @@ static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
         box = bbox_from_extents(pos, 0.5, 0.5, 0.5);
         render_box(&goxel->rend, &box, false, NULL, false);
     }
-    if (state == STATE_IDLE) {
-        if (snaped) state = STATE_SNAPED;
-    }
-    if (state == STATE_SNAPED) {
+
+    switch (state) {
+    case STATE_IDLE:
+        if (snaped) return STATE_SNAPED;
+        break;
+
+    case STATE_SNAPED:
         if (!snaped) return STATE_IDLE;
         if (down) {
             image_history_push(goxel->image);
             proc_stop(proc);
             proc_start(proc, &box);
-            state = STATE_PAINT;
+            return STATE_PAINT;
         }
+        break;
+
+    case STATE_PAINT:
+        if (!down) return STATE_IDLE;
+        break;
     }
-    if (state == STATE_PAINT) {
-        if (!down) state = STATE_IDLE;
-    }
+
     return state;
 }
 
