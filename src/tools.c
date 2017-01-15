@@ -426,8 +426,10 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     vec2_t win = inputs->mouse_pos;
     win.y = view_size->y - win.y;
 
-    painter.mode = MODE_SUB;
+    painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
+    painter.color = uvec4b(255, 255, 255, 255);
+
     // Create the tool box from the camera along the visible ray.
     camera_get_ray(&goxel->camera, &win, &view, &pos, &normal);
     box.mat = mat4_identity;

@@ -441,6 +441,7 @@ enum {
     MODE_NULL,
     MODE_ADD,
     MODE_SUB,
+    MODE_SUB_CLAMP,
     MODE_PAINT,
     MODE_MAX,
     MODE_INTERSECT,

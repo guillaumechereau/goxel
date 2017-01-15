@@ -598,7 +598,7 @@ void block_fill(block_t *block,
 static bool can_skip(uvec4b_t v, int mode, uvec4b_t c)
 {
     return (v.a && (mode == MODE_ADD) && uvec4b_equal(c, v)) ||
-            (!v.a && (mode == MODE_SUB || mode == MODE_PAINT));
+            (!v.a && IS_IN(mode, MODE_SUB, MODE_PAINT, MODE_SUB_CLAMP));
 }
 
 static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
@@ -620,6 +620,9 @@ static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
     else if (mode == MODE_MAX) {
         ret.a = max(a.a, b.a);
         ret.rgb = b.rgb;
+    } else if (mode == MODE_SUB_CLAMP) {
+        ret.a = min(aa, 255 - ba);
+        ret.rgb = a.rgb;
     } else {
         assert(false);
     }
