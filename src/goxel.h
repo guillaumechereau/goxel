@@ -835,6 +835,7 @@ typedef struct proc {
 } gox_proc_t;
 
 int proc_parse(const char *txt, gox_proc_t *proc);
+void proc_release(gox_proc_t *proc);
 int proc_start(gox_proc_t *proc, const box_t *box);
 int proc_stop(gox_proc_t *proc);
 int proc_iter(gox_proc_t *proc);

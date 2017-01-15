@@ -271,6 +271,7 @@ void goxel_init(goxel_t *goxel)
 
 void goxel_release(goxel_t *goxel)
 {
+    proc_release(&goxel->proc);
     gui_release();
 }
 

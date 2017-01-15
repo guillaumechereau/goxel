@@ -103,7 +103,7 @@ static const shape_t *SHAPES[] = {
 typedef struct proc_node node_t;
 struct proc_node {
     int         type;
-    const char  *id;
+    char        *id;
     float       v;
     int         size;
     node_t      *children, *next, *prev, *parent;
@@ -154,6 +154,8 @@ static void node_free(node_t *node)
         DL_DELETE(node->children, c);
         node_free(c);
     }
+    free(node->id);
+    free(node);
 }
 
 static void ctxs_free(ctx_t *ctx)
@@ -539,13 +541,7 @@ static node_t *parse(const char *txt, int *err_line);
 
 int proc_parse(const char *txt, gox_proc_t *proc)
 {
-    node_free(proc->prog);
-    ctxs_free(proc->ctxs);
-    proc->ctxs = NULL;
-    free(proc->error.str);
-    proc->error.str = NULL;
-    proc->error.line = 0;
-
+    proc_release(proc);
     proc->prog = parse(txt, &proc->error.line);
     if (!proc->prog) {
         proc->state = PROC_PARSE_ERROR;
@@ -556,6 +552,17 @@ int proc_parse(const char *txt, gox_proc_t *proc)
     proc->state = PROC_READY;
     if (0) visit(proc->prog, 0);
     return 0;
+}
+
+void proc_release(gox_proc_t *proc)
+{
+    node_free(proc->prog);
+    proc->prog = NULL;
+    ctxs_free(proc->ctxs);
+    proc->ctxs = NULL;
+    free(proc->error.str);
+    proc->error.str = NULL;
+    proc->error.line = 0;
 }
 
 int proc_start(gox_proc_t *proc, const box_t *box)
