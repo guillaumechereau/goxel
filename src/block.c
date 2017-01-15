@@ -673,6 +673,10 @@ void block_merge(block_t *block, const block_t *other, int mode)
 {
     int x, y, z;
     if (!other || other->data == get_empty_data()) return;
+    if (IS_IN(mode, MODE_ADD, MODE_MAX) && block->data == get_empty_data()) {
+        block_set_data(block, other->data);
+        return;
+    }
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
         BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z),
