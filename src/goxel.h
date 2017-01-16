@@ -1053,6 +1053,14 @@ struct profiler_block
     int64_t             tot_time;
     int64_t             self_time;
     int64_t             enter_time;
+
+    // For real time fps computation.
+    struct {
+        int64_t             frame_tot_time;
+        int64_t             frame_self_time;
+        int64_t             tot_time;
+        int64_t             self_time;
+    } avg;
 };
 void profiler_start(void);
 void profiler_stop(void);

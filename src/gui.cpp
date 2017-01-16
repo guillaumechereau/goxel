@@ -994,12 +994,12 @@ static void render_profiler_info(void)
 
     root = profiler_get_blocks();
     if (!root) return;
-    time_per_frame = root->tot_time / root->count / (1000.0 * 1000.0);
+    time_per_frame = root->avg.tot_time / (1000.0 * 1000.0);
     fps = 1000.0 / time_per_frame;
     ImGui::BulletText("%.1fms/frame (%dfps)", time_per_frame, fps);
     for (block = root; block; block = block->next) {
-        self_time = block->self_time / root->count / (1000.0 * 1000.0);
-        percent = block->self_time * 100 / root->tot_time;
+        self_time = block->avg.self_time / (1000.0 * 1000.0);
+        percent = block->avg.self_time * 100 / root->avg.tot_time;
         if (!percent) continue;
         ImGui::BulletText("%s: self:%.1fms/frame (%d%%)",
                 block->name, self_time, percent);
