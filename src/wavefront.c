@@ -77,6 +77,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     block_t *block;
     voxel_vertex_t* verts;
     vec3_t v;
+    uvec3b_t c;
     int nb_quads, i, j;
     mat4_t mat;
     FILE *out;
@@ -100,7 +101,8 @@ void wavefront_export(const mesh_t *mesh, const char *path)
                          verts[i * 4 + j].pos.y,
                          verts[i * 4 + j].pos.z);
                 v = mat4_mul_vec3(mat, v);
-                line = (line_t){"v ", .v = v};
+                c = verts[i * 4 + j].color.rgb;
+                line = (line_t){"v ", .v = v, .c = c};
                 face.vs[j] = lines_add(lines, &line);
             }
             // Put the normals
@@ -119,7 +121,11 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     line_ptr = NULL;
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "v ", 2) == 0)
-            fprintf(out, "v %g %g %g\n", VEC3_SPLIT(line_ptr->v));
+            fprintf(out, "v %g %g %g %f %f %f\n",
+                    VEC3_SPLIT(line_ptr->v),
+                    line_ptr->c.r / 255.,
+                    line_ptr->c.g / 255.,
+                    line_ptr->c.b / 255.);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "vn", 2) == 0)
@@ -135,6 +141,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     }
     fclose(out);
     utarray_free(lines);
+    free(verts);
 }
 
 void ply_export(const mesh_t *mesh, const char *path)
@@ -211,6 +218,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     }
     fclose(out);
     utarray_free(lines);
+    free(verts);
 }
 
 static void export_as_obj(goxel_t *goxel, const char *path)
