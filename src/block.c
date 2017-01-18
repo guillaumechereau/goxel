@@ -670,17 +670,35 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
 void block_merge(block_t *block, const block_t *other, int mode)
 {
     int x, y, z;
+    block_data_t *data;
+
     if (!other || other->data == get_empty_data()) return;
     if (IS_IN(mode, MODE_ADD, MODE_MAX) && block->data == get_empty_data()) {
         block_set_data(block, other->data);
         return;
     }
+
+    // Check if the merge op has been cached.
+    struct {
+        uint64_t id1;
+        uint64_t id2;
+        int      mode;
+    } key = {
+        block->data->id, other->data->id, mode
+    };
+    data = cache_get(&key, sizeof(key));
+    if (data) {
+        block_set_data(block, data);
+        return;
+    }
+
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
         BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z),
                                            DATA_AT(other->data, x, y, z),
                                            mode);
     }
+    cache_add(&key, sizeof(key), block->data);
 }
 
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)

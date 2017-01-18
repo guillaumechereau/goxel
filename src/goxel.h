@@ -1112,4 +1112,9 @@ void mustache_add_str(mustache_t *m, const char *key, const char *fmt, ...);
 int mustache_render(const mustache_t *m, const char *templ, char *out);
 void mustache_free(mustache_t *m);
 
+// ####### Cache manager #########################
+// Allow to cache blocks merge operations.
+void cache_add(const void *key, int len, block_data_t *data);
+block_data_t *cache_get(const void *key, int len);
+
 #endif // GOXEL_H
