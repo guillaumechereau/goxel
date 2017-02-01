@@ -673,25 +673,36 @@ static void tools_panel(goxel_t *goxel)
 {
     const struct {
         int         tool;
+        const char  *tool_id;
         const char  *name;
         int         icon;
     } values[] = {
-        {TOOL_BRUSH,        "Brush",        ICON_TOOL_BRUSH},
-        {TOOL_SHAPE,        "Shape",        ICON_TOOL_SHAPE},
-        {TOOL_LASER,        "Laser",        ICON_TOOL_LASER},
-        {TOOL_SET_PLANE,    "Plane",        ICON_TOOL_PLANE},
-        {TOOL_MOVE,         "Move",         ICON_TOOL_MOVE},
-        {TOOL_PICK_COLOR,   "Pick Color",   ICON_TOOL_PICK},
-        {TOOL_SELECTION,    "Selection",    ICON_TOOL_SELECTION},
-        {TOOL_PROCEDURAL,   "Procedural",   ICON_TOOL_PROCEDURAL},
+        {TOOL_BRUSH,        "brush",     "Brush",        ICON_TOOL_BRUSH},
+        {TOOL_SHAPE,        "shape",     "Shape",        ICON_TOOL_SHAPE},
+        {TOOL_LASER,        "laser",     "Laser",        ICON_TOOL_LASER},
+        {TOOL_SET_PLANE,    "plane",     "Plane",        ICON_TOOL_PLANE},
+        {TOOL_MOVE,         "move",      "Move",         ICON_TOOL_MOVE},
+        {TOOL_PICK_COLOR,   "pick",      "Pick Color",   ICON_TOOL_PICK},
+        {TOOL_SELECTION,    "selection", "Selection",    ICON_TOOL_SELECTION},
+        {TOOL_PROCEDURAL,   "procedural","Procedural",   ICON_TOOL_PROCEDURAL},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
     bool v;
+    char action_id[64];
+    char label[64];
+    const action_t *action;
     ImGui::PushID("tools_panel");
     for (i = 0; i < nb; i++) {
         v = goxel->tool == values[i].tool;
-        if (ImGui::GoxSelectable(values[i].name, &v, g_tex_icons->tex,
+        sprintf(label, "%s", values[i].name);
+        if (values[i].tool_id) {
+            sprintf(action_id, "tool_set_%s", values[i].tool_id);
+            action = action_get(action_id);
+            if (action->shortcut)
+                sprintf(label, "%s (%s)", values[i].name, action->shortcut);
+        }
+        if (ImGui::GoxSelectable(label, &v, g_tex_icons->tex,
                                  values[i].icon)) {
             goxel->tool = values[i].tool;
             goxel->tool_state = 0;
@@ -1026,6 +1037,16 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
     }
 }
 
+static int check_action_shortcut(const action_t *action)
+{
+    const arg_t args[] = {ARG(0, 0)};
+    if (action->shortcut && ImGui::IsKeyPressed(action->shortcut[0])) {
+        action_exec(action, args);
+        return 1;
+    }
+    return 0;
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     static view_t view;
@@ -1237,6 +1258,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
             ImGui::GoxIsCharPressed(25))
         goxel_redo(goxel);
+
+    // Check the action shortcuts.
+    actions_iter(check_action_shortcut);
 }
 
 void gui_render(void)

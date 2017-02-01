@@ -408,11 +408,13 @@ struct action {
     void            *func;  // Pointer to the function to call.
     action_sig_t    sig;    // Signature of the function.
     int             flags;
+    const char      *shortcut; // Optional shortcut.
 };
 
 void action_register(const action_t *action);
 const action_t *action_get(const char *id);
 void *action_exec(const action_t *action, const arg_t *args);
+void actions_iter(int (*f)(const action_t *action));
 
 // Convenience macro to call action_exec directly from an id and a list of
 // arguments.

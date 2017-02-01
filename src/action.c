@@ -42,6 +42,14 @@ const action_t *action_get(const char *id)
     return item ? item->action : NULL;
 }
 
+void actions_iter(int (*f)(const action_t *action))
+{
+    action_hash_item_t *item, *tmp;
+    HASH_ITER(hh, g_actions, item, tmp) {
+        f(item->action);
+    }
+}
+
 static long get_arg_value(arg_t arg, const arg_t *args)
 {
     const arg_t *argp;

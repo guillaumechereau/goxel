@@ -606,6 +606,31 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
 void tool_cancel(goxel_t *goxel, int tool, int state)
 {
     if (state == 0) return;
+    mesh_set(goxel->image->active_layer->mesh, goxel->tool_mesh_orig);
+    goxel_update_meshes(goxel, MESH_LAYERS);
     goxel->tool_plane = plane_null;
     goxel->tool_state = 0;
 }
+
+#define TOOL_ACTION(t, T, s) \
+    static void tool_set_##t(goxel_t *goxel) { \
+        tool_cancel(goxel, goxel->tool, goxel->tool_state); \
+        goxel->tool = TOOL_##T; \
+    } \
+    \
+    ACTION_REGISTER(tool_set_##t, \
+        .help = "Activate " #t " tool", \
+        .func = tool_set_##t, \
+        .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL)), \
+        .flags = ACTION_NO_CHANGE, \
+        .shortcut = s, \
+    )
+
+TOOL_ACTION(brush, BRUSH, "B")
+TOOL_ACTION(shape, SHAPE, "S")
+TOOL_ACTION(laser, LASER, "L")
+TOOL_ACTION(plane, SET_PLANE, "P")
+TOOL_ACTION(move, MOVE, "M")
+TOOL_ACTION(pick, PICK_COLOR, "C")
+TOOL_ACTION(selection, SELECTION, "R")
+TOOL_ACTION(procedural, PROCEDURAL, NULL)
