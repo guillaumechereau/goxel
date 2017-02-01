@@ -469,7 +469,7 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         mesh_set(goxel->pick_mesh, goxel->layers_mesh);
 }
 
-static void export_as(goxel_t *goxel, const char *type, const char *path)
+static void export_as(const char *type, const char *path)
 {
     char id[128];
     assert(path);
@@ -489,16 +489,14 @@ static void export_as(goxel_t *goxel, const char *type, const char *path)
 ACTION_REGISTER(export_as,
     .help = "Export the image",
     .func = export_as,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("type", TYPE_STRING),
+    .sig = SIG(TYPE_VOID, ARG("type", TYPE_STRING),
                           ARG("path", TYPE_FILE_PATH)),
     .flags = ACTION_NO_CHANGE,
 )
 
 
 // XXX: this function has to be rewritten.
-static void export_as_png(goxel_t *goxel, const char *path,
-                          int w, int h)
+static void export_as_png(const char *path, int w, int h)
 {
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *data2, *data;
@@ -531,14 +529,13 @@ static void export_as_png(goxel_t *goxel, const char *path,
 ACTION_REGISTER(export_as_png,
     .help = "Save the image as a png file",
     .func = export_as_png,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH),
+    .sig = SIG(TYPE_VOID, ARG("path", TYPE_FILE_PATH),
                           ARG("width", TYPE_INT),
                           ARG("height", TYPE_INT)),
     .flags = ACTION_NO_CHANGE,
 )
 
-static void export_as_txt(goxel_t *goxel, const char *path)
+static void export_as_txt(const char *path)
 {
     FILE *out;
     mesh_t *mesh = goxel->layers_mesh;
@@ -571,8 +568,7 @@ static void export_as_txt(goxel_t *goxel, const char *path)
 ACTION_REGISTER(export_as_txt,
     .help = "Save the image as a txt file",
     .func = export_as_txt,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
+    .sig = SIG(TYPE_VOID, ARG("path", TYPE_FILE_PATH)),
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -624,8 +620,7 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
 }
 
-static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
-                                 layer_t *layer, box_t *box)
+static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
 {
     layer_t *new_layer;
     painter_t painter;
@@ -645,13 +640,12 @@ static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
 ACTION_REGISTER(cut_as_new_layer,
     .help = "Cut into a new layer",
     .func = cut_as_new_layer,
-    .sig = SIG(TYPE_LAYER, ARG("goxel", TYPE_GOXEL),
-                           ARG("img", TYPE_IMAGE),
+    .sig = SIG(TYPE_LAYER, ARG("img", TYPE_IMAGE),
                            ARG("layer", TYPE_LAYER),
                            ARG("box", TYPE_BOX)),
 )
 
-static void clear_selection(goxel_t *goxel)
+static void clear_selection(void)
 {
     if (goxel->tool == TOOL_SELECTION)
         tool_cancel(goxel, goxel->tool, goxel->tool_state);
@@ -661,10 +655,10 @@ static void clear_selection(goxel_t *goxel)
 ACTION_REGISTER(clear_selection,
     .help = "Clear the selection",
     .func = clear_selection,
-    .sig = SIG(TYPE_LAYER, ARG("goxel", TYPE_GOXEL)),
+    .sig = SIG(TYPE_LAYER),
 )
 
-static void fill_selection(goxel_t *goxel, layer_t *layer)
+static void fill_selection(layer_t *layer)
 {
     if (box_is_null(goxel->selection)) return;
     mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
@@ -674,6 +668,5 @@ static void fill_selection(goxel_t *goxel, layer_t *layer)
 ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
     .func = fill_selection,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("layer", TYPE_LAYER)),
+    .sig = SIG(TYPE_VOID, ARG("layer", TYPE_LAYER)),
 )

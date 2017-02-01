@@ -20,8 +20,7 @@
 
 #include "goxel.h"
 
-static void export_as_pov(goxel_t *goxel, const char *path,
-                          int w, int h)
+static void export_as_pov(const char *path, int w, int h)
 {
     FILE *file;
     layer_t *layer;
@@ -91,8 +90,7 @@ static void export_as_pov(goxel_t *goxel, const char *path,
 ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
     .func = export_as_pov,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH),
+    .sig = SIG(TYPE_VOID, ARG("path", TYPE_FILE_PATH),
                           ARG("width", TYPE_INT),
                           ARG("height", TYPE_INT)),
     .flags = ACTION_NO_CHANGE,

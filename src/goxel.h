@@ -393,7 +393,7 @@ typedef struct {
 #define SIG(ret_, ...) { \
         ret_, \
         ARRAY_SIZE(((arg_t[]){__VA_ARGS__})), \
-        (const arg_t[]){__VA_ARGS__, ARG(0, 0)} \
+        (const arg_t[]){ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)} + 1 \
     }
 
 enum {

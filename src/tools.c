@@ -613,7 +613,7 @@ void tool_cancel(goxel_t *goxel, int tool, int state)
 }
 
 #define TOOL_ACTION(t, T, s) \
-    static void tool_set_##t(goxel_t *goxel) { \
+    static void tool_set_##t(void) { \
         tool_cancel(goxel, goxel->tool, goxel->tool_state); \
         goxel->tool = TOOL_##T; \
     } \
@@ -621,7 +621,7 @@ void tool_cancel(goxel_t *goxel, int tool, int state)
     ACTION_REGISTER(tool_set_##t, \
         .help = "Activate " #t " tool", \
         .func = tool_set_##t, \
-        .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL)), \
+        .sig = SIG(TYPE_VOID), \
         .flags = ACTION_NO_CHANGE, \
         .shortcut = s, \
     )
