@@ -123,6 +123,7 @@ void image_delete(image_t *img)
 layer_t *image_add_layer(image_t *img)
 {
     layer_t *layer;
+    img = img ?: goxel->image;
     layer = layer_new("unamed");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
@@ -132,6 +133,8 @@ layer_t *image_add_layer(image_t *img)
 
 void image_delete_layer(image_t *img, layer_t *layer)
 {
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
     DL_DELETE(img->layers, layer);
     if (layer == img->active_layer) img->active_layer = NULL;
     layer_delete(layer);
@@ -147,6 +150,8 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
 {
     assert(d == -1 || d == +1);
     layer_t *other = NULL;
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
     if (d == -1) {
         other = layer->next;
         SWAP(other, layer);
@@ -161,6 +166,8 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
 layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
+    img = img ?: goxel->image;
+    other = other ?: img->active_layer;
     layer = layer_copy(other);
     layer->visible = true;
     DL_APPEND(img->layers, layer);
@@ -171,6 +178,7 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 void image_merge_visible_layers(image_t *img)
 {
     layer_t *layer, *last = NULL;
+    img = img ?: goxel->image;
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         if (last) {
@@ -246,7 +254,9 @@ void image_redo(image_t *img)
 void image_clear_layer(layer_t *layer, const box_t *box)
 {
     painter_t painter;
-    if (!box || box_is_null(*box)) {
+    layer = layer ?: goxel->image->active_layer;
+    box = box ?: &goxel->selection;
+    if (box_is_null(*box)) {
         mesh_clear(layer->mesh);
         return;
     }

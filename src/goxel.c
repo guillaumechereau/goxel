@@ -625,6 +625,10 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
     layer_t *new_layer;
     painter_t painter;
 
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
+    box = box ?: &goxel->selection;
+
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
         .shape = &shape_cube,

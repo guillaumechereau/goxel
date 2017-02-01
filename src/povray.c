@@ -33,6 +33,8 @@ static void export_as_pov(const char *path, int w, int h)
     vec3_t light_dir;
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = goxel->camera;
+    w = w ?: goxel->image->export_width;
+    h = h ?: goxel->image->export_height;
 
     template = assets_get("asset://data/povray_template.pov", NULL);
     assert(template);

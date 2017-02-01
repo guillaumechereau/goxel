@@ -359,7 +359,6 @@ enum {
     TYPE_VOID,
     TYPE_INT,
     TYPE_STRING,
-    TYPE_GOXEL,
     TYPE_LAYER,
     TYPE_IMAGE,
     TYPE_FILE_PATH,

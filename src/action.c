@@ -59,19 +59,6 @@ static long get_arg_value(arg_t arg, const arg_t *args)
                 return argp->value;
         }
     }
-    // Default values for some types.
-    if (arg.type == TYPE_GOXEL)
-        return (intptr_t)goxel;
-    if (arg.type == TYPE_IMAGE)
-        return (intptr_t)goxel->image;
-    if (arg.type == TYPE_LAYER)
-        return (intptr_t)goxel->image->active_layer;
-    if (arg.type == TYPE_BOX)
-        return (intptr_t)&goxel->selection;
-    if (str_equ(arg.name, "width"))
-        return (int)goxel->image->export_width;
-    if (str_equ(arg.name, "height"))
-        return (int)goxel->image->export_height;
     return 0;
 }
 
