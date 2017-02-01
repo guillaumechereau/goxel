@@ -949,7 +949,10 @@ typedef struct goxel
 
     int        block_count; // Counter for the number of block data.
 } goxel_t;
-goxel_t *goxel(void);
+
+// the global goxel instance.
+extern goxel_t *goxel;
+
 void goxel_init(goxel_t *goxel);
 void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);

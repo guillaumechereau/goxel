@@ -424,15 +424,15 @@ static int set_args(gox_proc_t *proc, node_t *node, ctx_t *ctx)
 
 static void call_shape(const ctx_t *ctx, const shape_t *shape)
 {
-    mesh_t *mesh = goxel()->image->active_layer->mesh;
+    mesh_t *mesh = goxel->image->active_layer->mesh;
     uvec3b_t hsl = uvec3b(ctx->color.x / 360 * 255,
                           ctx->color.y * 255,
                           ctx->color.z * 255);
-    goxel()->painter.color.rgb = hsl_to_rgb(hsl);
-    goxel()->painter.shape = shape;
-    goxel()->painter.mode = ctx->mode;
-    goxel()->painter.smoothness = ctx->antialiased ? 1 : 0;
-    mesh_op(mesh, &goxel()->painter, &ctx->box);
+    goxel->painter.color.rgb = hsl_to_rgb(hsl);
+    goxel->painter.shape = shape;
+    goxel->painter.mode = ctx->mode;
+    goxel->painter.smoothness = ctx->antialiased ? 1 : 0;
+    mesh_op(mesh, &goxel->painter, &ctx->box);
 }
 
 // Iter the program once.
@@ -629,7 +629,7 @@ int proc_iter(gox_proc_t *proc)
             break;
         }
         if (last) break;
-        if (get_clock() - goxel()->frame_clock > 16000000) {
+        if (get_clock() - goxel->frame_clock > 16000000) {
             proc->in_frame = true;
             return 0;
         }

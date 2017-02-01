@@ -203,7 +203,7 @@ static block_data_t *get_empty_data(void)
         data = calloc(1, sizeof(*data));
         data->ref = 1;
         data->id = 0;
-        goxel()->block_count++;
+        goxel->block_count++;
     }
     return data;
 }
@@ -235,7 +235,7 @@ void block_delete(block_t *block)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
-        goxel()->block_count--;
+        goxel->block_count--;
     }
     free(block);
 }
@@ -254,7 +254,7 @@ void block_set_data(block_t *block, block_data_t *data)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
-        goxel()->block_count--;
+        goxel->block_count--;
     }
     block->data = data;
     data->ref++;
@@ -571,8 +571,8 @@ static void block_prepare_write(block_t *block)
     memcpy(data->voxels, block->data->voxels, N * N * N * 4);
     data->ref = 1;
     block->data = data;
-    block->data->id = ++goxel()->next_uid;
-    goxel()->block_count++;
+    block->data->id = ++goxel->next_uid;
+    goxel->block_count++;
 }
 
 void block_fill(block_t *block,

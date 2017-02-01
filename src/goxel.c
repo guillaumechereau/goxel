@@ -19,7 +19,7 @@
 #include "goxel.h"
 #include <stdarg.h>
 
-static goxel_t *g_goxel = NULL;
+goxel_t *goxel = NULL;
 
 static void unpack_pos_data(const uvec4b_t data, vec3b_t *pos, int *face,
                             int *cube_id)
@@ -218,9 +218,9 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
     return ret;
 }
 
-void goxel_init(goxel_t *goxel)
+void goxel_init(goxel_t *gox)
 {
-    g_goxel = goxel;
+    goxel = gox;
     memset(goxel, 0, sizeof(*goxel));
 
     render_init();
@@ -273,11 +273,6 @@ void goxel_release(goxel_t *goxel)
 {
     proc_release(&goxel->proc);
     gui_release();
-}
-
-goxel_t *goxel(void)
-{
-    return g_goxel;
 }
 
 void goxel_iter(goxel_t *goxel, inputs_t *inputs)

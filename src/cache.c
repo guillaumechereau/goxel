@@ -48,7 +48,7 @@ static void cleanup(void)
         item->data->ref--;
         if (item->data->ref == 0) {
             free(item->data);
-            goxel()->block_count--;
+            goxel->block_count--;
         }
         free(item);
         g_size--;

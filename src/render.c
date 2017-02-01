@@ -410,7 +410,7 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
     }
     HASH_ADD(hh, g_items, key, sizeof(key), item);
 end:
-    item->last_used_frame = goxel()->frame_count;
+    item->last_used_frame = goxel->frame_count;
     return item;
 }
 
@@ -755,7 +755,7 @@ static void cleanup_buffer(void)
     render_item_t *item, *tmp;
     HASH_ITER(hh, g_items, item, tmp) {
         if (item->type == ITEM_BLOCK) {
-            if (item->last_used_frame + 1 < goxel()->frame_count) {
+            if (item->last_used_frame + 1 < goxel->frame_count) {
                 GL(glDeleteBuffers(1, &item->vertex_buffer));
                 HASH_DEL(g_items, item);
                 free(item);
@@ -865,7 +865,7 @@ void render_render(renderer_t *rend, const int rect[4],
 
     DL_SORT(rend->items, item_sort_cmp);
     DL_FOREACH_SAFE(rend->items, item, tmp) {
-        item->last_used_frame = goxel()->frame_count;
+        item->last_used_frame = goxel->frame_count;
         switch (item->type) {
         case ITEM_MESH:
             render_mesh_(rend, item->mesh, item->effects, &shadow_mvp);

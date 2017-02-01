@@ -295,7 +295,7 @@ void model3d_render(model3d_t *model3d,
     }
     GL(glUniform1f(prog.u_strip_l, strip ? 1.0 : 0.0));
     GL(glUniform1f(prog.u_time_l,
-                   strip == 2 ? goxel()->frame_count * 16 / 1000.0 : 0));
+                   strip == 2 ? goxel->frame_count * 16 / 1000.0 : 0));
 
     tex = tex ?: g_white_tex;
     GL(glActiveTexture(GL_TEXTURE0));

@@ -61,17 +61,17 @@ static long get_arg_value(arg_t arg, const arg_t *args)
     }
     // Default values for some types.
     if (arg.type == TYPE_GOXEL)
-        return (intptr_t)goxel();
+        return (intptr_t)goxel;
     if (arg.type == TYPE_IMAGE)
-        return (intptr_t)goxel()->image;
+        return (intptr_t)goxel->image;
     if (arg.type == TYPE_LAYER)
-        return (intptr_t)goxel()->image->active_layer;
+        return (intptr_t)goxel->image->active_layer;
     if (arg.type == TYPE_BOX)
-        return (intptr_t)&goxel()->selection;
+        return (intptr_t)&goxel->selection;
     if (str_equ(arg.name, "width"))
-        return (int)goxel()->image->export_width;
+        return (int)goxel->image->export_width;
     if (str_equ(arg.name, "height"))
-        return (int)goxel()->image->export_height;
+        return (int)goxel->image->export_height;
     return 0;
 }
 
@@ -93,10 +93,10 @@ void *action_exec(const action_t *action, const arg_t *args)
     is_void = action->sig.ret == TYPE_VOID;
 
     // For the moment all action cancel the current tool, for simplicity.
-    tool_cancel(goxel(), goxel()->tool, goxel()->tool_state);
+    tool_cancel(goxel, goxel->tool, goxel->tool_state);
 
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
-        image_history_push(goxel()->image);
+        image_history_push(goxel->image);
     }
 
     reentry++;
@@ -129,7 +129,7 @@ void *action_exec(const action_t *action, const arg_t *args)
 
     reentry--;
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
-        goxel_update_meshes(goxel(), -1);
+        goxel_update_meshes(goxel, -1);
     }
     return ret;
 }

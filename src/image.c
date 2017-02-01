@@ -229,7 +229,7 @@ void image_undo(image_t *img)
 
     image_set(img, img->history_current->history_prev);
     img->history_current = img->history_current->history_prev;
-    goxel_update_meshes(goxel(), -1);
+    goxel_update_meshes(goxel, -1);
 }
 
 void image_redo(image_t *img)
@@ -240,7 +240,7 @@ void image_redo(image_t *img)
     }
     img->history_current = img->history_current->history_next;
     image_set(img, img->history_current);
-    goxel_update_meshes(goxel(), -1);
+    goxel_update_meshes(goxel, -1);
 }
 
 void image_clear_layer(layer_t *layer, const box_t *box)

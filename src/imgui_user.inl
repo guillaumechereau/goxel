@@ -88,7 +88,7 @@ namespace ImGui {
         if (ret) *v = !*v;
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("%s", tooltip);
-            goxel_set_help_text(goxel(), tooltip);
+            goxel_set_help_text(goxel, tooltip);
         }
         ImGui::PopID();
         return ret;
@@ -235,7 +235,7 @@ namespace ImGui {
             return true;
         }
         if (ImGui::IsItemHovered()) {
-            goxel_set_help_text(goxel(), action_get(id)->help);
+            goxel_set_help_text(goxel, action_get(id)->help);
         }
         return false;
     }
