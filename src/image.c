@@ -270,40 +270,35 @@ void image_clear_layer(layer_t *layer, const box_t *box)
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .func = image_clear_layer,
-    .sig = SIG(TYPE_VOID, ARG("layer", TYPE_LAYER),
-                          ARG("box", TYPE_BOX)),
+    .sig = "pp",
 )
 
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
     .func = image_add_layer,
-    .sig = SIG(TYPE_LAYER, ARG("image", TYPE_IMAGE)),
+    .sig = "p",
 )
 
 ACTION_REGISTER(img_del_layer,
     .help = "Delete the active layer",
     .func = image_delete_layer,
-    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
-                          ARG("layer", TYPE_LAYER)),
+    .sig = "pp",
 )
 
 ACTION_REGISTER(img_move_layer,
     .help = "Move the active layer",
     .func = image_move_layer,
-    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
-                          ARG("layer", TYPE_LAYER),
-                          ARG("ofs", TYPE_INT)),
+    .sig = "ppi",
 )
 
 ACTION_REGISTER(img_duplicate_layer,
     .help = "Duplicate the active layer",
     .func = image_duplicate_layer,
-    .sig = SIG(TYPE_LAYER, ARG("image", TYPE_IMAGE),
-                           ARG("layer", TYPE_LAYER)),
+    .sig = "pp",
 )
 
 ACTION_REGISTER(img_merge_visible_layers,
     .help = "Merge all the visible layers",
     .func = image_merge_visible_layers,
-    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE)),
+    .sig = "p",
 )

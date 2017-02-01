@@ -621,7 +621,7 @@ void tool_cancel(goxel_t *goxel, int tool, int state)
     ACTION_REGISTER(tool_set_##t, \
         .help = "Activate " #t " tool", \
         .func = tool_set_##t, \
-        .sig = SIG(TYPE_VOID), \
+        .sig = "", \
         .flags = ACTION_NO_CHANGE, \
         .shortcut = s, \
     )

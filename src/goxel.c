@@ -483,14 +483,13 @@ static void export_as(const char *type, const char *path)
         type++;
     }
     sprintf(id, "export_as_%s", type);
-    action_exec2(id, ARG("path", path));
+    action_exec2(id, "p", path);
 }
 
 ACTION_REGISTER(export_as,
     .help = "Export the image",
     .func = export_as,
-    .sig = SIG(TYPE_VOID, ARG("type", TYPE_STRING),
-                          ARG("path", TYPE_FILE_PATH)),
+    .sig = "pp",
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -504,6 +503,8 @@ static void export_as_png(const char *path, int w, int h)
     renderer_t rend = goxel->rend;
     mesh_t *mesh;
     camera_t camera = goxel->camera;
+    w = w ?: goxel->image->export_width;
+    h = h ?: goxel->image->export_height;
 
     camera.aspect = (float)w / h;
     LOG_I("Exporting to file %s", path);
@@ -529,9 +530,7 @@ static void export_as_png(const char *path, int w, int h)
 ACTION_REGISTER(export_as_png,
     .help = "Save the image as a png file",
     .func = export_as_png,
-    .sig = SIG(TYPE_VOID, ARG("path", TYPE_FILE_PATH),
-                          ARG("width", TYPE_INT),
-                          ARG("height", TYPE_INT)),
+    .sig = "pii",
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -568,7 +567,7 @@ static void export_as_txt(const char *path)
 ACTION_REGISTER(export_as_txt,
     .help = "Save the image as a txt file",
     .func = export_as_txt,
-    .sig = SIG(TYPE_VOID, ARG("path", TYPE_FILE_PATH)),
+    .sig = "p",
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -644,9 +643,7 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
 ACTION_REGISTER(cut_as_new_layer,
     .help = "Cut into a new layer",
     .func = cut_as_new_layer,
-    .sig = SIG(TYPE_LAYER, ARG("img", TYPE_IMAGE),
-                           ARG("layer", TYPE_LAYER),
-                           ARG("box", TYPE_BOX)),
+    .sig = "ppp",
 )
 
 static void clear_selection(void)
@@ -659,7 +656,7 @@ static void clear_selection(void)
 ACTION_REGISTER(clear_selection,
     .help = "Clear the selection",
     .func = clear_selection,
-    .sig = SIG(TYPE_LAYER),
+    .sig = "p",
 )
 
 static void fill_selection(layer_t *layer)
@@ -672,5 +669,5 @@ static void fill_selection(layer_t *layer)
 ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
     .func = fill_selection,
-    .sig = SIG(TYPE_VOID, ARG("layer", TYPE_LAYER)),
+    .sig = "p",
 )

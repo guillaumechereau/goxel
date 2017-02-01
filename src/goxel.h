@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 #define GOXEL_VERSION_STR "0.3.0"
 
@@ -345,7 +346,7 @@ void texture_delete(texture_t *tex);
 // We support some basic reflexion of functions.  We do this by registering the
 // functions with the ACTION_REGISTER macro.  Once a function has been
 // registered, it is possible to query it (action_get) and call it
-// (action_exec).  There is some basic support for default and named arguments.
+// (action_exec).
 // Check the end of image.c to see some examples.  The idea is that this will
 // make it much easier to add meta information to functions, like
 // documentation, shortcuts.  Also in theory this should allow to add a
@@ -353,47 +354,16 @@ void texture_delete(texture_t *tex);
 
 // XXX: this is still pretty experimental.  This might change in the future.
 
-// For reflexion, we need to keep an id for all the types we can pass to
-// actions.
-enum {
-    TYPE_VOID,
-    TYPE_INT,
-    TYPE_STRING,
-    TYPE_LAYER,
-    TYPE_IMAGE,
-    TYPE_FILE_PATH,
-    TYPE_BOX,
-};
+typedef struct astack astack_t;
 
-// Structure used both to define an action argument signature (name, type),
-// or an action call argument value (name, value).  In that case the type
-// can be inferred from the action signature.
-typedef struct {
-    const char  *name;
-    union {
-        long        type;
-        long        value;
-        const char  *s;
-    };
-} arg_t;
+astack_t *stack_create(void);
+void      stack_delete(astack_t *s);
 
-#define ARG(n, v) {n, {(intptr_t)(v)}}
-#define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
-
-// Represent a function signature with return type and arguments.
-typedef struct {
-    int         ret;
-    int         nb_args;
-    const arg_t *args;      // Terminated by a argument of type VOID
-} action_sig_t;
-
-// Convenience macro to create a function signature:
-// SIG(ret_type, ARG(arg1_name, arg1_type), ARG(arg2_name, arg2_type), ...)
-#define SIG(ret_, ...) { \
-        ret_, \
-        ARRAY_SIZE(((arg_t[]){__VA_ARGS__})), \
-        (const arg_t[]){ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)} + 1 \
-    }
+void  stack_push_i(astack_t *s, int i);
+void  stack_push_p(astack_t *s, void *p);
+int   stack_get_i(const astack_t *s, int i);
+void *stack_get_p(const astack_t *s, int i);
+void  stack_pop(astack_t *s);
 
 enum {
     ACTION_NO_CHANGE    = 1 << 0,  // The action does not touch the image.
@@ -405,26 +375,20 @@ struct action {
     const char      *id;    // Globally unique id.
     const char      *help;  // Help text.
     void            *func;  // Pointer to the function to call.
-    action_sig_t    sig;    // Signature of the function.
+    const char      *sig;   // Signature of the function.
     int             flags;
     const char      *shortcut; // Optional shortcut.
 };
 
 void action_register(const action_t *action);
 const action_t *action_get(const char *id);
-void *action_exec(const action_t *action, const arg_t *args);
+int action_exec(const action_t *action, const char *sig, ...);
+int action_execv(const action_t *action, const char *sig, va_list ap);
 void actions_iter(int (*f)(const action_t *action));
 
-// Convenience macro to call action_exec directly from an id and a list of
-// arguments.
-// I have to add a ARG(0, 0) at the beginning of the arg list so that the
-// macro works even with no action arguments.  Maybe I should add a nb_args
-// argument to action_exec to prevent that.
-#define action_exec2(id, ...) ({ \
-        const arg_t args_[] = {ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)}; \
-        action_exec(action_get(id), args_ + 1); \
-    })
-
+// Convenience macro to call action_exec directly from an action id.
+#define action_exec2(id, sig, ...) \
+    action_exec(action_get(id), sig, ##__VA_ARGS__)
 
 
 // Convenience macro to register an action from anywere in a c file.

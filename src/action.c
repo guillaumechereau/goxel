@@ -50,34 +50,17 @@ void actions_iter(int (*f)(const action_t *action))
     }
 }
 
-static long get_arg_value(arg_t arg, const arg_t *args)
+int action_execv(const action_t *action, const char *sig, va_list ap)
 {
-    const arg_t *argp;
-    if (args) {
-        for (argp = args; argp->name; argp++) {
-            if (strcmp(argp->name, arg.name) == 0)
-                return argp->value;
-        }
-    }
-    return 0;
-}
-
-void *action_exec(const action_t *action, const arg_t *args)
-{
-    void *ret = NULL;
-    int i, nb_args;
-    long vals[4];
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
+    int i;
+    astack_t *stack = stack_create();
     // XXX: not sure this is actually legal in C.  func will be called with
     // a variable number or arguments, that might be of any registered types!
-    void *(*func)() = action->func;
-    bool is_void;
+    void (*func)() = action->func;
 
     assert(action);
-    nb_args = action->sig.nb_args;
-    assert(nb_args <= ARRAY_SIZE(vals));
-    is_void = action->sig.ret == TYPE_VOID;
 
     // For the moment all action cancel the current tool, for simplicity.
     tool_cancel(goxel, goxel->tool, goxel->tool_state);
@@ -88,35 +71,60 @@ void *action_exec(const action_t *action, const arg_t *args)
 
     reentry++;
 
-    for (i = 0; i < nb_args; i++)
-        vals[i] = get_arg_value(action->sig.args[i], args);
-
-    if (is_void && nb_args == 0)
+    for (i = 0; i < strlen(action->sig); i++) {
+        if (i < strlen(sig)) {
+            assert(sig[i] == action->sig[i]);
+            switch (action->sig[i]) {
+                case 'i': stack_push_i(stack, va_arg(ap, int)); break;
+                case 'p': stack_push_p(stack, va_arg(ap, void*)); break;
+                default: assert(false);
+            }
+        } else {
+            switch (action->sig[i]) {
+                case 'i': stack_push_i(stack, 0); break;
+                case 'p': stack_push_p(stack, NULL); break;
+                default: assert(false);
+            }
+        }
+    }
+    if (strcmp(action->sig, "") == 0) {
         func();
-    else if (is_void && nb_args == 1)
-        func(vals[0]);
-    else if (is_void && nb_args == 2)
-        func(vals[0], vals[1]);
-    else if (is_void && nb_args == 3)
-        func(vals[0], vals[1], vals[2]);
-    else if (is_void && nb_args == 4)
-        func(vals[0], vals[1], vals[2], vals[3]);
-    else if (!is_void && nb_args == 0)
-        ret = func();
-    else if (!is_void && nb_args == 1)
-        ret = func(vals[0]);
-    else if (!is_void && nb_args == 2)
-        ret = func(vals[0], vals[1]);
-    else if (!is_void && nb_args == 3)
-        ret = func(vals[0], vals[1], vals[2]);
-    else if (!is_void && nb_args == 4)
-        ret = func(vals[0], vals[1], vals[2], vals[3]);
-    else
-        LOG_E("Cannot handle signature for action %s", action->id);
+    } else if (strcmp(action->sig, "p") == 0) {
+        func(stack_get_p(stack, 0));
+    } else if (strcmp(action->sig, "pp") == 0) {
+        func(stack_get_p(stack, 0),
+             stack_get_p(stack, 1));
+    } else if (strcmp(action->sig, "ppp") == 0) {
+        func(stack_get_p(stack, 0),
+             stack_get_p(stack, 1),
+             stack_get_p(stack, 2));
+    } else if (strcmp(action->sig, "ppi") == 0) {
+        func(stack_get_p(stack, 0),
+             stack_get_p(stack, 1),
+             stack_get_i(stack, 2));
+    } else if (strcmp(action->sig, "pii") == 0) {
+        func(stack_get_p(stack, 0),
+             stack_get_i(stack, 1),
+             stack_get_i(stack, 2));
+    } else {
+        LOG_E("Cannot handle sig '%s'", action->sig);
+        assert(false);
+    }
 
     reentry--;
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
         goxel_update_meshes(goxel, -1);
     }
+    stack_delete(stack);
+    return 0;
+}
+
+int action_exec(const action_t *action, const char *sig, ...)
+{
+    va_list ap;
+    int ret;
+    va_start(ap, sig);
+    ret = action_execv(action, sig, ap);
+    va_end(ap);
     return ret;
 }

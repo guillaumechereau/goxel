@@ -37,7 +37,7 @@ namespace ImGui {
     bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
                              bool display_frame = true,
                              bool default_open = false);
-    bool GoxAction(const char *id, const char *label, const arg_t *args);
+    bool GoxAction(const char *id, const char *label, const char *sig, ...);
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
 };
@@ -450,7 +450,7 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SHAPE) {
-        ImGui::GoxAction("fill_selection", "Fill selection", NULL);
+        ImGui::GoxAction("fill_selection", "Fill selection", "");
     }
     if (goxel->tool == TOOL_SET_PLANE) {
         i = 0;
@@ -497,8 +497,8 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SELECTION) {
-        ImGui::GoxAction("clear_selection", "Clear selection", NULL);
-        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", NULL);
+        ImGui::GoxAction("clear_selection", "Clear selection", "");
+        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", "");
     }
 }
 
@@ -657,7 +657,7 @@ static void procedural_panel(goxel_t *goxel)
         char path[1024];
         sprintf(path, "%s/img_%04d.png",
                 gui->prog_export_animation_path, proc->frame);
-        action_exec2("export_as", ARG("type", "png"), ARG("path", path));
+        action_exec2("export_as", "pp", "png", path);
     }
     if (proc->state != PROC_RUNNING) gui->prog_export_animation = false;
 
@@ -765,16 +765,16 @@ static void layers_panel(goxel_t *goxel)
         i++;
         ImGui::PopID();
     }
-    ImGui::GoxAction("img_new_layer", "Add", NULL);
+    ImGui::GoxAction("img_new_layer", "Add", "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_del_layer", "Del", NULL);
+    ImGui::GoxAction("img_del_layer", "Del", "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "^", ARGS(ARG("ofs", +1)));
+    ImGui::GoxAction("img_move_layer", "^", "ppi", NULL, NULL, +1);
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "v", ARGS(ARG("ofs", -1)));
-    ImGui::GoxAction("img_duplicate_layer", "Duplicate", NULL);
+    ImGui::GoxAction("img_move_layer", "v", "ppi", NULL, NULL, -1);
+    ImGui::GoxAction("img_duplicate_layer", "Duplicate", "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", NULL);
+    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", "");
     ImGui::PopID();
 }
 
@@ -983,7 +983,7 @@ static void export_as(goxel_t *goxel, const char *type)
     char *path = NULL;
     bool result = dialog_open(DIALOG_FLAG_SAVE, type, &path);
     if (!result) return;
-    action_exec2("export_as", ARG("type", type), ARG("path", path));
+    action_exec2("export_as", "pp", type, path);
     free(path);
 }
 
@@ -1039,9 +1039,8 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
 
 static int check_action_shortcut(const action_t *action)
 {
-    const arg_t args[] = {ARG(0, 0)};
     if (action->shortcut && ImGui::IsKeyPressed(action->shortcut[0])) {
-        action_exec(action, args);
+        action_exec(action, "");
         return 1;
     }
     return 0;
@@ -1121,7 +1120,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         }
         if (ImGui::BeginMenu("Edit")) {
             if (ImGui::MenuItem("Clear", "Delete"))
-                action_exec2("layer_clear");
+                action_exec2("layer_clear", "");
             if (ImGui::MenuItem("Undo", "Ctrl+Z")) goxel_undo(goxel);
             if (ImGui::MenuItem("Redo", "Ctrl+Y")) goxel_redo(goxel);
             if (ImGui::MenuItem("Shift Alpha"))
@@ -1229,7 +1228,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (ImGui::GoxIsCharPressed('#'))
         goxel->plane_hidden = !goxel->plane_hidden;
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
-        action_exec2("layer_clear");
+        action_exec2("layer_clear", "");
     if (ImGui::IsKeyPressed(' ', false) && goxel->painter.mode == MODE_ADD)
         goxel->painter.mode = MODE_SUB;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.mode == MODE_SUB)

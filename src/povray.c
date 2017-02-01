@@ -92,8 +92,6 @@ static void export_as_pov(const char *path, int w, int h)
 ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
     .func = export_as_pov,
-    .sig = SIG(TYPE_VOID, ARG("path", TYPE_FILE_PATH),
-                          ARG("width", TYPE_INT),
-                          ARG("height", TYPE_INT)),
+    .sig = "pii",
     .flags = ACTION_NO_CHANGE,
 )

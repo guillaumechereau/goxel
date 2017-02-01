@@ -227,11 +227,14 @@ namespace ImGui {
         return ret;
     }
 
-    bool GoxAction(const char *id, const char *label, const arg_t *args)
+    bool GoxAction(const char *id, const char *label, const char *sig, ...)
     {
+        va_list ap;
         assert(action_get(id));
         if (ImGui::Button(label)) {
-            action_exec(action_get(id), args);
+            va_start(ap, sig);
+            action_execv(action_get(id), sig, ap);
+            va_end(ap);
             return true;
         }
         if (ImGui::IsItemHovered()) {

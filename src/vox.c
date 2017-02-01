@@ -245,7 +245,7 @@ static void export_as_vox(const char *path)
 ACTION_REGISTER(export_as_vox,
     .help = "Save the image as a vox 3d file",
     .func = export_as_vox,
-    .sig = SIG(TYPE_VOID, ARG("path", TYPE_FILE_PATH)),
+    .sig = "p",
     .flags = ACTION_NO_CHANGE,
 )
 
