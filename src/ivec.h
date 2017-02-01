@@ -100,7 +100,7 @@ static inline bool uvec4b_equal(uvec4b_t a, uvec4b_t b)
 
 static inline vec3b_t vec3b_add(const vec3b_t a, const vec3b_t b)
 {
-    vec3b_t ret;
+    vec3b_t ret = {};
     int i;
     for (i = 0; i < 3; i++)
         ret.v[i] = a.v[i] + b.v[i];
@@ -114,7 +114,7 @@ static inline void vec3b_iadd(vec3b_t *a, const vec3b_t b)
 
 static inline vec3b_t vec3b_addk(const vec3b_t a, const vec3b_t b, float k)
 {
-    vec3b_t ret;
+    vec3b_t ret = {};
     int i;
     for (i = 0; i < 3; i++)
         ret.v[i] = a.v[i] + b.v[i] * k;

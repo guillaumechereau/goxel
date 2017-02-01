@@ -196,11 +196,6 @@ static int mc_compute(uint8_t cube_index, const uvec4b_t neighboors[8],
     return nb_tri;
 }
 
-static int make_id(void)
-{
-    return ++goxel()->block_next_id;
-}
-
 static block_data_t *get_empty_data(void)
 {
     static block_data_t *data = NULL;
@@ -576,7 +571,7 @@ static void block_prepare_write(block_t *block)
     memcpy(data->voxels, block->data->voxels, N * N * N * 4);
     data->ref = 1;
     block->data = data;
-    block->data->id = make_id();
+    block->data->id = ++goxel()->next_uid;
     goxel()->block_count++;
 }
 
@@ -595,22 +590,38 @@ void block_fill(block_t *block,
     }
 }
 
-static bool can_skip(uvec4b_t v, int op, const uvec4b_t *c)
+static bool can_skip(uvec4b_t v, int mode, uvec4b_t c)
 {
-    return (v.a && (op == OP_ADD) && uvec4b_equal(*c, v)) ||
-            (!v.a && (op == OP_SUB || op == OP_PAINT));
+    return (v.a && (mode == MODE_ADD) && uvec4b_equal(c, v)) ||
+            (!v.a && IS_IN(mode, MODE_SUB, MODE_PAINT, MODE_SUB_CLAMP));
 }
 
-static void apply_op(uvec4b_t *v, int op, const uvec4b_t *c, uint8_t k)
+static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
 {
-    if (op == OP_PAINT)
-        v->rgb = uvec3b_mix(v->rgb, c->rgb, k / 255.);
-    if (op == OP_ADD) {
-        v->rgb = c->rgb;
-        v->a = max(v->a, k);
+    uvec4b_t ret = a;
+    int i, aa = a.a, ba = b.a;
+    if (mode == MODE_PAINT) {
+        ret.rgb = uvec3b_mix(a.rgb, b.rgb, ba / 255.);
     }
-    if (op == OP_SUB)
-        v->a = max(0, v->a - k);
+    else if (mode == MODE_ADD) {
+        ret.a = min((int)a.a + b.a, 255);
+        if (aa + ba)
+            for (i = 0; i < 3; i++)
+                ret.v[i] = (a.v[i] * aa + b.v[i] * ba) / (aa + ba);
+    }
+    else if (mode == MODE_SUB) {
+        ret.a = max(0, aa - ba);
+    }
+    else if (mode == MODE_MAX) {
+        ret.a = max(a.a, b.a);
+        ret.rgb = b.rgb;
+    } else if (mode == MODE_SUB_CLAMP) {
+        ret.a = min(aa, 255 - ba);
+        ret.rgb = a.rgb;
+    } else {
+        assert(false);
+    }
+    return ret;
 }
 
 // XXX: cleanup this function.
@@ -619,16 +630,15 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     int x, y, z;
     mat4_t mat = mat4_identity;
     vec3_t p, size;
-    float k;
-    uint8_t v;
-    int op = painter->op;
-    const uvec4b_t *c = &painter->color;
+    float k, v;
+    int mode = painter->mode;
+    uvec4b_t c;
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
     shape_func = painter->shape->func;
     bool invert = false;
 
-    if (op == OP_INTERSECT) {
-        op = OP_SUB;
+    if (mode == MODE_INTERSECT) {
+        mode = MODE_SUB;
         invert = true;
     }
 
@@ -639,47 +649,56 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
 
     mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
     mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
+
     BLOCK_ITER(x, y, z) {
-        if (can_skip(BLOCK_AT(block, x, y, z), op, c)) continue;
+        c = painter->color;
+        if (can_skip(BLOCK_AT(block, x, y, z), mode, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1, 1);
-        v = (k + 1) * 0.5 * 255;
-        if (invert) v = 255 - v;
+        v = (k + 1) * 0.5;
+        if (invert) v = 1.0 - v;
         if (v) {
             block_prepare_write(block);
-            apply_op(&BLOCK_AT(block, x, y, z), op, c, v);
+            c.a *= v;
+            BLOCK_AT(block, x, y, z) = combine(
+                BLOCK_AT(block, x, y, z), c, mode);
         }
     }
 }
 
-static uvec4b_t merge(uvec4b_t a, uvec4b_t b)
-{
-    uvec4b_t ret;
-    int alpha = a.a;
-    if (b.a == 0) return a;
-    if (a.a == 0) return b;
-    ret.a = max(a.a, b.a);
-    ret.r = (a.r * alpha + b.r * (255 - alpha)) / 256;
-    ret.g = (a.g * alpha + b.g * (255 - alpha)) / 256;
-    ret.b = (a.b * alpha + b.b * (255 - alpha)) / 256;
-    return ret;
-}
-
-void block_merge(block_t *block, const block_t *other)
+void block_merge(block_t *block, const block_t *other, int mode)
 {
     int x, y, z;
+    block_data_t *data;
+
     if (!other || other->data == get_empty_data()) return;
-    if (block->data == get_empty_data()) {
+    if (IS_IN(mode, MODE_ADD, MODE_MAX) && block->data == get_empty_data()) {
         block_set_data(block, other->data);
+        return;
+    }
+
+    // Check if the merge op has been cached.
+    struct {
+        uint64_t id1;
+        uint64_t id2;
+        int      mode;
+    } key = {
+        block->data->id, other->data->id, mode
+    };
+    data = cache_get(&key, sizeof(key));
+    if (data) {
+        block_set_data(block, data);
         return;
     }
 
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
-        BLOCK_AT(block, x, y, z) = merge(DATA_AT(block->data, x, y, z),
-                                         DATA_AT(other->data, x, y, z));
+        BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z),
+                                           DATA_AT(other->data, x, y, z),
+                                           mode);
     }
+    cache_add(&key, sizeof(key), block->data);
 }
 
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)

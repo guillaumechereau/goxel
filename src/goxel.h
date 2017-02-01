@@ -378,7 +378,7 @@ typedef struct {
     };
 } arg_t;
 
-#define ARG(n, v) {n, {(long)(v)}}
+#define ARG(n, v) {n, {(intptr_t)(v)}}
 #define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
 
 // Represent a function signature with return type and arguments.
@@ -438,11 +438,13 @@ void *action_exec(const action_t *action, const arg_t *args);
 
 // #### Tool/Operation/Painter #
 enum {
-    OP_NULL,
-    OP_ADD,
-    OP_SUB,
-    OP_PAINT,
-    OP_INTERSECT,
+    MODE_NULL,
+    MODE_ADD,
+    MODE_SUB,
+    MODE_SUB_CLAMP,
+    MODE_PAINT,
+    MODE_MAX,
+    MODE_INTERSECT,
 };
 
 enum {
@@ -457,6 +459,12 @@ enum {
     TOOL_PROCEDURAL,
 };
 
+// Mesh mask for goxel_update_meshes function.
+enum {
+    MESH_LAYERS = 1 << 0,
+    MESH_PICK   = 1 << 1,
+};
+
 typedef struct shape {
     const char *id;
     float (*func)(const vec3_t *p, const vec3_t *s, float smoothness);
@@ -468,10 +476,10 @@ extern shape_t shape_cube;
 extern shape_t shape_cylinder;
 
 
-// The painting context, including the tool, brush, operation, radius,
+// The painting context, including the tool, brush, mode, radius,
 // color, etc...
 typedef struct painter {
-    int             op;
+    int             mode;
     const shape_t   *shape;
     uvec4b_t        color;
     float           smoothness;
@@ -504,7 +512,7 @@ typedef struct block_data block_data_t;
 struct block_data
 {
     int         ref;
-    int         id;
+    uint64_t    id;
     uvec4b_t    voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE]; // RGBA voxels.
 };
 
@@ -514,7 +522,7 @@ struct block
     UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
     vec3_t          pos;
-    int             id;
+    int             id;     // id of the block in the mesh it belongs.
 };
 block_t *block_new(const vec3_t *pos, block_data_t *data);
 void block_delete(block_t *block);
@@ -527,7 +535,7 @@ int block_generate_vertices(const block_data_t *data, int effects,
                             voxel_vertex_t *out);
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);
-void block_merge(block_t *block, const block_t *other);
+void block_merge(block_t *block, const block_t *other, int op);
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos);
 void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v);
 
@@ -546,18 +554,19 @@ struct mesh
     block_t *blocks;
     int next_block_id;
     int *ref;   // Used to implement copy on write of the blocks.
+    uint64_t id;     // global uniq id, change each time a mesh changes.
 };
 mesh_t *mesh_new(void);
 void mesh_clear(mesh_t *mesh);
 void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
-void mesh_set(mesh_t **mesh, const mesh_t *other);
+void mesh_set(mesh_t *mesh, const mesh_t *other);
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_fill(mesh_t *mesh,
                uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
                void *user_data);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
-void mesh_merge(mesh_t *mesh, const mesh_t *other);
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
@@ -826,6 +835,7 @@ typedef struct proc {
 } gox_proc_t;
 
 int proc_parse(const char *txt, gox_proc_t *proc);
+void proc_release(gox_proc_t *proc);
 int proc_start(gox_proc_t *proc, const box_t *box);
 int proc_stop(gox_proc_t *proc);
 int proc_iter(gox_proc_t *proc);
@@ -870,7 +880,11 @@ typedef struct goxel
     image_t    *image;
 
     mesh_t     *layers_mesh; // All the layers combined.
-    mesh_t     *pick_mesh;
+    mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
+
+    // Meshes used by the tools.
+    mesh_t     *tool_mesh_orig;
+    mesh_t     *tool_mesh;
 
     history_t  *history;     // Undo/redo history.
     int        snap;
@@ -897,14 +911,12 @@ typedef struct goxel
     // Some state for the tool iter functions.
     // XXX: move this into tool.c
     int        tool_state;
-    int        tool_t;
     int        tool_snape_face;
-    mesh_t     *tool_origin_mesh;
     // Structure used to skip rendering when don't move the mouse.
     struct     {
         vec3_t     pos;
         bool       pressed;
-        int        op;
+        int        mode;
     }          tool_last_op;
     vec3_t     tool_start_pos;
     plane_t    tool_plane;
@@ -929,7 +941,9 @@ typedef struct goxel
 
     int        frame_count;       // Global frames counter.
     int64_t    frame_clock;       // Clock time at beginning of the frame.
-    int        block_next_id;
+
+    // Global uid counter.
+    uint64_t   next_uid;
 
     int        block_count; // Counter for the number of block data.
 } goxel_t;
@@ -944,18 +958,23 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
 // the view.
 void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
                          const inputs_t *inputs, bool inside);
+
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
-                    const vec2_t *pos, vec3_t *out, vec3_t *normal);
+                    const vec2_t *pos, bool on_surface,
+                    vec3_t *out, vec3_t *normal);
+
 bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, mesh_t *mesh,
                      vec3_t *out, vec3_t *normal);
+
 bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const plane_t *plane,
                      vec3_t *out, vec3_t *normal);
 bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
                      const vec2_t *pos, const box_t *box, bool inside,
                      vec3_t *out, vec3_t *normal, int *face);
-void goxel_update_meshes(goxel_t *goxel, bool pick);
+// Recompute the meshes.  mask from MESH_ enum.
+void goxel_update_meshes(goxel_t *goxel, int mask);
 
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
 void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);
@@ -1036,6 +1055,14 @@ struct profiler_block
     int64_t             tot_time;
     int64_t             self_time;
     int64_t             enter_time;
+
+    // For real time fps computation.
+    struct {
+        int64_t             frame_tot_time;
+        int64_t             frame_self_time;
+        int64_t             tot_time;
+        int64_t             self_time;
+    } avg;
 };
 void profiler_start(void);
 void profiler_stop(void);
@@ -1086,5 +1113,10 @@ mustache_t *mustache_add_list(mustache_t *m, const char *key);
 void mustache_add_str(mustache_t *m, const char *key, const char *fmt, ...);
 int mustache_render(const mustache_t *m, const char *templ, char *out);
 void mustache_free(mustache_t *m);
+
+// ####### Cache manager #########################
+// Allow to cache blocks merge operations.
+void cache_add(const void *key, int len, block_data_t *data);
+block_data_t *cache_get(const void *key, int len);
 
 #endif // GOXEL_H

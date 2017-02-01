@@ -105,6 +105,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
         *out = mat4_mul_vec3(plane.mat, *out);
         *normal = vec3_normalized(plane.n);
         if (inside) vec3_imul(normal, -1);
+        vec3_iaddk(out, *normal, 0.5);
         return true;
     }
     return false;
@@ -166,7 +167,8 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
 }
 
 int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
-                    const vec2_t *pos, vec3_t *out, vec3_t *normal)
+                    const vec2_t *pos, bool on_surface,
+                    vec3_t *out, vec3_t *normal)
 {
     int i, ret = 0;
     vec3_t p, n;
@@ -182,9 +184,11 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
 
     for (i = 0; i < 4; i++) {
         if (!(goxel->snap & (1 << i))) continue;
-        if ((1 << i) == SNAP_MESH)
+        if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(goxel, view_size, pos,
                                         goxel->pick_mesh, &p, &n);
+            if (on_surface) vec3_iaddk(&p, n, 1);
+        }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, view_size, pos,
                                          &goxel->plane, &p, &n);
@@ -229,8 +233,11 @@ void goxel_init(goxel_t *goxel)
 
     goxel->image = image_new();
 
-    goxel->layers_mesh = mesh_copy(goxel->image->active_layer->mesh);
-    goxel->pick_mesh = mesh_copy(goxel->image->active_layer->mesh);
+    goxel->layers_mesh = mesh_new();
+    goxel->pick_mesh = mesh_new();
+    goxel->tool_mesh_orig = mesh_new();
+    goxel->tool_mesh = mesh_new();
+    goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
     goxel->back_color = HEXCOLOR(0x393939ff);
@@ -242,7 +249,7 @@ void goxel_init(goxel_t *goxel)
     goxel->tool_radius = 0.5;
     goxel->painter = (painter_t) {
         .shape = &shape_cube,
-        .op = OP_ADD,
+        .mode = MODE_ADD,
         .smoothness = 0,
         .color = HEXCOLOR(0xEEEEECFF),
     };
@@ -264,6 +271,7 @@ void goxel_init(goxel_t *goxel)
 
 void goxel_release(goxel_t *goxel)
 {
+    proc_release(&goxel->proc);
     gui_release();
 }
 
@@ -452,16 +460,18 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
         render_export_viewport(goxel, rect);
 }
 
-void goxel_update_meshes(goxel_t *goxel, bool pick)
+void goxel_update_meshes(goxel_t *goxel, int mask)
 {
     layer_t *layer;
-    mesh_clear(goxel->layers_mesh);
-    DL_FOREACH(goxel->image->layers, layer) {
-        if (!layer->visible) continue;
-        mesh_merge(goxel->layers_mesh, layer->mesh);
+    if (mask & MESH_LAYERS) {
+        mesh_clear(goxel->layers_mesh);
+        DL_FOREACH(goxel->image->layers, layer) {
+            if (!layer->visible) continue;
+            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_ADD);
+        }
     }
-    if (pick)
-        mesh_set(&goxel->pick_mesh, goxel->layers_mesh);
+    if (mask & MESH_PICK)
+        mesh_set(goxel->pick_mesh, goxel->layers_mesh);
 }
 
 static void export_as(goxel_t *goxel, const char *type, const char *path)
@@ -492,10 +502,9 @@ ACTION_REGISTER(export_as,
 
 
 // XXX: this function has to be rewritten.
-static void export_as_png(goxel_t *goxel, const char *path)
+static void export_as_png(goxel_t *goxel, const char *path,
+                          int w, int h)
 {
-    int w = goxel->image->export_width;
-    int h = goxel->image->export_height;
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *data2, *data;
     texture_t *fbo;
@@ -528,46 +537,9 @@ ACTION_REGISTER(export_as_png,
     .help = "Save the image as a png file",
     .func = export_as_png,
     .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
-)
-
-static void export_as_obj(goxel_t *goxel, const char *path)
-{
-    wavefront_export(goxel->layers_mesh, path);
-}
-
-ACTION_REGISTER(export_as_obj,
-    .help = "Save the image as a wavefront obj file",
-    .func = export_as_obj,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
-)
-
-static void export_as_ply(goxel_t *goxel, const char *path)
-{
-    ply_export(goxel->layers_mesh, path);
-}
-
-ACTION_REGISTER(export_as_ply,
-    .help = "Save the image as a ply file",
-    .func = export_as_ply,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
-)
-
-static void export_as_qubicle(goxel_t *goxel, const char *path)
-{
-    qubicle_export(goxel->layers_mesh, path);
-}
-
-ACTION_REGISTER(export_as_qubicle,
-    .help = "Save the image as a qubicle 3d file",
-    .func = export_as_qubicle,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
+                          ARG("path", TYPE_FILE_PATH),
+                          ARG("width", TYPE_INT),
+                          ARG("height", TYPE_INT)),
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -666,10 +638,11 @@ static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
         .shape = &shape_cube,
-        .op = OP_INTERSECT,
+        .mode = MODE_INTERSECT,
+        .color = uvec4b(255, 255, 255, 255),
     };
     mesh_op(new_layer->mesh, &painter, box);
-    painter.op = OP_SUB;
+    painter.mode = MODE_SUB;
     mesh_op(layer->mesh, &painter, box);
     return new_layer;
 }
@@ -700,7 +673,7 @@ static void fill_selection(goxel_t *goxel, layer_t *layer)
 {
     if (box_is_null(goxel->selection)) return;
     mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
-    goxel_update_meshes(goxel, true);
+    goxel_update_meshes(goxel, -1);
 }
 
 ACTION_REGISTER(fill_selection,

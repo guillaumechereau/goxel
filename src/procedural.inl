@@ -22,6 +22,7 @@
     #define YY_CTX_MEMBERS \
         int line, read_line;    \
         node_t *prog;           \
+        node_t *nodes;          \
         const char *cur;        \
         vars_t vars;
 
@@ -35,7 +36,7 @@
     }                                                   \
 
     static node_t *node_create(int type, const char *id, int line,
-                               int nb, node_t **children)
+                               int nb, node_t **children, node_t **nodes)
     {
         int i;
         node_t *node = calloc(1, sizeof(*node));
@@ -45,26 +46,31 @@
         node->size = nb;
         for (i = 0; i < nb; i++) {
             assert(children[i]);
+            DL_DELETE(*nodes, children[i]);
             DL_APPEND(node->children, children[i]);
         }
+        DL_APPEND(*nodes, node);
         return node;
     }
 
     // Convenience macro to create a node.
     #define N(type, id, ...) ({ \
         node_t *nodes[] = {__VA_ARGS__}; \
-        node_create(NODE_##type, id, yy->line, ARRAY_SIZE(nodes), nodes); \
+        node_create(NODE_##type, id, yy->line, ARRAY_SIZE(nodes), nodes, \
+                    &yy->nodes); \
     })
 
     // Convenience function to append a node to an other one.
-    static void A(node_t *node, node_t *c)
+    static void node_append(node_t *node, node_t *c, node_t **nodes)
     {
         assert(node);
         assert(c);
         assert(node != c);
         node->size++;
+        DL_DELETE(*nodes, c);
         DL_APPEND(node->children, c);
     }
+    #define A(n, c) ({node_append(n, c, &yy->nodes);})
 
     static void clear_vars(vars_t *vars)
     {
@@ -1928,12 +1934,20 @@ YY_PARSE(yycontext *) YYRELEASE(yycontext *yyctx)
 static node_t *parse(const char *txt, int *err_line)
 {
     yycontext yy;
+    node_t *node, *tmp;
     memset(&yy, 0, sizeof(yy));
     yy.cur = txt;
     while (yyparse(&yy))
         ;
     if (!yy.prog && err_line) *err_line = yy.read_line;
     yyrelease(&yy);
+
+    // Delete all the unused nodes.
+    DL_FOREACH_SAFE(yy.nodes, node, tmp) {
+        DL_DELETE(yy.nodes, node);
+        if (node != yy.prog)
+            node_free(node);
+    }
     return yy.prog;
 }
 

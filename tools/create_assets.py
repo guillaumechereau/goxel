@@ -33,7 +33,7 @@ print >>out, "// This file is auto generated from tools/create_assets.py\n"
 def list_files():
     for root, dirs, files in os.walk("data"):
         for f in files:
-            if any(f.endswith(x) for x in [".png", ".goxcf", ".gpl"]):
+            if any(f.endswith(x) for x in [".png", ".goxcf", ".gpl", ".pov"]):
                 yield os.path.join(root, f)
 
 TEMPLATE = ("static const uint8_t DATA_{name}[{size}]\n"
@@ -67,7 +67,7 @@ def create_file(f):
     data = open(f).read()
     size = len(data)
     name = f.replace('/', '_').replace('.', '_').replace('-', '_')
-    if f.endswith(".goxcf") or f.endswith('.gpl'):
+    if f.endswith(".goxcf") or f.endswith('.gpl') or f.endswith(".pov"):
         size += 1 # So that we NULL terminate the string.
         data = encode_str(data)
     else:

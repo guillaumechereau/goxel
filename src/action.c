@@ -53,13 +53,17 @@ static long get_arg_value(arg_t arg, const arg_t *args)
     }
     // Default values for some types.
     if (arg.type == TYPE_GOXEL)
-        return (long)goxel();
+        return (intptr_t)goxel();
     if (arg.type == TYPE_IMAGE)
-        return (long)goxel()->image;
+        return (intptr_t)goxel()->image;
     if (arg.type == TYPE_LAYER)
-        return (long)goxel()->image->active_layer;
+        return (intptr_t)goxel()->image->active_layer;
     if (arg.type == TYPE_BOX)
-        return (long)&goxel()->selection;
+        return (intptr_t)&goxel()->selection;
+    if (str_equ(arg.name, "width"))
+        return (int)goxel()->image->export_width;
+    if (str_equ(arg.name, "height"))
+        return (int)goxel()->image->export_height;
     return 0;
 }
 
@@ -117,7 +121,7 @@ void *action_exec(const action_t *action, const arg_t *args)
 
     reentry--;
     if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
-        goxel_update_meshes(goxel(), true);
+        goxel_update_meshes(goxel(), -1);
     }
     return ret;
 }

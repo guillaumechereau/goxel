@@ -41,21 +41,35 @@ void profiler_stop(void)
 
 void profiler_tick(void)
 {
-    profiler_block_t *block = &g_root_block;
+    const float mix_k = 0.1;
+    profiler_block_t *b = &g_root_block;
     if (!g_running) profiler_start();
-    assert(block->depth <= 1);
-    if (!block->depth)
-        profiler_enter_(block);
-    else
-        profiler_exit_(block);
+    assert(b->depth <= 1);
+    if (!b->depth) {
+        profiler_enter_(b);
+        return;
+    }
+    profiler_exit_(b);
+
+    // Compute the running averages
+    LL_FOREACH(g_blocks, b) {
+        b->avg.tot_time = mix(b->avg.tot_time,
+                              b->tot_time - b->avg.frame_tot_time,
+                              mix_k);
+        b->avg.self_time = mix(b->avg.self_time,
+                               b->self_time - b->avg.frame_self_time,
+                               mix_k);
+        b->avg.frame_tot_time = b->tot_time;
+        b->avg.frame_self_time = b->self_time;
+    }
 }
 
 static int sort_cmp(const profiler_block_t *a, const profiler_block_t *b)
 {
     if (a == &g_root_block) return -1;
     if (b == &g_root_block) return +1;
-    return a->self_time < b->self_time ? +1 :
-           a->self_time < b->self_time ? -1 :
+    return a->avg.self_time < b->avg.self_time ? +1 :
+           a->avg.self_time < b->avg.self_time ? -1 :
            0;
 }
 

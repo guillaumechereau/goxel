@@ -174,7 +174,7 @@ void image_merge_visible_layers(image_t *img)
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         if (last) {
-            mesh_merge(layer->mesh, last->mesh);
+            mesh_merge(layer->mesh, last->mesh, MODE_ADD);
             DL_DELETE(img->layers, last);
             layer_delete(last);
         }
@@ -229,7 +229,7 @@ void image_undo(image_t *img)
 
     image_set(img, img->history_current->history_prev);
     img->history_current = img->history_current->history_prev;
-    goxel_update_meshes(goxel(), true);
+    goxel_update_meshes(goxel(), -1);
 }
 
 void image_redo(image_t *img)
@@ -240,7 +240,7 @@ void image_redo(image_t *img)
     }
     img->history_current = img->history_current->history_next;
     image_set(img, img->history_current);
-    goxel_update_meshes(goxel(), true);
+    goxel_update_meshes(goxel(), -1);
 }
 
 void image_clear_layer(layer_t *layer, const box_t *box)
@@ -252,7 +252,7 @@ void image_clear_layer(layer_t *layer, const box_t *box)
     }
     painter = (painter_t) {
         .shape = &shape_cube,
-        .op = OP_SUB,
+        .mode = MODE_SUB,
     };
     mesh_op(layer->mesh, &painter, box);
 }

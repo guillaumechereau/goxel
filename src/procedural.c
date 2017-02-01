@@ -103,7 +103,7 @@ static const shape_t *SHAPES[] = {
 typedef struct proc_node node_t;
 struct proc_node {
     int         type;
-    const char  *id;
+    char        *id;
     float       v;
     int         size;
     node_t      *children, *next, *prev, *parent;
@@ -115,7 +115,7 @@ typedef struct proc_ctx ctx_t;
 struct proc_ctx {
     ctx_t       *next, *prev;
     box_t       box;
-    int         op;
+    int         mode;
     vec4_t      color;
     bool        antialiased;
     uint32_t    seed;
@@ -154,6 +154,8 @@ static void node_free(node_t *node)
         DL_DELETE(node->children, c);
         node_free(c);
     }
+    free(node->id);
+    free(node);
 }
 
 static void ctxs_free(ctx_t *ctx)
@@ -387,10 +389,10 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
         move_value(&ctx->color.z, v[0], v[1]);
         break;
     case OP_sub:
-        ctx->op = OP_SUB;
+        ctx->mode = MODE_SUB;
         break;
     case OP_paint:
-        ctx->op = OP_PAINT;
+        ctx->mode = MODE_PAINT;
         break;
     case OP_seed:
         set_seed(v[0], &ctx->seed);
@@ -428,7 +430,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
                           ctx->color.z * 255);
     goxel()->painter.color.rgb = hsl_to_rgb(hsl);
     goxel()->painter.shape = shape;
-    goxel()->painter.op = ctx->op;
+    goxel()->painter.mode = ctx->mode;
     goxel()->painter.smoothness = ctx->antialiased ? 1 : 0;
     mesh_op(mesh, &goxel()->painter, &ctx->box);
 }
@@ -539,13 +541,7 @@ static node_t *parse(const char *txt, int *err_line);
 
 int proc_parse(const char *txt, gox_proc_t *proc)
 {
-    node_free(proc->prog);
-    ctxs_free(proc->ctxs);
-    proc->ctxs = NULL;
-    free(proc->error.str);
-    proc->error.str = NULL;
-    proc->error.line = 0;
-
+    proc_release(proc);
     proc->prog = parse(txt, &proc->error.line);
     if (!proc->prog) {
         proc->state = PROC_PARSE_ERROR;
@@ -556,6 +552,17 @@ int proc_parse(const char *txt, gox_proc_t *proc)
     proc->state = PROC_READY;
     if (0) visit(proc->prog, 0);
     return 0;
+}
+
+void proc_release(gox_proc_t *proc)
+{
+    node_free(proc->prog);
+    proc->prog = NULL;
+    ctxs_free(proc->ctxs);
+    proc->ctxs = NULL;
+    free(proc->error.str);
+    proc->error.str = NULL;
+    proc->error.line = 0;
 }
 
 int proc_start(gox_proc_t *proc, const box_t *box)
@@ -569,7 +576,7 @@ int proc_start(gox_proc_t *proc, const box_t *box)
     ctx = calloc(1, sizeof(*ctx));
     ctx->box = box ? *box : bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
     ctx->color = vec4(0, 0, 1, 1);
-    ctx->op = OP_ADD;
+    ctx->mode = MODE_ADD;
     ctx->prog = get_rule(proc->prog, "main", ctx);
     set_seed(rand(), &ctx->seed);
     DL_APPEND(proc->ctxs, ctx);

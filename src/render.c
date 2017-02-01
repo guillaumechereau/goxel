@@ -58,7 +58,8 @@ struct render_item_t
     };
     vec3_t          grid;
     uvec4b_t        color;
-    int             strip;  // XXX: move into effects?
+    bool            strip;  // XXX: move into effects?
+    bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
     texture_t       *tex;
     bool            fixed; // If true, render in the view ref.
@@ -609,7 +610,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     if (effects & EFFECT_SEE_BACK) {
         effects &= ~EFFECT_SEE_BACK;
         effects |= EFFECT_SEMI_TRANSPARENT;
-        render_mesh_(rend, mesh, effects, NULL);
+        render_mesh_(rend, mesh, effects, shadow_mvp);
     }
 }
 
@@ -631,7 +632,19 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     mat4_t view = rend->view_mat;
     if (item->fixed) view = mat4_identity;
     mat4_imul(&view, item->mat);
-    model3d_render(item->model3d, &view, &rend->proj_mat, &item->color,
+    mat4_t proj;
+    mat4_t *proj_mat;
+
+    if (item->proj_screen) {
+        proj = mat4_ortho(-0.5, +0.5, -0.5, +0.5, -10, +10);
+        proj_mat = &proj;
+        view = mat4_identity;
+    } else {
+        proj_mat = &rend->proj_mat;
+        view = mat4_mul(rend->view_mat, item->mat);
+    }
+
+    model3d_render(item->model3d, &view, proj_mat, &item->color,
                    item->tex, item->strip, 0, NULL);
 }
 
@@ -673,7 +686,8 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    item->mat = *mat;
+    item->mat = mat ? *mat : mat4_identity;
+    item->proj_screen = !mat;
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
     item->color = uvec4b(255, 255, 255, 255);
@@ -738,11 +752,10 @@ void render_sphere(renderer_t *rend, const mat4_t *mat)
 // Evict item from g_items to save memory.
 static void cleanup_buffer(void)
 {
-    // XXX: do not evict all the items like that.
     render_item_t *item, *tmp;
     HASH_ITER(hh, g_items, item, tmp) {
         if (item->type == ITEM_BLOCK) {
-            if (item->last_used_frame < goxel()->frame_count) {
+            if (item->last_used_frame + 1 < goxel()->frame_count) {
                 GL(glDeleteBuffers(1, &item->vertex_buffer));
                 HASH_DEL(g_items, item);
                 free(item);
@@ -753,6 +766,7 @@ static void cleanup_buffer(void)
 
 static int item_sort_value(const render_item_t *a)
 {
+    if (a->proj_screen)     return 10;
     switch (a->type) {
         case ITEM_MESH:     return 0;
         case ITEM_MODEL3D:  return 1;
@@ -1033,14 +1047,15 @@ static const char *FSHADER =
     "    v = normalize(-(u_view * u_model * vec4(v_pos, 1.0)).xyz);     \n"
     "    r = reflect(-s, n);                                            \n"
     "    l_spe = 0.0;                                                   \n"
-    "    if (s_dot_n > 0.0)                                             \n"
+    "    if (s_dot_n > 0.0 && u_m_spe > 0.0)                            \n"
     "       l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);        \n"
     "                                                                   \n"
     "    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;            \n"
     "    bshadow = sqrt(bshadow);                                       \n"
     "    bshadow = mix(1.0, bshadow, u_bshadow);                        \n"
-    "    gl_FragColor = v_color;                                        \n"
-    "    gl_FragColor.rgb *= (l_dif + l_amb + l_spe) * u_l_int;         \n"
+    "    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);                       \n"
+    "    gl_FragColor.rgb += (l_dif + l_amb) * u_l_int * v_color.rgb;   \n"
+    "    gl_FragColor.rgb += l_spe * u_l_int * vec3(1.0);               \n"
     "    gl_FragColor.rgb *= bshadow;                                   \n"
     "                                                                   \n"
     "    // Shadow map.                                                 \n"

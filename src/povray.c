@@ -20,78 +20,48 @@
 
 #include "goxel.h"
 
-static const char *TEMPLATE =
-    "// Generated from goxel {{version}}\n"
-    "// https://github.com/guillaumechereau/goxel\n"
-
-    "{{#camera}}"
-    "camera {\n"
-    "    location {{location}}\n"
-    "    look_at {{look_at}}\n"
-    "    angle {{angle}}\n"
-    "}\n"
-    "{{/camera}}"
-
-    "\n"
-    "#declare Voxel = box {<-0.5, -0.5, -0.5>, <0.5, 0.5, 0.5>}\n"
-    "#macro Vox(Pos, Color)\n"
-    "    object {\n"
-    "        Voxel\n"
-    "        translate Pos\n"
-    "        texture { pigment {color rgb Color / 255} }\n"
-    "    }\n"
-    "#end\n"
-
-    "{{#light}}"
-    "global_settings { ambient_light rgb<1, 1, 1> * {{ambient}} }\n"
-    "light_source {\n"
-    "    <0, 1024, 0> color rgb <2, 2, 2>\n"
-    "    parallel\n"
-    "    point_at {{point_at}}\n"
-    "}\n"
-    "{{/light}}"
-
-    "union {\n"
-    "{{#voxels}}"
-    "    Vox({{pos}}, {{color}})\n"
-    "{{/voxels}}"
-    "}"
-;
-
-
-// Turn goxel coordinates into povray coordinates.
-#define FIX_AXIS(x, y, z) (y), (z), (-x)
-
-static void export_as_pov(goxel_t *goxel, const char *path)
+static void export_as_pov(goxel_t *goxel, const char *path,
+                          int w, int h)
 {
     FILE *file;
     layer_t *layer;
     block_t *block;
     int size, x, y, z, vx, vy, vz;
     char *buf;
+    const char *template;
     uvec4b_t v;
-    mat4_t cam_to_view;
-    vec3_t cam_pos, cam_look_at, light_dir;
+    mat4_t modelview;
+    vec3_t light_dir;
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
+    camera_t camera = goxel->camera;
 
-    cam_to_view = mat4_inverted(goxel->camera.view_mat);
-    cam_pos = mat4_mul_vec(cam_to_view, vec4(0, 0, 0, 1)).xyz;
-    cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
+    template = assets_get("asset://data/povray_template.pov", NULL);
+    assert(template);
+    camera.aspect = (float)w / h;
+    camera_update(&camera);
+
+    modelview = camera.view_mat;
+    // cam_to_view = mat4_inverted(camera.view_mat);
+    // cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
     light_dir = render_get_light_dir(&goxel->rend);
 
     m = mustache_root();
     mustache_add_str(m, "version", GOXEL_VERSION_STR);
     m_cam = mustache_add_dict(m, "camera");
-    mustache_add_str(m_cam, "location", "<%.1f, %.1f, %.1f>",
-                     FIX_AXIS(cam_pos.x, cam_pos.y, cam_pos.z));
-    mustache_add_str(m_cam, "look_at", "<%.1f, %.1f, %.1f>",
-                     FIX_AXIS(cam_look_at.x, cam_look_at.y, cam_look_at.z));
-    mustache_add_str(m_cam, "angle", "%.1f", goxel->camera.fovy);
+    mustache_add_str(m_cam, "width", "%d", w);
+    mustache_add_str(m_cam, "height", "%d", h);
+    mustache_add_str(m_cam, "angle", "%.1f", camera.fovy * camera.aspect);
+    mustache_add_str(m_cam, "modelview",
+                     "<%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f>",
+                     modelview.v[0], modelview.v[1], modelview.v[2],
+                     modelview.v[4], modelview.v[5], modelview.v[6],
+                     modelview.v[8], modelview.v[9], modelview.v[10],
+                     modelview.v[12], modelview.v[13], modelview.v[14]);
     m_light = mustache_add_dict(m, "light");
     mustache_add_str(m_light, "ambient", "%.2f",
                      goxel->rend.settings.ambient);
-    mustache_add_str(m_light, "point_at", "<%.1f, %1.f + 1024, %.1f>",
-                     FIX_AXIS(-light_dir.x, -light_dir.y, -light_dir.z));
+    mustache_add_str(m_light, "point_at", "<%.1f, %.1f, %.1f + 1024>",
+                     -light_dir.x, -light_dir.y, -light_dir.z);
 
     m_voxels = mustache_add_list(m, "voxels");
     DL_FOREACH(goxel->image->layers, layer) {
@@ -102,14 +72,14 @@ static void export_as_pov(goxel_t *goxel, const char *path)
             vy = y + block->pos.y - BLOCK_SIZE / 2;
             vz = z + block->pos.z - BLOCK_SIZE / 2;
             mustache_add_str(m_voxel, "pos", "<%d, %d, %d>",
-                             FIX_AXIS(vx, vy, vz));
+                             vx, vy, vz);
             mustache_add_str(m_voxel, "color", "<%d, %d, %d>", v.r, v.g, v.b);
         }
     }
 
-    size = mustache_render(m, TEMPLATE, NULL);
+    size = mustache_render(m, template, NULL);
     buf = calloc(size + 1, 1);
-    mustache_render(m, TEMPLATE, buf);
+    mustache_render(m, template, buf);
     mustache_free(m);
 
     file = fopen(path, "wb");
@@ -122,6 +92,8 @@ ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
     .func = export_as_pov,
     .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
+                          ARG("path", TYPE_FILE_PATH),
+                          ARG("width", TYPE_INT),
+                          ARG("height", TYPE_INT)),
     .flags = ACTION_NO_CHANGE,
 )

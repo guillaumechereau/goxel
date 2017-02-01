@@ -406,7 +406,7 @@ DECL void mat4_igrow(mat4_t *m, real_t x, real_t y, real_t z)
 DECL mat4_t mat4_mul(mat4_t a, mat4_t b)
 {
     int i, j, k;
-    mat4_t ret;
+    mat4_t ret = {};
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
             ret.v[j * 4 + i] = 0.0;
@@ -454,7 +454,7 @@ DECL mat4_t mat4_perspective(real_t fovy, real_t aspect,
 DECL mat4_t mat4_transposed(mat4_t m)
 {
     int i, j;
-    mat4_t ret;
+    mat4_t ret = {};
     for (i = 0; i < 4; i++)
         for (j = 0; j < 4; j++)
             ret.v[i * 4 + j] = m.v[j * 4 + i];

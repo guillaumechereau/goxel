@@ -146,25 +146,6 @@ static void start_main_loop(void (*func)(void))
 
 int main(int argc, char **argv)
 {
-    /*
-    mustache_t *l, *d, *m = mustache_root();
-    mustache_add_str(m, "name", "Guillaume");
-    l = mustache_add_list(m, "list");
-    int i;
-    for (i = 0; i < 5; i++) {
-        d = mustache_add_dict(l, NULL);
-        mustache_add_str(d, "x", "V%d", i);
-    }
-    l = mustache_add_dict(m, "camera");
-    mustache_add_str(l, "location", "<1, 2, 3>");
-    char s[1024];
-    mustache_render(m, "Hello {{name}} {{#list}}{{x}}{{/list}}!\n"
-                       "{{#camera}}{{location}}{{/camera}}" , s);
-    LOG_D("'%s'", s);
-    mustache_free(m);
-    return 0;
-    */
-
     args_t args = {};
     GLFWwindow *window;
     GLFWmonitor *monitor;
