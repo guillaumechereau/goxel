@@ -879,8 +879,9 @@ static void render_advanced_panel(goxel_t *goxel)
     }
     ImGui::PopID();
 
-    b = !goxel->plane_hidden;
-    if (ImGui::Checkbox("Show grid", &b)) goxel->plane_hidden = !b;
+    action_exec2("grid_visible", ">b", &b);
+    if (ImGui::Checkbox("Show grid", &b))
+        action_exec2("grid_visible", "b", b);
 }
 
 

@@ -359,10 +359,14 @@ typedef struct astack astack_t;
 astack_t *stack_create(void);
 void      stack_delete(astack_t *s);
 
+int   stack_size(const astack_t *s);
+char  stack_type(const astack_t *s, int i);
 void  stack_push_i(astack_t *s, int i);
 void  stack_push_p(astack_t *s, void *p);
+void  stack_push_b(astack_t *s, bool b);
 int   stack_get_i(const astack_t *s, int i);
 void *stack_get_p(const astack_t *s, int i);
+bool  stack_get_b(const astack_t *s, int i);
 void  stack_pop(astack_t *s);
 
 enum {
@@ -376,6 +380,7 @@ struct action {
     const char      *help;  // Help text.
     int             flags;
     const char      *shortcut; // Optional shortcut.
+    int             (*func)(const action_t *a, astack_t *s);
 
     // cfunc and csig can be used to directly call any function.
     void            *cfunc;

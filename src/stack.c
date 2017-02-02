@@ -23,6 +23,7 @@ typedef struct
     union {
         void   *p;
         int     i;
+        bool    b;
     };
     char type;
 } astack_entry_t;
@@ -43,11 +44,22 @@ void stack_delete(astack_t *s)
     free(s);
 }
 
+int stack_size(const astack_t *s) {
+    return s->size;
+}
+
 static int fix_i(const astack_t *s, int i)
 {
     if (i < 0) i = s->size + i;
     if (i >= s->size) return -1;
     return i;
+}
+
+char stack_type(const astack_t *s, int i)
+{
+    i = fix_i(s, i);
+    if (i < 0) return '\0';
+    return s->entries[i].type;
 }
 
 void stack_push_i(astack_t *s, int i)
@@ -58,6 +70,11 @@ void stack_push_i(astack_t *s, int i)
 void stack_push_p(astack_t *s, void *p)
 {
     s->entries[s->size++] = (astack_entry_t) {.p = p, .type = 'p'};
+}
+
+void stack_push_b(astack_t *s, bool b)
+{
+    s->entries[s->size++] = (astack_entry_t) {.b = b, .type = 'b'};
 }
 
 int stack_get_i(const astack_t *s, int i)
@@ -76,6 +93,15 @@ void *stack_get_p(const astack_t *s, int i)
     assert(i >= 0);
     e = &s->entries[i];
     return e->type == 'p' ? e->p : NULL;
+}
+
+bool stack_get_b(const astack_t *s, int i)
+{
+    const astack_entry_t *e;
+    i = fix_i(s, i);
+    assert(i >= 0);
+    e = &s->entries[i];
+    return e->type == 'b' ? e->b : false;
 }
 
 void stack_pop(astack_t *s)

@@ -671,3 +671,17 @@ ACTION_REGISTER(fill_selection,
     .cfunc = fill_selection,
     .csig = "vp",
 )
+
+static int show_grid_action(const action_t *a, astack_t *s)
+{
+    if (stack_type(s, 0) == 'b')
+        goxel->plane_hidden = !stack_get_b(s, 0);
+    stack_push_b(s, !goxel->plane_hidden);
+    return 0;
+}
+
+ACTION_REGISTER(grid_visible,
+    .help = "Show the grid",
+    .func = show_grid_action,
+    .flags = ACTION_NO_CHANGE,
+)
