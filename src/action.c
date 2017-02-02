@@ -108,7 +108,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     // For the moment all action cancel the current tool, for simplicity.
     tool_cancel(goxel, goxel->tool, goxel->tool_state);
 
-    if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
+    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
         image_history_push(goxel->image);
     }
 
@@ -138,7 +138,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     }
 
     reentry--;
-    if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
+    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
         goxel_update_meshes(goxel, -1);
     }
     stack_delete(s);

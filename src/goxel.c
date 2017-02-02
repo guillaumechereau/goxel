@@ -490,7 +490,6 @@ ACTION_REGISTER(export_as,
     .help = "Export the image",
     .cfunc = export_as,
     .csig = "vpp",
-    .flags = ACTION_NO_CHANGE,
 )
 
 
@@ -531,7 +530,6 @@ ACTION_REGISTER(export_as_png,
     .help = "Save the image as a png file",
     .cfunc = export_as_png,
     .csig = "vpii",
-    .flags = ACTION_NO_CHANGE,
 )
 
 static void export_as_txt(const char *path)
@@ -568,7 +566,6 @@ ACTION_REGISTER(export_as_txt,
     .help = "Save the image as a txt file",
     .cfunc = export_as_txt,
     .csig = "vp",
-    .flags = ACTION_NO_CHANGE,
 )
 
 // XXX: we could merge all the set_xxx_text function into a single one.
@@ -644,6 +641,7 @@ ACTION_REGISTER(cut_as_new_layer,
     .help = "Cut into a new layer",
     .cfunc = cut_as_new_layer,
     .csig = "vppp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 static void clear_selection(void)
@@ -657,6 +655,7 @@ ACTION_REGISTER(clear_selection,
     .help = "Clear the selection",
     .cfunc = clear_selection,
     .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 static void fill_selection(layer_t *layer)
@@ -670,6 +669,7 @@ ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
     .cfunc = fill_selection,
     .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 static int show_grid_action(const action_t *a, astack_t *s)
@@ -683,5 +683,4 @@ static int show_grid_action(const action_t *a, astack_t *s)
 ACTION_REGISTER(grid_visible,
     .help = "Show the grid",
     .func = show_grid_action,
-    .flags = ACTION_NO_CHANGE,
 )

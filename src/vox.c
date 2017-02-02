@@ -246,7 +246,6 @@ ACTION_REGISTER(export_as_vox,
     .help = "Save the image as a vox 3d file",
     .cfunc = export_as_vox,
     .csig = "vp",
-    .flags = ACTION_NO_CHANGE,
 )
 
 

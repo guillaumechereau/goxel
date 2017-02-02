@@ -370,7 +370,7 @@ bool  stack_get_b(const astack_t *s, int i);
 void  stack_pop(astack_t *s);
 
 enum {
-    ACTION_NO_CHANGE    = 1 << 0,  // The action does not touch the image.
+    ACTION_TOUCH_IMAGE    = 1 << 0,  // Push the undo history.
 };
 
 // Represent an action.

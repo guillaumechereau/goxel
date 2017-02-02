@@ -622,7 +622,6 @@ void tool_cancel(goxel_t *goxel, int tool, int state)
         .help = "Activate " #t " tool", \
         .cfunc = tool_set_##t, \
         .csig = "v", \
-        .flags = ACTION_NO_CHANGE, \
         .shortcut = s, \
     )
 

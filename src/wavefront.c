@@ -230,7 +230,6 @@ ACTION_REGISTER(export_as_obj,
     .help = "Save the image as a wavefront obj file",
     .cfunc = export_as_obj,
     .csig = "vp",
-    .flags = ACTION_NO_CHANGE,
 )
 
 static void export_as_ply(const char *path)
@@ -242,5 +241,4 @@ ACTION_REGISTER(export_as_ply,
     .help = "Save the image as a ply file",
     .cfunc = export_as_ply,
     .csig = "vp",
-    .flags = ACTION_NO_CHANGE,
 )

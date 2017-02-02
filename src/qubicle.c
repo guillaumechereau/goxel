@@ -147,5 +147,4 @@ ACTION_REGISTER(export_as_qubicle,
     .help = "Save the image as a qubicle 3d file",
     .cfunc = export_as_qubicle,
     .csig = "vp",
-    .flags = ACTION_NO_CHANGE,
 )

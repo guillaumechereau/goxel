@@ -93,5 +93,4 @@ ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
     .cfunc = export_as_pov,
     .csig = "vpii",
-    .flags = ACTION_NO_CHANGE,
 )

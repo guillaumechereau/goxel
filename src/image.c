@@ -271,34 +271,40 @@ ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .cfunc = image_clear_layer,
     .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
     .cfunc = image_add_layer,
     .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_del_layer,
     .help = "Delete the active layer",
     .cfunc = image_delete_layer,
     .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_move_layer,
     .help = "Move the active layer",
     .cfunc = image_move_layer,
     .csig = "vppi",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_duplicate_layer,
     .help = "Duplicate the active layer",
     .cfunc = image_duplicate_layer,
     .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_merge_visible_layers,
     .help = "Merge all the visible layers",
     .cfunc = image_merge_visible_layers,
     .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
