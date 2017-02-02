@@ -488,8 +488,8 @@ static void export_as(const char *type, const char *path)
 
 ACTION_REGISTER(export_as,
     .help = "Export the image",
-    .func = export_as,
-    .sig = "pp",
+    .cfunc = export_as,
+    .csig = "vpp",
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -529,8 +529,8 @@ static void export_as_png(const char *path, int w, int h)
 
 ACTION_REGISTER(export_as_png,
     .help = "Save the image as a png file",
-    .func = export_as_png,
-    .sig = "pii",
+    .cfunc = export_as_png,
+    .csig = "vpii",
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -566,8 +566,8 @@ static void export_as_txt(const char *path)
 
 ACTION_REGISTER(export_as_txt,
     .help = "Save the image as a txt file",
-    .func = export_as_txt,
-    .sig = "p",
+    .cfunc = export_as_txt,
+    .csig = "vp",
     .flags = ACTION_NO_CHANGE,
 )
 
@@ -642,8 +642,8 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
 
 ACTION_REGISTER(cut_as_new_layer,
     .help = "Cut into a new layer",
-    .func = cut_as_new_layer,
-    .sig = "ppp",
+    .cfunc = cut_as_new_layer,
+    .csig = "vppp",
 )
 
 static void clear_selection(void)
@@ -655,8 +655,8 @@ static void clear_selection(void)
 
 ACTION_REGISTER(clear_selection,
     .help = "Clear the selection",
-    .func = clear_selection,
-    .sig = "p",
+    .cfunc = clear_selection,
+    .csig = "vp",
 )
 
 static void fill_selection(layer_t *layer)
@@ -668,6 +668,6 @@ static void fill_selection(layer_t *layer)
 
 ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
-    .func = fill_selection,
-    .sig = "p",
+    .cfunc = fill_selection,
+    .csig = "vp",
 )

@@ -145,7 +145,7 @@ static void export_as_qubicle(const char *path)
 
 ACTION_REGISTER(export_as_qubicle,
     .help = "Save the image as a qubicle 3d file",
-    .func = export_as_qubicle,
-    .sig = "p",
+    .cfunc = export_as_qubicle,
+    .csig = "vp",
     .flags = ACTION_NO_CHANGE,
 )

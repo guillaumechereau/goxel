@@ -374,10 +374,12 @@ typedef struct action action_t;
 struct action {
     const char      *id;    // Globally unique id.
     const char      *help;  // Help text.
-    void            *func;  // Pointer to the function to call.
-    const char      *sig;   // Signature of the function.
     int             flags;
     const char      *shortcut; // Optional shortcut.
+
+    // cfunc and csig can be used to directly call any function.
+    void            *cfunc;
+    const char      *csig;
 };
 
 void action_register(const action_t *action);

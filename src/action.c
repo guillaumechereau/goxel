@@ -58,7 +58,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     astack_t *stack = stack_create();
     // XXX: not sure this is actually legal in C.  func will be called with
     // a variable number or arguments, that might be of any registered types!
-    void (*func)() = action->func;
+    void (*func)() = action->cfunc;
 
     assert(action);
 
@@ -71,43 +71,43 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
 
     reentry++;
 
-    for (i = 0; i < strlen(action->sig); i++) {
+    for (i = 0; i < strlen(action->csig + 1); i++) {
         if (i < strlen(sig)) {
-            assert(sig[i] == action->sig[i]);
-            switch (action->sig[i]) {
+            assert(sig[i] == action->csig[i + 1]);
+            switch (action->csig[i + 1]) {
                 case 'i': stack_push_i(stack, va_arg(ap, int)); break;
                 case 'p': stack_push_p(stack, va_arg(ap, void*)); break;
                 default: assert(false);
             }
         } else {
-            switch (action->sig[i]) {
+            switch (action->csig[i + 1]) {
                 case 'i': stack_push_i(stack, 0); break;
                 case 'p': stack_push_p(stack, NULL); break;
                 default: assert(false);
             }
         }
     }
-    if (strcmp(action->sig, "") == 0) {
+    if (strcmp(action->csig, "v") == 0) {
         func();
-    } else if (strcmp(action->sig, "p") == 0) {
+    } else if (strcmp(action->csig, "vp") == 0) {
         func(stack_get_p(stack, 0));
-    } else if (strcmp(action->sig, "pp") == 0) {
+    } else if (strcmp(action->csig, "vpp") == 0) {
         func(stack_get_p(stack, 0),
              stack_get_p(stack, 1));
-    } else if (strcmp(action->sig, "ppp") == 0) {
+    } else if (strcmp(action->csig, "vppp") == 0) {
         func(stack_get_p(stack, 0),
              stack_get_p(stack, 1),
              stack_get_p(stack, 2));
-    } else if (strcmp(action->sig, "ppi") == 0) {
+    } else if (strcmp(action->csig, "vppi") == 0) {
         func(stack_get_p(stack, 0),
              stack_get_p(stack, 1),
              stack_get_i(stack, 2));
-    } else if (strcmp(action->sig, "pii") == 0) {
+    } else if (strcmp(action->csig, "vpii") == 0) {
         func(stack_get_p(stack, 0),
              stack_get_i(stack, 1),
              stack_get_i(stack, 2));
     } else {
-        LOG_E("Cannot handle sig '%s'", action->sig);
+        LOG_E("Cannot handle sig '%s'", action->csig);
         assert(false);
     }
 
