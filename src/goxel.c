@@ -497,14 +497,14 @@ ACTION_REGISTER(export_as,
 // XXX: this function has to be rewritten.
 static void export_as_png(const char *path, int w, int h)
 {
+    w = w ?: goxel->image->export_width;
+    h = h ?: goxel->image->export_height;
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *data2, *data;
     texture_t *fbo;
     renderer_t rend = goxel->rend;
     mesh_t *mesh;
     camera_t camera = goxel->camera;
-    w = w ?: goxel->image->export_width;
-    h = h ?: goxel->image->export_height;
 
     camera.aspect = (float)w / h;
     LOG_I("Exporting to file %s", path);
