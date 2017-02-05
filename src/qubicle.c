@@ -31,7 +31,7 @@ void qubicle_import(const char *path)
     int version, color_format, orientation, compression, vmask, mat_count;
     int i, j, r, index, len, w, h, d, pos[3], x, y, z;
     char buff[256];
-    uint32_t v;
+    uvec4b_t v;
     uvec4b_t *cube;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
@@ -63,27 +63,28 @@ void qubicle_import(const char *path)
         cube = calloc(w * h * d, sizeof(*cube));
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {
-                v = READ(uint32_t, file);
-                cube[index].uint32 = v;
-                cube[index].a = cube[index].a ? 255 : 0;
+                v.uint32 = READ(uint32_t, file);
+                v.a = v.a ? 255 : 0;
+                cube[index] = v;
             }
         } else {
             for (z = 0; z < d; z++) {
                 index = 0;
                 while (true) {
-                    v = READ(uint32_t, file);
-                    if (v == NEXTSLICEFLAG) {
+                    v.uint32 = READ(uint32_t, file);
+                    if (v.uint32 == NEXTSLICEFLAG) {
                         break; // Next z.
                     }
                     len = 1;
-                    if (v == CODEFLAG) {
+                    if (v.uint32 == CODEFLAG) {
                         len = READ(uint32_t, file);
-                        v = READ(uint32_t, file);
+                        v.uint32 = READ(uint32_t, file);
+                        v.a = v.a ? 255 : 0;
                     }
                     for (j = 0; j < len; j++) {
                         x = index % w;
                         y = index / w;
-                        cube[x + y * w + z * w * h].uint32 = v;
+                        cube[x + y * w + z * w * h] = v;
                         index++;
                     }
                 }
