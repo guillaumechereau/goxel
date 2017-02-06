@@ -725,7 +725,8 @@ enum {
     KEY_PAGE_DOWN   = 267,
     KEY_HOME        = 268,
     KEY_END         = 269,
-    KEY_SHIFT       = 340,
+    KEY_LEFT_SHIFT  = 340,
+    KEY_RIGHT_SHIFT = 344,
     KEY_CONTROL     = 341,
 };
 

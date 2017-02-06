@@ -348,7 +348,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
 
     case STATE_SNAPED:
         if (!snaped) return STATE_CANCEL;
-        if (inputs->keys[KEY_SHIFT])
+        if (inputs->keys[KEY_LEFT_SHIFT])
             render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
         if (check_can_skip(goxel, pos, down, goxel->painter.mode))
             return state;
@@ -358,7 +358,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
 
-        if (inputs->keys[KEY_SHIFT]) {
+        if (inputs->keys[KEY_LEFT_SHIFT]) {
             render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
             if (pressed) {
                 painter2 = goxel->painter;
@@ -389,7 +389,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (released) {
             goxel->painting = false;
             goxel->camera.target = pos;
-            if (inputs->keys[KEY_SHIFT])
+            if (inputs->keys[KEY_LEFT_SHIFT])
                 return STATE_WAIT_KEY_UP;
             mesh_set(goxel->pick_mesh, goxel->layers_mesh);
             return STATE_IDLE;
@@ -405,7 +405,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         break;
 
     case STATE_WAIT_KEY_UP:
-        if (!inputs->keys[KEY_SHIFT]) state = STATE_IDLE;
+        if (!inputs->keys[KEY_LEFT_SHIFT]) state = STATE_IDLE;
         if (snaped) state = STATE_SNAPED;
         break;
     }

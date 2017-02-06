@@ -758,7 +758,7 @@ static void layers_panel(goxel_t *goxel)
         ImGui::SameLine();
         if (ImGui::Selectable(layer->visible ? "v##v" : " ##v",
                     &layer->visible, 0, ImVec2(12, 12))) {
-            if (ImGui::IsKeyDown(KEY_SHIFT))
+            if (ImGui::IsKeyDown(KEY_LEFT_SHIFT))
                 toggle_layer_only_visible(goxel, layer);
             goxel_update_meshes(goxel, -1);
         }
@@ -1040,17 +1040,21 @@ static int check_action_shortcut(const action_t *action)
 {
     ImGuiIO& io = ImGui::GetIO();
     const char *s = action->shortcut;
+    bool check_key = true;
+    bool check_char = true;
     if (!s) return 0;
     if (io.KeyCtrl) {
+        LOG_D("Ctrl");
         if (!str_startswith(s, "Ctrl")) return 0;
         s += strlen("Ctrl ");
-        if (ImGui::IsKeyPressed(s[0])) {
-            action_exec(action, "");
-            return 1;
-        }
-        return 0;
+        check_char = false;
     }
-    if (ImGui::GoxIsCharPressed(s[0])) {
+    if (io.KeyShift) {
+        LOG_D("Shift");
+        check_key = false;
+    }
+    if (    (check_char && ImGui::GoxIsCharPressed(s[0])) ||
+            (check_key && ImGui::IsKeyPressed(s[0]))) {
         action_exec(action, "");
         return 1;
     }
@@ -1078,7 +1082,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
         io.KeysDown[i] = inputs->keys[i];
-    io.KeyShift = inputs->keys[KEY_SHIFT];
+    io.KeyShift = inputs->keys[KEY_LEFT_SHIFT] ||
+                  inputs->keys[KEY_RIGHT_SHIFT];
     io.KeyCtrl = inputs->keys[KEY_CONTROL];
     for (i = 0; i < ARRAY_SIZE(inputs->chars); i++) {
         if (!inputs->chars[i]) break;
