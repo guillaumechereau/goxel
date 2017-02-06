@@ -1261,6 +1261,15 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel->tool = goxel->prev_tool;
         goxel->prev_tool = 0;
     }
+
+    float last_tool_radius = goxel->tool_radius;
+    if (ImGui::IsKeyPressed('[')) goxel->tool_radius -= 0.5;
+    if (ImGui::IsKeyPressed(']')) goxel->tool_radius += 0.5;
+    if (goxel->tool_radius != last_tool_radius) {
+        goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
+        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+    }
+
     // XXX: this won't map correctly to a French keyboard.  Unfortunately as
     // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
     // layout on Windows.  For the moment I just ignore the problem until I
