@@ -246,13 +246,29 @@ namespace ImGui {
     bool GoxCheckbox(const char *id, const char *label)
     {
         bool b;
-        action_exec2(id, ">b", &b);
+        const action_t *action = action_get(id);
+        action_exec(action, ">b", &b);
         if (ImGui::Checkbox(label, &b)) {
-            action_exec2(id, "b", b);
+            action_exec(action, "b", b);
             return true;
         }
         if (ImGui::IsItemHovered()) {
-            goxel_set_help_text(goxel, action_get(id)->help);
+            if (!action->shortcut)
+                goxel_set_help_text(goxel, action->help);
+            else
+                goxel_set_help_text(goxel, "%s (%s)",
+                        action->help, action->shortcut);
+        }
+        return false;
+    }
+
+    bool GoxMenuItem(const char *id, const char *label)
+    {
+        const action_t *action = action_get(id);
+        assert(action);
+        if (ImGui::MenuItem(label, action->shortcut)) {
+            action_exec(action, "");
+            return true;
         }
         return false;
     }

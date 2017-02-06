@@ -359,6 +359,7 @@ typedef struct astack astack_t;
 astack_t *stack_create(void);
 void      stack_delete(astack_t *s);
 
+void  stack_clear(astack_t *s);
 int   stack_size(const astack_t *s);
 char  stack_type(const astack_t *s, int i);
 void  stack_push_i(astack_t *s, int i);
@@ -371,6 +372,8 @@ void  stack_pop(astack_t *s);
 
 enum {
     ACTION_TOUCH_IMAGE    = 1 << 0,  // Push the undo history.
+    // Toggle actions accept and return a boolean value.
+    ACTION_TOGGLE         = 1 << 1,
 };
 
 // Represent an action.
@@ -381,6 +384,7 @@ struct action {
     int             flags;
     const char      *shortcut; // Optional shortcut.
     int             (*func)(const action_t *a, astack_t *s);
+    void            *data;
 
     // cfunc and csig can be used to directly call any function.
     void            *cfunc;

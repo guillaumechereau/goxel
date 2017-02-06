@@ -39,6 +39,7 @@ namespace ImGui {
                              bool default_open = false);
     bool GoxAction(const char *id, const char *label, const char *sig, ...);
     bool GoxCheckbox(const char *id, const char *label);
+    bool GoxMenuItem(const char *id, const char *label);
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
 };
@@ -1037,7 +1038,19 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
 
 static int check_action_shortcut(const action_t *action)
 {
-    if (action->shortcut && ImGui::IsKeyPressed(action->shortcut[0])) {
+    ImGuiIO& io = ImGui::GetIO();
+    const char *s = action->shortcut;
+    if (!s) return 0;
+    if (io.KeyCtrl) {
+        if (!str_startswith(s, "Ctrl")) return 0;
+        s += strlen("Ctrl ");
+        if (ImGui::IsKeyPressed(s[0])) {
+            action_exec(action, "");
+            return 1;
+        }
+        return 0;
+    }
+    if (ImGui::GoxIsCharPressed(s[0])) {
         action_exec(action, "");
         return 1;
     }
@@ -1123,6 +1136,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             if (ImGui::MenuItem("Redo", "Ctrl+Y")) goxel_redo(goxel);
             if (ImGui::MenuItem("Shift Alpha"))
                 open_shift_alpha = true;
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("View")) {
+            ImGui::GoxMenuItem("view_left", "Left");
+            ImGui::GoxMenuItem("view_right", "Right");
+            ImGui::GoxMenuItem("view_front", "Front");
+            ImGui::GoxMenuItem("view_top", "Top");
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -1222,9 +1242,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         ImGui::EndPopup();
     }
 
-    // Handle the shortcuts.  XXX: this should be done better.
-    if (ImGui::GoxIsCharPressed('#'))
-        goxel->plane_hidden = !goxel->plane_hidden;
+    // Handle the shortcuts.  XXX: this should be done with actions.
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
         action_exec2("layer_clear", "");
     if (ImGui::IsKeyPressed(' ', false) && goxel->painter.mode == MODE_ADD)

@@ -683,4 +683,43 @@ static int show_grid_action(const action_t *a, astack_t *s)
 ACTION_REGISTER(grid_visible,
     .help = "Show the grid",
     .func = show_grid_action,
+    .shortcut = "#",
+    .flags = ACTION_TOGGLE,
+)
+
+#define HS2 (sqrt(2.0) / 2.0)
+
+
+static int view_set(const action_t *a, astack_t *s)
+{
+    goxel->camera.rot = *((quat_t*)a->data);
+    return 0;
+}
+
+ACTION_REGISTER(view_left,
+    .help = "Set camera view to left",
+    .func = view_set,
+    .data = &QUAT(-0.5, 0.5, 0.5, 0.5),
+    .shortcut = "Ctrl 3",
+)
+
+ACTION_REGISTER(view_right,
+    .help = "Set camera view to right",
+    .func = view_set,
+    .data = &QUAT(0.5, 0.5, 0.5, -0.5),
+    .shortcut = "3",
+)
+
+ACTION_REGISTER(view_top,
+    .help = "Set camera view to top",
+    .func = view_set,
+    .data = &QUAT(0, 0, 0, 1),
+    .shortcut = "7",
+)
+
+ACTION_REGISTER(view_front,
+    .help = "Set camera view to front",
+    .func = view_set,
+    .data = &QUAT(-HS2, 0, 0, HS2),
+    .shortcut = "1",
 )

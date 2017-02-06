@@ -100,6 +100,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
     char c;
+    bool b;
     int i, nb;
     int (*func)(const action_t *a, astack_t *s);
     astack_t *s = stack_create();
@@ -122,6 +123,13 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
             case 'p': stack_push_p(s, va_arg(ap, void*)); break;
             default: assert(false);
         }
+    }
+
+    if ((action->flags & ACTION_TOGGLE) && (stack_size(s) == 0) && (!c)) {
+        func(action, s);
+        b = stack_get_b(s, 0);
+        stack_clear(s);
+        stack_push_b(s, !b);
     }
     func(action, s);
 

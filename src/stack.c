@@ -48,6 +48,11 @@ int stack_size(const astack_t *s) {
     return s->size;
 }
 
+void stack_clear(astack_t *s)
+{
+    s->size = 0;
+}
+
 static int fix_i(const astack_t *s, int i)
 {
     if (i < 0) i = s->size + i;
