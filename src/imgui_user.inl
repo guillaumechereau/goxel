@@ -243,6 +243,20 @@ namespace ImGui {
         return false;
     }
 
+    bool GoxCheckbox(const char *id, const char *label)
+    {
+        bool b;
+        action_exec2(id, ">b", &b);
+        if (ImGui::Checkbox(label, &b)) {
+            action_exec2(id, "b", b);
+            return true;
+        }
+        if (ImGui::IsItemHovered()) {
+            goxel_set_help_text(goxel, action_get(id)->help);
+        }
+        return false;
+    }
+
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax)
     {
         int a;

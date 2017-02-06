@@ -38,6 +38,7 @@ namespace ImGui {
                              bool display_frame = true,
                              bool default_open = false);
     bool GoxAction(const char *id, const char *label, const char *sig, ...);
+    bool GoxCheckbox(const char *id, const char *label);
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
 };
@@ -813,7 +814,6 @@ static void palette_panel(goxel_t *goxel)
 static void render_advanced_panel(goxel_t *goxel)
 {
     float v;
-    bool b;
     ImVec4 c;
     int i;
     const struct {
@@ -878,10 +878,7 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::PopID();
     }
     ImGui::PopID();
-
-    action_exec2("grid_visible", ">b", &b);
-    if (ImGui::Checkbox("Show grid", &b))
-        action_exec2("grid_visible", "b", b);
+    ImGui::GoxCheckbox("grid_visible", "Show grid");
 }
 
 
