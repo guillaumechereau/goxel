@@ -687,7 +687,7 @@ ACTION_REGISTER(grid_visible,
     .flags = ACTION_TOGGLE,
 )
 
-#define HS2 (sqrt(2.0) / 2.0)
+#define HS2 0.7071067811865476
 
 
 static int view_set(const action_t *a, astack_t *s)
