@@ -1167,7 +1167,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     } PANELS[] = {
         {"Tools", tools_panel},
         {"Palette", palette_panel},
-        {"layers", layers_panel},
+        {"Layers", layers_panel},
         {"Render", render_panel},
         {"Export", export_panel},
     };
