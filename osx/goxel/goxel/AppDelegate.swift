@@ -54,6 +54,11 @@ class GoxNSOpenGLView: NSOpenGLView {
         case 2: appDelegate().inputs.mouse_down.2 = (state != 0);
         default: break;
         }
+        // Force an update after a mousedown event to make sure that it will
+        // be recognised even if we release the mouse immediately.
+        if state == 1 {
+            goxel_iter(&appDelegate().goxel, &appDelegate().inputs)
+        }
     }
     
     override func mouseDown(with event: NSEvent)         { mouseEvent(0, 1, event) }
