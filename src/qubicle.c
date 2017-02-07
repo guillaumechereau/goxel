@@ -92,6 +92,7 @@ void qubicle_import(const char *path)
         }
         mesh_blit(goxel->image->active_layer->mesh, cube,
                   pos[0], pos[1], pos[2], w, h, d);
+        goxel_update_meshes(goxel, -1);
         free(cube);
     }
 }

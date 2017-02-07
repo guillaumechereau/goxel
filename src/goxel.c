@@ -693,6 +693,7 @@ ACTION_REGISTER(grid_visible,
 static int view_set(const action_t *a, astack_t *s)
 {
     goxel->camera.rot = *((quat_t*)a->data);
+    goxel_update_meshes(goxel, -1);
     return 0;
 }
 
