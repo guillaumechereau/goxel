@@ -1044,7 +1044,6 @@ static int check_action_shortcut(const action_t *action)
     bool check_char = true;
     if (!s) return 0;
     if (io.KeyCtrl) {
-        LOG_D("Ctrl");
         if (!str_startswith(s, "Ctrl")) return 0;
         s += strlen("Ctrl ");
         check_char = false;
