@@ -1004,6 +1004,7 @@ static void render_profiler_info(void)
 
     root = profiler_get_blocks();
     if (!root) return;
+    if (!root->avg.tot_time) return;
     time_per_frame = root->avg.tot_time / (1000.0 * 1000.0);
     fps = 1000.0 / time_per_frame;
     ImGui::BulletText("%.1fms/frame (%dfps)", time_per_frame, fps);
