@@ -41,7 +41,7 @@ static void vox_import_old(const char *path)
     uvec4b_t color;
 
     mesh = goxel->image->active_layer->mesh;
-    file = fopen(path, "r");
+    file = fopen(path, "rb");
     w = READ(uint32_t, file);
     h = READ(uint32_t, file);
     d = READ(uint32_t, file);
@@ -134,7 +134,7 @@ void vox_import(const char *path)
     context_t ctx = {};
 
     mesh = goxel->image->active_layer->mesh;
-    file = fopen(path, "r");
+    file = fopen(path, "rb");
     r = fread(magic, 1, 4, file);
     (void)r;
     if (strncmp(magic, "VOX ", 4) != 0) {
