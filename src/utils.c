@@ -259,14 +259,14 @@ char *read_file(const char *path, int *size)
 {
     FILE *file;
     char *ret = NULL;
-    int read_size __attribute__((unused));
+    long read_size __attribute__((unused));
     int size_default;
 
     size = size ?: &size_default; // Allow to pass NULL as size;
     file = fopen(path, "rb");
     if (!file) return NULL;
     fseek(file, 0, SEEK_END);
-    *size = ftell(file);
+    *size = (int)ftell(file);
     fseek(file, 0, SEEK_SET);
     ret = malloc(*size + 1);
     read_size = fread(ret, *size, 1, file);

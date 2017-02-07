@@ -101,7 +101,7 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     const bool down = inputs->mouse_down[0];
     const bool up = !down;
     int snaped = 0;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
@@ -200,7 +200,7 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
     const bool up = !down;
     int snaped = 0;
     int face = -1;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal = vec3_zero;
     plane_t face_plane;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
@@ -316,7 +316,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     const bool pressed = down && !goxel->painting;
     const bool released = !down && goxel->painting;
     int snaped = 0;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal = vec3_zero;
     box_t box;
     painter_t painter2;
     mesh_t *mesh = goxel->image->active_layer->mesh;
@@ -467,7 +467,7 @@ static int tool_set_plane_iter(goxel_t *goxel, const inputs_t *inputs,
                                bool inside)
 {
     bool snaped;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal = vec3_zero;
     mesh_t *mesh = goxel->layers_mesh;
     const bool pressed = inputs->mouse_down[0];
     goxel_set_help_text(goxel, "Click on the mesh to set plane.");

@@ -81,7 +81,7 @@ void profiler_report()
     LL_SORT(g_blocks, sort_cmp);
     LL_FOREACH(g_blocks, b) {
         time = b->tot_time / (1000.0 * 1000.0);
-        percent = b->tot_time * 100 / g_blocks->tot_time;
+        percent = (int)(b->tot_time * 100 / g_blocks->tot_time);
         LOG_I("%s count:%d time:%.2fms (%d%%)",
                 b->name, b->count, time, percent);
     }

@@ -146,7 +146,7 @@ typedef struct {
 static vec3b_t mc_interp_pos(const mc_vert_t *vert)
 {
     int i;
-    vec3b_t ret;
+    vec3b_t ret = vec3b_zero;
     vec3b_t p0 = VERTICES_POSITIONS[vert->v0];
     vec3b_t p1 = VERTICES_POSITIONS[vert->v1];
     const float mu = vert->mu;

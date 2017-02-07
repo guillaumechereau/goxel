@@ -623,7 +623,7 @@ static void procedural_panel(goxel_t *goxel)
         if (dialog_open(DIALOG_FLAG_OPEN, "goxcf\0*.goxcf\0", &path)) {
             FILE *f = fopen(path, "r");
             int nb;
-            nb = fread(gui->prog_buff, 1, sizeof(gui->prog_buff), f);
+            nb = (int)fread(gui->prog_buff, 1, sizeof(gui->prog_buff), f);
             gui->prog_buff[nb] = '\0';
             fclose(f);
             strcpy(gui->prog_path, path);
@@ -1009,7 +1009,7 @@ static void render_profiler_info(void)
     ImGui::BulletText("%.1fms/frame (%dfps)", time_per_frame, fps);
     for (block = root; block; block = block->next) {
         self_time = block->avg.self_time / (1000.0 * 1000.0);
-        percent = block->avg.self_time * 100 / root->avg.tot_time;
+        percent = (int)(block->avg.self_time * 100 / root->avg.tot_time);
         if (!percent) continue;
         ImGui::BulletText("%s: self:%.1fms/frame (%d%%)",
                 block->name, self_time, percent);
@@ -1230,7 +1230,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                           ImGuiWindowFlags_NoInputs);
         ImGui::Text("Blocks: %d (%.2g MiB)", goxel->block_count,
                 (float)goxel->block_count * sizeof(block_data_t) / MiB);
-        ImGui::Text("uid: %ld", goxel->next_uid);
+        ImGui::Text("uid: %llu", goxel->next_uid);
         if (PROFILER)
             render_profiler_info();
         ImGui::EndChild();

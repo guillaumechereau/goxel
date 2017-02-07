@@ -175,8 +175,8 @@ static void chunk_write_int32(chunk_t *c, gzFile out, int32_t v)
 static void chunk_write_dict_value(chunk_t *c, gzFile out, const char *name,
                                    const void *data, int size)
 {
-    chunk_write_int32(c, out, strlen(name));
-    chunk_write(c, out, name, strlen(name));
+    chunk_write_int32(c, out, (int)strlen(name));
+    chunk_write(c, out, name, (int)strlen(name));
     chunk_write_int32(c, out, size);
     chunk_write(c, out, data, size);
 }

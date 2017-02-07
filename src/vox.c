@@ -82,7 +82,8 @@ typedef struct {
 static void read_chunk(FILE *file, context_t *ctx)
 {
     char id[4], r;
-    int size, children_size, fpos, i;
+    int size, children_size, i;
+    long fpos;
 
     r = fread(id, 1, 4, file);
     (void)r;

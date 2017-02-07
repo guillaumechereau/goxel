@@ -35,7 +35,7 @@ static int g_size = 0;
 
 static int sort_cmp(void *a, void *b)
 {
-    return ((item_t*)a)->last_used - ((item_t*)b)->last_used;
+    return sign(((item_t*)a)->last_used - ((item_t*)b)->last_used);
 }
 
 static void cleanup(void)

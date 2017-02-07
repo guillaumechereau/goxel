@@ -112,13 +112,12 @@ static bool parse_preamble(FILE *in)
 
 static int remain_size(FILE *in)
 {
-    long cur;
-    int end;
+    long cur, end;
     cur = ftell(in);
     fseek(in, 0, SEEK_END);
     end = ftell(in);
     fseek(in, cur, SEEK_SET);
-    return end - cur;
+    return (int)(end - cur);
 }
 
 enum {

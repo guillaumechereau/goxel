@@ -51,7 +51,7 @@ void qubicle_import(const char *path)
 
     for (i = 0; i < mat_count; i++) {
         len = READ(uint8_t, file);
-        r = fread(buff, len, 1, file);
+        r = (int)fread(buff, len, 1, file);
         (void)r;
         w = READ(uint32_t, file);
         h = READ(uint32_t, file);

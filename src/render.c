@@ -317,7 +317,7 @@ static prog_t *get_prog(const char *vshader, const char *fshader,
                         const char *include)
 {
     int i;
-    prog_t *p;
+    prog_t *p = NULL;
     for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
         p = &g_progs[i];
         if (!p->vshader) break;

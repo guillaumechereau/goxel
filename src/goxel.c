@@ -171,7 +171,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
                     vec3_t *out, vec3_t *normal)
 {
     int i, ret = 0;
-    vec3_t p, n;
+    vec3_t p = vec3_zero, n = vec3_zero;
     float dist, best = INFINITY;
     bool r = false;
 

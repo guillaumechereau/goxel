@@ -134,7 +134,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     func(action, s);
 
     // Get the return arguments.
-    nb = c ? strlen(sig) : 0;
+    nb = c ? (int)strlen(sig) : 0;
     for (i = 0; i < nb; i++) {
         c = sig[i];
         switch (c) {
