@@ -36,13 +36,13 @@ images:
 {::options parse_block_html="true" /}
 
 {% for image in page.images %}
-<div class="row z-depth-2">
+<div class="row card">
   <div class="col m6 s12">
    <img class="materialboxed responsive-img"
         src="{{site.baseurl}}/images/screenshots/{{ image.path }}"
         alt="{{image.title}}" >
   </div>
-  <div class="col m6 s12 card-content flow-text">
+  <div class="col l3 m6 s12 card-content flow-text">
    <h5>{{image.title}}</h5>
 
    {{image.text}}

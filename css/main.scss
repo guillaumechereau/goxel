@@ -19,7 +19,9 @@ body {
 
 body {
     @extend .grey;
-    @extend .lighten-4;
+    @extend .darken-4;
+    @extend .grey-text;
+    @extend .text-lighten-1;
 }
 
 .brand-logo img {
@@ -27,14 +29,19 @@ body {
     margin-right: 8px;
 }
 
+.card {
+    @extend .teal;
+    @extend .darken-3;
+}
+
 .card .card-title {
-    @extend .red-text;
-    @extend .text-darken-2;
+    @extend .yellow-text;
+    @extend .text-darken-1;
 }
 
 .nav-wrapper, .page-footer {
-    @extend .deep-purple;
-    @extend .lighten-1;
+    @extend .teal;
+    @extend .darken-3;
 }
 
 .parallax-container {
@@ -42,7 +49,8 @@ body {
 }
 
 footer a {
-    @extend .white-text
+    @extend .grey-text;
+    @extend .text-lighten-1;
 }
 
 // Support for sticky footer:
