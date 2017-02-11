@@ -29,24 +29,25 @@ static const uint32_t VOX_DEFAULT_PALETTE[256];
     ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
 // Import the old magica voxel file format:
-// w, h, w, <data>, <palette>
+//
+// d, h, w, <data>, <palette>
 static void vox_import_old(const char *path)
 {
     FILE *file;
-    int x, y, z, w, h, d, i;
+    int w, h, d, i;
     uint8_t *voxels;
     uvec4b_t *palette;
-    mesh_t *mesh;
-    vec3_t pos;
+    uvec4b_t *cube;
     uvec4b_t color;
 
-    mesh = goxel->image->active_layer->mesh;
     file = fopen(path, "rb");
-    w = READ(uint32_t, file);
-    h = READ(uint32_t, file);
     d = READ(uint32_t, file);
+    h = READ(uint32_t, file);
+    w = READ(uint32_t, file);
+
     voxels = calloc(w * h * d, 1);
     palette = calloc(256, sizeof(*palette));
+    cube = calloc(w * h * d, sizeof(*cube));
     for (i = 0; i < w * h * d; i++) {
         voxels[i] = READ(uint8_t, file);
     }
@@ -59,17 +60,18 @@ static void vox_import_old(const char *path)
     palette[255] = uvec4b(0, 0, 0, 0);
 
     for (i = 0; i < w * h * d; i++) {
-        x = i % w;
-        y = (i / w) % h;
-        z = i / w / h;
-        pos = vec3(x + 0.5 - w / 2, y + 0.5 - h / 2, z + 0.5);
+        if (voxels[i] == 255) continue;
         color = palette[voxels[i]];
-        mesh_set_at(mesh, &pos, color);
+        cube[i] = color;
     }
 
+    mesh_blit(goxel->image->active_layer->mesh, cube,
+              -w / 2, -h / 2, -d / 2, w, h, d);
     free(palette);
     free(voxels);
+    free(cube);
     fclose(file);
+    goxel_update_meshes(goxel, -1);
 }
 
 typedef struct {
