@@ -84,6 +84,7 @@ void qubicle_import(const char *path)
                     for (j = 0; j < len; j++) {
                         x = index % w;
                         y = index / w;
+                        v.a = v.a ? 255 : 0;
                         cube[x + y * w + z * w * h] = v;
                         index++;
                     }
