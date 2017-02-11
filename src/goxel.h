@@ -538,9 +538,6 @@ void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
 void mesh_set(mesh_t *mesh, const mesh_t *other);
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
-void mesh_fill(mesh_t *mesh,
-               uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
-               void *user_data);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
