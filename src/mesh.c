@@ -295,6 +295,8 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
     static block_t *last_block = NULL;
     static uint64_t last_mesh_id = 0;
     static box_t last_box;
+    vec3_t p;
+    const int s = BLOCK_SIZE - 2;
 
     if ((last_mesh_id == mesh->id) && last_block) {
         if (bbox_contains_vec(last_box, *pos)) {
@@ -302,16 +304,15 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
         }
     }
 
-    // XXX: use HASH_FIND here!
-    MESH_ITER_BLOCKS(mesh, block) {
-        if (bbox_contains_vec(block_get_box(block, false), *pos)) {
-            last_mesh_id = mesh->id;
-            last_block = block;
-            last_box = block_get_box(block, false);
-            return block_get_at(block, pos);
-        }
-    }
-    return uvec4b(0, 0, 0, 0);
+    p = vec3((int)(round(pos->x / s) * s),
+             (int)(round(pos->y / s) * s),
+             (int)(round(pos->z / s) * s));
+    HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
+    if (!block) return uvec4b(0, 0, 0, 0);
+    last_mesh_id = mesh->id;
+    last_block = block;
+    last_box = block_get_box(block, false);
+    return block_get_at(block, pos);
 }
 
 void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v)
