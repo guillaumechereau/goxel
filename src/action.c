@@ -106,10 +106,8 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     astack_t *s = stack_create();
     func = action->func ?: default_function;
 
-    // For the moment all action cancel the current tool, for simplicity.
-    tool_cancel(goxel, goxel->tool, goxel->tool_state);
-
     if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
+        tool_cancel(goxel, goxel->tool, goxel->tool_state);
         image_history_push(goxel->image);
     }
 
