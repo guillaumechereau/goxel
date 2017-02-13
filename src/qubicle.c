@@ -36,7 +36,7 @@ void qubicle_import(const char *path)
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
 
-    file = fopen(path, "r");
+    file = fopen(path, "rb");
     version = READ(uint32_t, file);
     (void)version;
     color_format = READ(uint32_t, file);
