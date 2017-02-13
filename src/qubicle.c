@@ -33,6 +33,7 @@ void qubicle_import(const char *path)
     char buff[256];
     uvec4b_t v;
     uvec4b_t *cube;
+    mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
 
@@ -93,9 +94,13 @@ void qubicle_import(const char *path)
         }
         mesh_blit(goxel->image->active_layer->mesh, cube,
                   pos[0], pos[1], pos[2], w, h, d);
-        goxel_update_meshes(goxel, -1);
         free(cube);
     }
+
+    // Apply a 90 deg X rotation to fix axis.
+    mat4_irotate(&mat, M_PI / 2, 1, 0, 0);
+    mesh_move(goxel->image->active_layer->mesh, &mat);
+    goxel_update_meshes(goxel, -1);
 }
 
 void qubicle_export(const mesh_t *mesh, const char *path)
@@ -104,6 +109,13 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     block_t *block;
     int i, count, x, y, z;
     char buff[8];
+    mesh_t *m = mesh_copy(mesh);
+    mat4_t mat = mat4_identity;
+
+    // Apply a -90 deg X rotation to fix axis.
+    mat4_irotate(&mat, -M_PI / 2, 1, 0, 0);
+    mesh_move(m, &mat);
+    mesh = m;
 
     count = HASH_COUNT(mesh->blocks);
 
@@ -139,6 +151,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
         i++;
     }
     fclose(file);
+    mesh_delete(m);
 }
 
 static void export_as_qubicle(const char *path)
