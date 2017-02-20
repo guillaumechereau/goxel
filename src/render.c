@@ -840,7 +840,6 @@ static mat4_t render_shadow_map(renderer_t *rend)
 void render_render(renderer_t *rend, const int rect[4],
                    const vec4_t *clear_color)
 {
-    PROFILED
     render_item_t *item, *tmp;
     mat4_t shadow_mvp;
     bool shadow = rend->settings.shadow &&

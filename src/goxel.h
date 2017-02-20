@@ -1015,57 +1015,6 @@ void qubicle_export(const mesh_t *mesh, const char *path);
 
 void vox_import(const char *path);
 
-// #### Profiler ###############
-
-typedef struct profiler_block profiler_block_t;
-struct profiler_block
-{
-    const char          *name;
-    profiler_block_t    *next;   // All the blocks are put in a list.
-    profiler_block_t    *parent; // The block that called this block.
-    int                 depth;   // How many time are we inside this block.
-    int                 count;
-
-    // In nanoseconds
-    int64_t             tot_time;
-    int64_t             self_time;
-    int64_t             enter_time;
-
-    // For real time fps computation.
-    struct {
-        int64_t             frame_tot_time;
-        int64_t             frame_self_time;
-        int64_t             tot_time;
-        int64_t             self_time;
-    } avg;
-};
-void profiler_start(void);
-void profiler_stop(void);
-void profiler_tick(void);
-profiler_block_t *profiler_get_blocks();
-
-void profiler_enter_(profiler_block_t *block);
-void profiler_exit_(profiler_block_t *block);
-static inline void profiler_cleanup_(profiler_block_t **p)
-{
-    profiler_exit_(*p);
-}
-
-#ifndef PROFILER
-    #define PROFILER DEBUG
-#endif
-#if PROFILER
-    #define PROFILED2(name_) \
-        static profiler_block_t block_ = {name_}; \
-        profiler_enter_(&block_); \
-        profiler_block_t *block_ref_ \
-                __attribute__((cleanup(profiler_cleanup_))); \
-        block_ref_ = &block_;
-#else
-    #define PROFILED2(name_)
-#endif
-#define PROFILED PROFILED2(__func__)
-
 // ##### Assets manager ########################
 // All the assets are saved in binary directly in the code, using
 // tool/create_assets.py.

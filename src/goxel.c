@@ -278,7 +278,6 @@ void goxel_release(goxel_t *goxel)
 void goxel_iter(goxel_t *goxel, inputs_t *inputs)
 {
     goxel->frame_clock = get_clock();
-    profiler_tick();
     goxel_set_help_text(goxel, NULL);
     goxel_set_hint_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);

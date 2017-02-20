@@ -996,28 +996,6 @@ static void load(goxel_t *goxel)
     free(path);
 }
 
-static void render_profiler_info(void)
-{
-    profiler_block_t *block, *root;
-    int percent, fps;
-    double time_per_frame;
-    double self_time;
-
-    root = profiler_get_blocks();
-    if (!root) return;
-    if (!root->avg.tot_time) return;
-    time_per_frame = root->avg.tot_time / (1000.0 * 1000.0);
-    fps = 1000.0 / time_per_frame;
-    ImGui::BulletText("%.1fms/frame (%dfps)", time_per_frame, fps);
-    for (block = root; block; block = block->next) {
-        self_time = block->avg.self_time / (1000.0 * 1000.0);
-        percent = (int)(block->avg.self_time * 100 / root->avg.tot_time);
-        if (!percent) continue;
-        ImGui::BulletText("%s: self:%.1fms/frame (%d%%)",
-                block->name, self_time, percent);
-    }
-}
-
 static void shift_alpha_popup(goxel_t *goxel, bool just_open)
 {
     static int v = 0;
@@ -1226,15 +1204,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     ImGui::EndChild();
 
-    if (DEBUG || PROFILER) {
+    if (DEBUG) {
         ImGui::SetCursorPos(ImVec2(left_pane_width + 20, 30));
         ImGui::BeginChild("debug", ImVec2(0, 0), false,
                           ImGuiWindowFlags_NoInputs);
         ImGui::Text("Blocks: %d (%.2g MiB)", goxel->block_count,
                 (float)goxel->block_count * sizeof(block_data_t) / MiB);
         ImGui::Text("uid: %lu", (unsigned long)goxel->next_uid);
-        if (PROFILER)
-            render_profiler_info();
         ImGui::EndChild();
     }
 

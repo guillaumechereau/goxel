@@ -190,8 +190,6 @@ static void add_blocks(mesh_t *mesh, box_t box)
 
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
-    PROFILED
-
     // In case we are doing the same operation as last time, we can just use
     // the value we buffered.
     if (!g_last_op.origin) g_last_op.origin = mesh_new();

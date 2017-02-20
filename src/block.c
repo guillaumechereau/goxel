@@ -510,7 +510,6 @@ static int block_generate_vertices_mc(const block_data_t *data, int effects,
 int block_generate_vertices(const block_data_t *data, int effects,
                             voxel_vertex_t *out)
 {
-    PROFILED
     int x, y, z, f;
     int i, nb = 0;
     uint32_t neighboors_mask;
