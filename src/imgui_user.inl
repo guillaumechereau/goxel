@@ -80,7 +80,7 @@ namespace ImGui {
             uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
             window->DrawList->AddImage((void*)tex, image_bb.Min, image_bb.Max,
-                                       uv0, uv1, 0xFFFFFFFF);
+                                       uv0, uv1, 0xFF000000);
         } else {
             ret = ImGui::Button(name, size);
         }
