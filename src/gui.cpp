@@ -30,7 +30,7 @@ static inline ImVec4 IMHEXCOLOR(uint32_t v)
 
 namespace ImGui {
     bool GoxSelectable(const char *name, bool *v, int tex = 0, int icon = 0,
-                       const char *tooltip = NULL);
+                       const char *tooltip = NULL, ImVec2 size = ImVec2(0, 0));
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
     bool GoxIsCharPressed(int c);
@@ -389,14 +389,14 @@ static void mode_panel(goxel_t *goxel)
 static void shapes_panel(goxel_t *goxel);
 static void tool_options_panel(goxel_t *goxel)
 {
-    int i;
+    int i, w;
     float v;
     bool s;
-    const char *snap[][2] = {
-        {"Mesh", "M"},
-        {"Plane", "P"},
-        {"Selection Inside", "SI"},
-        {"Selection Outside", "SO"},
+    const char *snap[] = {
+        "Mesh",
+        "Plane",
+        "Sel In",
+        "Sel Out",
     };
     ImVec4 color;
     layer_t *layer;
@@ -421,13 +421,14 @@ static void tool_options_panel(goxel_t *goxel)
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         ImGui::Text("Snap on");
+        w = ImGui::GetContentRegionAvailWidth() / 2;
         for (i = 0; i < (int)ARRAY_SIZE(snap); i++) {
             s = goxel->snap & (1 << i);
-            if (ImGui::GoxSelectable(snap[i][1], &s, 0, 0, snap[i][0])) {
+            if (ImGui::GoxSelectable(snap[i], &s, 0, 0, NULL, ImVec2(w, 16))) {
                 goxel->snap = s ? goxel->snap | (1 << i) :
                                   goxel->snap & ~(1 << i);
             }
-            if (i != ARRAY_SIZE(snap) - 1)
+            if (i % 2 != 1)
                 ImGui::SameLine();
         }
     }

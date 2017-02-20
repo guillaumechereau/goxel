@@ -57,15 +57,16 @@ static void hue_bitmap(uint8_t *buffer, int w, int h)
 
 namespace ImGui {
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
-                       const char *tooltip) {
+                       const char *tooltip, ImVec2 size) {
         ImGuiWindow* window = GetCurrentWindow();
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
-        const ImVec2 size(32, 32);
+        if (size.x == 0) size.x = 32;
+        if (size.y == 0) size.y = 32;
 
         const ImVec2 padding = ImVec2(0, 0);//style.FramePadding;
         const ImRect image_bb(window->DC.CursorPos + padding,
-                              window->DC.CursorPos + padding + size); 
+                              window->DC.CursorPos + padding + size);
         bool ret;
         ImVec2 uv0, uv1; // The position in the icon texture.
         ImVec4 color;
