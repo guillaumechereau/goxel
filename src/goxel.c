@@ -663,6 +663,7 @@ ACTION_REGISTER(clear_selection,
 static void fill_selection(layer_t *layer)
 {
     if (box_is_null(goxel->selection)) return;
+    layer = layer ?: goxel->image->active_layer;
     mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
     goxel_update_meshes(goxel, -1);
 }
