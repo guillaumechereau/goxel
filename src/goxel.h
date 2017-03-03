@@ -284,8 +284,8 @@ void sys_log(const char *msg);
 const char *sys_get_data_dir(void);
 bool sys_asset_exists(const char *path);
 char *sys_read_asset(const char *path, int *size);
-const char *sys_get_clipboard_text(void);
-void sys_set_clipboard_text(const char *text);
+const char *sys_get_clipboard_text(void* user);
+void sys_set_clipboard_text(void *user, const char *text);
 GLuint sys_get_screen_framebuffer(void);
 // #############################
 

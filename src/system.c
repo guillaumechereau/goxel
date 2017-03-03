@@ -124,7 +124,7 @@ GLuint sys_get_screen_framebuffer(void)
 
 #include <gtk/gtk.h>
 
-const char *sys_get_clipboard_text(void)
+const char *sys_get_clipboard_text(void* user)
 {
     GtkClipboard *cb;
     static gchar *text = NULL;
@@ -135,7 +135,7 @@ const char *sys_get_clipboard_text(void)
     return text;
 }
 
-void sys_set_clipboard_text(const char *text)
+void sys_set_clipboard_text(void *user, const char *text)
 {
     GtkClipboard *cb;
     gtk_init_check(NULL, NULL);

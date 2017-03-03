@@ -56,42 +56,116 @@ static void hue_bitmap(uint8_t *buffer, int w, int h)
 }
 
 namespace ImGui {
+
+    static struct {
+        int nb;
+        int col;
+        int i;
+    } g_group = {};
+
+    void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color,
+                 bool fill, int corners)
+    {
+        ImGuiWindow* window = GetCurrentWindow();
+        size.x = size.x ?: ImGui::GetContentRegionAvailWidth();
+        if (fill) {
+            window->DrawList->AddRectFilled(
+                    pos, pos + size,
+                    ImGui::ColorConvertFloat4ToU32(color), 4, corners);
+        } else {
+            window->DrawList->AddRect(
+                    pos, pos + size,
+                    ImGui::ColorConvertFloat4ToU32(color), 4, corners);
+        }
+    }
+
+    void GoxBox(ImVec2 pos, ImVec2 size, bool selected, int corners)
+    {
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        ImVec4 color  = style.Colors[selected ? ImGuiCol_ButtonActive :
+                                     ImGuiCol_Button];
+        return GoxBox2(pos, size, color, true, corners);
+    }
+
+    void GoxGroupBegin(int nb, int col)
+    {
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        g_group.nb = nb;
+        g_group.col = col ?: nb;
+        g_group.i = 0;
+        draw_list->ChannelsSplit(2);
+        draw_list->ChannelsSetCurrent(1);
+        ImGui::BeginGroup();
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 1));
+    }
+
+    void GoxGroupEnd(void)
+    {
+        ImGui::PopStyleVar();
+        ImGui::Dummy(ImVec2(0, 0));
+        ImGui::EndGroup();
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        draw_list->ChannelsSetCurrent(0);
+        ImVec2 pos = ImGui::GetItemRectMin();
+        ImVec2 size = ImGui::GetItemRectMax() - pos;
+        GoxBox2(pos, size, ImVec4(0.3, 0.3, 0.3, 1), true, 0xFF);
+        draw_list->ChannelsMerge();
+        GoxBox2(pos, size, ImVec4(0, 0, 0, 1), false, 0xFF);
+        memset(&g_group, 0, sizeof(g_group));
+    }
+
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
                        const char *tooltip, ImVec2 size) {
         ImGuiWindow* window = GetCurrentWindow();
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
+        ImVec2 pos = ImGui::GetCursorScreenPos();
         if (size.x == 0) size.x = 32;
         if (size.y == 0) size.y = 32;
 
-        const ImVec2 padding = ImVec2(0, 0);//style.FramePadding;
-        const ImRect image_bb(window->DC.CursorPos + padding,
-                              window->DC.CursorPos + padding + size);
-        bool ret;
+        const ImVec2 padding = ImVec2(0, 0);
+        const ImRect image_bb(pos + padding, pos + padding + size);
+        bool ret, hovered;
+        int corners = 0;
         ImVec2 uv0, uv1; // The position in the icon texture.
-        ImVec4 color;
+        int colorText = ImGui::ColorConvertFloat4ToU32(
+                                        style.Colors[ImGuiCol_Text]);
 
         if (!tooltip) tooltip = name;
-        color = style.Colors[ImGuiCol_Button];
-        if (*v) color = style.Colors[ImGuiCol_ButtonActive];
-        ImGui::PushStyleColor(ImGuiCol_Button, color);
         ImGui::PushID(name);
+
+        ret = ImGui::InvisibleButton(name, size);
+        hovered = ImGui::IsItemHovered();
+
+        if (g_group.nb) {
+            if (g_group.i == 0) corners |= 0x1;
+            if (g_group.i == g_group.col - 1) corners |= 0x2;
+            if (g_group.i == g_group.nb - 1) corners |= 0x4;
+            if (g_group.i % g_group.col == 0 &&
+                    g_group.i >= g_group.nb - g_group.col) corners |= 0x8;
+        }
+        GoxBox(pos, size, *v, corners);
+
         if (tex) {
-            ret = ImGui::Button("", size);
             uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
             window->DrawList->AddImage((void*)tex, image_bb.Min, image_bb.Max,
                                        uv0, uv1, 0xFF000000);
         } else {
-            ret = ImGui::Button(name, size);
+            window->DrawList->AddText(pos + ImVec2(3, 2), colorText, name);
         }
-        ImGui::PopStyleColor();
         if (ret) *v = !*v;
-        if (ImGui::IsItemHovered()) {
+        if (hovered) {
             ImGui::SetTooltip("%s", tooltip);
             goxel_set_help_text(goxel, tooltip);
         }
         ImGui::PopID();
+        if (g_group.nb) {
+            g_group.i++;
+            if ((g_group.i % g_group.col) != 0) ImGui::SameLine();
+        }
+
         return ret;
     }
 
@@ -333,4 +407,128 @@ namespace ImGui {
         ImGui::PopID();
         return ret;
     }
+
+    // Copied from imgui, with some custom modifications.
+    bool GoxDragFloat(const char* label, float* v, float v_speed,
+            float v_min, float v_max, const char* display_format, float power)
+    {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        const float w = CalcItemWidth();
+
+        const ImVec2 label_size = CalcTextSize("", NULL, true);
+        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y*2.0f));
+        const ImRect inner_bb(frame_bb.Min + style.FramePadding, frame_bb.Max - style.FramePadding);
+        const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
+
+        // NB- we don't call ItemSize() yet because we may turn into a text edit box below
+        if (!ItemAdd(total_bb, &id))
+        {
+            ItemSize(total_bb, style.FramePadding.y);
+            return false;
+        }
+
+        const bool hovered = IsHovered(frame_bb, id);
+        if (hovered)
+            SetHoveredID(id);
+
+        if (!display_format)
+            display_format = "%.3f";
+        int decimal_precision = ParseFormatPrecision(display_format, 3);
+
+        // Tabbing or CTRL-clicking on Drag turns it into an input box
+        bool start_text_input = false;
+        const bool tab_focus_requested = FocusableItemRegister(window, g.ActiveId == id);
+        if (tab_focus_requested || (hovered && (g.IO.MouseClicked[0] | g.IO.MouseDoubleClicked[0])))
+        {
+            SetActiveID(id, window);
+            FocusWindow(window);
+
+            if (tab_focus_requested || g.IO.KeyCtrl || g.IO.MouseDoubleClicked[0])
+            {
+                start_text_input = true;
+                g.ScalarAsInputTextId = 0;
+            }
+        }
+        if (start_text_input || (g.ActiveId == id && g.ScalarAsInputTextId == id))
+            return InputScalarAsWidgetReplacement(frame_bb, label, ImGuiDataType_Float, v, id, decimal_precision);
+
+        // Actual drag behavior
+        ItemSize(total_bb, style.FramePadding.y);
+        const bool value_changed = DragBehavior(frame_bb, id, v, v_speed, v_min, v_max, decimal_precision, power);
+
+        // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
+        char value_buf[64];
+        const char* value_buf_end = value_buf + ImFormatString(value_buf, IM_ARRAYSIZE(value_buf), display_format, *v);
+        RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(1.0f,0.5f));
+
+        value_buf_end = value_buf + ImFormatString(value_buf, IM_ARRAYSIZE(value_buf), "%s:", label);
+        RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.0f,0.5f));
+
+        return value_changed;
+    }
+
+    bool GoxInputFloat(const char *label, float *v, float step,
+                       float minv, float maxv, const char *format)
+    {
+        bool ret = false;
+        ImGuiContext& g = *GImGui;
+        ImGuiWindow* window = GetCurrentWindow();
+        ImVec2 pos = window->DC.CursorPos;
+        const ImGuiStyle& style = g.Style;
+        const ImVec2 button_sz = ImVec2(
+                g.FontSize, g.FontSize) + style.FramePadding * 2.0f;
+        int button_flags =
+            ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
+
+        GoxGroupBegin(1, 0);
+
+        ImGui::PushID(label);
+
+        // Set frame background to transparent.
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
+
+        GoxBox(pos, ImVec2(0, 18), false, 0xFF);
+        if (ImGui::ButtonEx("-", button_sz, button_flags)) {
+            (*v) -= step;
+            ret = true;
+        }
+        ImGui::SameLine();
+
+        ImGui::PushItemWidth(
+                ImGui::GetContentRegionAvailWidth() -
+                button_sz.x - style.ItemSpacing.x);
+
+        ret |= ImGui::GoxDragFloat(label, v, step, minv, maxv, format, 1.0);
+
+        ImGui::SameLine();
+        ImGui::PopItemWidth();
+
+        if (ImGui::ButtonEx("+", button_sz, button_flags)) {
+            (*v) += step;
+            ret = true;
+        }
+
+        ImGui::PopStyleColor();
+        ImGui::PopStyleColor();
+        ImGui::PopID();
+        GoxGroupEnd();
+
+        return ret;
+    }
+
+    bool GoxInputInt(const char *format, int *v, int step, int minv, int maxv)
+    {
+        float vf = *v;
+        bool ret = GoxInputFloat(format, &vf, 0.05, minv, maxv, "%.0f");
+        if (ret) *v = vf;
+        return ret;
+    }
 };
+
