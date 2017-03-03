@@ -468,13 +468,14 @@ static void tool_options_panel(goxel_t *goxel)
             }
             auto_grid(ARRAY_SIZE(snap), i, 2);
         }
-        ImGui::GoxGroupEnd();
     }
     if (goxel->tool == TOOL_BRUSH) {
         v = goxel->snap_offset;
         if (ImGui::GoxInputFloat("Offset", &v, 0.1, -1, +1, "%.1f"))
             goxel->snap_offset = clamp(v, -1, +1);
     }
+    ImGui::GoxGroupEnd();
+
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         mode_panel(goxel);
         shapes_panel(goxel);
@@ -964,12 +965,14 @@ static void export_panel(goxel_t *goxel)
 {
     int i;
     goxel->show_export_viewport = true;
+    ImGui::GoxGroupBegin();
     i = goxel->image->export_width;
     if (ImGui::GoxInputInt("width", &i, 1, 1, 2048))
         goxel->image->export_width = clamp(i, 1, 2048);
     i = goxel->image->export_height;
     if (ImGui::GoxInputInt("height", &i, 1, 1, 2048))
         goxel->image->export_height = clamp(i, 1, 2048);
+    ImGui::GoxGroupEnd();
 }
 
 static void save_as(goxel_t *goxel)
