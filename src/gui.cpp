@@ -251,9 +251,15 @@ static void load_fonts_texture()
     const void *data;
     int data_size;
 
+    const ImWchar ranges[] = {
+        0x0020, 0x00FF, // Basic Latin + Latin Supplement
+        0x25A0, 0x25FF, // Geometric shapes
+        0
+    };
+
     data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
     assert(data);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, NULL);
+    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, NULL, ranges);
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
@@ -307,12 +313,14 @@ static void init_ImGui()
     style.FramePadding = ImVec2(4, 2);
 
     style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
     style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0x000000FF);
     style.Colors[ImGuiCol_Button] = IMHEXCOLOR(0xA1A1A1FF);
     style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
     style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
-    style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x6666FFFF);
+    style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x7777CCFF);
+    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0xE0E0E0FF);
 }
 
 void gui_init(void)

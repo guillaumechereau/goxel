@@ -12,7 +12,9 @@ PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 CHARS = (u"abcdefghijklmnopqrstuvwxyz"
          u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
          u"0123456789"
-         u" ?!\"#$%&'()*+,-./°¯[]^:<>{}")
+         u" ?!\"#$%&'()*+,-./°¯[]^:<>{}"
+         u"◀▶"
+         )
 
 font = fontforge.open(PATH)
 for g in font:

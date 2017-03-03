@@ -154,17 +154,24 @@ namespace ImGui {
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
                        const char *tooltip, ImVec2 size) {
         ImGuiWindow* window = GetCurrentWindow();
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
         ImVec2 pos = ImGui::GetCursorScreenPos();
         if (size.x == 0) size.x = 32;
         if (size.y == 0) size.y = 32;
 
         const ImVec2 padding = ImVec2(0, 0);
         const ImRect image_bb(pos + padding, pos + padding + size);
-        bool ret;
+        bool ret = false;
         ImVec2 uv0, uv1; // The position in the icon texture.
+        ImVec4 color;
 
         if (!tooltip) tooltip = name;
         ImGui::PushID(name);
+
+        color = style.Colors[ImGuiCol_Button];
+        if (*v) color = style.Colors[ImGuiCol_ButtonActive];
+        ImGui::PushStyleColor(ImGuiCol_Button, color);
 
         if (tex) {
             ret = ImGui::Button("", size);
@@ -175,6 +182,8 @@ namespace ImGui {
         } else {
             ret = ImGui::Button(name, size);
         }
+        ImGui::PopStyleColor();
+        if (ret) *v = !*v;
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("%s", tooltip);
             goxel_set_help_text(goxel, tooltip);
@@ -309,12 +318,7 @@ namespace ImGui {
                              bool display_frame,
                              bool default_open)
     {
-        bool ret;
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
-        ret = ImGui::CollapsingHeader(label, str_id, display_frame, default_open);
-        if (ret) ImGui::Dummy(ImVec2(0, 4));
-        ImGui::PopStyleColor();
-        return ret;
+        return ImGui::CollapsingHeader(label, str_id, display_frame, default_open);
     }
 
     bool GoxAction(const char *id, const char *label, float size,
@@ -514,12 +518,14 @@ namespace ImGui {
         ImGui::PushID(label);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
 
-        if (ImGui::ButtonEx("-", button_sz, button_flags)) {
+        ImGui::SetWindowFontScale(0.75);
+        if (ImGui::ButtonEx("◀", button_sz, button_flags)) {
             (*v) -= step;
             ret = true;
         }
-        ImGui::SameLine();
+        ImGui::SetWindowFontScale(1);
 
+        ImGui::SameLine();
         ImGui::PushItemWidth(
                 ImGui::GetContentRegionAvailWidth() -
                 button_sz.x - style.ItemSpacing.x);
@@ -529,10 +535,12 @@ namespace ImGui {
 
         ImGui::SameLine();
 
-        if (ImGui::ButtonEx("+", button_sz, button_flags)) {
+        ImGui::SetWindowFontScale(0.75);
+        if (ImGui::ButtonEx("▶", button_sz, button_flags)) {
             (*v) += step;
             ret = true;
         }
+        ImGui::SetWindowFontScale(1);
 
         ImGui::PopStyleVar();
         ImGui::PopID();
