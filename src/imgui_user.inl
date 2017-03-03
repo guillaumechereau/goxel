@@ -431,6 +431,37 @@ namespace ImGui {
         return ret;
     }
 
+    // Copied from imgui, with some customization...
+    bool GoxInputScalarAsWidgetReplacement(const ImRect& aabb, const char* label, ImGuiDataType data_type, void* data_ptr, ImGuiID id, int decimal_precision)
+    {
+        ImGuiContext& g = *GImGui;
+        ImGuiWindow* window = GetCurrentWindow();
+
+        // Our replacement widget will override the focus ID (registered previously to allow for a TAB focus to happen)
+        SetActiveID(g.ScalarAsInputTextId, window);
+        SetHoveredID(0);
+        FocusableItemUnregister(window);
+
+        char buf[32];
+        DataTypeFormatString(data_type, data_ptr, decimal_precision, buf, IM_ARRAYSIZE(buf));
+        bool text_value_changed = InputTextEx(label, buf, IM_ARRAYSIZE(buf), aabb.GetSize(), ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue);
+        if (g.ScalarAsInputTextId == 0)
+        {
+            // First frame
+            IM_ASSERT(g.ActiveId == id);    // InputText ID expected to match the Slider ID (else we'd need to store them both, which is also possible)
+            g.ScalarAsInputTextId = g.ActiveId;
+            SetHoveredID(id);
+        }
+        else if (g.ActiveId != g.ScalarAsInputTextId)
+        {
+            // Release
+            g.ScalarAsInputTextId = 0;
+        }
+        if (text_value_changed)
+            return DataTypeApplyOpFromText(buf, GImGui->InputTextState.InitialText.begin(), data_type, data_ptr, NULL);
+        return false;
+    }
+
     // Copied from imgui, with some custom modifications.
     bool GoxDragFloat(const char* label, const char* name,
             float* v, float v_speed,
@@ -480,7 +511,7 @@ namespace ImGui {
             }
         }
         if (start_text_input || (g.ActiveId == id && g.ScalarAsInputTextId == id))
-            return InputScalarAsWidgetReplacement(frame_bb, label, ImGuiDataType_Float, v, id, decimal_precision);
+            return GoxInputScalarAsWidgetReplacement(frame_bb, label, ImGuiDataType_Float, v, id, decimal_precision);
 
         // Actual drag behavior
         ItemSize(total_bb, style.FramePadding.y);

@@ -44,7 +44,8 @@ namespace ImGui {
     bool GoxMenuItem(const char *id, const char *label);
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
-    bool GoxInputInt(const char *label, int *v, int step, int minv, int maxv);
+    bool GoxInputInt(const char *label, int *v, int step = 1,
+                     int minv = 0, int maxv = 0);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = 0.0, float maxv = 1.0,
                        const char *format = "%.1f");
@@ -493,38 +494,44 @@ static void tool_options_panel(goxel_t *goxel)
         ImGui::GoxAction("fill_selection", "Fill selection", 1.0, "");
     }
     if (goxel->tool == TOOL_SET_PLANE) {
+        ImGui::GoxGroupBegin();
         i = 0;
-        if (ImGui::InputInt("Move", &i))
+        if (ImGui::GoxInputInt("Move", &i))
             mat4_itranslate(&goxel->plane.mat, 0, 0, -i);
         i = 0;
-        if (ImGui::InputInt("Rot X", &i))
+        if (ImGui::GoxInputInt("Rot X", &i))
             mat4_irotate(&goxel->plane.mat, i * M_PI / 2, 1, 0, 0);
         i = 0;
-        if (ImGui::InputInt("Rot Y", &i))
+        if (ImGui::GoxInputInt("Rot Y", &i))
             mat4_irotate(&goxel->plane.mat, i * M_PI / 2, 0, 1, 0);
+        ImGui::GoxGroupEnd();
     }
     if (goxel->tool == TOOL_MOVE) {
         ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
         mat = mat4_identity;
         layer = goxel->image->active_layer;
+        ImGui::GoxGroupBegin();
         i = 0;
-        if (ImGui::InputInt("Move X", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Move X", &i))
             mat4_itranslate(&mat, i, 0, 0);
         i = 0;
-        if (ImGui::InputInt("Move Y", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Move Y", &i, 1, -1, flags))
             mat4_itranslate(&mat, 0, i, 0);
         i = 0;
-        if (ImGui::InputInt("Move Z", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Move Z", &i, 1, -1, flags))
             mat4_itranslate(&mat, 0, 0, i);
+        ImGui::GoxGroupEnd();
+        ImGui::GoxGroupBegin();
         i = 0;
-        if (ImGui::InputInt("Rot X", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Rot X", &i, 1, -1, flags))
             mat4_irotate(&mat, i * M_PI / 2, 1, 0, 0);
         i = 0;
-        if (ImGui::InputInt("Rot Y", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Rot Y", &i, 1, -1, flags))
             mat4_irotate(&mat, i * M_PI / 2, 0, 1, 0);
         i = 0;
-        if (ImGui::InputInt("Rot Z", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Rot Z", &i, 1, -1, flags))
             mat4_irotate(&mat, i * M_PI / 2, 0, 0, 1);
+        ImGui::GoxGroupEnd();
         if (layer->image && ImGui::InputInt("Scale", &i)) {
             v = pow(2, i);
             mat4_iscale(&mat, v, v, v);
