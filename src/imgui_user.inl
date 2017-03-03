@@ -132,8 +132,7 @@ namespace ImGui {
     void GoxGroupEnd(void)
     {
         g_group--;
-        ImGui::PopStyleVar();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleVar(2);
         ImGui::Dummy(ImVec2(0, 0));
         ImGui::EndGroup();
         ImDrawList* draw_list = ImGui::GetWindowDrawList();

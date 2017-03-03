@@ -468,13 +468,11 @@ static void tool_options_panel(goxel_t *goxel)
             }
             auto_grid(ARRAY_SIZE(snap), i, 2);
         }
-    }
-    if (goxel->tool == TOOL_BRUSH) {
         v = goxel->snap_offset;
         if (ImGui::GoxInputFloat("Offset", &v, 0.1, -1, +1, "%.1f"))
             goxel->snap_offset = clamp(v, -1, +1);
+        ImGui::GoxGroupEnd();
     }
-    ImGui::GoxGroupEnd();
 
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         mode_panel(goxel);
