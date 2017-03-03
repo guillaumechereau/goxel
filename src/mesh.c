@@ -103,6 +103,7 @@ mesh_t *mesh_copy(const mesh_t *other)
     mesh_t *mesh = calloc(1, sizeof(*mesh));
     mesh->blocks = other->blocks;
     mesh->ref = other->ref;
+    mesh->id = other->id;
     mesh->next_block_id = other->next_block_id;
     (*mesh->ref)++;
     return mesh;
