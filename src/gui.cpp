@@ -37,17 +37,19 @@ namespace ImGui {
     bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
                              bool display_frame = true,
                              bool default_open = false);
-    bool GoxAction(const char *id, const char *label, const char *sig, ...);
+    bool GoxAction(const char *id, const char *label, float size,
+                   const char *sig, ...);
+
     bool GoxCheckbox(const char *id, const char *label);
     bool GoxMenuItem(const char *id, const char *label);
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
     bool GoxInputInt(const char *label, int *v, int step, int minv, int maxv);
-    bool GoxInputFloat(const char *label, float *v, float speed = 0.01,
+    bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = 0.0, float maxv = 1.0,
                        const char *format = "%.1f");
 
-    void GoxGroupBegin(int nb, int col);
+    void GoxGroupBegin(void);
     void GoxGroupEnd(void);
 };
 
@@ -246,6 +248,12 @@ static void load_fonts_texture()
 
     unsigned char* pixels;
     int width, height;
+    const void *data;
+    int data_size;
+
+    data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
+    assert(data);
+    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, NULL);
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
@@ -297,10 +305,12 @@ static void init_ImGui()
     style.WindowPadding = ImVec2(4, 4);
     style.ItemSpacing = ImVec2(4, 4);
     style.FramePadding = ImVec2(4, 2);
+
     style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x727272FF);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
     style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0x000000FF);
     style.Colors[ImGuiCol_Button] = IMHEXCOLOR(0xA1A1A1FF);
+    style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
     style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
     style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x6666FFFF);
 }
@@ -370,6 +380,12 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width, height));
 }
 
+// XXX: better replace this by something more automatic.
+static void auto_grid(int nb, int i, int col)
+{
+    if ((i + 1) % col != 0) ImGui::SameLine();
+}
+
 static void mode_panel(goxel_t *goxel)
 {
     int i;
@@ -385,13 +401,14 @@ static void mode_panel(goxel_t *goxel)
     };
     ImGui::Text("Mode");
 
-    ImGui::GoxGroupBegin(ARRAY_SIZE(values), 0);
+    ImGui::GoxGroupBegin();
     for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
         v = goxel->painter.mode == values[i].mode;
         if (ImGui::GoxSelectable(values[i].name, &v,
                                  g_tex_icons->tex, values[i].icon)) {
             goxel->painter.mode = values[i].mode;
         }
+        auto_grid(ARRAY_SIZE(values), i, 4);
     }
     ImGui::GoxGroupEnd();
 }
@@ -434,19 +451,20 @@ static void tool_options_panel(goxel_t *goxel)
 
         w = ImGui::GetContentRegionAvailWidth() / 2.0 - 1;
 
-        ImGui::GoxGroupBegin(ARRAY_SIZE(snap), 2);
+        ImGui::GoxGroupBegin();
         for (i = 0; i < (int)ARRAY_SIZE(snap); i++) {
             s = goxel->snap & (1 << i);
             if (ImGui::GoxSelectable(snap[i], &s, 0, 0, NULL, ImVec2(w, 18))) {
                 goxel->snap = s ? goxel->snap | (1 << i) :
                                   goxel->snap & ~(1 << i);
             }
+            auto_grid(ARRAY_SIZE(snap), i, 2);
         }
         ImGui::GoxGroupEnd();
     }
     if (goxel->tool == TOOL_BRUSH) {
         v = goxel->snap_offset;
-        if (ImGui::GoxInputFloat("Offset", &v, 0.01, -1, +1, "%.1f"))
+        if (ImGui::GoxInputFloat("Offset", &v, 0.1, -1, +1, "%.1f"))
             goxel->snap_offset = clamp(v, -1, +1);
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
@@ -465,7 +483,7 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SHAPE) {
-        ImGui::GoxAction("fill_selection", "Fill selection", "");
+        ImGui::GoxAction("fill_selection", "Fill selection", 1.0, "");
     }
     if (goxel->tool == TOOL_SET_PLANE) {
         i = 0;
@@ -512,8 +530,8 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SELECTION) {
-        ImGui::GoxAction("clear_selection", "Clear selection", "");
-        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", "");
+        ImGui::GoxAction("clear_selection", "Clear selection", 1.0, "");
+        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", 1.0, "");
     }
 }
 
@@ -533,13 +551,14 @@ static void shapes_panel(goxel_t *goxel)
     ImGui::Text("Shape");
     ImGui::PushID("shapes");
 
-    ImGui::GoxGroupBegin(ARRAY_SIZE(shapes), 0);
+    ImGui::GoxGroupBegin();
     for (i = 0; i < (int)ARRAY_SIZE(shapes); i++) {
         v = goxel->painter.shape == shapes[i].shape;
         if (ImGui::GoxSelectable(shapes[i].name, &v, g_tex_icons->tex,
                                  shapes[i].icon)) {
             goxel->painter.shape = shapes[i].shape;
         }
+        auto_grid(ARRAY_SIZE(shapes), i, 4);
     }
     ImGui::GoxGroupEnd();
     ImGui::PopID();
@@ -710,7 +729,7 @@ static void tools_panel(goxel_t *goxel)
     const action_t *action;
     ImGui::PushID("tools_panel");
 
-    ImGui::GoxGroupBegin(ARRAY_SIZE(values), 4);
+    ImGui::GoxGroupBegin();
     for (i = 0; i < nb; i++) {
         v = goxel->tool == values[i].tool;
         sprintf(label, "%s", values[i].name);
@@ -725,6 +744,7 @@ static void tools_panel(goxel_t *goxel)
             goxel->tool = values[i].tool;
             goxel->tool_state = 0;
         }
+        auto_grid(nb, i, 4);
     }
     ImGui::GoxGroupEnd();
 
@@ -785,16 +805,19 @@ static void layers_panel(goxel_t *goxel)
         i++;
         ImGui::PopID();
     }
-    ImGui::GoxAction("img_new_layer", "Add", "");
+    ImGui::GoxAction("img_new_layer", "Add", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_del_layer", "Del", "");
+    ImGui::GoxAction("img_del_layer", "Del", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "^", "ppi", NULL, NULL, +1);
+    ImGui::GoxAction("img_move_layer", "^", 0, "ppi", NULL, NULL, +1);
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "v", "ppi", NULL, NULL, -1);
-    ImGui::GoxAction("img_duplicate_layer", "Duplicate", "");
-    ImGui::SameLine();
-    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", "");
+    ImGui::GoxAction("img_move_layer", "v", 0, "ppi", NULL, NULL, -1);
+
+    ImGui::GoxGroupBegin();
+    ImGui::GoxAction("img_duplicate_layer", "Duplicate", 1, "");
+    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", 1, "");
+    ImGui::GoxGroupEnd();
+
     ImGui::PopID();
 }
 
@@ -850,14 +873,15 @@ static void render_advanced_panel(goxel_t *goxel)
     ImGui::GoxInputAngle("Yaw", &goxel->rend.light.yaw, 0, 360);
     ImGui::Checkbox("Fixed", &goxel->rend.light.fixed);
 
+    ImGui::GoxGroupBegin();
     v = goxel->rend.settings.border_shadow;
-    if (ImGui::GoxInputFloat("bshadow", &v, 0.01)) {
+    if (ImGui::GoxInputFloat("bshadow", &v, 0.1)) {
         v = clamp(v, 0, 1); \
         goxel->rend.settings.border_shadow = v;
     }
 #define MAT_FLOAT(name, min, max) \
     v = goxel->rend.settings.name;  \
-    if (ImGui::GoxInputFloat(#name, &v, 0.01, min, max)) { \
+    if (ImGui::GoxInputFloat(#name, &v, 0.1, min, max)) { \
         v = clamp(v, min, max); \
         goxel->rend.settings.name = v; \
     }
@@ -869,6 +893,7 @@ static void render_advanced_panel(goxel_t *goxel)
     MAT_FLOAT(smoothness, 0, 1);
 
 #undef MAT_FLOAT
+    ImGui::GoxGroupEnd();
 
     ImGui::CheckboxFlags("Borders",
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS);
@@ -1099,6 +1124,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Goxel", NULL, window_flags);
 
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
@@ -1147,6 +1173,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         }
         ImGui::EndMenuBar();
     }
+    ImGui::PopStyleColor();
     ImGui::Spacing();
 
     left_pane_width = 168;

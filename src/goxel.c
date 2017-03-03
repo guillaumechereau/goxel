@@ -396,7 +396,9 @@ void goxel_render(goxel_t *goxel)
     GL(glViewport(0, 0, goxel->screen_size.x, goxel->screen_size.y));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     GL(glClearColor(0, 0, 0, 1));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL(glStencilMask(0xFF));
+    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+               GL_STENCIL_BUFFER_BIT));
     gui_render();
 }
 
