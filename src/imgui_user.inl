@@ -57,15 +57,16 @@ static void hue_bitmap(uint8_t *buffer, int w, int h)
 
 namespace ImGui {
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
-                       const char *tooltip) {
+                       const char *tooltip, ImVec2 size) {
         ImGuiWindow* window = GetCurrentWindow();
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
-        const ImVec2 size(32, 32);
+        if (size.x == 0) size.x = 32;
+        if (size.y == 0) size.y = 32;
 
         const ImVec2 padding = ImVec2(0, 0);//style.FramePadding;
         const ImRect image_bb(window->DC.CursorPos + padding,
-                              window->DC.CursorPos + padding + size); 
+                              window->DC.CursorPos + padding + size);
         bool ret;
         ImVec2 uv0, uv1; // The position in the icon texture.
         ImVec4 color;
@@ -80,7 +81,7 @@ namespace ImGui {
             uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
             window->DrawList->AddImage((void*)tex, image_bb.Min, image_bb.Max,
-                                       uv0, uv1, 0xFFFFFFFF);
+                                       uv0, uv1, 0xFF000000);
         } else {
             ret = ImGui::Button(name, size);
         }
@@ -88,7 +89,7 @@ namespace ImGui {
         if (ret) *v = !*v;
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("%s", tooltip);
-            goxel_set_help_text(goxel(), tooltip);
+            goxel_set_help_text(goxel, tooltip);
         }
         ImGui::PopID();
         return ret;
@@ -227,15 +228,48 @@ namespace ImGui {
         return ret;
     }
 
-    bool GoxAction(const char *id, const char *label, const arg_t *args)
+    bool GoxAction(const char *id, const char *label, const char *sig, ...)
     {
+        va_list ap;
         assert(action_get(id));
         if (ImGui::Button(label)) {
-            action_exec(action_get(id), args);
+            va_start(ap, sig);
+            action_execv(action_get(id), sig, ap);
+            va_end(ap);
             return true;
         }
         if (ImGui::IsItemHovered()) {
-            goxel_set_help_text(goxel(), action_get(id)->help);
+            goxel_set_help_text(goxel, action_get(id)->help);
+        }
+        return false;
+    }
+
+    bool GoxCheckbox(const char *id, const char *label)
+    {
+        bool b;
+        const action_t *action = action_get(id);
+        action_exec(action, ">b", &b);
+        if (ImGui::Checkbox(label, &b)) {
+            action_exec(action, "b", b);
+            return true;
+        }
+        if (ImGui::IsItemHovered()) {
+            if (!action->shortcut)
+                goxel_set_help_text(goxel, action->help);
+            else
+                goxel_set_help_text(goxel, "%s (%s)",
+                        action->help, action->shortcut);
+        }
+        return false;
+    }
+
+    bool GoxMenuItem(const char *id, const char *label)
+    {
+        const action_t *action = action_get(id);
+        assert(action);
+        if (ImGui::MenuItem(label, action->shortcut)) {
+            action_exec(action, "");
+            return true;
         }
         return false;
     }

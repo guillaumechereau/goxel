@@ -123,6 +123,7 @@ void image_delete(image_t *img)
 layer_t *image_add_layer(image_t *img)
 {
     layer_t *layer;
+    img = img ?: goxel->image;
     layer = layer_new("unamed");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
@@ -132,6 +133,8 @@ layer_t *image_add_layer(image_t *img)
 
 void image_delete_layer(image_t *img, layer_t *layer)
 {
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
     DL_DELETE(img->layers, layer);
     if (layer == img->active_layer) img->active_layer = NULL;
     layer_delete(layer);
@@ -147,6 +150,8 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
 {
     assert(d == -1 || d == +1);
     layer_t *other = NULL;
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
     if (d == -1) {
         other = layer->next;
         SWAP(other, layer);
@@ -161,6 +166,8 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
 layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
+    img = img ?: goxel->image;
+    other = other ?: img->active_layer;
     layer = layer_copy(other);
     layer->visible = true;
     DL_APPEND(img->layers, layer);
@@ -171,6 +178,7 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 void image_merge_visible_layers(image_t *img)
 {
     layer_t *layer, *last = NULL;
+    img = img ?: goxel->image;
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         if (last) {
@@ -229,7 +237,7 @@ void image_undo(image_t *img)
 
     image_set(img, img->history_current->history_prev);
     img->history_current = img->history_current->history_prev;
-    goxel_update_meshes(goxel(), -1);
+    goxel_update_meshes(goxel, -1);
 }
 
 void image_redo(image_t *img)
@@ -240,13 +248,15 @@ void image_redo(image_t *img)
     }
     img->history_current = img->history_current->history_next;
     image_set(img, img->history_current);
-    goxel_update_meshes(goxel(), -1);
+    goxel_update_meshes(goxel, -1);
 }
 
 void image_clear_layer(layer_t *layer, const box_t *box)
 {
     painter_t painter;
-    if (!box || box_is_null(*box)) {
+    layer = layer ?: goxel->image->active_layer;
+    box = box ?: &goxel->selection;
+    if (box_is_null(*box)) {
         mesh_clear(layer->mesh);
         return;
     }
@@ -259,41 +269,42 @@ void image_clear_layer(layer_t *layer, const box_t *box)
 
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
-    .func = image_clear_layer,
-    .sig = SIG(TYPE_VOID, ARG("layer", TYPE_LAYER),
-                          ARG("box", TYPE_BOX)),
+    .cfunc = image_clear_layer,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
-    .func = image_add_layer,
-    .sig = SIG(TYPE_LAYER, ARG("image", TYPE_IMAGE)),
+    .cfunc = image_add_layer,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_del_layer,
     .help = "Delete the active layer",
-    .func = image_delete_layer,
-    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
-                          ARG("layer", TYPE_LAYER)),
+    .cfunc = image_delete_layer,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_move_layer,
     .help = "Move the active layer",
-    .func = image_move_layer,
-    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE),
-                          ARG("layer", TYPE_LAYER),
-                          ARG("ofs", TYPE_INT)),
+    .cfunc = image_move_layer,
+    .csig = "vppi",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_duplicate_layer,
     .help = "Duplicate the active layer",
-    .func = image_duplicate_layer,
-    .sig = SIG(TYPE_LAYER, ARG("image", TYPE_IMAGE),
-                           ARG("layer", TYPE_LAYER)),
+    .cfunc = image_duplicate_layer,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_merge_visible_layers,
     .help = "Merge all the visible layers",
-    .func = image_merge_visible_layers,
-    .sig = SIG(TYPE_VOID, ARG("image", TYPE_IMAGE)),
+    .cfunc = image_merge_visible_layers,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )

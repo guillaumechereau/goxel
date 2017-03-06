@@ -101,7 +101,7 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     const bool down = inputs->mouse_down[0];
     const bool up = !down;
     int snaped = 0;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
@@ -200,7 +200,7 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
     const bool up = !down;
     int snaped = 0;
     int face = -1;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal = vec3_zero;
     plane_t face_plane;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
@@ -316,7 +316,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     const bool pressed = down && !goxel->painting;
     const bool released = !down && goxel->painting;
     int snaped = 0;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal = vec3_zero;
     box_t box;
     painter_t painter2;
     mesh_t *mesh = goxel->image->active_layer->mesh;
@@ -348,7 +348,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
 
     case STATE_SNAPED:
         if (!snaped) return STATE_CANCEL;
-        if (inputs->keys[KEY_SHIFT])
+        if (inputs->keys[KEY_LEFT_SHIFT])
             render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
         if (check_can_skip(goxel, pos, down, goxel->painter.mode))
             return state;
@@ -358,7 +358,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
 
-        if (inputs->keys[KEY_SHIFT]) {
+        if (inputs->keys[KEY_LEFT_SHIFT]) {
             render_line(&goxel->rend, &goxel->tool_start_pos, &pos, NULL);
             if (pressed) {
                 painter2 = goxel->painter;
@@ -389,7 +389,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         if (released) {
             goxel->painting = false;
             goxel->camera.target = pos;
-            if (inputs->keys[KEY_SHIFT])
+            if (inputs->keys[KEY_LEFT_SHIFT])
                 return STATE_WAIT_KEY_UP;
             mesh_set(goxel->pick_mesh, goxel->layers_mesh);
             return STATE_IDLE;
@@ -405,7 +405,7 @@ static int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         break;
 
     case STATE_WAIT_KEY_UP:
-        if (!inputs->keys[KEY_SHIFT]) state = STATE_IDLE;
+        if (!inputs->keys[KEY_LEFT_SHIFT]) state = STATE_IDLE;
         if (snaped) state = STATE_SNAPED;
         break;
     }
@@ -467,7 +467,7 @@ static int tool_set_plane_iter(goxel_t *goxel, const inputs_t *inputs,
                                bool inside)
 {
     bool snaped;
-    vec3_t pos, normal;
+    vec3_t pos = vec3_zero, normal = vec3_zero;
     mesh_t *mesh = goxel->layers_mesh;
     const bool pressed = inputs->mouse_down[0];
     goxel_set_help_text(goxel, "Click on the mesh to set plane.");
@@ -606,6 +606,30 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
 void tool_cancel(goxel_t *goxel, int tool, int state)
 {
     if (state == 0) return;
+    mesh_set(goxel->image->active_layer->mesh, goxel->tool_mesh_orig);
+    goxel_update_meshes(goxel, MESH_LAYERS);
     goxel->tool_plane = plane_null;
     goxel->tool_state = 0;
 }
+
+#define TOOL_ACTION(t, T, s) \
+    static void tool_set_##t(void) { \
+        tool_cancel(goxel, goxel->tool, goxel->tool_state); \
+        goxel->tool = TOOL_##T; \
+    } \
+    \
+    ACTION_REGISTER(tool_set_##t, \
+        .help = "Activate " #t " tool", \
+        .cfunc = tool_set_##t, \
+        .csig = "v", \
+        .shortcut = s, \
+    )
+
+TOOL_ACTION(brush, BRUSH, "B")
+TOOL_ACTION(shape, SHAPE, "S")
+TOOL_ACTION(laser, LASER, "L")
+TOOL_ACTION(plane, SET_PLANE, "P")
+TOOL_ACTION(move, MOVE, "M")
+TOOL_ACTION(pick, PICK_COLOR, "C")
+TOOL_ACTION(selection, SELECTION, "R")
+TOOL_ACTION(procedural, PROCEDURAL, NULL)

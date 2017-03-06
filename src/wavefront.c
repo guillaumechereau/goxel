@@ -221,28 +221,24 @@ void ply_export(const mesh_t *mesh, const char *path)
     free(verts);
 }
 
-static void export_as_obj(goxel_t *goxel, const char *path)
+static void export_as_obj(const char *path)
 {
     wavefront_export(goxel->layers_mesh, path);
 }
 
 ACTION_REGISTER(export_as_obj,
     .help = "Save the image as a wavefront obj file",
-    .func = export_as_obj,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as_obj,
+    .csig = "vp",
 )
 
-static void export_as_ply(goxel_t *goxel, const char *path)
+static void export_as_ply(const char *path)
 {
     ply_export(goxel->layers_mesh, path);
 }
 
 ACTION_REGISTER(export_as_ply,
     .help = "Save the image as a ply file",
-    .func = export_as_ply,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as_ply,
+    .csig = "vp",
 )

@@ -90,6 +90,8 @@ typedef union {
 
 #define MAT(...) {{__VA_ARGS__}}
 
+#define QUAT(...) ((quat_t){{__VA_ARGS__}})
+
 #define DECL static inline
 
 static const vec3_t vec3_zero = VEC3(0, 0, 0);

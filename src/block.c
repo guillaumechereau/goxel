@@ -146,7 +146,7 @@ typedef struct {
 static vec3b_t mc_interp_pos(const mc_vert_t *vert)
 {
     int i;
-    vec3b_t ret;
+    vec3b_t ret = vec3b_zero;
     vec3b_t p0 = VERTICES_POSITIONS[vert->v0];
     vec3b_t p1 = VERTICES_POSITIONS[vert->v1];
     const float mu = vert->mu;
@@ -203,7 +203,7 @@ static block_data_t *get_empty_data(void)
         data = calloc(1, sizeof(*data));
         data->ref = 1;
         data->id = 0;
-        goxel()->block_count++;
+        goxel->block_count++;
     }
     return data;
 }
@@ -235,7 +235,7 @@ void block_delete(block_t *block)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
-        goxel()->block_count--;
+        goxel->block_count--;
     }
     free(block);
 }
@@ -254,7 +254,7 @@ void block_set_data(block_t *block, block_data_t *data)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
-        goxel()->block_count--;
+        goxel->block_count--;
     }
     block->data = data;
     data->ref++;
@@ -510,7 +510,6 @@ static int block_generate_vertices_mc(const block_data_t *data, int effects,
 int block_generate_vertices(const block_data_t *data, int effects,
                             voxel_vertex_t *out)
 {
-    PROFILED
     int x, y, z, f;
     int i, nb = 0;
     uint32_t neighboors_mask;
@@ -571,8 +570,8 @@ static void block_prepare_write(block_t *block)
     memcpy(data->voxels, block->data->voxels, N * N * N * 4);
     data->ref = 1;
     block->data = data;
-    block->data->id = ++goxel()->next_uid;
-    goxel()->block_count++;
+    block->data->id = ++goxel->next_uid;
+    goxel->block_count++;
 }
 
 void block_fill(block_t *block,

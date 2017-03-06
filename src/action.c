@@ -42,86 +42,121 @@ const action_t *action_get(const char *id)
     return item ? item->action : NULL;
 }
 
-static long get_arg_value(arg_t arg, const arg_t *args)
+void actions_iter(int (*f)(const action_t *action))
 {
-    const arg_t *argp;
-    if (args) {
-        for (argp = args; argp->name; argp++) {
-            if (strcmp(argp->name, arg.name) == 0)
-                return argp->value;
+    action_hash_item_t *item, *tmp;
+    HASH_ITER(hh, g_actions, item, tmp) {
+        if (f(item->action)) return;
+    }
+}
+
+// The default action function will try to call the action cfunc.
+static int default_function(const action_t *a, astack_t *s)
+{
+    int i;
+    void (*func)() = a->cfunc;
+    assert(a->cfunc);
+    assert(a->csig);
+
+    // Fill any missing arguments with 0 values.
+    for (i = stack_size(s); i < strlen(a->csig + 1); i++) {
+        switch (a->csig[i + 1]) {
+            case 'i': stack_push_i(s, 0); break;
+            case 'p': stack_push_p(s, NULL); break;
+            default: assert(false);
         }
     }
-    // Default values for some types.
-    if (arg.type == TYPE_GOXEL)
-        return (intptr_t)goxel();
-    if (arg.type == TYPE_IMAGE)
-        return (intptr_t)goxel()->image;
-    if (arg.type == TYPE_LAYER)
-        return (intptr_t)goxel()->image->active_layer;
-    if (arg.type == TYPE_BOX)
-        return (intptr_t)&goxel()->selection;
-    if (str_equ(arg.name, "width"))
-        return (int)goxel()->image->export_width;
-    if (str_equ(arg.name, "height"))
-        return (int)goxel()->image->export_height;
+
+    if (strcmp(a->csig, "v") == 0) {
+        func();
+    } else if (strcmp(a->csig, "vp") == 0) {
+        func(stack_get_p(s, 0));
+    } else if (strcmp(a->csig, "vpp") == 0) {
+        func(stack_get_p(s, 0),
+             stack_get_p(s, 1));
+    } else if (strcmp(a->csig, "vppp") == 0) {
+        func(stack_get_p(s, 0),
+             stack_get_p(s, 1),
+             stack_get_p(s, 2));
+    } else if (strcmp(a->csig, "vppi") == 0) {
+        func(stack_get_p(s, 0),
+             stack_get_p(s, 1),
+             stack_get_i(s, 2));
+    } else if (strcmp(a->csig, "vpii") == 0) {
+        func(stack_get_p(s, 0),
+             stack_get_i(s, 1),
+             stack_get_i(s, 2));
+    } else {
+        LOG_E("Cannot handle sig '%s'", a->csig);
+        assert(false);
+    }
+
     return 0;
 }
 
-void *action_exec(const action_t *action, const arg_t *args)
+int action_execv(const action_t *action, const char *sig, va_list ap)
 {
-    void *ret = NULL;
-    int i, nb_args;
-    long vals[4];
+    assert(action);
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
-    // XXX: not sure this is actually legal in C.  func will be called with
-    // a variable number or arguments, that might be of any registered types!
-    void *(*func)() = action->func;
-    bool is_void;
+    char c;
+    bool b;
+    int i, nb;
+    int (*func)(const action_t *a, astack_t *s);
+    astack_t *s = stack_create();
+    func = action->func ?: default_function;
 
-    assert(action);
-    nb_args = action->sig.nb_args;
-    assert(nb_args <= ARRAY_SIZE(vals));
-    is_void = action->sig.ret == TYPE_VOID;
-
-    // For the moment all action cancel the current tool, for simplicity.
-    tool_cancel(goxel(), goxel()->tool, goxel()->tool_state);
-
-    if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
-        image_history_push(goxel()->image);
+    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
+        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+        image_history_push(goxel->image);
     }
 
     reentry++;
 
-    for (i = 0; i < nb_args; i++)
-        vals[i] = get_arg_value(action->sig.args[i], args);
+    while ((c = *sig++)) {
+        if (c == '>') break;
+        switch (c) {
+            case 'i': stack_push_i(s, va_arg(ap, int)); break;
+            case 'b': stack_push_b(s, va_arg(ap, int)); break;
+            case 'p': stack_push_p(s, va_arg(ap, void*)); break;
+            default: assert(false);
+        }
+    }
 
-    if (is_void && nb_args == 0)
-        func();
-    else if (is_void && nb_args == 1)
-        func(vals[0]);
-    else if (is_void && nb_args == 2)
-        func(vals[0], vals[1]);
-    else if (is_void && nb_args == 3)
-        func(vals[0], vals[1], vals[2]);
-    else if (is_void && nb_args == 4)
-        func(vals[0], vals[1], vals[2], vals[3]);
-    else if (!is_void && nb_args == 0)
-        ret = func();
-    else if (!is_void && nb_args == 1)
-        ret = func(vals[0]);
-    else if (!is_void && nb_args == 2)
-        ret = func(vals[0], vals[1]);
-    else if (!is_void && nb_args == 3)
-        ret = func(vals[0], vals[1], vals[2]);
-    else if (!is_void && nb_args == 4)
-        ret = func(vals[0], vals[1], vals[2], vals[3]);
-    else
-        LOG_E("Cannot handle signature for action %s", action->id);
+    if ((action->flags & ACTION_TOGGLE) && (stack_size(s) == 0) && (!c)) {
+        func(action, s);
+        b = stack_get_b(s, 0);
+        stack_clear(s);
+        stack_push_b(s, !b);
+    }
+    func(action, s);
+
+    // Get the return arguments.
+    nb = c ? (int)strlen(sig) : 0;
+    for (i = 0; i < nb; i++) {
+        c = sig[i];
+        switch (c) {
+            case 'i': *va_arg(ap, int*) = stack_get_i(s, -nb + i); break;
+            case 'b': *va_arg(ap, bool*) = stack_get_b(s, -nb + i); break;
+            case 'p': *va_arg(ap, void**) = stack_get_p(s, -nb + i); break;
+            default: assert(false);
+        }
+    }
 
     reentry--;
-    if (reentry == 0 && !(action->flags & ACTION_NO_CHANGE)) {
-        goxel_update_meshes(goxel(), -1);
+    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
+        goxel_update_meshes(goxel, -1);
     }
+    stack_delete(s);
+    return 0;
+}
+
+int action_exec(const action_t *action, const char *sig, ...)
+{
+    va_list ap;
+    int ret;
+    va_start(ap, sig);
+    ret = action_execv(action, sig, ap);
+    va_end(ap);
     return ret;
 }

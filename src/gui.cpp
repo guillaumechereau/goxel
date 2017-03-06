@@ -30,14 +30,16 @@ static inline ImVec4 IMHEXCOLOR(uint32_t v)
 
 namespace ImGui {
     bool GoxSelectable(const char *name, bool *v, int tex = 0, int icon = 0,
-                       const char *tooltip = NULL);
+                       const char *tooltip = NULL, ImVec2 size = ImVec2(0, 0));
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
     bool GoxIsCharPressed(int c);
     bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
                              bool display_frame = true,
                              bool default_open = false);
-    bool GoxAction(const char *id, const char *label, const arg_t *args);
+    bool GoxAction(const char *id, const char *label, const char *sig, ...);
+    bool GoxCheckbox(const char *id, const char *label);
+    bool GoxMenuItem(const char *id, const char *label);
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
 };
@@ -387,14 +389,14 @@ static void mode_panel(goxel_t *goxel)
 static void shapes_panel(goxel_t *goxel);
 static void tool_options_panel(goxel_t *goxel)
 {
-    int i;
+    int i, w;
     float v;
     bool s;
-    const char *snap[][2] = {
-        {"Mesh", "M"},
-        {"Plane", "P"},
-        {"Selection Inside", "SI"},
-        {"Selection Outside", "SO"},
+    const char *snap[] = {
+        "Mesh",
+        "Plane",
+        "Sel In",
+        "Sel Out",
     };
     ImVec4 color;
     layer_t *layer;
@@ -419,13 +421,14 @@ static void tool_options_panel(goxel_t *goxel)
     }
     if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
         ImGui::Text("Snap on");
+        w = ImGui::GetContentRegionAvailWidth() / 2;
         for (i = 0; i < (int)ARRAY_SIZE(snap); i++) {
             s = goxel->snap & (1 << i);
-            if (ImGui::GoxSelectable(snap[i][1], &s, 0, 0, snap[i][0])) {
+            if (ImGui::GoxSelectable(snap[i], &s, 0, 0, NULL, ImVec2(w, 16))) {
                 goxel->snap = s ? goxel->snap | (1 << i) :
                                   goxel->snap & ~(1 << i);
             }
-            if (i != ARRAY_SIZE(snap) - 1)
+            if (i % 2 != 1)
                 ImGui::SameLine();
         }
     }
@@ -450,7 +453,7 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SHAPE) {
-        ImGui::GoxAction("fill_selection", "Fill selection", NULL);
+        ImGui::GoxAction("fill_selection", "Fill selection", "");
     }
     if (goxel->tool == TOOL_SET_PLANE) {
         i = 0;
@@ -497,8 +500,8 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SELECTION) {
-        ImGui::GoxAction("clear_selection", "Clear selection", NULL);
-        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", NULL);
+        ImGui::GoxAction("clear_selection", "Clear selection", "");
+        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", "");
     }
 }
 
@@ -621,7 +624,7 @@ static void procedural_panel(goxel_t *goxel)
         if (dialog_open(DIALOG_FLAG_OPEN, "goxcf\0*.goxcf\0", &path)) {
             FILE *f = fopen(path, "r");
             int nb;
-            nb = fread(gui->prog_buff, 1, sizeof(gui->prog_buff), f);
+            nb = (int)fread(gui->prog_buff, 1, sizeof(gui->prog_buff), f);
             gui->prog_buff[nb] = '\0';
             fclose(f);
             strcpy(gui->prog_path, path);
@@ -657,7 +660,7 @@ static void procedural_panel(goxel_t *goxel)
         char path[1024];
         sprintf(path, "%s/img_%04d.png",
                 gui->prog_export_animation_path, proc->frame);
-        action_exec2("export_as", ARG("type", "png"), ARG("path", path));
+        action_exec2("export_as", "pp", "png", path);
     }
     if (proc->state != PROC_RUNNING) gui->prog_export_animation = false;
 
@@ -673,25 +676,36 @@ static void tools_panel(goxel_t *goxel)
 {
     const struct {
         int         tool;
+        const char  *tool_id;
         const char  *name;
         int         icon;
     } values[] = {
-        {TOOL_BRUSH,        "Brush",        ICON_TOOL_BRUSH},
-        {TOOL_SHAPE,        "Shape",        ICON_TOOL_SHAPE},
-        {TOOL_LASER,        "Laser",        ICON_TOOL_LASER},
-        {TOOL_SET_PLANE,    "Plane",        ICON_TOOL_PLANE},
-        {TOOL_MOVE,         "Move",         ICON_TOOL_MOVE},
-        {TOOL_PICK_COLOR,   "Pick Color",   ICON_TOOL_PICK},
-        {TOOL_SELECTION,    "Selection",    ICON_TOOL_SELECTION},
-        {TOOL_PROCEDURAL,   "Procedural",   ICON_TOOL_PROCEDURAL},
+        {TOOL_BRUSH,        "brush",     "Brush",        ICON_TOOL_BRUSH},
+        {TOOL_SHAPE,        "shape",     "Shape",        ICON_TOOL_SHAPE},
+        {TOOL_LASER,        "laser",     "Laser",        ICON_TOOL_LASER},
+        {TOOL_SET_PLANE,    "plane",     "Plane",        ICON_TOOL_PLANE},
+        {TOOL_MOVE,         "move",      "Move",         ICON_TOOL_MOVE},
+        {TOOL_PICK_COLOR,   "pick",      "Pick Color",   ICON_TOOL_PICK},
+        {TOOL_SELECTION,    "selection", "Selection",    ICON_TOOL_SELECTION},
+        {TOOL_PROCEDURAL,   "procedural","Procedural",   ICON_TOOL_PROCEDURAL},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
     bool v;
+    char action_id[64];
+    char label[64];
+    const action_t *action;
     ImGui::PushID("tools_panel");
     for (i = 0; i < nb; i++) {
         v = goxel->tool == values[i].tool;
-        if (ImGui::GoxSelectable(values[i].name, &v, g_tex_icons->tex,
+        sprintf(label, "%s", values[i].name);
+        if (values[i].tool_id) {
+            sprintf(action_id, "tool_set_%s", values[i].tool_id);
+            action = action_get(action_id);
+            if (action->shortcut)
+                sprintf(label, "%s (%s)", values[i].name, action->shortcut);
+        }
+        if (ImGui::GoxSelectable(label, &v, g_tex_icons->tex,
                                  values[i].icon)) {
             goxel->tool = values[i].tool;
             goxel->tool_state = 0;
@@ -745,7 +759,7 @@ static void layers_panel(goxel_t *goxel)
         ImGui::SameLine();
         if (ImGui::Selectable(layer->visible ? "v##v" : " ##v",
                     &layer->visible, 0, ImVec2(12, 12))) {
-            if (ImGui::IsKeyDown(KEY_SHIFT))
+            if (ImGui::IsKeyDown(KEY_LEFT_SHIFT))
                 toggle_layer_only_visible(goxel, layer);
             goxel_update_meshes(goxel, -1);
         }
@@ -754,16 +768,16 @@ static void layers_panel(goxel_t *goxel)
         i++;
         ImGui::PopID();
     }
-    ImGui::GoxAction("img_new_layer", "Add", NULL);
+    ImGui::GoxAction("img_new_layer", "Add", "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_del_layer", "Del", NULL);
+    ImGui::GoxAction("img_del_layer", "Del", "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "^", ARGS(ARG("ofs", +1)));
+    ImGui::GoxAction("img_move_layer", "^", "ppi", NULL, NULL, +1);
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "v", ARGS(ARG("ofs", -1)));
-    ImGui::GoxAction("img_duplicate_layer", "Duplicate", NULL);
+    ImGui::GoxAction("img_move_layer", "v", "ppi", NULL, NULL, -1);
+    ImGui::GoxAction("img_duplicate_layer", "Duplicate", "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", NULL);
+    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", "");
     ImGui::PopID();
 }
 
@@ -802,7 +816,6 @@ static void palette_panel(goxel_t *goxel)
 static void render_advanced_panel(goxel_t *goxel)
 {
     float v;
-    bool b;
     ImVec4 c;
     int i;
     const struct {
@@ -867,9 +880,7 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::PopID();
     }
     ImGui::PopID();
-
-    b = !goxel->plane_hidden;
-    if (ImGui::Checkbox("Show grid", &b)) goxel->plane_hidden = !b;
+    ImGui::GoxCheckbox("grid_visible", "Show grid");
 }
 
 
@@ -1040,7 +1051,7 @@ static void export_as(goxel_t *goxel, const char *type)
     char *path = NULL;
     bool result = dialog_open(DIALOG_FLAG_SAVE, type, &path);
     if (!result) return;
-    action_exec2("export_as", ARG("type", type), ARG("path", path));
+    action_exec2("export_as", "pp", type, path);
     free(path);
 }
 
@@ -1051,27 +1062,6 @@ static void load(goxel_t *goxel)
     if (!result) return;
     load_from_file(goxel, path);
     free(path);
-}
-
-static void render_profiler_info(void)
-{
-    profiler_block_t *block, *root;
-    int percent, fps;
-    double time_per_frame;
-    double self_time;
-
-    root = profiler_get_blocks();
-    if (!root) return;
-    time_per_frame = root->avg.tot_time / (1000.0 * 1000.0);
-    fps = 1000.0 / time_per_frame;
-    ImGui::BulletText("%.1fms/frame (%dfps)", time_per_frame, fps);
-    for (block = root; block; block = block->next) {
-        self_time = block->avg.self_time / (1000.0 * 1000.0);
-        percent = block->avg.self_time * 100 / root->avg.tot_time;
-        if (!percent) continue;
-        ImGui::BulletText("%s: self:%.1fms/frame (%d%%)",
-                block->name, self_time, percent);
-    }
 }
 
 static void shift_alpha_popup(goxel_t *goxel, bool just_open)
@@ -1092,6 +1082,30 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
         original_mesh = NULL;
         ImGui::CloseCurrentPopup();
     }
+}
+
+static int check_action_shortcut(const action_t *action)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    const char *s = action->shortcut;
+    bool check_key = true;
+    bool check_char = true;
+    if (!s) return 0;
+    if (io.KeyCtrl) {
+        if (!str_startswith(s, "Ctrl")) return 0;
+        s += strlen("Ctrl ");
+        check_char = false;
+    }
+    if (io.KeyShift) {
+        LOG_D("Shift");
+        check_key = false;
+    }
+    if (    (check_char && ImGui::GoxIsCharPressed(s[0])) ||
+            (check_key && ImGui::IsKeyPressed(s[0]))) {
+        action_exec(action, "");
+        return 1;
+    }
+    return 0;
 }
 
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
@@ -1115,7 +1129,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
         io.KeysDown[i] = inputs->keys[i];
-    io.KeyShift = inputs->keys[KEY_SHIFT];
+    io.KeyShift = inputs->keys[KEY_LEFT_SHIFT] ||
+                  inputs->keys[KEY_RIGHT_SHIFT];
     io.KeyCtrl = inputs->keys[KEY_CONTROL];
     for (i = 0; i < ARRAY_SIZE(inputs->chars); i++) {
         if (!inputs->chars[i]) break;
@@ -1168,11 +1183,18 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         }
         if (ImGui::BeginMenu("Edit")) {
             if (ImGui::MenuItem("Clear", "Delete"))
-                action_exec2("layer_clear");
+                action_exec2("layer_clear", "");
             if (ImGui::MenuItem("Undo", "Ctrl+Z")) goxel_undo(goxel);
             if (ImGui::MenuItem("Redo", "Ctrl+Y")) goxel_redo(goxel);
             if (ImGui::MenuItem("Shift Alpha"))
                 open_shift_alpha = true;
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("View")) {
+            ImGui::GoxMenuItem("view_left", "Left");
+            ImGui::GoxMenuItem("view_right", "Right");
+            ImGui::GoxMenuItem("view_front", "Front");
+            ImGui::GoxMenuItem("view_top", "Top");
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -1193,7 +1215,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     } PANELS[] = {
         {"Tools", tools_panel},
         {"Palette", palette_panel},
-        {"layers", layers_panel},
+        {"Layers", layers_panel},
         {"Render", render_panel},
         {"Export", export_panel},
     };
@@ -1250,15 +1272,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     ImGui::EndChild();
 
-    if (DEBUG || PROFILER) {
+    if (DEBUG) {
         ImGui::SetCursorPos(ImVec2(left_pane_width + 20, 30));
         ImGui::BeginChild("debug", ImVec2(0, 0), false,
                           ImGuiWindowFlags_NoInputs);
         ImGui::Text("Blocks: %d (%.2g MiB)", goxel->block_count,
                 (float)goxel->block_count * sizeof(block_data_t) / MiB);
-        ImGui::Text("uid: %ld", goxel->next_uid);
-        if (PROFILER)
-            render_profiler_info();
+        ImGui::Text("uid: %lu", (unsigned long)goxel->next_uid);
         ImGui::EndChild();
     }
 
@@ -1272,11 +1292,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         ImGui::EndPopup();
     }
 
-    // Handle the shortcuts.  XXX: this should be done better.
-    if (ImGui::GoxIsCharPressed('#'))
-        goxel->plane_hidden = !goxel->plane_hidden;
+    // Handle the shortcuts.  XXX: this should be done with actions.
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
-        action_exec2("layer_clear");
+        action_exec2("layer_clear", "");
     if (ImGui::IsKeyPressed(' ', false) && goxel->painter.mode == MODE_ADD)
         goxel->painter.mode = MODE_SUB;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.mode == MODE_SUB)
@@ -1293,6 +1311,15 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel->tool = goxel->prev_tool;
         goxel->prev_tool = 0;
     }
+
+    float last_tool_radius = goxel->tool_radius;
+    if (ImGui::GoxIsCharPressed('[')) goxel->tool_radius -= 0.5;
+    if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
+    if (goxel->tool_radius != last_tool_radius) {
+        goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
+        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+    }
+
     // XXX: this won't map correctly to a French keyboard.  Unfortunately as
     // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
     // layout on Windows.  For the moment I just ignore the problem until I
@@ -1305,6 +1332,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
             ImGui::GoxIsCharPressed(25))
         goxel_redo(goxel);
+
+    // Check the action shortcuts.
+    actions_iter(check_action_shortcut);
 }
 
 void gui_render(void)

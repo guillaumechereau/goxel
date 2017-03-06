@@ -37,8 +37,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
-#define GOXEL_VERSION_STR "0.3.0"
+#define GOXEL_VERSION_STR "0.4.0"
 
 // #### Set the DEBUG macro ####
 #ifndef DEBUG
@@ -345,7 +346,7 @@ void texture_delete(texture_t *tex);
 // We support some basic reflexion of functions.  We do this by registering the
 // functions with the ACTION_REGISTER macro.  Once a function has been
 // registered, it is possible to query it (action_get) and call it
-// (action_exec).  There is some basic support for default and named arguments.
+// (action_exec).
 // Check the end of image.c to see some examples.  The idea is that this will
 // make it much easier to add meta information to functions, like
 // documentation, shortcuts.  Also in theory this should allow to add a
@@ -353,51 +354,26 @@ void texture_delete(texture_t *tex);
 
 // XXX: this is still pretty experimental.  This might change in the future.
 
-// For reflexion, we need to keep an id for all the types we can pass to
-// actions.
-enum {
-    TYPE_VOID,
-    TYPE_INT,
-    TYPE_STRING,
-    TYPE_GOXEL,
-    TYPE_LAYER,
-    TYPE_IMAGE,
-    TYPE_FILE_PATH,
-    TYPE_BOX,
-};
+typedef struct astack astack_t;
 
-// Structure used both to define an action argument signature (name, type),
-// or an action call argument value (name, value).  In that case the type
-// can be inferred from the action signature.
-typedef struct {
-    const char  *name;
-    union {
-        long        type;
-        long        value;
-        const char  *s;
-    };
-} arg_t;
+astack_t *stack_create(void);
+void      stack_delete(astack_t *s);
 
-#define ARG(n, v) {n, {(intptr_t)(v)}}
-#define ARGS(...) (const arg_t[]){__VA_ARGS__, ARG(0, 0)}
-
-// Represent a function signature with return type and arguments.
-typedef struct {
-    int         ret;
-    int         nb_args;
-    const arg_t *args;      // Terminated by a argument of type VOID
-} action_sig_t;
-
-// Convenience macro to create a function signature:
-// SIG(ret_type, ARG(arg1_name, arg1_type), ARG(arg2_name, arg2_type), ...)
-#define SIG(ret_, ...) { \
-        ret_, \
-        ARRAY_SIZE(((arg_t[]){__VA_ARGS__})), \
-        (const arg_t[]){__VA_ARGS__, ARG(0, 0)} \
-    }
+void  stack_clear(astack_t *s);
+int   stack_size(const astack_t *s);
+char  stack_type(const astack_t *s, int i);
+void  stack_push_i(astack_t *s, int i);
+void  stack_push_p(astack_t *s, void *p);
+void  stack_push_b(astack_t *s, bool b);
+int   stack_get_i(const astack_t *s, int i);
+void *stack_get_p(const astack_t *s, int i);
+bool  stack_get_b(const astack_t *s, int i);
+void  stack_pop(astack_t *s);
 
 enum {
-    ACTION_NO_CHANGE    = 1 << 0,  // The action does not touch the image.
+    ACTION_TOUCH_IMAGE    = 1 << 0,  // Push the undo history.
+    // Toggle actions accept and return a boolean value.
+    ACTION_TOGGLE         = 1 << 1,
 };
 
 // Represent an action.
@@ -405,25 +381,25 @@ typedef struct action action_t;
 struct action {
     const char      *id;    // Globally unique id.
     const char      *help;  // Help text.
-    void            *func;  // Pointer to the function to call.
-    action_sig_t    sig;    // Signature of the function.
     int             flags;
+    const char      *shortcut; // Optional shortcut.
+    int             (*func)(const action_t *a, astack_t *s);
+    void            *data;
+
+    // cfunc and csig can be used to directly call any function.
+    void            *cfunc;
+    const char      *csig;
 };
 
 void action_register(const action_t *action);
 const action_t *action_get(const char *id);
-void *action_exec(const action_t *action, const arg_t *args);
+int action_exec(const action_t *action, const char *sig, ...);
+int action_execv(const action_t *action, const char *sig, va_list ap);
+void actions_iter(int (*f)(const action_t *action));
 
-// Convenience macro to call action_exec directly from an id and a list of
-// arguments.
-// I have to add a ARG(0, 0) at the beginning of the arg list so that the
-// macro works even with no action arguments.  Maybe I should add a nb_args
-// argument to action_exec to prevent that.
-#define action_exec2(id, ...) ({ \
-        const arg_t args_[] = {ARG(0, 0), ##__VA_ARGS__, ARG(0, 0)}; \
-        action_exec(action_get(id), args_ + 1); \
-    })
-
+// Convenience macro to call action_exec directly from an action id.
+#define action_exec2(id, sig, ...) \
+    action_exec(action_get(id), sig, ##__VA_ARGS__)
 
 
 // Convenience macro to register an action from anywere in a c file.
@@ -562,9 +538,6 @@ void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
 void mesh_set(mesh_t *mesh, const mesh_t *other);
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
-void mesh_fill(mesh_t *mesh,
-               uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
-               void *user_data);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos);
@@ -749,7 +722,8 @@ enum {
     KEY_PAGE_DOWN   = 267,
     KEY_HOME        = 268,
     KEY_END         = 269,
-    KEY_SHIFT       = 340,
+    KEY_LEFT_SHIFT  = 340,
+    KEY_RIGHT_SHIFT = 344,
     KEY_CONTROL     = 341,
 };
 
@@ -947,7 +921,10 @@ typedef struct goxel
 
     int        block_count; // Counter for the number of block data.
 } goxel_t;
-goxel_t *goxel(void);
+
+// the global goxel instance.
+extern goxel_t *goxel;
+
 void goxel_init(goxel_t *goxel);
 void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);
@@ -1039,57 +1016,6 @@ void qubicle_import(const char *path);
 void qubicle_export(const mesh_t *mesh, const char *path);
 
 void vox_import(const char *path);
-
-// #### Profiler ###############
-
-typedef struct profiler_block profiler_block_t;
-struct profiler_block
-{
-    const char          *name;
-    profiler_block_t    *next;   // All the blocks are put in a list.
-    profiler_block_t    *parent; // The block that called this block.
-    int                 depth;   // How many time are we inside this block.
-    int                 count;
-
-    // In nanoseconds
-    int64_t             tot_time;
-    int64_t             self_time;
-    int64_t             enter_time;
-
-    // For real time fps computation.
-    struct {
-        int64_t             frame_tot_time;
-        int64_t             frame_self_time;
-        int64_t             tot_time;
-        int64_t             self_time;
-    } avg;
-};
-void profiler_start(void);
-void profiler_stop(void);
-void profiler_tick(void);
-profiler_block_t *profiler_get_blocks();
-
-void profiler_enter_(profiler_block_t *block);
-void profiler_exit_(profiler_block_t *block);
-static inline void profiler_cleanup_(profiler_block_t **p)
-{
-    profiler_exit_(*p);
-}
-
-#ifndef PROFILER
-    #define PROFILER DEBUG
-#endif
-#if PROFILER
-    #define PROFILED2(name_) \
-        static profiler_block_t block_ = {name_}; \
-        profiler_enter_(&block_); \
-        profiler_block_t *block_ref_ \
-                __attribute__((cleanup(profiler_cleanup_))); \
-        block_ref_ = &block_;
-#else
-    #define PROFILED2(name_)
-#endif
-#define PROFILED PROFILED2(__func__)
 
 // ##### Assets manager ########################
 // All the assets are saved in binary directly in the code, using

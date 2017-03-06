@@ -317,7 +317,7 @@ static prog_t *get_prog(const char *vshader, const char *fshader,
                         const char *include)
 {
     int i;
-    prog_t *p;
+    prog_t *p = NULL;
     for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
         p = &g_progs[i];
         if (!p->vshader) break;
@@ -410,7 +410,7 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
     }
     HASH_ADD(hh, g_items, key, sizeof(key), item);
 end:
-    item->last_used_frame = goxel()->frame_count;
+    item->last_used_frame = goxel->frame_count;
     return item;
 }
 
@@ -755,7 +755,7 @@ static void cleanup_buffer(void)
     render_item_t *item, *tmp;
     HASH_ITER(hh, g_items, item, tmp) {
         if (item->type == ITEM_BLOCK) {
-            if (item->last_used_frame + 1 < goxel()->frame_count) {
+            if (item->last_used_frame + 1 < goxel->frame_count) {
                 GL(glDeleteBuffers(1, &item->vertex_buffer));
                 HASH_DEL(g_items, item);
                 free(item);
@@ -840,7 +840,6 @@ static mat4_t render_shadow_map(renderer_t *rend)
 void render_render(renderer_t *rend, const int rect[4],
                    const vec4_t *clear_color)
 {
-    PROFILED
     render_item_t *item, *tmp;
     mat4_t shadow_mvp;
     bool shadow = rend->settings.shadow &&
@@ -865,7 +864,7 @@ void render_render(renderer_t *rend, const int rect[4],
 
     DL_SORT(rend->items, item_sort_cmp);
     DL_FOREACH_SAFE(rend->items, item, tmp) {
-        item->last_used_frame = goxel()->frame_count;
+        item->last_used_frame = goxel->frame_count;
         switch (item->type) {
         case ITEM_MESH:
             render_mesh_(rend, item->mesh, item->effects, &shadow_mvp);

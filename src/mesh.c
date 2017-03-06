@@ -32,7 +32,7 @@ static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
     assert(*mesh->ref > 0);
-    mesh->id = goxel()->next_uid++;
+    mesh->id = goxel->next_uid++;
     if (*mesh->ref == 1)
         return;
     (*mesh->ref)--;
@@ -65,7 +65,7 @@ mesh_t *mesh_new(void)
     mesh = calloc(1, sizeof(*mesh));
     mesh->next_block_id = 1;
     mesh->ref = calloc(1, sizeof(*mesh->ref));
-    mesh->id = goxel()->next_uid++;
+    mesh->id = goxel->next_uid++;
     *mesh->ref = 1;
     return mesh;
 }
@@ -127,12 +127,17 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     (*mesh->ref)++;
 }
 
-void mesh_fill(mesh_t *mesh,
-               uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
-               void *user_data)
+static void add_blocks(mesh_t *mesh, box_t box);
+static void mesh_fill(
+        mesh_t *mesh,
+        const box_t *box,
+        uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
+        void *user_data)
 {
-    mesh_prepare_write(mesh);
+    box_t bbox = box_get_bbox(*box);
     block_t *block;
+    mesh_clear(mesh);
+    add_blocks(mesh, bbox);
     MESH_ITER_BLOCKS(mesh, block) {
         block_fill(block, get_color, user_data);
     }
@@ -147,7 +152,6 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     MESH_ITER_BLOCKS(mesh, block) {
         ret = bbox_merge(ret, block_get_box(block, exact));
     }
-    // LOG_D("w:%f h:%f d:%f", ret.w.x, ret.h.y, ret.d.z);
     return ret;
 }
 
@@ -186,8 +190,6 @@ static void add_blocks(mesh_t *mesh, box_t box)
 
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
-    PROFILED
-
     // In case we are doing the same operation as last time, we can just use
     // the value we buffered.
     if (!g_last_op.origin) g_last_op.origin = mesh_new();
@@ -288,11 +290,27 @@ block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos)
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
 {
     block_t *block;
-    MESH_ITER_BLOCKS(mesh, block) {
-        if (bbox_contains_vec(block_get_box(block, false), *pos))
-            return block_get_at(block, pos);
+    static block_t *last_block = NULL;
+    static uint64_t last_mesh_id = 0;
+    static box_t last_box;
+    vec3_t p;
+    const int s = BLOCK_SIZE - 2;
+
+    if ((last_mesh_id == mesh->id) && last_block) {
+        if (bbox_contains_vec(last_box, *pos)) {
+            return block_get_at(last_block, pos);
+        }
     }
-    return uvec4b(0, 0, 0, 0);
+
+    p = vec3((int)(round(pos->x / s) * s),
+             (int)(round(pos->y / s) * s),
+             (int)(round(pos->z / s) * s));
+    HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
+    if (!block) return uvec4b(0, 0, 0, 0);
+    last_mesh_id = mesh->id;
+    last_block = block;
+    last_box = block_get_box(block, false);
+    return block_get_at(block, pos);
 }
 
 void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v)
@@ -327,9 +345,7 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat)
     box = mesh_get_box(mesh, true);
     if (box_is_null(box)) return;
     box.mat = mat4_mul(*mat, box.mat);
-    box = box_get_bbox(box);
-    add_blocks(mesh, box);
-    mesh_fill(mesh, mesh_move_get_color, &data);
+    mesh_fill(mesh, &box, mesh_move_get_color, &data);
     mesh_delete(data.mesh);
     mesh_remove_empty_blocks(mesh);
 }

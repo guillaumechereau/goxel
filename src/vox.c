@@ -28,6 +28,52 @@ static const uint32_t VOX_DEFAULT_PALETTE[256];
 #define WRITE(type, v, file) \
     ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
+// Import the old magica voxel file format:
+//
+// d, h, w, <data>, <palette>
+static void vox_import_old(const char *path)
+{
+    FILE *file;
+    int w, h, d, i;
+    uint8_t *voxels;
+    uvec4b_t *palette;
+    uvec4b_t *cube;
+    uvec4b_t color;
+
+    file = fopen(path, "rb");
+    d = READ(uint32_t, file);
+    h = READ(uint32_t, file);
+    w = READ(uint32_t, file);
+
+    voxels = calloc(w * h * d, 1);
+    palette = calloc(256, sizeof(*palette));
+    cube = calloc(w * h * d, sizeof(*cube));
+    for (i = 0; i < w * h * d; i++) {
+        voxels[i] = READ(uint8_t, file);
+    }
+    for (i = 0; i < 256; i++) {
+        palette[i].r = READ(uint8_t, file);
+        palette[i].g = READ(uint8_t, file);
+        palette[i].b = READ(uint8_t, file);
+        palette[i].a = 255;
+    }
+    palette[255] = uvec4b(0, 0, 0, 0);
+
+    for (i = 0; i < w * h * d; i++) {
+        if (voxels[i] == 255) continue;
+        color = palette[voxels[i]];
+        cube[i] = color;
+    }
+
+    mesh_blit(goxel->image->active_layer->mesh, cube,
+              -w / 2, -h / 2, -d / 2, w, h, d);
+    free(palette);
+    free(voxels);
+    free(cube);
+    fclose(file);
+    goxel_update_meshes(goxel, -1);
+}
+
 typedef struct {
     int         w, h, d;
     uvec4b_t    *palette;
@@ -38,7 +84,8 @@ typedef struct {
 static void read_chunk(FILE *file, context_t *ctx)
 {
     char id[4], r;
-    int size, children_size, fpos, i;
+    int size, children_size, i;
+    long fpos;
 
     r = fread(id, 1, 4, file);
     (void)r;
@@ -88,10 +135,16 @@ void vox_import(const char *path)
     uvec4b_t color;
     context_t ctx = {};
 
-    mesh = goxel()->image->active_layer->mesh;
-    file = fopen(path, "r");
+    mesh = goxel->image->active_layer->mesh;
+    file = fopen(path, "rb");
     r = fread(magic, 1, 4, file);
     (void)r;
+    if (strncmp(magic, "VOX ", 4) != 0) {
+        LOG_D("Old style magica voxel file");
+        fclose(file);
+        vox_import_old(path);
+        return;
+    }
     assert(strncmp(magic, "VOX ", 4) == 0);
     version = READ(uint32_t, file);
     (void)version;
@@ -112,7 +165,7 @@ void vox_import(const char *path)
     free(ctx.voxels);
     free(ctx.palette);
     mesh_remove_empty_blocks(mesh);
-    goxel_update_meshes(goxel(), -1);
+    goxel_update_meshes(goxel, -1);
 }
 
 static int get_color_index(uvec4b_t v, const uvec4b_t *palette, bool exact)
@@ -237,17 +290,15 @@ static void vox_export(const mesh_t *mesh, const char *path)
     free(palette);
 }
 
-static void export_as_vox(goxel_t *goxel, const char *path)
+static void export_as_vox(const char *path)
 {
     vox_export(goxel->layers_mesh, path);
 }
 
 ACTION_REGISTER(export_as_vox,
     .help = "Save the image as a vox 3d file",
-    .func = export_as_vox,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as_vox,
+    .csig = "vp",
 )
 
 

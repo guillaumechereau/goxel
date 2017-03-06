@@ -31,12 +31,13 @@ void qubicle_import(const char *path)
     int version, color_format, orientation, compression, vmask, mat_count;
     int i, j, r, index, len, w, h, d, pos[3], x, y, z;
     char buff[256];
-    uint32_t v;
+    uvec4b_t v;
     uvec4b_t *cube;
+    mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
 
-    file = fopen(path, "r");
+    file = fopen(path, "rb");
     version = READ(uint32_t, file);
     (void)version;
     color_format = READ(uint32_t, file);
@@ -51,7 +52,7 @@ void qubicle_import(const char *path)
 
     for (i = 0; i < mat_count; i++) {
         len = READ(uint8_t, file);
-        r = fread(buff, len, 1, file);
+        r = (int)fread(buff, len, 1, file);
         (void)r;
         w = READ(uint32_t, file);
         h = READ(uint32_t, file);
@@ -63,36 +64,43 @@ void qubicle_import(const char *path)
         cube = calloc(w * h * d, sizeof(*cube));
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {
-                v = READ(uint32_t, file);
-                cube[index].uint32 = v;
-                cube[index].a = cube[index].a ? 255 : 0;
+                v.uint32 = READ(uint32_t, file);
+                v.a = v.a ? 255 : 0;
+                cube[index] = v;
             }
         } else {
             for (z = 0; z < d; z++) {
                 index = 0;
                 while (true) {
-                    v = READ(uint32_t, file);
-                    if (v == NEXTSLICEFLAG) {
+                    v.uint32 = READ(uint32_t, file);
+                    if (v.uint32 == NEXTSLICEFLAG) {
                         break; // Next z.
                     }
                     len = 1;
-                    if (v == CODEFLAG) {
+                    if (v.uint32 == CODEFLAG) {
                         len = READ(uint32_t, file);
-                        v = READ(uint32_t, file);
+                        v.uint32 = READ(uint32_t, file);
+                        v.a = v.a ? 255 : 0;
                     }
                     for (j = 0; j < len; j++) {
                         x = index % w;
                         y = index / w;
-                        cube[x + y * w + z * w * h].uint32 = v;
+                        v.a = v.a ? 255 : 0;
+                        cube[x + y * w + z * w * h] = v;
                         index++;
                     }
                 }
             }
         }
-        mesh_blit(goxel()->image->active_layer->mesh, cube,
+        mesh_blit(goxel->image->active_layer->mesh, cube,
                   pos[0], pos[1], pos[2], w, h, d);
         free(cube);
     }
+
+    // Apply a 90 deg X rotation to fix axis.
+    mat4_irotate(&mat, M_PI / 2, 1, 0, 0);
+    mesh_move(goxel->image->active_layer->mesh, &mat);
+    goxel_update_meshes(goxel, -1);
 }
 
 void qubicle_export(const mesh_t *mesh, const char *path)
@@ -101,6 +109,13 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     block_t *block;
     int i, count, x, y, z;
     char buff[8];
+    mesh_t *m = mesh_copy(mesh);
+    mat4_t mat = mat4_identity;
+
+    // Apply a -90 deg X rotation to fix axis.
+    mat4_irotate(&mat, -M_PI / 2, 1, 0, 0);
+    mesh_move(m, &mat);
+    mesh = m;
 
     count = HASH_COUNT(mesh->blocks);
 
@@ -136,17 +151,16 @@ void qubicle_export(const mesh_t *mesh, const char *path)
         i++;
     }
     fclose(file);
+    mesh_delete(m);
 }
 
-static void export_as_qubicle(goxel_t *goxel, const char *path)
+static void export_as_qubicle(const char *path)
 {
     qubicle_export(goxel->layers_mesh, path);
 }
 
 ACTION_REGISTER(export_as_qubicle,
     .help = "Save the image as a qubicle 3d file",
-    .func = export_as_qubicle,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as_qubicle,
+    .csig = "vp",
 )

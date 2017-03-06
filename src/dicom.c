@@ -112,13 +112,12 @@ static bool parse_preamble(FILE *in)
 
 static int remain_size(FILE *in)
 {
-    long cur;
-    int end;
+    long cur, end;
     cur = ftell(in);
     fseek(in, 0, SEEK_END);
     end = ftell(in);
     fseek(in, cur, SEEK_SET);
-    return end - cur;
+    return (int)(end - cur);
 }
 
 enum {
@@ -343,7 +342,7 @@ void dicom_import(const char *dirpath)
     free(data);
 
     // This could belong to the caller function.
-    mesh_blit(goxel()->image->active_layer->mesh, cube,
+    mesh_blit(goxel->image->active_layer->mesh, cube,
               -w / 2, -h / 2, -d / 2, w, h, d);
 
     free(cube);

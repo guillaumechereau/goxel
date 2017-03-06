@@ -19,7 +19,7 @@
 #include "goxel.h"
 #include <stdarg.h>
 
-static goxel_t *g_goxel = NULL;
+goxel_t *goxel = NULL;
 
 static void unpack_pos_data(const uvec4b_t data, vec3b_t *pos, int *face,
                             int *cube_id)
@@ -171,7 +171,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
                     vec3_t *out, vec3_t *normal)
 {
     int i, ret = 0;
-    vec3_t p, n;
+    vec3_t p = vec3_zero, n = vec3_zero;
     float dist, best = INFINITY;
     bool r = false;
 
@@ -218,9 +218,9 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
     return ret;
 }
 
-void goxel_init(goxel_t *goxel)
+void goxel_init(goxel_t *gox)
 {
-    g_goxel = goxel;
+    goxel = gox;
     memset(goxel, 0, sizeof(*goxel));
 
     render_init();
@@ -275,15 +275,9 @@ void goxel_release(goxel_t *goxel)
     gui_release();
 }
 
-goxel_t *goxel(void)
-{
-    return g_goxel;
-}
-
 void goxel_iter(goxel_t *goxel, inputs_t *inputs)
 {
     goxel->frame_clock = get_clock();
-    profiler_tick();
     goxel_set_help_text(goxel, NULL);
     goxel_set_hint_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
@@ -474,7 +468,7 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         mesh_set(goxel->pick_mesh, goxel->layers_mesh);
 }
 
-static void export_as(goxel_t *goxel, const char *type, const char *path)
+static void export_as(const char *type, const char *path)
 {
     char id[128];
     assert(path);
@@ -488,23 +482,21 @@ static void export_as(goxel_t *goxel, const char *type, const char *path)
         type++;
     }
     sprintf(id, "export_as_%s", type);
-    action_exec2(id, ARG("path", path));
+    action_exec2(id, "p", path);
 }
 
 ACTION_REGISTER(export_as,
     .help = "Export the image",
-    .func = export_as,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("type", TYPE_STRING),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as,
+    .csig = "vpp",
 )
 
 
 // XXX: this function has to be rewritten.
-static void export_as_png(goxel_t *goxel, const char *path,
-                          int w, int h)
+static void export_as_png(const char *path, int w, int h)
 {
+    w = w ?: goxel->image->export_width;
+    h = h ?: goxel->image->export_height;
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *data2, *data;
     texture_t *fbo;
@@ -535,15 +527,11 @@ static void export_as_png(goxel_t *goxel, const char *path,
 
 ACTION_REGISTER(export_as_png,
     .help = "Save the image as a png file",
-    .func = export_as_png,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH),
-                          ARG("width", TYPE_INT),
-                          ARG("height", TYPE_INT)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as_png,
+    .csig = "vpii",
 )
 
-static void export_as_txt(goxel_t *goxel, const char *path)
+static void export_as_txt(const char *path)
 {
     FILE *out;
     mesh_t *mesh = goxel->layers_mesh;
@@ -575,10 +563,8 @@ static void export_as_txt(goxel_t *goxel, const char *path)
 
 ACTION_REGISTER(export_as_txt,
     .help = "Save the image as a txt file",
-    .func = export_as_txt,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as_txt,
+    .csig = "vp",
 )
 
 // XXX: we could merge all the set_xxx_text function into a single one.
@@ -629,11 +615,14 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
 }
 
-static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
-                                 layer_t *layer, box_t *box)
+static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
 {
     layer_t *new_layer;
     painter_t painter;
+
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
+    box = box ?: &goxel->selection;
 
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
@@ -649,14 +638,12 @@ static layer_t *cut_as_new_layer(goxel_t *goxel, image_t *img,
 
 ACTION_REGISTER(cut_as_new_layer,
     .help = "Cut into a new layer",
-    .func = cut_as_new_layer,
-    .sig = SIG(TYPE_LAYER, ARG("goxel", TYPE_GOXEL),
-                           ARG("img", TYPE_IMAGE),
-                           ARG("layer", TYPE_LAYER),
-                           ARG("box", TYPE_BOX)),
+    .cfunc = cut_as_new_layer,
+    .csig = "vppp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
-static void clear_selection(goxel_t *goxel)
+static void clear_selection(void)
 {
     if (goxel->tool == TOOL_SELECTION)
         tool_cancel(goxel, goxel->tool, goxel->tool_state);
@@ -665,11 +652,12 @@ static void clear_selection(goxel_t *goxel)
 
 ACTION_REGISTER(clear_selection,
     .help = "Clear the selection",
-    .func = clear_selection,
-    .sig = SIG(TYPE_LAYER, ARG("goxel", TYPE_GOXEL)),
+    .cfunc = clear_selection,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
-static void fill_selection(goxel_t *goxel, layer_t *layer)
+static void fill_selection(layer_t *layer)
 {
     if (box_is_null(goxel->selection)) return;
     mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
@@ -678,7 +666,60 @@ static void fill_selection(goxel_t *goxel, layer_t *layer)
 
 ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
-    .func = fill_selection,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("layer", TYPE_LAYER)),
+    .cfunc = fill_selection,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+static int show_grid_action(const action_t *a, astack_t *s)
+{
+    if (stack_type(s, 0) == 'b')
+        goxel->plane_hidden = !stack_get_b(s, 0);
+    stack_push_b(s, !goxel->plane_hidden);
+    return 0;
+}
+
+ACTION_REGISTER(grid_visible,
+    .help = "Show the grid",
+    .func = show_grid_action,
+    .shortcut = "#",
+    .flags = ACTION_TOGGLE,
+)
+
+#define HS2 0.7071067811865476
+
+
+static int view_set(const action_t *a, astack_t *s)
+{
+    goxel->camera.rot = *((quat_t*)a->data);
+    goxel_update_meshes(goxel, -1);
+    return 0;
+}
+
+ACTION_REGISTER(view_left,
+    .help = "Set camera view to left",
+    .func = view_set,
+    .data = &QUAT(-0.5, 0.5, 0.5, 0.5),
+    .shortcut = "Ctrl 3",
+)
+
+ACTION_REGISTER(view_right,
+    .help = "Set camera view to right",
+    .func = view_set,
+    .data = &QUAT(0.5, 0.5, 0.5, -0.5),
+    .shortcut = "3",
+)
+
+ACTION_REGISTER(view_top,
+    .help = "Set camera view to top",
+    .func = view_set,
+    .data = &QUAT(0, 0, 0, 1),
+    .shortcut = "7",
+)
+
+ACTION_REGISTER(view_front,
+    .help = "Set camera view to front",
+    .func = view_set,
+    .data = &QUAT(-HS2, 0, 0, HS2),
+    .shortcut = "1",
 )

@@ -20,8 +20,7 @@
 
 #include "goxel.h"
 
-static void export_as_pov(goxel_t *goxel, const char *path,
-                          int w, int h)
+static void export_as_pov(const char *path, int w, int h)
 {
     FILE *file;
     layer_t *layer;
@@ -34,6 +33,8 @@ static void export_as_pov(goxel_t *goxel, const char *path,
     vec3_t light_dir;
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = goxel->camera;
+    w = w ?: goxel->image->export_width;
+    h = h ?: goxel->image->export_height;
 
     template = assets_get("asset://data/povray_template.pov", NULL);
     assert(template);
@@ -90,10 +91,6 @@ static void export_as_pov(goxel_t *goxel, const char *path,
 
 ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
-    .func = export_as_pov,
-    .sig = SIG(TYPE_VOID, ARG("goxel", TYPE_GOXEL),
-                          ARG("path", TYPE_FILE_PATH),
-                          ARG("width", TYPE_INT),
-                          ARG("height", TYPE_INT)),
-    .flags = ACTION_NO_CHANGE,
+    .cfunc = export_as_pov,
+    .csig = "vpii",
 )

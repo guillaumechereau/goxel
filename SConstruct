@@ -10,11 +10,10 @@ target_os = str(Platform())
 
 debug = int(ARGUMENTS.get('debug', 1))
 gprof = int(ARGUMENTS.get('gprof', 0))
-profile = int(ARGUMENTS.get('profile', 0))
 glut = int(ARGUMENTS.get('glut', 0))
 emscripten = ARGUMENTS.get('emscripten', 0)
 
-if gprof or profile: debug = 0
+if gprof: debug = 0
 if emscripten: target_os = 'js'
 
 env = Environment(ENV = os.environ)
@@ -36,8 +35,6 @@ else:
 
 if gprof:
     env.Append(CCFLAGS='-pg', LINKFLAGS='-pg')
-if profile:
-    env.Append(CCFLAGS='-DPROFILER=1')
 
 env.Append(CPPPATH=['src'])
 
