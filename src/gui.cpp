@@ -321,7 +321,7 @@ static void init_ImGui()
     style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
     style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
     style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x7777CCFF);
-    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0xE0E0E0FF);
+    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
 }
 
 void gui_init(void)
