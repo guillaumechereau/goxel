@@ -24,6 +24,8 @@
 from collections import namedtuple
 import os
 
+TYPES = [".png", ".goxcf", ".gpl", ".pov", ".ttf"]
+
 File = namedtuple('File', 'path name data size')
 
 out = open("src/assets.inl", "w")
@@ -33,7 +35,7 @@ print >>out, "// This file is auto generated from tools/create_assets.py\n"
 def list_files():
     for root, dirs, files in os.walk("data"):
         for f in files:
-            if any(f.endswith(x) for x in [".png", ".goxcf", ".gpl", ".pov"]):
+            if any(f.endswith(x) for x in TYPES):
                 yield os.path.join(root, f)
 
 TEMPLATE = ("static const uint8_t DATA_{name}[{size}]\n"

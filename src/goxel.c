@@ -222,6 +222,7 @@ void goxel_init(goxel_t *gox)
 {
     goxel = gox;
     memset(goxel, 0, sizeof(*goxel));
+    goxel->next_uid = 1; // 0 should never be used.
 
     render_init();
     shapes_init();
@@ -396,7 +397,9 @@ void goxel_render(goxel_t *goxel)
     GL(glViewport(0, 0, goxel->screen_size.x, goxel->screen_size.y));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     GL(glClearColor(0, 0, 0, 1));
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    GL(glStencilMask(0xFF));
+    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+               GL_STENCIL_BUFFER_BIT));
     gui_render();
 }
 
@@ -660,6 +663,7 @@ ACTION_REGISTER(clear_selection,
 static void fill_selection(layer_t *layer)
 {
     if (box_is_null(goxel->selection)) return;
+    layer = layer ?: goxel->image->active_layer;
     mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
     goxel_update_meshes(goxel, -1);
 }
