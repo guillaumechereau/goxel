@@ -13,7 +13,7 @@ CHARS = (u"abcdefghijklmnopqrstuvwxyz"
          u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
          u"0123456789"
          u" ?!\"#$%&'()*+,-./°¯[]^:<>{}"
-         u"◀▶"
+         u"◀▶▲▼▴▾●"
          )
 
 font = fontforge.open(PATH)

@@ -800,7 +800,7 @@ static void layers_panel(goxel_t *goxel)
         ImGui::PushID(i);
         ImGui::AlignFirstTextHeightToWidgets();
         current = goxel->image->active_layer == layer;
-        if (ImGui::Selectable(current ? "*" : " ", &current, 0,
+        if (ImGui::Selectable(current ? "●" : " ", &current, 0,
                               ImVec2(12, 12))) {
             if (current) {
                 goxel->image->active_layer = layer;
@@ -823,9 +823,9 @@ static void layers_panel(goxel_t *goxel)
     ImGui::SameLine();
     ImGui::GoxAction("img_del_layer", "Del", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "^", 0, "ppi", NULL, NULL, +1);
+    ImGui::GoxAction("img_move_layer", "▴", 0, "ppi", NULL, NULL, +1);
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "v", 0, "ppi", NULL, NULL, -1);
+    ImGui::GoxAction("img_move_layer", "▾", 0, "ppi", NULL, NULL, -1);
 
     ImGui::GoxGroupBegin();
     ImGui::GoxAction("img_duplicate_layer", "Duplicate", 1, "");
