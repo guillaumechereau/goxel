@@ -18,6 +18,18 @@
 
 #include "goxel.h"
 
+#ifdef __linux__
+#define NOC_FILE_DIALOG_GTK
+#define NOC_FILE_DIALOG_IMPLEMENTATION
+#include "noc_file_dialog.h"
+#endif
+
+#ifdef WIN32
+#define NOC_FILE_DIALOG_WIN32
+#define NOC_FILE_DIALOG_IMPLEMENTATION
+#include "noc_file_dialog.h"
+#endif
+
 void sys_log(const char *msg)
 {
     printf("%s\n", msg);

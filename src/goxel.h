@@ -32,6 +32,7 @@
 #include "uthash.h"
 #include "utarray.h"
 #include "ivec.h"
+#include "noc_file_dialog.h"
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -296,11 +297,6 @@ enum {
     DIALOG_FLAG_OPEN    = 1 << 1,
     DIALOG_FLAG_DIR     = 1 << 2,
 };
-
-// out will be set to a newly allocated string of NULL.
-bool dialog_open(int flags, const char *filter, char **out);
-// #############################
-
 
 // #### Texture ################
 enum {
