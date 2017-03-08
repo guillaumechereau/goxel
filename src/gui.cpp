@@ -1324,28 +1324,31 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
 
     float last_tool_radius = goxel->tool_radius;
-    if (ImGui::GoxIsCharPressed('[')) goxel->tool_radius -= 0.5;
-    if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
-    if (goxel->tool_radius != last_tool_radius) {
-        goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
-        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+
+    if (!io.WantCaptureKeyboard) {
+        if (ImGui::GoxIsCharPressed('[')) goxel->tool_radius -= 0.5;
+        if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
+        if (goxel->tool_radius != last_tool_radius) {
+            goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
+            tool_cancel(goxel, goxel->tool, goxel->tool_state);
+        }
+
+        // XXX: this won't map correctly to a French keyboard.  Unfortunately as
+        // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
+        // layout on Windows.  For the moment I just ignore the problem until I
+        // either find a solution, either find a replacement for GLFW.
+        // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
+        // key 25 and 26, which might makes more sense.  Here I test for both.
+        if (    (io.KeyCtrl && ImGui::IsKeyPressed('Z', false)) ||
+                ImGui::GoxIsCharPressed(26))
+            goxel_undo(goxel);
+        if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
+                ImGui::GoxIsCharPressed(25))
+            goxel_redo(goxel);
+
+        // Check the action shortcuts.
+        actions_iter(check_action_shortcut);
     }
-
-    // XXX: this won't map correctly to a French keyboard.  Unfortunately as
-    // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
-    // layout on Windows.  For the moment I just ignore the problem until I
-    // either find a solution, either find a replacement for GLFW.
-    // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
-    // key 25 and 26, which might makes more sense.  Here I test for both.
-    if (    (io.KeyCtrl && ImGui::IsKeyPressed('Z', false)) ||
-            ImGui::GoxIsCharPressed(26))
-        goxel_undo(goxel);
-    if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
-            ImGui::GoxIsCharPressed(25))
-        goxel_redo(goxel);
-
-    // Check the action shortcuts.
-    actions_iter(check_action_shortcut);
 }
 
 void gui_render(void)
