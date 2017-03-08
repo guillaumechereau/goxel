@@ -1059,6 +1059,28 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
     }
 }
 
+static void about_popup(bool just_open)
+{
+    ImGui::Text("Goxel " GOXEL_VERSION_STR);
+    ImGui::Text("Copyright © 2015-2017");
+    ImGui::Text("Guillaume Chereau <guillaume@noctua-software.com>");
+    ImGui::Text("GPL 3 License");
+
+    if (ImGui::CollapsingHeader("Credits")) {
+        ImGui::Text("Code:");
+        ImGui::BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
+        ImGui::BulletText("Dustin Willis Webber <dustin.webber@gmail.com>");
+        ImGui::BulletText("Pablo Hugo Reda <pabloreda@gmail.com>");
+        ImGui::BulletText("Othelarian (https://github.com/othelarian)");
+        ImGui::Text("Art:");
+        ImGui::BulletText("Michal (https://github.com/YarlBoro)");
+    }
+
+    if (ImGui::Button("OK")) {
+        ImGui::CloseCurrentPopup();
+    }
+}
+
 static int check_action_shortcut(const action_t *action)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -1088,6 +1110,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     static int current_panel = 0;
     float left_pane_width;
     bool open_shift_alpha = false;
+    bool open_about = false;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
 
@@ -1170,6 +1193,11 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::GoxMenuItem("view_right", "Right");
             ImGui::GoxMenuItem("view_front", "Front");
             ImGui::GoxMenuItem("view_top", "Top");
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Help")) {
+            if (ImGui::MenuItem("About"))
+                open_about = true;
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -1264,6 +1292,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (ImGui::BeginPopupModal("Shift Alpha", NULL,
                 ImGuiWindowFlags_AlwaysAutoResize)) {
         shift_alpha_popup(goxel, open_shift_alpha);
+        ImGui::EndPopup();
+    }
+    if (open_about)
+        ImGui::OpenPopup("About");
+    if (ImGui::BeginPopupModal("About", NULL,
+                ImGuiWindowFlags_AlwaysAutoResize)) {
+        about_popup(open_about);
         ImGui::EndPopup();
     }
 
