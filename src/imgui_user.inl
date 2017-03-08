@@ -523,7 +523,7 @@ namespace ImGui {
         RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(1.0f,0.5f));
 
         value_buf_end = value_buf + ImFormatString(value_buf, IM_ARRAYSIZE(value_buf), "%s:", name);
-        RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(0.0f,0.5f));
+        RenderTextClipped(frame_bb.Min, frame_bb.Max - ImVec2(30, 0), value_buf, value_buf_end, NULL, ImVec2(0.0f,0.5f));
 
         return value_changed;
     }
