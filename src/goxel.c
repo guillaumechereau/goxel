@@ -244,8 +244,14 @@ void goxel_init(goxel_t *gox)
     goxel->back_color = HEXCOLOR(0x393939ff);
     goxel->grid_color = HEXCOLOR(0x4a4a4aff);
 
+    // Load and set default palette.
     palette_load_all(&goxel->palettes);
-    goxel->palette = goxel->palettes;
+    DL_FOREACH(goxel->palettes, goxel->palette) {
+        if (strcmp(goxel->palette->name, "Tango icons") == 0)
+            break;
+    }
+    goxel->palette = goxel->palette ?: goxel->palettes;
+
     goxel->tool = TOOL_BRUSH;
     goxel->tool_radius = 0.5;
     goxel->painter = (painter_t) {
