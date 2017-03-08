@@ -251,16 +251,18 @@ static void load_fonts_texture()
     int width, height;
     const void *data;
     int data_size;
+    ImFontConfig conf;
 
     const ImWchar ranges[] = {
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
         0x25A0, 0x25FF, // Geometric shapes
         0
     };
+    conf.FontDataOwnedByAtlas = false;
 
     data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
     assert(data);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, NULL, ranges);
+    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, &conf, ranges);
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
