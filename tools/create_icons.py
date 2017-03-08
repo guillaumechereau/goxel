@@ -29,7 +29,7 @@ SRC = [
     None,
 ]
 
-ret_img = PIL.Image.new('L', (1024, 1024))
+ret_img = PIL.Image.new('L', (256, 256))
 
 x = 0
 y = 0
@@ -40,14 +40,14 @@ for src in SRC:
         continue
     path = 'svg/{}'.format(src)
     subprocess.check_output([
-        'inkscape', path, '--export-area-page', '--export-dpi=180',
+        'inkscape', path, '--export-area-page',
+        '--export-width=24', '--export-height=24',
         '--export-png=/tmp/symbols.png'])
     img = PIL.Image.open('/tmp/symbols.png')
     img = img.split()[3]
-    ret_img.paste(img, (128 * x, 128 * y))
+    ret_img.paste(img, (32 * x + 4, 32 * y + 4))
     x = x + 1
 
-ret_img = ret_img.resize((256, 256), PIL.Image.ANTIALIAS)
 white_img = PIL.Image.new('L', (256, 256), "white")
 ret_img = PIL.Image.merge('LA', (white_img, ret_img))
 ret_img.save('data/icons.png')
