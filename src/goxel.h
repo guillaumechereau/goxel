@@ -916,6 +916,7 @@ typedef struct goxel
     uint64_t   next_uid;
 
     int        block_count; // Counter for the number of block data.
+    bool       quit;        // Set to true to quit the application.
 } goxel_t;
 
 // the global goxel instance.

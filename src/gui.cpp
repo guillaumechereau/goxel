@@ -1177,6 +1177,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 if (ImGui::MenuItem("txt")) export_as(goxel, "txt\0*.txt\0");
                 ImGui::EndMenu();
             }
+            ImGui::GoxMenuItem("quit", "Quit");
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit")) {

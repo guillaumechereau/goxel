@@ -727,3 +727,14 @@ ACTION_REGISTER(view_front,
     .data = &QUAT(-HS2, 0, 0, HS2),
     .shortcut = "1",
 )
+
+static void quit(void)
+{
+    goxel->quit = true;
+}
+ACTION_REGISTER(quit,
+    .help = "Quit the application",
+    .cfunc = quit,
+    .csig = "v",
+    .shortcut = "Ctrl Q",
+)
