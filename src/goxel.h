@@ -400,10 +400,10 @@ void actions_iter(int (*f)(const action_t *action));
 
 // Convenience macro to register an action from anywere in a c file.
 #define ACTION_REGISTER(id_, ...) \
-    static const action_t action_##id_ = {.id = #id_, __VA_ARGS__}; \
-    static void register_action_##id_() __attribute__((constructor)); \
-    static void register_action_##id_() { \
-        action_register(&action_##id_); \
+    static const action_t GOX_action_##id_ = {.id = #id_, __VA_ARGS__}; \
+    static void GOX_register_action_##id_() __attribute__((constructor)); \
+    static void GOX_register_action_##id_() { \
+        action_register(&GOX_action_##id_); \
     }
 
 // #############################
