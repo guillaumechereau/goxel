@@ -157,6 +157,7 @@ const char *noc_file_dialog_open(int flags,
 
 #include <windows.h>
 #include <commdlg.h>
+#include <Shlobj.h>
 
 const char *noc_file_dialog_open(int flags,
                                  const char *filters,
@@ -164,25 +165,43 @@ const char *noc_file_dialog_open(int flags,
                                  const char *default_name)
 {
     OPENFILENAME ofn;       // common dialog box structure
+    BROWSEINFO   bif;       // only used to open directory
+    LPITEMIDLIST lpItem;    // only for open directory
     char szFile[260];       // buffer for file name
     int ret;
 
-    ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize = sizeof(ofn);
-    ofn.lpstrFile = szFile;
-    ofn.lpstrFile[0] = '\0';
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = filters;
-    ofn.nFilterIndex = 1;
-    ofn.lpstrFileTitle = NULL;
-    ofn.nMaxFileTitle = 0;
-    ofn.lpstrInitialDir = NULL;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    if (!(flags & NOC_FILE_DIALOG_DIR)) {
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.lpstrFile = szFile;
+        ofn.lpstrFile[0] = '\0';
+        ofn.nMaxFile = sizeof(szFile);
+        ofn.lpstrFilter = filters;
+        ofn.nFilterIndex = 1;
+        ofn.lpstrFileTitle = NULL;
+        ofn.nMaxFileTitle = 0;
+        ofn.lpstrInitialDir = NULL;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+        if (default_name)
+            strcpy(ofn.lpstrFile, default_name);
 
-    if (flags & NOC_FILE_DIALOG_OPEN)
-        ret = GetOpenFileName(&ofn);
-    else
-        ret = GetSaveFileName(&ofn);
+
+        if (flags & NOC_FILE_DIALOG_OPEN)
+            ret = GetOpenFileName(&ofn);
+        else
+            ret = GetSaveFileName(&ofn);
+    } else {
+        ZeroMemory(&bif, sizeof(bif));
+        bif.pszDisplayName = szFile;
+
+        lpItem = SHBrowseForFolder(&bif);
+        if (lpItem) {
+            SHGetPathFromIDList(lpItem, szFile);
+            ret = 1;
+        } else {
+            ret = 0;
+        }
+    }
 
     free(g_noc_file_dialog_ret);
     g_noc_file_dialog_ret = ret ? strdup(szFile) : NULL;
