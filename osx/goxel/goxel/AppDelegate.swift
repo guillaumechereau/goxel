@@ -22,6 +22,7 @@ class GoxNSOpenGLView: NSOpenGLView {
             NSOpenGLPixelFormatAttribute(NSOpenGLPFAAlphaSize), 8,
             NSOpenGLPixelFormatAttribute(NSOpenGLPFADoubleBuffer),
             NSOpenGLPixelFormatAttribute(NSOpenGLPFADepthSize), 32,
+            NSOpenGLPixelFormatAttribute(NSOpenGLPFAStencilSize), 8,
             0
         ]
         
