@@ -1294,7 +1294,7 @@ bool    ImFontAtlas::Build()
     TexWidth = (TexDesiredWidth > 0) ? TexDesiredWidth : (total_glyph_count > 4000) ? 4096 : (total_glyph_count > 2000) ? 2048 : (total_glyph_count > 1000) ? 1024 : 512;
     TexHeight = 0;
     const int max_tex_height = 1024*32;
-    stbtt_pack_context spc;
+    stbtt_pack_context spc = {};
     stbtt_PackBegin(&spc, NULL, TexWidth, max_tex_height, 0, 1, NULL);
 
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
