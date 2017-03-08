@@ -209,7 +209,7 @@ const char *noc_file_dialog_open(int flags,
     char buf[128], *patterns;
     // XXX: I don't know about memory management with cococa, need to check
     // if I leak memory here.
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    // NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
     if (flags & NOC_FILE_DIALOG_OPEN) {
         panel = open_panel = [NSOpenPanel openPanel];
@@ -258,7 +258,7 @@ const char *noc_file_dialog_open(int flags,
         g_noc_file_dialog_ret = strdup(utf8_path);
     }
 
-    [pool release];
+    // [pool release];
     return g_noc_file_dialog_ret;
 }
 #endif
