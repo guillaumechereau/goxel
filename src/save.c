@@ -374,3 +374,35 @@ void load_from_file(goxel_t *goxel, const char *path)
     goxel_update_meshes(goxel, -1);
     gzclose(in);
 }
+
+static void save_as(const char *path)
+{
+    if (!path) {
+        path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "gox\0*.gox\0",
+                                    NULL, "untitled.gox");
+        if (!path) return;
+    }
+    if (path != goxel->image->path) {
+        free(goxel->image->path);
+        goxel->image->path = strdup(path);
+    }
+    save_to_file(goxel, goxel->image->path);
+}
+
+ACTION_REGISTER(save_as,
+    .help = "Save the image as",
+    .cfunc = save_as,
+    .csig = "vp",
+)
+
+static void save(const char *path)
+{
+    save_as(path ?: goxel->image->path);
+}
+
+ACTION_REGISTER(save,
+    .help = "Save the image",
+    .cfunc = save,
+    .csig = "vp",
+    .shortcut = "Ctrl S"
+)

@@ -251,16 +251,18 @@ static void load_fonts_texture()
     int width, height;
     const void *data;
     int data_size;
+    ImFontConfig conf;
 
     const ImWchar ranges[] = {
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
         0x25A0, 0x25FF, // Geometric shapes
         0
     };
+    conf.FontDataOwnedByAtlas = false;
 
     data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
     assert(data);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, NULL, ranges);
+    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, &conf, ranges);
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
@@ -313,7 +315,7 @@ static void init_ImGui()
     style.ItemSpacing = ImVec2(4, 4);
     style.FramePadding = ImVec2(4, 2);
 
-    style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x607272FF);
     style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
     style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0x000000FF);
@@ -322,6 +324,8 @@ static void init_ImGui()
     style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
     style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x7777CCFF);
     style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
+    style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_MenuBarBg] = IMHEXCOLOR(0x607272FF);
 }
 
 void gui_init(void)
@@ -649,13 +653,15 @@ static void procedural_panel(goxel_t *goxel)
     ImGui::SameLine();
 
     if (ImGui::Button("Export Animation")) {
-        char *dir_path;
-        if (dialog_open(DIALOG_FLAG_SAVE | DIALOG_FLAG_DIR, NULL, &dir_path)) {
+        const char *dir_path;
+        dir_path = noc_file_dialog_open(
+                    NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
+                    NULL, NULL, NULL);
+        if (dir_path) {
             mesh_clear(goxel->image->active_layer->mesh);
             proc_start(proc, NULL);
             gui->prog_export_animation = true;
             sprintf(gui->prog_export_animation_path, "Path: %s", dir_path);
-            free(dir_path);
         }
     }
 
@@ -666,26 +672,27 @@ static void procedural_panel(goxel_t *goxel)
         ImGui::PopItemWidth();
     }
     if (ImGui::Button("Load")) {
-        char *path;
-        if (dialog_open(DIALOG_FLAG_OPEN, "goxcf\0*.goxcf\0", &path)) {
+        const char *path;
+        path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
+                                    "goxcf\0*.goxcf\0", NULL, NULL);
+        if (path) {
             FILE *f = fopen(path, "r");
             int nb;
             nb = (int)fread(gui->prog_buff, 1, sizeof(gui->prog_buff), f);
             gui->prog_buff[nb] = '\0';
             fclose(f);
             strcpy(gui->prog_path, path);
-            free(path);
         }
         proc_parse(gui->prog_buff, proc);
     }
     ImGui::SameLine();
     if (ImGui::Button("Save")) {
         if (!*gui->prog_path) {
-            char *path;
-            if (dialog_open(DIALOG_FLAG_SAVE, "goxcf\0*.goxcf\0", &path)) {
+            const char *path;
+            path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                                   "goxcf\0*.goxcf\0", NULL, NULL);
+            if (path)
                 strcpy(gui->prog_path, path);
-                free(path);
-            }
         }
         if (*gui->prog_path) {
             FILE *f = fopen(gui->prog_path, "w");
@@ -970,6 +977,7 @@ static void export_panel(goxel_t *goxel)
 {
     int i;
     goxel->show_export_viewport = true;
+    ImGui::GoxGroupBegin();
     i = goxel->image->export_width;
     if (ImGui::GoxInputInt("width", &i, 1, 1, 2048))
         goxel->image->export_width = clamp(i, 1, 2048);
@@ -979,78 +987,58 @@ static void export_panel(goxel_t *goxel)
     ImGui::GoxGroupEnd();
 }
 
-static void save_as(goxel_t *goxel)
-{
-    char *path = NULL;
-    bool result;
-    result = dialog_open(DIALOG_FLAG_SAVE, "gox\0*.gox\0", &path);
-    if (!result) return;
-    free(goxel->image->path);
-    goxel->image->path = path;
-    save_to_file(goxel, path);
-}
-
-static void save(goxel_t *goxel)
-{
-    if (!goxel->image->path) {
-        save_as(goxel);
-        return;
-    }
-    save_to_file(goxel, goxel->image->path);
-}
-
 static void import_dicom(goxel_t *goxel)
 {
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN | DIALOG_FLAG_DIR, NULL, &path);
-    if (!result) return;
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN | NOC_FILE_DIALOG_DIR,
+                                NULL, NULL, NULL);
+    if (!path) return;
     dicom_import(path);
-    free(path);
 }
 
 static void import_qubicle(goxel_t *goxel)
 {
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
-    if (!result) return;
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, NULL, NULL, NULL);
+    if (!path) return;
     qubicle_import(path);
-    free(path);
 }
 
 static void import_vox(goxel_t *goxel)
 {
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
-    if (!result) return;
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
+                                NULL, NULL);
+    if (!path) return;
     vox_import(path);
-    free(path);
 }
 
 static void import_image_plane(goxel_t *goxel)
 {
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, NULL, &path);
-    if (!result) return;
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
+            "png\0*.png\0jpg\0*.jpg;*.jpeg\0", NULL, NULL);
+    if (!path) return;
     goxel_import_image_plane(goxel, path);
-    free(path);
 }
 
-static void export_as(goxel_t *goxel, const char *type)
+static void export_as(goxel_t *goxel, const char *filter)
 {
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_SAVE, type, &path);
-    if (!result) return;
-    action_exec2("export_as", "pp", type, path);
-    free(path);
+    const char *path;
+    char name[32];
+    sprintf(name, "untitled.%s", filter);
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filter, NULL, name);
+    if (!path) return;
+    action_exec2("export_as", "pp", filter, path);
 }
 
 static void load(goxel_t *goxel)
 {
-    char *path = NULL;
-    bool result = dialog_open(DIALOG_FLAG_OPEN, "gox\0*.gox\0", &path);
-    if (!result) return;
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
+                                NULL, NULL);
+    if (!path) return;
     load_from_file(goxel, path);
-    free(path);
 }
 
 static void shift_alpha_popup(goxel_t *goxel, bool just_open)
@@ -1069,6 +1057,28 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
     if (ImGui::Button("OK")) {
         mesh_delete(original_mesh);
         original_mesh = NULL;
+        ImGui::CloseCurrentPopup();
+    }
+}
+
+static void about_popup(bool just_open)
+{
+    ImGui::Text("Goxel " GOXEL_VERSION_STR);
+    ImGui::Text("Copyright © 2015-2017");
+    ImGui::Text("Guillaume Chereau <guillaume@noctua-software.com>");
+    ImGui::Text("GPL 3 License");
+
+    if (ImGui::CollapsingHeader("Credits")) {
+        ImGui::Text("Code:");
+        ImGui::BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
+        ImGui::BulletText("Dustin Willis Webber <dustin.webber@gmail.com>");
+        ImGui::BulletText("Pablo Hugo Reda <pabloreda@gmail.com>");
+        ImGui::BulletText("Othelarian (https://github.com/othelarian)");
+        ImGui::Text("Art:");
+        ImGui::BulletText("Michal (https://github.com/YarlBoro)");
+    }
+
+    if (ImGui::Button("OK")) {
         ImGui::CloseCurrentPopup();
     }
 }
@@ -1102,6 +1112,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     static int current_panel = 0;
     float left_pane_width;
     bool open_shift_alpha = false;
+    bool open_about = false;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
 
@@ -1139,14 +1150,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Goxel", NULL, window_flags);
 
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
-                save(goxel);
+                action_exec2("save", "");
             }
             if (ImGui::MenuItem("Save as")) {
-                save_as(goxel);
+                action_exec2("save_as", "");
             }
             if (ImGui::MenuItem("Load", "Ctrl+O")) {
                 load(goxel);
@@ -1168,6 +1178,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 if (ImGui::MenuItem("txt")) export_as(goxel, "txt\0*.txt\0");
                 ImGui::EndMenu();
             }
+            ImGui::GoxMenuItem("quit", "Quit");
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit")) {
@@ -1186,18 +1197,20 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::GoxMenuItem("view_top", "Top");
             ImGui::EndMenu();
         }
+        if (ImGui::BeginMenu("Help")) {
+            if (ImGui::MenuItem("About"))
+                open_about = true;
+            ImGui::EndMenu();
+        }
         ImGui::EndMenuBar();
     }
-    ImGui::PopStyleColor();
-    ImGui::Spacing();
 
     left_pane_width = 168;
-    if (goxel->tool == TOOL_PROCEDURAL) {
+    if (current_panel == 0 && goxel->tool == TOOL_PROCEDURAL) {
         left_pane_width = clamp(ImGui::CalcTextSize(gui->prog_buff).x + 60,
                                 250, 600);
     }
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
-    ImGui::PushItemWidth(75);
 
     const struct {
         const char *name;
@@ -1281,6 +1294,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         shift_alpha_popup(goxel, open_shift_alpha);
         ImGui::EndPopup();
     }
+    if (open_about)
+        ImGui::OpenPopup("About");
+    if (ImGui::BeginPopupModal("About", NULL,
+                ImGuiWindowFlags_AlwaysAutoResize)) {
+        about_popup(open_about);
+        ImGui::EndPopup();
+    }
 
     // Handle the shortcuts.  XXX: this should be done with actions.
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
@@ -1303,28 +1323,31 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
 
     float last_tool_radius = goxel->tool_radius;
-    if (ImGui::GoxIsCharPressed('[')) goxel->tool_radius -= 0.5;
-    if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
-    if (goxel->tool_radius != last_tool_radius) {
-        goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
-        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+
+    if (!io.WantCaptureKeyboard) {
+        if (ImGui::GoxIsCharPressed('[')) goxel->tool_radius -= 0.5;
+        if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
+        if (goxel->tool_radius != last_tool_radius) {
+            goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
+            tool_cancel(goxel, goxel->tool, goxel->tool_state);
+        }
+
+        // XXX: this won't map correctly to a French keyboard.  Unfortunately as
+        // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
+        // layout on Windows.  For the moment I just ignore the problem until I
+        // either find a solution, either find a replacement for GLFW.
+        // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
+        // key 25 and 26, which might makes more sense.  Here I test for both.
+        if (    (io.KeyCtrl && ImGui::IsKeyPressed('Z', false)) ||
+                ImGui::GoxIsCharPressed(26))
+            goxel_undo(goxel);
+        if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
+                ImGui::GoxIsCharPressed(25))
+            goxel_redo(goxel);
+
+        // Check the action shortcuts.
+        actions_iter(check_action_shortcut);
     }
-
-    // XXX: this won't map correctly to a French keyboard.  Unfortunately as
-    // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
-    // layout on Windows.  For the moment I just ignore the problem until I
-    // either find a solution, either find a replacement for GLFW.
-    // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
-    // key 25 and 26, which might makes more sense.  Here I test for both.
-    if (    (io.KeyCtrl && ImGui::IsKeyPressed('Z', false)) ||
-            ImGui::GoxIsCharPressed(26))
-        goxel_undo(goxel);
-    if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
-            ImGui::GoxIsCharPressed(25))
-        goxel_redo(goxel);
-
-    // Check the action shortcuts.
-    actions_iter(check_action_shortcut);
 }
 
 void gui_render(void)

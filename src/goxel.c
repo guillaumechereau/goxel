@@ -244,8 +244,14 @@ void goxel_init(goxel_t *gox)
     goxel->back_color = HEXCOLOR(0x393939ff);
     goxel->grid_color = HEXCOLOR(0x4a4a4aff);
 
+    // Load and set default palette.
     palette_load_all(&goxel->palettes);
-    goxel->palette = goxel->palettes;
+    DL_FOREACH(goxel->palettes, goxel->palette) {
+        if (strcmp(goxel->palette->name, "Tango icons") == 0)
+            break;
+    }
+    goxel->palette = goxel->palette ?: goxel->palettes;
+
     goxel->tool = TOOL_BRUSH;
     goxel->tool_radius = 0.5;
     goxel->painter = (painter_t) {
@@ -726,4 +732,15 @@ ACTION_REGISTER(view_front,
     .func = view_set,
     .data = &QUAT(-HS2, 0, 0, HS2),
     .shortcut = "1",
+)
+
+static void quit(void)
+{
+    goxel->quit = true;
+}
+ACTION_REGISTER(quit,
+    .help = "Quit the application",
+    .cfunc = quit,
+    .csig = "v",
+    .shortcut = "Ctrl Q",
 )

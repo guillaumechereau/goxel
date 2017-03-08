@@ -61,6 +61,7 @@ if target_os == 'darwin':
 
 env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
+env.Append(CPPPATH=['ext_src/noc'])
 
 sources += glob.glob('ext_src/imgui/*.cpp')
 env.Append(CPPPATH=['ext_src/imgui'])

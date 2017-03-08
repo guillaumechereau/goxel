@@ -22,6 +22,7 @@ class GoxNSOpenGLView: NSOpenGLView {
             NSOpenGLPixelFormatAttribute(NSOpenGLPFAAlphaSize), 8,
             NSOpenGLPixelFormatAttribute(NSOpenGLPFADoubleBuffer),
             NSOpenGLPixelFormatAttribute(NSOpenGLPFADepthSize), 32,
+            NSOpenGLPixelFormatAttribute(NSOpenGLPFAStencilSize), 8,
             0
         ]
         
@@ -152,6 +153,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.inputs.chars.0 = 0
         glFlush()
         view.openGLContext?.flushBuffer()
+        if self.goxel.quit {
+            NSApplication.shared().terminate(nil)
+        }
     }
 }
 

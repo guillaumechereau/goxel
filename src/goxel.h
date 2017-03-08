@@ -32,6 +32,7 @@
 #include "uthash.h"
 #include "utarray.h"
 #include "ivec.h"
+#include "noc_file_dialog.h"
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define GOXEL_VERSION_STR "0.4.0"
+#define GOXEL_VERSION_STR "0.5.0"
 
 // #### Set the DEBUG macro ####
 #ifndef DEBUG
@@ -296,11 +297,6 @@ enum {
     DIALOG_FLAG_OPEN    = 1 << 1,
     DIALOG_FLAG_DIR     = 1 << 2,
 };
-
-// out will be set to a newly allocated string of NULL.
-bool dialog_open(int flags, const char *filter, char **out);
-// #############################
-
 
 // #### Texture ################
 enum {
@@ -920,6 +916,7 @@ typedef struct goxel
     uint64_t   next_uid;
 
     int        block_count; // Counter for the number of block data.
+    bool       quit;        // Set to true to quit the application.
 } goxel_t;
 
 // the global goxel instance.
@@ -975,8 +972,6 @@ uvec3b_t hsl_to_rgb(uvec3b_t hsl);
 uvec3b_t rgb_to_hsl(uvec3b_t rgb);
 
 // #### Gui ####################
-
-#define GUI_DEFAULT_ITEM_WIDTH 75
 
 void gui_init(void);
 void gui_release(void);

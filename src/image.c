@@ -82,8 +82,8 @@ image_t *image_new(void)
 {
     layer_t *layer;
     image_t *img = calloc(1, sizeof(*img));
-    img->export_width = 256;
-    img->export_height = 256;
+    img->export_width = 1024;
+    img->export_height = 1024;
     layer = layer_new("background");
     layer->visible = true;
     DL_APPEND(img->layers, layer);

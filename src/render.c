@@ -641,7 +641,6 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
         view = mat4_identity;
     } else {
         proj_mat = &rend->proj_mat;
-        view = mat4_mul(rend->view_mat, item->mat);
     }
 
     model3d_render(item->model3d, &view, proj_mat, &item->color,
