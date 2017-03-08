@@ -315,7 +315,7 @@ static void init_ImGui()
     style.ItemSpacing = ImVec2(4, 4);
     style.FramePadding = ImVec2(4, 2);
 
-    style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x607272FF);
     style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
     style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0x000000FF);
@@ -324,6 +324,8 @@ static void init_ImGui()
     style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
     style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x7777CCFF);
     style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
+    style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_MenuBarBg] = IMHEXCOLOR(0x607272FF);
 }
 
 void gui_init(void)
@@ -1148,7 +1150,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Goxel", NULL, window_flags);
 
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
             if (ImGui::MenuItem("Save", "Ctrl+S")) {
@@ -1203,11 +1204,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         }
         ImGui::EndMenuBar();
     }
-    ImGui::PopStyleColor();
-    ImGui::Spacing();
 
     left_pane_width = 168;
-    if (goxel->tool == TOOL_PROCEDURAL) {
+    if (current_panel == 0 && goxel->tool == TOOL_PROCEDURAL) {
         left_pane_width = clamp(ImGui::CalcTextSize(gui->prog_buff).x + 60,
                                 250, 600);
     }
