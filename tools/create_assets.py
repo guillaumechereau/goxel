@@ -34,7 +34,7 @@ print >>out, "// This file is auto generated from tools/create_assets.py\n"
 
 def list_files():
     for root, dirs, files in os.walk("data"):
-        for f in files:
+        for f in sorted(files, key=lambda x: x.upper()):
             if any(f.endswith(x) for x in TYPES):
                 yield os.path.join(root, f)
 
