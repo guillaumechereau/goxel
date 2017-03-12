@@ -987,32 +987,6 @@ static void export_panel(goxel_t *goxel)
     ImGui::GoxGroupEnd();
 }
 
-static void import_dicom(goxel_t *goxel)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN | NOC_FILE_DIALOG_DIR,
-                                NULL, NULL, NULL);
-    if (!path) return;
-    dicom_import(path);
-}
-
-static void import_qubicle(goxel_t *goxel)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, NULL, NULL, NULL);
-    if (!path) return;
-    qubicle_import(path);
-}
-
-static void import_vox(goxel_t *goxel)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
-                                NULL, NULL);
-    if (!path) return;
-    vox_import(path);
-}
-
 static void import_image_plane(goxel_t *goxel)
 {
     const char *path;
@@ -1030,15 +1004,6 @@ static void export_as(goxel_t *goxel, const char *filter)
     path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filter, NULL, name);
     if (!path) return;
     action_exec2("export_as", "pp", filter, path);
-}
-
-static void load(goxel_t *goxel)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
-                                NULL, NULL);
-    if (!path) return;
-    load_from_file(goxel, path);
 }
 
 static void shift_alpha_popup(goxel_t *goxel, bool just_open)
@@ -1152,22 +1117,17 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("File")) {
-            if (ImGui::MenuItem("Save", "Ctrl+S")) {
-                action_exec2("save", "");
-            }
-            if (ImGui::MenuItem("Save as")) {
-                action_exec2("save_as", "");
-            }
-            if (ImGui::MenuItem("Load", "Ctrl+O")) {
-                load(goxel);
-            }
+            ImGui::GoxMenuItem("save", "Save");
+            ImGui::GoxMenuItem("save_as", "Save as");
+            ImGui::GoxMenuItem("open", "Open");
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
-                if (ImGui::MenuItem("qubicle")) import_qubicle(goxel);
-                if (ImGui::MenuItem("vox")) import_vox(goxel);
-                if (ImGui::MenuItem("dicom")) import_dicom(goxel);
+                ImGui::GoxMenuItem("import_qubicle", "Qubicle");
+                ImGui::GoxMenuItem("import_vox", "Magica Voxel");
+                ImGui::GoxMenuItem("import_dicom", "Dicom");
                 ImGui::EndMenu();
             }
+            // XXX: directly use actions.
             if (ImGui::BeginMenu("Export As..")) {
                 if (ImGui::MenuItem("png")) export_as(goxel, "png\0*.png\0");
                 if (ImGui::MenuItem("obj")) export_as(goxel, "obj\0*.obj\0");
@@ -1184,8 +1144,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         if (ImGui::BeginMenu("Edit")) {
             if (ImGui::MenuItem("Clear", "Delete"))
                 action_exec2("layer_clear", "");
-            if (ImGui::MenuItem("Undo", "Ctrl+Z")) goxel_undo(goxel);
-            if (ImGui::MenuItem("Redo", "Ctrl+Y")) goxel_redo(goxel);
+            if (ImGui::MenuItem("Undo", "Ctrl Z")) goxel_undo(goxel);
+            if (ImGui::MenuItem("Redo", "Ctrl Y")) goxel_redo(goxel);
             if (ImGui::MenuItem("Shift Alpha"))
                 open_shift_alpha = true;
             ImGui::EndMenu();

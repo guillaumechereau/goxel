@@ -21,6 +21,21 @@
 
 // Very basic implementation of DICOM files reader.
 
+typedef struct {
+    int     instance_number;
+    float   slice_location;
+    int     samples_per_pixel;
+    int     rows;
+    int     columns;
+    int     bits_allocated;
+    int     bits_stored;
+    int     high_bit;
+
+    int     data_size;
+    char    *path;      // If you set it, you have to remember to free it.
+} dicom_t;
+
+
 // Convenience macro.
 #define READ(type, in) ({ \
         type v; \
@@ -233,8 +248,8 @@ static bool parse_element(FILE *in, int state, element_t *out)
     return true;
 }
 
-void dicom_load(const char *path, dicom_t *dicom,
-                char *out_buffer, int buffer_size)
+static void dicom_load(const char *path, dicom_t *dicom,
+                       char *out_buffer, int buffer_size)
 {
     FILE *in = fopen(path, "rb");
     int state = 0;
@@ -292,7 +307,7 @@ static int dicom_sort(const void *a, const void *b)
     return sign(_a->slice_location - _b->slice_location);
 }
 
-void dicom_import(const char *dirpath)
+static void dicom_import(const char *dirpath)
 {
     DIR *dir;
     struct dirent *dirent;
@@ -303,6 +318,10 @@ void dicom_import(const char *dirpath)
     int i;
     uint16_t *data;
     uvec4b_t *cube;
+
+    dirpath = dirpath ?: noc_file_dialog_open(
+            NOC_FILE_DIALOG_OPEN | NOC_FILE_DIALOG_DIR, NULL, NULL, NULL);
+    if (!dirpath) return;
 
     // First we parse all the dicom images into a sorted array.
     // XXX: how to propery iter a directory?
@@ -348,9 +367,6 @@ void dicom_import(const char *dirpath)
     free(cube);
 }
 
-
-
-
 static const dicom_uid_t UIDS[] = {
 
     {"1.2.840.10008.1.2",       "Implicit VR Little Endian"},
@@ -358,3 +374,10 @@ static const dicom_uid_t UIDS[] = {
     {"1.2.840.10008.1.2.4.91",  "JPEG 2000 Image Compression"},
     {NULL, NULL},
 };
+
+
+ACTION_REGISTER(import_dicom,
+    .help = "Import a dicom image",
+    .cfunc = dicom_import,
+    .csig = "vp",
+)
