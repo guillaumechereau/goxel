@@ -182,6 +182,8 @@ int main(int argc, char **argv)
             action_exec2("import_qubicle", "p", args.args[0]);
         else if (str_endswith(args.args[0], ".vox"))
             action_exec2("import_vox", "p", args.args[0]);
+        else if (str_endswith(args.args[0], ".kv6"))
+            action_exec2("import_kv6", "p", args.args[0]);
         else
             load_from_file(g_goxel, args.args[0]);
     }
