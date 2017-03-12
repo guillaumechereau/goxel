@@ -375,6 +375,23 @@ void load_from_file(goxel_t *goxel, const char *path)
     gzclose(in);
 }
 
+static void action_open(const char *path)
+{
+
+    if (!path)
+        path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
+                                    NULL, NULL);
+    if (!path) return;
+    load_from_file(goxel, path);
+}
+
+ACTION_REGISTER(open,
+    .help = "Open an image",
+    .cfunc = action_open,
+    .csig = "vp",
+    .shortcut = "Ctrl O",
+)
+
 static void save_as(const char *path)
 {
     if (!path) {
