@@ -125,7 +125,7 @@ static void read_chunk(FILE *file, context_t *ctx)
     }
 }
 
-void vox_import(const char *path)
+static void vox_import(const char *path)
 {
     FILE *file;
     char magic[4];
@@ -134,6 +134,10 @@ void vox_import(const char *path)
     mesh_t      *mesh;
     uvec4b_t color;
     context_t ctx = {};
+
+    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
+                                        NULL, NULL);
+    if (!path) return;
 
     mesh = goxel->image->active_layer->mesh;
     file = fopen(path, "rb");
@@ -298,6 +302,12 @@ static void export_as_vox(const char *path)
 ACTION_REGISTER(export_as_vox,
     .help = "Save the image as a vox 3d file",
     .cfunc = export_as_vox,
+    .csig = "vp",
+)
+
+ACTION_REGISTER(import_vox,
+    .help = "Import a magica voxel vox image",
+    .cfunc = vox_import,
     .csig = "vp",
 )
 

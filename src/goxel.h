@@ -983,35 +983,6 @@ void gui_render(void);
 void wavefront_export(const mesh_t *mesh, const char *path);
 void ply_export(const mesh_t *mesh, const char *path);
 
-
-// #### DICOM files support ####
-
-typedef struct {
-    int     instance_number;
-    float   slice_location;
-    int     samples_per_pixel;
-    int     rows;
-    int     columns;
-    int     bits_allocated;
-    int     bits_stored;
-    int     high_bit;
-
-    int     data_size;
-    char    *path;      // If you set it, you have to remember to free it.
-} dicom_t;
-
-void dicom_load(const char *path, dicom_t *dicom,
-                char *out_buffer, int buffer_size);
-void dicom_import(const char *dir);
-
-
-// #############################
-
-void qubicle_import(const char *path);
-void qubicle_export(const mesh_t *mesh, const char *path);
-
-void vox_import(const char *path);
-
 // ##### Assets manager ########################
 // All the assets are saved in binary directly in the code, using
 // tool/create_assets.py.

@@ -25,7 +25,7 @@
 #define WRITE(type, v, file) \
     ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
-void qubicle_import(const char *path)
+static void qubicle_import(const char *path)
 {
     FILE *file;
     int version, color_format, orientation, compression, vmask, mat_count;
@@ -36,6 +36,10 @@ void qubicle_import(const char *path)
     mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
+
+    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
+                                        NULL, NULL, NULL);
+    if (!path) return;
 
     file = fopen(path, "rb");
     version = READ(uint32_t, file);
@@ -158,6 +162,12 @@ static void export_as_qubicle(const char *path)
 {
     qubicle_export(goxel->layers_mesh, path);
 }
+
+ACTION_REGISTER(import_qubicle,
+    .help = "Import a qubicle file",
+    .cfunc = qubicle_import,
+    .csig = "vp",
+)
 
 ACTION_REGISTER(export_as_qubicle,
     .help = "Save the image as a qubicle 3d file",

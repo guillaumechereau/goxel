@@ -987,32 +987,6 @@ static void export_panel(goxel_t *goxel)
     ImGui::GoxGroupEnd();
 }
 
-static void import_dicom(goxel_t *goxel)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN | NOC_FILE_DIALOG_DIR,
-                                NULL, NULL, NULL);
-    if (!path) return;
-    dicom_import(path);
-}
-
-static void import_qubicle(goxel_t *goxel)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, NULL, NULL, NULL);
-    if (!path) return;
-    qubicle_import(path);
-}
-
-static void import_vox(goxel_t *goxel)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
-                                NULL, NULL);
-    if (!path) return;
-    vox_import(path);
-}
-
 static void import_image_plane(goxel_t *goxel)
 {
     const char *path;
@@ -1148,11 +1122,12 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::GoxMenuItem("open", "Open");
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
-                if (ImGui::MenuItem("qubicle")) import_qubicle(goxel);
-                if (ImGui::MenuItem("vox")) import_vox(goxel);
-                if (ImGui::MenuItem("dicom")) import_dicom(goxel);
+                ImGui::GoxMenuItem("import_qubicle", "Qubicle");
+                ImGui::GoxMenuItem("import_vox", "Magica Voxel");
+                ImGui::GoxMenuItem("import_dicom", "Dicom");
                 ImGui::EndMenu();
             }
+            // XXX: directly use actions.
             if (ImGui::BeginMenu("Export As..")) {
                 if (ImGui::MenuItem("png")) export_as(goxel, "png\0*.png\0");
                 if (ImGui::MenuItem("obj")) export_as(goxel, "obj\0*.obj\0");
