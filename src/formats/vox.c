@@ -296,6 +296,9 @@ static void vox_export(const mesh_t *mesh, const char *path)
 
 static void export_as_vox(const char *path)
 {
+    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                    "magica voxel\0*.vox\0", NULL, "untitled.vox");
+    if (!path) return;
     vox_export(goxel->layers_mesh, path);
 }
 
@@ -303,12 +306,20 @@ ACTION_REGISTER(export_as_vox,
     .help = "Save the image as a vox 3d file",
     .cfunc = export_as_vox,
     .csig = "vp",
+    .file_format = {
+        .name = "magica voxel",
+        .ext = "*.vox\0",
+    },
 )
 
 ACTION_REGISTER(import_vox,
     .help = "Import a magica voxel vox image",
     .cfunc = vox_import,
     .csig = "vp",
+    .file_format = {
+        .name = "magica voxel",
+        .ext = "*.vox\0",
+    },
 )
 
 

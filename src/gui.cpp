@@ -996,16 +996,6 @@ static void import_image_plane(goxel_t *goxel)
     goxel_import_image_plane(goxel, path);
 }
 
-static void export_as(goxel_t *goxel, const char *filter)
-{
-    const char *path;
-    char name[32];
-    sprintf(name, "untitled.%s", filter);
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filter, NULL, name);
-    if (!path) return;
-    action_exec2("export_as", "pp", filter, path);
-}
-
 static void shift_alpha_popup(goxel_t *goxel, bool just_open)
 {
     static int v = 0;
@@ -1071,6 +1061,22 @@ static int check_action_shortcut(const action_t *action)
     return 0;
 }
 
+static int import_menu_action_callback(const action_t *a)
+{
+    if (!a->file_format.name) return 0;
+    if (!str_startswith(a->id, "import_")) return 0;
+    if (ImGui::MenuItem(a->file_format.name)) action_exec(a, "");
+    return 0;
+}
+
+static int export_menu_action_callback(const action_t *a)
+{
+    if (!a->file_format.name) return 0;
+    if (!str_startswith(a->id, "export_")) return 0;
+    if (ImGui::MenuItem(a->file_format.name)) action_exec(a, "");
+    return 0;
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     static view_t view;
@@ -1122,20 +1128,11 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::GoxMenuItem("open", "Open");
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
-                ImGui::GoxMenuItem("import_qubicle", "Qubicle");
-                ImGui::GoxMenuItem("import_vox", "Magica Voxel");
-                ImGui::GoxMenuItem("import_dicom", "Dicom");
+                actions_iter(import_menu_action_callback);
                 ImGui::EndMenu();
             }
-            // XXX: directly use actions.
             if (ImGui::BeginMenu("Export As..")) {
-                if (ImGui::MenuItem("png")) export_as(goxel, "png\0*.png\0");
-                if (ImGui::MenuItem("obj")) export_as(goxel, "obj\0*.obj\0");
-                if (ImGui::MenuItem("ply")) export_as(goxel, "ply\0*.ply\0");
-                if (ImGui::MenuItem("qubicle")) export_as(goxel, "qubicle\0*.qb\0");
-                if (ImGui::MenuItem("vox")) export_as(goxel, "vox\0*.vox\0");
-                if (ImGui::MenuItem("pov")) export_as(goxel, "pov\0*.pov\0");
-                if (ImGui::MenuItem("txt")) export_as(goxel, "txt\0*.txt\0");
+                actions_iter(export_menu_action_callback);
                 ImGui::EndMenu();
             }
             ImGui::GoxMenuItem("quit", "Quit");

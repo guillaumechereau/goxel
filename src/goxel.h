@@ -385,6 +385,12 @@ struct action {
     // cfunc and csig can be used to directly call any function.
     void            *cfunc;
     const char      *csig;
+
+    // Used for export / import actions.
+    struct {
+        const char  *name;
+        const char  *ext;
+    } file_format;
 };
 
 void action_register(const action_t *action);

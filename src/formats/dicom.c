@@ -380,4 +380,7 @@ ACTION_REGISTER(import_dicom,
     .help = "Import a dicom image",
     .cfunc = dicom_import,
     .csig = "vp",
+    .file_format = {
+        .name = "dicom",
+    },
 )

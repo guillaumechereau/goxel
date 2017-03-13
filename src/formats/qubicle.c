@@ -160,6 +160,9 @@ void qubicle_export(const mesh_t *mesh, const char *path)
 
 static void export_as_qubicle(const char *path)
 {
+    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                    "qubicle\0*.qb\0", NULL, "untitled.qb");
+    if (!path) return;
     qubicle_export(goxel->layers_mesh, path);
 }
 
@@ -167,10 +170,18 @@ ACTION_REGISTER(import_qubicle,
     .help = "Import a qubicle file",
     .cfunc = qubicle_import,
     .csig = "vp",
+    .file_format = {
+        .name = "qubicle",
+        .ext = "*.qb\0",
+    },
 )
 
 ACTION_REGISTER(export_as_qubicle,
     .help = "Save the image as a qubicle 3d file",
     .cfunc = export_as_qubicle,
     .csig = "vp",
+    .file_format = {
+        .name = "qubicle",
+        .ext = "*.qb\0",
+    },
 )

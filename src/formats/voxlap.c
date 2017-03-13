@@ -124,4 +124,8 @@ ACTION_REGISTER(import_kv6,
     .help = "Import a slab kv6 image",
     .cfunc = kv6_import,
     .csig = "vp",
+    .file_format = {
+        .name = "kv6",
+        .ext = "*.kv6\0"
+    },
 )

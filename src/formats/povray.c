@@ -36,6 +36,10 @@ static void export_as_pov(const char *path, int w, int h)
     w = w ?: goxel->image->export_width;
     h = h ?: goxel->image->export_height;
 
+    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                    "povray\0*.pov\0", NULL, "untitled.pov");
+    if (!path) return;
+
     template = assets_get("asset://data/povray_template.pov", NULL);
     assert(template);
     camera.aspect = (float)w / h;
@@ -93,4 +97,8 @@ ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
     .cfunc = export_as_pov,
     .csig = "vpii",
+    .file_format = {
+        .name = "povray",
+        .ext = "*.povray\0",
+    },
 )
