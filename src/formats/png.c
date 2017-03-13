@@ -52,6 +52,7 @@ static void export_as_png(const char *path, int w, int h)
     texture_get_data(fbo, w * 2, h * 2, 4, data2);
     img_downsample(data2, w * 2, h * 2, 4, data);
     img_write(data, w, h, 4, path);
+    free(data2);
     free(data);
 }
 
