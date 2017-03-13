@@ -176,17 +176,8 @@ int main(int argc, char **argv)
 #endif
 
     goxel_init(g_goxel);
-    if (args.args[0]) {
-        // XXX: support all file formats!
-        if (str_endswith(args.args[0], ".qb"))
-            action_exec2("import_qubicle", "p", args.args[0]);
-        else if (str_endswith(args.args[0], ".vox"))
-            action_exec2("import_vox", "p", args.args[0]);
-        else if (str_endswith(args.args[0], ".kv6"))
-            action_exec2("import_kv6", "p", args.args[0]);
-        else
-            load_from_file(g_goxel, args.args[0]);
-    }
+    if (args.args[0])
+        action_exec2("import", "p", args.args[0]);
 
     start_main_loop(loop_function);
     goxel_release(g_goxel);

@@ -549,6 +549,37 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
 }
 
+static int goxel_import_file_cb(const action_t *a, void *user)
+{
+    const char *path = USER_GET(user, 0);
+    const action_t **ret = USER_GET(user, 1);
+    if (!a->file_format.ext) return 0;
+    if (!str_startswith(a->id, "import_")) return 0;
+    if (!str_endswith(path, a->file_format.ext + 1)) return 0;
+    *ret = a;
+    return 1;
+}
+
+static int goxel_import_file(const char *path)
+{
+    const action_t *a = NULL;
+    if (str_endswith(path, ".gox")) {
+        load_from_file(goxel, path);
+        return 0;
+    }
+    actions_iter(goxel_import_file_cb, USER_PASS(path, &a));
+    if (!a) return -1;
+    action_exec(a, "p", path);
+    return 0;
+}
+
+ACTION_REGISTER(import,
+    .help = "Import a file",
+    .cfunc = goxel_import_file,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
 static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
 {
     layer_t *new_layer;
