@@ -549,12 +549,13 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
 }
 
-static int goxel_import_file_cb(const action_t *a, void *user)
+static int search_action_for_format_cb(const action_t *a, void *user)
 {
     const char *path = USER_GET(user, 0);
-    const action_t **ret = USER_GET(user, 1);
+    const char *type = USER_GET(user, 1);
+    const action_t **ret = USER_GET(user, 2);
     if (!a->file_format.ext) return 0;
-    if (!str_startswith(a->id, "import_")) return 0;
+    if (!str_startswith(a->id, type)) return 0;
     if (!str_endswith(path, a->file_format.ext + 1)) return 0;
     *ret = a;
     return 1;
@@ -567,7 +568,7 @@ static int goxel_import_file(const char *path)
         load_from_file(goxel, path);
         return 0;
     }
-    actions_iter(goxel_import_file_cb, USER_PASS(path, &a));
+    actions_iter(search_action_for_format_cb, USER_PASS(path, "import_", &a));
     if (!a) return -1;
     action_exec(a, "p", path);
     return 0;
@@ -578,6 +579,20 @@ ACTION_REGISTER(import,
     .cfunc = goxel_import_file,
     .csig = "vp",
     .flags = ACTION_TOUCH_IMAGE,
+)
+
+static int goxel_export_to_file(const char *path)
+{
+    const action_t *a = NULL;
+    actions_iter(search_action_for_format_cb, USER_PASS(path, "export_", &a));
+    if (!a) return -1;
+    return action_exec(a, "p", path);
+}
+
+ACTION_REGISTER(export,
+    .help = "Export to a file",
+    .cfunc = goxel_export_to_file,
+    .csig = "vp",
 )
 
 static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)

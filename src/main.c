@@ -59,7 +59,8 @@ void on_char(GLFWwindow *win, unsigned int c)
 
 typedef struct
 {
-    char    *args[1];
+    char *input;
+    char *export;
 } args_t;
 
 #ifndef NO_ARGP
@@ -68,7 +69,11 @@ typedef struct
 const char *argp_program_version = "goxel " GOXEL_VERSION_STR;
 const char *argp_program_bug_address = "<guillaume@noctua-software.com>";
 static char doc[] = "A 3D voxels editor";
-static char args_doc[] = "[FILE]";
+static char args_doc[] = "[INPUT]";
+static struct argp_option options[] = {
+    {"export",   'e', "FILENAME", 0, "Export the model to a file" },
+    {},
+};
 
 /* Parse a single option. */
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
@@ -77,10 +82,13 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 
     switch (key)
     {
+    case 'e':
+        args->export = arg;
+        break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
             argp_usage(state);
-        args->args[state->arg_num] = arg;
+        args->input = arg;
         break;
     case ARGP_KEY_END:
         break;
@@ -91,7 +99,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 }
 
 /* Our argp parser. */
-static struct argp argp = { NULL, parse_opt, args_doc, doc };
+static struct argp argp = { options, parse_opt, args_doc, doc };
 #endif
 
 static void loop_function(void) {
@@ -151,6 +159,7 @@ int main(int argc, char **argv)
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
+    int ret = 0;
     inputs_t inputs = {};
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
 
@@ -176,12 +185,21 @@ int main(int argc, char **argv)
 #endif
 
     goxel_init(g_goxel);
-    if (args.args[0])
-        action_exec2("import", "p", args.args[0]);
-
+    if (args.input)
+        action_exec2("import", "p", args.input);
+    if (args.export) {
+        if (!args.input) {
+            LOG_E("trying to export an empty image");
+            ret = -1;
+        } else {
+            ret = action_exec2("export", "p", args.export);
+        }
+        goto end;
+    }
     start_main_loop(loop_function);
+end:
     goxel_release(g_goxel);
-    return 0;
+    return ret;
 }
 
 #else // GLUT implementation
