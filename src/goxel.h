@@ -163,6 +163,10 @@ enum {
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define SWAP(x0, x) {typeof(x0) tmp = x0; x0 = x; x = tmp;}
 
+// Used to pass and get values to callback 'void *user' arguments.
+#define USER_PASS(...) ((const void*[]){__VA_ARGS__})
+#define USER_GET(var, n) (((void**)var)[n])
+
 // IS_IN(x, ...): returns true if x is equal to any of the other arguments.
 #define IS_IN(x, ...) ({ \
         bool _ret = false; \
