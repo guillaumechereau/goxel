@@ -171,11 +171,14 @@ int main(int argc, char **argv)
     argp_parse (&argp, argc, argv, 0, 0, &args);
 #endif
 
-if (!args.export_file) {
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 2);
     monitor = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(monitor);
+    if (args.export_file) {
+        // Because the window is not necesary
+        glfwWindowHint(GLFW_VISIBLE, 0);
+    }
     window = glfwCreateWindow(mode->width, mode->height, title, NULL, NULL);
     g_window = window;
     glfwMakeContextCurrent(window);
@@ -199,65 +202,37 @@ if (!args.export_file) {
             load_from_file(g_goxel, args.args[0]);
     }
     
-}
-else {
-    glfwInit();
-    glfwWindowHint(GLFW_SAMPLES, 2);
-    monitor = glfwGetPrimaryMonitor();
-    mode = glfwGetVideoMode(monitor);
-    glfwWindowHint(GLFW_VISIBLE, 0);
-    window = glfwCreateWindow(mode->width, mode->height, title, NULL, NULL);
-    g_window = window;
-    glfwMakeContextCurrent(window);
-    glfwSetScrollCallback(window, on_scroll);
-    glfwSetCharCallback(window, on_char);
-    glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
-#ifdef WIN32
-    glewInit();
-#endif
-    
-    goxel_init(g_goxel);
-    if (args.args[0]) {
-        if (str_endswith(args.args[0], ".qb"))
-            qubicle_import(args.args[0]);
-        else if (str_endswith(args.args[0], ".vox"))
-            vox_import(args.args[0]);
+    // Checks if there is a loaded file.
+    if (g_goxel->image->path)
+    {
+        if (str_endswith(args.export_file, ".png")) {
+            export_as_png(args.export_file, 0, 0);
+            exit(0);
+        }
+        else if (str_endswith(args.export_file, ".obj")) {
+            wavefront_export(g_goxel->layers_mesh, args.export_file);
+            exit(0);
+        }
+        else if (str_endswith(args.export_file, ".ply")) {
+            ply_export(g_goxel->layers_mesh, args.export_file);
+            exit(0);
+        }
+        else if (str_endswith(args.export_file, ".qb")) {
+            qubicle_export(g_goxel->layers_mesh, args.export_file);
+            exit(0);
+        }
+        //~ else if (str_endswith(args.export_file, ".vox")) {
+            //~ vox_export(g_goxel->layers_mesh, args.export_file);
+            //~ exit(0);
+        //~ }
+        else if (str_endswith(args.export_file, ".txt")) {
+            export_as_txt(args.export_file);
+            exit(0);
+        }
         else
-            load_from_file(g_goxel, args.args[0]);
-    }
-    
-        // Checks if there is a loaded file.
-        if (g_goxel->image->path)
         {
-            if (str_endswith(args.export_file, ".png")) {
-                export_as_png(args.export_file, 0, 0);
-                exit(0);
-            }
-            else if (str_endswith(args.export_file, ".obj")) {
-                wavefront_export(g_goxel->layers_mesh, args.export_file);
-                exit(0);
-            }
-            else if (str_endswith(args.export_file, ".ply")) {
-                ply_export(g_goxel->layers_mesh, args.export_file);
-                exit(0);
-            }
-            else if (str_endswith(args.export_file, ".qb")) {
-                qubicle_export(g_goxel->layers_mesh, args.export_file);
-                exit(0);
-            }
-            //~ else if (str_endswith(args.export_file, ".vox")) {
-                //~ vox_export(g_goxel->layers_mesh, args.export_file);
-                //~ exit(0);
-            //~ }
-            else if (str_endswith(args.export_file, ".txt")) {
-                export_as_txt(args.export_file);
-                exit(0);
-            }
-            else
-            {
-                printf("Unknow the file extension to export.\n");
-                exit(1);
-            }
+            printf("Unknow the file extension to export.\n");
+            exit(1);
         }
     }
 
