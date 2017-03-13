@@ -1038,7 +1038,7 @@ static void about_popup(bool just_open)
     }
 }
 
-static int check_action_shortcut(const action_t *action)
+static int check_action_shortcut(const action_t *action, void *user)
 {
     ImGuiIO& io = ImGui::GetIO();
     const char *s = action->shortcut;
@@ -1061,7 +1061,7 @@ static int check_action_shortcut(const action_t *action)
     return 0;
 }
 
-static int import_menu_action_callback(const action_t *a)
+static int import_menu_action_callback(const action_t *a, void *user)
 {
     if (!a->file_format.name) return 0;
     if (!str_startswith(a->id, "import_")) return 0;
@@ -1069,7 +1069,7 @@ static int import_menu_action_callback(const action_t *a)
     return 0;
 }
 
-static int export_menu_action_callback(const action_t *a)
+static int export_menu_action_callback(const action_t *a, void *user)
 {
     if (!a->file_format.name) return 0;
     if (!str_startswith(a->id, "export_")) return 0;
@@ -1128,11 +1128,11 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::GoxMenuItem("open", "Open");
             if (ImGui::BeginMenu("Import...")) {
                 if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
-                actions_iter(import_menu_action_callback);
+                actions_iter(import_menu_action_callback, NULL);
                 ImGui::EndMenu();
             }
             if (ImGui::BeginMenu("Export As..")) {
-                actions_iter(export_menu_action_callback);
+                actions_iter(export_menu_action_callback, NULL);
                 ImGui::EndMenu();
             }
             ImGui::GoxMenuItem("quit", "Quit");
@@ -1303,7 +1303,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             goxel_redo(goxel);
 
         // Check the action shortcuts.
-        actions_iter(check_action_shortcut);
+        actions_iter(check_action_shortcut, NULL);
     }
 }
 

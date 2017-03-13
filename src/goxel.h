@@ -397,7 +397,7 @@ void action_register(const action_t *action);
 const action_t *action_get(const char *id);
 int action_exec(const action_t *action, const char *sig, ...);
 int action_execv(const action_t *action, const char *sig, va_list ap);
-void actions_iter(int (*f)(const action_t *action));
+void actions_iter(int (*f)(const action_t *action, void *user), void *user);
 
 // Convenience macro to call action_exec directly from an action id.
 #define action_exec2(id, sig, ...) \

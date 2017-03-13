@@ -42,11 +42,11 @@ const action_t *action_get(const char *id)
     return item ? item->action : NULL;
 }
 
-void actions_iter(int (*f)(const action_t *action))
+void actions_iter(int (*f)(const action_t *action, void *user), void *user)
 {
     action_hash_item_t *item, *tmp;
     HASH_ITER(hh, g_actions, item, tmp) {
-        if (f(item->action)) return;
+        if (f(item->action, user)) return;
     }
 }
 
