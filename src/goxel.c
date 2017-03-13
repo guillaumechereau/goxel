@@ -502,7 +502,7 @@ ACTION_REGISTER(export_as,
 
 
 // XXX: this function has to be rewritten.
-static void export_as_png(const char *path, int w, int h)
+void export_as_png(const char *path, int w, int h)
 {
     w = w ?: goxel->image->export_width;
     h = h ?: goxel->image->export_height;
@@ -540,7 +540,7 @@ ACTION_REGISTER(export_as_png,
     .csig = "vpii",
 )
 
-static void export_as_txt(const char *path)
+void export_as_txt(const char *path)
 {
     FILE *out;
     mesh_t *mesh = goxel->layers_mesh;

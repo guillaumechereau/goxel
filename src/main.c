@@ -60,6 +60,7 @@ void on_char(GLFWwindow *win, unsigned int c)
 typedef struct
 {
     char    *args[1];
+    char *export_file;
 } args_t;
 
 #ifndef NO_ARGP
@@ -77,21 +78,30 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 
     switch (key)
     {
-    case ARGP_KEY_ARG:
-        if (state->arg_num >= 1)
-            argp_usage(state);
-        args->args[state->arg_num] = arg;
-        break;
-    case ARGP_KEY_END:
-        break;
-    default:
-        return ARGP_ERR_UNKNOWN;
+        case 'e':
+            args->export_file = arg;
+            break;
+        case ARGP_KEY_ARG:
+            if (state->arg_num >= 1)
+                argp_usage(state);
+            args->args[state->arg_num] = arg;
+            break;
+        case ARGP_KEY_END:
+            break;
+        default:
+            return ARGP_ERR_UNKNOWN;
     }
     return 0;
 }
 
+/* Our options. */
+static struct argp_option options[] = {
+    {"export", 'e', "FILE", 0, "Export to FILE the voxel project." },
+    { 0 }
+};
+
 /* Our argp parser. */
-static struct argp argp = { NULL, parse_opt, args_doc, doc };
+static struct argp argp = { options, parse_opt, args_doc, doc };
 #endif
 
 static void loop_function(void) {
@@ -165,6 +175,10 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_SAMPLES, 2);
     monitor = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(monitor);
+    if (args.export_file) {
+        // Because the window is not necesary
+        glfwWindowHint(GLFW_VISIBLE, 0);
+    }
     window = glfwCreateWindow(mode->width, mode->height, title, NULL, NULL);
     g_window = window;
     glfwMakeContextCurrent(window);
@@ -186,6 +200,40 @@ int main(int argc, char **argv)
             action_exec2("import_kv6", "p", args.args[0]);
         else
             load_from_file(g_goxel, args.args[0]);
+    }
+    
+    // Checks if there is a loaded file.
+    if (g_goxel->image->path)
+    {
+        if (str_endswith(args.export_file, ".png")) {
+            export_as_png(args.export_file, 0, 0);
+            exit(0);
+        }
+        else if (str_endswith(args.export_file, ".obj")) {
+            wavefront_export(g_goxel->layers_mesh, args.export_file);
+            exit(0);
+        }
+        else if (str_endswith(args.export_file, ".ply")) {
+            ply_export(g_goxel->layers_mesh, args.export_file);
+            exit(0);
+        }
+        else if (str_endswith(args.export_file, ".qb")) {
+            qubicle_export(g_goxel->layers_mesh, args.export_file);
+            exit(0);
+        }
+        //~ else if (str_endswith(args.export_file, ".vox")) {
+            //~ vox_export(g_goxel->layers_mesh, args.export_file);
+            //~ exit(0);
+        //~ }
+        else if (str_endswith(args.export_file, ".txt")) {
+            export_as_txt(args.export_file);
+            exit(0);
+        }
+        else
+        {
+            printf("Unknow the file extension to export.\n");
+            exit(1);
+        }
     }
 
     start_main_loop(loop_function);

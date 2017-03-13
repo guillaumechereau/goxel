@@ -1011,4 +1011,9 @@ void mustache_free(mustache_t *m);
 void cache_add(const void *key, int len, block_data_t *data);
 block_data_t *cache_get(const void *key, int len);
 
+// ###############################################
+void export_as_png(const char *path, int w, int h);
+void export_as_txt(const char *path);
+void qubicle_export(const mesh_t *mesh, const char *path);
+
 #endif // GOXEL_H
