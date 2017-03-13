@@ -27,6 +27,11 @@
         goto end; \
     } while (0)
 
+static inline int AT(int x, int y, int z, int w, int h, int d) {
+    y = h - y - 1;
+    z = d - z - 1;
+    return x + y * w + z * w * h;
+}
 
 static uvec4b_t swap_color(uint32_t v)
 {
@@ -84,7 +89,7 @@ static int kv6_import(const char *path)
         nb = xyoffsets[x * h + y];
         for (i = 0; i < nb; i++, p++) {
             z = blocks[p].zpos;
-            cube[x + y * w + z * w * h] = swap_color(blocks[p].color);
+            cube[AT(x, y, z, w, h, d)] = swap_color(blocks[p].color);
         }
     }
 
@@ -101,8 +106,8 @@ static int kv6_import(const char *path)
             }
             if (blocks[p].visface & 0x20) {
                 for (; z < blocks[p].zpos; z++)
-                    if (cube[x + y * w + z * w * h].a == 0)
-                        cube[x + y * w + z * w * h] = color;
+                    if (cube[AT(x, y, z, w, h, d)].a == 0)
+                        cube[AT(x, y, z, w, h, d)] = color;
             }
         }
     }
@@ -176,15 +181,15 @@ static int kvx_import(const char *path)
             assert(z + len - 1  < d);
             for (i = 0; i < len; i++) {
                 color = READ(uint8_t, file);
-                cube[x + y * w + (z + i) * w * h] = palette[color];
+                cube[AT(x, y, z + i, w, h, d)] = palette[color];
             }
             nb -= len + 3;
             // Fill
             if (visface & 0x10) lastz = z + len;
             if (visface & 0x20) {
                 for (i = lastz; i < z; i++)
-                    if (cube[x + y * w + i * w * h].a == 0)
-                        cube[x + y * w + i * w * h] = palette[color];
+                    if (cube[AT(x, y, i, w, h, d)].a == 0)
+                        cube[AT(x, y, i, w, h, d)] = palette[color];
             }
         }
     }
