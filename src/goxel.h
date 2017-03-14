@@ -237,6 +237,8 @@ static inline float mix(float x, float y, float t)
 
 // #### Utils ##################
 
+char *read_file(const char *path, int *size);
+
 // Get the clock in nanoseconds
 int64_t get_clock(void);
 
