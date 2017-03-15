@@ -39,10 +39,10 @@ void camera_update(camera_t *camera)
         camera->proj_mat = mat4_ortho(
                 -size, +size,
                 -size / camera->aspect, +size / camera->aspect,
-                0, 1000);
+                0, 2048);
     } else {
         camera->proj_mat = mat4_perspective(
-                camera->fovy, camera->aspect, 1, 1000);
+                camera->fovy, camera->aspect, 1, 2048);
     }
 }
 
