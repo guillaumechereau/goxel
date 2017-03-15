@@ -30,6 +30,7 @@
     } while (0)
 
 static inline int AT(int x, int y, int z) {
+    x = 511 - x;
     z = 63 - z;
     return x + y * 512 + z * 512 * 512;
 }
