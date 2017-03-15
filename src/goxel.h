@@ -735,12 +735,12 @@ enum {
     KEY_CONTROL     = 341,
 };
 
-// Flags to set where the mouse snap.
+// Flags to set where the mouse snap.  In order of priority.
 enum {
-    SNAP_MESH           = 1 << 0,
-    SNAP_PLANE          = 1 << 1,
-    SNAP_SELECTION_IN   = 1 << 2,
-    SNAP_SELECTION_OUT  = 1 << 3,
+    SNAP_SELECTION_IN   = 1 << 0,
+    SNAP_SELECTION_OUT  = 1 << 1,
+    SNAP_MESH           = 1 << 2,
+    SNAP_PLANE          = 1 << 3,
 };
 
 typedef struct inputs

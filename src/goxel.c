@@ -172,7 +172,6 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
 {
     int i, ret = 0;
     vec3_t p = vec3_zero, n = vec3_zero;
-    float dist, best = INFINITY;
     bool r = false;
 
     // If tool_plane is set, we specifically use it.
@@ -203,10 +202,6 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         if (!r)
             continue;
 
-        dist = -mat4_mul_vec3(goxel->camera.view_mat, p).z;
-        if (dist < 0 || dist > best) continue;
-
-        best = dist;
         p.x = round(p.x - 0.5) + 0.5;
         p.y = round(p.y - 0.5) + 0.5;
         p.z = round(p.z - 0.5) + 0.5;
@@ -214,6 +209,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         *out = p;
         *normal = n;
         ret = 1 << i;
+        break;
     }
     return ret;
 }

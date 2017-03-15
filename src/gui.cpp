@@ -433,10 +433,10 @@ static void tool_options_panel(goxel_t *goxel)
     float w, v;
     bool s;
     const char *snap[] = {
-        "Mesh",
-        "Plane",
         "Sel In",
         "Sel Out",
+        "Mesh",
+        "Plane",
     };
     ImVec4 color;
     layer_t *layer;
