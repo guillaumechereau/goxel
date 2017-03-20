@@ -88,9 +88,6 @@ void model3d_init(void)
 
 model3d_t *model3d_cube(void)
 {
-    extern const int FACES_VERTICES[6][4];
-    extern const vec3b_t VERTICES_POSITIONS[8];
-    extern const vec3b_t FACES_NORMALS[6];
     int f, i, v;
     model3d_t *model = calloc(1, sizeof(*model));
     model->solid = true;
@@ -115,8 +112,6 @@ model3d_t *model3d_cube(void)
 
 model3d_t *model3d_wire_cube(void)
 {
-    extern const int FACES_VERTICES[6][4];
-    extern const vec3b_t VERTICES_POSITIONS[8];
     int f, i, v;
     vec3b_t p;
     model3d_t *model = calloc(1, sizeof(*model));

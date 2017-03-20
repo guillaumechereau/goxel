@@ -26,9 +26,6 @@ static const int N = BLOCK_SIZE;
         for (y = 1; y < N - 1; y++) \
             for (x = 1; x < N - 1; x++)
 
-extern const vec3b_t VERTICES_POSITIONS[8];
-extern const int EDGES_VERTICES[12][2];
-
 // Marching cube data.
 static const int MC_EDGE_TABLE[256];
 static const int8_t MC_TRI_TABLE[256][16];

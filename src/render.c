@@ -221,8 +221,6 @@ static void bump_img_fill(uvec3b_t *data, int x, int y, int w, int h,
 
 static uvec3b_t bump_neighbor_value(int f, int e)
 {
-    extern const vec3b_t FACES_NORMALS[6];
-    extern const int FACES_NEIGHBORS[6][4];
     assert(e >= 0 && e < 4);
     assert(f >= 0 && f < 6);
     vec3b_t n0, n1;
@@ -237,7 +235,6 @@ static uvec3b_t bump_neighbor_value(int f, int e)
 
 static void set_bump_block(uvec3b_t *data, int bx, int by, int f, int mask)
 {
-    extern const vec3b_t FACES_NORMALS[6];
     uvec3b_t v = uvec3b(127 + FACES_NORMALS[f].x * 127,
                         127 + FACES_NORMALS[f].y * 127,
                         127 + FACES_NORMALS[f].z * 127);

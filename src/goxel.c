@@ -79,7 +79,6 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
                      vec3_t *out, vec3_t *normal,
                      int *face)
 {
-    extern const mat4_t FACES_MATS[6];
     int f;
     vec3_t wpos = vec3(pos->x, view_size->y - pos->y, 0);
     vec3_t opos;
@@ -116,8 +115,6 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
                              vec3_t *out, vec3_t *normal)
 {
     // XXX: No need to render the fbo if it is not dirty.
-    extern const vec3b_t FACES_NORMALS[6];
-
     if (goxel->pick_fbo && !vec2_equal(
                 vec2(goxel->pick_fbo->w, goxel->pick_fbo->h), *view_size)) {
         texture_delete(goxel->pick_fbo);
