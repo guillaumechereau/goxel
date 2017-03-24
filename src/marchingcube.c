@@ -19,6 +19,7 @@
 #include "goxel.h"
 
 static const int N = BLOCK_SIZE;
+
 #define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
 
 #define BLOCK_ITER_INSIDE(x, y, z) \
@@ -30,7 +31,7 @@ static const int N = BLOCK_SIZE;
 static const int MC_EDGE_TABLE[256];
 static const int8_t MC_TRI_TABLE[256][16];
 
-// Represent a marching cube vertex, by two vertex index and a factor
+// Represent a marching cube triangle vertex, by two vertex index and a factor
 // between them.  If mu = 0, the vertex is at v0, if mu = 1, the vertex is
 // at v1, otherwise the vertex is somewhere in between.
 typedef struct {
@@ -38,46 +39,23 @@ typedef struct {
     float   mu;
 } mc_vert_t;
 
-static vec3b_t mc_interp_pos(const mc_vert_t *vert)
-{
-    int i;
-    vec3b_t ret = vec3b_zero;
-    vec3b_t p0 = VERTICES_POSITIONS[vert->v0];
-    vec3b_t p1 = VERTICES_POSITIONS[vert->v1];
-    const float mu = vert->mu;
-    for (i = 0; i < 3; i++)
-        ret.v[i] = (p0.v[i] * (1 - mu) + p1.v[i] * mu) * MC_VOXEL_SUB_POS;
-    return ret;
-}
-
-static uvec4b_t mc_interp_color(const mc_vert_t *vert,
-                               const uvec4b_t neighboors[8])
-{
-    uvec4b_t ret;
-    const uvec4b_t v0 = neighboors[vert->v0];
-    const uvec4b_t v1 = neighboors[vert->v1];
-    ret.a = 255;
-    int i;
-    for (i = 0; i < 3; i++)
-        ret.v[i] = (v0.v[i] * v0.a + v1.v[i] * v1.a) / (v0.a + v1.a);
-    return ret;
-}
-
-
-static int mc_compute(uint8_t cube_index, const uvec4b_t neighboors[8],
+static int mc_compute(const int neighboors[8],
                       mc_vert_t (*out)[3])
 {
     int edges, i, nb_tri;
     int f0, f1;
+    int cube_index = 0;
     mc_vert_t verts[12];
+
+    for (i = 0; i < 8; i++) if (neighboors[i] > 127) cube_index |= 1 << i;
     edges = MC_EDGE_TABLE[cube_index];
     if (!edges) return 0;
     for (i = 0; i < 12; i++) {
         if (!(edges & (1 << i))) continue;
         verts[i].v0 = EDGES_VERTICES[i][0];
         verts[i].v1 = EDGES_VERTICES[i][1];
-        f0 = neighboors[verts[i].v0].a;
-        f1 = neighboors[verts[i].v1].a;
+        f0 = neighboors[verts[i].v0];
+        f1 = neighboors[verts[i].v1];
         verts[i].mu = (f0 - 127) / (float)(f0 - f1);
     }
     nb_tri = 0;
@@ -91,54 +69,96 @@ static int mc_compute(uint8_t cube_index, const uvec4b_t neighboors[8],
     return nb_tri;
 }
 
-static uint8_t block_get_neighboors_mc(const block_data_t *data,
-                                       int x, int y, int z,
-                                       uvec4b_t neighboors[8])
+static vec3b_t mc_interp_pos(const mc_vert_t *vert)
 {
     int i;
-    vec3b_t npos;
-    uint8_t ret = 0;
-    for (i = 0; i < 8; i++) {
-        npos = vec3b_add(vec3b(x, y, z), VERTICES_POSITIONS[i]);
-        neighboors[i] = DATA_AT(data, npos.x, npos.y, npos.z);
-        if (neighboors[i].a > 127) ret |= 1 << i;
-    }
+    vec3b_t ret = vec3b_zero;
+    vec3b_t p0 = VERTICES_POSITIONS[vert->v0];
+    vec3b_t p1 = VERTICES_POSITIONS[vert->v1];
+    const float mu = vert->mu;
+    for (i = 0; i < 3; i++)
+        ret.v[i] = (p0.v[i] * (1 - mu) + p1.v[i] * mu) * MC_VOXEL_SUB_POS;
     return ret;
 }
 
-// XXX: I could use an interpolation of the normal for a smooth effect.
-static vec3b_t mc_normal(uint8_t neighboors_mask, uvec4b_t neighboors[8])
+static vec3_t mc_interp_normal(const mc_vert_t *vert, const int normals[8][3])
 {
     int i;
-    int ssum = 0;
-    int sx = 0, sy = 0, sz = 0;
-    for (i = 0; i < 8; i++) {
-        ssum += neighboors[i].a;
-        sx -= (VERTICES_POSITIONS[i].x * 2 - 1) * neighboors[i].a / 4;
-        sy -= (VERTICES_POSITIONS[i].y * 2 - 1) * neighboors[i].a / 4;
-        sz -= (VERTICES_POSITIONS[i].z * 2 - 1) * neighboors[i].a / 4;
-    }
-    return vec3b(sx * 256 / ssum, sy * 256 / ssum, sz * 256 / ssum);
+    vec3_t ret = vec3_zero;
+    const int *p0 = normals[vert->v0];
+    const int *p1 = normals[vert->v1];
+    const float mu = vert->mu;
+    for (i = 0; i < 3; i++)
+        ret.v[i] = (p0[i] * (1 - mu) + p1[i] * mu);
+    vec3_normalize(&ret);
+    return ret;
 }
 
 int block_generate_vertices_mc(const block_data_t *data, int effects,
                                voxel_vertex_t *out)
 {
-    uint8_t neighboors_mask;
-    uvec4b_t neighboors[8];
-    int x, y, z, nb_tri, i, v, nb_tri_tot = 0, vi;
+    int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
+    int a, sum_a;
+    vec3_t n;
+    uvec4b_t color;
+    int colorbest;
+    bool use_max_color;
+
+    int densities[8];
+    int normals[8][3];
+    int d;
+
     mc_vert_t tri[5][3];
+
+    // Add up the contribution of each voxel to the vertices values.
     BLOCK_ITER_INSIDE(x, y, z) {
-        neighboors_mask = block_get_neighboors_mc(data, x, y, z, neighboors);
-        nb_tri = mc_compute(neighboors_mask, neighboors, tri);
+        memset(densities, 0, sizeof(densities));
+        memset(normals, 0, sizeof(normals));
+        color = DATA_AT(data, x, y, z);
+        use_max_color = (color.a == 0);
+        colorbest = 8;
+        sum_a = 0;
+        for (v = 0; v < 8; v++) {
+
+            vx = x + VERTICES_POSITIONS[v].x;
+            vy = y + VERTICES_POSITIONS[v].y;
+            vz = z + VERTICES_POSITIONS[v].z;
+
+            for (w = 0; w < 8; w++) {
+                wx = vx + VERTICES_POSITIONS[w].x - 1;
+                wy = vy + VERTICES_POSITIONS[w].y - 1;
+                wz = vz + VERTICES_POSITIONS[w].z - 1;
+                a = DATA_AT(data, wx, wy, wz).a;
+
+                if (use_max_color && a) {
+                    d = abs(x - wx) + abs(y - wy) + abs(z - wz);
+                    if (d < colorbest) {
+                        color = DATA_AT(data, wx, wy, wz);
+                        colorbest = d;
+                    }
+                }
+
+                sum_a += a;
+                densities[v] += a;
+
+                normals[v][0] -= a * (2 * VERTICES_POSITIONS[w].x - 1);
+                normals[v][1] -= a * (2 * VERTICES_POSITIONS[w].y - 1);
+                normals[v][2] -= a * (2 * VERTICES_POSITIONS[w].z - 1);
+            }
+            densities[v] /= 8;
+        }
+        if (sum_a == 0) continue;
+        nb_tri = mc_compute(densities, tri);
+
         for (i = 0; i < nb_tri; i++) {
             for (v = 0; v < 3; v++) {
                 vi = (nb_tri_tot + i) * 3 + v;
+                out[vi].color = color;
+                out[vi].color.a = 255;
                 out[vi].pos = mc_interp_pos(&tri[i][v]);
+                n = mc_interp_normal(&tri[i][v], normals);
+                out[vi].normal = vec3b(n.x * 126, n.y * 126, n.z * 126);
                 vec3b_iaddk(&out[vi].pos, vec3b(x, y, z), MC_VOXEL_SUB_POS);
-                vec3b_iadd(&out[vi].pos, vec3b(4, 4, 4));
-                out[vi].color = mc_interp_color(&tri[i][v], neighboors);
-                out[vi].normal = mc_normal(neighboors_mask, neighboors);
 
                 // XXX: this shouldn't matter.
                 out[vi].bshadow_uv = uvec2b(0, 0);
