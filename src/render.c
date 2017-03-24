@@ -64,7 +64,6 @@ struct render_item_t
     texture_t       *tex;
     bool            fixed; // If true, render in the view ref.
     int             effects;
-    int             last_used_frame;
 
     GLuint      vertex_buffer;
     int         size;           // 4 (quads) or 3 (triangles).
@@ -72,8 +71,10 @@ struct render_item_t
 };
 
 // The buffered item hash table.  For the moment it is only used of the blocks.
-static render_item_t *g_items = NULL;
+// static render_item_t *g_items = NULL;
 
+// The cache of the g_items.
+static cache_t   *g_items_cache;
 static const int BATCH_QUAD_COUNT = 1 << 14;
 static model3d_t *g_cube_model;
 static model3d_t *g_line_model;
@@ -347,6 +348,7 @@ void render_init()
     init_border_texture();
     init_bump_texture();
 
+    g_items_cache = cache_create(512);
     g_cube_model = model3d_cube();
     g_line_model = model3d_line();
     g_wire_cube_model = model3d_wire_cube();
@@ -371,6 +373,15 @@ void render_deinit(void)
 // A global buffer large enough to contain all the vertices for any block.
 static voxel_vertex_t* g_vertices_buffer = NULL;
 
+// Used for the cache.
+static int item_delete(void *item_)
+{
+    render_item_t *item = item_;
+    GL(glDeleteBuffers(1, &item->vertex_buffer));
+    free(item);
+    return 0;
+}
+
 static render_item_t *get_item_for_block(const block_t *block, int effects)
 {
     render_item_t *item;
@@ -382,8 +393,9 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
         .id = block->data->id,
         .effects = effects & effects_mask,
     };
-    HASH_FIND(hh, g_items, &key, sizeof(key), item);
-    if (item) goto end;
+
+    item = cache_get(g_items_cache, &key, sizeof(key));
+    if (item) return item;
 
     item = calloc(1, sizeof(*item));
     item->key = key;
@@ -405,9 +417,8 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
                 item->nb_elements * item->size * sizeof(*g_vertices_buffer),
                 g_vertices_buffer, GL_STATIC_DRAW));
     }
-    HASH_ADD(hh, g_items, key, sizeof(key), item);
-end:
-    item->last_used_frame = goxel->frame_count;
+
+    cache_add(g_items_cache, &key, sizeof(key), item, item_delete);
     return item;
 }
 
@@ -745,21 +756,6 @@ void render_sphere(renderer_t *rend, const mat4_t *mat)
     DL_APPEND(rend->items, item);
 }
 
-// Evict item from g_items to save memory.
-static void cleanup_buffer(void)
-{
-    render_item_t *item, *tmp;
-    HASH_ITER(hh, g_items, item, tmp) {
-        if (item->type == ITEM_BLOCK) {
-            if (item->last_used_frame + 1 < goxel->frame_count) {
-                GL(glDeleteBuffers(1, &item->vertex_buffer));
-                HASH_DEL(g_items, item);
-                free(item);
-            }
-        }
-    }
-}
-
 static int item_sort_value(const render_item_t *a)
 {
     if (a->proj_screen)     return 10;
@@ -860,7 +856,6 @@ void render_render(renderer_t *rend, const int rect[4],
 
     DL_SORT(rend->items, item_sort_cmp);
     DL_FOREACH_SAFE(rend->items, item, tmp) {
-        item->last_used_frame = goxel->frame_count;
         switch (item->type) {
         case ITEM_MESH:
             render_mesh_(rend, item->mesh, item->effects, &shadow_mvp);
@@ -880,7 +875,6 @@ void render_render(renderer_t *rend, const int rect[4],
         free(item);
     }
     assert(rend->items == NULL);
-    cleanup_buffer();
 }
 
 int render_get_default_settings(int i, char **name, render_settings_t *out)
