@@ -18,61 +18,66 @@
 
 #include "goxel.h"
 
-// After we reach this size, we start to remove old items.
-#define MAX_SIZE 512
-
 typedef struct item item_t;
 struct item {
     UT_hash_handle  hh;
     char            key[32];
-    block_data_t    *data;
+    void            *data;
     uint64_t        last_used;
+    int             (*delfunc)(void *data);
 };
 
-static item_t *g_items = NULL;
-static uint64_t g_clock = 0;
-static int g_size = 0;
+struct cache {
+    item_t *items;
+    uint64_t clock;
+    int size;
+    int max_size;
+};
+
+cache_t *cache_create(int size)
+{
+    cache_t *cache = calloc(1, sizeof(*cache));
+    cache->max_size = size;
+    return cache;
+}
 
 static int sort_cmp(void *a, void *b)
 {
     return sign(((item_t*)a)->last_used - ((item_t*)b)->last_used);
 }
 
-static void cleanup(void)
+static void cleanup(cache_t *cache)
 {
     item_t *item;
-    HASH_SORT(g_items, sort_cmp);
-    while (g_size >= MAX_SIZE) {
-        item = g_items;
-        HASH_DEL(g_items, item);
-        item->data->ref--;
-        if (item->data->ref == 0) {
-            free(item->data);
-            goxel->block_count--;
-        }
+    HASH_SORT(cache->items, sort_cmp);
+    while (cache->size >= cache->max_size) {
+        item = cache->items;
+        HASH_DEL(cache->items, item);
+        item->delfunc(item->data);
         free(item);
-        g_size--;
+        cache->size--;
     }
 }
 
-void cache_add(const void *key, int len, block_data_t *data)
+void cache_add(cache_t *cache, const void *key, int len, void *data,
+               int (*delfunc)(void *data))
 {
     item_t *item = calloc(1, sizeof(*item));
     assert(len <= sizeof(item->key));
     memcpy(item->key, key, len);
     item->data = data;
-    item->last_used = g_clock++;
-    data->ref++;
-    HASH_ADD(hh, g_items, key, len, item);
-    g_size++;
-    if (g_size >= MAX_SIZE) cleanup();
+    item->last_used = cache->clock++;
+    item->delfunc = delfunc;
+    HASH_ADD(hh, cache->items, key, len, item);
+    cache->size++;
+    if (cache->size >= cache->max_size) cleanup(cache);
 }
 
-block_data_t *cache_get(const void *key, int len)
+void *cache_get(cache_t *cache, const void *key, int keylen)
 {
     item_t *item;
-    HASH_FIND(hh, g_items, key, len, item);
+    HASH_FIND(hh, cache->items, key, keylen, item);
     if (!item) return NULL;
-    item->last_used = g_clock++;
+    item->last_used = cache->clock++;
     return item->data;
 }

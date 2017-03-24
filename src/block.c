@@ -472,10 +472,23 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     }
 }
 
+// Used for the cache.
+static int block_del(void *data_)
+{
+    block_data_t *data = data_;
+    data->ref--;
+    if (data->ref == 0) {
+        free(data);
+        goxel->block_count--;
+    }
+    return 0;
+}
+
 void block_merge(block_t *block, const block_t *other, int mode)
 {
     int x, y, z;
     block_data_t *data;
+    static cache_t *cache = NULL;
 
     if (!other || other->data == get_empty_data()) return;
     if (IS_IN(mode, MODE_ADD, MODE_MAX) && block->data == get_empty_data()) {
@@ -484,6 +497,7 @@ void block_merge(block_t *block, const block_t *other, int mode)
     }
 
     // Check if the merge op has been cached.
+    if (!cache) cache = cache_create(512);
     struct {
         uint64_t id1;
         uint64_t id2;
@@ -491,7 +505,7 @@ void block_merge(block_t *block, const block_t *other, int mode)
     } key = {
         block->data->id, other->data->id, mode
     };
-    data = cache_get(&key, sizeof(key));
+    data = cache_get(cache, &key, sizeof(key));
     if (data) {
         block_set_data(block, data);
         return;
@@ -503,7 +517,8 @@ void block_merge(block_t *block, const block_t *other, int mode)
                                            DATA_AT(other->data, x, y, z),
                                            mode);
     }
-    cache_add(&key, sizeof(key), block->data);
+    block->data->ref++;
+    cache_add(cache, &key, sizeof(key), block->data, block_del);
 }
 
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)

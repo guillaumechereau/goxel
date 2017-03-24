@@ -1021,7 +1021,11 @@ void mustache_free(mustache_t *m);
 
 // ####### Cache manager #########################
 // Allow to cache blocks merge operations.
-void cache_add(const void *key, int len, block_data_t *data);
-block_data_t *cache_get(const void *key, int len);
+typedef struct cache cache_t;
+
+cache_t *cache_create(int size);
+void cache_add(cache_t *cache, const void *key, int keylen, void *data,
+               int (*delfunc)(void *data));
+void *cache_get(cache_t *cache, const void *key, int keylen);
 
 #endif // GOXEL_H
