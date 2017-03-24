@@ -43,7 +43,7 @@ cache_t *cache_create(int size)
 
 static int sort_cmp(void *a, void *b)
 {
-    return sign(((item_t*)a)->last_used - ((item_t*)b)->last_used);
+    return cmp(((item_t*)a)->last_used, ((item_t*)b)->last_used);
 }
 
 static void cleanup(cache_t *cache)

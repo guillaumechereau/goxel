@@ -217,6 +217,12 @@ static inline vec4_t uvec4b_to_vec4(uvec4b_t v)
       (_x > 0) ? +1 : (_x < 0)? -1 : 0; \
       })
 
+#define cmp(a, b) ({ \
+    __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    (_a > _b) ? +1 : (_a < _b) ? -1 : 0; \
+})
+
 static inline float smoothstep(float edge0, float edge1, float x)
 {
     x = clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
