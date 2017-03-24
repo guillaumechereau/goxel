@@ -57,7 +57,7 @@ static int value_cmp(const void *a_, const void *b_)
     int k = g_k;
     const value_t *a = a_;
     const value_t *b = b_;
-    return sign(a->c.v[k] - b->c.v[k]);
+    return cmp(a->c.v[k], b->c.v[k]);
 }
 
 // Split a bucket into two new buckets.
@@ -117,7 +117,7 @@ static int bucket_cmp(const void *a_, const void *b_)
     const bucket_t *b = (void*)b_;
     int na = a->values ? utarray_len(a->values) : -1;
     int nb = b->values ? utarray_len(b->values) : -1;
-    return sign(nb - na);
+    return cmp(nb, na);
 }
 
 // Generate an optimal palette whith a fixed number of colors from a mesh.

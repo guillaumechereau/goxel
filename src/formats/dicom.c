@@ -302,9 +302,7 @@ static void dicom_load(const char *path, dicom_t *dicom,
 
 static int dicom_sort(const void *a, const void *b)
 {
-    const dicom_t *_a = a;
-    const dicom_t *_b = b;
-    return sign(_a->slice_location - _b->slice_location);
+    return cmp(((dicom_t*)a)->slice_location, ((dicom_t*)b)->slice_location);
 }
 
 static void dicom_import(const char *dirpath)

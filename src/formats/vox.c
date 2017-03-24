@@ -195,9 +195,9 @@ static int voxel_cmp(const void *a_, const void *b_)
 {
     const uint8_t *a = a_;
     const uint8_t *b = b_;
-    if (a[2] != b[2]) return sign(a[2] - b[2]);
-    if (a[1] != b[1]) return sign(a[1] - b[1]);
-    if (a[0] != b[0]) return sign(a[0] - b[0]);
+    if (a[2] != b[2]) return cmp(a[2], b[2]);
+    if (a[1] != b[1]) return cmp(a[1], b[1]);
+    if (a[0] != b[0]) return cmp(a[0], b[0]);
     return 0;
 }
 
