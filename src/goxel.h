@@ -195,6 +195,10 @@ static inline vec4_t uvec4b_to_vec4(uvec4b_t v)
 #define DR2D (180 / M_PI)
 #define DD2R (M_PI / 180)
 
+#define KB 1024
+#define MB (1024 * KB)
+#define GB (1024 * MB)
+
 #define min(a, b) ({ \
       __typeof__ (a) _a = (a); \
       __typeof__ (b) _b = (b); \
@@ -1031,7 +1035,7 @@ typedef struct cache cache_t;
 
 cache_t *cache_create(int size);
 void cache_add(cache_t *cache, const void *key, int keylen, void *data,
-               int (*delfunc)(void *data));
+               int cost, int (*delfunc)(void *data));
 void *cache_get(cache_t *cache, const void *key, int keylen);
 
 #endif // GOXEL_H

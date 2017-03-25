@@ -23,6 +23,7 @@ struct item {
     UT_hash_handle  hh;
     char            key[32];
     void            *data;
+    int             cost;
     uint64_t        last_used;
     int             (*delfunc)(void *data);
 };
@@ -54,22 +55,23 @@ static void cleanup(cache_t *cache)
         item = cache->items;
         HASH_DEL(cache->items, item);
         item->delfunc(item->data);
+        cache->size -= item->cost;
         free(item);
-        cache->size--;
     }
 }
 
 void cache_add(cache_t *cache, const void *key, int len, void *data,
-               int (*delfunc)(void *data))
+               int cost, int (*delfunc)(void *data))
 {
     item_t *item = calloc(1, sizeof(*item));
     assert(len <= sizeof(item->key));
     memcpy(item->key, key, len);
     item->data = data;
+    item->cost = cost;
     item->last_used = cache->clock++;
     item->delfunc = delfunc;
     HASH_ADD(hh, cache->items, key, len, item);
-    cache->size++;
+    cache->size += cost;
     if (cache->size >= cache->max_size) cleanup(cache);
 }
 

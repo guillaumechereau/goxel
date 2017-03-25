@@ -518,7 +518,7 @@ void block_merge(block_t *block, const block_t *other, int mode)
                                            mode);
     }
     block->data->ref++;
-    cache_add(cache, &key, sizeof(key), block->data, block_del);
+    cache_add(cache, &key, sizeof(key), block->data, 1, block_del);
 }
 
 uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)

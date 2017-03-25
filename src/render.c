@@ -348,7 +348,8 @@ void render_init()
     init_border_texture();
     init_bump_texture();
 
-    g_items_cache = cache_create(512);
+    // XXX: pick the proper memory size according to what is available.
+    g_items_cache = cache_create(1 * GB);
     g_cube_model = model3d_cube();
     g_line_model = model3d_line();
     g_wire_cube_model = model3d_wire_cube();
@@ -418,7 +419,9 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
                 g_vertices_buffer, GL_STATIC_DRAW));
     }
 
-    cache_add(g_items_cache, &key, sizeof(key), item, item_delete);
+    cache_add(g_items_cache, &key, sizeof(key), item,
+              item->nb_elements * item->size * sizeof(*g_vertices_buffer),
+              item_delete);
     return item;
 }
 
