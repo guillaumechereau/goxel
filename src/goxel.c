@@ -315,7 +315,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
     vec4_t x_axis;
 
     if (inputs->mouse_wheel) {
-        goxel->camera.dist -= inputs->mouse_wheel * 10;
+        goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
         return;
     }
     // Middle click: rotate the view.
