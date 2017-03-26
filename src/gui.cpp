@@ -926,6 +926,9 @@ static void render_advanced_panel(goxel_t *goxel)
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_MARCHING_CUBES)) {
         goxel->rend.settings.smoothness = 1;
     }
+    if (goxel->rend.settings.effects & EFFECT_MARCHING_CUBES)
+        ImGui::CheckboxFlags("Flat",
+            (unsigned int*)&goxel->rend.settings.effects, EFFECT_FLAT);
 
     ImGui::Text("Other");
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {

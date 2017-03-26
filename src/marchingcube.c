@@ -114,6 +114,7 @@ int block_generate_vertices_mc(const block_data_t *data, int effects,
     BLOCK_ITER_INSIDE(x, y, z) {
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
+        n = vec3_zero;
         color = DATA_AT(data, x, y, z);
         use_max_color = (color.a == 0);
         colorbest = 8;
@@ -141,14 +142,22 @@ int block_generate_vertices_mc(const block_data_t *data, int effects,
                 sum_a += a;
                 densities[v] += a;
 
-                normals[v][0] -= a * (2 * VERTICES_POSITIONS[w].x - 1);
-                normals[v][1] -= a * (2 * VERTICES_POSITIONS[w].y - 1);
-                normals[v][2] -= a * (2 * VERTICES_POSITIONS[w].z - 1);
+                if (!(effects & EFFECT_FLAT)) {
+                    normals[v][0] -= a * (2 * VERTICES_POSITIONS[w].x - 1);
+                    normals[v][1] -= a * (2 * VERTICES_POSITIONS[w].y - 1);
+                    normals[v][2] -= a * (2 * VERTICES_POSITIONS[w].z - 1);
+                }
+                else {
+                    n.x -= a * (2 * VERTICES_POSITIONS[w].x - 1);
+                    n.y -= a * (2 * VERTICES_POSITIONS[w].y - 1);
+                    n.z -= a * (2 * VERTICES_POSITIONS[w].z - 1);
+                }
             }
             densities[v] /= 8;
         }
         if (sum_a == 0) continue;
         nb_tri = mc_compute(densities, tri);
+        if (effects & EFFECT_FLAT) vec3_normalize(&n);
 
         for (i = 0; i < nb_tri; i++) {
             for (v = 0; v < 3; v++) {
@@ -156,10 +165,10 @@ int block_generate_vertices_mc(const block_data_t *data, int effects,
                 out[vi].color = color;
                 out[vi].color.a = 255;
                 out[vi].pos = mc_interp_pos(&tri[i][v]);
-                n = mc_interp_normal(&tri[i][v], normals);
+                if (!(effects & EFFECT_FLAT))
+                    n = mc_interp_normal(&tri[i][v], normals);
                 out[vi].normal = vec3b(n.x * 126, n.y * 126, n.z * 126);
                 vec3b_iaddk(&out[vi].pos, vec3b(x, y, z), MC_VOXEL_SUB_POS);
-
                 // XXX: this shouldn't matter.
                 out[vi].bshadow_uv = uvec2b(0, 0);
                 out[vi].bump_uv = uvec2b(0, 0);

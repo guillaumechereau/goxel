@@ -602,6 +602,7 @@ enum {
     EFFECT_SEE_BACK         = 1 << 6,
     EFFECT_MARCHING_CUBES   = 1 << 7,
     EFFECT_SHADOW_MAP       = 1 << 8,
+    EFFECT_FLAT             = 1 << 9,
 };
 
 typedef struct {

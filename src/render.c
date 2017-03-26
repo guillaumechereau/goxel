@@ -387,7 +387,8 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
 {
     render_item_t *item;
     const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
-                             EFFECT_MARCHING_CUBES | EFFECT_SMOOTH;
+                             EFFECT_MARCHING_CUBES | EFFECT_SMOOTH |
+                             EFFECT_FLAT;
     // For the moment we always compute the smooth normal no mater what.
     effects |= EFFECT_SMOOTH;
     block_item_key_t key = {
@@ -916,7 +917,7 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
         case 4:
             if (name) *name = "Marching";
             out->smoothness = 1.0;
-            out->effects = EFFECT_MARCHING_CUBES;
+            out->effects = EFFECT_MARCHING_CUBES | EFFECT_FLAT;
             break;
     }
     return 5;
