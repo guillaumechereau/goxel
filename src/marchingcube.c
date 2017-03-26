@@ -47,7 +47,7 @@ static int mc_compute(const int neighboors[8],
     int cube_index = 0;
     mc_vert_t verts[12];
 
-    for (i = 0; i < 8; i++) if (neighboors[i] > 127) cube_index |= 1 << i;
+    for (i = 0; i < 8; i++) if (neighboors[i] >= 127) cube_index |= 1 << i;
     edges = MC_EDGE_TABLE[cube_index];
     if (!edges) return 0;
     for (i = 0; i < 12; i++) {
@@ -106,9 +106,10 @@ int block_generate_vertices_mc(const block_data_t *data, int effects,
 
     int densities[8];
     int normals[8][3];
-    int d;
+    int d, k = 2;
 
     mc_vert_t tri[5][3];
+    if (!(effects & EFFECT_FLAT)) k = 8;
 
     // Add up the contribution of each voxel to the vertices values.
     BLOCK_ITER_INSIDE(x, y, z) {
@@ -153,7 +154,7 @@ int block_generate_vertices_mc(const block_data_t *data, int effects,
                     n.z -= a * (2 * VERTICES_POSITIONS[w].z - 1);
                 }
             }
-            densities[v] /= 8;
+            densities[v] /= k;
         }
         if (sum_a == 0) continue;
         nb_tri = mc_compute(densities, tri);
