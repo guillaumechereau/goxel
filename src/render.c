@@ -112,7 +112,6 @@ typedef struct {
     GLint u_bshadow_tex_l;
     GLint u_bshadow_l;
     GLint u_bump_tex_l;
-    GLint u_block_id_l;
     GLint u_pos_scale_l;
     GLint u_shadow_mvp_l;
     GLint u_shadow_k_l;
@@ -143,7 +142,7 @@ static const struct {
     {"a_pos",           3, GL_BYTE,            false, OFFSET(pos)},
     {"a_normal",        3, GL_BYTE,            false, OFFSET(normal)},
     {"a_color",         4, GL_UNSIGNED_BYTE,   true,  OFFSET(color)},
-    {"a_pos_data",      2, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
+    {"a_pos_data",      4, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
     {"a_uv",            2, GL_UNSIGNED_BYTE,   true,  OFFSET(uv)},
     {"a_bump_uv",       2, GL_UNSIGNED_BYTE,   false, OFFSET(bump_uv)},
     {"a_bshadow_uv",    2, GL_UNSIGNED_BYTE,   false, OFFSET(bshadow_uv)},
@@ -300,7 +299,6 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader,
     UNIFORM(u_bshadow_tex);
     UNIFORM(u_bshadow);
     UNIFORM(u_bump_tex);
-    UNIFORM(u_block_id);
     UNIFORM(u_pos_scale);
     UNIFORM(u_shadow_mvp);
     UNIFORM(u_shadow_k);
@@ -408,7 +406,7 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
     item->nb_elements = block_generate_vertices(block->data, effects,
-                                                g_vertices_buffer);
+                                                block->id, g_vertices_buffer);
     item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
     if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
@@ -430,7 +428,6 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
                           prog_t *prog, mat4_t *model)
 {
     render_item_t *item;
-    vec2_t block_id_vec;
     mat4_t block_model;
     int attr;
 
@@ -446,12 +443,6 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
                                  sizeof(voxel_vertex_t),
                                  (void*)(intptr_t)ATTRIBUTES[attr].offset));
     }
-
-    block_id_vec = vec2(
-        (block->id >> 8)   / 255.0,
-        (block->id & 0xff) / 255.0
-    );
-    GL(glUniform2fv(prog->u_block_id_l, 1, block_id_vec.v));
 
     block_model = *model;
     mat4_itranslate(&block_model, block->pos.x, block->pos.y, block->pos.z);
@@ -1075,11 +1066,11 @@ static const char *FSHADER =
 static const char *POS_DATA_VSHADER =
     "                                                                   \n"
     "attribute vec3 a_pos;                                              \n"
-    "attribute vec2 a_pos_data;                                         \n"
+    "attribute vec4 a_pos_data;                                         \n"
     "uniform   mat4 u_model;                                            \n"
     "uniform   mat4 u_view;                                             \n"
     "uniform   mat4 u_proj;                                             \n"
-    "varying   vec2 v_pos_data;                                         \n"
+    "varying   vec4 v_pos_data;                                         \n"
     "void main()                                                        \n"
     "{                                                                  \n"
     "    vec3 pos = a_pos;                                              \n"
@@ -1094,13 +1085,11 @@ static const char *POS_DATA_FSHADER =
     "precision highp float;                                           \n"
     "#endif                                                           \n"
     "                                                                 \n"
-    "varying lowp vec2 v_pos_data;                                    \n"
-    "uniform vec2 u_block_id;                                         \n"
+    "varying lowp vec4 v_pos_data;                                    \n"
     "                                                                 \n"
     "void main()                                                      \n"
     "{                                                                \n"
-    "    gl_FragColor.rg = v_pos_data;                                \n"
-    "    gl_FragColor.ba = u_block_id;                                \n"
+    "    gl_FragColor = v_pos_data;                                   \n"
     "}                                                                \n"
 ;
 

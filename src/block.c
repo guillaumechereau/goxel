@@ -302,19 +302,19 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
  *    z   :  4 bits
  *    pad :  1 bit
  *    face:  3 bits
+ *    id  : 16 bits
  *    -------------
- *    tot : 16 bits
- *
- *    So it fits into 2 bytes, and we can feed it into a shader as a vec2.
+ *    tot : 32 bits
  */
-static uvec2b_t get_pos_as_vec2(int x, int y, int z, int f)
+static uint32_t get_pos_data(uint32_t x, uint32_t y, uint32_t z, uint32_t f,
+                             uint32_t i)
 {
-    return uvec2b(x << 4 | y,
-                  z << 4 | f);
+    assert(BLOCK_SIZE == 16);
+    return (x << 28) | (y << 24) | (z << 20) | (f << 16) | (i & 0xffff);
 }
 
 int block_generate_vertices(const block_data_t *data, int effects,
-                            voxel_vertex_t *out)
+                            int block_id, voxel_vertex_t *out)
 {
     int x, y, z, f;
     int i, nb = 0;
@@ -349,7 +349,7 @@ int block_generate_vertices(const block_data_t *data, int effects,
                 // For testing:
                 // This put a border bump on all the edges of the voxel.
                 out[nb * 4 + i].bump_uv = uvec2b(borders_mask * 16, f * 16);
-                out[nb * 4 + i].pos_data = get_pos_as_vec2(x, y, z, f);
+                out[nb * 4 + i].pos_data = get_pos_data(x, y, z, f, block_id);
             }
             nb++;
         }

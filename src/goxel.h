@@ -495,7 +495,7 @@ typedef struct voxel_vertex
     vec3b_t  pos        __attribute__((aligned(4)));
     vec3b_t  normal     __attribute__((aligned(4)));
     uvec4b_t color      __attribute__((aligned(4)));
-    uvec2b_t pos_data   __attribute__((aligned(4)));
+    uint32_t pos_data   __attribute__((aligned(4)));
     uvec2b_t uv         __attribute__((aligned(4)));
     uvec2b_t bshadow_uv __attribute__((aligned(4)));
     uvec2b_t bump_uv    __attribute__((aligned(4)));
@@ -527,7 +527,7 @@ void block_fill(block_t *block,
                 uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
                 void *user_data);
 int block_generate_vertices(const block_data_t *data, int effects,
-                            voxel_vertex_t *out);
+                            int block_id, voxel_vertex_t *out);
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);
 void block_merge(block_t *block, const block_t *other, int op);

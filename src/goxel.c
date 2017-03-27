@@ -21,16 +21,17 @@
 
 goxel_t *goxel = NULL;
 
-static void unpack_pos_data(const uvec4b_t data, vec3b_t *pos, int *face,
+static void unpack_pos_data(uint32_t v, vec3b_t *pos, int *face,
                             int *cube_id)
 {
+    assert(BLOCK_SIZE == 16);
     int x, y, z, f, i;
-    x = data.r >> 4;
-    y = data.r & 0x0f;
-    z = data.g >> 4;
-    f = data.g & 0x0f;
+    x = v >> 28;
+    y = (v >> 24) & 0x0f;
+    z = (v >> 20) & 0x0f;
+    f = (v >> 16) & 0x0f;
+    i = v & 0xffff;
     assert(f < 6);
-    i = ((int)data.b) << 8 | data.a;
     *pos = vec3b(x, y, z);
     *face = f;
     *cube_id = i;
@@ -131,7 +132,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
         .proj_mat = goxel->rend.proj_mat,
         .settings = goxel->rend.settings,
     };
-    uvec4b_t pixel;
+    uint32_t pixel;
     vec3b_t voxel_pos;
     block_t *block;
     int face, block_id;
