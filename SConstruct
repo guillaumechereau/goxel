@@ -9,11 +9,12 @@ import sys
 target_os = str(Platform())
 
 debug = int(ARGUMENTS.get('debug', 1))
+profile = int(ARGUMENTS.get('profile', 0))
 gprof = int(ARGUMENTS.get('gprof', 0))
 glut = int(ARGUMENTS.get('glut', 0))
 emscripten = ARGUMENTS.get('emscripten', 0)
 
-if gprof: debug = 0
+if profile or gprof: debug = 0
 if emscripten: target_os = 'js'
 
 env = Environment(ENV = os.environ)
@@ -28,10 +29,11 @@ env.Append(CFLAGS= '-Wall -Werror -std=gnu99 -Wno-unknown-pragmas',
                     '-Wno-unknown-pragmas'
         )
 
-if debug:
-    env.Append(CCFLAGS='-g')
-else:
+if not debug:
     env.Append(CCFLAGS='-O3 -DNDEBUG -D_FORTIFY_SOURCE=2')
+
+if profile or debug:
+    env.Append(CCFLAGS='-g')
 
 if gprof:
     env.Append(CCFLAGS='-pg', LINKFLAGS='-pg')
