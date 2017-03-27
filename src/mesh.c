@@ -297,26 +297,25 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
     block_t *block;
     static block_t *last_block = NULL;
     static uint64_t last_mesh_id = 0;
-    static box_t last_box;
+    static vec3i_t last_p;
+
     vec3i_t p;
     const int s = BLOCK_SIZE - 2;
-
-    if ((last_mesh_id == mesh->id) && last_block) {
-        if (bbox_contains_vec(last_box, *pos)) {
-            return block_get_at(last_block, pos);
-        }
-    }
 
     p = vec3i((int)(floor((pos->x + BLOCK_SIZE / 2) / s) * s),
               (int)(floor((pos->y + BLOCK_SIZE / 2) / s) * s),
               (int)(floor((pos->z + BLOCK_SIZE / 2) / s) * s));
 
+    if (last_mesh_id == mesh->id) {
+        if (memcmp(&last_p, &p, sizeof(p)) == 0)
+            return last_block ? block_get_at(last_block, pos) : uvec4b_zero;
+    }
+
     HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
-    if (!block) return uvec4b(0, 0, 0, 0);
     last_mesh_id = mesh->id;
     last_block = block;
-    last_box = block_get_box(block, false);
-    return block_get_at(block, pos);
+    last_p = p;
+    return block ? block_get_at(block, pos) : uvec4b_zero;
 }
 
 void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v)
