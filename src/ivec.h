@@ -34,6 +34,15 @@ static inline vec2i_t vec2i(int x, int y) {
 }
 
 typedef union {
+    struct  { int x, y, z; };
+    int     v[3];
+} vec3i_t;
+
+static inline vec3i_t vec3i(int x, int y, int z) {
+    return (vec3i_t)IVEC(x, y, z);
+}
+
+typedef union {
     struct  { uint8_t x, y; };
     uint8_t     v[2];
 } uvec2b_t;

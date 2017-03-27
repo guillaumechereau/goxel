@@ -142,6 +142,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
     rend.settings.shadow = 0;
     rend.fbo = goxel->pick_fbo->framebuffer;
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
+
     render_render(&rend, rect, &vec4_zero);
 
     x = round(pos->x);

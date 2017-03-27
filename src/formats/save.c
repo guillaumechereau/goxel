@@ -291,7 +291,7 @@ void load_from_file(goxel_t *goxel, const char *path)
     uint8_t *png;
     chunk_t c;
     int i, index, x, y, z;
-    vec3_t pos;
+    vec3i_t pos;
     int  dict_value_size;
     char dict_key[256];
     char dict_value[256];
@@ -344,7 +344,7 @@ void load_from_file(goxel_t *goxel, const char *path)
                 chunk_read_int32(&c, in);
                 data = hash_find_at(blocks_table, index);
                 assert(data);
-                pos = vec3(x, y, z);
+                pos = vec3i(x, y, z);
                 mesh_add_block(layer->mesh, data->v, &pos);
             }
             while ((dict_value_size = chunk_read_dict_value(&c, in,

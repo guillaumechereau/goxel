@@ -516,7 +516,8 @@ static void compute_shadow_map_box(
         if (item->type != ITEM_MESH) continue;
         MESH_ITER_BLOCKS(item->mesh, block) {
             for (i = 0; i < 8; i++) {
-                p = vec3_addk(block->pos, POS[i], N);
+                p = vec3(block->pos.x, block->pos.y, block->pos.z);
+                p = vec3_addk(p, POS[i], N);
                 p = mat4_mul_vec3(view_mat, p);
                 rect[0] = min(rect[0], p.x);
                 rect[1] = max(rect[1], p.x);

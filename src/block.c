@@ -86,7 +86,7 @@ bool block_is_empty(const block_t *block, bool fast)
     return true;
 }
 
-block_t *block_new(const vec3_t *pos, block_data_t *data)
+block_t *block_new(const vec3i_t *pos, block_data_t *data)
 {
     block_t *block = calloc(1, sizeof(*block));
     block->pos = *pos;
@@ -130,8 +130,9 @@ box_t block_get_box(const block_t *block, bool exact)
     box_t ret;
     int x, y, z;
     int xmin = N, xmax = 0, ymin = N, ymax = 0, zmin = N, zmax = 0;
+    vec3_t pos = vec3(block->pos.x, block->pos.y, block->pos.z);
     if (!exact)
-        return bbox_from_extents(block->pos, N / 2, N / 2, N / 2);
+        return bbox_from_extents(pos, N / 2, N / 2, N / 2);
     BLOCK_ITER(x, y, z) {
         if (BLOCK_AT(block, x, y, z).a) {
             xmin = min(xmin, x);
@@ -145,7 +146,7 @@ box_t block_get_box(const block_t *block, bool exact)
     if (xmin > xmax) return box_null;
     ret = bbox_from_points(vec3(xmin - 0.5, ymin - 0.5, zmin - 0.5),
                            vec3(xmax + 0.5, ymax + 0.5, zmax + 0.5));
-    vec3_iadd(&ret.p, block->pos);
+    vec3_iadd(&ret.p, pos);
     vec3_isub(&ret.p, vec3(N / 2 - 0.5, N / 2 - 0.5, N / 2 - 0.5));
     return ret;
 }
@@ -525,12 +526,12 @@ uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)
 {
     int x, y, z;
     vec3_t p = *pos;
-    assert(bbox_contains_vec(block_get_box(block, false), *pos));
-    vec3_isub(&p, block->pos);
-    vec3_iadd(&p, vec3(N / 2 - 0.5, N / 2 - 0.5, N / 2 - 0.5));
-    x = round(p.x);
-    y = round(p.y);
-    z = round(p.z);
+    x = round(p.x - block->pos.x + N / 2 - 0.5);
+    y = round(p.y - block->pos.y + N / 2 - 0.5);
+    z = round(p.z - block->pos.z + N / 2 - 0.5);
+    assert(x >= 0 && x < N);
+    assert(y >= 0 && y < N);
+    assert(z >= 0 && z < N);
     return BLOCK_AT(block, x, y, z);
 }
 
@@ -538,13 +539,13 @@ void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v)
 {
     int x, y, z;
     vec3_t p = *pos;
-    assert(bbox_contains_vec(block_get_box(block, false), *pos));
-    vec3_isub(&p, block->pos);
-    vec3_iadd(&p, vec3(N / 2 - 0.5, N / 2 - 0.5, N / 2 - 0.5));
     block_prepare_write(block);
-    x = round(p.x);
-    y = round(p.y);
-    z = round(p.z);
+    x = round(p.x - block->pos.x + N / 2 - 0.5);
+    y = round(p.y - block->pos.y + N / 2 - 0.5);
+    z = round(p.z - block->pos.z + N / 2 - 0.5);
+    assert(x >= 0 && x < N);
+    assert(y >= 0 && y < N);
+    assert(z >= 0 && z < N);
     BLOCK_AT(block, x, y, z) = v;
 }
 

@@ -156,11 +156,10 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     return ret;
 }
 
-static block_t *mesh_get_block_at(const mesh_t *mesh, const vec3_t *pos)
+static block_t *mesh_get_block_at(const mesh_t *mesh, const vec3i_t *pos)
 {
     block_t *block;
-    vec3_t p = vec3((int)pos->x, (int)pos->y, (int)pos->z);
-    HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
+    HASH_FIND(hh, mesh->blocks, pos, sizeof(*pos), block);
     return block;
 }
 
@@ -171,7 +170,7 @@ static void add_blocks(mesh_t *mesh, box_t box)
     float x, y, z;
     int i;
     const int s = BLOCK_SIZE - 2;
-    vec3_t p;
+    vec3i_t p;
 
     a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
     b = vec3(box.p.x + box.w.x, box.p.y + box.h.y, box.p.z + box.d.z);
@@ -183,7 +182,10 @@ static void add_blocks(mesh_t *mesh, box_t box)
     for (y = a.y; y <= b.y; y += s)
     for (x = a.x; x <= b.x; x += s)
     {
-        p = vec3(x, y, z);
+        p = vec3i(x, y, z);
+        assert(p.x % s == 0);
+        assert(p.y % s == 0);
+        assert(p.z % s == 0);
         if (!mesh_get_block_at(mesh, &p))
             mesh_add_block(mesh, NULL, &p);
     }
@@ -276,13 +278,15 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     }
 }
 
-block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3_t *pos)
+block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos)
 {
     block_t *block;
-    vec3_t p = vec3((int)pos->x, (int)pos->y, (int)pos->z);
-    assert(!mesh_get_block_at(mesh, &p));
+    assert(pos->x % (BLOCK_SIZE - 2) == 0);
+    assert(pos->y % (BLOCK_SIZE - 2) == 0);
+    assert(pos->z % (BLOCK_SIZE - 2) == 0);
+    assert(!mesh_get_block_at(mesh, pos));
     mesh_prepare_write(mesh);
-    block = block_new(&p, data);
+    block = block_new(pos, data);
     block->id = mesh->next_block_id++;
     HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
     return block;
@@ -294,7 +298,7 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
     static block_t *last_block = NULL;
     static uint64_t last_mesh_id = 0;
     static box_t last_box;
-    vec3_t p;
+    vec3i_t p;
     const int s = BLOCK_SIZE - 2;
 
     if ((last_mesh_id == mesh->id) && last_block) {
@@ -303,9 +307,9 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
         }
     }
 
-    p = vec3((int)(round(pos->x / s) * s),
-             (int)(round(pos->y / s) * s),
-             (int)(round(pos->z / s) * s));
+    p = vec3i((int)(round(pos->x / s) * s),
+              (int)(round(pos->y / s) * s),
+              (int)(round(pos->z / s) * s));
     HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
     if (!block) return uvec4b(0, 0, 0, 0);
     last_mesh_id = mesh->id;
