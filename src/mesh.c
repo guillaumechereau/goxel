@@ -307,9 +307,10 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
         }
     }
 
-    p = vec3i((int)(round(pos->x / s) * s),
-              (int)(round(pos->y / s) * s),
-              (int)(round(pos->z / s) * s));
+    p = vec3i((int)(floor((pos->x + BLOCK_SIZE / 2) / s) * s),
+              (int)(floor((pos->y + BLOCK_SIZE / 2) / s) * s),
+              (int)(floor((pos->z + BLOCK_SIZE / 2) / s) * s));
+
     HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
     if (!block) return uvec4b(0, 0, 0, 0);
     last_mesh_id = mesh->id;

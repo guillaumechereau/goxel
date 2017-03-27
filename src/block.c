@@ -526,9 +526,9 @@ uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)
 {
     int x, y, z;
     vec3_t p = *pos;
-    x = round(p.x - block->pos.x + N / 2 - 0.5);
-    y = round(p.y - block->pos.y + N / 2 - 0.5);
-    z = round(p.z - block->pos.z + N / 2 - 0.5);
+    x = floor(p.x - block->pos.x + N / 2);
+    y = floor(p.y - block->pos.y + N / 2);
+    z = floor(p.z - block->pos.z + N / 2);
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
@@ -540,9 +540,9 @@ void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v)
     int x, y, z;
     vec3_t p = *pos;
     block_prepare_write(block);
-    x = round(p.x - block->pos.x + N / 2 - 0.5);
-    y = round(p.y - block->pos.y + N / 2 - 0.5);
-    z = round(p.z - block->pos.z + N / 2 - 0.5);
+    x = round(p.x - block->pos.x + N / 2 - 0.5f);
+    y = round(p.y - block->pos.y + N / 2 - 0.5f);
+    z = round(p.z - block->pos.z + N / 2 - 0.5f);
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
