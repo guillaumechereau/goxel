@@ -42,15 +42,9 @@ cache_t *cache_create(int size)
     return cache;
 }
 
-static int sort_cmp(void *a, void *b)
-{
-    return cmp(((item_t*)a)->last_used, ((item_t*)b)->last_used);
-}
-
 static void cleanup(cache_t *cache)
 {
     item_t *item;
-    HASH_SORT(cache->items, sort_cmp);
     while (cache->size >= cache->max_size) {
         item = cache->items;
         HASH_DEL(cache->items, item);
@@ -81,5 +75,8 @@ void *cache_get(cache_t *cache, const void *key, int keylen)
     HASH_FIND(hh, cache->items, key, keylen, item);
     if (!item) return NULL;
     item->last_used = cache->clock++;
+    // Reinsert item on top of the hash list so that it stays sorted.
+    HASH_DEL(cache->items, item);
+    HASH_ADD(hh, cache->items, key, keylen, item);
     return item->data;
 }
