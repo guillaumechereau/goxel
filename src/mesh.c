@@ -325,29 +325,25 @@ void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v)
     }
 }
 
-typedef struct
+static uvec4b_t mesh_move_get_color(const vec3_t *pos, void *user)
 {
-    mesh_t *mesh;
-    mat4_t mat;
-} mesh_move_data_t;
-
-static uvec4b_t mesh_move_get_color(const vec3_t *pos, void *user_data)
-{
-    mesh_move_data_t *data = user_data;
-    vec3_t p = mat4_mul_vec3(data->mat, *pos);
-    return mesh_get_at(data->mesh, &p);
+    mesh_t *mesh = USER_GET(user, 0);
+    mat4_t *mat = USER_GET(user, 1);
+    vec3_t p = mat4_mul_vec3(*mat, *pos);
+    return mesh_get_at(mesh, &p);
 }
 
 void mesh_move(mesh_t *mesh, const mat4_t *mat)
 {
     box_t box;
-    mesh_move_data_t data = {mesh_copy(mesh), mat4_inverted(*mat)};
+    mesh_t *src_mesh = mesh_copy(mesh);
+    mat4_t imat = mat4_inverted(*mat);
     mesh_prepare_write(mesh);
     box = mesh_get_box(mesh, true);
     if (box_is_null(box)) return;
     box.mat = mat4_mul(*mat, box.mat);
-    mesh_fill(mesh, &box, mesh_move_get_color, &data);
-    mesh_delete(data.mesh);
+    mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
+    mesh_delete(src_mesh);
     mesh_remove_empty_blocks(mesh);
 }
 
