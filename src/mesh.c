@@ -302,9 +302,9 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
     vec3i_t p;
     const int s = BLOCK_SIZE - 2;
 
-    p = vec3i((int)(floor((pos->x + BLOCK_SIZE / 2) / s) * s),
-              (int)(floor((pos->y + BLOCK_SIZE / 2) / s) * s),
-              (int)(floor((pos->z + BLOCK_SIZE / 2) / s) * s));
+    p = vec3i((int)(floor((pos->x + s / 2) / s) * s),
+              (int)(floor((pos->y + s / 2) / s) * s),
+              (int)(floor((pos->z + s / 2) / s) * s));
 
     if (last_mesh_id == mesh->id) {
         if (memcmp(&last_p, &p, sizeof(p)) == 0)
