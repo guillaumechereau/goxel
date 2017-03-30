@@ -998,6 +998,34 @@ static void export_panel(goxel_t *goxel)
 static void cameras_panel(goxel_t *goxel)
 {
     camera_t *cam;
+    int i = 0;
+    bool current;
+    ImGui::PushID("cameras_planel");
+
+    DL_FOREACH(goxel->image->cameras, cam) {
+        ImGui::PushID(i);
+        ImGui::AlignFirstTextHeightToWidgets();
+        current = goxel->image->active_camera == cam;
+        if (ImGui::Selectable(current ? "●" : " ", &current, 0,
+                              ImVec2(12, 12))) {
+            if (current) {
+                camera_set(&goxel->camera, cam);
+                goxel->image->active_camera = cam;
+            }
+        }
+        ImGui::SameLine();
+        ImGui::InputText("##name", cam->name, sizeof(cam->name));
+        ImGui::PopID();
+        i++;
+    }
+    ImGui::GoxAction("img_new_camera", "Add", 0, "");
+    ImGui::SameLine();
+    ImGui::GoxAction("img_del_camera", "Del", 0, "");
+    ImGui::SameLine();
+    ImGui::GoxAction("img_move_camera", "▴", 0, "ppi", NULL, NULL, +1);
+    ImGui::SameLine();
+    ImGui::GoxAction("img_move_camera", "▾", 0, "ppi", NULL, NULL, -1);
+
     cam = &goxel->camera;
     ImGui::GoxInputFloat("dist", &cam->dist, 10.0);
 
@@ -1015,6 +1043,8 @@ static void cameras_panel(goxel_t *goxel)
     ImGui::GoxAction("view_front", "front", 0.5, ""); ImGui::SameLine();
     ImGui::GoxAction("view_top", "top", 1.0, "");
     ImGui::GoxGroupEnd();
+
+    ImGui::PopID();
 }
 
 static void import_image_plane(goxel_t *goxel)

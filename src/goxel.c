@@ -284,6 +284,8 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel_set_hint_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
     camera_update(&goxel->camera);
+    if (goxel->image->active_camera)
+        camera_set(goxel->image->active_camera, &goxel->camera);
     goxel->rend.view_mat = goxel->camera.view_mat;
     goxel->rend.proj_mat = goxel->camera.proj_mat;
     gui_iter(goxel, inputs);

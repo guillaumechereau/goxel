@@ -18,6 +18,26 @@
 
 #include "goxel.h"
 
+camera_t *camera_new(const char *name)
+{
+    camera_t *cam = calloc(1, sizeof(*cam));
+    strncpy(cam->name, name, sizeof(cam->name));
+    return cam;
+}
+
+void camera_delete(camera_t *cam)
+{
+    free(cam);
+}
+
+void camera_set(camera_t *cam, const camera_t *other)
+{
+    cam->ortho = other->ortho;
+    cam->dist = other->dist;
+    cam->rot = other->rot;
+    cam->ofs = other->ofs;
+}
+
 void camera_update(camera_t *camera)
 {
     float size;

@@ -191,6 +191,47 @@ void image_merge_visible_layers(image_t *img)
     if (last) img->active_layer = last;
 }
 
+
+camera_t *image_add_camera(image_t *img)
+{
+    camera_t *cam;
+    img = img ?: goxel->image;
+    cam = camera_new("unamed");
+    DL_APPEND(img->cameras, cam);
+    img->active_camera = cam;
+    return cam;
+}
+
+void image_delete_camera(image_t *img, camera_t *cam)
+{
+    img = img ?: goxel->image;
+    cam = cam ?: img->active_camera;
+    if (!cam) return;
+    DL_DELETE(img->cameras, cam);
+    if (cam == img->active_camera) img->active_camera = NULL;
+    camera_delete(cam);
+}
+
+void image_move_camera(image_t *img, camera_t *cam, int d)
+{
+    // XXX: make a generic algo to move objects in a list.
+    assert(d == -1 || d == +1);
+    camera_t *other = NULL;
+    img = img ?: goxel->image;
+    cam = cam ?: img->active_camera;
+    if (!cam) return;
+    if (d == -1) {
+        other = cam->next;
+        SWAP(other, cam);
+    } else if (cam != img->cameras) {
+        other = cam->prev;
+    }
+    if (!other || !cam) return;
+    DL_DELETE(img->cameras, cam);
+    DL_PREPEND_ELEM(img->cameras, other, cam);
+}
+
+
 void image_set(image_t *img, image_t *other)
 {
     layer_t *layer, *tmp, *other_layer;
@@ -306,5 +347,27 @@ ACTION_REGISTER(img_merge_visible_layers,
     .help = "Merge all the visible layers",
     .cfunc = image_merge_visible_layers,
     .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+
+ACTION_REGISTER(img_new_camera,
+    .help = "Add a new camera to the image",
+    .cfunc = image_add_camera,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_del_camera,
+    .help = "Delete the active camera",
+    .cfunc = image_delete_camera,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_move_camera,
+    .help = "Move the active camera",
+    .cfunc = image_move_camera,
+    .csig = "vppi",
     .flags = ACTION_TOUCH_IMAGE,
 )
