@@ -47,10 +47,12 @@ namespace ImGui {
     bool GoxInputInt(const char *label, int *v, int step = 1,
                      int minv = 0, int maxv = 0);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
-                       float minv = 0.0, float maxv = 1.0,
+                       float minv = FLT_MIN, float maxv = FLT_MAX,
                        const char *format = "%.1f");
 
-    void GoxGroupBegin(void);
+    bool GoxInputQuat(const char *label, quat_t *q);
+
+    void GoxGroupBegin(const char *label = NULL);
     void GoxGroupEnd(void);
 };
 
@@ -993,6 +995,28 @@ static void export_panel(goxel_t *goxel)
     ImGui::GoxGroupEnd();
 }
 
+static void cameras_panel(goxel_t *goxel)
+{
+    camera_t *cam;
+    cam = &goxel->camera;
+    ImGui::GoxInputFloat("dist", &cam->dist, 10.0);
+
+    ImGui::GoxGroupBegin("Offset");
+    ImGui::GoxInputFloat("x", &cam->ofs.x, 1.0);
+    ImGui::GoxInputFloat("y", &cam->ofs.y, 1.0);
+    ImGui::GoxInputFloat("z", &cam->ofs.z, 1.0);
+    ImGui::GoxGroupEnd();
+
+    ImGui::GoxInputQuat("Rotation", &cam->rot);
+
+    ImGui::GoxGroupBegin("Set");
+    ImGui::GoxAction("view_left", "left", 0.5, ""); ImGui::SameLine();
+    ImGui::GoxAction("view_right", "right", 1.0, "");
+    ImGui::GoxAction("view_front", "front", 0.5, ""); ImGui::SameLine();
+    ImGui::GoxAction("view_top", "top", 1.0, "");
+    ImGui::GoxGroupEnd();
+}
+
 static void import_image_plane(goxel_t *goxel)
 {
     const char *path;
@@ -1183,6 +1207,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         {"Palette", palette_panel},
         {"Layers", layers_panel},
         {"Render", render_panel},
+        {"Cameras", cameras_panel},
         {"Export", export_panel},
     };
 

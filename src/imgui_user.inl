@@ -118,8 +118,10 @@ namespace ImGui {
         draw_list->AddCallback(stencil_callback, (void*)(intptr_t)op);
     }
 
-    void GoxGroupBegin(void)
+    void GoxGroupBegin(const char *label)
     {
+        if (label) ImGui::Text(label);
+        ImGui::PushID(label ? label : "group");
         g_group++;
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         draw_list->ChannelsSplit(2);
@@ -148,6 +150,7 @@ namespace ImGui {
         draw_list->ChannelsMerge();
         GoxStencil(0); // Stencil reset.
         GoxBox2(pos, size, ImVec4(0.3, 0.3, 0.3, 1), false);
+        ImGui::PopID();
     }
 
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
@@ -368,23 +371,6 @@ namespace ImGui {
         return false;
     }
 
-    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax)
-    {
-        int a;
-        bool ret;
-        a = round(*v * DR2D);
-        ret = ImGui::InputInt(id, &a);
-        if (ret) {
-            if (vmin == 0 && vmax == 360) {
-                while (a < 0) a += 360;
-                a %= 360;
-            }
-            a = clamp(a, vmin, vmax);
-            *v = (float)(a * DD2R);
-        }
-        return ret;
-    }
-
     bool GoxTab(const char *text, bool *v)
     {
         ImFont *font = GImGui->Font;
@@ -533,7 +519,7 @@ namespace ImGui {
     {
         bool self_group = false;
         if (g_group == 0) {
-            GoxGroupBegin();
+            GoxGroupBegin(NULL);
             self_group = true;
         }
         bool ret = false;
@@ -576,6 +562,9 @@ namespace ImGui {
         ImGui::PopID();
         if (self_group) GoxGroupEnd();
 
+        if (ret)
+            *v = clamp(*v, minv, maxv);
+
         return ret;
     }
 
@@ -586,5 +575,37 @@ namespace ImGui {
         if (ret) *v = vf;
         return ret;
     }
+
+    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax)
+    {
+        int a;
+        bool ret;
+        a = round(*v * DR2D);
+        ret = GoxInputInt(id, &a, 1, vmin, vmax);
+        if (ret) {
+            if (vmin == 0 && vmax == 360) {
+                while (a < 0) a += 360;
+                a %= 360;
+            }
+            a = clamp(a, vmin, vmax);
+            *v = (float)(a * DD2R);
+        }
+        return ret;
+    }
+
+    bool GoxInputQuat(const char *label, quat_t *q)
+    {
+        vec3_t eul;
+        bool ret = false;
+        eul = quat_to_eul(*q);
+        GoxGroupBegin(label);
+        if (GoxInputAngle("x", &eul.x, -180, +180)) ret = true;
+        if (GoxInputAngle("y", &eul.y, -180, +180)) ret = true;
+        if (GoxInputAngle("z", &eul.z, -180, +180)) ret = true;
+        GoxGroupEnd();
+        if (ret) *q = eul_to_quat(eul);
+        return ret;
+    }
+
 };
 
