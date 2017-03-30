@@ -31,8 +31,6 @@ env.Append(CFLAGS= '-Wall -Werror -std=gnu99 -Wno-unknown-pragmas',
 
 if not debug:
     env.Append(CCFLAGS='-Ofast -DNDEBUG')
-else:
-    env.Append(CCFLAGS='-Og')
 
 if profile or debug:
     env.Append(CCFLAGS='-g')
