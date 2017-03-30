@@ -66,6 +66,12 @@ typedef union {
 } vec4_t;
 
 typedef union {
+    real_t v[9];
+    real_t v2[3][3];
+    vec3_t vecs[3];
+} mat3_t;
+
+typedef union {
     real_t v[16];
     vec4_t vecs[4];
 } mat4_t;
@@ -481,6 +487,7 @@ DECL mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up)
 
 DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
 DECL mat4_t quat_to_mat4(quat_t q);
+DECL mat3_t quat_to_mat3(quat_t q);
 DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)
 {
     if (a == 0.0)
@@ -594,4 +601,35 @@ DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)
 DECL void mat4_imul_quat(mat4_t *mat, quat_t q)
 {
     *mat = mat4_mul_quat(*mat, q);
+}
+
+void mat3_to_eul_(const mat3_t *m, vec3_t *e);
+DECL vec3_t mat3_to_eul(mat3_t m)
+{
+    vec3_t e;
+    mat3_to_eul_(&m, &e);
+    return e;
+}
+
+void quat_to_mat3_(const quat_t *q, mat3_t *m);
+DECL mat3_t quat_to_mat3(quat_t q)
+{
+    mat3_t m;
+    quat_to_mat3_(&q, &m);
+    return m;
+}
+
+DECL vec3_t quat_to_eul(quat_t q)
+{
+    mat3_t m;
+    m = quat_to_mat3(q);
+    return mat3_to_eul(m);
+}
+
+void eul_to_quat_(const vec3_t *e, quat_t *q);
+DECL quat_t eul_to_quat(vec3_t e)
+{
+    quat_t q;
+    eul_to_quat_(&e, &q);
+    return q;
 }
