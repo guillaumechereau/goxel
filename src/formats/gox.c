@@ -75,6 +75,13 @@ static int gzeof(gzFile file) {return feof(file);}
  *          4 bytes: 0
  *      [DICT]
  *
+ *  CAMR: a camera:
+ *      [DICT] containing the following entries:
+ *          name: string
+ *          dist: float
+ *          rot: quaternion
+ *          ofs: offset
+ *
  */
 
 // We create a hash table of all the blocks data.
@@ -136,20 +143,21 @@ static void chunk_read_finish(chunk_t *c, gzFile in)
     read_int32(in); // TODO: check crc.
 }
 
-static int chunk_read_dict_value(chunk_t *c, gzFile in,
-                                 char *key, char *value) {
+static bool chunk_read_dict_value(chunk_t *c, gzFile in,
+                                  char *key, char *value, int *value_size) {
     int size;
     assert(c->pos <= c->length);
     if (c->pos == c->length) return 0;
     size = chunk_read_int32(c, in);
-    if (size == 0) return 0;
+    if (size == 0) return false;
     assert(size < 256);
     chunk_read(c, in, key, size);
     key[size] = '\0';
     size = chunk_read_int32(c, in);
     chunk_read(c, in, value, size);
     value[size] = '\0';
-    return size;
+    *value_size = size;
+    return true;
 }
 
 static void chunk_write_start(chunk_t *c, gzFile out, const char *type)
@@ -162,6 +170,7 @@ static void chunk_write_start(chunk_t *c, gzFile out, const char *type)
 
 static void chunk_write(chunk_t *c, gzFile out, const char *data, int size)
 {
+    if (size == 0) return;
     assert(c->length + size < CHUNK_BUFF_SIZE);
     memcpy(c->buffer + c->length, data, size);
     c->length += size;
@@ -211,6 +220,7 @@ void save_to_file(goxel_t *goxel, const char *path)
     int nb_blocks, index, size;
     gzFile out;
     uint8_t *png;
+    camera_t *camera;
 
     out = gzopen(path, str_endswith(path, ".gz") ? "wb" : "wbT");
     gzwrite(out, "GOX ", 4);
@@ -262,6 +272,23 @@ void save_to_file(goxel_t *goxel, const char *path)
         chunk_write_finish(&c, out);
     }
 
+    // Write all the cameras.
+    DL_FOREACH(goxel->image->cameras, camera) {
+        chunk_write_start(&c, out, "CAMR");
+        chunk_write_dict_value(&c, out, "name", camera->name,
+                               strlen(camera->name));
+        chunk_write_dict_value(&c, out, "dist", &camera->dist,
+                               sizeof(camera->dist));
+        chunk_write_dict_value(&c, out, "rot", &camera->rot,
+                               sizeof(camera->rot));
+        chunk_write_dict_value(&c, out, "ofs", &camera->ofs,
+                               sizeof(camera->ofs));
+        if (camera == goxel->image->active_camera)
+            chunk_write_dict_value(&c, out, "active", NULL, 0);
+
+        chunk_write_finish(&c, out);
+    }
+
     HASH_ITER(hh, blocks_table, data, data_tmp) {
         HASH_DEL(blocks_table, data);
         free(data);
@@ -295,6 +322,7 @@ void load_from_file(goxel_t *goxel, const char *path)
     int  dict_value_size;
     char dict_key[256];
     char dict_value[256];
+    camera_t *camera;
 
     image_history_push(goxel->image);
 
@@ -347,8 +375,8 @@ void load_from_file(goxel_t *goxel, const char *path)
                 pos = vec3i(x, y, z);
                 mesh_add_block(layer->mesh, data->v, &pos);
             }
-            while ((dict_value_size = chunk_read_dict_value(&c, in,
-                                                dict_key, dict_value))) {
+            while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
+                                          &dict_value_size))) {
                 if (strcmp(dict_key, "name") == 0)
                     sprintf(layer->name, "%s", dict_value);
                 if (strcmp(dict_key, "mat") == 0) {
@@ -359,6 +387,25 @@ void load_from_file(goxel_t *goxel, const char *path)
                     layer->image = texture_new_image(dict_value);
                 }
             }
+        } else if (strncmp(c.type, "CAMR", 4) == 0) {
+            camera = camera_new("unamed");
+            DL_APPEND(goxel->image->cameras, camera);
+            while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
+                                          &dict_value_size))) {
+                if (strcmp(dict_key, "name") == 0)
+                    sprintf(camera->name, "%s", dict_value);
+                if (strcmp(dict_key, "dist") == 0)
+                    memcpy(&camera->dist, dict_value, dict_value_size);
+                if (strcmp(dict_key, "rot") == 0)
+                    memcpy(&camera->rot, dict_value, dict_value_size);
+                if (strcmp(dict_key, "ofs") == 0)
+                    memcpy(&camera->ofs, dict_value, dict_value_size);
+                if (strcmp(dict_key, "active") == 0) {
+                    goxel->image->active_camera = camera;
+                    camera_set(&goxel->camera, camera);
+                }
+            }
+
         } else assert(false);
         chunk_read_finish(&c, in);
     }
