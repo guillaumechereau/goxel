@@ -79,6 +79,7 @@ class GoxNSOpenGLView: NSOpenGLView {
     
     override func keyDown(with event: NSEvent) {
         switch (event.keyCode) {
+            case 36: appDelegate().inputs.keys.257 = true
             case 51: appDelegate().inputs.keys.259 = true
             case 123: appDelegate().inputs.keys.263 = true
             case 124: appDelegate().inputs.keys.262 = true
@@ -95,6 +96,7 @@ class GoxNSOpenGLView: NSOpenGLView {
     
     override func keyUp(with event: NSEvent) {
         switch (event.keyCode) {
+            case 36: appDelegate().inputs.keys.257 = false
             case 51: appDelegate().inputs.keys.259 = false
             case 123: appDelegate().inputs.keys.263 = false
             case 124: appDelegate().inputs.keys.262 = false
