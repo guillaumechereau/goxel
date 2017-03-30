@@ -675,28 +675,28 @@ static int view_set(const action_t *a, astack_t *s)
 ACTION_REGISTER(view_left,
     .help = "Set camera view to left",
     .func = view_set,
-    .data = &QUAT(-0.5, 0.5, 0.5, 0.5),
+    .data = &QUAT(0.5, -0.5, 0.5, 0.5),
     .shortcut = "Ctrl 3",
 )
 
 ACTION_REGISTER(view_right,
     .help = "Set camera view to right",
     .func = view_set,
-    .data = &QUAT(0.5, 0.5, 0.5, -0.5),
+    .data = &QUAT(-0.5, 0.5, 0.5, 0.5),
     .shortcut = "3",
 )
 
 ACTION_REGISTER(view_top,
     .help = "Set camera view to top",
     .func = view_set,
-    .data = &QUAT(0, 0, 0, 1),
+    .data = &QUAT(1, 0, 0, 0),
     .shortcut = "7",
 )
 
 ACTION_REGISTER(view_front,
     .help = "Set camera view to front",
     .func = view_set,
-    .data = &QUAT(-HS2, 0, 0, HS2),
+    .data = &QUAT(HS2, -HS2, 0, 0),
     .shortcut = "1",
 )
 

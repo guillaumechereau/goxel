@@ -73,11 +73,11 @@ typedef union {
 
 typedef union {
     struct {
-        real_t x, y, z, w;
+        real_t w, x, y, z;
     };
     struct {
-        vec3_t v;
         real_t a;
+        vec3_t v;
     };
 } quat_t;
 
@@ -107,7 +107,7 @@ static const mat4_t mat4_zero = MAT(0, 0, 0, 0,
                                     0, 0, 0, 0,
                                     0, 0, 0, 0);
 
-static const quat_t quat_identity = {{0, 0, 0, 1}};
+static const quat_t quat_identity = {{1, 0, 0, 0}};
 
 DECL vec2_t vec2(real_t x, real_t y)
 {
@@ -516,8 +516,8 @@ DECL void mat4_irotate(mat4_t *m, real_t a, real_t x, real_t y, real_t z)
     *m = mat4_rotate(*m, a, x, y, z);
 }
 
-DECL quat_t quat(real_t x, real_t y, real_t z, real_t w) {
-   return (quat_t){{x, y, z, w}};
+DECL quat_t quat(real_t w, real_t x, real_t y, real_t z) {
+   return (quat_t){{w, x, y, z}};
 }
 
 DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z)
@@ -531,19 +531,19 @@ DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z)
 
     sin_angle = sin(a);
 
-    return quat(vn.x * sin_angle,
+    return quat(cos(a),
+                vn.x * sin_angle,
                 vn.y * sin_angle,
-                vn.z * sin_angle,
-                cos(a));
+                vn.z * sin_angle);
 }
 
 DECL mat4_t quat_to_mat4(quat_t q)
 {
-    real_t x, y, z, w;
+    real_t w, x, y, z;
+    w = q.w;
     x = q.x;
     y = q.y;
     z = q.z;
-    w = q.w;
     return mat4(
             1-2*y*y-2*z*z,     2*x*y+2*z*w,     2*x*z-2*y*w,     0,
               2*x*y-2*z*w,   1-2*x*x-2*z*z,     2*y*z+2*x*w,     0,
@@ -552,15 +552,15 @@ DECL mat4_t quat_to_mat4(quat_t q)
 }
 
 DECL quat_t quat_conjugate(quat_t q) {
-    return quat(-q.x, -q.y, -q.z, q.w);
+    return quat(q.w, -q.x, -q.y, -q.z);
 }
 
 DECL quat_t quat_mul(quat_t a, quat_t b)
 {
-    return quat(a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+    return quat(a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
+                a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
                 a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
-                a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x,
-                a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z);
+                a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x);
 }
 
 DECL void quat_imul(quat_t *a, quat_t b)
