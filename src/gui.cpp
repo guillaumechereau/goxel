@@ -1011,6 +1011,8 @@ static void cameras_panel(goxel_t *goxel)
             if (current) {
                 camera_set(&goxel->camera, cam);
                 goxel->image->active_camera = cam;
+            } else {
+                goxel->image->active_camera = NULL;
             }
         }
         ImGui::SameLine();
