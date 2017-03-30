@@ -349,7 +349,7 @@ int list_dir(const char *url, int flags, void *user,
 void img_downsample(const uint8_t *img, int w, int h, int bpp,
                     uint8_t *out)
 {
-#define IX(x, y, k) (((y) * w + (x)) * bpp + (k))
+#define IX(x, y, k) ((((size_t)y) * w + (x)) * bpp + (k))
     int i, j, k;
 
     assert(w % 2 == 0 && h % 2 == 0);

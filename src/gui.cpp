@@ -979,14 +979,17 @@ static void render_panel(goxel_t *goxel)
 static void export_panel(goxel_t *goxel)
 {
     int i;
+    int maxsize;
+    GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
+    maxsize /= 2; // Because png export already double it.
     goxel->show_export_viewport = true;
     ImGui::GoxGroupBegin();
     i = goxel->image->export_width;
-    if (ImGui::GoxInputInt("width", &i, 1, 1, 2048))
-        goxel->image->export_width = clamp(i, 1, 2048);
+    if (ImGui::GoxInputInt("width", &i, 1, 1, maxsize))
+        goxel->image->export_width = clamp(i, 1, maxsize);
     i = goxel->image->export_height;
-    if (ImGui::GoxInputInt("height", &i, 1, 1, 2048))
-        goxel->image->export_height = clamp(i, 1, 2048);
+    if (ImGui::GoxInputInt("height", &i, 1, 1, maxsize))
+        goxel->image->export_height = clamp(i, 1, maxsize);
     ImGui::GoxGroupEnd();
 }
 

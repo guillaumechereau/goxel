@@ -242,7 +242,9 @@ void texture_get_data(const texture_t *tex, int w, int h, int bpp,
     GL(glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, tmp));
     // Flip output y.
     for (i = 0; i < h; i++) {
-        memcpy(&buf[i * w * bpp], &tmp[(h - i - 1) * w * bpp], bpp * w);
+        memcpy(&buf[i * (size_t)w * bpp],
+               &tmp[((size_t)h - i - 1) * (size_t)w * bpp],
+               bpp * (size_t)w);
     }
     free(tmp);
 }
