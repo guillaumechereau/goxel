@@ -120,7 +120,7 @@ namespace ImGui {
 
     void GoxGroupBegin(const char *label)
     {
-        if (label) ImGui::Text(label);
+        if (label) ImGui::Text("%s", label);
         ImGui::PushID(label ? label : "group");
         g_group++;
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
