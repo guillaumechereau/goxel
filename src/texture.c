@@ -134,9 +134,14 @@ static void texture_set_data(texture_t *tex,
     GL(glGenTextures(1, &tex->tex));
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
-    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+    if (!(tex->flags & TF_NEAREST)) {
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
             (tex->flags & TF_MIPMAP)? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR));
+    } else {
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    }
     GL(glTexImage2D(GL_TEXTURE_2D, 0, tex->format, tex->tex_w, tex->tex_h,
                 0, tex->format, data_type, data));
     free(buff0);
@@ -145,7 +150,7 @@ static void texture_set_data(texture_t *tex,
         GL(glGenerateMipmap(GL_TEXTURE_2D));
 }
 
-texture_t *texture_new_image(const char *path)
+texture_t *texture_new_image(const char *path, int flags)
 {
     texture_t *tex;
     uint8_t *img;
@@ -161,7 +166,7 @@ texture_t *texture_new_image(const char *path)
     tex->tex_h = next_pow2(h);
     tex->w = w;
     tex->h = h;
-    tex->flags = TF_HAS_TEX;
+    tex->flags = TF_HAS_TEX | flags;
     tex->format = (int[]){0, 0, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA}[bpp];
     texture_create_empty(tex);
     texture_set_data(tex, img, w, h, bpp);

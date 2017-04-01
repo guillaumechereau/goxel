@@ -537,7 +537,7 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
 {
     layer_t *layer;
     texture_t *tex;
-    tex = texture_new_image(path);
+    tex = texture_new_image(path, TF_NEAREST);
     if (!tex) return;
     image_history_push(goxel->image);
     layer = image_add_layer(goxel->image);

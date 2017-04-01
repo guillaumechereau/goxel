@@ -384,7 +384,7 @@ void load_from_file(goxel_t *goxel, const char *path)
                     memcpy(&layer->mat, dict_value, dict_value_size);
                 }
                 if (strcmp(dict_key, "img-path") == 0) {
-                    layer->image = texture_new_image(dict_value);
+                    layer->image = texture_new_image(dict_value, TF_NEAREST);
                 }
             }
         } else if (strncmp(c.type, "CAMR", 4) == 0) {

@@ -325,6 +325,7 @@ enum {
     TF_RGB_565  = 1 << 5,
     TF_HAS_TEX  = 1 << 6,
     TF_HAS_FB   = 1 << 7,
+    TF_NEAREST  = 1 << 8,
 };
 
 typedef struct texture texture_t;
@@ -342,7 +343,7 @@ struct texture {
     GLuint framebuffer, depth, stencil;
 };
 
-texture_t *texture_new_image(const char *path);
+texture_t *texture_new_image(const char *path, int flags);
 texture_t *texture_new_surface(int w, int h, int flags);
 texture_t *texture_new_buffer(int w, int h, int flags);
 void texture_get_data(const texture_t *tex, int w, int h, int bpp,
