@@ -748,7 +748,6 @@ static void tools_panel(goxel_t *goxel)
     char action_id[64];
     char label[64];
     const action_t *action;
-    ImGui::PushID("tools_panel");
 
     ImGui::GoxGroupBegin();
     for (i = 0; i < nb; i++) {
@@ -777,8 +776,6 @@ static void tools_panel(goxel_t *goxel)
                                        true, true))
             procedural_panel(goxel);
     }
-
-    ImGui::PopID();
 }
 
 static void toggle_layer_only_visible(goxel_t *goxel, layer_t *layer)
@@ -802,7 +799,6 @@ static void layers_panel(goxel_t *goxel)
     layer_t *layer;
     int i = 0;
     bool current;
-    ImGui::PushID("layers_planel");
     DL_FOREACH(goxel->image->layers, layer) {
         ImGui::PushID(i);
         ImGui::AlignFirstTextHeightToWidgets();
@@ -838,8 +834,6 @@ static void layers_panel(goxel_t *goxel)
     ImGui::GoxAction("img_duplicate_layer", "Duplicate", 1, "");
     ImGui::GoxAction("img_merge_visible_layers", "Merge visible", 1, "");
     ImGui::GoxGroupEnd();
-
-    ImGui::PopID();
 }
 
 static void palette_panel(goxel_t *goxel)
@@ -886,8 +880,6 @@ static void render_advanced_panel(goxel_t *goxel)
         {&goxel->back_color, "Back color"},
         {&goxel->grid_color, "Grid color"},
     };
-
-    ImGui::PushID("RenderAdvancedPanel");
 
     ImGui::Text("Light");
     ImGui::GoxInputAngle("Pitch", &goxel->rend.light.pitch, -90, +90);
@@ -945,7 +937,6 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::Text("%s", COLORS[i].label);
         ImGui::PopID();
     }
-    ImGui::PopID();
     ImGui::GoxCheckbox("grid_visible", "Show grid");
 }
 
@@ -959,7 +950,6 @@ static void render_panel(goxel_t *goxel)
     render_settings_t settings;
 
     ImGui::Checkbox("Ortho", &goxel->camera.ortho);
-    ImGui::PushID("RenderPanel");
     for (i = 0; i < nb; i++) {
         render_get_default_settings(i, &name, &settings);
         current = memcmp(&goxel->rend.settings, &settings,
@@ -973,7 +963,6 @@ static void render_panel(goxel_t *goxel)
     }
     if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
         render_advanced_panel(goxel);
-    ImGui::PopID();
 }
 
 static void export_panel(goxel_t *goxel)
@@ -998,8 +987,6 @@ static void cameras_panel(goxel_t *goxel)
     camera_t *cam;
     int i = 0;
     bool current;
-    ImGui::PushID("cameras_planel");
-
     DL_FOREACH(goxel->image->cameras, cam) {
         ImGui::PushID(i);
         ImGui::AlignFirstTextHeightToWidgets();
@@ -1043,8 +1030,6 @@ static void cameras_panel(goxel_t *goxel)
     ImGui::GoxAction("view_front", "front", 0.5, ""); ImGui::SameLine();
     ImGui::GoxAction("view_top", "top", 1.0, "");
     ImGui::GoxGroupEnd();
-
-    ImGui::PopID();
 }
 
 static void import_image_plane(goxel_t *goxel)
@@ -1254,7 +1239,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     goxel->show_export_viewport = false;
 
     ImGui::PushID("panel");
+    ImGui::PushID(PANELS[current_panel].name);
     PANELS[current_panel].fn(goxel);
+    ImGui::PopID();
     ImGui::PopID();
 
     ImGui::EndGroup();
