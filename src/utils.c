@@ -365,3 +365,18 @@ void img_downsample(const uint8_t *img, int w, int h, int bpp,
     }
 #undef IX
 }
+
+// Like gluUnproject.
+vec3_t unproject(const vec3_t *win, const mat4_t *model,
+                 const mat4_t *proj, const vec4_t *view)
+{
+    mat4_t inv;
+    vec4_t p;
+    inv = mat4_inverted(mat4_mul(*proj, *model));
+    p = vec4((win->x - view->v[0]) / view->v[2] * 2 - 1,
+             (win->y - view->v[1]) / view->v[3] * 2 - 1,
+             2 * win->z - 1, 1);
+    p = mat4_mul_vec(inv, p);
+    if (p.w != 0) vec3_imul(&(p.xyz), 1 / p.w);
+    return p.xyz;
+}

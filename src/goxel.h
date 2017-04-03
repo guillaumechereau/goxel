@@ -293,6 +293,11 @@ static inline bool str_equ(const char *s1, const char *s2) {
 int list_dir(const char *url, int flags, void *user,
              int (*f)(int i, const char *path, void *user));
 
+// Convert from screen coordinate to world coordinates.
+// Similar to gluUnproject.
+vec3_t unproject(const vec3_t *win, const mat4_t *model,
+                 const mat4_t *proj, const vec4_t *view);
+
 // #############################
 
 

@@ -70,22 +70,11 @@ void camera_update(camera_t *camera)
 void camera_get_ray(const camera_t *camera, const vec2_t *win,
                     const vec4_t *view, vec3_t *o, vec3_t *d)
 {
-    // XXX: ugly algo.
-    mat4_t inv;
-    vec3_t p;
-    vec3_t norm_pos = vec3((2 * win->x - view->v[0]) / view->v[2] - 1,
-                           (2 * win->y - view->v[1]) / view->v[3] - 1,
-                           - 1);
-    if (camera->ortho) {
-        inv = mat4_inverted(mat4_mul(camera->proj_mat, camera->view_mat));
-        *o = mat4_mul_vec(inv, vec4(norm_pos.x, norm_pos.y, 0, 1)).xyz;
-        *d = mat4_mul_vec(inv, vec4(0, 0, -1, 0)).xyz;
-    } else {
-        inv = mat4_inverted(camera->view_mat);
-        *o = mat4_mul_vec(inv, vec4(0, 0, 0, 1)).xyz;
-        inv = mat4_mul(camera->proj_mat, camera->view_mat);
-        mat4_invert(&inv);
-        p = mat4_mul_vec3(inv, norm_pos);
-        *d = vec3_sub(p, *o);
-    }
+    vec3_t o1, o2, p;
+    p = vec3(win->x, win->y, 0);
+    o1 = unproject(&p, &camera->view_mat, &camera->proj_mat, view);
+    p = vec3(win->x, win->y, 1);
+    o2 = unproject(&p, &camera->view_mat, &camera->proj_mat, view);
+    *o = o1;
+    *d = vec3_normalized(vec3_sub(o2, o1));
 }
