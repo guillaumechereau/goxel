@@ -647,7 +647,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     }
 
     model3d_render(item->model3d, &view, proj_mat, &item->color,
-                   item->tex, item->effects, 0, NULL);
+                   item->tex, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -656,18 +656,16 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     int x, y, n;
     mat4_t view2, view3;
     view2 = rend->view_mat;
-    vec3_t center;
 
     mat4_imul(&view2, item->mat);
     norm = mat4_mul_vec(mat4_mul(rend->proj_mat, view2), vec4(0, 0, 1, 0));
     mat4_itranslate(&view2, 0, 0, 0.5 * sign(norm.z));
-    center = mat4_mul_vec3(view2, vec3_zero);
     n = 3;
     for (y = -n; y <= n; y++)
     for (x = -n; x <= n; x++) {
         view3 = mat4_translate(view2, x, y, 0);
         model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
-                       NULL, 0, 32, &center);
+                       NULL, 0);
     }
 }
 

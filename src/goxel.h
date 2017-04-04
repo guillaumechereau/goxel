@@ -706,9 +706,7 @@ void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
                     const texture_t *tex,
-                    int   effects,
-                    float fade, const vec3_t *fade_center);
-
+                    int   effects);
 
 // #### Palette ################
 

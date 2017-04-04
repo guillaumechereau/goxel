@@ -32,8 +32,6 @@ typedef struct {
     GLint u_proj_l;
     GLint u_tex_l;
     GLint u_uv_scale_l;
-    GLint u_fade_l;
-    GLint u_fade_center_l;
     GLint u_strip_l;
     GLint u_time_l;
 } prog_t;
@@ -55,8 +53,6 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_proj);
     UNIFORM(u_tex);
     UNIFORM(u_uv_scale);
-    UNIFORM(u_fade);
-    UNIFORM(u_fade_center);
     UNIFORM(u_strip);
     UNIFORM(u_time);
 #undef ATTRIB
@@ -264,8 +260,7 @@ void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
                     const texture_t *tex,
-                    int   effects,
-                    float fade, const vec3_t *fade_center)
+                    int   effects)
 {
     uvec4b_t c = color ? *color : HEXCOLOR(0xffffffff);
     vec4_t cf;
@@ -284,12 +279,6 @@ void model3d_render(model3d_t *model3d,
 
     cf = vec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
     GL(glUniform4fv(prog.u_color_l, 1, cf.v));
-    if (fade_center) {
-        GL(glUniform1f(prog.u_fade_l, fade));
-        GL(glUniform3fv(prog.u_fade_center_l, 1, fade_center->v));
-    } else {
-        GL(glUniform1f(prog.u_fade_l, 0));
-    }
     GL(glUniform1f(prog.u_strip_l, effects & EFFECT_STRIP ? 1.0 : 0.0));
     GL(glUniform1f(prog.u_time_l, 0)); // No moving strip effects.
 
@@ -336,8 +325,6 @@ static const char *VSHADER =
     "uniform   mat4  u_proj;                                            \n"
     "uniform   vec4  u_color;                                           \n"
     "uniform   vec2  u_uv_scale;                                        \n"
-    "uniform   float u_fade;                                            \n"
-    "uniform   vec3  u_fade_center;                                     \n"
     "                                                                   \n"
     "varying   vec4 v_color;                                            \n"
     "varying   vec2 v_uv;                                               \n"
@@ -347,11 +334,6 @@ static const char *VSHADER =
     "    vec3 pos = (u_model * vec4(a_pos, 1.0)).xyz;                   \n"
     "    gl_Position = u_proj * vec4(pos, 1.0);                         \n"
     "    v_color = u_color * a_color;                                   \n"
-    "    if (u_fade > 0.0) {                                            \n"
-    "       float fdist = distance(pos, u_fade_center);                 \n"
-    "       float fade = smoothstep(u_fade, 0.0, fdist);                \n"
-    "       v_color.a *= fade;                                          \n"
-    "    }                                                              \n"
     "    v_uv = a_uv * u_uv_scale;                                      \n"
     "}                                                                  \n"
 ;
