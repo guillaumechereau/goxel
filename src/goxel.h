@@ -609,6 +609,10 @@ enum {
     EFFECT_MARCHING_CUBES   = 1 << 7,
     EFFECT_SHADOW_MAP       = 1 << 8,
     EFFECT_FLAT             = 1 << 9,
+
+    // For render box.
+    EFFECT_STRIP            = 1 << 10,
+    EFFECT_WIREFRAME        = 1 << 11,
 };
 
 typedef struct {
@@ -649,11 +653,11 @@ void render_plane(renderer_t *rend, const plane_t *plane,
                   const uvec4b_t *color);
 void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
                  const uvec4b_t *color);
-void render_box(renderer_t *rend, const box_t *box, bool solid,
-                const uvec4b_t *color, int strip);
+void render_box(renderer_t *rend, const box_t *box,
+                const uvec4b_t *color, int effects);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
 void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat);
-void render_rect(renderer_t *rend, const plane_t *plane, int strip);
+void render_rect(renderer_t *rend, const plane_t *plane, int effects);
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.

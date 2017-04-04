@@ -58,7 +58,6 @@ struct render_item_t
     };
     vec3_t          grid;
     uvec4b_t        color;
-    bool            strip;  // XXX: move into effects?
     bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
     texture_t       *tex;
@@ -648,7 +647,8 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     }
 
     model3d_render(item->model3d, &view, proj_mat, &item->color,
-                   item->tex, item->strip, 0, NULL);
+                   item->tex,
+                   (item->effects & EFFECT_STRIP) ? 1 : 0, 0, NULL);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -697,15 +697,16 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
     DL_APPEND(rend->items, item);
 }
 
-void render_rect(renderer_t *rend, const plane_t *plane, int strip)
+void render_rect(renderer_t *rend, const plane_t *plane, int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
+    assert((effects & EFFECT_STRIP) == effects);
     item->type = ITEM_MODEL3D;
     item->mat = plane->mat;
     item->model3d = g_wire_rect_model;
     item->color = uvec4b(255, 255, 255, 255);
     item->fixed = true;
-    item->strip = strip;
+    item->effects = effects;
     DL_APPEND(rend->items, item);
 }
 
@@ -731,15 +732,17 @@ void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
     DL_APPEND(rend->items, item);
 }
 
-void render_box(renderer_t *rend, const box_t *box, bool solid,
-                const uvec4b_t *color, int strip)
+void render_box(renderer_t *rend, const box_t *box,
+                const uvec4b_t *color, int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
+    assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME)) == effects);
     item->type = ITEM_MODEL3D;
     item->mat = box->mat;
     item->color = color ? *color : HEXCOLOR(0xffffffff);
-    item->strip = strip;
-    item->model3d = solid ? g_cube_model : g_wire_cube_model;
+    item->effects = effects;
+    item->model3d = (effects & EFFECT_WIREFRAME) ? g_wire_cube_model :
+                                                   g_cube_model;
     DL_APPEND(rend->items, item);
 }
 

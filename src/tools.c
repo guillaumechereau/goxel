@@ -133,7 +133,7 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         goxel->tool_start_pos = pos;
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
-        render_box(&goxel->rend, &box, false, &box_color, false);
+        render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         if (down) {
             state = STATE_PAINT;
             goxel->painting = true;
@@ -145,7 +145,7 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
         goxel_set_help_text(goxel, "Drag.");
         if (!snaped || !inside) return state;
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0, &goxel->plane);
-        render_box(&goxel->rend, &box, false, &box_color, false);
+        render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         mesh_set(mesh, goxel->tool_mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
@@ -170,7 +170,7 @@ static int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
                                  goxel->plane.n));
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
-        render_box(&goxel->rend, &box, false, &box_color, false);
+        render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         mesh_set(mesh, goxel->tool_mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
@@ -241,7 +241,7 @@ static int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         goxel->tool_start_pos = pos;
         box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
                       &goxel->plane);
-        render_box(&goxel->rend, &box, false, &box_color, false);
+        render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         if (down) {
             state = STATE_PAINT;
             goxel->painting = true;
@@ -444,7 +444,7 @@ static int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     // Just a large value for the size of the laser box.
     mat4_itranslate(&box.mat, 0, 0, -1024);
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
-    render_box(&goxel->rend, &box, false, NULL, false);
+    render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     switch (state) {
     case STATE_IDLE:
@@ -532,7 +532,7 @@ static int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
         pos.y = round(pos.y - 0.5) + 0.5;
         pos.z = round(pos.z - 0.5) + 0.5;
         box = bbox_from_extents(pos, 0.5, 0.5, 0.5);
-        render_box(&goxel->rend, &box, false, NULL, false);
+        render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
     }
 
     switch (state) {
