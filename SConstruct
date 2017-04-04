@@ -41,7 +41,8 @@ if gprof:
 env.Append(CPPPATH=['src'])
 
 sources = glob.glob('src/*.c') + glob.glob('src/*.cpp') + \
-          glob.glob('src/formats/*.c')
+          glob.glob('src/formats/*.c') + \
+          glob.glob('src/tools/*.c')
 
 if target_os == 'posix':
     env.Append(LIBS=['GL', 'm', 'z'])
