@@ -647,8 +647,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     }
 
     model3d_render(item->model3d, &view, proj_mat, &item->color,
-                   item->tex,
-                   (item->effects & EFFECT_STRIP) ? 1 : 0, 0, NULL);
+                   item->tex, item->effects, 0, NULL);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -736,7 +735,8 @@ void render_box(renderer_t *rend, const box_t *box,
                 const uvec4b_t *color, int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
-    assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME)) == effects);
+    assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
+            == effects);
     item->type = ITEM_MODEL3D;
     item->mat = box->mat;
     item->color = color ? *color : HEXCOLOR(0xffffffff);

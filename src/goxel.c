@@ -471,7 +471,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
         render_plane(rend, &goxel->plane, &goxel->grid_color);
     if (!box_is_null(goxel->image->box))
-        render_box(rend, &goxel->image->box, NULL, EFFECT_WIREFRAME);
+        render_box(rend, &goxel->image->box, NULL, EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, rect);
 }

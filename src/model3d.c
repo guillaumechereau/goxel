@@ -264,7 +264,7 @@ void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
                     const texture_t *tex,
-                    int  strip,
+                    int   effects,
                     float fade, const vec3_t *fade_center)
 {
     uvec4b_t c = color ? *color : HEXCOLOR(0xffffffff);
@@ -280,6 +280,8 @@ void model3d_render(model3d_t *model3d,
     GL(glCullFace(GL_BACK));
     model3d->cull ? GL(glEnable(GL_CULL_FACE)) :
                     GL(glDisable(GL_CULL_FACE));
+    GL(glCullFace(effects & EFFECT_SEE_BACK ? GL_FRONT : GL_BACK));
+
     cf = vec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
     GL(glUniform4fv(prog.u_color_l, 1, cf.v));
     if (fade_center) {
@@ -288,9 +290,8 @@ void model3d_render(model3d_t *model3d,
     } else {
         GL(glUniform1f(prog.u_fade_l, 0));
     }
-    GL(glUniform1f(prog.u_strip_l, strip ? 1.0 : 0.0));
-    GL(glUniform1f(prog.u_time_l,
-                   strip == 2 ? goxel->frame_count * 16 / 1000.0 : 0));
+    GL(glUniform1f(prog.u_strip_l, effects & EFFECT_STRIP ? 1.0 : 0.0));
+    GL(glUniform1f(prog.u_time_l, 0)); // No moving strip effects.
 
     tex = tex ?: g_white_tex;
     GL(glActiveTexture(GL_TEXTURE0));
