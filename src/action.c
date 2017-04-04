@@ -20,7 +20,7 @@
 
 typedef struct {
     UT_hash_handle  hh;
-    const action_t  *action;
+    action_t        action;
 } action_hash_item_t;
 
 // Global hash of all the actions.
@@ -30,7 +30,7 @@ void action_register(const action_t *action)
 {
     action_hash_item_t *item;
     item = calloc(1, sizeof(*item));
-    item->action = action;
+    item->action = *action;
     HASH_ADD_KEYPTR(hh, g_actions, action->id, strlen(action->id), item);
 }
 
@@ -39,14 +39,14 @@ const action_t *action_get(const char *id)
     action_hash_item_t *item;
     HASH_FIND_STR(g_actions, id, item);
     if (!item) LOG_W("Cannot find action %s", id);
-    return item ? item->action : NULL;
+    return item ? &item->action : NULL;
 }
 
 void actions_iter(int (*f)(const action_t *action, void *user), void *user)
 {
     action_hash_item_t *item, *tmp;
     HASH_ITER(hh, g_actions, item, tmp) {
-        if (f(item->action, user)) return;
+        if (f(&item->action, user)) return;
     }
 }
 
