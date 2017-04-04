@@ -172,6 +172,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
     int i, ret = 0;
     vec3_t p = vec3_zero, n = vec3_zero;
     bool r = false;
+    float dist, best = INFINITY;
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
@@ -180,7 +181,7 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         return r ? SNAP_PLANE : 0;
     }
 
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < 5; i++) {
         if (!(goxel->snap & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(goxel, view_size, pos,
@@ -198,6 +199,10 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
             r = goxel_unproject_on_box(goxel, view_size, pos,
                                        &goxel->selection, false,
                                        &p, &n, NULL);
+        if ((1 << i) == SNAP_IMAGE_BOX)
+            r = goxel_unproject_on_box(goxel, view_size, pos,
+                                       &goxel->image->box, true,
+                                       &p, &n, NULL);
         if (!r)
             continue;
 
@@ -205,9 +210,18 @@ int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
         p.y = round(p.y - 0.5) + 0.5;
         p.z = round(p.z - 0.5) + 0.5;
 
+        dist = -mat4_mul_vec3(goxel->camera.view_mat, p).z;
+        if (dist < 0 || dist > best) continue;
+
         *out = p;
         *normal = n;
         ret = 1 << i;
+
+        if ((1 << i) == SNAP_IMAGE_BOX) {
+            best = dist;
+            continue;
+        }
+
         break;
     }
     return ret;
@@ -267,7 +281,7 @@ void goxel_init(goxel_t *gox)
 
     model3d_init();
     goxel->plane = plane(vec3(0.5, 0.5, 0.5), vec3(1, 0, 0), vec3(0, 1, 0));
-    goxel->snap = SNAP_PLANE | SNAP_MESH;
+    goxel->snap = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
     gui_init();
 }
 
@@ -456,6 +470,8 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     }
     if (!goxel->plane_hidden && plane_is_null(goxel->tool_plane))
         render_plane(rend, &goxel->plane, &goxel->grid_color);
+    if (!box_is_null(goxel->image->box))
+        render_box(rend, &goxel->image->box, NULL, EFFECT_WIREFRAME);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, rect);
 }

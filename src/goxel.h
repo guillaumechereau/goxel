@@ -759,10 +759,11 @@ enum {
 
 // Flags to set where the mouse snap.  In order of priority.
 enum {
-    SNAP_SELECTION_IN   = 1 << 0,
-    SNAP_SELECTION_OUT  = 1 << 1,
-    SNAP_MESH           = 1 << 2,
-    SNAP_PLANE          = 1 << 3,
+    SNAP_IMAGE_BOX      = 1 << 0,
+    SNAP_SELECTION_IN   = 1 << 1,
+    SNAP_SELECTION_OUT  = 1 << 2,
+    SNAP_MESH           = 1 << 3,
+    SNAP_PLANE          = 1 << 4,
 };
 
 typedef struct inputs
@@ -831,6 +832,7 @@ struct image {
     layer_t *active_layer;
     camera_t *cameras;
     camera_t *active_camera;
+    box_t    box;
 
     // For saving.
     char    *path;

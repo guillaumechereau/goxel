@@ -426,18 +426,20 @@ static void mode_panel(goxel_t *goxel)
     ImGui::GoxGroupEnd();
 }
 
+static void snap_button(const char *label, int s, float w)
+{
+    bool v = goxel->snap & s;
+    if (ImGui::GoxSelectable(label, &v, 0, 0, NULL, ImVec2(w, 18))) {
+        goxel->snap = v ? goxel->snap | s : goxel->snap & ~s;
+    }
+}
+
 static void shapes_panel(goxel_t *goxel);
 static void tool_options_panel(goxel_t *goxel)
 {
     int i;
     float w, v;
     bool s;
-    const char *snap[] = {
-        "Sel In",
-        "Sel Out",
-        "Mesh",
-        "Plane",
-    };
     ImVec4 color;
     layer_t *layer;
     mat4_t mat;
@@ -465,14 +467,18 @@ static void tool_options_panel(goxel_t *goxel)
         w = ImGui::GetContentRegionAvailWidth() / 2.0 - 1;
 
         ImGui::GoxGroupBegin();
-        for (i = 0; i < (int)ARRAY_SIZE(snap); i++) {
-            s = goxel->snap & (1 << i);
-            if (ImGui::GoxSelectable(snap[i], &s, 0, 0, NULL, ImVec2(w, 18))) {
-                goxel->snap = s ? goxel->snap | (1 << i) :
-                                  goxel->snap & ~(1 << i);
-            }
-            auto_grid(ARRAY_SIZE(snap), i, 2);
+
+        snap_button("Mesh", SNAP_MESH, w);
+        ImGui::SameLine();
+        snap_button("Plane", SNAP_PLANE, w);
+        if (!box_is_null(goxel->selection)) {
+            snap_button("Sel In", SNAP_SELECTION_IN, w);
+            ImGui::SameLine();
+            snap_button("Sel out", SNAP_SELECTION_OUT, w);
         }
+        if (!box_is_null(goxel->image->box))
+            snap_button("Image box", SNAP_IMAGE_BOX, -1);
+
         v = goxel->snap_offset;
         if (ImGui::GoxInputFloat("Offset", &v, 0.1, -1, +1, "%.1f"))
             goxel->snap_offset = clamp(v, -1, +1);
@@ -982,6 +988,30 @@ static void export_panel(goxel_t *goxel)
     ImGui::GoxGroupEnd();
 }
 
+static void image_panel(goxel_t *goxel)
+{
+    bool bounded;
+    int w, h, d;
+    image_t *image = goxel->image;
+    box_t *box = &image->box;
+
+    bounded = !box_is_null(*box);
+    if (ImGui::Checkbox("Bounded", &bounded)) {
+        *box = bounded ? bbox_from_extents(vec3_zero, 16, 16, 16) : box_null;
+    }
+    if (bounded) {
+        w = box->w.x * 2;
+        h = box->h.y * 2;
+        d = box->d.z * 2;
+        ImGui::GoxGroupBegin("Size");
+        ImGui::GoxInputInt("w", &w, 1, 1, 2048);
+        ImGui::GoxInputInt("h", &h, 1, 1, 2048);
+        ImGui::GoxInputInt("d", &d, 1, 1, 2048);
+        ImGui::GoxGroupEnd();
+        *box = bbox_from_extents(vec3_zero, w / 2., h / 2., d / 2.);
+    }
+}
+
 static void cameras_panel(goxel_t *goxel)
 {
     camera_t *cam;
@@ -1223,6 +1253,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         {"Layers", layers_panel},
         {"Render", render_panel},
         {"Cameras", cameras_panel},
+        {"Image", image_panel},
         {"Export", export_panel},
     };
 
