@@ -568,10 +568,10 @@ namespace ImGui {
         return ret;
     }
 
-    bool GoxInputInt(const char *format, int *v, int step, int minv, int maxv)
+    bool GoxInputInt(const char *format, int *v, int step, float minv, float maxv)
     {
         float vf = *v;
-        bool ret = GoxInputFloat(format, &vf, 1, minv, maxv, "%.0f");
+        bool ret = GoxInputFloat(format, &vf, 1.0f, minv, maxv, "%.0f");
         if (ret) *v = vf;
         return ret;
     }

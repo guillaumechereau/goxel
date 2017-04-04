@@ -45,9 +45,9 @@ namespace ImGui {
     bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
     bool GoxInputInt(const char *label, int *v, int step = 1,
-                     int minv = 0, int maxv = 0);
+                     float minv = -FLT_MAX, float maxv = FLT_MAX);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
-                       float minv = FLT_MIN, float maxv = FLT_MAX,
+                       float minv = -FLT_MAX, float maxv = FLT_MAX,
                        const char *format = "%.1f");
 
     bool GoxInputQuat(const char *label, quat_t *q);
@@ -517,7 +517,6 @@ static void tool_options_panel(goxel_t *goxel)
         ImGui::GoxGroupEnd();
     }
     if (goxel->tool == TOOL_MOVE) {
-        ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue;
         mat = mat4_identity;
         layer = goxel->image->active_layer;
         ImGui::GoxGroupBegin();
@@ -525,21 +524,21 @@ static void tool_options_panel(goxel_t *goxel)
         if (ImGui::GoxInputInt("Move X", &i))
             mat4_itranslate(&mat, i, 0, 0);
         i = 0;
-        if (ImGui::GoxInputInt("Move Y", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Move Y", &i))
             mat4_itranslate(&mat, 0, i, 0);
         i = 0;
-        if (ImGui::GoxInputInt("Move Z", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Move Z", &i))
             mat4_itranslate(&mat, 0, 0, i);
         ImGui::GoxGroupEnd();
         ImGui::GoxGroupBegin();
         i = 0;
-        if (ImGui::GoxInputInt("Rot X", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Rot X", &i))
             mat4_irotate(&mat, i * M_PI / 2, 1, 0, 0);
         i = 0;
-        if (ImGui::GoxInputInt("Rot Y", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Rot Y", &i))
             mat4_irotate(&mat, i * M_PI / 2, 0, 1, 0);
         i = 0;
-        if (ImGui::GoxInputInt("Rot Z", &i, 1, -1, flags))
+        if (ImGui::GoxInputInt("Rot Z", &i))
             mat4_irotate(&mat, i * M_PI / 2, 0, 0, 1);
         ImGui::GoxGroupEnd();
         if (layer->image && ImGui::InputInt("Scale", &i)) {
