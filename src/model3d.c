@@ -34,6 +34,10 @@ typedef struct {
     GLint u_uv_scale_l;
     GLint u_strip_l;
     GLint u_time_l;
+
+    GLint u_l_dir_l;
+    GLint u_l_diff_l;
+    GLint u_l_emit_l;
 } prog_t;
 
 static prog_t prog;
@@ -55,6 +59,9 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_uv_scale);
     UNIFORM(u_strip);
     UNIFORM(u_time);
+    UNIFORM(u_l_dir);
+    UNIFORM(u_l_diff);
+    UNIFORM(u_l_emit);
 #undef ATTRIB
 #undef UNIFORM
     GL(glUseProgram(prog->prog));
@@ -260,10 +267,13 @@ void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
                     const uvec4b_t *color,
                     const texture_t *tex,
+                    const vec3_t *light,
                     int   effects)
 {
     uvec4b_t c = color ? *color : HEXCOLOR(0xffffffff);
     vec4_t cf;
+    vec3_t light_dir;
+
     GL(glUseProgram(prog.prog));
     GL(glUniformMatrix4fv(prog.u_model_l, 1, 0, model->v));
     GL(glUniformMatrix4fv(prog.u_proj_l, 1, 0, proj->v));
@@ -307,10 +317,25 @@ void model3d_render(model3d_t *model3d,
     GL(glEnableVertexAttribArray(prog.a_uv_l));
     GL(glVertexAttribPointer(prog.a_uv_l, 2, GL_FLOAT, false,
             sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, uv)));
-    if (model3d->solid)
+    GL(glEnableVertexAttribArray(prog.a_normal_l));
+    GL(glVertexAttribPointer(prog.a_normal_l, 3, GL_FLOAT, false,
+            sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, normal)));
+
+    GL(glUniform1f(prog.u_l_emit_l, 1.0f));
+    GL(glUniform1f(prog.u_l_diff_l, 0.0f));
+
+    if (model3d->solid) {
+        if (light) {
+            light_dir = *light;
+            if (effects & EFFECT_SEE_BACK) vec3_imul(&light_dir, -1);
+            GL(glUniform3fv(prog.u_l_dir_l, 1, light_dir.v));
+            GL(glUniform1f(prog.u_l_emit_l, 0.2f));
+            GL(glUniform1f(prog.u_l_diff_l, 0.8f));
+        }
         GL(glDrawArrays(GL_TRIANGLES, 0, model3d->nb_vertices));
-    else
+    } else {
         GL(glDrawArrays(GL_LINES, 0, model3d->nb_vertices));
+    }
     GL(glDisableVertexAttribArray(prog.a_pos_l));
     GL(glDisableVertexAttribArray(prog.a_color_l));
     GL(glCullFace(GL_BACK));
@@ -320,20 +345,27 @@ static const char *VSHADER =
     "                                                                   \n"
     "attribute vec3  a_pos;                                             \n"
     "attribute vec4  a_color;                                           \n"
+    "attribute vec3  a_normal;                                          \n"
     "attribute vec2  a_uv;                                              \n"
     "uniform   mat4  u_model;                                           \n"
     "uniform   mat4  u_proj;                                            \n"
     "uniform   vec4  u_color;                                           \n"
     "uniform   vec2  u_uv_scale;                                        \n"
+    "uniform   vec3  u_l_dir;                                           \n"
+    "uniform   float u_l_diff;                                          \n"
+    "uniform   float u_l_emit;                                          \n"
     "                                                                   \n"
     "varying   vec4 v_color;                                            \n"
     "varying   vec2 v_uv;                                               \n"
     "                                                                   \n"
     "void main()                                                        \n"
     "{                                                                  \n"
+    "    vec4 col = u_color * a_color;                                  \n"
     "    vec3 pos = (u_model * vec4(a_pos, 1.0)).xyz;                   \n"
     "    gl_Position = u_proj * vec4(pos, 1.0);                         \n"
-    "    v_color = u_color * a_color;                                   \n"
+    "    float diff = max(0.0, dot(u_l_dir, a_normal));                 \n"
+    "    col.rgb *= (u_l_emit + u_l_diff * diff);                       \n"
+    "    v_color = col;                                                 \n"
     "    v_uv = a_uv * u_uv_scale;                                      \n"
     "}                                                                  \n"
 ;
@@ -346,7 +378,7 @@ static const char *FSHADER =
     "                                                                   \n"
     "uniform sampler2D u_tex;                                           \n"
     "uniform float     u_strip;                                         \n"
-    "uniform float     u_time;                                             \n"
+    "uniform float     u_time;                                          \n"
     "                                                                   \n"
     "varying lowp vec4  v_color;                                        \n"
     "varying      vec2  v_uv;                                           \n"

@@ -637,6 +637,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     mat4_imul(&view, item->mat);
     mat4_t proj;
     mat4_t *proj_mat;
+    vec3_t light;
 
     if (item->proj_screen) {
         proj = mat4_ortho(-0.5, +0.5, -0.5, +0.5, -10, +10);
@@ -646,8 +647,11 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
         proj_mat = &rend->proj_mat;
     }
 
+    if (!(item->effects & EFFECT_WIREFRAME))
+        light = get_light_dir(rend, false);
+
     model3d_render(item->model3d, &view, proj_mat, &item->color,
-                   item->tex, item->effects);
+                   item->tex, &light, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -665,7 +669,7 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     for (x = -n; x <= n; x++) {
         view3 = mat4_translate(view2, x, y, 0);
         model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
-                       NULL, 0);
+                       NULL, NULL, 0);
     }
 }
 
