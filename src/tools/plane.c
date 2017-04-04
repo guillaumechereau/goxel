@@ -18,9 +18,8 @@
 
 #include "goxel.h"
 
-int tool_set_plane_iter(goxel_t *goxel, const inputs_t *inputs,
-                        int state, const vec2_t *view_size,
-                        bool inside)
+static int iter(const inputs_t *inputs, int state, void **data,
+                const vec2_t *view_size, bool inside)
 {
     bool snaped;
     vec3_t pos = vec3_zero, normal = vec3_zero;
@@ -37,6 +36,6 @@ int tool_set_plane_iter(goxel_t *goxel, const inputs_t *inputs,
 }
 
 TOOL_REGISTER(TOOL_SET_PLANE, plane,
-              .iter_fn = tool_set_plane_iter,
+              .iter_fn = iter,
               .shortcut = "P"
 )

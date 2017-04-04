@@ -898,10 +898,6 @@ typedef struct goxel
     mesh_t     *layers_mesh; // All the layers combined.
     mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
 
-    // Meshes used by the tools.
-    mesh_t     *tool_mesh_orig;
-    mesh_t     *tool_mesh;
-
     history_t  *history;     // Undo/redo history.
     int        snap;
     float      snap_offset;  // Only for brush tool.
@@ -920,21 +916,14 @@ typedef struct goxel
     renderer_t rend;
 
     int        tool;
-    // Used when we change the effective tool with ctrl.
-    int        prev_tool;
     float      tool_radius;
 
     // Some state for the tool iter functions.
     // XXX: move this into tool.c
     int        tool_state;
-    int        tool_snape_face;
-    // Structure used to skip rendering when don't move the mouse.
-    struct     {
-        vec3_t     pos;
-        bool       pressed;
-        int        mode;
-    }          tool_last_op;
-    vec3_t     tool_start_pos;
+    // data pointer that can be set and used by the tools.
+    void       *tool_data;
+
     plane_t    tool_plane;
     bool       tool_shape_two_steps; // Param of the shape tool.
 
@@ -946,7 +935,6 @@ typedef struct goxel
         vec3_t camera_ofs;
     } move_origin;
 
-    bool       painting;    // Set to true when we are in a painting operation.
     bool       moving;      // Set to true while in a movement operation.
     gox_proc_t proc;        // The current procedural rendering (if any).
 
@@ -1013,9 +1001,9 @@ typedef struct tool tool_t;
 struct tool {
     int id;
     const char *action_id;
-    int (*iter_fn)(goxel_t *goxel, const inputs_t *inputs,
-                   int state, const vec2_t *view_size,
-                   bool inside);
+    int (*iter_fn)(const inputs_t *inputs, int state, void **data,
+                   const vec2_t *view_size, bool inside);
+    int (*cancel_fn)(int state, void **data);
     const char *shortcut;
 };
 
@@ -1028,9 +1016,9 @@ struct tool {
     }
 
 void tool_register_(const tool_t *tool);
-int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
+int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
               const vec2_t *view_size, bool inside);
-void tool_cancel(goxel_t *goxel, int tool, int state);
+void tool_cancel(int tool, int state, void **data);
 
 
 // #### Colors functions #######

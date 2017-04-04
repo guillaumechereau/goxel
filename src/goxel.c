@@ -245,8 +245,6 @@ void goxel_init(goxel_t *gox)
 
     goxel->layers_mesh = mesh_new();
     goxel->pick_mesh = mesh_new();
-    goxel->tool_mesh_orig = mesh_new();
-    goxel->tool_mesh = mesh_new();
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
@@ -405,8 +403,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
         goxel->moving = false;
 
     // Paint with the current tool if needed.
-    goxel->tool_state = tool_iter(goxel, goxel->tool, inputs,
-                                  goxel->tool_state, view_size, inside);
+    goxel->tool_state = tool_iter(goxel->tool, inputs,
+                                  goxel->tool_state, &goxel->tool_data,
+                                  view_size, inside);
 }
 
 void goxel_render(goxel_t *goxel)
@@ -539,13 +538,13 @@ void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
 
 void goxel_undo(goxel_t *goxel)
 {
-    tool_cancel(goxel, goxel->tool, goxel->tool_state);
+    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
     image_undo(goxel->image);
 }
 
 void goxel_redo(goxel_t *goxel)
 {
-    tool_cancel(goxel, goxel->tool, goxel->tool_state);
+    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
     image_redo(goxel->image);
 }
 
@@ -639,7 +638,7 @@ ACTION_REGISTER(cut_as_new_layer,
 static void clear_selection(void)
 {
     if (goxel->tool == TOOL_SELECTION)
-        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+        tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
     goxel->selection = box_null;
 }
 

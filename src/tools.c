@@ -32,7 +32,7 @@ static const tool_t *g_tools[TOOL_COUNT] = {};
 
 static int tool_set_action(const action_t *a, astack_t *s)
 {
-    tool_cancel(goxel, goxel->tool, goxel->tool_state);
+    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
     goxel->tool = ((tool_t*)a->data)->id;
     return 0;
 }
@@ -51,7 +51,7 @@ void tool_register_(const tool_t *tool)
     action_register(&action);
 }
 
-int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
+int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
               const vec2_t *view_size, bool inside)
 {
     int ret;
@@ -59,16 +59,12 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
     assert(g_tools[tool]->iter_fn);
 
     while (true) {
-        ret = g_tools[tool]->iter_fn(goxel, inputs, state, view_size, inside);
+        ret = g_tools[tool]->iter_fn(inputs, state, data, view_size, inside);
         if (ret == STATE_CANCEL) {
-            mesh_set(goxel->image->active_layer->mesh, goxel->tool_mesh_orig);
-            goxel_update_meshes(goxel, MESH_LAYERS);
+            tool_cancel(tool, state, data);
             ret = 0;
         }
         if (ret == STATE_END) ret = 0;
-        if (ret == 0)
-            goxel->tool_plane = plane_null;
-
         if ((ret & STATE_MASK) != (state & STATE_MASK))
             ret |= STATE_ENTER;
         else
@@ -81,11 +77,11 @@ int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
     return ret;
 }
 
-void tool_cancel(goxel_t *goxel, int tool, int state)
+void tool_cancel(int tool, int state, void **data)
 {
-    if (state == 0) return;
-    mesh_set(goxel->image->active_layer->mesh, goxel->tool_mesh_orig);
-    goxel_update_meshes(goxel, MESH_LAYERS);
-    goxel->tool_plane = plane_null;
+    if (g_tools[tool]->cancel_fn)
+        g_tools[tool]->cancel_fn(state, data);
+    assert(*data == NULL);
     goxel->tool_state = 0;
+    goxel_update_meshes(goxel, MESH_LAYERS);
 }

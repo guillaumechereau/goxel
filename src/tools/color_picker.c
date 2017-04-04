@@ -19,9 +19,8 @@
 #include "goxel.h"
 
 
-int tool_color_picker_iter(goxel_t *goxel, const inputs_t *inputs,
-                           int state, const vec2_t *view_size,
-                           bool inside)
+int tool_color_picker_iter(const inputs_t *inputs, int state, void **data,
+                           const vec2_t *view_size, bool inside)
 {
     bool snaped;
     vec3_t pos, normal;

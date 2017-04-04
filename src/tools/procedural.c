@@ -28,9 +28,8 @@ enum {
     STATE_PAINT,
 };
 
-int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
-                         int state, const vec2_t *view_size,
-                         bool inside)
+static int iter(const inputs_t *inputs, int state, void **data,
+                const vec2_t *view_size, bool inside)
 {
     int snaped = 0;
     vec3_t pos, normal;
@@ -80,5 +79,5 @@ int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
 }
 
 TOOL_REGISTER(TOOL_PROCEDURAL, procedural,
-              .iter_fn = tool_procedural_iter,
+              .iter_fn = iter,
 )

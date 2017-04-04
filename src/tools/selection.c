@@ -34,6 +34,11 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
+typedef struct {
+    int     snap_face;
+    vec3_t  start_pos;
+} data_t;
+
 static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
                      float r, const plane_t *plane)
 {
@@ -70,12 +75,20 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-// XXX: this is very close to tool_shape_iter.
-int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
-                        int state, const vec2_t *view_size,
-                        bool inside)
+static data_t *get_data(void **data_)
 {
-    extern const mat4_t FACES_MATS[6];
+    data_t **data = (data_t**)data_;
+    if (!*data) {
+        *data = calloc(1, sizeof(**data));
+    }
+    return *data;
+}
+
+// XXX: this is very close to tool_shape_iter.
+static int iter(const inputs_t *inputs, int state, void **data_,
+                const vec2_t *view_size, bool inside)
+{
+    data_t *data = get_data(data_);
     const bool down = inputs->mouse_down[0];
     const bool up = !down;
     int snaped = 0;
@@ -88,17 +101,17 @@ int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
     // See if we can snap on a selection face.
     if (inside && !box_is_null(goxel->selection) &&
             IS_IN(state, STATE_IDLE, STATE_SNAPED, STATE_SNAPED_FACE)) {
-        goxel->tool_snape_face = -1;
+        data->snap_face = -1;
         if (goxel_unproject_on_box(goxel, view_size, &inputs->mouse_pos,
                                &goxel->selection, false,
                                &pos, &normal, &face)) {
-            goxel->tool_snape_face = face;
+            data->snap_face = face;
             state = STATE_SNAPED_FACE;
         }
     }
-    if (!box_is_null(goxel->selection) && goxel->tool_snape_face != -1)
+    if (!box_is_null(goxel->selection) && data->snap_face != -1)
         face_plane.mat = mat4_mul(goxel->selection.mat,
-                                  FACES_MATS[goxel->tool_snape_face]);
+                                  FACES_MATS[data->snap_face]);
 
     if (inside && face == -1)
         snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos, false,
@@ -111,27 +124,26 @@ int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
 
     switch (state) {
     case STATE_IDLE:
-        goxel->tool_snape_face = -1;
+        data->snap_face = -1;
         if (snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED:
         if (!snaped) return STATE_CANCEL;
         goxel_set_help_text(goxel, "Click and drag to set selection.");
-        goxel->tool_start_pos = pos;
-        box = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
+        data->start_pos = pos;
+        box = get_box(&data->start_pos, &pos, &normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         if (down) {
             state = STATE_PAINT;
-            goxel->painting = true;
         }
         break;
 
     case STATE_PAINT:
         goxel_set_help_text(goxel, "Drag.");
         if (!snaped || !inside) return state;
-        goxel->selection = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
+        goxel->selection = get_box(&data->start_pos, &pos, &normal, 0,
                                    &goxel->plane);
         if (up) {
             goxel->tool_plane = plane_from_normal(pos, goxel->plane.u);
@@ -146,10 +158,9 @@ int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(pos, goxel->tool_plane.p),
                                  goxel->plane.n));
-        goxel->selection = get_box(&goxel->tool_start_pos, &pos, &normal, 0,
+        goxel->selection = get_box(&data->start_pos, &pos, &normal, 0,
                                    &goxel->plane);
         if (down) {
-            goxel->painting = false;
             return STATE_WAIT_UP;
         }
         break;
@@ -183,13 +194,23 @@ int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
         pos.y = round(pos.y);
         pos.z = round(pos.z);
         goxel->selection = box_move_face(goxel->selection,
-                                         goxel->tool_snape_face, pos);
+                                         data->snap_face, pos);
         break;
     }
     return state;
 }
 
+static int cancel(int state, void **data_)
+{
+    if (!(*data_)) return 0;
+    data_t *data = get_data(data_);
+    free(data);
+    *data_ = NULL;
+    return 0;
+}
+
 TOOL_REGISTER(TOOL_SELECTION, selection,
-              .iter_fn = tool_selection_iter,
+              .iter_fn = iter,
+              .cancel_fn = cancel,
               .shortcut = "R",
 )

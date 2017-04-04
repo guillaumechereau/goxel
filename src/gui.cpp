@@ -767,8 +767,7 @@ static void tools_panel(goxel_t *goxel)
         }
         if (ImGui::GoxSelectable(label, &v, g_tex_icons->tex,
                                  values[i].icon)) {
-            goxel->tool = values[i].tool;
-            goxel->tool_state = 0;
+            action_exec(action, "");
         }
         auto_grid(nb, i, 4);
     }
@@ -1347,17 +1346,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel->painter.mode = MODE_ADD;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.mode == MODE_SUB)
         goxel->painter.mode = MODE_ADD;
-    if (ImGui::IsKeyPressed(KEY_CONTROL, false) && goxel->tool == TOOL_BRUSH) {
-        tool_cancel(goxel, goxel->tool, goxel->tool_state);
-        goxel->prev_tool = goxel->tool;
-        goxel->tool = TOOL_PICK_COLOR;
-    }
-    if (ImGui::IsKeyReleased(KEY_CONTROL) && goxel->prev_tool) {
-        tool_cancel(goxel, goxel->tool, goxel->tool_state);
-        goxel->tool = goxel->prev_tool;
-        goxel->prev_tool = 0;
-    }
-
     float last_tool_radius = goxel->tool_radius;
 
     if (!io.WantCaptureKeyboard) {
@@ -1365,7 +1353,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
         if (goxel->tool_radius != last_tool_radius) {
             goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
-            tool_cancel(goxel, goxel->tool, goxel->tool_state);
+            tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
         }
 
         // XXX: this won't map correctly to a French keyboard.  Unfortunately as

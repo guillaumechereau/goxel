@@ -18,14 +18,13 @@
 
 #include "goxel.h"
 
-int tool_move_iter(goxel_t *goxel, const inputs_t *inputs,
-                   int state, const vec2_t *view_size,
-                   bool inside)
+static int iter(const inputs_t *inputs, int state, void **data,
+                const vec2_t *view_size, bool inside)
 {
     return 0;
 }
 
 TOOL_REGISTER(TOOL_MOVE, move,
-              .iter_fn = tool_move_iter,
+              .iter_fn = iter,
               .shortcut = "M",
 )

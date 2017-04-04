@@ -28,8 +28,8 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
-int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                    const vec2_t *view_size, bool inside)
+static int iter(const inputs_t *inputs, int state, void **data,
+                const vec2_t *view_size, bool inside)
 {
     vec3_t pos, normal;
     box_t box;
@@ -79,6 +79,6 @@ int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
 }
 
 TOOL_REGISTER(TOOL_LASER, laser,
-              .iter_fn = tool_laser_iter,
+              .iter_fn = iter,
               .shortcut = "L",
 )

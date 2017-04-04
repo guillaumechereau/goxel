@@ -107,7 +107,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     func = action->func ?: default_function;
 
     if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
-        tool_cancel(goxel, goxel->tool, goxel->tool_state);
+        tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
         image_history_push(goxel->image);
     }
 
