@@ -191,3 +191,7 @@ int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     return state;
 }
 
+TOOL_REGISTER(TOOL_BRUSH, brush,
+              .iter_fn = tool_brush_iter,
+              .shortcut = "B"
+)

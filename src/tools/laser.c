@@ -77,3 +77,8 @@ int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     }
     return state;
 }
+
+TOOL_REGISTER(TOOL_LASER, laser,
+              .iter_fn = tool_laser_iter,
+              .shortcut = "L",
+)

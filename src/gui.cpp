@@ -743,7 +743,7 @@ static void tools_panel(goxel_t *goxel)
         {TOOL_LASER,        "laser",     "Laser",        ICON_TOOL_LASER},
         {TOOL_SET_PLANE,    "plane",     "Plane",        ICON_TOOL_PLANE},
         {TOOL_MOVE,         "move",      "Move",         ICON_TOOL_MOVE},
-        {TOOL_PICK_COLOR,   "pick",      "Pick Color",   ICON_TOOL_PICK},
+        {TOOL_PICK_COLOR,   "pick_color","Pick Color",   ICON_TOOL_PICK},
         {TOOL_SELECTION,    "selection", "Selection",    ICON_TOOL_SELECTION},
         {TOOL_PROCEDURAL,   "procedural","Procedural",   ICON_TOOL_PROCEDURAL},
     };
@@ -761,6 +761,7 @@ static void tools_panel(goxel_t *goxel)
         if (values[i].tool_id) {
             sprintf(action_id, "tool_set_%s", values[i].tool_id);
             action = action_get(action_id);
+            assert(action);
             if (action->shortcut)
                 sprintf(label, "%s (%s)", values[i].name, action->shortcut);
         }

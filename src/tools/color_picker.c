@@ -39,3 +39,7 @@ int tool_color_picker_iter(goxel_t *goxel, const inputs_t *inputs,
     return 0;
 }
 
+TOOL_REGISTER(TOOL_PICK_COLOR, pick_color,
+             .iter_fn = tool_color_picker_iter,
+             .shortcut = "C",
+)

@@ -78,3 +78,7 @@ int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs,
 
     return state;
 }
+
+TOOL_REGISTER(TOOL_PROCEDURAL, procedural,
+              .iter_fn = tool_procedural_iter,
+)

@@ -189,3 +189,7 @@ int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs,
     return state;
 }
 
+TOOL_REGISTER(TOOL_SELECTION, selection,
+              .iter_fn = tool_selection_iter,
+              .shortcut = "R",
+)

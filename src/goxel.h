@@ -398,10 +398,10 @@ enum {
 // Represent an action.
 typedef struct action action_t;
 struct action {
-    const char      *id;    // Globally unique id.
-    const char      *help;  // Help text.
+    const char      *id;            // Globally unique id.
+    const char      *help;          // Help text.
     int             flags;
-    const char      *shortcut; // Optional shortcut.
+    const char      *shortcut;      // Optional shortcut.
     int             (*func)(const action_t *a, astack_t *s);
     void            *data;
 
@@ -458,6 +458,8 @@ enum {
     TOOL_PICK_COLOR,
     TOOL_SELECTION,
     TOOL_PROCEDURAL,
+
+    TOOL_COUNT
 };
 
 // Mesh mask for goxel_update_meshes function.
@@ -1007,9 +1009,29 @@ void save_to_file(goxel_t *goxel, const char *path);
 void load_from_file(goxel_t *goxel, const char *path);
 
 
+typedef struct tool tool_t;
+struct tool {
+    int id;
+    const char *action_id;
+    int (*iter_fn)(goxel_t *goxel, const inputs_t *inputs,
+                   int state, const vec2_t *view_size,
+                   bool inside);
+    const char *shortcut;
+};
+
+#define TOOL_REGISTER(id_, name_, ...) \
+    static const tool_t GOX_tool_##id_ = {\
+            .id = id_, .action_id = "tool_set_" #name_, __VA_ARGS__}; \
+    static void GOX_register_tool_##tool_() __attribute__((constructor)); \
+    static void GOX_register_tool_##tool_() { \
+        tool_register_(&GOX_tool_##id_); \
+    }
+
+void tool_register_(const tool_t *tool);
 int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
               const vec2_t *view_size, bool inside);
 void tool_cancel(goxel_t *goxel, int tool, int state);
+
 
 // #### Colors functions #######
 uvec3b_t hsl_to_rgb(uvec3b_t hsl);

@@ -25,4 +25,7 @@ int tool_move_iter(goxel_t *goxel, const inputs_t *inputs,
     return 0;
 }
 
-
+TOOL_REGISTER(TOOL_MOVE, move,
+              .iter_fn = tool_move_iter,
+              .shortcut = "M",
+)

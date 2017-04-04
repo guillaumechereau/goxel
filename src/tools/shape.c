@@ -173,3 +173,7 @@ int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
     return state;
 }
 
+TOOL_REGISTER(TOOL_SHAPE, shape,
+              .iter_fn = tool_shape_iter,
+              .shortcut = "S",
+)

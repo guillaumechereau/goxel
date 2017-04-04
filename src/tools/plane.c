@@ -36,3 +36,7 @@ int tool_set_plane_iter(goxel_t *goxel, const inputs_t *inputs,
     return 0;
 }
 
+TOOL_REGISTER(TOOL_SET_PLANE, plane,
+              .iter_fn = tool_set_plane_iter,
+              .shortcut = "P"
+)

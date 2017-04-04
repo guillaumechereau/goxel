@@ -28,48 +28,38 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
+static const tool_t *g_tools[TOOL_COUNT] = {};
 
-int tool_brush_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                    const vec2_t *view_size, bool inside);
-int tool_shape_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                    const vec2_t *view_size, bool inside);
-int tool_selection_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                        const vec2_t *view_size, bool inside);
-int tool_laser_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                    const vec2_t *view_size, bool inside);
-int tool_procedural_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                         const vec2_t *view_size, bool inside);
-int tool_set_plane_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                        const vec2_t *view_size, bool inside);
-int tool_move_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                   const vec2_t *view_size, bool inside);
-int tool_color_picker_iter(goxel_t *goxel, const inputs_t *inputs, int state,
-                           const vec2_t *view_size, bool inside);
+static int tool_set_action(const action_t *a, astack_t *s)
+{
+    tool_cancel(goxel, goxel->tool, goxel->tool_state);
+    goxel->tool = ((tool_t*)a->data)->id;
+    return 0;
+}
+
+void tool_register_(const tool_t *tool)
+{
+    action_t action;
+    g_tools[tool->id] = tool;
+    action = (action_t) {
+        .id = tool->action_id,
+        .shortcut = tool->shortcut,
+        .help = "set tool",
+        .func = tool_set_action,
+        .data = (void*)tool,
+    };
+    action_register(&action);
+}
 
 int tool_iter(goxel_t *goxel, int tool, const inputs_t *inputs, int state,
               const vec2_t *view_size, bool inside)
 {
     int ret;
-
-    typedef int (*tool_func_t)(goxel_t *goxel, const inputs_t *inputs,
-                               int state, const vec2_t *view_size,
-                               bool inside);
-    static const tool_func_t FUNCS[] = {
-        [TOOL_SHAPE]        = tool_shape_iter,
-        [TOOL_BRUSH]        = tool_brush_iter,
-        [TOOL_LASER]        = tool_laser_iter,
-        [TOOL_SET_PLANE]    = tool_set_plane_iter,
-        [TOOL_MOVE]         = tool_move_iter,
-        [TOOL_PICK_COLOR]   = tool_color_picker_iter,
-        [TOOL_SELECTION]    = tool_selection_iter,
-        [TOOL_PROCEDURAL]   = tool_procedural_iter,
-    };
-
-    assert(tool >= 0 && tool < ARRAY_SIZE(FUNCS));
-    assert(FUNCS[tool]);
+    assert(tool >= 0 && tool < TOOL_COUNT);
+    assert(g_tools[tool]->iter_fn);
 
     while (true) {
-        ret = FUNCS[tool](goxel, inputs, state, view_size, inside);
+        ret = g_tools[tool]->iter_fn(goxel, inputs, state, view_size, inside);
         if (ret == STATE_CANCEL) {
             mesh_set(goxel->image->active_layer->mesh, goxel->tool_mesh_orig);
             goxel_update_meshes(goxel, MESH_LAYERS);
@@ -99,25 +89,3 @@ void tool_cancel(goxel_t *goxel, int tool, int state)
     goxel->tool_plane = plane_null;
     goxel->tool_state = 0;
 }
-
-#define TOOL_ACTION(t, T, s) \
-    static void tool_set_##t(void) { \
-        tool_cancel(goxel, goxel->tool, goxel->tool_state); \
-        goxel->tool = TOOL_##T; \
-    } \
-    \
-    ACTION_REGISTER(tool_set_##t, \
-        .help = "Activate " #t " tool", \
-        .cfunc = tool_set_##t, \
-        .csig = "v", \
-        .shortcut = s, \
-    )
-
-TOOL_ACTION(brush, BRUSH, "B")
-TOOL_ACTION(shape, SHAPE, "S")
-TOOL_ACTION(laser, LASER, "L")
-TOOL_ACTION(plane, SET_PLANE, "P")
-TOOL_ACTION(move, MOVE, "M")
-TOOL_ACTION(pick, PICK_COLOR, "C")
-TOOL_ACTION(selection, SELECTION, "R")
-TOOL_ACTION(procedural, PROCEDURAL, NULL)
