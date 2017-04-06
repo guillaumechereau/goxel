@@ -154,7 +154,6 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
         if (!snaped || !inside) return state;
-        render_plane(&goxel->rend, &goxel->tool_plane, &goxel->grid_color);
         pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(pos, goxel->tool_plane.p),
                                  goxel->plane.n));
@@ -203,6 +202,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
 static int cancel(int state, void **data_)
 {
     if (!(*data_)) return 0;
+    goxel->tool_plane = plane_null;
     data_t *data = get_data(data_);
     free(data);
     *data_ = NULL;
