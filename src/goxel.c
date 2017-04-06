@@ -679,6 +679,61 @@ ACTION_REGISTER(grid_visible,
     .flags = ACTION_TOGGLE,
 )
 
+static void copy_action(void)
+{
+    painter_t painter;
+    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+    mesh_delete(goxel->clipboard.mesh);
+    goxel->clipboard.box = goxel->selection;
+    goxel->clipboard.mesh = mesh_copy(goxel->image->active_layer->mesh);
+    if (!box_is_null(goxel->selection)) {
+        painter = (painter_t) {
+            .shape = &shape_cube,
+            .mode = MODE_INTERSECT,
+            .color = uvec4b(255, 255, 255, 255),
+        };
+        mesh_op(goxel->clipboard.mesh, &painter, &goxel->selection);
+    }
+}
+
+static void past_action(void)
+{
+    mesh_t *mesh = goxel->image->active_layer->mesh;
+    mesh_t *tmp;
+    vec3_t p1, p2;
+    mat4_t mat = mat4_identity;
+    if (!goxel->clipboard.mesh) return;
+    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+
+    tmp = mesh_copy(goxel->clipboard.mesh);
+    if (    !box_is_null(goxel->selection) &&
+            !box_is_null(goxel->clipboard.box)) {
+        p1 = goxel->selection.p;
+        p2 = goxel->clipboard.box.p;
+        mat4_itranslate(&mat, +p1.x, +p1.y, +p1.z);
+        mat4_itranslate(&mat, -p2.x, -p2.y, -p2.z);
+        mesh_move(tmp, &mat);
+    }
+    mesh_merge(mesh, tmp, MODE_ADD);
+    mesh_delete(tmp);
+}
+
+ACTION_REGISTER(copy,
+    .help = "Copy",
+    .cfunc = copy_action,
+    .csig = "v",
+    .shortcut = "Ctrl C",
+    .flags = 0,
+)
+
+ACTION_REGISTER(past,
+    .help = "Past",
+    .cfunc = past_action,
+    .csig = "v",
+    .shortcut = "Ctrl V",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
 #define HS2 (M_SQRT2 / 2.0)
 
 

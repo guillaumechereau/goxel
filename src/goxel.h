@@ -898,6 +898,11 @@ typedef struct goxel
     mesh_t     *layers_mesh; // All the layers combined.
     mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
 
+    struct     {
+        mesh_t *mesh;
+        box_t  box;
+    } clipboard;
+
     history_t  *history;     // Undo/redo history.
     int        snap;
     float      snap_offset;  // Only for brush tool.

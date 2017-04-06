@@ -1242,6 +1242,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 action_exec2("layer_clear", "");
             if (ImGui::MenuItem("Undo", "Ctrl Z")) goxel_undo(goxel);
             if (ImGui::MenuItem("Redo", "Ctrl Y")) goxel_redo(goxel);
+            ImGui::GoxMenuItem("copy", "Copy");
+            ImGui::GoxMenuItem("past", "Past");
             if (ImGui::MenuItem("Shift Alpha"))
                 open_shift_alpha = true;
             ImGui::EndMenu();
