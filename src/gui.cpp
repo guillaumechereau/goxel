@@ -553,8 +553,33 @@ static void tool_options_panel(goxel_t *goxel)
         }
     }
     if (goxel->tool == TOOL_SELECTION) {
-        ImGui::GoxAction("clear_selection", "Clear selection", 1.0, "");
-        ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", 1.0, "");
+        if (!box_is_null(goxel->selection)) {
+            int x, y, z, w, h, d;
+            box_t *box = &goxel->selection;
+            ImGui::GoxAction("clear_selection", "Clear selection", 1.0, "");
+            ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", 1.0, "");
+            w = round(box->w.x * 2);
+            h = round(box->h.y * 2);
+            d = round(box->d.z * 2);
+            x = round(box->p.x - box->w.x);
+            y = round(box->p.y - box->h.y);
+            z = round(box->p.z - box->d.z);
+
+            ImGui::GoxGroupBegin("Origin");
+            ImGui::GoxInputInt("x", &x);
+            ImGui::GoxInputInt("y", &y);
+            ImGui::GoxInputInt("z", &z);
+            ImGui::GoxGroupEnd();
+
+            ImGui::GoxGroupBegin("Size");
+            ImGui::GoxInputInt("w", &w, 1, 1, 2048);
+            ImGui::GoxInputInt("h", &h, 1, 1, 2048);
+            ImGui::GoxInputInt("d", &d, 1, 1, 2048);
+            ImGui::GoxGroupEnd();
+            *box = bbox_from_extents(
+                    vec3(x + w / 2., y + h / 2., z + d / 2.),
+                    w / 2., h / 2., d / 2.);
+        }
     }
 }
 
