@@ -231,8 +231,20 @@ static int cancel(int state, void **data_)
     return 0;
 }
 
+static int gui(void)
+{
+    tool_gui_radius();
+    tool_gui_smoothness();
+    tool_gui_snap();
+    tool_gui_mode();
+    tool_gui_shape();
+    tool_gui_color();
+    return 0;
+}
+
 TOOL_REGISTER(TOOL_BRUSH, brush,
               .iter_fn = iter,
               .cancel_fn = cancel,
+              .gui_fn = gui,
               .shortcut = "B"
 )

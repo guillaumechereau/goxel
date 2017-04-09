@@ -196,8 +196,24 @@ static int cancel(int state, void **data_)
     return 0;
 }
 
+static int gui(void)
+{
+    tool_gui_smoothness();
+    gui_checkbox("Two steps", &goxel->tool_shape_two_steps,
+                 "Second click set the height");
+    tool_gui_snap();
+    tool_gui_mode();
+    tool_gui_shape();
+    tool_gui_color();
+    if (!box_is_null(goxel->selection))
+        gui_action_button("fill_selection", "Fill selection", 1.0, "");
+
+    return 0;
+}
+
 TOOL_REGISTER(TOOL_SHAPE, shape,
               .iter_fn = iter,
               .cancel_fn = cancel,
+              .gui_fn = gui,
               .shortcut = "S",
 )

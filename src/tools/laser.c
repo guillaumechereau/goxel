@@ -78,7 +78,15 @@ static int iter(const inputs_t *inputs, int state, void **data,
     return state;
 }
 
+static int gui(void)
+{
+    tool_gui_radius();
+    tool_gui_smoothness();
+    return 0;
+}
+
 TOOL_REGISTER(TOOL_LASER, laser,
               .iter_fn = iter,
+              .gui_fn = gui,
               .shortcut = "L",
 )

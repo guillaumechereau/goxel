@@ -24,7 +24,51 @@ static int iter(const inputs_t *inputs, int state, void **data,
     return 0;
 }
 
+static int gui(void)
+{
+    layer_t *layer;
+    mat4_t mat = mat4_identity;
+    int i;
+    double v;
+
+    layer = goxel->image->active_layer;
+    gui_group_begin(NULL);
+    i = 0;
+    if (gui_input_int("Move X", &i, 0, 0))
+        mat4_itranslate(&mat, i, 0, 0);
+    i = 0;
+    if (gui_input_int("Move Y", &i, 0, 0))
+        mat4_itranslate(&mat, 0, i, 0);
+    i = 0;
+    if (gui_input_int("Move Z", &i, 0, 0))
+        mat4_itranslate(&mat, 0, 0, i);
+    gui_group_end();
+    gui_group_begin(NULL);
+    i = 0;
+    if (gui_input_int("Rot X", &i, 0, 0))
+        mat4_irotate(&mat, i * M_PI / 2, 1, 0, 0);
+    i = 0;
+    if (gui_input_int("Rot Y", &i, 0, 0))
+        mat4_irotate(&mat, i * M_PI / 2, 0, 1, 0);
+    i = 0;
+    if (gui_input_int("Rot Z", &i, 0, 0))
+        mat4_irotate(&mat, i * M_PI / 2, 0, 0, 1);
+    gui_group_end();
+    if (layer->image && gui_input_int("Scale", &i, 0, 0)) {
+        v = pow(2, i);
+        mat4_iscale(&mat, v, v, v);
+    }
+    if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
+        image_history_push(goxel->image);
+        mesh_move(layer->mesh, &mat);
+        layer->mat = mat4_mul(mat, layer->mat);
+        goxel_update_meshes(goxel, -1);
+    }
+    return 0;
+}
+
 TOOL_REGISTER(TOOL_MOVE, move,
               .iter_fn = iter,
+              .gui_fn = gui,
               .shortcut = "M",
 )

@@ -38,7 +38,14 @@ int tool_color_picker_iter(const inputs_t *inputs, int state, void **data,
     return 0;
 }
 
+static int gui(void)
+{
+    tool_gui_color();
+    return 0;
+}
+
 TOOL_REGISTER(TOOL_PICK_COLOR, pick_color,
              .iter_fn = tool_color_picker_iter,
+             .gui_fn = gui,
              .shortcut = "C",
 )

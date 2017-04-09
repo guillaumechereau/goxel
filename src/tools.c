@@ -85,3 +85,129 @@ void tool_cancel(int tool, int state, void **data)
     goxel->tool_state = 0;
     goxel_update_meshes(goxel, MESH_LAYERS);
 }
+
+int tool_gui(int tool)
+{
+    if (!g_tools[tool]->gui_fn) return 0;
+    return g_tools[tool]->gui_fn();
+}
+
+
+static void snap_button(const char *label, int s, float w)
+{
+    bool v = goxel->snap & s;
+    if (gui_selectable(label, &v, NULL, w)) {
+        goxel->snap = v ? goxel->snap | s : goxel->snap & ~s;
+    }
+}
+
+int tool_gui_snap(void)
+{
+    float w, v;
+    gui_text("Snap on");
+    w = gui_get_avail_width() / 2.0 - 1;
+    gui_group_begin(NULL);
+    snap_button("Mesh", SNAP_MESH, w);
+    gui_same_line();
+    snap_button("Plane", SNAP_PLANE, w);
+    if (!box_is_null(goxel->selection)) {
+        snap_button("Sel In", SNAP_SELECTION_IN, w);
+        gui_same_line();
+        snap_button("Sel out", SNAP_SELECTION_OUT, w);
+    }
+    if (!box_is_null(goxel->image->box))
+        snap_button("Image box", SNAP_IMAGE_BOX, -1);
+
+    v = goxel->snap_offset;
+    if (gui_input_float("Offset", &v, 0.1, -1, +1, "%.1f"))
+        goxel->snap_offset = clamp(v, -1, +1);
+    gui_group_end();
+    return 0;
+}
+
+// XXX: replace this.
+static void auto_grid(int nb, int i, int col)
+{
+    if ((i + 1) % col != 0) gui_same_line();
+}
+
+int tool_gui_mode(void)
+{
+    int i;
+    bool v;
+    struct {
+        int        mode;
+        const char *name;
+        int        icon;
+    } values[] = {
+        {MODE_ADD,    "Add",  ICON_MODE_ADD},
+        {MODE_SUB,    "Sub",  ICON_MODE_SUB},
+        {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
+    };
+    gui_text("Mode");
+
+    gui_group_begin(NULL);
+    for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
+        v = goxel->painter.mode == values[i].mode;
+        if (gui_selectable_icon(values[i].name, &v, values[i].icon)) {
+            goxel->painter.mode = values[i].mode;
+        }
+        auto_grid(ARRAY_SIZE(values), i, 4);
+    }
+    gui_group_end();
+    return 0;
+}
+
+int tool_gui_shape(void)
+{
+    struct {
+        const char  *name;
+        shape_t     *shape;
+        int         icon;
+    } shapes[] = {
+        {"Sphere", &shape_sphere, ICON_SHAPE_SPHERE},
+        {"Cube", &shape_cube, ICON_SHAPE_CUBE},
+        {"Cylinder", &shape_cylinder, ICON_SHAPE_CYLINDER},
+    };
+    int i;
+    bool v;
+    gui_text("Shape");
+    gui_group_begin(NULL);
+    for (i = 0; i < (int)ARRAY_SIZE(shapes); i++) {
+        v = goxel->painter.shape == shapes[i].shape;
+        if (gui_selectable_icon(shapes[i].name, &v, shapes[i].icon)) {
+            goxel->painter.shape = shapes[i].shape;
+        }
+        auto_grid(ARRAY_SIZE(shapes), i, 4);
+    }
+    gui_group_end();
+    return 0;
+}
+
+int tool_gui_radius(void)
+{
+    int i;
+    i = goxel->tool_radius * 2;
+    if (gui_input_int("Size", &i, 1, 128)) {
+        i = clamp(i, 1, 128);
+        goxel->tool_radius = i / 2.0;
+    }
+    return 0;
+}
+
+int tool_gui_smoothness(void)
+{
+    bool s;
+    s = goxel->painter.smoothness;
+    if (gui_checkbox("Antialiased", &s, NULL)) {
+        goxel->painter.smoothness = s ? 1 : 0;
+    }
+    return 0;
+}
+
+int tool_gui_color(void)
+{
+    gui_text("Color");
+    gui_color(&goxel->painter.color);
+    return 0;
+}

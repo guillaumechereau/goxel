@@ -209,8 +209,41 @@ static int cancel(int state, void **data_)
     return 0;
 }
 
+static int gui(void)
+{
+    int x, y, z, w, h, d;
+    box_t *box = &goxel->selection;
+    if (box_is_null(*box)) return 0;
+
+    gui_action_button("clear_selection", "Clear selection", 1.0, "");
+    gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
+    w = round(box->w.x * 2);
+    h = round(box->h.y * 2);
+    d = round(box->d.z * 2);
+    x = round(box->p.x - box->w.x);
+    y = round(box->p.y - box->h.y);
+    z = round(box->p.z - box->d.z);
+
+    gui_group_begin("Origin");
+    gui_input_int("x", &x, 0, 0);
+    gui_input_int("y", &y, 0, 0);
+    gui_input_int("z", &z, 0, 0);
+    gui_group_end();
+
+    gui_group_begin("Size");
+    gui_input_int("w", &w, 1, 2048);
+    gui_input_int("h", &h, 1, 2048);
+    gui_input_int("d", &d, 1, 2048);
+    gui_group_end();
+    *box = bbox_from_extents(
+            vec3(x + w / 2., y + h / 2., z + d / 2.),
+            w / 2., h / 2., d / 2.);
+    return 0;
+}
+
 TOOL_REGISTER(TOOL_SELECTION, selection,
               .iter_fn = iter,
               .cancel_fn = cancel,
+              .gui_fn = gui,
               .shortcut = "R",
 )

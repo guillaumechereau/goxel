@@ -58,26 +58,6 @@ namespace ImGui {
 
 static texture_t *g_tex_icons = NULL;
 
-// All the icons positions inside icon.png (as Y*8 + X).
-enum {
-    ICON_TOOL_BRUSH = 0,
-    ICON_TOOL_SHAPE = 1,
-    ICON_TOOL_LASER = 2,
-    ICON_TOOL_PLANE = 3,
-    ICON_TOOL_MOVE = 4,
-    ICON_TOOL_PICK = 5,
-    ICON_TOOL_SELECTION = 6,
-    ICON_TOOL_PROCEDURAL = 7,
-
-    ICON_MODE_ADD = 8,
-    ICON_MODE_SUB = 9,
-    ICON_MODE_PAINT = 10,
-
-    ICON_SHAPE_SPHERE = 16,
-    ICON_SHAPE_CUBE = 17,
-    ICON_SHAPE_CYLINDER = 18,
-};
-
 static const int MiB = 1 << 20;
 
 static ImVec4 uvec4b_to_imvec4(uvec4b_t v)
@@ -399,219 +379,6 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) ImGui::SameLine();
 }
 
-static void mode_panel(goxel_t *goxel)
-{
-    int i;
-    bool v;
-    struct {
-        int        mode;
-        const char *name;
-        int        icon;
-    } values[] = {
-        {MODE_ADD,    "Add",  ICON_MODE_ADD},
-        {MODE_SUB,    "Sub",  ICON_MODE_SUB},
-        {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
-    };
-    ImGui::Text("Mode");
-
-    ImGui::GoxGroupBegin();
-    for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
-        v = goxel->painter.mode == values[i].mode;
-        if (ImGui::GoxSelectable(values[i].name, &v,
-                                 g_tex_icons->tex, values[i].icon)) {
-            goxel->painter.mode = values[i].mode;
-        }
-        auto_grid(ARRAY_SIZE(values), i, 4);
-    }
-    ImGui::GoxGroupEnd();
-}
-
-static void snap_button(const char *label, int s, float w)
-{
-    bool v = goxel->snap & s;
-    if (ImGui::GoxSelectable(label, &v, 0, 0, NULL, ImVec2(w, 18))) {
-        goxel->snap = v ? goxel->snap | s : goxel->snap & ~s;
-    }
-}
-
-static void shapes_panel(goxel_t *goxel);
-static void tool_options_panel(goxel_t *goxel)
-{
-    int i;
-    float w, v;
-    bool s;
-    ImVec4 color;
-    layer_t *layer;
-    mat4_t mat;
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_LASER)) {
-        i = goxel->tool_radius * 2;
-        if (ImGui::GoxInputInt("Size", &i, 1, 1, 128)) {
-            i = clamp(i, 1, 128);
-            goxel->tool_radius = i / 2.0;
-        }
-    }
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_LASER, TOOL_SHAPE)) {
-        s = goxel->painter.smoothness;
-        if (ImGui::Checkbox("Antialiased", &s)) {
-            goxel->painter.smoothness = s ? 1 : 0;
-        }
-    }
-    if (goxel->tool == TOOL_SHAPE) {
-        ImGui::Checkbox("Two steps", &goxel->tool_shape_two_steps);
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Second click set the height");
-    }
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
-        ImGui::Text("Snap on");
-
-        w = ImGui::GetContentRegionAvailWidth() / 2.0 - 1;
-
-        ImGui::GoxGroupBegin();
-
-        snap_button("Mesh", SNAP_MESH, w);
-        ImGui::SameLine();
-        snap_button("Plane", SNAP_PLANE, w);
-        if (!box_is_null(goxel->selection)) {
-            snap_button("Sel In", SNAP_SELECTION_IN, w);
-            ImGui::SameLine();
-            snap_button("Sel out", SNAP_SELECTION_OUT, w);
-        }
-        if (!box_is_null(goxel->image->box))
-            snap_button("Image box", SNAP_IMAGE_BOX, -1);
-
-        v = goxel->snap_offset;
-        if (ImGui::GoxInputFloat("Offset", &v, 0.1, -1, +1, "%.1f"))
-            goxel->snap_offset = clamp(v, -1, +1);
-        ImGui::GoxGroupEnd();
-    }
-
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE)) {
-        mode_panel(goxel);
-        shapes_panel(goxel);
-    }
-    if (IS_IN(goxel->tool, TOOL_BRUSH, TOOL_SHAPE, TOOL_PICK_COLOR)) {
-        ImGui::Text("Color");
-        color = uvec4b_to_imvec4(goxel->painter.color);
-        ImGui::ColorButton(color);
-        if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            ImGui::GoxColorEdit("##edit", &goxel->painter.color);
-            if (ImGui::Button("Close"))
-                ImGui::CloseCurrentPopup();
-            ImGui::EndPopup();
-        }
-    }
-    if (goxel->tool == TOOL_SHAPE) {
-        ImGui::GoxAction("fill_selection", "Fill selection", 1.0, "");
-    }
-    if (goxel->tool == TOOL_SET_PLANE) {
-        ImGui::GoxGroupBegin();
-        i = 0;
-        if (ImGui::GoxInputInt("Move", &i))
-            mat4_itranslate(&goxel->plane.mat, 0, 0, -i);
-        i = 0;
-        if (ImGui::GoxInputInt("Rot X", &i))
-            mat4_irotate(&goxel->plane.mat, i * M_PI / 2, 1, 0, 0);
-        i = 0;
-        if (ImGui::GoxInputInt("Rot Y", &i))
-            mat4_irotate(&goxel->plane.mat, i * M_PI / 2, 0, 1, 0);
-        ImGui::GoxGroupEnd();
-    }
-    if (goxel->tool == TOOL_MOVE) {
-        mat = mat4_identity;
-        layer = goxel->image->active_layer;
-        ImGui::GoxGroupBegin();
-        i = 0;
-        if (ImGui::GoxInputInt("Move X", &i))
-            mat4_itranslate(&mat, i, 0, 0);
-        i = 0;
-        if (ImGui::GoxInputInt("Move Y", &i))
-            mat4_itranslate(&mat, 0, i, 0);
-        i = 0;
-        if (ImGui::GoxInputInt("Move Z", &i))
-            mat4_itranslate(&mat, 0, 0, i);
-        ImGui::GoxGroupEnd();
-        ImGui::GoxGroupBegin();
-        i = 0;
-        if (ImGui::GoxInputInt("Rot X", &i))
-            mat4_irotate(&mat, i * M_PI / 2, 1, 0, 0);
-        i = 0;
-        if (ImGui::GoxInputInt("Rot Y", &i))
-            mat4_irotate(&mat, i * M_PI / 2, 0, 1, 0);
-        i = 0;
-        if (ImGui::GoxInputInt("Rot Z", &i))
-            mat4_irotate(&mat, i * M_PI / 2, 0, 0, 1);
-        ImGui::GoxGroupEnd();
-        if (layer->image && ImGui::InputInt("Scale", &i)) {
-            v = pow(2, i);
-            mat4_iscale(&mat, v, v, v);
-        }
-        if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
-            image_history_push(goxel->image);
-            mesh_move(layer->mesh, &mat);
-            layer->mat = mat4_mul(mat, layer->mat);
-            goxel_update_meshes(goxel, -1);
-        }
-    }
-    if (goxel->tool == TOOL_SELECTION) {
-        if (!box_is_null(goxel->selection)) {
-            int x, y, z, w, h, d;
-            box_t *box = &goxel->selection;
-            ImGui::GoxAction("clear_selection", "Clear selection", 1.0, "");
-            ImGui::GoxAction("cut_as_new_layer", "Cut as new layer", 1.0, "");
-            w = round(box->w.x * 2);
-            h = round(box->h.y * 2);
-            d = round(box->d.z * 2);
-            x = round(box->p.x - box->w.x);
-            y = round(box->p.y - box->h.y);
-            z = round(box->p.z - box->d.z);
-
-            ImGui::GoxGroupBegin("Origin");
-            ImGui::GoxInputInt("x", &x);
-            ImGui::GoxInputInt("y", &y);
-            ImGui::GoxInputInt("z", &z);
-            ImGui::GoxGroupEnd();
-
-            ImGui::GoxGroupBegin("Size");
-            ImGui::GoxInputInt("w", &w, 1, 1, 2048);
-            ImGui::GoxInputInt("h", &h, 1, 1, 2048);
-            ImGui::GoxInputInt("d", &d, 1, 1, 2048);
-            ImGui::GoxGroupEnd();
-            *box = bbox_from_extents(
-                    vec3(x + w / 2., y + h / 2., z + d / 2.),
-                    w / 2., h / 2., d / 2.);
-        }
-    }
-}
-
-static void shapes_panel(goxel_t *goxel)
-{
-    struct {
-        const char  *name;
-        shape_t     *shape;
-        int         icon;
-    } shapes[] = {
-        {"Sphere", &shape_sphere, ICON_SHAPE_SPHERE},
-        {"Cube", &shape_cube, ICON_SHAPE_CUBE},
-        {"Cylinder", &shape_cylinder, ICON_SHAPE_CYLINDER},
-    };
-    int i;
-    bool v;
-    ImGui::Text("Shape");
-    ImGui::PushID("shapes");
-
-    ImGui::GoxGroupBegin();
-    for (i = 0; i < (int)ARRAY_SIZE(shapes); i++) {
-        v = goxel->painter.shape == shapes[i].shape;
-        if (ImGui::GoxSelectable(shapes[i].name, &v, g_tex_icons->tex,
-                                 shapes[i].icon)) {
-            goxel->painter.shape = shapes[i].shape;
-        }
-        auto_grid(ARRAY_SIZE(shapes), i, 4);
-    }
-    ImGui::GoxGroupEnd();
-    ImGui::PopID();
-}
-
 static void procedural_panel(goxel_t *goxel)
 {
     static char **progs = NULL;
@@ -800,7 +567,7 @@ static void tools_panel(goxel_t *goxel)
 
     if (goxel->tool != TOOL_PROCEDURAL) {
         if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
-            tool_options_panel(goxel);
+            tool_gui(goxel->tool);
     } else {
         if (ImGui::GoxCollapsingHeader("Procedural Rendering", NULL,
                                        true, true))
@@ -1404,4 +1171,107 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 void gui_render(void)
 {
     ImGui::Render();
+}
+
+extern "C" {
+using namespace ImGui;
+
+void gui_group_begin(const char *label)
+{
+    GoxGroupBegin(label);
+}
+
+void gui_group_end(void)
+{
+    GoxGroupEnd();
+}
+
+bool gui_input_int(const char *label, int *v, int minv, int maxv)
+{
+    float minvf = minv;
+    float maxvf = maxv;
+    if (minv == 0 && maxv == 0) {
+        minvf = -FLT_MAX;
+        maxvf = +FLT_MAX;
+    }
+    return GoxInputInt(label, v, 1, minvf, maxvf);
+}
+
+bool gui_input_float(const char *label, float *v, float step,
+                     float minv, float maxv, const char *format)
+{
+    if (minv == 0.f && maxv == 0.f) {
+        minv = -FLT_MAX;
+        maxv = +FLT_MAX;
+    }
+    if (step == 0.f) step = 0.1f;
+    if (!format) format = "%.1f";
+    return GoxInputFloat(label, v, step, minv, maxv, format);
+}
+
+bool gui_action_button(const char *id, const char *label, float size,
+                       const char *sig, ...)
+{
+    va_list ap;
+    float w = GetContentRegionAvailWidth();
+    assert(action_get(id));
+    if (Button(label, ImVec2(size * w, 0))) {
+        va_start(ap, sig);
+        action_execv(action_get(id), sig, ap);
+        va_end(ap);
+        return true;
+    }
+    if (IsItemHovered()) {
+        goxel_set_help_text(goxel, action_get(id)->help);
+    }
+    return false;
+}
+
+bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
+{
+    return GoxSelectable(name, v, 0, 0, tooltip, ImVec2(w, 18));
+}
+
+bool gui_selectable_icon(const char *name, bool *v, int icon)
+{
+    return GoxSelectable(name, v, g_tex_icons->tex, icon);
+}
+
+float gui_get_avail_width(void)
+{
+    return GetContentRegionAvailWidth();
+}
+
+void gui_text(const char *label)
+{
+    Text("%s", label);
+}
+
+void gui_same_line(void)
+{
+    SameLine();
+}
+
+bool gui_color(uvec4b_t *color)
+{
+    ImVec4 icolor;
+    icolor = uvec4b_to_imvec4(*color);
+    ImGui::ColorButton(icolor);
+    if (ImGui::BeginPopupContextItem("color context menu", 0)) {
+        ImGui::GoxColorEdit("##edit", color);
+        if (ImGui::Button("Close"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+    return false;
+}
+
+bool gui_checkbox(const char *label, bool *v, const char *hint)
+{
+    bool ret;
+    ret = Checkbox(label, v);
+    if (hint && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", hint);
+    return ret;
+}
+
 }

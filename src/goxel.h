@@ -437,6 +437,28 @@ void actions_iter(int (*f)(const action_t *action, void *user), void *user);
 
 // #############################
 
+
+// All the icons positions inside icon.png (as Y*8 + X).
+enum {
+    ICON_TOOL_BRUSH = 0,
+    ICON_TOOL_SHAPE = 1,
+    ICON_TOOL_LASER = 2,
+    ICON_TOOL_PLANE = 3,
+    ICON_TOOL_MOVE = 4,
+    ICON_TOOL_PICK = 5,
+    ICON_TOOL_SELECTION = 6,
+    ICON_TOOL_PROCEDURAL = 7,
+
+    ICON_MODE_ADD = 8,
+    ICON_MODE_SUB = 9,
+    ICON_MODE_PAINT = 10,
+
+    ICON_SHAPE_SPHERE = 16,
+    ICON_SHAPE_CUBE = 17,
+    ICON_SHAPE_CYLINDER = 18,
+};
+
+
 // #### Tool/Operation/Painter #
 enum {
     MODE_NULL,
@@ -1009,6 +1031,7 @@ struct tool {
     int (*iter_fn)(const inputs_t *inputs, int state, void **data,
                    const vec2_t *view_size, bool inside);
     int (*cancel_fn)(int state, void **data);
+    int (*gui_fn)(void);
     const char *shortcut;
 };
 
@@ -1024,6 +1047,14 @@ void tool_register_(const tool_t *tool);
 int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
               const vec2_t *view_size, bool inside);
 void tool_cancel(int tool, int state, void **data);
+int tool_gui(int tool);
+
+int tool_gui_snap(void);
+int tool_gui_mode(void);
+int tool_gui_shape(void);
+int tool_gui_radius(void);
+int tool_gui_smoothness(void);
+int tool_gui_color(void);
 
 
 // #### Colors functions #######
@@ -1036,6 +1067,24 @@ void gui_init(void);
 void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);
 void gui_render(void);
+
+// Gui widgets:
+void gui_text(const char *label);
+void gui_group_begin(const char *label);
+void gui_group_end(void);
+bool gui_checkbox(const char *label, bool *v, const char *hint);
+bool gui_input_int(const char *label, int *v, int minv, int maxv);
+bool gui_input_float(const char *label, float *v, float step,
+                     float minv, float maxv, const char *format);
+bool gui_action_button(const char *id, const char *label, float size,
+                       const char *sig, ...);
+bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
+bool gui_selectable_icon(const char *name, bool *v, int icon);
+bool gui_color(uvec4b_t *color);
+
+float gui_get_avail_width(void);
+void gui_same_line(void);
+
 
 // #############################
 
