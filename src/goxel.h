@@ -909,7 +909,8 @@ int proc_iter(gox_proc_t *proc);
 
 // Get the list of programs saved in data/procs.
 int proc_list_examples(void (*f)(int index,
-                                 const char *name, const char *code));
+                                 const char *name, const char *code,
+                                 void *user), void *user);
 
 
 typedef struct goxel
@@ -1070,6 +1071,7 @@ void gui_render(void);
 
 // Gui widgets:
 void gui_text(const char *label);
+bool gui_button(const char *label);
 void gui_group_begin(const char *label);
 void gui_group_end(void);
 bool gui_checkbox(const char *label, bool *v, const char *hint);
@@ -1081,9 +1083,16 @@ bool gui_action_button(const char *id, const char *label, float size,
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_icon(const char *name, bool *v, int icon);
 bool gui_color(uvec4b_t *color);
+bool gui_input_text(const char *label, char *buf, int size);
+bool gui_input_text_multiline(const char *label, char *buf, int size,
+                              float height);
+void gui_input_text_multiline_highlight(int line);
+bool gui_combo(const char *label, int *v, const char **names, int nb);
 
 float gui_get_avail_width(void);
 void gui_same_line(void);
+void gui_enabled_begin(bool enabled);
+void gui_enabled_end(void);
 
 
 // #############################

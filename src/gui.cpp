@@ -117,10 +117,6 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    char prog_path[1024];       // "\0" if no loaded prog.
-    char prog_buff[64 * 1024];  // XXX: make it dynamic?
-    bool prog_export_animation;
-    char prog_export_animation_path[1024];
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -379,149 +375,6 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) ImGui::SameLine();
 }
 
-static void procedural_panel(goxel_t *goxel)
-{
-    static char **progs = NULL;
-    static char **names = NULL;
-    static int nb_progs = 0;
-    static bool first_time = true;
-    int i;
-    static int current = -1;
-    gox_proc_t *proc = &goxel->proc;
-    bool enabled;
-    static bool auto_run;
-    static int timer = 0;
-
-    ImGuiStyle& style = ImGui::GetStyle();
-
-    if (first_time) {
-        first_time = false;
-        strcpy(gui->prog_buff, "shape main {\n    cube[s 3]\n}");
-        for (i = 0; i < nb_progs; i++) {free(progs[i]); free(names[i]);}
-        free(progs);
-        free(names);
-        nb_progs = proc_list_examples(NULL);
-        progs = (char**)calloc(nb_progs, sizeof(*progs));
-        names = (char**)calloc(nb_progs, sizeof(*names));
-        proc_list_examples(
-                [](int i, const char *name, const char *code){
-                    progs[i] = strdup(code);
-                    names[i] = strdup(name);
-                });
-        proc_parse(gui->prog_buff, proc);
-    }
-
-    if (ImGui::InputTextMultiline("", gui->prog_buff,
-                                  ARRAY_SIZE(gui->prog_buff),
-                                  ImVec2(-1, 400))) {
-        timer = 0;
-        proc_parse(gui->prog_buff, proc);
-    }
-    if (proc->error.str) {
-        float h = ImGui::CalcTextSize("").y;
-        ImVec2 rmin = ImGui::GetItemRectMin();
-        ImVec2 rmax = ImGui::GetItemRectMax();
-        rmin.y = rmin.y + goxel->proc.error.line * h + 2;
-        rmax.y = rmin.y + h;
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->AddRect(rmin, rmax, 0x800000ff);
-        ImGui::Text("%s", proc->error.str);
-    }
-    enabled = proc->state >= PROC_READY;
-
-    if (auto_run && proc->state == PROC_READY && timer == 0) timer = 1;
-    if (proc->state == PROC_RUNNING) {
-        if (ImGui::Button("Stop")) proc_stop(proc);
-    } else {
-        ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[
-                         enabled ? ImGuiCol_Text : ImGuiCol_TextDisabled]);
-        if (    (ImGui::Button("Run") && enabled) ||
-                (auto_run && proc->state == PROC_READY &&
-                 timer && timer++ >= 16)) {
-            mesh_clear(goxel->image->active_layer->mesh);
-            proc_start(proc, NULL);
-            timer = 0;
-        }
-        ImGui::PopStyleColor();
-    }
-    ImGui::SameLine();
-    if (ImGui::Checkbox("Auto", &auto_run))
-        proc_parse(gui->prog_buff, proc);
-    ImGui::SameLine();
-
-    if (ImGui::Button("Export Animation")) {
-        const char *dir_path;
-        dir_path = noc_file_dialog_open(
-                    NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
-                    NULL, NULL, NULL);
-        if (dir_path) {
-            mesh_clear(goxel->image->active_layer->mesh);
-            proc_start(proc, NULL);
-            gui->prog_export_animation = true;
-            sprintf(gui->prog_export_animation_path, "%s", dir_path);
-        }
-    }
-
-    // File load / save.  No error check yet!
-    if (*gui->prog_path) {
-        ImGui::PushItemWidth(-1);
-        ImGui::InputText("##path", gui->prog_path, sizeof(gui->prog_path));
-        ImGui::PopItemWidth();
-    }
-    if (ImGui::Button("Load")) {
-        const char *path;
-        path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                    "goxcf\0*.goxcf\0", NULL, NULL);
-        if (path) {
-            FILE *f = fopen(path, "r");
-            int nb;
-            nb = (int)fread(gui->prog_buff, 1, sizeof(gui->prog_buff), f);
-            gui->prog_buff[nb] = '\0';
-            fclose(f);
-            strcpy(gui->prog_path, path);
-        }
-        proc_parse(gui->prog_buff, proc);
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Save")) {
-        if (!*gui->prog_path) {
-            const char *path;
-            path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                                   "goxcf\0*.goxcf\0", NULL, NULL);
-            if (path)
-                strcpy(gui->prog_path, path);
-        }
-        if (*gui->prog_path) {
-            FILE *f = fopen(gui->prog_path, "w");
-            fwrite(gui->prog_buff, strlen(gui->prog_buff), 1, f);
-            fclose(f);
-        }
-    }
-
-    ImGui::PushItemWidth(-100);
-    if (ImGui::Combo("Examples", &current, (const char**)names, nb_progs)) {
-        strcpy(gui->prog_buff, progs[current]);
-        proc_parse(gui->prog_buff, proc);
-    }
-    ImGui::PopItemWidth();
-
-    if (proc->state == PROC_RUNNING && gui->prog_export_animation
-            && !proc->in_frame) {
-        char path[1024];
-        sprintf(path, "%s/img_%04d.png",
-                gui->prog_export_animation_path, proc->frame);
-        action_exec2("export_as", "pp", "png", path);
-    }
-    if (proc->state != PROC_RUNNING) gui->prog_export_animation = false;
-
-    if (proc->state == PROC_RUNNING) {
-        proc_iter(proc);
-        if (!proc->in_frame)
-            goxel_update_meshes(goxel, MESH_LAYERS);
-    }
-}
-
-
 static void tools_panel(goxel_t *goxel)
 {
     const struct {
@@ -564,15 +417,8 @@ static void tools_panel(goxel_t *goxel)
         auto_grid(nb, i, 4);
     }
     ImGui::GoxGroupEnd();
-
-    if (goxel->tool != TOOL_PROCEDURAL) {
-        if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
-            tool_gui(goxel->tool);
-    } else {
-        if (ImGui::GoxCollapsingHeader("Procedural Rendering", NULL,
-                                       true, true))
-            procedural_panel(goxel);
-    }
+    if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
+        tool_gui(goxel->tool);
 }
 
 static void toggle_layer_only_visible(goxel_t *goxel, layer_t *layer)
@@ -1032,8 +878,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     left_pane_width = 168;
     if (current_panel == 0 && goxel->tool == TOOL_PROCEDURAL) {
-        left_pane_width = clamp(ImGui::CalcTextSize(gui->prog_buff).x + 60,
-                                250, 600);
+        left_pane_width = 400;
     }
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
 
@@ -1272,6 +1117,60 @@ bool gui_checkbox(const char *label, bool *v, const char *hint)
     ret = Checkbox(label, v);
     if (hint && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", hint);
     return ret;
+}
+
+bool gui_button(const char *label)
+{
+    return Button(label);
+}
+
+bool gui_input_text(const char *label, char *txt, int size)
+{
+    return InputText(label, txt, size);
+}
+
+bool gui_input_text_multiline(const char *label, char *buf, int size,
+                              float height)
+{
+    // We set the frame color to a semi transparent value, because otherwise
+    // we cannot render the error highlight.
+    // XXX: fix that.
+    bool ret;
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4 col = style.Colors[ImGuiCol_FrameBg];
+    style.Colors[ImGuiCol_FrameBg].w = 0.5;
+    ret = InputTextMultiline(label, buf, size, ImVec2(-1, height));
+    style.Colors[ImGuiCol_FrameBg] = col;
+    return ret;
+}
+
+bool gui_combo(const char *label, int *v, const char **names, int nb)
+{
+    return Combo(label, v, names, nb);
+}
+
+void gui_input_text_multiline_highlight(int line)
+{
+    float h = ImGui::CalcTextSize("").y;
+    ImVec2 rmin = ImGui::GetItemRectMin();
+    ImVec2 rmax = ImGui::GetItemRectMax();
+    rmin.y = rmin.y + line * h + 2;
+    rmax.y = rmin.y + h;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddRectFilled(rmin, rmax, 0xff0000ff);
+}
+
+void gui_enabled_begin(bool enabled)
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    ImVec4 color = style.Colors[ImGuiCol_Text];
+    if (!enabled) color.w /= 2;
+    ImGui::PushStyleColor(ImGuiCol_Text, color);
+}
+
+void gui_enabled_end(void)
+{
+    ImGui::PopStyleColor();
 }
 
 }
