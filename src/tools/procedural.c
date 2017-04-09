@@ -22,10 +22,11 @@ enum {
     STATE_IDLE      = 0,
     STATE_CANCEL    = 1,
     STATE_END       = 2,
-    STATE_ENTER     = 0x0100,
 
     STATE_SNAPED,
     STATE_PAINT,
+
+    STATE_ENTER     = 0x0100,
 };
 
 static int iter(const inputs_t *inputs, int state, void **data,
