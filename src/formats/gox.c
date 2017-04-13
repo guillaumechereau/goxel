@@ -226,6 +226,13 @@ void save_to_file(goxel_t *goxel, const char *path)
     gzwrite(out, "GOX ", 4);
     write_int32(out, 1);
 
+    // Write image info.
+    chunk_write_start(&c, out, "IMG ");
+    if (!box_is_null(goxel->image->box))
+        chunk_write_dict_value(&c, out, "box", &goxel->image->box,
+                               sizeof(goxel->image->box));
+    chunk_write_finish(&c, out);
+
     // Add all the blocks data into the hash table.
     index = 0;
     DL_FOREACH(goxel->image->layers, layer) {
@@ -406,6 +413,12 @@ void load_from_file(goxel_t *goxel, const char *path)
                 }
             }
 
+        } else if (strncmp(c.type, "IMG ", 4) == 0) {
+            while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
+                                          &dict_value_size))) {
+                if (strcmp(dict_key, "box") == 0)
+                    memcpy(&goxel->image->box, dict_value, dict_value_size);
+            }
         } else assert(false);
         chunk_read_finish(&c, in);
     }
