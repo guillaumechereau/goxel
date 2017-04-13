@@ -452,7 +452,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     // Render all the image layers.
     DL_FOREACH(goxel->image->layers, layer) {
         if (layer->visible && layer->image)
-            render_img(rend, layer->image, &layer->mat);
+            render_img(rend, layer->image, &layer->mat, EFFECT_NO_SHADING);
     }
 
     render_box(rend, &goxel->selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);

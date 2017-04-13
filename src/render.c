@@ -686,7 +686,8 @@ void render_plane(renderer_t *rend, const plane_t *plane,
     DL_APPEND(rend->items, item);
 }
 
-void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
+void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
+                int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
@@ -695,6 +696,7 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat)
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
     item->color = uvec4b(255, 255, 255, 255);
+    item->effects = effects;
     DL_APPEND(rend->items, item);
 }
 

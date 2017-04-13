@@ -173,7 +173,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     case STATE_SNAPED_FACE:
         if (face == -1) return STATE_IDLE;
         goxel_set_help_text(goxel, "Drag to move face");
-        render_img(&goxel->rend, NULL, &face_plane.mat);
+        render_img(&goxel->rend, NULL, &face_plane.mat, EFFECT_NO_SHADING);
         if (down) {
             state = STATE_MOVE_FACE;
             goxel->tool_plane = plane(pos, normal,
