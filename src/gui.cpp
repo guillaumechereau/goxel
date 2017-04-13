@@ -628,7 +628,7 @@ static void export_panel(goxel_t *goxel)
 static void image_panel(goxel_t *goxel)
 {
     bool bounded;
-    int w, h, d;
+    int x, y, z, w, h, d;
     image_t *image = goxel->image;
     box_t *box = &image->box;
 
@@ -640,12 +640,25 @@ static void image_panel(goxel_t *goxel)
         w = box->w.x * 2;
         h = box->h.y * 2;
         d = box->d.z * 2;
-        ImGui::GoxGroupBegin("Size");
-        ImGui::GoxInputInt("w", &w, 1, 1, 2048);
-        ImGui::GoxInputInt("h", &h, 1, 1, 2048);
-        ImGui::GoxInputInt("d", &d, 1, 1, 2048);
-        ImGui::GoxGroupEnd();
-        *box = bbox_from_extents(vec3_zero, w / 2., h / 2., d / 2.);
+        x = round(box->p.x - box->w.x);
+        y = round(box->p.y - box->h.y);
+        z = round(box->p.z - box->d.z);
+
+        gui_group_begin("Origin");
+        gui_input_int("x", &x, 0, 0);
+        gui_input_int("y", &y, 0, 0);
+        gui_input_int("z", &z, 0, 0);
+        gui_group_end();
+
+        gui_group_begin("Size");
+        gui_input_int("w", &w, 1, 2048);
+        gui_input_int("h", &h, 1, 2048);
+        gui_input_int("d", &d, 1, 2048);
+        gui_group_end();
+
+        *box = bbox_from_extents(
+                vec3(x + w / 2., y + h / 2., z + d / 2.),
+                w / 2., h / 2., d / 2.);
     }
 }
 
