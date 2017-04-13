@@ -522,6 +522,7 @@ static void render_advanced_panel(goxel_t *goxel)
     } COLORS[] = {
         {&goxel->back_color, "Back color"},
         {&goxel->grid_color, "Grid color"},
+        {&goxel->image_box_color, "Box color"},
     };
 
     ImGui::Text("Light");

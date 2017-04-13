@@ -938,6 +938,7 @@ typedef struct goxel
 
     uvec4b_t   back_color;
     uvec4b_t   grid_color;
+    uvec4b_t   image_box_color;
 
     texture_t  *pick_fbo;
     painter_t  painter;

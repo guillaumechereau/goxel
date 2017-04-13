@@ -250,6 +250,7 @@ void goxel_init(goxel_t *gox)
 
     goxel->back_color = HEXCOLOR(0x393939ff);
     goxel->grid_color = HEXCOLOR(0x4a4a4aff);
+    goxel->image_box_color = HEXCOLOR(0xccccffff);
 
     // Load and set default palette.
     palette_load_all(&goxel->palettes);
@@ -470,7 +471,8 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     if (!goxel->plane_hidden)
         render_plane(rend, &goxel->plane, &goxel->grid_color);
     if (!box_is_null(goxel->image->box))
-        render_box(rend, &goxel->image->box, NULL, EFFECT_SEE_BACK);
+        render_box(rend, &goxel->image->box, &goxel->image_box_color,
+                   EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, rect);
 }
