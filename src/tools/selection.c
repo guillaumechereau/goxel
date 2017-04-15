@@ -34,6 +34,13 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
+enum {
+    DRAG_RESIZE,
+    DRAG_MOVE,
+};
+
+static int g_drag_mode = 0;
+
 typedef struct {
     int     snap_face;
     vec3_t  start_pos;
@@ -93,7 +100,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     const bool up = !down;
     int snaped = 0;
     int face = -1;
-    vec3_t pos = vec3_zero, normal = vec3_zero;
+    vec3_t pos = vec3_zero, normal = vec3_zero, n;
     plane_t face_plane;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
@@ -184,16 +191,22 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     case STATE_MOVE_FACE:
         if (up) return STATE_IDLE;
         goxel_set_help_text(goxel, "Drag to move face");
+        n = vec3_normalized(face_plane.n);
         goxel_unproject_on_plane(goxel, view_size, &inputs->mouse_pos,
                                  &goxel->tool_plane, &pos, &normal);
         pos = vec3_add(goxel->tool_plane.p,
-                    vec3_project(vec3_sub(pos, goxel->tool_plane.p),
-                                 vec3_normalized(face_plane.n)));
+                    vec3_project(vec3_sub(pos, goxel->tool_plane.p), n));
         pos.x = round(pos.x);
         pos.y = round(pos.y);
         pos.z = round(pos.z);
-        goxel->selection = box_move_face(goxel->selection,
-                                         data->snap_face, pos);
+        if (g_drag_mode == DRAG_RESIZE) {
+            goxel->selection = box_move_face(goxel->selection,
+                                             data->snap_face, pos);
+        } else {
+            vec3_t d = vec3_add(goxel->selection.p, face_plane.n);
+            vec3_t ofs = vec3_project(vec3_sub(pos, d), n);
+            vec3_iadd(&goxel->selection.p, ofs);
+        }
         break;
     }
     return state;
@@ -215,6 +228,9 @@ static int gui(void)
     box_t *box = &goxel->selection;
     if (box_is_null(*box)) return 0;
 
+    gui_text("Drag mode");
+    gui_combo("##drag_mode", &g_drag_mode,
+              (const char*[]) {"Resize", "Move"}, 2);
     gui_action_button("clear_selection", "Clear selection", 1.0, "");
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
     w = round(box->w.x * 2);
