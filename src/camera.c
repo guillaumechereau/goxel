@@ -38,9 +38,30 @@ void camera_set(camera_t *cam, const camera_t *other)
     cam->ofs = other->ofs;
 }
 
+static void compute_clip(const mat4_t *view_mat, float *near, float *far)
+{
+    block_t *block;
+    vec3_t p;
+    float n = FLT_MAX, f = 256;
+    const int margin = 8 * BLOCK_SIZE;
+    MESH_ITER_BLOCKS(goxel->layers_mesh, block) {
+        p = vec3(block->pos.x, block->pos.y, block->pos.z);
+        p = mat4_mul_vec3(*view_mat, p);
+        if (p.z < 0) {
+            n = min(n, -p.z - margin);
+            f = max(f, -p.z + margin);
+        }
+    }
+    if (n >= f) n = 1;
+    n = max(n, 1);
+    *near = n;
+    *far = f;
+}
+
 void camera_update(camera_t *camera)
 {
     float size;
+    float near, far;
 
     camera->fovy = 20.;
     if (camera->move_to_target) {
@@ -54,15 +75,16 @@ void camera_update(camera_t *camera)
     mat4_itranslate(&camera->view_mat,
            camera->ofs.x, camera->ofs.y, camera->ofs.z);
 
+    compute_clip(&camera->view_mat, &near, &far);
     if (camera->ortho) {
         size = camera->dist;
         camera->proj_mat = mat4_ortho(
                 -size, +size,
                 -size / camera->aspect, +size / camera->aspect,
-                0, 2048);
+                near, far);
     } else {
         camera->proj_mat = mat4_perspective(
-                camera->fovy, camera->aspect, 1, 2048);
+                camera->fovy, camera->aspect, near, far);
     }
 }
 
