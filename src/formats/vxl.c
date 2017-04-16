@@ -89,8 +89,10 @@ static int vxl_import(const char *path)
                 cube[AT(x, y, i)].a = 0;
 
             color = (uint32_t*)(v + 4);
-            for (z = top_color_start; z <= top_color_end; z++)
+            for (z = top_color_start; z <= top_color_end; z++) {
+                CHECK(z >= 0 && z < d);
                 cube[AT(x, y, z)] = swap_color(*color++);
+            }
 
             len_bottom = top_color_end - top_color_start + 1;
 
@@ -127,6 +129,142 @@ static int vxl_import(const char *path)
     return ret;
 }
 
+static int is_surface(int x, int y, int z, uint8_t map[512][512][64])
+{
+   if (map[x][y][z]==0) return 0;
+   if (x   >   0 && map[x-1][y][z]==0) return 1;
+   if (x+1 < 512 && map[x+1][y][z]==0) return 1;
+   if (y   >   0 && map[x][y-1][z]==0) return 1;
+   if (y+1 < 512 && map[x][y+1][z]==0) return 1;
+   if (z   >   0 && map[x][y][z-1]==0) return 1;
+   if (z+1 <  64 && map[x][y][z+1]==0) return 1;
+   return 0;
+}
+
+static void write_color(FILE *f, uint32_t color)
+{
+    uvec4b_t c;
+    c.uint32 = color;
+    fputc(c.b, f);
+    fputc(c.g, f);
+    fputc(c.r, f);
+    fputc(c.a, f);
+}
+
+#define MAP_Z  64
+void write_map(const char *filename,
+               uint8_t map[512][512][64],
+               uint32_t color[512][512][64])
+{
+    int i,j,k;
+    FILE *f = fopen(filename, "wb");
+
+    for (j = 0; j < 512; ++j) {
+        for (i=0; i < 512; ++i) {
+            k = 0;
+            while (k < MAP_Z) {
+                int z;
+                int air_start;
+                int top_colors_start;
+                int top_colors_end; // exclusive
+                int bottom_colors_start;
+                int bottom_colors_end; // exclusive
+                int top_colors_len;
+                int bottom_colors_len;
+                int colors;
+
+                // find the air region
+                air_start = k;
+                while (k < MAP_Z && !map[i][j][k])
+                    ++k;
+
+                // find the top region
+                top_colors_start = k;
+                while (k < MAP_Z && is_surface(i,j,k,map))
+                    ++k;
+                top_colors_end = k;
+
+                // now skip past the solid voxels
+                while (k < MAP_Z && map[i][j][k] && !is_surface(i,j,k,map))
+                    ++k;
+
+                // at the end of the solid voxels, we have colored voxels.
+                // in the "normal" case they're bottom colors; but it's
+                // possible to have air-color-solid-color-solid-color-air,
+                // which we encode as air-color-solid-0, 0-color-solid-air
+
+                // so figure out if we have any bottom colors at this point
+                bottom_colors_start = k;
+
+                z = k;
+                while (z < MAP_Z && is_surface(i,j,z,map))
+                    ++z;
+
+                if (z == MAP_Z || 0)
+                    ; // in this case, the bottom colors of this span are
+                      // empty, because we'l emit as top colors
+                else {
+                    // otherwise, these are real bottom colors so we can write
+                    // them
+                    while (is_surface(i,j,k,map))
+                        ++k;
+                }
+                bottom_colors_end = k;
+
+                // now we're ready to write a span
+                top_colors_len    = top_colors_end    - top_colors_start;
+                bottom_colors_len = bottom_colors_end - bottom_colors_start;
+
+                colors = top_colors_len + bottom_colors_len;
+
+                if (k == MAP_Z)
+                    fputc(0,f); // last span
+                else
+                    fputc(colors+1, f);
+
+                fputc(top_colors_start, f);
+                fputc(top_colors_end-1, f);
+                fputc(air_start, f);
+
+                for (z=0; z < top_colors_len; ++z)
+                    write_color(f, color[i][j][top_colors_start + z]);
+                for (z=0; z < bottom_colors_len; ++z)
+                    write_color(f, color[i][j][bottom_colors_start + z]);
+            }
+        }
+    }
+    fclose(f);
+}
+
+static void export_as_vxl(const char *path)
+{
+    uint8_t (*map)[512][512][64];
+    uint32_t (*color)[512][512][64];
+    const mesh_t *mesh = goxel->layers_mesh;
+    uvec4b_t c;
+    int x, y, z;
+    vec3_t pos;
+
+    map = calloc(1, sizeof(*map));
+    color = calloc(1, sizeof(*color));
+
+    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                    "vxl\0*.vxl\0", NULL, "untitled.vxl");
+
+    for (z = 0; z < 64; z++)
+    for (y = 0; y < 512; y++)
+    for (x = 0; x < 512; x++) {
+        pos = vec3(256 - x, y - 256, 31 - z);
+        c = mesh_get_at(mesh, &pos);
+        if (c.a <= 127) continue;
+        (*map)[x][y][z] = 1;
+        (*color)[x][y][z] = c.uint32;
+    }
+    write_map(path, *map, *color);
+    free(map);
+    free(color);
+}
+
 ACTION_REGISTER(import_vxl,
     .help = "Import a Ace of Spades map file",
     .cfunc = vxl_import,
@@ -134,5 +272,15 @@ ACTION_REGISTER(import_vxl,
     .file_format = {
         .name = "vxl",
         .ext = "*.vxl\0"
+    },
+)
+
+ACTION_REGISTER(export_as_vxl,
+    .help = "Export the image as a Spades map file",
+    .cfunc = export_as_vxl,
+    .csig = "vp",
+    .file_format = {
+        .name = "vxl",
+        .ext = "*.vxl\0",
     },
 )
