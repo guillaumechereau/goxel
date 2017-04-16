@@ -397,7 +397,7 @@ static void tools_panel(goxel_t *goxel)
     bool v;
     char action_id[64];
     char label[64];
-    const action_t *action;
+    const action_t *action = NULL;
 
     ImGui::GoxGroupBegin();
     for (i = 0; i < nb; i++) {
