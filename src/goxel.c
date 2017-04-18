@@ -238,6 +238,7 @@ void goxel_init(goxel_t *gox)
     goxel->camera.ofs = vec3_zero;
     goxel->camera.rot = quat_identity;
     goxel->camera.dist = 128;
+    goxel->camera.aspect = 1;
     quat_irotate(&goxel->camera.rot, -M_PI / 4, 1, 0, 0);
     quat_irotate(&goxel->camera.rot, -M_PI / 4, 0, 0, 1);
 
