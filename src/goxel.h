@@ -33,7 +33,7 @@
 #include "utarray.h"
 #include "ivec.h"
 #include "noc_file_dialog.h"
-#include "block.h"
+#include "block_def.h"
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>

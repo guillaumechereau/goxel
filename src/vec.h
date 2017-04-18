@@ -19,6 +19,9 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef VEC_H_
+#define VEC_H_
+
 #include <math.h>
 #include <stdbool.h>
 
@@ -633,3 +636,5 @@ DECL quat_t eul_to_quat(vec3_t e)
     eul_to_quat_(&e, &q);
     return q;
 }
+
+#endif // VEC_H_

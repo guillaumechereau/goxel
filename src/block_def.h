@@ -41,6 +41,7 @@
  */
 
 #include "ivec.h"
+#include "vec.h"
 
 // face index -> [vertex0, vertex1, vertex2, vertex3]
 static const int FACES_VERTICES[6][4] = {
