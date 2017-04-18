@@ -12,24 +12,33 @@ debug = int(ARGUMENTS.get('debug', 1))
 profile = int(ARGUMENTS.get('profile', 0))
 glut = int(ARGUMENTS.get('glut', 0))
 emscripten = ARGUMENTS.get('emscripten', 0)
+werror = int(ARGUMENTS.get("werror", 1))
+clang = int(ARGUMENTS.get("clang", 0))
 
 if profile: debug = 0
 if emscripten: target_os = 'js'
 
 env = Environment(ENV = os.environ)
 
+if clang:
+    env.Replace(CC='clang', CXX='clang++')
+
 # Asan & Ubsan (need to come first).
 if debug and target_os == 'posix':
     env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
                LIBS=['asan', 'ubsan'])
 
-env.Append(CFLAGS= '-Wall -Werror -std=gnu99 -Wno-unknown-pragmas',
-           CXXFLAGS='-std=gnu++11 -Wall -Werror -Wno-narrowing '
-                    '-Wno-unknown-pragmas'
+env.Append(CFLAGS= '-Wall -std=gnu99 -Wno-unknown-pragmas',
+           CXXFLAGS='-std=gnu++11 -Wall -Wno-narrowing '
+                    '-Wno-unknown-pragmas -Wno-unused-function'
         )
 
+if werror:
+    env.Append(CCFLAGS='-Werror')
+
 if debug:
-    env.Append(CFLAGS='-Og')
+    if env['CC'] == 'gcc':
+        env.Append(CFLAGS='-Og')
 else:
     env.Append(CCFLAGS='-Ofast -DNDEBUG')
 
