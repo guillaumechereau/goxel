@@ -6,6 +6,10 @@ Version 0.5.0
 
 By Guillaume Chereau <guillaume@noctua-software.com>
 
+[![Build Status](
+    https://travis-ci.org/guillaumechereau/goxel.svg?branch=master)](
+    https://travis-ci.org/guillaumechereau/goxel)
+
 Webpage: https://guillaumechereau.github.io/goxel
 
 About
