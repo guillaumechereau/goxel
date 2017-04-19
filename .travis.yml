@@ -1,0 +1,17 @@
+# Travis configuration for automatic build
+
+os: linux
+
+sudo: required
+
+language: c++
+
+compiler:
+    - gcc
+    - clang
+
+before_install:
+    - sudo apt-get -qq update
+    - sudo apt-get install -y libglfw3-dev libgtk-3-dev
+
+script: make release
