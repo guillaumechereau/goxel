@@ -14,6 +14,16 @@ compiler:
 
 before_install:
     - sudo apt-get -qq update
-    - sudo apt-get install -y libglfw3-dev libgtk-3-dev
+    - sudo apt-get install -y libgtk-3-dev
+    - wget https://github.com/glfw/glfw/releases/download/3.2.1/glfw-3.2.1.zip
+
+install:
+    # Build and install glfw3
+    - unzip glfw-3.2.1.zip
+    - cd glfw-3.2.1
+    - sudo cmake -G "Unix Makefiles" -DBUILD_SHARED_LIBS=ON
+    - sudo make
+    - sudo make install
+    - cd ..
 
 script: make release
