@@ -81,7 +81,7 @@ static vec3b_t mc_interp_pos(const mc_vert_t *vert)
     return ret;
 }
 
-static vec3_t mc_interp_normal(const mc_vert_t *vert, const int normals[8][3])
+static vec3_t mc_interp_normal(const mc_vert_t *vert, int normals[8][3])
 {
     int i;
     vec3_t ret = vec3_zero;
