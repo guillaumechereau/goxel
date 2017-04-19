@@ -21,8 +21,8 @@ install:
     # Build and install glfw3
     - unzip glfw-3.2.1.zip
     - cd glfw-3.2.1
-    - sudo cmake -G "Unix Makefiles" -DBUILD_SHARED_LIBS=ON
-    - sudo make
+    - cmake -G "Unix Makefiles" -DBUILD_SHARED_LIBS=ON
+    - make
     - sudo make install
     - cd ..
 
