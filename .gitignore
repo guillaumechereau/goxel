@@ -4,3 +4,5 @@
 *.obj
 .sconsign.dblite
 /goxel
+.DS_Store
+xcuserdata/
