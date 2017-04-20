@@ -1,20 +1,19 @@
 # Travis configuration for automatic build
 
-os:
-  - linux
-  - osx
-
-dist: trusty
-
-sudo: required
-
 language: c++
 
-compiler:
-  - gcc
-  - clang
-
-osx_image: xcode8.3
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+      compiler: gcc
+    - os: linux
+      sudo: required
+      dist: trusty
+      compiler: clang
+    - os: osx
+      osx_image: xcode8.3
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
