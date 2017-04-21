@@ -595,15 +595,32 @@ namespace ImGui {
 
     bool GoxInputQuat(const char *label, quat_t *q)
     {
+        // Hack to prevent weird behavior when we change the euler angles.
+        // We keep track of the last used euler angles value and reuse them if
+        // the quaternion is the same.
+        static struct {
+            quat_t quat;
+            vec3_t eul;
+        } last = {};
+
         vec3_t eul;
         bool ret = false;
-        eul = quat_to_eul(*q);
+
+        if (memcmp(q, &last.quat, sizeof(*q)) == 0)
+            eul = last.eul;
+        else
+            eul = quat_to_eul(*q);
         GoxGroupBegin(label);
         if (GoxInputAngle("x", &eul.x, -180, +180)) ret = true;
         if (GoxInputAngle("y", &eul.y, -180, +180)) ret = true;
         if (GoxInputAngle("z", &eul.z, -180, +180)) ret = true;
         GoxGroupEnd();
-        if (ret) *q = eul_to_quat(eul);
+
+        if (ret) {
+            *q = eul_to_quat(eul);
+            last.quat = *q;
+            last.eul = eul;
+        }
         return ret;
     }
 
