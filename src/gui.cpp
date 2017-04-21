@@ -1133,9 +1133,9 @@ bool gui_checkbox(const char *label, bool *v, const char *hint)
     return ret;
 }
 
-bool gui_button(const char *label)
+bool gui_button(const char *label, float w)
 {
-    return Button(label);
+    return Button(label, ImVec2(w, 0));
 }
 
 bool gui_input_text(const char *label, char *txt, int size)

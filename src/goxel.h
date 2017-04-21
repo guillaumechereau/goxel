@@ -1074,7 +1074,7 @@ void gui_render(void);
 
 // Gui widgets:
 void gui_text(const char *label);
-bool gui_button(const char *label);
+bool gui_button(const char *label, float w);
 void gui_group_begin(const char *label);
 void gui_group_end(void);
 bool gui_checkbox(const char *label, bool *v, const char *hint);
