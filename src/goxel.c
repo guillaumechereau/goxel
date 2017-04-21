@@ -428,17 +428,13 @@ static void render_export_viewport(goxel_t *goxel, const vec4_t *view)
     int h = goxel->image->export_height;
     float aspect = (float)w/h;
     plane_t plane;
-    float sx, sy;
     plane.mat = mat4_identity;
-    mat4_itranslate(&plane.mat, 0, 0, -1);
-    sy = 2 * tan(goxel->camera.fovy / 2. / 180. * M_PI);
-    sx = sy * w / h;
-    if (goxel->camera.aspect < aspect) {
-        sx *= goxel->camera.aspect / aspect;
-        sy *= goxel->camera.aspect / aspect;
+    if (aspect < goxel->camera.aspect) {
+        mat4_iscale(&plane.mat, aspect / goxel->camera.aspect, 1, 1);
+    } else {
+        mat4_iscale(&plane.mat, 1, goxel->camera.aspect / aspect, 1);
     }
-    mat4_iscale(&plane.mat, sx, sy, 1);
-    render_rect(&goxel->rend, &plane, 1);
+    render_rect(&goxel->rend, &plane, EFFECT_STRIP);
 }
 
 void goxel_render_view(goxel_t *goxel, const vec4_t *rect)

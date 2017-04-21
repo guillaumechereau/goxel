@@ -61,7 +61,6 @@ struct render_item_t
     bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
     texture_t       *tex;
-    bool            fixed; // If true, render in the view ref.
     int             effects;
 
     GLuint      vertex_buffer;
@@ -633,7 +632,6 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
     mat4_t view = rend->view_mat;
-    if (item->fixed) view = mat4_identity;
     mat4_imul(&view, item->mat);
     mat4_t proj;
     mat4_t *proj_mat;
@@ -642,7 +640,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     if (item->proj_screen) {
         proj = mat4_ortho(-0.5, +0.5, -0.5, +0.5, -10, +10);
         proj_mat = &proj;
-        view = mat4_identity;
+        view = item->mat;
     } else {
         proj_mat = &rend->proj_mat;
     }
@@ -708,7 +706,7 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects)
     item->mat = plane->mat;
     item->model3d = g_wire_rect_model;
     item->color = uvec4b(255, 255, 255, 255);
-    item->fixed = true;
+    item->proj_screen = true;
     item->effects = effects;
     DL_APPEND(rend->items, item);
 }
