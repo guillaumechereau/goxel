@@ -126,7 +126,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     file = fopen(path, "wb");
     WRITE(uint32_t, 257, file); // version
     WRITE(uint32_t, 0, file);   // color format RGBA
-    WRITE(uint32_t, 1, file);   // orientation right handed
+    WRITE(uint32_t, 0, file);   // orientation left handed
     WRITE(uint32_t, 0, file);   // no compression
     WRITE(uint32_t, 0, file);   // vmask
     WRITE(uint32_t, count, file);
