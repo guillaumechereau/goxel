@@ -58,6 +58,13 @@ static int gui(void)
         v = pow(2, i);
         mat4_iscale(&mat, v, v, v);
     }
+
+    gui_group_begin(NULL);
+    if (gui_button("flip X", -1)) mat4_iscale(&mat, -1,  1,  1);
+    if (gui_button("flip Y", -1)) mat4_iscale(&mat,  1, -1,  1);
+    if (gui_button("flip Z", -1)) mat4_iscale(&mat,  1,  1, -1);
+    gui_group_end();
+
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
         image_history_push(goxel->image);
         mesh_move(layer->mesh, &mat);
