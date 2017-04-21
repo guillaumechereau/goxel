@@ -38,7 +38,7 @@ void camera_set(camera_t *cam, const camera_t *other)
     cam->ofs = other->ofs;
 }
 
-static void compute_clip(const mat4_t *view_mat, float *near, float *far)
+static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
 {
     block_t *block;
     vec3_t p;
@@ -54,14 +54,14 @@ static void compute_clip(const mat4_t *view_mat, float *near, float *far)
     }
     if (n >= f) n = 1;
     n = max(n, 1);
-    *near = n;
-    *far = f;
+    *near_ = n;
+    *far_ = f;
 }
 
 void camera_update(camera_t *camera)
 {
     float size;
-    float near, far;
+    float clip_near, clip_far;
 
     camera->fovy = 20.;
     if (camera->move_to_target) {
@@ -75,16 +75,16 @@ void camera_update(camera_t *camera)
     mat4_itranslate(&camera->view_mat,
            camera->ofs.x, camera->ofs.y, camera->ofs.z);
 
-    compute_clip(&camera->view_mat, &near, &far);
+    compute_clip(&camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
         size = camera->dist;
         camera->proj_mat = mat4_ortho(
                 -size, +size,
                 -size / camera->aspect, +size / camera->aspect,
-                near, far);
+                clip_near, clip_far);
     } else {
         camera->proj_mat = mat4_perspective(
-                camera->fovy, camera->aspect, near, far);
+                camera->fovy, camera->aspect, clip_near, clip_far);
     }
 }
 
