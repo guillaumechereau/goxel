@@ -398,22 +398,25 @@ void block_fill(block_t *block,
 
 static bool can_skip(uvec4b_t v, int mode, uvec4b_t c)
 {
-    return (v.a && (mode == MODE_ADD) && uvec4b_equal(c, v)) ||
+    return (v.a && (mode == MODE_OVER) && uvec4b_equal(c, v)) ||
             (!v.a && IS_IN(mode, MODE_SUB, MODE_PAINT, MODE_SUB_CLAMP));
 }
 
 static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
 {
     uvec4b_t ret = a;
-    int aa = a.a, ba = b.a;
+    int i, aa = a.a, ba = b.a;
     if (mode == MODE_PAINT) {
         ret.rgb = uvec3b_mix(a.rgb, b.rgb, ba / 255.);
     }
-    else if (mode == MODE_ADD) {
-        ret.a = min((int)a.a + b.a, 255);
-        if (aa + ba - (aa * ba / 255))
-            ret.rgb = uvec3b_mix(a.rgb, b.rgb,
-                                 ba / (aa + ba - aa * ba / 255.));
+    else if (mode == MODE_OVER) {
+        if (255 * ba + aa * (255 - ba)) {
+            for (i = 0; i < 3; i++) {
+                ret.v[i] = (255 * b.v[i] * ba + a.v[i] * aa * (255 - ba)) /
+                           (255 * ba + aa * (255 - ba));
+            }
+        }
+        ret.a = ba + aa * (255 - ba) / 255;
     }
     else if (mode == MODE_SUB) {
         ret.a = max(0, aa - ba);
@@ -492,7 +495,7 @@ void block_merge(block_t *block, const block_t *other, int mode)
     static cache_t *cache = NULL;
 
     if (!other || other->data == get_empty_data()) return;
-    if (IS_IN(mode, MODE_ADD, MODE_MAX) && block->data == get_empty_data()) {
+    if (IS_IN(mode, MODE_OVER, MODE_MAX) && block->data == get_empty_data()) {
         block_set_data(block, other->data);
         return;
     }

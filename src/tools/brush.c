@@ -130,7 +130,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     if (inside)
         snaped = goxel_unproject(
                 goxel, view_size, &inputs->mouse_pos,
-                goxel->painter.mode == MODE_ADD && !goxel->snap_offset,
+                goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
                 &pos, &normal);
     goxel_set_help_text(goxel, "Brush: use shift to draw lines, "
                                "ctrl to pick color");

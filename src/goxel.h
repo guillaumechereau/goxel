@@ -462,7 +462,7 @@ enum {
 // #### Tool/Operation/Painter #
 enum {
     MODE_NULL,
-    MODE_ADD,
+    MODE_OVER,
     MODE_SUB,
     MODE_SUB_CLAMP,
     MODE_PAINT,

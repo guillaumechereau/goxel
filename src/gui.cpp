@@ -993,12 +993,12 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     // Handle the shortcuts.  XXX: this should be done with actions.
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
         action_exec2("layer_clear", "");
-    if (ImGui::IsKeyPressed(' ', false) && goxel->painter.mode == MODE_ADD)
+    if (ImGui::IsKeyPressed(' ', false) && goxel->painter.mode == MODE_OVER)
         goxel->painter.mode = MODE_SUB;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.mode == MODE_SUB)
-        goxel->painter.mode = MODE_ADD;
+        goxel->painter.mode = MODE_OVER;
     if (ImGui::IsKeyReleased(' ') && goxel->painter.mode == MODE_SUB)
-        goxel->painter.mode = MODE_ADD;
+        goxel->painter.mode = MODE_OVER;
     float last_tool_radius = goxel->tool_radius;
 
     if (!io.WantCaptureKeyboard) {

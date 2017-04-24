@@ -140,7 +140,7 @@ int tool_gui_mode(void)
         const char *name;
         int        icon;
     } values[] = {
-        {MODE_ADD,    "Add",  ICON_MODE_ADD},
+        {MODE_OVER,   "Add",  ICON_MODE_ADD},
         {MODE_SUB,    "Sub",  ICON_MODE_SUB},
         {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
     };

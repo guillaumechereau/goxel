@@ -576,7 +576,7 @@ int proc_start(gox_proc_t *proc, const box_t *box)
     ctx = calloc(1, sizeof(*ctx));
     ctx->box = box ? *box : bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
     ctx->color = vec4(0, 0, 1, 1);
-    ctx->mode = MODE_ADD;
+    ctx->mode = MODE_OVER;
     ctx->prog = get_rule(proc->prog, "main", ctx);
     set_seed(rand(), &ctx->seed);
     DL_APPEND(proc->ctxs, ctx);

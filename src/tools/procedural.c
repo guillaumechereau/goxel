@@ -44,7 +44,7 @@ static int iter(const inputs_t *inputs, int state, void **data,
     if (inside)
         snaped = goxel_unproject(
                 goxel, view_size, &inputs->mouse_pos,
-                goxel->painter.mode == MODE_ADD && !goxel->snap_offset,
+                goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
                 &pos, &normal);
     if (snaped) {
         if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)

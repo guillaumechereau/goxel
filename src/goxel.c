@@ -265,7 +265,7 @@ void goxel_init(goxel_t *gox)
     goxel->tool_radius = 0.5;
     goxel->painter = (painter_t) {
         .shape = &shape_cube,
-        .mode = MODE_ADD,
+        .mode = MODE_OVER,
         .smoothness = 0,
         .color = HEXCOLOR(0xEEEEECFF),
     };
@@ -481,7 +481,7 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         mesh_clear(goxel->layers_mesh);
         DL_FOREACH(goxel->image->layers, layer) {
             if (!layer->visible) continue;
-            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_ADD);
+            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_OVER);
         }
     }
     if (mask & MESH_PICK)
@@ -713,7 +713,7 @@ static void past_action(void)
         mat4_itranslate(&mat, -p2.x, -p2.y, -p2.z);
         mesh_move(tmp, &mat);
     }
-    mesh_merge(mesh, tmp, MODE_ADD);
+    mesh_merge(mesh, tmp, MODE_OVER);
     mesh_delete(tmp);
 }
 

@@ -222,7 +222,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 
     // For constructive modes, we have to add blocks if they are not present.
     mesh_prepare_write(mesh);
-    if (IS_IN(painter->mode, MODE_ADD, MODE_MAX)) {
+    if (IS_IN(painter->mode, MODE_OVER, MODE_MAX)) {
         add_blocks(mesh, bbox);
     }
     HASH_ITER(hh, mesh->blocks, block, tmp) {
@@ -258,7 +258,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     mesh_prepare_write(mesh);
 
     // Add empty blocks if needed.
-    if (IS_IN(mode, MODE_ADD, MODE_MAX)) {
+    if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
         MESH_ITER_BLOCKS(other, block) {
             if (!mesh_get_block_at(mesh, &block->pos)) {
                 mesh_add_block(mesh, NULL, &block->pos);
