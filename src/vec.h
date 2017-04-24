@@ -63,6 +63,10 @@ typedef union {
         real_t b;
         real_t a;
     };
+    struct {
+        vec2_t xy;
+        vec2_t zw;
+    };
     vec3_t xyz;
     vec3_t rgb;
     real_t v[4];

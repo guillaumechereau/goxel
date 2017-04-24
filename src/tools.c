@@ -52,14 +52,14 @@ void tool_register_(const tool_t *tool)
 }
 
 int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
-              const vec2_t *view_size, bool inside)
+              const vec4_t *view, bool inside)
 {
     int ret;
     assert(tool >= 0 && tool < TOOL_COUNT);
     assert(g_tools[tool]->iter_fn);
 
     while (true) {
-        ret = g_tools[tool]->iter_fn(inputs, state, data, view_size, inside);
+        ret = g_tools[tool]->iter_fn(inputs, state, data, view, inside);
         if (ret == STATE_CANCEL) {
             tool_cancel(tool, state, data);
             ret = 0;

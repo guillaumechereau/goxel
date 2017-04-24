@@ -945,13 +945,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
     vec2_t view_size = vec2(view.rect.z, view.rect.w);
+    vec4_t view_rect = vec4(canvas_pos.x,
+                            io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
+                            canvas_size.x, canvas_size.y);
     if (ImGui::IsItemHovered() || goxel->tool_state) {
-        inputs_t rel_inputs = *inputs;
-        rel_inputs.mouse_pos =
-            vec2(ImGui::GetIO().MousePos.x - canvas_pos.x,
-                 ImGui::GetIO().MousePos.y - canvas_pos.y);
-        goxel_mouse_in_view(goxel, &view_size, &rel_inputs,
-                ImGui::IsItemHovered());
+        inputs_t inputs2 = *inputs;
+        inputs2.mouse_pos.y = io.DisplaySize.y - inputs2.mouse_pos.y;
+        goxel_mouse_in_view(goxel, &view_rect, &inputs2,
+                            ImGui::IsItemHovered());
     }
     render_axis_arrows(goxel, &view_size);
 

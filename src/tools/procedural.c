@@ -30,7 +30,7 @@ enum {
 };
 
 static int iter(const inputs_t *inputs, int state, void **data,
-                const vec2_t *view_size, bool inside)
+                const vec4_t *view, bool inside)
 {
     int snaped = 0;
     vec3_t pos, normal;
@@ -43,7 +43,7 @@ static int iter(const inputs_t *inputs, int state, void **data,
     // XXX: duplicate code with tool_brush_iter.
     if (inside)
         snaped = goxel_unproject(
-                goxel, view_size, &inputs->mouse_pos,
+                goxel, view, &inputs->mouse_pos,
                 goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
                 &pos, &normal);
     if (snaped) {

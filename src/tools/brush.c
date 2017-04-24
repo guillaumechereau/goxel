@@ -115,7 +115,7 @@ static data_t *get_data(void **data_)
 }
 
 static int iter(const inputs_t *inputs, int state, void **data_,
-                const vec2_t *view_size, bool inside)
+                const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);
     const bool down = inputs->mouse_down[0];
@@ -129,7 +129,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
 
     if (inside)
         snaped = goxel_unproject(
-                goxel, view_size, &inputs->mouse_pos,
+                goxel, view, &inputs->mouse_pos,
                 goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
                 &pos, &normal);
     goxel_set_help_text(goxel, "Brush: use shift to draw lines, "

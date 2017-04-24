@@ -93,7 +93,7 @@ static data_t *get_data(void **data_)
 
 // XXX: this is very close to tool_shape_iter.
 static int iter(const inputs_t *inputs, int state, void **data_,
-                const vec2_t *view_size, bool inside)
+                const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);
     const bool down = inputs->mouse_down[0];
@@ -109,7 +109,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     if (inside && !box_is_null(goxel->selection) &&
             IS_IN(state, STATE_IDLE, STATE_SNAPED, STATE_SNAPED_FACE)) {
         data->snap_face = -1;
-        if (goxel_unproject_on_box(goxel, view_size, &inputs->mouse_pos,
+        if (goxel_unproject_on_box(goxel, view, &inputs->mouse_pos,
                                &goxel->selection, false,
                                &pos, &normal, &face)) {
             data->snap_face = face;
@@ -121,7 +121,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
                                   FACES_MATS[data->snap_face]);
 
     if (inside && face == -1)
-        snaped = goxel_unproject(goxel, view_size, &inputs->mouse_pos, false,
+        snaped = goxel_unproject(goxel, view, &inputs->mouse_pos, false,
                                  &pos, &normal);
     if (snaped) {
         pos.x = round(pos.x - 0.5) + 0.5;
@@ -192,7 +192,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
         if (up) return STATE_IDLE;
         goxel_set_help_text(goxel, "Drag to move face");
         n = vec3_normalized(face_plane.n);
-        goxel_unproject_on_plane(goxel, view_size, &inputs->mouse_pos,
+        goxel_unproject_on_plane(goxel, view, &inputs->mouse_pos,
                                  &goxel->tool_plane, &pos, &normal);
         pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(pos, goxel->tool_plane.p), n));

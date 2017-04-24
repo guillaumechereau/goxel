@@ -995,21 +995,21 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
 // Called by the gui when the mouse hover a 3D view.
 // XXX: change the name since we also call it when the mouse get out of
 // the view.
-void goxel_mouse_in_view(goxel_t *goxel, const vec2_t *view_size,
+void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                          const inputs_t *inputs, bool inside);
 
-int goxel_unproject(goxel_t *goxel, const vec2_t *view_size,
+int goxel_unproject(goxel_t *goxel, const vec4_t *view,
                     const vec2_t *pos, bool on_surface,
                     vec3_t *out, vec3_t *normal);
 
-bool goxel_unproject_on_mesh(goxel_t *goxel, const vec2_t *view_size,
+bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
                      const vec2_t *pos, mesh_t *mesh,
                      vec3_t *out, vec3_t *normal);
 
-bool goxel_unproject_on_plane(goxel_t *goxel, const vec2_t *view_size,
+bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
                      const vec2_t *pos, const plane_t *plane,
                      vec3_t *out, vec3_t *normal);
-bool goxel_unproject_on_box(goxel_t *goxel, const vec2_t *view_size,
+bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
                      const vec2_t *pos, const box_t *box, bool inside,
                      vec3_t *out, vec3_t *normal, int *face);
 // Recompute the meshes.  mask from MESH_ enum.
@@ -1033,7 +1033,7 @@ struct tool {
     int id;
     const char *action_id;
     int (*iter_fn)(const inputs_t *inputs, int state, void **data,
-                   const vec2_t *view_size, bool inside);
+                   const vec4_t *view, bool inside);
     int (*cancel_fn)(int state, void **data);
     int (*gui_fn)(void);
     const char *shortcut;
@@ -1049,7 +1049,7 @@ struct tool {
 
 void tool_register_(const tool_t *tool);
 int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
-              const vec2_t *view_size, bool inside);
+              const vec4_t *view, bool inside);
 void tool_cancel(int tool, int state, void **data);
 int tool_gui(int tool);
 

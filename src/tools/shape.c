@@ -94,7 +94,7 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
 }
 
 static int iter(const inputs_t *inputs, int state, void **data_,
-                const vec2_t *view_size, bool inside)
+                const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);
     const bool down = inputs->mouse_down[0];
@@ -107,7 +107,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
 
     if (inside)
         snaped = goxel_unproject(
-                goxel, view_size, &inputs->mouse_pos,
+                goxel, view, &inputs->mouse_pos,
                 goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
                 &pos, &normal);
     set_snap_hint(goxel, snaped);

@@ -19,7 +19,7 @@
 #include "goxel.h"
 
 static int iter(const inputs_t *inputs, int state, void **data,
-                const vec2_t *view_size, bool inside)
+                const vec4_t *view, bool inside)
 {
     return 0;
 }

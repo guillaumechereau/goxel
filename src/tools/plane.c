@@ -19,14 +19,14 @@
 #include "goxel.h"
 
 static int iter(const inputs_t *inputs, int state, void **data,
-                const vec2_t *view_size, bool inside)
+                const vec4_t *view, bool inside)
 {
     bool snaped;
     vec3_t pos = vec3_zero, normal = vec3_zero;
     mesh_t *mesh = goxel->layers_mesh;
     const bool pressed = inputs->mouse_down[0];
     goxel_set_help_text(goxel, "Click on the mesh to set plane.");
-    snaped = inside && goxel_unproject_on_mesh(goxel, view_size,
+    snaped = inside && goxel_unproject_on_mesh(goxel, view,
                             &inputs->mouse_pos, mesh, &pos, &normal);
     if (snaped && pressed) {
         vec3_iadd(&pos, normal);

@@ -29,25 +29,21 @@ enum {
 };
 
 static int iter(const inputs_t *inputs, int state, void **data,
-                const vec2_t *view_size, bool inside)
+                const vec4_t *view, bool inside)
 {
     vec3_t pos, normal;
     box_t box;
     painter_t painter = goxel->painter;
     mesh_t *mesh = goxel->image->active_layer->mesh;
     const bool down = inputs->mouse_down[0];
-    // XXX: would be nice if we got the vec4_t view instead of view_size,
-    // and why input->pos is not already in win pos?
-    vec4_t view = vec4(0, 0, view_size->x, view_size->y);
     vec2_t win = inputs->mouse_pos;
-    win.y = view_size->y - win.y;
 
     painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
     painter.color = uvec4b(255, 255, 255, 255);
 
     // Create the tool box from the camera along the visible ray.
-    camera_get_ray(&goxel->camera, &win, &view, &pos, &normal);
+    camera_get_ray(&goxel->camera, &win, view, &pos, &normal);
     box.mat = mat4_identity;
     box.w = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
                      vec4(1, 0, 0, 0)).xyz;
