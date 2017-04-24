@@ -4,6 +4,11 @@ layout: default
 
 ### Download Goxel
 
+#### Version 0.6
+
+- [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.6.0/goxel-0.6.0-windows.zip)
+- [Mac](https://github.com/guillaumechereau/goxel/releases/download/v0.6.0/goxel-0.6.0-mac.zip)
+
 #### Version 0.5
 
 - [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.5.0/goxel-0.5.0-windows.zip)
