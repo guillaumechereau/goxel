@@ -242,7 +242,7 @@ ACTION_REGISTER(export_as_obj,
 static void export_as_ply(const char *path)
 {
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "obj\0*.obj\0", NULL, "untitled.obj");
+                    "ply\0*.ply\0", NULL, "untitled.ply");
     if (!path) return;
     ply_export(goxel->layers_mesh, path);
 }
