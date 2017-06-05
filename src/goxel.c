@@ -734,6 +734,16 @@ ACTION_REGISTER(past,
 #define HS2 (M_SQRT2 / 2.0)
 
 
+static int view_default(const action_t *a, astack_t *s)
+{
+	goxel->camera.rot = quat_identity;
+	quat_irotate(&goxel->camera.rot, -M_PI / 4, 1, 0, 0);
+	quat_irotate(&goxel->camera.rot, -M_PI / 4, 0, 0, 1);
+	goxel_update_meshes(goxel, -1);
+	
+	return 0;
+}
+
 static int view_set(const action_t *a, astack_t *s)
 {
     goxel->camera.rot = *((quat_t*)a->data);
@@ -760,6 +770,12 @@ ACTION_REGISTER(view_top,
     .func = view_set,
     .data = &QUAT(1, 0, 0, 0),
     .shortcut = "7",
+)
+
+ACTION_REGISTER(view_default,
+    .help = "Set camera view to default",
+    .func = view_default,
+    .shortcut = "5",
 )
 
 ACTION_REGISTER(view_front,

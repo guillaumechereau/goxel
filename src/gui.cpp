@@ -710,6 +710,7 @@ static void cameras_panel(goxel_t *goxel)
     ImGui::GoxAction("view_right", "right", 1.0, "");
     ImGui::GoxAction("view_front", "front", 0.5, ""); ImGui::SameLine();
     ImGui::GoxAction("view_top", "top", 1.0, "");
+    ImGui::GoxAction("view_default", "default", 1.0, "");
     ImGui::GoxGroupEnd();
 }
 
@@ -880,6 +881,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::GoxMenuItem("view_right", "Right");
             ImGui::GoxMenuItem("view_front", "Front");
             ImGui::GoxMenuItem("view_top", "Top");
+            ImGui::GoxMenuItem("view_default", "Default");
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Help")) {
