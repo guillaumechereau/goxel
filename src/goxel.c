@@ -463,7 +463,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     update_cursor(inputs, view, inside);
 
     // Paint with the current tool if needed.
-    goxel->tool_state = tool_iter(goxel->tool, inputs,
+    goxel->tool_state = tool_iter(goxel->tool,
                                   goxel->tool_state, &goxel->tool_data,
                                   view, inside);
 }

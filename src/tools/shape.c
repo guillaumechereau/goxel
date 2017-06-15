@@ -83,7 +83,7 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static int iter(const inputs_t *inputs, int state, void **data_,
+static int iter(int state, void **data_,
                 const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);

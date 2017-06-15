@@ -51,7 +51,7 @@ void tool_register_(const tool_t *tool)
     action_register(&action);
 }
 
-int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
+int tool_iter(int tool, int state, void **data,
               const vec4_t *view, bool inside)
 {
     int ret;
@@ -59,7 +59,7 @@ int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
     assert(g_tools[tool]->iter_fn);
 
     while (true) {
-        ret = g_tools[tool]->iter_fn(inputs, state, data, view, inside);
+        ret = g_tools[tool]->iter_fn(state, data, view, inside);
         if (ret == STATE_CANCEL) {
             tool_cancel(tool, state, data);
             ret = 0;

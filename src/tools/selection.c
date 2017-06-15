@@ -103,7 +103,7 @@ static int get_face(vec3_t n)
 }
 
 // XXX: this is very close to tool_shape_iter.
-static int iter(const inputs_t *inputs, int state, void **data_,
+static int iter(int state, void **data_,
                 const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);

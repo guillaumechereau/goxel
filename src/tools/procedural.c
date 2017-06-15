@@ -29,7 +29,7 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
-static int iter(const inputs_t *inputs, int state, void **data,
+static int iter(int state, void **data,
                 const vec4_t *view, bool inside)
 {
     box_t box;

@@ -1063,7 +1063,7 @@ typedef struct tool tool_t;
 struct tool {
     int id;
     const char *action_id;
-    int (*iter_fn)(const inputs_t *inputs, int state, void **data,
+    int (*iter_fn)(int state, void **data,
                    const vec4_t *view, bool inside);
     int (*cancel_fn)(int state, void **data);
     int (*gui_fn)(void);
@@ -1079,8 +1079,8 @@ struct tool {
     }
 
 void tool_register_(const tool_t *tool);
-int tool_iter(int tool, const inputs_t *inputs, int state, void **data,
-              const vec4_t *view, bool inside);
+int tool_iter(int tool, int state, void **data, const vec4_t *view,
+              bool inside);
 void tool_cancel(int tool, int state, void **data);
 int tool_gui(int tool);
 

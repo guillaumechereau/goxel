@@ -105,7 +105,7 @@ static data_t *get_data(void **data_)
     return *data;
 }
 
-static int iter(const inputs_t *inputs, int state, void **data_,
+static int iter(int state, void **data_,
                 const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);
