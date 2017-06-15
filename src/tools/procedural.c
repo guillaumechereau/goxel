@@ -32,37 +32,22 @@ enum {
 static int iter(const inputs_t *inputs, int state, void **data,
                 const vec4_t *view, bool inside)
 {
-    int snaped = 0;
-    vec3_t pos, normal;
     box_t box;
     gox_proc_t *proc = &goxel->proc;
-    const bool down = inputs->mouse_down[0];
+    cursor_t *curs = &goxel->cursor;
 
     if (proc->state == PROC_PARSE_ERROR) return 0;
 
-    // XXX: duplicate code with tool_brush_iter.
-    if (inside)
-        snaped = goxel_unproject(
-                        goxel, view, &inputs->mouse_pos, goxel->snap_mask, 0,
-                        &pos, &normal);
-    if (snaped) {
-        if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)
-            vec3_iaddk(&pos, normal, goxel->snap_offset * goxel->tool_radius);
-        pos.x = round(pos.x - 0.5) + 0.5;
-        pos.y = round(pos.y - 0.5) + 0.5;
-        pos.z = round(pos.z - 0.5) + 0.5;
-        box = bbox_from_extents(pos, 0.5, 0.5, 0.5);
-        render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
-    }
-
     switch (state) {
     case STATE_IDLE:
-        if (snaped) return STATE_SNAPED;
+        if (curs->snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED:
-        if (!snaped) return STATE_IDLE;
-        if (down) {
+        if (!curs->snaped) return STATE_IDLE;
+        box = bbox_from_extents(curs->pos, 0.5, 0.5, 0.5);
+        render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
+        if (curs->flags & CURSOR_PRESSED) {
             image_history_push(goxel->image);
             proc_stop(proc);
             proc_start(proc, &box);
@@ -71,7 +56,7 @@ static int iter(const inputs_t *inputs, int state, void **data,
         break;
 
     case STATE_PAINT:
-        if (!down) return STATE_IDLE;
+        if (!(curs->flags & CURSOR_PRESSED)) return STATE_IDLE;
         break;
     }
 
