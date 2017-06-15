@@ -293,7 +293,7 @@ void goxel_init(goxel_t *gox)
 
     model3d_init();
     goxel->plane = plane(vec3_zero, vec3(1, 0, 0), vec3(0, 1, 0));
-    goxel->snap = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
+    goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
     gui_init();
 }
 
@@ -377,7 +377,7 @@ static void update_cursor(const inputs_t *inputs, const vec4_t *view,
 
     // Set some default values.  The tools can override them.
     // XXX: would be better to reset the cursor when we change tool!
-    c->snap_mask = goxel->snap;
+    c->snap_mask = goxel->snap_mask;
     set_flag(&c->snap_mask, SNAP_ROUNDED, goxel->painter.smoothness == 0);
     c->snap_offset = 0;
 }

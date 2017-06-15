@@ -43,7 +43,7 @@ static int iter(const inputs_t *inputs, int state, void **data,
     // XXX: duplicate code with tool_brush_iter.
     if (inside)
         snaped = goxel_unproject(
-                        goxel, view, &inputs->mouse_pos, goxel->snap, 0,
+                        goxel, view, &inputs->mouse_pos, goxel->snap_mask, 0,
                         &pos, &normal);
     if (snaped) {
         if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)

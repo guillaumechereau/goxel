@@ -958,8 +958,8 @@ typedef struct goxel
     } clipboard;
 
     history_t  *history;     // Undo/redo history.
-    int        snap; // XXX: rename to snap_mask.
-    float      snap_offset;  // Only for brush tool.
+    int        snap_mask;    // Global snap mask (can edit in the GUI).
+    float      snap_offset;  // Only for brush tool, remove that?
 
     plane_t    plane;         // The snapping plane.
     bool       plane_hidden;  // Set to true to hide the plane.
