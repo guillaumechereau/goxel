@@ -91,6 +91,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
     cursor_t *curs = &goxel->cursor;
+    curs->snap_offset = (goxel->painter.mode == MODE_OVER) ? 0.5 : -0.5;
 
     switch (state) {
 
@@ -139,9 +140,14 @@ static int iter(const inputs_t *inputs, int state, void **data_,
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
         if (!curs->snaped || !inside) return state;
+        // XXX: clean this up...
         curs->pos = vec3_add(goxel->tool_plane.p,
                        vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
                                     goxel->plane.n));
+        curs->pos.x = round(curs->pos.x - 0.5) + 0.5;
+        curs->pos.y = round(curs->pos.y - 0.5) + 0.5;
+        curs->pos.z = round(curs->pos.z - 0.5) + 0.5;
+
         box = get_box(&data->start_pos, &curs->pos, &curs->normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);

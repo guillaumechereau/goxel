@@ -103,7 +103,6 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
         *out = mat4_mul_vec3(plane.mat, *out);
         *normal = vec3_normalized(plane.n);
         if (inside) vec3_imul(normal, -1);
-        vec3_iaddk(out, *normal, 0.5);
         return true;
     }
     return false;
@@ -179,7 +178,8 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
     if (!plane_is_null(goxel->tool_plane)) {
         r = goxel_unproject_on_plane(goxel, view, pos,
                                      &goxel->tool_plane, out, normal);
-        return r ? SNAP_PLANE : 0;
+        ret = r ? SNAP_PLANE : 0;
+        goto end;
     }
 
     for (i = 0; i < 6; i++) {
@@ -229,6 +229,7 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
 
         break;
     }
+end:
     if (ret && offset)
         vec3_iaddk(out, *normal, offset);
     if (ret && (snap_mask & SNAP_ROUNDED)) {
