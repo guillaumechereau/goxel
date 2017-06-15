@@ -161,11 +161,13 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
                 block->pos.y + voxel_pos.y - BLOCK_SIZE / 2 + 0.5,
                 block->pos.z + voxel_pos.z - BLOCK_SIZE / 2 + 0.5);
     *normal = vec3(VEC3_SPLIT(FACES_NORMALS[face]));
+    vec3_iaddk(out, *normal, 0.5);
     return true;
 }
 
+
 int goxel_unproject(goxel_t *goxel, const vec4_t *view,
-                    const vec2_t *pos, bool on_surface,
+                    const vec2_t *pos, int snap_mask, float offset,
                     vec3_t *out, vec3_t *normal)
 {
     int i, ret = 0;
@@ -180,12 +182,11 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
         return r ? SNAP_PLANE : 0;
     }
 
-    for (i = 0; i < 5; i++) {
-        if (!(goxel->snap & (1 << i))) continue;
+    for (i = 0; i < 6; i++) {
+        if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(goxel, view, pos,
                                         goxel->pick_mesh, &p, &n);
-            if (on_surface) vec3_iaddk(&p, n, 1);
         }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, view, pos,
@@ -202,12 +203,17 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
             r = goxel_unproject_on_box(goxel, view, pos,
                                        &goxel->image->box, true,
                                        &p, &n, NULL);
+        if ((1 << i) == SNAP_IMAGE_BOX)
+            r = goxel_unproject_on_box(goxel, view, pos,
+                                       &goxel->image->box, true,
+                                       &p, &n, NULL);
+        if ((1 << i) == SNAP_CAMERA) {
+            camera_get_ray(&goxel->camera, pos, view, &p, &n);
+            r = true;
+        }
+
         if (!r)
             continue;
-
-        p.x = round(p.x - 0.5) + 0.5;
-        p.y = round(p.y - 0.5) + 0.5;
-        p.z = round(p.z - 0.5) + 0.5;
 
         dist = -mat4_mul_vec3(goxel->camera.view_mat, p).z;
         if (dist < 0 || dist > best) continue;
@@ -222,6 +228,13 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
         }
 
         break;
+    }
+    if (ret && offset)
+        vec3_iaddk(out, *normal, offset);
+    if (ret && (snap_mask & SNAP_ROUNDED)) {
+        out->x = round(out->x - 0.5) + 0.5;
+        out->y = round(out->y - 0.5) + 0.5;
+        out->z = round(out->z - 0.5) + 0.5;
     }
     return ret;
 }
@@ -279,7 +292,7 @@ void goxel_init(goxel_t *gox)
     render_get_default_settings(0, NULL, &goxel->rend.settings);
 
     model3d_init();
-    goxel->plane = plane(vec3(0.5, 0.5, 0.5), vec3(1, 0, 0), vec3(0, 1, 0));
+    goxel->plane = plane(vec3_zero, vec3(1, 0, 0), vec3(0, 1, 0));
     goxel->snap = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
     gui_init();
 }
@@ -323,6 +336,50 @@ static quat_t compute_view_rotation(const quat_t *rot,
                            vec4(1, 0, 0, 0));
     q2 = quat_from_axis(x_rot, x_axis.x, x_axis.y, x_axis.z);
     return quat_mul(q1, q2);
+}
+
+static void set_cursor_hint(cursor_t *curs)
+{
+    const char *snap_str = NULL;
+    if (!curs->snaped) {
+        goxel_set_hint_text(goxel, NULL);
+        return;
+    }
+    if (curs->snaped == SNAP_MESH) snap_str = "mesh";
+    if (curs->snaped == SNAP_PLANE) snap_str = "plane";
+    if (IS_IN(curs->snaped, SNAP_SELECTION_IN, SNAP_SELECTION_OUT))
+        snap_str = "selection";
+
+    goxel_set_hint_text(goxel, "[%.1f %.1f %.1f] (%s)",
+            curs->pos.x, curs->pos.y, curs->pos.z, snap_str);
+}
+
+static void update_cursor(const inputs_t *inputs, const vec4_t *view,
+                          bool inside)
+{
+    cursor_t *c = &goxel->cursor;
+    if (inside) {
+        c->snaped = goxel_unproject(
+                goxel, view, &inputs->mouse_pos, c->snap_mask,
+                c->snap_offset, &c->pos, &c->normal);
+    } else {
+        c->snaped = 0;
+    }
+
+    c->flags &= ~(CURSOR_DOWN | CURSOR_UP);
+    if ((bool)(c->flags & CURSOR_PRESSED) != inputs->mouse_down[0]) {
+        set_flag(&c->flags, CURSOR_PRESSED, inputs->mouse_down[0]);
+        set_flag(&c->flags,
+                 inputs->mouse_down[0] ? CURSOR_DOWN : CURSOR_UP, true);
+    }
+    set_flag(&c->flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
+    set_cursor_hint(c);
+
+    // Set some default values.  The tools can override them.
+    // XXX: would be better to reset the cursor when we change tool!
+    c->snap_mask = goxel->snap;
+    set_flag(&c->snap_mask, SNAP_ROUNDED, goxel->painter.smoothness == 0);
+    c->snap_offset = 0;
 }
 
 // XXX: Cleanup this.
@@ -401,6 +458,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
 
     if (goxel->moving && !inputs->mouse_down[1] && !inputs->mouse_down[2])
         goxel->moving = false;
+
+    update_cursor(inputs, view, inside);
 
     // Paint with the current tool if needed.
     goxel->tool_state = tool_iter(goxel->tool, inputs,

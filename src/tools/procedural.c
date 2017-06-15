@@ -43,9 +43,8 @@ static int iter(const inputs_t *inputs, int state, void **data,
     // XXX: duplicate code with tool_brush_iter.
     if (inside)
         snaped = goxel_unproject(
-                goxel, view, &inputs->mouse_pos,
-                goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
-                &pos, &normal);
+                        goxel, view, &inputs->mouse_pos, goxel->snap, 0,
+                        &pos, &normal);
     if (snaped) {
         if (goxel->tool == TOOL_BRUSH && goxel->snap_offset)
             vec3_iaddk(&pos, normal, goxel->snap_offset * goxel->tool_radius);

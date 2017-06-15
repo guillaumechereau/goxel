@@ -22,19 +22,18 @@
 int tool_color_picker_iter(const inputs_t *inputs, int state, void **data,
                            const vec4_t *view, bool inside)
 {
-    bool snaped;
-    vec3_t pos, normal;
     uvec4b_t color;
     mesh_t *mesh = goxel->layers_mesh;
-    const bool pressed = inputs->mouse_down[0];
+    cursor_t *curs = &goxel->cursor;
+    curs->snap_mask = SNAP_MESH;
+    curs->snap_offset = -0.5;
+
     goxel_set_help_text(goxel, "Click on a voxel to pick the color");
-    snaped = inside && goxel_unproject_on_mesh(goxel, view,
-                            &inputs->mouse_pos, mesh, &pos, &normal);
-    if (!snaped) return 0;
-    color = mesh_get_at(mesh, &pos);
+    if (!curs->snaped) return 0;
+    color = mesh_get_at(mesh, &curs->pos);
     color.a = 255;
     goxel_set_help_text(goxel, "%d %d %d", color.r, color.g, color.b);
-    if (pressed) goxel->painter.color = color;
+    if (curs->flags & CURSOR_PRESSED) goxel->painter.color = color;
     return 0;
 }
 

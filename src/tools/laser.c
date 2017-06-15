@@ -31,19 +31,18 @@ enum {
 static int iter(const inputs_t *inputs, int state, void **data,
                 const vec4_t *view, bool inside)
 {
-    vec3_t pos, normal;
     box_t box;
     painter_t painter = goxel->painter;
     mesh_t *mesh = goxel->image->active_layer->mesh;
-    const bool down = inputs->mouse_down[0];
-    vec2_t win = inputs->mouse_pos;
+    cursor_t *curs = &goxel->cursor;
+    curs->snap_mask = SNAP_CAMERA;
+    curs->snap_offset = 0;
 
     painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
     painter.color = uvec4b(255, 255, 255, 255);
 
     // Create the tool box from the camera along the visible ray.
-    camera_get_ray(&goxel->camera, &win, view, &pos, &normal);
     box.mat = mat4_identity;
     box.w = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
                      vec4(1, 0, 0, 0)).xyz;
@@ -51,8 +50,8 @@ static int iter(const inputs_t *inputs, int state, void **data,
                      vec4(0, 1, 0, 0)).xyz;
     box.d = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
                      vec4(0, 0, 1, 0)).xyz;
-    box.d = vec3_neg(normal);
-    box.p = pos;
+    box.d = vec3_neg(curs->normal);
+    box.p = curs->pos;
     // Just a large value for the size of the laser box.
     mat4_itranslate(&box.mat, 0, 0, -1024);
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
@@ -60,13 +59,13 @@ static int iter(const inputs_t *inputs, int state, void **data,
 
     switch (state) {
     case STATE_IDLE:
-        if (down) return STATE_PAINT;
+        if (curs->flags & CURSOR_PRESSED) return STATE_PAINT;
         break;
     case STATE_PAINT | STATE_ENTER:
         image_history_push(goxel->image);
         break;
     case STATE_PAINT:
-        if (!down) return STATE_IDLE;
+        if (!(curs->flags & CURSOR_PRESSED)) return STATE_IDLE;
         mesh_op(mesh, &painter, &box);
         goxel_update_meshes(goxel, -1);
         break;

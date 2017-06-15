@@ -238,6 +238,11 @@ static inline float mix(float x, float y, float t)
     return (1.0 - t) * x + t * y;
 }
 
+static inline void set_flag(int *x, int flag, bool v)
+{
+    v ? (*x |= flag) : (*x &= ~flag);
+}
+
 // #############################
 
 // XXX: I should clean up a but the code of vec.h so that I can put those on
@@ -789,6 +794,9 @@ enum {
     SNAP_SELECTION_OUT  = 1 << 2,
     SNAP_MESH           = 1 << 3,
     SNAP_PLANE          = 1 << 4,
+    SNAP_CAMERA         = 1 << 5, // Used for laser tool.
+
+    SNAP_ROUNDED        = 1 << 8, // Round the result.
 };
 
 typedef struct inputs
@@ -914,6 +922,27 @@ int proc_list_examples(void (*f)(int index,
                                  const char *name, const char *code,
                                  void *user), void *user);
 
+// Represent a 3d cursor.
+// The program keeps track of two cursors, that are then used by the tools.
+
+enum {
+    // The state flags of the cursor.
+    CURSOR_PRESSED      = 1 << 0,
+    CURSOR_DOWN         = 1 << 1,   // Just pressed.
+    CURSOR_UP           = 1 << 2,   // Just released.
+    CURSOR_SHIFT        = 1 << 3,
+    CURSOR_CTRL         = 1 << 4,
+};
+
+typedef struct cursor {
+    vec3_t pos;
+    vec3_t normal;
+    int    snap_mask;
+    int    snaped;
+    int    flags; // Union of CURSOR_* values.
+    float  snap_offset; // XXX: fix this.
+} cursor_t;
+
 
 typedef struct goxel
 {
@@ -929,7 +958,7 @@ typedef struct goxel
     } clipboard;
 
     history_t  *history;     // Undo/redo history.
-    int        snap;
+    int        snap; // XXX: rename to snap_mask.
     float      snap_offset;  // Only for brush tool.
 
     plane_t    plane;         // The snapping plane.
@@ -945,6 +974,8 @@ typedef struct goxel
     texture_t  *pick_fbo;
     painter_t  painter;
     renderer_t rend;
+
+    cursor_t   cursor;
 
     int        tool;
     float      tool_radius;
@@ -999,7 +1030,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                          const inputs_t *inputs, bool inside);
 
 int goxel_unproject(goxel_t *goxel, const vec4_t *view,
-                    const vec2_t *pos, bool on_surface,
+                    const vec2_t *pos, int snap_mask, float offset,
                     vec3_t *out, vec3_t *normal);
 
 bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,

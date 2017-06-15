@@ -45,26 +45,17 @@ typedef struct {
     } last_op;
 } data_t;
 
-static bool check_can_skip(data_t *data, vec3_t pos, bool pressed, int mode)
+static bool check_can_skip(data_t *data, const cursor_t *curs, int mode)
 {
+    const bool pressed = curs->flags & CURSOR_PRESSED;
     if (    pressed == data->last_op.pressed &&
             mode == data->last_op.mode &&
-            vec3_equal(pos, data->last_op.pos))
+            vec3_equal(curs->pos, data->last_op.pos))
         return true;
     data->last_op.pressed = pressed;
     data->last_op.mode = mode;
-    data->last_op.pos = pos;
+    data->last_op.pos = curs->pos;
     return false;
-}
-
-static void set_snap_hint(goxel_t *goxel, int snap)
-{
-    if (snap == SNAP_MESH)
-        goxel_set_hint_text(goxel, "[Snapped to mesh]");
-    if (snap == SNAP_PLANE)
-        goxel_set_hint_text(goxel, "[Snapped to plane]");
-    if (snap == SNAP_SELECTION_IN || snap == SNAP_SELECTION_OUT)
-        goxel_set_hint_text(goxel, "[Snapped to selection]");
 }
 
 static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
@@ -118,33 +109,18 @@ static int iter(const inputs_t *inputs, int state, void **data_,
                 const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);
-    const bool down = inputs->mouse_down[0];
-    const bool pressed = down && !data->painting;
-    const bool released = !down && data->painting;
-    int snaped = 0;
-    vec3_t pos = vec3_zero, normal = vec3_zero;
     box_t box;
     painter_t painter2;
     mesh_t *mesh = goxel->image->active_layer->mesh;
+    cursor_t *curs = &goxel->cursor;
+    bool shift = curs->flags & CURSOR_SHIFT;
 
-    if (inside)
-        snaped = goxel_unproject(
-                goxel, view, &inputs->mouse_pos,
-                goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
-                &pos, &normal);
-    goxel_set_help_text(goxel, "Brush: use shift to draw lines, "
-                               "ctrl to pick color");
-    set_snap_hint(goxel, snaped);
-    if (snaped) {
-        if (goxel->snap_offset)
-            vec3_iaddk(&pos, normal, goxel->snap_offset * goxel->tool_radius);
-        pos.x = round(pos.x - 0.5) + 0.5;
-        pos.y = round(pos.y - 0.5) + 0.5;
-        pos.z = round(pos.z - 0.5) + 0.5;
-    }
+    curs->snap_offset = goxel->snap_offset * goxel->tool_radius +
+        ((goxel->painter.mode == MODE_OVER) ? 0.5 : -0.5);
+
     switch (state) {
     case STATE_IDLE:
-        if (snaped) return STATE_SNAPED;
+        if (curs->snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED | STATE_ENTER:
@@ -153,32 +129,33 @@ static int iter(const inputs_t *inputs, int state, void **data_,
         break;
 
     case STATE_SNAPED:
-        if (!snaped) return STATE_CANCEL;
-        if (inputs->keys[KEY_LEFT_SHIFT])
-            render_line(&goxel->rend, &data->start_pos, &pos, NULL);
-        if (check_can_skip(data, pos, down, goxel->painter.mode))
+        if (!curs->snaped) return STATE_CANCEL;
+        if (shift)
+            render_line(&goxel->rend, &data->start_pos, &curs->pos, NULL);
+        if (check_can_skip(data, curs, goxel->painter.mode))
             return state;
-        box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
+        box = get_box(&curs->pos, NULL, &curs->normal,
+                      goxel->tool_radius, NULL);
 
         mesh_set(mesh, data->mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
 
-        if (inputs->keys[KEY_LEFT_SHIFT]) {
-            render_line(&goxel->rend, &data->start_pos, &pos, NULL);
-            if (pressed) {
+        if (shift) {
+            render_line(&goxel->rend, &data->start_pos, &curs->pos, NULL);
+            if (curs->flags & CURSOR_DOWN) {
                 painter2 = goxel->painter;
                 painter2.shape = &shape_cylinder;
-                box = get_box(&data->start_pos, &pos, &normal,
+                box = get_box(&data->start_pos, &curs->pos, &curs->normal,
                               goxel->tool_radius, NULL);
                 mesh_set(mesh, data->mesh_orig);
                 mesh_op(mesh, &painter2, &box);
                 mesh_set(data->mesh_orig, mesh);
                 goxel_update_meshes(goxel, MESH_LAYERS);
-                data->start_pos = pos;
+                data->start_pos = curs->pos;
             }
         }
-        if (pressed) {
+        if (curs->flags & CURSOR_DOWN) {
             state = STATE_PAINT;
             data->last_op.mode = 0;
             data->painting = true;
@@ -189,31 +166,32 @@ static int iter(const inputs_t *inputs, int state, void **data_,
         break;
 
     case STATE_PAINT:
-        if (!snaped) return state;
-        if (check_can_skip(data, pos, down, goxel->painter.mode))
+        if (!curs->snaped) return state;
+        if (check_can_skip(data, curs, goxel->painter.mode))
             return state;
-        if (released) {
+        if (curs->flags & CURSOR_UP) {
             data->painting = false;
-            goxel->camera.target = pos;
-            if (inputs->keys[KEY_LEFT_SHIFT])
+            goxel->camera.target = curs->pos;
+            if (shift)
                 return STATE_WAIT_KEY_UP;
             mesh_set(goxel->pick_mesh, goxel->layers_mesh);
             mesh_set(data->mesh_orig, mesh);
             return STATE_IDLE;
         }
-        box = get_box(&pos, NULL, &normal, goxel->tool_radius, NULL);
+        box = get_box(&curs->pos, NULL, &curs->normal,
+                      goxel->tool_radius, NULL);
         painter2 = goxel->painter;
         painter2.mode = MODE_MAX;
         mesh_op(data->mesh, &painter2, &box);
         mesh_set(mesh, data->mesh_orig);
         mesh_merge(mesh, data->mesh, goxel->painter.mode);
         goxel_update_meshes(goxel, MESH_LAYERS);
-        data->start_pos = pos;
+        data->start_pos = curs->pos;
         break;
 
     case STATE_WAIT_KEY_UP:
-        if (!inputs->keys[KEY_LEFT_SHIFT]) state = STATE_IDLE;
-        if (snaped) state = STATE_SNAPED;
+        if (!shift) state = STATE_IDLE;
+        if (curs->snaped) state = STATE_SNAPED;
         break;
     }
     return state;

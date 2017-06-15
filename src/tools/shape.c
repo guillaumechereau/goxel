@@ -47,16 +47,6 @@ static data_t *get_data(void **data_)
     return *data;
 }
 
-static void set_snap_hint(goxel_t *goxel, int snap)
-{
-    if (snap == SNAP_MESH)
-        goxel_set_hint_text(goxel, "[Snapped to mesh]");
-    if (snap == SNAP_PLANE)
-        goxel_set_hint_text(goxel, "[Snapped to plane]");
-    if (snap == SNAP_SELECTION_IN || snap == SNAP_SELECTION_OUT)
-        goxel_set_hint_text(goxel, "[Snapped to selection]");
-}
-
 static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
                      float r, const plane_t *plane)
 {
@@ -97,29 +87,15 @@ static int iter(const inputs_t *inputs, int state, void **data_,
                 const vec4_t *view, bool inside)
 {
     data_t *data = get_data(data_);
-    const bool down = inputs->mouse_down[0];
-    const bool up = !down;
-    int snaped = 0;
-    vec3_t pos = vec3_zero, normal;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
+    cursor_t *curs = &goxel->cursor;
 
-    if (inside)
-        snaped = goxel_unproject(
-                goxel, view, &inputs->mouse_pos,
-                goxel->painter.mode == MODE_OVER && !goxel->snap_offset,
-                &pos, &normal);
-    set_snap_hint(goxel, snaped);
-    if (snaped) {
-        pos.x = round(pos.x - 0.5) + 0.5;
-        pos.y = round(pos.y - 0.5) + 0.5;
-        pos.z = round(pos.z - 0.5) + 0.5;
-    }
     switch (state) {
 
     case STATE_IDLE:
-        if (snaped) return STATE_SNAPED;
+        if (curs->snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED | STATE_ENTER:
@@ -127,13 +103,13 @@ static int iter(const inputs_t *inputs, int state, void **data_,
         break;
 
     case STATE_SNAPED:
-        if (!snaped) return STATE_CANCEL;
+        if (!curs->snaped) return STATE_CANCEL;
         goxel_set_help_text(goxel, "Click and drag to draw.");
-        data->start_pos = pos;
-        box = get_box(&data->start_pos, &pos, &normal, 0,
+        data->start_pos = curs->pos;
+        box = get_box(&data->start_pos, &curs->pos, &curs->normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
-        if (down) {
+        if (curs->flags & CURSOR_PRESSED) {
             state = STATE_PAINT;
             image_history_push(goxel->image);
         }
@@ -141,18 +117,20 @@ static int iter(const inputs_t *inputs, int state, void **data_,
 
     case STATE_PAINT:
         goxel_set_help_text(goxel, "Drag.");
-        if (!snaped || !inside) return state;
-        box = get_box(&data->start_pos, &pos, &normal, 0, &goxel->plane);
+        if (!curs->snaped || !inside) return state;
+        box = get_box(&data->start_pos, &curs->pos, &curs->normal,
+                      0, &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         mesh_set(mesh, data->mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
-        if (up) {
+        if (!(curs->flags & CURSOR_PRESSED)) {
             if (!goxel->tool_shape_two_steps) {
                 goxel_update_meshes(goxel, -1);
                 state = STATE_END;
             } else {
-                goxel->tool_plane = plane_from_normal(pos, goxel->plane.u);
+                goxel->tool_plane = plane_from_normal(curs->pos,
+                                                      goxel->plane.u);
                 state = STATE_PAINT2;
             }
         }
@@ -160,17 +138,17 @@ static int iter(const inputs_t *inputs, int state, void **data_,
 
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
-        if (!snaped || !inside) return state;
-        pos = vec3_add(goxel->tool_plane.p,
-                    vec3_project(vec3_sub(pos, goxel->tool_plane.p),
-                                 goxel->plane.n));
-        box = get_box(&data->start_pos, &pos, &normal, 0,
+        if (!curs->snaped || !inside) return state;
+        curs->pos = vec3_add(goxel->tool_plane.p,
+                       vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
+                                    goxel->plane.n));
+        box = get_box(&data->start_pos, &curs->pos, &curs->normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         mesh_set(mesh, data->mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
-        if (down) {
+        if (curs->flags & CURSOR_PRESSED) {
             goxel_update_meshes(goxel, -1);
             return STATE_WAIT_UP;
         }
@@ -178,7 +156,7 @@ static int iter(const inputs_t *inputs, int state, void **data_,
 
     case STATE_WAIT_UP:
         goxel->tool_plane = plane_null;
-        if (up) return STATE_END;
+        if (!(curs->flags & CURSOR_PRESSED)) return STATE_END;
         break;
 
     }

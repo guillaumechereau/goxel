@@ -654,14 +654,11 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
 {
-    vec4_t norm;
     int x, y, n;
     mat4_t view2, view3;
     view2 = rend->view_mat;
 
     mat4_imul(&view2, item->mat);
-    norm = mat4_mul_vec(mat4_mul(rend->proj_mat, view2), vec4(0, 0, 1, 0));
-    mat4_itranslate(&view2, 0, 0, 0.5 * sign(norm.z));
     n = 3;
     for (y = -n; y <= n; y++)
     for (x = -n; x <= n; x++) {
@@ -677,7 +674,6 @@ void render_plane(renderer_t *rend, const plane_t *plane,
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
     item->mat = plane->mat;
-    mat4_itranslate(&item->mat, 0.5, 0.5, 0);
     mat4_iscale(&item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
     item->color = *color;

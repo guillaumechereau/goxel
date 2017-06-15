@@ -121,8 +121,8 @@ static int iter(const inputs_t *inputs, int state, void **data_,
                                   FACES_MATS[data->snap_face]);
 
     if (inside && face == -1)
-        snaped = goxel_unproject(goxel, view, &inputs->mouse_pos, false,
-                                 &pos, &normal);
+        snaped = goxel_unproject(goxel, view, &inputs->mouse_pos,
+                                 goxel->snap, 0, &pos, &normal);
     if (snaped) {
         pos.x = round(pos.x - 0.5) + 0.5;
         pos.y = round(pos.y - 0.5) + 0.5;
