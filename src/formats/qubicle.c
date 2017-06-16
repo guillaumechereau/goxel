@@ -112,7 +112,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     FILE *file;
     block_t *block;
     int i, count, x, y, z;
-    char buff[8];
+    char buff[16];
     mesh_t *m = mesh_copy(mesh);
     mat4_t mat = mat4_identity;
 
@@ -134,10 +134,9 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     i = 0;
     MESH_ITER_BLOCKS(mesh, block) {
 
-        WRITE(uint8_t, 8, file);
-        memset(buff, 0, 8);
         sprintf(buff, "%d", i);
-        fwrite(buff, 8, 1, file);
+        WRITE(uint8_t, strlen(buff), file);
+        fwrite(buff, strlen(buff), 1, file);
 
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
