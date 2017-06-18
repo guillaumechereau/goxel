@@ -33,10 +33,12 @@ out = open("src/assets.inl", "w")
 print >>out, "// This file is auto generated from tools/create_assets.py\n"
 
 def list_files():
+    ret = []
     for root, dirs, files in os.walk("data"):
-        for f in sorted(files, key=lambda x: x.upper()):
+        for f in files:
             if any(f.endswith(x) for x in TYPES):
-                yield os.path.join(root, f)
+                ret.append(os.path.join(root, f))
+    return sorted(ret, key=lambda x: x.upper())
 
 TEMPLATE = ("static const uint8_t DATA_{name}[{size}]\n"
             "                     __attribute__((aligned(4))) =\n"
