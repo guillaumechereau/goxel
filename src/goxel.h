@@ -809,6 +809,40 @@ typedef struct inputs
     float       mouse_wheel;
 } inputs_t;
 
+
+
+// #### Mouse gestures #####################################3
+
+enum {
+    // Supported type of gestures.
+    GESTURE_DRAG = 1,
+    GESTURE_CLICK,
+
+    // Gesture states.
+    GESTURE_POSSIBLE = 0,
+    GESTURE_RECOGNISED,
+    GESTURE_BEGIN,
+    GESTURE_UPDATE,
+    GESTURE_END,
+    GESTURE_TRIGGERED,
+    GESTURE_FAILED,
+};
+
+typedef struct gesture gesture_t;
+struct gesture
+{
+    int     type;
+    int     button;
+    int     state;
+    vec4_t  view;
+    vec2_t  pos;
+    vec2_t  start_pos;
+    int     (*callback)(const gesture_t *gest, void *user);
+};
+
+int gesture_update(int nb, gesture_t *gestures[],
+                   const inputs_t *inputs, const vec4_t *view, void *user);
+
 // #############################
 
 typedef struct camera camera_t;
@@ -997,7 +1031,6 @@ typedef struct goxel
         vec3_t camera_ofs;
     } move_origin;
 
-    bool       moving;      // Set to true while in a movement operation.
     gox_proc_t proc;        // The current procedural rendering (if any).
 
     palette_t  *palettes;   // The list of all the palettes
@@ -1013,6 +1046,12 @@ typedef struct goxel
 
     int        block_count; // Counter for the number of block data.
     bool       quit;        // Set to true to quit the application.
+
+    struct {
+        gesture_t pan;
+        gesture_t rotate;
+    } gestures;
+
 } goxel_t;
 
 // the global goxel instance.

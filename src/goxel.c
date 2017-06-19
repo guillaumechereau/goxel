@@ -240,6 +240,9 @@ end:
     return ret;
 }
 
+static int on_pan(const gesture_t *gest, void *user);
+static int on_rotate(const gesture_t *gest, void *user);
+
 void goxel_init(goxel_t *gox)
 {
     goxel = gox;
@@ -296,6 +299,17 @@ void goxel_init(goxel_t *gox)
     goxel->plane = plane(vec3_zero, vec3(1, 0, 0), vec3(0, 1, 0));
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
     gui_init();
+
+    goxel->gestures.pan = (gesture_t) {
+        .type = GESTURE_DRAG,
+        .button = 2,
+        .callback = on_pan,
+    };
+    goxel->gestures.rotate = (gesture_t) {
+        .type = GESTURE_DRAG,
+        .button = 1,
+        .callback = on_rotate,
+    };
 }
 
 void goxel_release(goxel_t *goxel)
@@ -383,54 +397,58 @@ static void update_cursor(const inputs_t *inputs, const vec4_t *view,
     c->snap_offset = 0;
 }
 
+static int on_pan(const gesture_t *gest, void *user)
+{
+    if (gest->state == GESTURE_BEGIN) {
+        goxel->move_origin.camera_ofs = goxel->camera.ofs;
+        goxel->move_origin.pos = gest->pos;
+    }
+    vec3_t wpos = vec3(gest->pos.x, gest->pos.y, 0);
+    vec3_t worigin_pos = vec3(goxel->move_origin.pos.x,
+                              goxel->move_origin.pos.y, 0);
+    vec3_t wdelta = vec3_sub(wpos, worigin_pos);
+    vec3_t odelta = unproject_delta(&wdelta, &goxel->camera.view_mat,
+                                    &goxel->camera.proj_mat, &gest->view);
+    vec3_imul(&odelta, 2); // XXX: why do I need that?
+    if (!goxel->camera.ortho)
+        vec3_imul(&odelta, goxel->camera.dist);
+    goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs, odelta);
+    goxel->camera.target = vec3_neg(goxel->camera.ofs);
+    return 0;
+}
+
+static int on_rotate(const gesture_t *gest, void *user)
+{
+    if (gest->state == GESTURE_BEGIN) {
+        goxel->move_origin.rotation = goxel->camera.rot;
+        goxel->move_origin.pos = gest->pos;
+    }
+    goxel->camera.move_to_target = true;
+    goxel->camera.rot = quat_mul(goxel->move_origin.rotation,
+            compute_view_rotation(&goxel->move_origin.rotation,
+                &goxel->move_origin.pos, &gest->pos,
+                &gest->view));
+
+    return 0;
+}
+
+
 // XXX: Cleanup this.
 void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                          const inputs_t *inputs, bool inside)
 {
     vec4_t x_axis;
+    gesture_t *gests[] = {&goxel->gestures.pan, &goxel->gestures.rotate};
+
+    if (gesture_update(2, gests, inputs, view, NULL))
+        return;
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
         return;
     }
-    // Middle click: rotate the view.
-    if (inputs->mouse_down[1]) {
-        if (!goxel->moving) {
-            goxel->moving = true;
-            goxel->move_origin.rotation = goxel->camera.rot;
-            goxel->move_origin.pos = inputs->mouse_pos;
-        }
-        goxel->camera.move_to_target = true;
-        goxel->camera.rot = quat_mul(goxel->move_origin.rotation,
-                compute_view_rotation(&goxel->move_origin.rotation,
-                    &goxel->move_origin.pos, &inputs->mouse_pos,
-                    view));
-        return;
-    }
-    // Right click: pan the view
-    if (inputs->mouse_down[2]) {
-        if (!goxel->moving) {
-            goxel->moving = true;
-            goxel->move_origin.camera_ofs = goxel->camera.ofs;
-            goxel->move_origin.pos = inputs->mouse_pos;
-        }
-        vec3_t wpos = vec3(inputs->mouse_pos.x,
-                           inputs->mouse_pos.y, 0);
-        vec3_t worigin_pos = vec3(goxel->move_origin.pos.x,
-                                  goxel->move_origin.pos.y,
-                                  0);
-        vec3_t wdelta = vec3_sub(wpos, worigin_pos);
-        vec3_t odelta = unproject_delta(&wdelta, &goxel->camera.view_mat,
-                                        &goxel->camera.proj_mat, view);
-        vec3_imul(&odelta, 2); // XXX: why do I need that?
-        if (!goxel->camera.ortho)
-            vec3_imul(&odelta, goxel->camera.dist);
-        goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs,
-                                     odelta);
-        goxel->camera.target = vec3_neg(goxel->camera.ofs);
-        return;
-    }
-    // handle mouse rotations
+
+    // handle keyboard rotations
     if (inputs->keys[KEY_LEFT])
         quat_irotate(&goxel->camera.rot, 0.05, 0, 0, +1);
     if (inputs->keys[KEY_RIGHT])
@@ -455,11 +473,6 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
             goxel->camera.move_to_target = true;
         }
     }
-
-
-    if (goxel->moving && !inputs->mouse_down[1] && !inputs->mouse_down[2])
-        goxel->moving = false;
-
     update_cursor(inputs, view, inside);
 
     // Paint with the current tool if needed.
