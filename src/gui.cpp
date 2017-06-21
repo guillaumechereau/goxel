@@ -950,12 +950,12 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     vec4_t view_rect = vec4(canvas_pos.x,
                             io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
                             canvas_size.x, canvas_size.y);
-    if (ImGui::IsItemHovered() || goxel->tool_state) {
-        inputs_t inputs2 = *inputs;
-        inputs2.mouse_pos.y = io.DisplaySize.y - inputs2.mouse_pos.y;
-        goxel_mouse_in_view(goxel, &view_rect, &inputs2,
-                            ImGui::IsItemHovered());
-    }
+
+    // Call mouse_in_view with inputs in the view referential.
+    inputs_t inputs2 = *inputs;
+    inputs2.mouse_pos.y = io.DisplaySize.y - inputs2.mouse_pos.y;
+    goxel_mouse_in_view(goxel, &view_rect, &inputs2);
+
     render_axis_arrows(goxel, &view_size);
 
     // Apparently there is a bug if we do not render anything.  So I render

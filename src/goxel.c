@@ -453,7 +453,7 @@ static int on_hover(const gesture_t *gest, void *user)
 
 // XXX: Cleanup this.
 void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
-                         const inputs_t *inputs, bool inside)
+                         const inputs_t *inputs)
 {
     vec4_t x_axis;
     gesture_t *gests[] = {&goxel->gestures.drag,
@@ -464,7 +464,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     gesture_update(4, gests, inputs, view, NULL);
     goxel->tool_state = tool_iter(goxel->tool,
                                   goxel->tool_state, &goxel->tool_data,
-                                  view, inside);
+                                  view);
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
@@ -496,7 +496,6 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
             goxel->camera.move_to_target = true;
         }
     }
-
 }
 
 void goxel_render(goxel_t *goxel)

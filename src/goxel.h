@@ -1067,7 +1067,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
 // XXX: change the name since we also call it when the mouse get out of
 // the view.
 void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
-                         const inputs_t *inputs, bool inside);
+                         const inputs_t *inputs);
 
 int goxel_unproject(goxel_t *goxel, const vec4_t *view,
                     const vec2_t *pos, int snap_mask, float offset,
@@ -1118,8 +1118,7 @@ struct tool {
     }
 
 void tool_register_(const tool_t *tool);
-int tool_iter(int tool, int state, void **data, const vec4_t *view,
-              bool inside);
+int tool_iter(int tool, int state, void **data, const vec4_t *view);
 void tool_cancel(int tool, int state, void **data);
 int tool_gui(int tool);
 

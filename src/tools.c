@@ -51,8 +51,7 @@ void tool_register_(const tool_t *tool)
     action_register(&action);
 }
 
-int tool_iter(int tool, int state, void **data,
-              const vec4_t *view, bool inside)
+int tool_iter(int tool, int state, void **data, const vec4_t *view)
 {
     int ret;
     assert(tool >= 0 && tool < TOOL_COUNT);
