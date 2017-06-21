@@ -19,8 +19,7 @@
 #include "goxel.h"
 
 
-int tool_color_picker_iter(int state, void **data,
-                           const vec4_t *view, bool inside)
+int tool_color_picker_iter(int state, void **data, const vec4_t *view)
 {
     uvec4b_t color;
     mesh_t *mesh = goxel->layers_mesh;

@@ -240,8 +240,10 @@ end:
     return ret;
 }
 
+static int on_drag(const gesture_t *gest, void *user);
 static int on_pan(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
+static int on_hover(const gesture_t *gest, void *user);
 
 void goxel_init(goxel_t *gox)
 {
@@ -300,6 +302,11 @@ void goxel_init(goxel_t *gox)
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
     gui_init();
 
+    goxel->gestures.drag = (gesture_t) {
+        .type = GESTURE_DRAG,
+        .button = 0,
+        .callback = on_drag,
+    };
     goxel->gestures.pan = (gesture_t) {
         .type = GESTURE_DRAG,
         .button = 2,
@@ -309,6 +316,10 @@ void goxel_init(goxel_t *gox)
         .type = GESTURE_DRAG,
         .button = 1,
         .callback = on_rotate,
+    };
+    goxel->gestures.hover = (gesture_t) {
+        .type = GESTURE_HOVER,
+        .callback = on_hover,
     };
 }
 
@@ -369,32 +380,23 @@ static void set_cursor_hint(cursor_t *curs)
             curs->pos.x, curs->pos.y, curs->pos.z, snap_str);
 }
 
-static void update_cursor(const inputs_t *inputs, const vec4_t *view,
-                          bool inside)
+static int on_drag(const gesture_t *gest, void *user)
 {
     cursor_t *c = &goxel->cursor;
-    if (inside) {
-        c->snaped = goxel_unproject(
-                goxel, view, &inputs->mouse_pos, c->snap_mask,
-                c->snap_offset, &c->pos, &c->normal);
-    } else {
-        c->snaped = 0;
-    }
+    if (gest->state == GESTURE_BEGIN)
+        c->flags |= CURSOR_PRESSED;
+    if (gest->state == GESTURE_END)
+        c->flags &= ~CURSOR_PRESSED;
 
-    c->flags &= ~(CURSOR_DOWN | CURSOR_UP);
-    if ((bool)(c->flags & CURSOR_PRESSED) != inputs->mouse_down[0]) {
-        set_flag(&c->flags, CURSOR_PRESSED, inputs->mouse_down[0]);
-        set_flag(&c->flags,
-                 inputs->mouse_down[0] ? CURSOR_DOWN : CURSOR_UP, true);
-    }
-    set_flag(&c->flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
-    set_cursor_hint(c);
-
+    c->snaped = goxel_unproject(
+            goxel, &gest->view, &gest->pos, c->snap_mask,
+            c->snap_offset, &c->pos, &c->normal);
     // Set some default values.  The tools can override them.
     // XXX: would be better to reset the cursor when we change tool!
     c->snap_mask = goxel->snap_mask;
     set_flag(&c->snap_mask, SNAP_ROUNDED, goxel->painter.smoothness == 0);
     c->snap_offset = 0;
+    return 0;
 }
 
 static int on_pan(const gesture_t *gest, void *user)
@@ -432,16 +434,37 @@ static int on_rotate(const gesture_t *gest, void *user)
     return 0;
 }
 
+static int on_hover(const gesture_t *gest, void *user)
+{
+    cursor_t *c = &goxel->cursor;
+    c->snaped = goxel_unproject(
+                    goxel, &gest->view, &gest->pos, c->snap_mask,
+                    c->snap_offset, &c->pos, &c->normal);
+    set_cursor_hint(c);
+    c->flags &= ~CURSOR_PRESSED;
+    // Set some default values.  The tools can override them.
+    // XXX: would be better to reset the cursor when we change tool!
+    c->snap_mask = goxel->snap_mask;
+    set_flag(&c->snap_mask, SNAP_ROUNDED, goxel->painter.smoothness == 0);
+    c->snap_offset = 0;
+    return 0;
+}
+
 
 // XXX: Cleanup this.
 void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                          const inputs_t *inputs, bool inside)
 {
     vec4_t x_axis;
-    gesture_t *gests[] = {&goxel->gestures.pan, &goxel->gestures.rotate};
+    gesture_t *gests[] = {&goxel->gestures.drag,
+                          &goxel->gestures.pan,
+                          &goxel->gestures.rotate,
+                          &goxel->gestures.hover};
 
-    if (gesture_update(2, gests, inputs, view, NULL))
-        return;
+    gesture_update(4, gests, inputs, view, NULL);
+    goxel->tool_state = tool_iter(goxel->tool,
+                                  goxel->tool_state, &goxel->tool_data,
+                                  view, inside);
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
@@ -473,12 +496,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
             goxel->camera.move_to_target = true;
         }
     }
-    update_cursor(inputs, view, inside);
 
-    // Paint with the current tool if needed.
-    goxel->tool_state = tool_iter(goxel->tool,
-                                  goxel->tool_state, &goxel->tool_data,
-                                  view, inside);
 }
 
 void goxel_render(goxel_t *goxel)

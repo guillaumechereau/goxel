@@ -21,7 +21,13 @@
 // Still experimental gestures manager.
 
 // XXX: this value should be set depending.
-static float g_start_dist = 8;
+static float g_start_dist = 0;
+
+static bool rect_contains(vec4_t rect, vec2_t pos)
+{
+    return pos.x >= rect.x && pos.x < rect.x + rect.z &&
+           pos.y >= rect.y && pos.y < rect.y + rect.w;
+}
 
 static int update(gesture_t *gest, const inputs_t *inputs)
 {
@@ -31,11 +37,12 @@ static int update(gesture_t *gest, const inputs_t *inputs)
         case GESTURE_POSSIBLE:
             if (inputs->mouse_down[gest->button]) {
                 gest->start_pos = inputs->mouse_pos;
-                gest->state = GESTURE_RECOGNISED;
+                gest->state = rect_contains(gest->view, inputs->mouse_pos) ?
+                    GESTURE_RECOGNISED: GESTURE_FAILED;
             }
             break;
         case GESTURE_RECOGNISED:
-            if (vec2_dist(gest->start_pos, gest->pos) > g_start_dist)
+            if (vec2_dist(gest->start_pos, gest->pos) >= g_start_dist)
                 gest->state = GESTURE_BEGIN;
             if (!inputs->mouse_down[gest->button])
                 gest->state = GESTURE_POSSIBLE;
@@ -108,5 +115,17 @@ int gesture_update(int nb, gesture_t *gestures[],
             ret = 1;
         }
     }
+
+    // Special case for the hover gesture.
+    if (!ret && allup) {
+        for (i = 0; i < nb; i++) {
+            gest = gestures[i];
+            if (gest->type != GESTURE_HOVER) continue;
+            gest->pos = inputs->mouse_pos;
+            gest->callback(gest, user);
+            ret = 1;
+        }
+    }
+
     return ret;
 }

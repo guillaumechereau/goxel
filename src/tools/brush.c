@@ -105,8 +105,7 @@ static data_t *get_data(void **data_)
     return *data;
 }
 
-static int iter(int state, void **data_,
-                const vec4_t *view, bool inside)
+static int iter(int state, void **data_, const vec4_t *view)
 {
     data_t *data = get_data(data_);
     box_t box;
@@ -143,7 +142,7 @@ static int iter(int state, void **data_,
 
         if (shift) {
             render_line(&goxel->rend, &data->start_pos, &curs->pos, NULL);
-            if (curs->flags & CURSOR_DOWN) {
+            if (curs->flags & CURSOR_PRESSED) {
                 painter2 = goxel->painter;
                 painter2.shape = &shape_cylinder;
                 box = get_box(&data->start_pos, &curs->pos, &curs->normal,
@@ -155,7 +154,7 @@ static int iter(int state, void **data_,
                 data->start_pos = curs->pos;
             }
         }
-        if (curs->flags & CURSOR_DOWN) {
+        if (curs->flags & CURSOR_PRESSED) {
             state = STATE_PAINT;
             data->last_op.mode = 0;
             data->painting = true;
@@ -169,7 +168,7 @@ static int iter(int state, void **data_,
         if (!curs->snaped) return state;
         if (check_can_skip(data, curs, goxel->painter.mode))
             return state;
-        if (curs->flags & CURSOR_UP) {
+        if (!(curs->flags & CURSOR_PRESSED)) {
             data->painting = false;
             goxel->camera.target = curs->pos;
             if (shift)

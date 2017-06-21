@@ -817,6 +817,7 @@ enum {
     // Supported type of gestures.
     GESTURE_DRAG = 1,
     GESTURE_CLICK,
+    GESTURE_HOVER,
 
     // Gesture states.
     GESTURE_POSSIBLE = 0,
@@ -962,10 +963,8 @@ int proc_list_examples(void (*f)(int index,
 enum {
     // The state flags of the cursor.
     CURSOR_PRESSED      = 1 << 0,
-    CURSOR_DOWN         = 1 << 1,   // Just pressed.
-    CURSOR_UP           = 1 << 2,   // Just released.
-    CURSOR_SHIFT        = 1 << 3,
-    CURSOR_CTRL         = 1 << 4,
+    CURSOR_SHIFT        = 1 << 1,
+    CURSOR_CTRL         = 1 << 2,
 };
 
 typedef struct cursor {
@@ -1048,8 +1047,10 @@ typedef struct goxel
     bool       quit;        // Set to true to quit the application.
 
     struct {
+        gesture_t drag;
         gesture_t pan;
         gesture_t rotate;
+        gesture_t hover;
     } gestures;
 
 } goxel_t;
@@ -1102,8 +1103,7 @@ typedef struct tool tool_t;
 struct tool {
     int id;
     const char *action_id;
-    int (*iter_fn)(int state, void **data,
-                   const vec4_t *view, bool inside);
+    int (*iter_fn)(int state, void **data, const vec4_t *view);
     int (*cancel_fn)(int state, void **data);
     int (*gui_fn)(void);
     const char *shortcut;

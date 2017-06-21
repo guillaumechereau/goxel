@@ -83,8 +83,7 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static int iter(int state, void **data_,
-                const vec4_t *view, bool inside)
+static int iter(int state, void **data_, const vec4_t *view)
 {
     data_t *data = get_data(data_);
     box_t box;
@@ -118,7 +117,7 @@ static int iter(int state, void **data_,
 
     case STATE_PAINT:
         goxel_set_help_text(goxel, "Drag.");
-        if (!curs->snaped || !inside) return state;
+        if (!curs->snaped) return state;
         box = get_box(&data->start_pos, &curs->pos, &curs->normal,
                       0, &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
@@ -139,7 +138,7 @@ static int iter(int state, void **data_,
 
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
-        if (!curs->snaped || !inside) return state;
+        if (!curs->snaped) return state;
         // XXX: clean this up...
         curs->pos = vec3_add(goxel->tool_plane.p,
                        vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),

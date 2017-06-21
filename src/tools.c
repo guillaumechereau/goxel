@@ -59,7 +59,7 @@ int tool_iter(int tool, int state, void **data,
     assert(g_tools[tool]->iter_fn);
 
     while (true) {
-        ret = g_tools[tool]->iter_fn(state, data, view, inside);
+        ret = g_tools[tool]->iter_fn(state, data, view);
         if (ret == STATE_CANCEL) {
             tool_cancel(tool, state, data);
             ret = 0;

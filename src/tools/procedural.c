@@ -29,8 +29,7 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
-static int iter(int state, void **data,
-                const vec4_t *view, bool inside)
+static int iter(int state, void **data, const vec4_t *view)
 {
     box_t box;
     gox_proc_t *proc = &goxel->proc;

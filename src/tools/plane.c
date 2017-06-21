@@ -18,8 +18,7 @@
 
 #include "goxel.h"
 
-static int iter(int state, void **data,
-                const vec4_t *view, bool inside)
+static int iter(int state, void **data, const vec4_t *view)
 {
     cursor_t *curs = &goxel->cursor;
     curs->snap_mask = SNAP_MESH;

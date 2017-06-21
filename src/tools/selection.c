@@ -103,8 +103,7 @@ static int get_face(vec3_t n)
 }
 
 // XXX: this is very close to tool_shape_iter.
-static int iter(int state, void **data_,
-                const vec4_t *view, bool inside)
+static int iter(int state, void **data_, const vec4_t *view)
 {
     data_t *data = get_data(data_);
     int face = -1;
@@ -151,7 +150,7 @@ static int iter(int state, void **data_,
 
     case STATE_PAINT:
         goxel_set_help_text(goxel, "Drag.");
-        if (!curs->snaped || !inside) return state;
+        if (!curs->snaped) return state;
         goxel->selection = get_box(&data->start_pos,
                                    &curs->pos, &curs->normal, 0,
                                    &goxel->plane);
@@ -163,7 +162,7 @@ static int iter(int state, void **data_,
 
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
-        if (!curs->snaped || !inside) return state;
+        if (!curs->snaped) return state;
         // XXX: clean this up...
         curs->pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
