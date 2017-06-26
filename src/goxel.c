@@ -391,6 +391,7 @@ static int on_drag(const gesture_t *gest, void *user)
     c->snaped = goxel_unproject(
             goxel, &gest->view, &gest->pos, c->snap_mask,
             c->snap_offset, &c->pos, &c->normal);
+
     // Set some default values.  The tools can override them.
     // XXX: would be better to reset the cursor when we change tool!
     c->snap_mask = goxel->snap_mask;
@@ -462,6 +463,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                           &goxel->gestures.hover};
 
     gesture_update(4, gests, inputs, view, NULL);
+    set_flag(&goxel->cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
+    set_flag(&goxel->cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
+
     goxel->tool_state = tool_iter(goxel->tool,
                                   goxel->tool_state, &goxel->tool_data,
                                   view);

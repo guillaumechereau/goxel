@@ -25,7 +25,6 @@ enum {
 
     STATE_SNAPED,
     STATE_PAINT,
-    STATE_WAIT_KEY_UP,
 
     STATE_ENTER = 0x0100,
 };
@@ -34,7 +33,6 @@ typedef struct {
     mesh_t *mesh_orig; // Original mesh.
     mesh_t *mesh;      // Mesh containing only the tool path.
 
-    bool painting;
     vec3_t start_pos;
     // Cache of the last operation.
     // XXX: could we remove this?
@@ -157,7 +155,6 @@ static int iter(int state, void **data_, const vec4_t *view)
         if (curs->flags & CURSOR_PRESSED) {
             state = STATE_PAINT;
             data->last_op.mode = 0;
-            data->painting = true;
             mesh_set(mesh, data->mesh_orig);
             image_history_push(goxel->image);
             mesh_clear(data->mesh);
@@ -169,10 +166,7 @@ static int iter(int state, void **data_, const vec4_t *view)
         if (check_can_skip(data, curs, goxel->painter.mode))
             return state;
         if (!(curs->flags & CURSOR_PRESSED)) {
-            data->painting = false;
             goxel->camera.target = curs->pos;
-            if (shift)
-                return STATE_WAIT_KEY_UP;
             mesh_set(goxel->pick_mesh, goxel->layers_mesh);
             mesh_set(data->mesh_orig, mesh);
             return STATE_IDLE;
@@ -186,11 +180,6 @@ static int iter(int state, void **data_, const vec4_t *view)
         mesh_merge(mesh, data->mesh, goxel->painter.mode);
         goxel_update_meshes(goxel, MESH_LAYERS);
         data->start_pos = curs->pos;
-        break;
-
-    case STATE_WAIT_KEY_UP:
-        if (!shift) state = STATE_IDLE;
-        if (curs->snaped) state = STATE_SNAPED;
         break;
     }
     return state;
