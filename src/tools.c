@@ -204,3 +204,22 @@ int tool_gui_color(void)
     gui_color(&goxel->painter.color);
     return 0;
 }
+
+int tool_gui_symmetry(void)
+{
+    float w;
+    int i;
+    bool v;
+    char *labels[] = {"X", "Y", "Z"};
+    gui_text("Symmetry");
+    w = gui_get_avail_width() / 3.0 - 1;
+    gui_group_begin(NULL);
+    for (i = 0; i < 3; i++) {
+        v = (goxel->painter.symmetry >> i) & 0x1;
+        if (gui_selectable(labels[i], &v, NULL, w))
+            set_flag(&goxel->painter.symmetry, 1 << i, v);
+        gui_same_line();
+    }
+    gui_group_end();
+    return 0;
+}

@@ -182,6 +182,7 @@ static int gui(tool_t *tool)
     tool_gui_mode();
     tool_gui_shape();
     tool_gui_color();
+    tool_gui_symmetry();
     if (!box_is_null(goxel->selection))
         gui_action_button("fill_selection", "Fill selection", 1.0, "");
 

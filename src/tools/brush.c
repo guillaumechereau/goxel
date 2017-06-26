@@ -203,6 +203,7 @@ static int gui(tool_t *tool)
     tool_gui_mode();
     tool_gui_shape();
     tool_gui_color();
+    tool_gui_symmetry();
     return 0;
 }
 

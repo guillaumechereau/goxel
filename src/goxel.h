@@ -513,6 +513,7 @@ typedef struct painter {
     const shape_t   *shape;
     uvec4b_t        color;
     float           smoothness;
+    int             symmetry; // bitfield X Y Z
 } painter_t;
 
 // #### Block ##################
@@ -1012,6 +1013,7 @@ int tool_gui_shape(void);
 int tool_gui_radius(void);
 int tool_gui_smoothness(void);
 int tool_gui_color(void);
+int tool_gui_symmetry(void);
 
 
 

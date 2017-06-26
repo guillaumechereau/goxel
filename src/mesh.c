@@ -193,6 +193,25 @@ static void add_blocks(mesh_t *mesh, box_t box)
 
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
+    int i;
+    painter_t painter2;
+    box_t box2;
+
+    if (painter->symmetry) {
+        painter2 = *painter;
+        painter2.symmetry = 0;
+        for (i = 0; i < 3; i++) {
+            if (!(painter->symmetry & (1 << i))) continue;
+            box2 = *box;
+            box2.mat = mat4_identity;
+            if (i == 0) mat4_iscale(&box2.mat, -1,  1,  1);
+            if (i == 1) mat4_iscale(&box2.mat,  1, -1,  1);
+            if (i == 2) mat4_iscale(&box2.mat,  1,  1, -1);
+            mat4_imul(&box2.mat, box->mat);
+            mesh_op(mesh, &painter2, &box2);
+        }
+    }
+
     // In case we are doing the same operation as last time, we can just use
     // the value we buffered.
     if (!g_last_op.origin) g_last_op.origin = mesh_new();
