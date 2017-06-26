@@ -90,7 +90,7 @@ static int iter(int state, void **data_, const vec4_t *view)
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
     cursor_t *curs = &goxel->cursor;
-    curs->snap_offset = (goxel->painter.mode == MODE_OVER) ? 0.5 : -0.5;
+    curs->snap_offset = 0.5;
 
     switch (state) {
 
