@@ -279,7 +279,7 @@ void goxel_init(goxel_t *gox)
     }
     goxel->palette = goxel->palette ?: goxel->palettes;
 
-    goxel->tool = TOOL_BRUSH;
+    action_exec2("tool_set_brush", "");
     goxel->tool_radius = 0.5;
     goxel->painter = (painter_t) {
         .shape = &shape_cube,
@@ -466,9 +466,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     set_flag(&goxel->cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel->cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
 
-    goxel->tool_state = tool_iter(goxel->tool,
-                                  goxel->tool_state, &goxel->tool_data,
-                                  view);
+    tool_iter(goxel->tool, view);
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
@@ -629,13 +627,13 @@ void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
 
 void goxel_undo(goxel_t *goxel)
 {
-    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+    tool_cancel(goxel->tool);
     image_undo(goxel->image);
 }
 
 void goxel_redo(goxel_t *goxel)
 {
-    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+    tool_cancel(goxel->tool);
     image_redo(goxel->image);
 }
 
@@ -728,8 +726,7 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void clear_selection(void)
 {
-    if (goxel->tool == TOOL_SELECTION)
-        tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+    if (goxel->tool->id == TOOL_SELECTION) tool_cancel(goxel->tool);
     goxel->selection = box_null;
 }
 
@@ -773,7 +770,7 @@ ACTION_REGISTER(grid_visible,
 static void copy_action(void)
 {
     painter_t painter;
-    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+    tool_cancel(goxel->tool);
     mesh_delete(goxel->clipboard.mesh);
     goxel->clipboard.box = goxel->selection;
     goxel->clipboard.mesh = mesh_copy(goxel->image->active_layer->mesh);
@@ -794,7 +791,7 @@ static void past_action(void)
     vec3_t p1, p2;
     mat4_t mat = mat4_identity;
     if (!goxel->clipboard.mesh) return;
-    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+    tool_cancel(goxel->tool);
 
     tmp = mesh_copy(goxel->clipboard.mesh);
     if (    !box_is_null(goxel->selection) &&

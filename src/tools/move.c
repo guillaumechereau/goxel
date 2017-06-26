@@ -18,12 +18,18 @@
 
 #include "goxel.h"
 
-static int iter(int state, void **data, const vec4_t *view)
+
+typedef struct {
+    tool_t tool;
+} tool_move_t;
+
+
+static int iter(tool_t *tool, const vec4_t *view)
 {
     return 0;
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     layer_t *layer;
     mat4_t mat = mat4_identity;
@@ -73,7 +79,7 @@ static int gui(void)
     return 0;
 }
 
-TOOL_REGISTER(TOOL_MOVE, move,
+TOOL_REGISTER(TOOL_MOVE, move, tool_move_t,
               .iter_fn = iter,
               .gui_fn = gui,
               .shortcut = "M",

@@ -18,7 +18,11 @@
 
 #include "goxel.h"
 
-static int iter(int state, void **data, const vec4_t *view)
+typedef struct {
+    tool_t tool;
+} tool_plane_t;
+
+static int iter(tool_t *tool, const vec4_t *view)
 {
     cursor_t *curs = &goxel->cursor;
     curs->snap_mask = SNAP_MESH;
@@ -35,7 +39,7 @@ static int iter(int state, void **data, const vec4_t *view)
     return 0;
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     int i;
     gui_group_begin(NULL);
@@ -52,7 +56,7 @@ static int gui(void)
     return 0;
 }
 
-TOOL_REGISTER(TOOL_SET_PLANE, plane,
+TOOL_REGISTER(TOOL_SET_PLANE, plane, tool_plane_t,
               .iter_fn = iter,
               .gui_fn = gui,
               .shortcut = "P"

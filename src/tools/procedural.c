@@ -29,7 +29,13 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
-static int iter(int state, void **data, const vec4_t *view)
+
+typedef struct {
+    tool_t  tool;
+} tool_procedural_t;
+
+
+static int iter(tool_t *tool, const vec4_t *view)
 {
     box_t box;
     gox_proc_t *proc = &goxel->proc;
@@ -37,7 +43,7 @@ static int iter(int state, void **data, const vec4_t *view)
 
     if (proc->state == PROC_PARSE_ERROR) return 0;
 
-    switch (state) {
+    switch (tool->state) {
     case STATE_IDLE:
         if (curs->snaped) return STATE_SNAPED;
         break;
@@ -59,7 +65,7 @@ static int iter(int state, void **data, const vec4_t *view)
         break;
     }
 
-    return state;
+    return tool->state;
 }
 
 static void on_example(int i, const char *name, const char *code,
@@ -71,7 +77,7 @@ static void on_example(int i, const char *name, const char *code,
     names[i] = strdup(name);
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     static char **progs = NULL;
     static char **names = NULL;
@@ -200,7 +206,7 @@ static int gui(void)
     return 0;
 }
 
-TOOL_REGISTER(TOOL_PROCEDURAL, procedural,
+TOOL_REGISTER(TOOL_PROCEDURAL, procedural, tool_procedural_t,
               .gui_fn = gui,
               .iter_fn = iter,
 )

@@ -30,6 +30,8 @@ enum {
 };
 
 typedef struct {
+    tool_t tool;
+
     mesh_t *mesh_orig; // Original mesh.
     mesh_t *mesh;      // Mesh containing only the tool path.
 
@@ -41,18 +43,19 @@ typedef struct {
         bool       pressed;
         int        mode;
     } last_op;
-} data_t;
+} tool_brush_t;
 
-static bool check_can_skip(data_t *data, const cursor_t *curs, int mode)
+static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
+                           int mode)
 {
     const bool pressed = curs->flags & CURSOR_PRESSED;
-    if (    pressed == data->last_op.pressed &&
-            mode == data->last_op.mode &&
-            vec3_equal(curs->pos, data->last_op.pos))
+    if (    pressed == brush->last_op.pressed &&
+            mode == brush->last_op.mode &&
+            vec3_equal(curs->pos, brush->last_op.pos))
         return true;
-    data->last_op.pressed = pressed;
-    data->last_op.mode = mode;
-    data->last_op.pos = curs->pos;
+    brush->last_op.pressed = pressed;
+    brush->last_op.mode = mode;
+    brush->last_op.pos = curs->pos;
     return false;
 }
 
@@ -92,112 +95,107 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static data_t *get_data(void **data_)
-{
-    data_t **data = (data_t**)data_;
-    if (!*data) {
-        *data = calloc(1, sizeof(**data));
-        (*data)->mesh_orig = mesh_copy(goxel->image->active_layer->mesh);
-        (*data)->mesh      = mesh_new();
-    }
-    return *data;
-}
 
-static int iter(int state, void **data_, const vec4_t *view)
+static int iter(tool_t *tool, const vec4_t *view)
 {
-    data_t *data = get_data(data_);
+    tool_brush_t *brush = (tool_brush_t*)tool;
     box_t box;
     painter_t painter2;
     mesh_t *mesh = goxel->image->active_layer->mesh;
     cursor_t *curs = &goxel->cursor;
     bool shift = curs->flags & CURSOR_SHIFT;
 
+    if (!brush->mesh_orig)
+        brush->mesh_orig = mesh_copy(goxel->image->active_layer->mesh);
+    if (!brush->mesh)
+        brush->mesh = mesh_new();
+
     curs->snap_offset = goxel->snap_offset * goxel->tool_radius +
         ((goxel->painter.mode == MODE_OVER) ? 0.5 : -0.5);
 
-    switch (state) {
+    switch (tool->state) {
     case STATE_IDLE:
         if (curs->snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED | STATE_ENTER:
-        mesh_set(data->mesh_orig, mesh);
-        data->last_op.mode = 0; // Discard last op.
+        mesh_set(brush->mesh_orig, mesh);
+        brush->last_op.mode = 0; // Discard last op.
         break;
 
     case STATE_SNAPED:
         if (!curs->snaped) return STATE_CANCEL;
         if (shift)
-            render_line(&goxel->rend, &data->start_pos, &curs->pos, NULL);
-        if (check_can_skip(data, curs, goxel->painter.mode))
-            return state;
+            render_line(&goxel->rend, &brush->start_pos, &curs->pos, NULL);
+        if (check_can_skip(brush, curs, goxel->painter.mode))
+            return tool->state;
         box = get_box(&curs->pos, NULL, &curs->normal,
                       goxel->tool_radius, NULL);
 
-        mesh_set(mesh, data->mesh_orig);
+        mesh_set(mesh, brush->mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
 
         if (shift) {
-            render_line(&goxel->rend, &data->start_pos, &curs->pos, NULL);
+            render_line(&goxel->rend, &brush->start_pos, &curs->pos, NULL);
             if (curs->flags & CURSOR_PRESSED) {
                 painter2 = goxel->painter;
                 painter2.shape = &shape_cylinder;
-                box = get_box(&data->start_pos, &curs->pos, &curs->normal,
+                box = get_box(&brush->start_pos, &curs->pos, &curs->normal,
                               goxel->tool_radius, NULL);
-                mesh_set(mesh, data->mesh_orig);
+                mesh_set(mesh, brush->mesh_orig);
                 mesh_op(mesh, &painter2, &box);
-                mesh_set(data->mesh_orig, mesh);
+                mesh_set(brush->mesh_orig, mesh);
                 goxel_update_meshes(goxel, MESH_LAYERS);
-                data->start_pos = curs->pos;
+                brush->start_pos = curs->pos;
             }
         }
         if (curs->flags & CURSOR_PRESSED) {
-            state = STATE_PAINT;
-            data->last_op.mode = 0;
-            mesh_set(mesh, data->mesh_orig);
+            tool->state = STATE_PAINT;
+            brush->last_op.mode = 0;
+            mesh_set(mesh, brush->mesh_orig);
             image_history_push(goxel->image);
-            mesh_clear(data->mesh);
+            mesh_clear(brush->mesh);
         }
         break;
 
     case STATE_PAINT:
-        if (!curs->snaped) return state;
-        if (check_can_skip(data, curs, goxel->painter.mode))
-            return state;
+        if (!curs->snaped) return tool->state;
+        if (check_can_skip(brush, curs, goxel->painter.mode))
+            return tool->state;
         if (!(curs->flags & CURSOR_PRESSED)) {
             goxel->camera.target = curs->pos;
             mesh_set(goxel->pick_mesh, goxel->layers_mesh);
-            mesh_set(data->mesh_orig, mesh);
+            mesh_set(brush->mesh_orig, mesh);
             return STATE_IDLE;
         }
         box = get_box(&curs->pos, NULL, &curs->normal,
                       goxel->tool_radius, NULL);
         painter2 = goxel->painter;
         painter2.mode = MODE_MAX;
-        mesh_op(data->mesh, &painter2, &box);
-        mesh_set(mesh, data->mesh_orig);
-        mesh_merge(mesh, data->mesh, goxel->painter.mode);
+        mesh_op(brush->mesh, &painter2, &box);
+        mesh_set(mesh, brush->mesh_orig);
+        mesh_merge(mesh, brush->mesh, goxel->painter.mode);
         goxel_update_meshes(goxel, MESH_LAYERS);
-        data->start_pos = curs->pos;
+        brush->start_pos = curs->pos;
         break;
     }
-    return state;
+    return tool->state;
 }
 
-static int cancel(int state, void **data_)
+static int cancel(tool_t *tool)
 {
-    if (!(*data_)) return 0;
-    data_t *data = get_data(data_);
-    mesh_set(goxel->image->active_layer->mesh, data->mesh_orig);
-    mesh_delete(data->mesh_orig);
-    mesh_delete(data->mesh);
-    free(data);
-    *data_ = NULL;
+    if (!tool) return 0;
+    tool_brush_t *brush = (tool_brush_t*)tool;
+    mesh_set(goxel->image->active_layer->mesh, brush->mesh_orig);
+    mesh_delete(brush->mesh_orig);
+    mesh_delete(brush->mesh);
+    brush->mesh_orig = NULL;
+    brush->mesh = NULL;
     return 0;
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     tool_gui_radius();
     tool_gui_smoothness();
@@ -208,7 +206,7 @@ static int gui(void)
     return 0;
 }
 
-TOOL_REGISTER(TOOL_BRUSH, brush,
+TOOL_REGISTER(TOOL_BRUSH, brush, tool_brush_t,
               .iter_fn = iter,
               .cancel_fn = cancel,
               .gui_fn = gui,

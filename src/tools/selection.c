@@ -42,9 +42,11 @@ enum {
 static int g_drag_mode = 0;
 
 typedef struct {
+    tool_t  tool;
+
     int     snap_face;
     vec3_t  start_pos;
-} data_t;
+} tool_selection_t;
 
 static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
                      float r, const plane_t *plane)
@@ -82,14 +84,6 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static data_t *get_data(void **data_)
-{
-    data_t **data = (data_t**)data_;
-    if (!*data) {
-        *data = calloc(1, sizeof(**data));
-    }
-    return *data;
-}
 
 // Get the face index from the normal.
 static int get_face(vec3_t n)
@@ -103,9 +97,9 @@ static int get_face(vec3_t n)
 }
 
 // XXX: this is very close to tool_shape_iter.
-static int iter(int state, void **data_, const vec4_t *view)
+static int iter(tool_t *tool, const vec4_t *view)
 {
-    data_t *data = get_data(data_);
+    tool_selection_t *selection = (tool_selection_t*)tool;
     int face = -1;
     vec3_t n;
     plane_t face_plane;
@@ -116,42 +110,42 @@ static int iter(int state, void **data_, const vec4_t *view)
     curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
     curs->snap_offset = 0.5;
 
-    if (IS_IN(state, STATE_IDLE, STATE_SNAPED, STATE_SNAPED_FACE)) {
+    if (IS_IN(tool->state, STATE_IDLE, STATE_SNAPED, STATE_SNAPED_FACE)) {
         curs->snap_mask |= SNAP_SELECTION_OUT;
         if (curs->snaped == SNAP_SELECTION_OUT) {
             face = get_face(curs->normal);
-            data->snap_face = face;
-            state = STATE_SNAPED_FACE;
+            selection->snap_face = face;
+            tool->state = STATE_SNAPED_FACE;
         }
     }
 
-    if (!box_is_null(goxel->selection) && data->snap_face != -1)
+    if (!box_is_null(goxel->selection) && selection->snap_face != -1)
         face_plane.mat = mat4_mul(goxel->selection.mat,
-                                  FACES_MATS[data->snap_face]);
+                                  FACES_MATS[selection->snap_face]);
 
-    switch (state) {
+    switch (tool->state) {
     case STATE_IDLE:
         goxel->tool_plane = plane_null;
-        data->snap_face = -1;
+        selection->snap_face = -1;
         if (curs->snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED:
         if (!curs->snaped) return STATE_CANCEL;
         goxel_set_help_text(goxel, "Click and drag to set selection.");
-        data->start_pos = curs->pos;
-        box = get_box(&data->start_pos, &curs->pos, &curs->normal, 0,
+        selection->start_pos = curs->pos;
+        box = get_box(&selection->start_pos, &curs->pos, &curs->normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         if (curs->flags & CURSOR_PRESSED) {
-            state = STATE_PAINT;
+            tool->state = STATE_PAINT;
         }
         break;
 
     case STATE_PAINT:
         goxel_set_help_text(goxel, "Drag.");
-        if (!curs->snaped) return state;
-        goxel->selection = get_box(&data->start_pos,
+        if (!curs->snaped) return tool->state;
+        goxel->selection = get_box(&selection->start_pos,
                                    &curs->pos, &curs->normal, 0,
                                    &goxel->plane);
         if (!(curs->flags & CURSOR_PRESSED)) {
@@ -162,7 +156,7 @@ static int iter(int state, void **data_, const vec4_t *view)
 
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
-        if (!curs->snaped) return state;
+        if (!curs->snaped) return tool->state;
         // XXX: clean this up...
         curs->pos = vec3_add(goxel->tool_plane.p,
                     vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
@@ -172,7 +166,7 @@ static int iter(int state, void **data_, const vec4_t *view)
         curs->pos.z = round(curs->pos.z - 0.5) + 0.5;
 
 
-        goxel->selection = get_box(&data->start_pos,
+        goxel->selection = get_box(&selection->start_pos,
                                    &curs->pos, &curs->normal, 0,
                                    &goxel->plane);
         if (curs->flags & CURSOR_PRESSED) {
@@ -195,7 +189,7 @@ static int iter(int state, void **data_, const vec4_t *view)
         goxel_set_help_text(goxel, "Drag to move face");
         render_img(&goxel->rend, NULL, &face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
-            state = STATE_MOVE_FACE;
+            tool->state = STATE_MOVE_FACE;
             goxel->tool_plane = plane(curs->pos, curs->normal,
                                       vec3_normalized(face_plane.u));
         }
@@ -214,7 +208,7 @@ static int iter(int state, void **data_, const vec4_t *view)
         curs->pos.z = round(curs->pos.z);
         if (g_drag_mode == DRAG_RESIZE) {
             goxel->selection = box_move_face(goxel->selection,
-                                             data->snap_face, curs->pos);
+                                             selection->snap_face, curs->pos);
         } else {
             vec3_t d = vec3_add(goxel->selection.p, face_plane.n);
             vec3_t ofs = vec3_project(vec3_sub(curs->pos, d), n);
@@ -222,20 +216,17 @@ static int iter(int state, void **data_, const vec4_t *view)
         }
         break;
     }
-    return state;
+    return tool->state;
 }
 
-static int cancel(int state, void **data_)
+static int cancel(tool_t *tool)
 {
-    if (!(*data_)) return 0;
+    if (!tool) return 0;
     goxel->tool_plane = plane_null;
-    data_t *data = get_data(data_);
-    free(data);
-    *data_ = NULL;
     return 0;
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     int x, y, z, w, h, d;
     box_t *box = &goxel->selection;
@@ -270,7 +261,7 @@ static int gui(void)
     return 0;
 }
 
-TOOL_REGISTER(TOOL_SELECTION, selection,
+TOOL_REGISTER(TOOL_SELECTION, selection, tool_selection_t,
               .iter_fn = iter,
               .cancel_fn = cancel,
               .gui_fn = gui,

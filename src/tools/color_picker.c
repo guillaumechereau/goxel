@@ -19,7 +19,12 @@
 #include "goxel.h"
 
 
-int tool_color_picker_iter(int state, void **data, const vec4_t *view)
+typedef struct {
+    tool_t tool;
+} tool_pick_color_t;
+
+
+int tool_color_picker_iter(tool_t *tool, const vec4_t *view)
 {
     uvec4b_t color;
     mesh_t *mesh = goxel->layers_mesh;
@@ -36,13 +41,13 @@ int tool_color_picker_iter(int state, void **data, const vec4_t *view)
     return 0;
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     tool_gui_color();
     return 0;
 }
 
-TOOL_REGISTER(TOOL_PICK_COLOR, pick_color,
+TOOL_REGISTER(TOOL_PICK_COLOR, pick_color, tool_pick_color_t,
              .iter_fn = tool_color_picker_iter,
              .gui_fn = gui,
              .shortcut = "C",

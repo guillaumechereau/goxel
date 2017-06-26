@@ -33,19 +33,11 @@ enum {
 };
 
 typedef struct {
+    tool_t tool;
     vec3_t start_pos;
     mesh_t *mesh_orig;
-} data_t;
+} tool_shape_t;
 
-static data_t *get_data(void **data_)
-{
-    data_t **data = (data_t**)data_;
-    if (!*data) {
-        *data = calloc(1, sizeof(**data));
-        (*data)->mesh_orig = mesh_copy(goxel->image->active_layer->mesh);
-    }
-    return *data;
-}
 
 static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
                      float r, const plane_t *plane)
@@ -83,62 +75,65 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static int iter(int state, void **data_, const vec4_t *view)
+static int iter(tool_t *tool, const vec4_t *view)
 {
-    data_t *data = get_data(data_);
+    tool_shape_t *shape = (tool_shape_t*)tool;
     box_t box;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
     mesh_t *mesh = goxel->image->active_layer->mesh;
     cursor_t *curs = &goxel->cursor;
     curs->snap_offset = 0.5;
 
-    switch (state) {
+    if (!shape->mesh_orig)
+        shape->mesh_orig = mesh_copy(goxel->image->active_layer->mesh);
+
+    switch (tool->state) {
 
     case STATE_IDLE:
         if (curs->snaped) return STATE_SNAPED;
         break;
 
     case STATE_SNAPED | STATE_ENTER:
-        mesh_set(data->mesh_orig, mesh);
+        mesh_set(shape->mesh_orig, mesh);
         break;
 
     case STATE_SNAPED:
         if (!curs->snaped) return STATE_CANCEL;
         goxel_set_help_text(goxel, "Click and drag to draw.");
-        data->start_pos = curs->pos;
-        box = get_box(&data->start_pos, &curs->pos, &curs->normal, 0,
+        shape->start_pos = curs->pos;
+        box = get_box(&shape->start_pos, &curs->pos, &curs->normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
         if (curs->flags & CURSOR_PRESSED) {
-            state = STATE_PAINT;
+            tool->state = STATE_PAINT;
             image_history_push(goxel->image);
         }
         break;
 
     case STATE_PAINT:
         goxel_set_help_text(goxel, "Drag.");
-        if (!curs->snaped) return state;
-        box = get_box(&data->start_pos, &curs->pos, &curs->normal,
+        if (!curs->snaped) return tool->state;
+        box = get_box(&shape->start_pos, &curs->pos, &curs->normal,
                       0, &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
-        mesh_set(mesh, data->mesh_orig);
+        mesh_set(mesh, shape->mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
         if (!(curs->flags & CURSOR_PRESSED)) {
             if (!goxel->tool_shape_two_steps) {
                 goxel_update_meshes(goxel, -1);
-                state = STATE_END;
+                tool->state = STATE_END;
             } else {
                 goxel->tool_plane = plane_from_normal(curs->pos,
                                                       goxel->plane.u);
-                state = STATE_PAINT2;
+                tool->state = STATE_PAINT2;
             }
         }
         break;
 
     case STATE_PAINT2:
         goxel_set_help_text(goxel, "Adjust height.");
-        if (!curs->snaped) return state;
+        if (!curs->snaped) return tool->state;
         // XXX: clean this up...
         curs->pos = vec3_add(goxel->tool_plane.p,
                        vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
@@ -147,10 +142,10 @@ static int iter(int state, void **data_, const vec4_t *view)
         curs->pos.y = round(curs->pos.y - 0.5) + 0.5;
         curs->pos.z = round(curs->pos.z - 0.5) + 0.5;
 
-        box = get_box(&data->start_pos, &curs->pos, &curs->normal, 0,
+        box = get_box(&shape->start_pos, &curs->pos, &curs->normal, 0,
                       &goxel->plane);
         render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
-        mesh_set(mesh, data->mesh_orig);
+        mesh_set(mesh, shape->mesh_orig);
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
         if (curs->flags & CURSOR_PRESSED) {
@@ -165,21 +160,20 @@ static int iter(int state, void **data_, const vec4_t *view)
         break;
 
     }
-    return state;
+    return tool->state;
 }
 
-static int cancel(int state, void **data_)
+static int cancel(tool_t *tool)
 {
-    if (!(*data_)) return 0;
-    data_t *data = get_data(data_);
-    mesh_set(goxel->image->active_layer->mesh, data->mesh_orig);
-    mesh_delete(data->mesh_orig);
-    free(data);
-    *data_ = NULL;
+    if (!tool) return 0;
+    tool_shape_t *shape = (tool_shape_t*)tool;
+    mesh_set(goxel->image->active_layer->mesh, shape->mesh_orig);
+    mesh_delete(shape->mesh_orig);
+    shape->mesh_orig = NULL;
     return 0;
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     tool_gui_smoothness();
     gui_checkbox("Two steps", &goxel->tool_shape_two_steps,
@@ -194,7 +188,7 @@ static int gui(void)
     return 0;
 }
 
-TOOL_REGISTER(TOOL_SHAPE, shape,
+TOOL_REGISTER(TOOL_SHAPE, shape, tool_shape_t,
               .iter_fn = iter,
               .cancel_fn = cancel,
               .gui_fn = gui,

@@ -957,6 +957,7 @@ int proc_list_examples(void (*f)(int index,
                                  const char *name, const char *code,
                                  void *user), void *user);
 
+
 // Represent a 3d cursor.
 // The program keeps track of two cursors, that are then used by the tools.
 
@@ -975,6 +976,43 @@ typedef struct cursor {
     int    flags; // Union of CURSOR_* values.
     float  snap_offset; // XXX: fix this.
 } cursor_t;
+
+// Tools
+typedef struct tool tool_t;
+struct tool {
+    int id;
+    const char *action_id;
+    int (*iter_fn)(tool_t *tool, const vec4_t *view);
+    int (*cancel_fn)(tool_t *tool);
+    int (*gui_fn)(tool_t *tool);
+    const char *shortcut;
+    int state; // XXX: to be removed I guess.
+};
+
+#define TOOL_REGISTER(id_, name_, klass_, ...) \
+    static klass_ GOX_tool_##id_ = {\
+            .tool = { \
+                .id = id_, .action_id = "tool_set_" #name_, __VA_ARGS__ \
+            } \
+        }; \
+    static void GOX_register_tool_##tool_() __attribute__((constructor)); \
+    static void GOX_register_tool_##tool_() { \
+        tool_register_(&GOX_tool_##id_.tool); \
+    }
+
+void tool_register_(const tool_t *tool);
+tool_t *tool_get(int id);
+int tool_iter(tool_t *tool, const vec4_t *view);
+void tool_cancel(tool_t *tool);
+int tool_gui(tool_t *tool);
+
+int tool_gui_snap(void);
+int tool_gui_mode(void);
+int tool_gui_shape(void);
+int tool_gui_radius(void);
+int tool_gui_smoothness(void);
+int tool_gui_color(void);
+
 
 
 typedef struct goxel
@@ -1010,15 +1048,10 @@ typedef struct goxel
 
     cursor_t   cursor;
 
-    int        tool;
+    tool_t     *tool;
     float      tool_radius;
 
     // Some state for the tool iter functions.
-    // XXX: move this into tool.c
-    int        tool_state;
-    // data pointer that can be set and used by the tools.
-    void       *tool_data;
-
     plane_t    tool_plane;
     bool       tool_shape_two_steps; // Param of the shape tool.
 
@@ -1097,37 +1130,6 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path);
 
 void save_to_file(goxel_t *goxel, const char *path);
 void load_from_file(goxel_t *goxel, const char *path);
-
-
-typedef struct tool tool_t;
-struct tool {
-    int id;
-    const char *action_id;
-    int (*iter_fn)(int state, void **data, const vec4_t *view);
-    int (*cancel_fn)(int state, void **data);
-    int (*gui_fn)(void);
-    const char *shortcut;
-};
-
-#define TOOL_REGISTER(id_, name_, ...) \
-    static const tool_t GOX_tool_##id_ = {\
-            .id = id_, .action_id = "tool_set_" #name_, __VA_ARGS__}; \
-    static void GOX_register_tool_##tool_() __attribute__((constructor)); \
-    static void GOX_register_tool_##tool_() { \
-        tool_register_(&GOX_tool_##id_); \
-    }
-
-void tool_register_(const tool_t *tool);
-int tool_iter(int tool, int state, void **data, const vec4_t *view);
-void tool_cancel(int tool, int state, void **data);
-int tool_gui(int tool);
-
-int tool_gui_snap(void);
-int tool_gui_mode(void);
-int tool_gui_shape(void);
-int tool_gui_radius(void);
-int tool_gui_smoothness(void);
-int tool_gui_color(void);
 
 
 // #### Colors functions #######

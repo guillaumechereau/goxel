@@ -401,7 +401,7 @@ static void tools_panel(goxel_t *goxel)
 
     ImGui::GoxGroupBegin();
     for (i = 0; i < nb; i++) {
-        v = goxel->tool == values[i].tool;
+        v = goxel->tool->id == values[i].tool;
         sprintf(label, "%s", values[i].name);
         if (values[i].tool_id) {
             sprintf(action_id, "tool_set_%s", values[i].tool_id);
@@ -893,7 +893,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
 
     left_pane_width = 168;
-    if (current_panel == 0 && goxel->tool == TOOL_PROCEDURAL) {
+    if (current_panel == 0 && goxel->tool->id == TOOL_PROCEDURAL) {
         left_pane_width = 400;
     }
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
@@ -1009,7 +1009,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
         if (goxel->tool_radius != last_tool_radius) {
             goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
-            tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
+            tool_cancel(goxel->tool);
         }
 
         // XXX: this won't map correctly to a French keyboard.  Unfortunately as

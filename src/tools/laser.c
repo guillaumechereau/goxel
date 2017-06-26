@@ -28,7 +28,11 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
-static int iter(int state, void **data, const vec4_t *view)
+typedef struct {
+    tool_t tool;
+} tool_laser_t;
+
+static int iter(tool_t *tool, const vec4_t *view)
 {
     box_t box;
     painter_t painter = goxel->painter;
@@ -56,7 +60,7 @@ static int iter(int state, void **data, const vec4_t *view)
     mat4_iscale(&box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
     render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
-    switch (state) {
+    switch (tool->state) {
     case STATE_IDLE:
         if (curs->flags & CURSOR_PRESSED) return STATE_PAINT;
         break;
@@ -69,17 +73,17 @@ static int iter(int state, void **data, const vec4_t *view)
         goxel_update_meshes(goxel, -1);
         break;
     }
-    return state;
+    return tool->state;
 }
 
-static int gui(void)
+static int gui(tool_t *tool)
 {
     tool_gui_radius();
     tool_gui_smoothness();
     return 0;
 }
 
-TOOL_REGISTER(TOOL_LASER, laser,
+TOOL_REGISTER(TOOL_LASER, laser, tool_laser_t,
               .iter_fn = iter,
               .gui_fn = gui,
               .shortcut = "L",

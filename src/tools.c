@@ -28,19 +28,17 @@ enum {
     STATE_ENTER     = 0x0100,
 };
 
-static const tool_t *g_tools[TOOL_COUNT] = {};
 
 static int tool_set_action(const action_t *a, astack_t *s)
 {
-    tool_cancel(goxel->tool, goxel->tool_state, &goxel->tool_data);
-    goxel->tool = ((tool_t*)a->data)->id;
+    tool_cancel(goxel->tool);
+    goxel->tool = (tool_t*)a->data;
     return 0;
 }
 
 void tool_register_(const tool_t *tool)
 {
     action_t action;
-    g_tools[tool->id] = tool;
     action = (action_t) {
         .id = tool->action_id,
         .shortcut = tool->shortcut,
@@ -51,44 +49,41 @@ void tool_register_(const tool_t *tool)
     action_register(&action);
 }
 
-int tool_iter(int tool, int state, void **data, const vec4_t *view)
+int tool_iter(tool_t *tool, const vec4_t *view)
 {
     int ret;
-    assert(tool >= 0 && tool < TOOL_COUNT);
-    assert(g_tools[tool]->iter_fn);
 
+    assert(tool);
     while (true) {
-        ret = g_tools[tool]->iter_fn(state, data, view);
+        ret = tool->iter_fn(tool, view);
         if (ret == STATE_CANCEL) {
-            tool_cancel(tool, state, data);
+            tool_cancel(tool);
             ret = 0;
         }
         if (ret == STATE_END) ret = 0;
-        if ((ret & STATE_MASK) != (state & STATE_MASK))
+        if ((ret & STATE_MASK) != (tool->state & STATE_MASK))
             ret |= STATE_ENTER;
         else
             ret &= ~STATE_ENTER;
 
-        if (ret == state) break;
-        state = ret;
+        if (ret == tool->state) break;
+        tool->state = ret;
     }
 
-    return ret;
+    return tool->state;
 }
 
-void tool_cancel(int tool, int state, void **data)
+void tool_cancel(tool_t *tool)
 {
-    if (g_tools[tool]->cancel_fn)
-        g_tools[tool]->cancel_fn(state, data);
-    assert(*data == NULL);
-    goxel->tool_state = 0;
+    if (!tool) return;
+    if (tool->cancel_fn) tool->cancel_fn(tool);
     goxel_update_meshes(goxel, MESH_LAYERS);
 }
 
-int tool_gui(int tool)
+int tool_gui(tool_t *tool)
 {
-    if (!g_tools[tool]->gui_fn) return 0;
-    return g_tools[tool]->gui_fn();
+    if (!tool->gui_fn) return 0;
+    return tool->gui_fn(tool);
 }
 
 
