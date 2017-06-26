@@ -136,6 +136,13 @@ static int iter(tool_t *tool, const vec4_t *view)
         mesh_op(mesh, &goxel->painter, &box);
         goxel_update_meshes(goxel, MESH_LAYERS);
 
+        if (curs->flags & CURSOR_PRESSED) {
+            tool->state = STATE_PAINT;
+            brush->last_op.mode = 0;
+            mesh_set(mesh, brush->mesh_orig);
+            image_history_push(goxel->image);
+            mesh_clear(brush->mesh);
+        }
         if (shift) {
             render_line(&goxel->rend, &brush->start_pos, &curs->pos, NULL);
             if (curs->flags & CURSOR_PRESSED) {
@@ -149,13 +156,6 @@ static int iter(tool_t *tool, const vec4_t *view)
                 goxel_update_meshes(goxel, MESH_LAYERS);
                 brush->start_pos = curs->pos;
             }
-        }
-        if (curs->flags & CURSOR_PRESSED) {
-            tool->state = STATE_PAINT;
-            brush->last_op.mode = 0;
-            mesh_set(mesh, brush->mesh_orig);
-            image_history_push(goxel->image);
-            mesh_clear(brush->mesh);
         }
         break;
 
