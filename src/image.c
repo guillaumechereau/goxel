@@ -305,6 +305,7 @@ void image_clear_layer(layer_t *layer, const box_t *box)
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_SUB,
+        .color = uvec4b(255, 255, 255, 255),
     };
     mesh_op(layer->mesh, &painter, box);
 }
