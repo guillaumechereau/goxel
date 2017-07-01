@@ -107,6 +107,7 @@ static int on_drag(const gesture3d_t *gest, void *user)
     if (gest->state == GESTURE_END) {
         goxel_update_meshes(goxel, -1);
         shape->adjust = goxel->tool_shape_two_steps;
+        mesh_set(shape->mesh_orig, mesh);
     }
     return 0;
 }
@@ -142,6 +143,7 @@ static int on_adjust(const gesture3d_t *gest, void *user)
 
     if (gest->state == GESTURE_END) {
         goxel->tool_plane = plane_null;
+        mesh_set(shape->mesh_orig, mesh);
         shape->adjust = false;
     }
 
