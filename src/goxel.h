@@ -845,6 +845,7 @@ struct gesture
 int gesture_update(int nb, gesture_t *gestures[],
                    const inputs_t *inputs, const vec4_t *view, void *user);
 
+
 // #############################
 
 typedef struct camera camera_t;
@@ -977,6 +978,19 @@ typedef struct cursor {
     int    flags; // Union of CURSOR_* values.
     float  snap_offset; // XXX: fix this.
 } cursor_t;
+
+// #### 3d gestures
+typedef struct gesture3d gesture3d_t;
+struct gesture3d
+{
+    int         type;
+    int         state;
+    cursor_t    cursor;
+    int         (*callback)(const gesture3d_t *gest, void *user);
+};
+
+int gesture3d(gesture3d_t *gest, const cursor_t *curs, void *user);
+
 
 // Tools
 typedef struct tool tool_t;
