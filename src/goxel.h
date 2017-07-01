@@ -985,11 +985,11 @@ struct gesture3d
 {
     int         type;
     int         state;
-    cursor_t    cursor;
-    int         (*callback)(const gesture3d_t *gest, void *user);
+    cursor_t    *cursor;
+    int         (*callback)(gesture3d_t *gest, void *user);
 };
 
-int gesture3d(gesture3d_t *gest, const cursor_t *curs, void *user);
+int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user);
 
 
 // Tools

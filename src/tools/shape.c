@@ -70,10 +70,10 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static int on_hover(const gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest, void *user)
 {
     box_t box;
-    const cursor_t *curs = &gest->cursor;
+    cursor_t *curs = gest->cursor;
     uvec4b_t box_color = HEXCOLOR(0xffff00ff);
 
     goxel_set_help_text(goxel, "Click and drag to draw.");
@@ -83,12 +83,12 @@ static int on_hover(const gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_drag(const gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
     mesh_t *mesh = goxel->image->active_layer->mesh;
     box_t box;
-    const cursor_t *curs = &gest->cursor;
+    cursor_t *curs = gest->cursor;
 
     if (shape->adjust) return GESTURE_FAILED;
 
@@ -112,10 +112,10 @@ static int on_drag(const gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_adjust(const gesture3d_t *gest, void *user)
+static int on_adjust(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
-    const cursor_t *curs = &gest->cursor;
+    cursor_t *curs = gest->cursor;
     vec3_t pos;
     box_t box;
     mesh_t *mesh = goxel->image->active_layer->mesh;

@@ -18,16 +18,16 @@
 
 #include "goxel.h"
 
-int gesture3d(gesture3d_t *gest, const cursor_t *curs, void *user)
+int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     bool pressed = curs->flags & CURSOR_PRESSED;
-    int ret;
+    int r, ret = 0;
+    gest->cursor = curs;
 
     if (gest->state == GESTURE_FAILED && !pressed)
         gest->state = GESTURE_POSSIBLE;
 
     if (gest->type == GESTURE_DRAG) {
-        gest->cursor = *curs;
         switch (gest->state) {
         case GESTURE_POSSIBLE:
             if (curs->snaped && pressed) gest->state = GESTURE_BEGIN;
@@ -41,7 +41,6 @@ int gesture3d(gesture3d_t *gest, const cursor_t *curs, void *user)
     }
 
     if (gest->type == GESTURE_HOVER) {
-        gest->cursor = *curs;
         switch (gest->state) {
         case GESTURE_POSSIBLE:
             if (curs->snaped && !pressed) gest->state = GESTURE_BEGIN;
@@ -55,9 +54,14 @@ int gesture3d(gesture3d_t *gest, const cursor_t *curs, void *user)
     }
 
     if (IS_IN(gest->state, GESTURE_BEGIN, GESTURE_UPDATE, GESTURE_END)) {
-        ret = gest->callback(gest, user);
-        if (ret == GESTURE_FAILED) gest->state = GESTURE_FAILED;
+        r = gest->callback(gest, user);
+        if (r == GESTURE_FAILED) {
+            gest->state = GESTURE_FAILED;
+            ret = 0;
+        } else {
+            ret = gest->state;
+        }
     }
     if (gest->state == GESTURE_END) gest->state = GESTURE_POSSIBLE;
-    return 0;
+    return ret;
 }

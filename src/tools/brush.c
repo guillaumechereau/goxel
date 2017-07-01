@@ -91,13 +91,13 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
-static int on_drag(const gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_brush_t *brush = (tool_brush_t*)user;
     mesh_t *mesh = goxel->image->active_layer->mesh;
     painter_t painter2;
     box_t box;
-    const cursor_t *curs = &gest->cursor;
+    cursor_t *curs = gest->cursor;
     bool shift = curs->flags & CURSOR_SHIFT;
 
     if (gest->state == GESTURE_BEGIN) {
@@ -137,11 +137,11 @@ static int on_drag(const gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_hover(const gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest, void *user)
 {
     mesh_t *mesh = goxel->image->active_layer->mesh;
     tool_brush_t *brush = (tool_brush_t*)user;
-    const cursor_t *curs = &gest->cursor;
+    cursor_t *curs = gest->cursor;
     box_t box;
     bool shift = curs->flags & CURSOR_SHIFT;
 

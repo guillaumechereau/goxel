@@ -30,7 +30,7 @@ typedef struct {
 
 } tool_laser_t;
 
-static int on_drag(const gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_laser_t *laser = (tool_laser_t*)user;
     mesh_t *mesh = goxel->image->active_layer->mesh;
