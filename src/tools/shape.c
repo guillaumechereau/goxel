@@ -18,24 +18,19 @@
 
 #include "goxel.h"
 
-enum {
-    STATE_IDLE      = 0,
-    STATE_CANCEL    = 1,
-    STATE_END       = 2,
-
-    STATE_SNAPED,
-    STATE_PAINT,
-    STATE_PAINT2,
-    STATE_WAIT_UP,
-    STATE_WAIT_KEY_UP,
-
-    STATE_ENTER = 0x0100,
-};
 
 typedef struct {
     tool_t tool;
     vec3_t start_pos;
     mesh_t *mesh_orig;
+    bool   adjust;
+
+    struct {
+        gesture3d_t drag;
+        gesture3d_t hover;
+        gesture3d_t adjust;
+    } gestures;
+
 } tool_shape_t;
 
 
@@ -75,91 +70,114 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     return box;
 }
 
+static int on_hover(const gesture3d_t *gest, void *user)
+{
+    box_t box;
+    const cursor_t *curs = &gest->cursor;
+    uvec4b_t box_color = HEXCOLOR(0xffff00ff);
+
+    goxel_set_help_text(goxel, "Click and drag to draw.");
+    box = get_box(&curs->pos, &curs->pos, &curs->normal, 0,
+                  &goxel->plane);
+    render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
+    return 0;
+}
+
+static int on_drag(const gesture3d_t *gest, void *user)
+{
+    tool_shape_t *shape = user;
+    mesh_t *mesh = goxel->image->active_layer->mesh;
+    box_t box;
+    const cursor_t *curs = &gest->cursor;
+
+    if (shape->adjust) return GESTURE_FAILED;
+
+    if (gest->state == GESTURE_BEGIN) {
+        mesh_set(shape->mesh_orig, mesh);
+        shape->start_pos = curs->pos;
+    }
+
+    goxel_set_help_text(goxel, "Drag.");
+    box = get_box(&shape->start_pos, &curs->pos, &curs->normal,
+                  0, &goxel->plane);
+    mesh_set(mesh, shape->mesh_orig);
+    mesh_op(mesh, &goxel->painter, &box);
+    goxel_update_meshes(goxel, MESH_LAYERS);
+
+    if (gest->state == GESTURE_END) {
+        goxel_update_meshes(goxel, -1);
+        shape->adjust = goxel->tool_shape_two_steps;
+    }
+    return 0;
+}
+
+static int on_adjust(const gesture3d_t *gest, void *user)
+{
+    tool_shape_t *shape = user;
+    const cursor_t *curs = &gest->cursor;
+    vec3_t pos;
+    box_t box;
+    mesh_t *mesh = goxel->image->active_layer->mesh;
+
+    goxel_set_help_text(goxel, "Adjust height.");
+
+    if (gest->state == GESTURE_BEGIN) {
+        goxel->tool_plane = plane_from_normal(curs->pos,
+                                              goxel->plane.u);
+    }
+
+    pos = vec3_add(goxel->tool_plane.p,
+                   vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
+                                goxel->plane.n));
+    pos.x = round(pos.x - 0.5) + 0.5;
+    pos.y = round(pos.y - 0.5) + 0.5;
+    pos.z = round(pos.z - 0.5) + 0.5;
+
+    box = get_box(&shape->start_pos, &pos, &curs->normal, 0,
+                  &goxel->plane);
+
+    mesh_set(mesh, shape->mesh_orig);
+    mesh_op(mesh, &goxel->painter, &box);
+    goxel_update_meshes(goxel, MESH_LAYERS);
+
+    if (gest->state == GESTURE_END) {
+        goxel->tool_plane = plane_null;
+        shape->adjust = false;
+    }
+
+    return 0;
+}
+
 static int iter(tool_t *tool, const vec4_t *view)
 {
     tool_shape_t *shape = (tool_shape_t*)tool;
-    box_t box;
-    uvec4b_t box_color = HEXCOLOR(0xffff00ff);
-    mesh_t *mesh = goxel->image->active_layer->mesh;
     cursor_t *curs = &goxel->cursor;
     curs->snap_offset = 0.5;
 
     if (!shape->mesh_orig)
         shape->mesh_orig = mesh_copy(goxel->image->active_layer->mesh);
 
-    switch (tool->state) {
-
-    case STATE_IDLE:
-        if (curs->snaped) return STATE_SNAPED;
-        break;
-
-    case STATE_SNAPED | STATE_ENTER:
-        mesh_set(shape->mesh_orig, mesh);
-        break;
-
-    case STATE_SNAPED:
-        if (!curs->snaped) return STATE_CANCEL;
-        goxel_set_help_text(goxel, "Click and drag to draw.");
-        shape->start_pos = curs->pos;
-        box = get_box(&shape->start_pos, &curs->pos, &curs->normal, 0,
-                      &goxel->plane);
-        render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
-        if (curs->flags & CURSOR_PRESSED) {
-            tool->state = STATE_PAINT;
-            image_history_push(goxel->image);
-        }
-        break;
-
-    case STATE_PAINT:
-        goxel_set_help_text(goxel, "Drag.");
-        if (!curs->snaped) return tool->state;
-        box = get_box(&shape->start_pos, &curs->pos, &curs->normal,
-                      0, &goxel->plane);
-        render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
-        mesh_set(mesh, shape->mesh_orig);
-        mesh_op(mesh, &goxel->painter, &box);
-        goxel_update_meshes(goxel, MESH_LAYERS);
-        if (!(curs->flags & CURSOR_PRESSED)) {
-            if (!goxel->tool_shape_two_steps) {
-                goxel_update_meshes(goxel, -1);
-                tool->state = STATE_END;
-            } else {
-                goxel->tool_plane = plane_from_normal(curs->pos,
-                                                      goxel->plane.u);
-                tool->state = STATE_PAINT2;
-            }
-        }
-        break;
-
-    case STATE_PAINT2:
-        goxel_set_help_text(goxel, "Adjust height.");
-        if (!curs->snaped) return tool->state;
-        // XXX: clean this up...
-        curs->pos = vec3_add(goxel->tool_plane.p,
-                       vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
-                                    goxel->plane.n));
-        curs->pos.x = round(curs->pos.x - 0.5) + 0.5;
-        curs->pos.y = round(curs->pos.y - 0.5) + 0.5;
-        curs->pos.z = round(curs->pos.z - 0.5) + 0.5;
-
-        box = get_box(&shape->start_pos, &curs->pos, &curs->normal, 0,
-                      &goxel->plane);
-        render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
-        mesh_set(mesh, shape->mesh_orig);
-        mesh_op(mesh, &goxel->painter, &box);
-        goxel_update_meshes(goxel, MESH_LAYERS);
-        if (curs->flags & CURSOR_PRESSED) {
-            goxel_update_meshes(goxel, -1);
-            return STATE_WAIT_UP;
-        }
-        break;
-
-    case STATE_WAIT_UP:
-        goxel->tool_plane = plane_null;
-        if (!(curs->flags & CURSOR_PRESSED)) return STATE_END;
-        break;
-
+    if (!shape->gestures.drag.type) {
+        shape->gestures.drag = (gesture3d_t) {
+            .type = GESTURE_DRAG,
+            .callback = on_drag,
+        };
+        shape->gestures.hover = (gesture3d_t) {
+            .type = GESTURE_HOVER,
+            .callback = on_hover,
+        };
+        shape->gestures.adjust = (gesture3d_t) {
+            .type = GESTURE_HOVER,
+            .callback = on_adjust,
+        };
     }
+
+    gesture3d(&shape->gestures.drag, curs, shape);
+    if (!shape->adjust)
+        gesture3d(&shape->gestures.hover, curs, shape);
+    else
+        gesture3d(&shape->gestures.adjust, curs, shape);
+
     return tool->state;
 }
 

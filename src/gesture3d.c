@@ -20,18 +20,22 @@
 
 int gesture3d(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
+    bool pressed = curs->flags & CURSOR_PRESSED;
+    int ret;
+
+    if (gest->state == GESTURE_FAILED && !pressed)
+        gest->state = GESTURE_POSSIBLE;
+
     if (gest->type == GESTURE_DRAG) {
         gest->cursor = *curs;
         switch (gest->state) {
         case GESTURE_POSSIBLE:
-            if (curs->snaped && (curs->flags & CURSOR_PRESSED))
-                gest->state = GESTURE_BEGIN;
+            if (curs->snaped && pressed) gest->state = GESTURE_BEGIN;
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
             gest->state = GESTURE_UPDATE;
-            if (!(curs->flags & CURSOR_PRESSED))
-                gest->state = GESTURE_END;
+            if (!pressed) gest->state = GESTURE_END;
             break;
         }
     }
@@ -40,20 +44,20 @@ int gesture3d(gesture3d_t *gest, const cursor_t *curs, void *user)
         gest->cursor = *curs;
         switch (gest->state) {
         case GESTURE_POSSIBLE:
-            if (curs->snaped && !(curs->flags & CURSOR_PRESSED))
-                gest->state = GESTURE_BEGIN;
+            if (curs->snaped && !pressed) gest->state = GESTURE_BEGIN;
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
             gest->state = GESTURE_UPDATE;
-            if (curs->flags & CURSOR_PRESSED)
-                gest->state = GESTURE_END;
+            if (pressed) gest->state = GESTURE_END;
             break;
         }
     }
 
-    if (IS_IN(gest->state, GESTURE_BEGIN, GESTURE_UPDATE, GESTURE_END))
-        gest->callback(gest, user);
+    if (IS_IN(gest->state, GESTURE_BEGIN, GESTURE_UPDATE, GESTURE_END)) {
+        ret = gest->callback(gest, user);
+        if (ret == GESTURE_FAILED) gest->state = GESTURE_FAILED;
+    }
     if (gest->state == GESTURE_END) gest->state = GESTURE_POSSIBLE;
     return 0;
 }
