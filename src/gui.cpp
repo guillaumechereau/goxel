@@ -116,6 +116,10 @@ typedef struct gui_t {
     prog_t  prog;
     GLuint  array_buffer;
     GLuint  index_buffer;
+    struct {
+        gesture_t drag;
+        gesture_t hover;
+    }       gestures;;
 
 } gui_t;
 
@@ -306,6 +310,17 @@ static void init_ImGui()
     style.Colors[ImGuiCol_MenuBarBg] = IMHEXCOLOR(0x607272FF);
 }
 
+
+static int on_gesture(const gesture_t *gest, void *user)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    io.MousePos = ImVec2(gest->pos.x, gest->pos.y);
+    io.MouseDown[0] = (gest->type == GESTURE_DRAG) &&
+                      (gest->state != GESTURE_END);
+    return 0;
+}
+
+
 void gui_init(void)
 {
     gui = (gui_t*)calloc(1, sizeof(*gui));
@@ -313,6 +328,10 @@ void gui_init(void)
     GL(glGenBuffers(1, &gui->array_buffer));
     GL(glGenBuffers(1, &gui->index_buffer));
     init_ImGui();
+    gui->gestures.drag.type = GESTURE_DRAG;
+    gui->gestures.drag.callback = on_gesture;
+    gui->gestures.hover.type = GESTURE_HOVER;
+    gui->gestures.hover.callback = on_gesture;
 
     g_tex_icons = texture_new_image("asset://data/icons.png", TF_NEAREST);
     GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
@@ -813,15 +832,13 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     bool open_about = false;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
-
-    io.DisplaySize = ImVec2((float)goxel->screen_size.x, (float)goxel->screen_size.y);
-
-    // Setup time step
+    gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
+    vec4_t display_rect = vec4(0, 0,
+                               goxel->screen_size.x, goxel->screen_size.y);
+    io.DisplaySize = ImVec2((float)goxel->screen_size.x,
+                            (float)goxel->screen_size.y);
     io.DeltaTime = 1.0 / 60;
-
-    io.MousePos = ImVec2(inputs->mouse_pos.x, inputs->mouse_pos.y);
-    io.MouseDown[0] = inputs->mouse_down[0];
-    io.MouseDown[1] = inputs->mouse_down[1];
+    gesture_update(2, gestures, inputs, &display_rect, NULL);
     io.MouseWheel = inputs->mouse_wheel;
 
     for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
