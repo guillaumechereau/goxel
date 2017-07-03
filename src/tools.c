@@ -18,16 +18,6 @@
 
 #include "goxel.h"
 
-static const int STATE_MASK = 0x00ff;
-
-enum {
-    STATE_IDLE      = 0,
-    STATE_CANCEL    = 1,
-    STATE_END       = 2,
-    // Added to a state the first time we enter into it.
-    STATE_ENTER     = 0x0100,
-};
-
 
 static int tool_set_action(const action_t *a, astack_t *s)
 {
