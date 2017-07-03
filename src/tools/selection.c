@@ -18,21 +18,6 @@
 
 #include "goxel.h"
 
-enum {
-    STATE_IDLE      = 0,
-    STATE_CANCEL    = 1,
-    STATE_END       = 2,
-
-    STATE_SNAPED,
-    STATE_PAINT,
-    STATE_PAINT2,
-    STATE_WAIT_UP,
-    STATE_WAIT_KEY_UP,
-    STATE_SNAPED_FACE,
-    STATE_MOVE_FACE,
-
-    STATE_ENTER     = 0x0100,
-};
 
 enum {
     DRAG_RESIZE,
