@@ -1009,7 +1009,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
         if (goxel->tool_radius != last_tool_radius) {
             goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
-            tool_cancel(goxel->tool);
         }
 
         // XXX: this won't map correctly to a French keyboard.  Unfortunately as

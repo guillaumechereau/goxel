@@ -229,12 +229,6 @@ end:
     return tool->state;
 }
 
-static int cancel(tool_t *tool)
-{
-    if (!tool) return 0;
-    goxel->tool_plane = plane_null;
-    return 0;
-}
 
 static int gui(tool_t *tool)
 {
@@ -273,7 +267,6 @@ static int gui(tool_t *tool)
 
 TOOL_REGISTER(TOOL_SELECTION, selection, tool_selection_t,
               .iter_fn = iter,
-              .cancel_fn = cancel,
               .gui_fn = gui,
               .shortcut = "R",
 )

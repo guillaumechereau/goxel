@@ -627,13 +627,11 @@ void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
 
 void goxel_undo(goxel_t *goxel)
 {
-    tool_cancel(goxel->tool);
     image_undo(goxel->image);
 }
 
 void goxel_redo(goxel_t *goxel)
 {
-    tool_cancel(goxel->tool);
     image_redo(goxel->image);
 }
 
@@ -726,7 +724,6 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void clear_selection(void)
 {
-    if (goxel->tool->id == TOOL_SELECTION) tool_cancel(goxel->tool);
     goxel->selection = box_null;
 }
 
@@ -770,7 +767,6 @@ ACTION_REGISTER(grid_visible,
 static void copy_action(void)
 {
     painter_t painter;
-    tool_cancel(goxel->tool);
     mesh_delete(goxel->clipboard.mesh);
     goxel->clipboard.box = goxel->selection;
     goxel->clipboard.mesh = mesh_copy(goxel->image->active_layer->mesh);
@@ -791,7 +787,6 @@ static void past_action(void)
     vec3_t p1, p2;
     mat4_t mat = mat4_identity;
     if (!goxel->clipboard.mesh) return;
-    tool_cancel(goxel->tool);
 
     tmp = mesh_copy(goxel->clipboard.mesh);
     if (    !box_is_null(goxel->selection) &&

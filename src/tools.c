@@ -31,7 +31,6 @@ enum {
 
 static int tool_set_action(const action_t *a, astack_t *s)
 {
-    tool_cancel(goxel->tool);
     goxel->tool = (tool_t*)a->data;
     return 0;
 }
@@ -51,33 +50,9 @@ void tool_register_(const tool_t *tool)
 
 int tool_iter(tool_t *tool, const vec4_t *view)
 {
-    int ret;
-
     assert(tool);
-    while (true) {
-        ret = tool->iter_fn(tool, view);
-        if (ret == STATE_CANCEL) {
-            tool_cancel(tool);
-            ret = 0;
-        }
-        if (ret == STATE_END) ret = 0;
-        if ((ret & STATE_MASK) != (tool->state & STATE_MASK))
-            ret |= STATE_ENTER;
-        else
-            ret &= ~STATE_ENTER;
-
-        if (ret == tool->state) break;
-        tool->state = ret;
-    }
-
+    tool->state = tool->iter_fn(tool, view);
     return tool->state;
-}
-
-void tool_cancel(tool_t *tool)
-{
-    if (!tool) return;
-    if (tool->cancel_fn) tool->cancel_fn(tool);
-    goxel_update_meshes(goxel, MESH_LAYERS);
 }
 
 int tool_gui(tool_t *tool)

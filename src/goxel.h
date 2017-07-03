@@ -998,7 +998,6 @@ struct tool {
     int id;
     const char *action_id;
     int (*iter_fn)(tool_t *tool, const vec4_t *view);
-    int (*cancel_fn)(tool_t *tool);
     int (*gui_fn)(tool_t *tool);
     const char *shortcut;
     int state; // XXX: to be removed I guess.
@@ -1018,7 +1017,6 @@ struct tool {
 void tool_register_(const tool_t *tool);
 tool_t *tool_get(int id);
 int tool_iter(tool_t *tool, const vec4_t *view);
-void tool_cancel(tool_t *tool);
 int tool_gui(tool_t *tool);
 
 int tool_gui_snap(void);

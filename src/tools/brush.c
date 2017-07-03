@@ -195,17 +195,6 @@ static int iter(tool_t *tool, const vec4_t *view)
     return tool->state;
 }
 
-static int cancel(tool_t *tool)
-{
-    if (!tool) return 0;
-    tool_brush_t *brush = (tool_brush_t*)tool;
-    mesh_set(goxel->image->active_layer->mesh, brush->mesh_orig);
-    mesh_delete(brush->mesh_orig);
-    mesh_delete(brush->mesh);
-    brush->mesh_orig = NULL;
-    brush->mesh = NULL;
-    return 0;
-}
 
 static int gui(tool_t *tool)
 {
@@ -221,7 +210,6 @@ static int gui(tool_t *tool)
 
 TOOL_REGISTER(TOOL_BRUSH, brush, tool_brush_t,
               .iter_fn = iter,
-              .cancel_fn = cancel,
               .gui_fn = gui,
               .shortcut = "B"
 )
