@@ -1036,6 +1036,7 @@ typedef struct goxel
 
     mesh_t     *layers_mesh; // All the layers combined.
     mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
+    mesh_t     *tool_mesh;   // Preview of the tool action.
 
     struct     {
         mesh_t *mesh;

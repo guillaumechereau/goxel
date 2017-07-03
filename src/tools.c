@@ -21,6 +21,11 @@
 
 static int tool_set_action(const action_t *a, astack_t *s)
 {
+    if (goxel->tool_mesh) {
+        mesh_delete(goxel->tool_mesh);
+        goxel->tool_mesh = NULL;
+        goxel_update_meshes(goxel, MESH_LAYERS);
+    }
     goxel->tool = (tool_t*)a->data;
     return 0;
 }

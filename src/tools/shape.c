@@ -95,6 +95,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN) {
         mesh_set(shape->mesh_orig, mesh);
         shape->start_pos = curs->pos;
+        image_history_push(goxel->image);
     }
 
     goxel_set_help_text(goxel, "Drag.");

@@ -146,21 +146,24 @@ static int on_hover(gesture3d_t *gest, void *user)
     box_t box;
     bool shift = curs->flags & CURSOR_SHIFT;
 
-    if (gest->state == GESTURE_BEGIN)
-        mesh_set(brush->mesh_orig, mesh);
-
     if (shift)
         render_line(&goxel->rend, &brush->start_pos, &curs->pos, NULL);
 
-    if (check_can_skip(brush, curs, goxel->painter.mode))
+    if (goxel->tool_mesh && check_can_skip(brush, curs, goxel->painter.mode))
         return 0;
 
     box = get_box(&curs->pos, NULL, &curs->normal,
                   goxel->tool_radius, NULL);
 
-    mesh_set(mesh, brush->mesh_orig);
-    mesh_op(mesh, &goxel->painter, &box);
+    if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
+    mesh_set(goxel->tool_mesh, mesh);
+    mesh_op(goxel->tool_mesh, &goxel->painter, &box);
     goxel_update_meshes(goxel, MESH_LAYERS);
+
+    if (gest->state == GESTURE_END) {
+        mesh_delete(goxel->tool_mesh);
+        goxel->tool_mesh = NULL;
+    }
 
     return 0;
 }

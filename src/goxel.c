@@ -567,11 +567,23 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
 void goxel_update_meshes(goxel_t *goxel, int mask)
 {
     layer_t *layer;
+    mesh_t *mesh;
+
+    // Hack so that we never use the tool mesh in the pick layer.
+    if (goxel->tool_mesh && (mask & MESH_PICK)) {
+        mesh_delete(goxel->tool_mesh);
+        goxel->tool_mesh = NULL;
+    }
+
     if (mask & MESH_LAYERS) {
         mesh_clear(goxel->layers_mesh);
         DL_FOREACH(goxel->image->layers, layer) {
             if (!layer->visible) continue;
-            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_OVER);
+            mesh = layer->mesh;
+            if (    goxel->tool_mesh &&
+                    (mesh == goxel->image->active_layer->mesh))
+                mesh = goxel->tool_mesh;
+            mesh_merge(goxel->layers_mesh, mesh, MODE_OVER);
         }
     }
     if (mask & MESH_PICK)
