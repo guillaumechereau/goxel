@@ -116,7 +116,8 @@ static int on_drag(gesture3d_t *gest, void *user)
         }
     }
 
-    if (check_can_skip(brush, curs, goxel->painter.mode))
+    if (    (gest->state == GESTURE_UPDATE) &&
+            (check_can_skip(brush, curs, goxel->painter.mode)))
         return 0;
 
     box = get_box(&curs->pos, NULL, &curs->normal,
@@ -132,7 +133,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (gest->state == GESTURE_END) {
         mesh_set(goxel->pick_mesh, goxel->layers_mesh);
         mesh_set(brush->mesh_orig, mesh);
-        goxel_update_meshes(goxel, MESH_LAYERS);
+        goxel_update_meshes(goxel, -1);
     }
     return 0;
 }
