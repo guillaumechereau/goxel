@@ -182,6 +182,11 @@ DECL void vec3_isub(vec3_t *a, vec3_t b)
     *a = vec3_sub(*a, b);
 }
 
+DECL vec2_t vec2_mul(vec2_t a, real_t k)
+{
+    return vec2(a.x * k, a.y * k);
+}
+
 DECL vec3_t vec3_mul(vec3_t a, real_t k)
 {
     return vec3(a.x * k, a.y * k, a.z * k);
@@ -216,6 +221,11 @@ DECL real_t vec2_norm(vec2_t a)
     return sqrt(vec2_norm2(a));
 }
 
+DECL vec2_t vec2_normalized(vec2_t a)
+{
+    return vec2_mul(a, 1 / vec2_norm(a));
+}
+
 DECL real_t vec3_norm(vec3_t a)
 {
     return sqrt(vec3_norm2(a));
@@ -246,6 +256,12 @@ DECL real_t vec3_dist2(vec3_t a, vec3_t b)
     return vec3_norm2(vec3_sub(a, b));
 }
 
+DECL vec2_t vec2_mix(vec2_t a, vec2_t b, real_t t)
+{
+    return vec2(a.x * (1 - t) + b.x * t,
+                a.y * (1 - t) + b.y * t);
+}
+
 DECL vec3_t vec3_mix(vec3_t a, vec3_t b, real_t t)
 {
     return vec3(a.x * (1 - t) + b.x * t,
@@ -271,6 +287,11 @@ DECL bool vec3_ilerp_const(vec3_t *a, vec3_t b, real_t d)
 DECL vec3_t vec3_project(vec3_t a, vec3_t b)
 {
     return vec3_mul(b, vec3_dot(a, b) / vec3_dot(b, b));
+}
+
+DECL real_t vec2_cross(vec2_t a, vec2_t b)
+{
+    return a.x * b.y - a.y * b.x;
 }
 
 DECL vec3_t vec3_cross(vec3_t a, vec3_t b)
