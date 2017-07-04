@@ -970,7 +970,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     // Call mouse_in_view with inputs in the view referential.
     inputs_t inputs2 = *inputs;
-    inputs2.mouse_pos.y = io.DisplaySize.y - inputs2.mouse_pos.y;
+    for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
+        inputs2.touches[i].pos.y = io.DisplaySize.y - inputs2.touches[i].pos.y;
+    }
+
     goxel_mouse_in_view(goxel, &view_rect, &inputs2);
 
     render_axis_arrows(goxel, &view_size);

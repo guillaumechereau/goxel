@@ -492,7 +492,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     // XXX: need to do it only on key down!
     if (inputs->keys['C']) {
         vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, view, &inputs->mouse_pos,
+        if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
                                     goxel->pick_mesh, &p, &n)) {
             goxel->camera.target = p;
             goxel->camera.move_to_target = true;

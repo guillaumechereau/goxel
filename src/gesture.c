@@ -20,8 +20,8 @@
 
 // Still experimental gestures manager.
 
-// XXX: this value should be set depending.
-static float g_start_dist = 0;
+// XXX: this value should be set depending on the screen resolution.
+static float g_start_dist = 8;
 
 static bool rect_contains(vec4_t rect, vec2_t pos)
 {
@@ -29,44 +29,51 @@ static bool rect_contains(vec4_t rect, vec2_t pos)
            pos.y >= rect.y && pos.y < rect.y + rect.w;
 }
 
-static int update(gesture_t *gest, const inputs_t *inputs)
+static int update(gesture_t *gest, const inputs_t *inputs, int mask)
 {
+    const touch_t *ts = inputs->touches;
+
     if (gest->type == GESTURE_DRAG) {
-        gest->pos = inputs->mouse_pos;
         switch (gest->state) {
         case GESTURE_POSSIBLE:
-            if (inputs->mouse_down[gest->button]) {
-                gest->start_pos = inputs->mouse_pos;
-                gest->state = rect_contains(gest->view, inputs->mouse_pos) ?
-                    GESTURE_RECOGNISED: GESTURE_FAILED;
+            if (ts[0].down[gest->button]) {
+                gest->start_pos = ts[0].pos;
+                gest->pos = gest->start_pos;
+                if (!rect_contains(gest->view, gest->pos)) {
+                    gest->state = GESTURE_FAILED;
+                    break;
+                }
+                gest->state = (mask & (GESTURE_CLICK | GESTURE_PINCH)) ?
+                            GESTURE_RECOGNISED: GESTURE_BEGIN;
             }
             break;
         case GESTURE_RECOGNISED:
-            if (vec2_dist(gest->start_pos, gest->pos) >= g_start_dist)
+            if (vec2_dist(gest->start_pos, ts[0].pos) >= g_start_dist)
                 gest->state = GESTURE_BEGIN;
-            if (!inputs->mouse_down[gest->button])
+            if (!ts[0].down[gest->button])
                 gest->state = GESTURE_POSSIBLE;
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
+            gest->pos = ts[0].pos;
             gest->state = GESTURE_UPDATE;
-            if (!inputs->mouse_down[gest->button])
+            if (!ts[0].down[gest->button])
                 gest->state = GESTURE_END;
             break;
         }
     }
 
     if (gest->type == GESTURE_CLICK) {
-        gest->pos = inputs->mouse_pos;
+        gest->pos = ts[0].pos;
         switch (gest->state) {
             case GESTURE_POSSIBLE:
-            if (inputs->mouse_down[gest->button]) {
-                gest->start_pos = inputs->mouse_pos;
+            if (ts[0].down[gest->button]) {
+                gest->start_pos = ts[0].pos;
                 gest->state = GESTURE_RECOGNISED;
             }
             break;
             case GESTURE_RECOGNISED:
-            if (!inputs->mouse_down[gest->button]) {
+            if (!ts[0].down[gest->button]) {
                 gest->state = GESTURE_TRIGGERED;
             }
             break;
@@ -80,13 +87,20 @@ static int update(gesture_t *gest, const inputs_t *inputs)
 int gesture_update(int nb, gesture_t *gestures[],
                    const inputs_t *inputs, const vec4_t *view, void *user)
 {
-    int i, nb_recognised = 0, ret = 0;
-    bool began = false;
+    int i, j, mask = 0;
     bool allup = true;
-    gesture_t *gest;
+    gesture_t *gest, *triggered = NULL;
 
-    for (i = 0; i < ARRAY_SIZE(inputs->mouse_down); i++)
-        if (inputs->mouse_down[i]) allup = false;
+    for (i = 0; !allup && i < ARRAY_SIZE(inputs->touches); i++) {
+        for (j = 0; !allup && j < ARRAY_SIZE(inputs->touches[i].down); j++) {
+            if (inputs->touches[i].down[i]) allup = false;
+        }
+    }
+
+    for (i = 0; i < nb; i++) {
+        gest = gestures[i];
+        if (gest->state == GESTURE_POSSIBLE) mask |= gest->type;
+    }
 
     for (i = 0; i < nb; i++) {
         gest = gestures[i];
@@ -97,35 +111,34 @@ int gesture_update(int nb, gesture_t *gestures[],
         if (IS_IN(gest->state, GESTURE_END, GESTURE_TRIGGERED))
             gest->state = GESTURE_POSSIBLE;
 
-        update(gest, inputs);
-        if (IS_IN(gest->state, GESTURE_BEGIN, GESTURE_TRIGGERED)) {
-            began = true;
-            break;
-        }
-        if (gest->state == GESTURE_RECOGNISED)
-            nb_recognised++;
-    }
-    for (i = 0; i < nb; i++) {
-        gest = gestures[i];
-        if (began && gest->state == GESTURE_RECOGNISED)
-            gest->state = GESTURE_FAILED;
+        update(gest, inputs, mask);
         if (IS_IN(gest->state, GESTURE_BEGIN, GESTURE_UPDATE, GESTURE_END,
                                GESTURE_TRIGGERED)) {
             gest->callback(gest, user);
-            ret = 1;
+            triggered = gest;
+            break;
+        }
+    }
+
+    // If one gesture started, fail all the other gestures.
+    if (triggered && triggered->state == GESTURE_BEGIN) {
+        for (i = 0; i < nb; i++) {
+            gest = gestures[i];
+            if (gest != triggered)
+                gest->state = GESTURE_FAILED;
         }
     }
 
     // Special case for the hover gesture.
-    if (!ret && allup) {
+    if (!triggered && allup) {
         for (i = 0; i < nb; i++) {
             gest = gestures[i];
             if (gest->type != GESTURE_HOVER) continue;
-            gest->pos = inputs->mouse_pos;
+            gest->pos = inputs->touches[0].pos;
             gest->callback(gest, user);
-            ret = 1;
+            triggered = gest;
         }
     }
 
-    return ret;
+    return triggered ? 1 : 0;
 }

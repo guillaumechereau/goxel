@@ -800,13 +800,20 @@ enum {
     SNAP_ROUNDED        = 1 << 8, // Round the result.
 };
 
+// A finger touch or mouse click state.
+// `down` represent each button in the mouse.  For touch events only the
+// first element is set.
+typedef struct {
+    vec2_t  pos;
+    bool    down[3];
+} touch_t;
+
 typedef struct inputs
 {
     int         window_size[2];
     bool        keys[512]; // Table of all the pressed keys.
     uint32_t    chars[16];
-    vec2_t      mouse_pos;
-    bool        mouse_down[3];
+    touch_t     touches[4];
     float       mouse_wheel;
 } inputs_t;
 
@@ -816,9 +823,10 @@ typedef struct inputs
 
 enum {
     // Supported type of gestures.
-    GESTURE_DRAG = 1,
-    GESTURE_CLICK,
-    GESTURE_HOVER,
+    GESTURE_DRAG        = 1 << 0,
+    GESTURE_CLICK       = 1 << 1,
+    GESTURE_PINCH       = 1 << 2,
+    GESTURE_HOVER       = 1 << 3,
 
     // Gesture states.
     GESTURE_POSSIBLE = 0,

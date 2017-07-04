@@ -121,13 +121,13 @@ static void loop_function(void) {
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    g_inputs->mouse_pos = vec2(xpos * fb_size[0] / win_size[0],
-                               ypos * fb_size[1] / win_size[1]);
-    g_inputs->mouse_down[0] =
+    g_inputs->touches[0].pos = vec2(xpos * fb_size[0] / win_size[0],
+                                    ypos * fb_size[1] / win_size[1]);
+    g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-    g_inputs->mouse_down[1] =
+    g_inputs->touches[0].down[1] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
-    g_inputs->mouse_down[2] =
+    g_inputs->touches[0].down[2] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
     goxel_iter(g_goxel, g_inputs);
     goxel_render(g_goxel);
