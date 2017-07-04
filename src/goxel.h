@@ -846,8 +846,9 @@ struct gesture
     int     state;
     vec4_t  view;
     vec2_t  pos;
-    vec2_t  start_pos;
+    vec2_t  start_pos[2];
     float   pinch;
+    float   rotation;
     int     (*callback)(const gesture_t *gest, void *user);
 };
 
