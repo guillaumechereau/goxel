@@ -80,6 +80,27 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
         }
     }
 
+    if (gest->type == GESTURE_PINCH) {
+        switch (gest->state) {
+        case GESTURE_POSSIBLE:
+            if (ts[0].down[0] && ts[1].down[0]) {
+                gest->state = GESTURE_BEGIN;
+                gest->start_pos = ts[0].pos;
+                gest->pos = ts[1].pos;
+                gest->pinch = 1;
+            }
+            break;
+        case GESTURE_BEGIN:
+        case GESTURE_UPDATE:
+            gest->state = GESTURE_UPDATE;
+            gest->pinch = vec2_dist(ts[0].pos, ts[1].pos) /
+                          vec2_dist(gest->start_pos, gest->pos);
+            if (!ts[0].down[0] || !ts[1].down[0])
+                gest->state = GESTURE_END;
+            break;
+        }
+    }
+
     return 0;
 }
 
