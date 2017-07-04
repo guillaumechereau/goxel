@@ -399,7 +399,9 @@ void block_fill(block_t *block,
 static bool can_skip(uvec4b_t v, int mode, uvec4b_t c)
 {
     return (v.a && (mode == MODE_OVER) && uvec4b_equal(c, v)) ||
-            (!v.a && IS_IN(mode, MODE_SUB, MODE_PAINT, MODE_SUB_CLAMP));
+            (!v.a && (mode == MODE_SUB ||
+                      mode == MODE_PAINT ||
+                      mode == MODE_SUB_CLAMP));
 }
 
 static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
@@ -464,9 +466,9 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
         if (can_skip(BLOCK_AT(block, x, y, z), mode, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         k = shape_func(&p, &size, painter->smoothness);
-        k = clamp(k / painter->smoothness, -1, 1);
-        v = (k + 1) * 0.5;
-        if (invert) v = 1.0 - v;
+        k = clamp(k / painter->smoothness, -1.0f, 1.0f);
+        v = k / 2.0f + 0.5f;
+        if (invert) v = 1.0f - v;
         if (v) {
             block_prepare_write(block);
             c.a *= v;
