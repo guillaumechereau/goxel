@@ -526,7 +526,7 @@ namespace ImGui {
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
         const ImVec2 button_sz = ImVec2(
-                g.FontSize, g.FontSize) + style.FramePadding * 2.0f;
+                g.FontSize * 2.0f, g.FontSize + style.FramePadding.y * 2.0f);
         int button_flags =
             ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         float speed = step / 20;
@@ -535,10 +535,12 @@ namespace ImGui {
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
 
         ImGui::SetWindowFontScale(0.75);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         if (ImGui::ButtonEx("◀", button_sz, button_flags)) {
             (*v) -= step;
             ret = true;
         }
+        ImGui::PopStyleVar();
         ImGui::SetWindowFontScale(1);
 
         ImGui::SameLine();
@@ -552,10 +554,12 @@ namespace ImGui {
         ImGui::SameLine();
 
         ImGui::SetWindowFontScale(0.75);
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         if (ImGui::ButtonEx("▶", button_sz, button_flags)) {
             (*v) += step;
             ret = true;
         }
+        ImGui::PopStyleVar();
         ImGui::SetWindowFontScale(1);
 
         ImGui::PopStyleVar();

@@ -1184,7 +1184,7 @@ bool gui_selectable_icon(const char *name, bool *v, int icon);
 bool gui_color(uvec4b_t *color);
 bool gui_input_text(const char *label, char *buf, int size);
 bool gui_input_text_multiline(const char *label, char *buf, int size,
-                              float height);
+                              float width, float height);
 void gui_input_text_multiline_highlight(int line);
 bool gui_combo(const char *label, int *v, const char **names, int nb);
 

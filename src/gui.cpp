@@ -116,14 +116,21 @@ typedef struct gui_t {
     prog_t  prog;
     GLuint  array_buffer;
     GLuint  index_buffer;
+    int     min_panel_size;
     struct {
         gesture_t drag;
         gesture_t hover;
-    }       gestures;;
+    }       gestures;
 
 } gui_t;
 
 static gui_t *gui = NULL;
+
+// Notify the gui that we want the panel size to be at least as large as
+// the last item.
+static void auto_adjust_panel_size(void) {
+    gui->min_panel_size = max(gui->min_panel_size, ImGui::GetItemRectMax().x);
+}
 
 static void init_prog(prog_t *p)
 {
@@ -259,6 +266,7 @@ static void load_fonts_texture()
 
 static void init_ImGui()
 {
+    float padding_k = 1;
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = 1.0f/60.0f;
 
@@ -295,7 +303,7 @@ static void init_ImGui()
     style.WindowRounding = 0;
     style.WindowPadding = ImVec2(4, 4);
     style.ItemSpacing = ImVec2(4, 4);
-    style.FramePadding = ImVec2(4, 2);
+    style.FramePadding = ImVec2(4 * padding_k, 2 * padding_k);
 
     style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x607272FF);
     style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
@@ -436,6 +444,8 @@ static void tools_panel(goxel_t *goxel)
         auto_grid(nb, i, 4);
     }
     ImGui::GoxGroupEnd();
+    auto_adjust_panel_size();
+
     if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
         tool_gui(goxel->tool);
 }
@@ -483,6 +493,7 @@ static void layers_panel(goxel_t *goxel)
         ImGui::InputText("##name", layer->name, sizeof(layer->name));
         i++;
         ImGui::PopID();
+        auto_adjust_panel_size();
     }
     ImGui::GoxAction("img_new_layer", "Add", 0, "");
     ImGui::SameLine();
@@ -527,6 +538,7 @@ static void palette_panel(goxel_t *goxel)
         ImGui::GoxPaletteEntry(&p->entries[i].color, &goxel->painter.color);
         if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
+        auto_adjust_panel_size();
     }
 }
 
@@ -909,10 +921,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         ImGui::EndMenuBar();
     }
 
-    left_pane_width = 168;
+    left_pane_width = max(168, gui->min_panel_size);
+    gui->min_panel_size = 0;
+
+    /*
     if (current_panel == 0 && goxel->tool->id == TOOL_PROCEDURAL) {
         left_pane_width = 400;
     }
+    */
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
 
     const struct {
@@ -1110,7 +1126,9 @@ bool gui_action_button(const char *id, const char *label, float size,
 
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
 {
-    return GoxSelectable(name, v, 0, 0, tooltip, ImVec2(w, 18));
+    ImGuiStyle& style = ImGui::GetStyle();
+    float h = 14 + 2 * style.FramePadding.y;
+    return GoxSelectable(name, v, 0, 0, tooltip, ImVec2(w, h));
 }
 
 bool gui_selectable_icon(const char *name, bool *v, int icon)
@@ -1166,7 +1184,7 @@ bool gui_input_text(const char *label, char *txt, int size)
 }
 
 bool gui_input_text_multiline(const char *label, char *buf, int size,
-                              float height)
+                              float width, float height)
 {
     // We set the frame color to a semi transparent value, because otherwise
     // we cannot render the error highlight.
@@ -1175,8 +1193,9 @@ bool gui_input_text_multiline(const char *label, char *buf, int size,
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4 col = style.Colors[ImGuiCol_FrameBg];
     style.Colors[ImGuiCol_FrameBg].w = 0.5;
-    ret = InputTextMultiline(label, buf, size, ImVec2(-1, height));
+    ret = InputTextMultiline(label, buf, size, ImVec2(width, height));
     style.Colors[ImGuiCol_FrameBg] = col;
+    auto_adjust_panel_size();
     return ret;
 }
 

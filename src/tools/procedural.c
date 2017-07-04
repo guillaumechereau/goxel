@@ -103,7 +103,7 @@ static int gui(tool_t *tool)
     }
 
     if (gui_input_text_multiline("", prog_buff,
-                                 ARRAY_SIZE(prog_buff), 400)) {
+                                 ARRAY_SIZE(prog_buff), 300, 400)) {
         timer = 0;
         proc_parse(prog_buff, proc);
     }
