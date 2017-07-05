@@ -41,6 +41,8 @@
 		F07DEA2C1BD0F33A00BAA1AD /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F07DEA1D1BD0F33A00BAA1AD /* imgui.cpp */; };
 		F07DEA2D1BD0F33A00BAA1AD /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F07DEA1F1BD0F33A00BAA1AD /* imgui_draw.cpp */; };
 		F07DEA331BD1014800BAA1AD /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F07DEA321BD1014800BAA1AD /* CoreFoundation.framework */; };
+		F097B3F31F0C97DB00A3622B /* gesture.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F11F0C97DB00A3622B /* gesture.c */; };
+		F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F21F0C97DB00A3622B /* gesture3d.c */; };
 		F0A15FFC1E962F1300C6EF33 /* dicom.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF21E962F1300C6EF33 /* dicom.c */; };
 		F0A15FFD1E962F1300C6EF33 /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF31E962F1300C6EF33 /* png.c */; };
 		F0A15FFE1E962F1300C6EF33 /* povray.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF41E962F1300C6EF33 /* povray.c */; };
@@ -119,6 +121,8 @@
 		F07DEA2E1BD0F3D000BAA1AD /* goxel.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = goxel.pch; sourceTree = "<group>"; };
 		F07DEA2F1BD0FB5F00BAA1AD /* goxel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "goxel-Bridging-Header.h"; sourceTree = "<group>"; };
 		F07DEA321BD1014800BAA1AD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		F097B3F11F0C97DB00A3622B /* gesture.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gesture.c; sourceTree = "<group>"; };
+		F097B3F21F0C97DB00A3622B /* gesture3d.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gesture3d.c; sourceTree = "<group>"; };
 		F0A15FF21E962F1300C6EF33 /* dicom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dicom.c; sourceTree = "<group>"; };
 		F0A15FF31E962F1300C6EF33 /* png.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = png.c; sourceTree = "<group>"; };
 		F0A15FF41E962F1300C6EF33 /* povray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = povray.c; sourceTree = "<group>"; };
@@ -209,6 +213,8 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F097B3F11F0C97DB00A3622B /* gesture.c */,
+				F097B3F21F0C97DB00A3622B /* gesture3d.c */,
 				F037D5C61EA6069A00C96D10 /* tools */,
 				F037D5C41EA6066300C96D10 /* vec.c */,
 				F0A160061E962F4600C6EF33 /* marchingcube.c */,
@@ -430,6 +436,8 @@
 				F07DEA2D1BD0F33A00BAA1AD /* imgui_draw.cpp in Sources */,
 				F037D5C51EA6066300C96D10 /* vec.c in Sources */,
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
+				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,
+				F097B3F31F0C97DB00A3622B /* gesture.c in Sources */,
 				F07DEA0B1BD0F31500BAA1AD /* palette.c in Sources */,
 				F07DEA131BD0F31500BAA1AD /* utils.c in Sources */,
 				F07DEA041BD0F31500BAA1AD /* goxel.c in Sources */,

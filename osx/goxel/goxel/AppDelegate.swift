@@ -44,15 +44,15 @@ class GoxNSOpenGLView: NSOpenGLView {
     }
     
     func mouseEvent(_ id: Int, _ state: Int, _ event: NSEvent) {
-        appDelegate().inputs.mouse_pos = vec2(
+        appDelegate().inputs.touches.0.pos = vec2(
             Float(event.locationInWindow.x),
             Float(self.frame.height - event.locationInWindow.y))
         
         // XXX: find a way to make it work with unsage memory.
         switch (id) {
-        case 0: appDelegate().inputs.mouse_down.0 = (state != 0);
-        case 1: appDelegate().inputs.mouse_down.1 = (state != 0);
-        case 2: appDelegate().inputs.mouse_down.2 = (state != 0);
+        case 0: appDelegate().inputs.touches.0.down.0 = (state != 0);
+        case 1: appDelegate().inputs.touches.0.down.1 = (state != 0);
+        case 2: appDelegate().inputs.touches.0.down.2 = (state != 0);
         default: break;
         }
         // Force an update after a mousedown event to make sure that it will
