@@ -34,10 +34,10 @@ install:
 
 script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      make release;
+      make release || travis_terminate 1;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       cd osx/goxel;
-      xcodebuild build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO;
+      xcodebuild build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO || travis_terminate 1;
       cd ../..;
     fi
