@@ -155,7 +155,7 @@ static int iter(tool_t *tool, const vec4_t *view)
 {
     tool_shape_t *shape = (tool_shape_t*)tool;
     cursor_t *curs = &goxel->cursor;
-    curs->snap_offset = 0.5;
+    curs->snap_offset = (goxel->painter.mode == MODE_OVER) ? 0.5 : -0.5;
 
     if (!shape->mesh_orig)
         shape->mesh_orig = mesh_copy(goxel->image->active_layer->mesh);
