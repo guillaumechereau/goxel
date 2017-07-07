@@ -1147,9 +1147,6 @@ void goxel_update_meshes(goxel_t *goxel, int mask);
 void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
 void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);
 
-// XXX: use actions for all that!
-void goxel_undo(goxel_t *goxel);
-void goxel_redo(goxel_t *goxel);
 void goxel_import_image_plane(goxel_t *goxel, const char *path);
 // #############################
 

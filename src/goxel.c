@@ -637,16 +637,6 @@ void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
     va_end(args);
 }
 
-void goxel_undo(goxel_t *goxel)
-{
-    image_undo(goxel->image);
-}
-
-void goxel_redo(goxel_t *goxel)
-{
-    image_redo(goxel->image);
-}
-
 void goxel_import_image_plane(goxel_t *goxel, const char *path)
 {
     layer_t *layer;
@@ -892,4 +882,21 @@ ACTION_REGISTER(quit,
     .cfunc = quit,
     .csig = "v",
     .shortcut = "Ctrl Q",
+)
+
+static void undo(void) { image_undo(goxel->image); }
+static void redo(void) { image_redo(goxel->image); }
+
+ACTION_REGISTER(undo,
+    .help = "Undo",
+    .cfunc = undo,
+    .csig = "v",
+    .shortcut = "Ctrl Z",
+)
+
+ACTION_REGISTER(redo,
+    .help = "Redo",
+    .cfunc = redo,
+    .csig = "v",
+    .shortcut = "Ctrl Y",
 )

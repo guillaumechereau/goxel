@@ -812,7 +812,7 @@ static int check_action_shortcut(const action_t *action, void *user)
         check_key = false;
     }
     if (    (check_char && ImGui::GoxIsCharPressed(s[0])) ||
-            (check_key && ImGui::IsKeyPressed(s[0]))) {
+            (check_key && ImGui::IsKeyPressed(s[0], false))) {
         action_exec(action, "");
         return 1;
     }
@@ -860,8 +860,8 @@ static void render_menu(void)
     if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("Clear", "Delete"))
             action_exec2("layer_clear", "");
-        if (ImGui::MenuItem("Undo", "Ctrl Z")) goxel_undo(goxel);
-        if (ImGui::MenuItem("Redo", "Ctrl Y")) goxel_redo(goxel);
+        ImGui::GoxMenuItem("undo", "Undo");
+        ImGui::MenuItem("redo", "Redo");
         ImGui::GoxMenuItem("copy", "Copy");
         ImGui::GoxMenuItem("past", "Past");
         if (ImGui::MenuItem("Shift Alpha"))
@@ -1062,13 +1062,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         // either find a solution, either find a replacement for GLFW.
         // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
         // key 25 and 26, which might makes more sense.  Here I test for both.
-        if (    (io.KeyCtrl && ImGui::IsKeyPressed('Z', false)) ||
-                ImGui::GoxIsCharPressed(26))
-            goxel_undo(goxel);
-        if (    (io.KeyCtrl && ImGui::IsKeyPressed('Y', false)) ||
-                ImGui::GoxIsCharPressed(25))
-            goxel_redo(goxel);
-
+        if (ImGui::GoxIsCharPressed(26)) action_exec2("undo", "");
+        if (ImGui::GoxIsCharPressed(25)) action_exec2("redo", "");
         // Check the action shortcuts.
         actions_iter(check_action_shortcut, NULL);
     }
