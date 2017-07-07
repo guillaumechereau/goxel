@@ -754,13 +754,13 @@ static void import_image_plane(goxel_t *goxel)
     goxel_import_image_plane(goxel, path);
 }
 
-static void shift_alpha_popup(goxel_t *goxel, bool just_open)
+static void shift_alpha_popup(goxel_t *goxel)
 {
     static int v = 0;
-    static mesh_t *original_mesh;
+    static mesh_t *original_mesh = NULL;
     mesh_t *mesh;
     mesh = goxel->image->active_layer->mesh;
-    if (just_open)
+    if (!original_mesh)
         original_mesh = mesh_copy(mesh);
     if (ImGui::InputInt("shift", &v, 1)) {
         mesh_set(mesh, original_mesh);
@@ -774,7 +774,7 @@ static void shift_alpha_popup(goxel_t *goxel, bool just_open)
     }
 }
 
-static void about_popup(bool just_open)
+static void about_popup(void)
 {
     ImGui::Text("Goxel " GOXEL_VERSION_STR);
     ImGui::Text("Copyright © 2015-2017");
@@ -835,14 +835,65 @@ static int export_menu_action_callback(const action_t *a, void *user)
     return 0;
 }
 
+static void render_menu(void)
+{
+    bool popup_about = false;
+    bool popup_shift_alpha = false;
+
+    if (!ImGui::BeginMenuBar()) return;
+    if (ImGui::BeginMenu("File")) {
+        ImGui::GoxMenuItem("save", "Save");
+        ImGui::GoxMenuItem("save_as", "Save as");
+        ImGui::GoxMenuItem("open", "Open");
+        if (ImGui::BeginMenu("Import...")) {
+            if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
+            actions_iter(import_menu_action_callback, NULL);
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Export As..")) {
+            actions_iter(export_menu_action_callback, NULL);
+            ImGui::EndMenu();
+        }
+        ImGui::GoxMenuItem("quit", "Quit");
+        ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Edit")) {
+        if (ImGui::MenuItem("Clear", "Delete"))
+            action_exec2("layer_clear", "");
+        if (ImGui::MenuItem("Undo", "Ctrl Z")) goxel_undo(goxel);
+        if (ImGui::MenuItem("Redo", "Ctrl Y")) goxel_redo(goxel);
+        ImGui::GoxMenuItem("copy", "Copy");
+        ImGui::GoxMenuItem("past", "Past");
+        if (ImGui::MenuItem("Shift Alpha"))
+            popup_shift_alpha = true;
+        ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("View")) {
+        ImGui::GoxMenuItem("view_left", "Left");
+        ImGui::GoxMenuItem("view_right", "Right");
+        ImGui::GoxMenuItem("view_front", "Front");
+        ImGui::GoxMenuItem("view_top", "Top");
+        ImGui::GoxMenuItem("view_default", "Default");
+        ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Help")) {
+        if (ImGui::MenuItem("About"))
+            popup_about = true;
+        ImGui::EndMenu();
+    }
+    ImGui::EndMenuBar();
+
+    if (popup_about) ImGui::OpenPopup("About");
+    if (popup_shift_alpha) ImGui::OpenPopup("Shift Alpha");
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     static view_t view;
     static int current_panel = 0;
     float left_pane_width;
-    bool open_shift_alpha = false;
-    bool open_about = false;
     unsigned int i;
+    bool popup_opened = false;
     ImGuiIO& io = ImGui::GetIO();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
     vec4_t display_rect = vec4(0, 0,
@@ -877,49 +928,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Goxel", NULL, window_flags);
 
-    if (ImGui::BeginMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            ImGui::GoxMenuItem("save", "Save");
-            ImGui::GoxMenuItem("save_as", "Save as");
-            ImGui::GoxMenuItem("open", "Open");
-            if (ImGui::BeginMenu("Import...")) {
-                if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
-                actions_iter(import_menu_action_callback, NULL);
-                ImGui::EndMenu();
-            }
-            if (ImGui::BeginMenu("Export As..")) {
-                actions_iter(export_menu_action_callback, NULL);
-                ImGui::EndMenu();
-            }
-            ImGui::GoxMenuItem("quit", "Quit");
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Edit")) {
-            if (ImGui::MenuItem("Clear", "Delete"))
-                action_exec2("layer_clear", "");
-            if (ImGui::MenuItem("Undo", "Ctrl Z")) goxel_undo(goxel);
-            if (ImGui::MenuItem("Redo", "Ctrl Y")) goxel_redo(goxel);
-            ImGui::GoxMenuItem("copy", "Copy");
-            ImGui::GoxMenuItem("past", "Past");
-            if (ImGui::MenuItem("Shift Alpha"))
-                open_shift_alpha = true;
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("View")) {
-            ImGui::GoxMenuItem("view_left", "Left");
-            ImGui::GoxMenuItem("view_right", "Right");
-            ImGui::GoxMenuItem("view_front", "Front");
-            ImGui::GoxMenuItem("view_top", "Top");
-            ImGui::GoxMenuItem("view_default", "Default");
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Help")) {
-            if (ImGui::MenuItem("About"))
-                open_about = true;
-            ImGui::EndMenu();
-        }
-        ImGui::EndMenuBar();
-    }
+    render_menu();
 
     left_pane_width = max(168, gui->min_panel_size);
     gui->min_panel_size = 0;
@@ -965,6 +974,19 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::EndGroup();
     ImGui::EndChild();
 
+    if (ImGui::BeginPopupModal("Shift Alpha", NULL,
+                ImGuiWindowFlags_AlwaysAutoResize)) {
+        popup_opened = true;
+        shift_alpha_popup(goxel);
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("About", NULL,
+                ImGuiWindowFlags_AlwaysAutoResize)) {
+        popup_opened = true;
+        about_popup();
+        ImGui::EndPopup();
+    }
+
     ImGui::SameLine();
 
     ImGui::BeginChild("3d view", ImVec2(0, 0), false,
@@ -985,12 +1007,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                             canvas_size.x, canvas_size.y);
 
     // Call mouse_in_view with inputs in the view referential.
-    inputs_t inputs2 = *inputs;
-    for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
-        inputs2.touches[i].pos.y = io.DisplaySize.y - inputs2.touches[i].pos.y;
+    if (!popup_opened) {
+        inputs_t inputs2 = *inputs;
+        for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
+            inputs2.touches[i].pos.y =
+                io.DisplaySize.y - inputs2.touches[i].pos.y;
+        }
+        goxel_mouse_in_view(goxel, &view_rect, &inputs2);
     }
-
-    goxel_mouse_in_view(goxel, &view_rect, &inputs2);
 
     render_axis_arrows(goxel, &view_size);
 
@@ -1013,21 +1037,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
 
     ImGui::End();
-
-    if (open_shift_alpha)
-        ImGui::OpenPopup("Shift Alpha");
-    if (ImGui::BeginPopupModal("Shift Alpha", NULL,
-                ImGuiWindowFlags_AlwaysAutoResize)) {
-        shift_alpha_popup(goxel, open_shift_alpha);
-        ImGui::EndPopup();
-    }
-    if (open_about)
-        ImGui::OpenPopup("About");
-    if (ImGui::BeginPopupModal("About", NULL,
-                ImGuiWindowFlags_AlwaysAutoResize)) {
-        about_popup(open_about);
-        ImGui::EndPopup();
-    }
 
     // Handle the shortcuts.  XXX: this should be done with actions.
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
