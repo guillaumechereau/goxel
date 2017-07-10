@@ -613,7 +613,7 @@ namespace ImGui {
         if (memcmp(q, &last.quat, sizeof(*q)) == 0)
             eul = last.eul;
         else
-            eul = quat_to_eul(*q);
+            eul = quat_to_eul(*q, EULER_ORDER_DEFAULT);
         GoxGroupBegin(label);
         if (GoxInputAngle("x", &eul.x, -180, +180)) ret = true;
         if (GoxInputAngle("y", &eul.y, -180, +180)) ret = true;
@@ -621,7 +621,7 @@ namespace ImGui {
         GoxGroupEnd();
 
         if (ret) {
-            *q = eul_to_quat(eul);
+            *q = eul_to_quat(eul, EULER_ORDER_DEFAULT);
             last.quat = *q;
             last.eul = eul;
         }

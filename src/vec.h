@@ -90,9 +90,20 @@ typedef union {
     };
     struct {
         real_t a;
-        vec3_t v;
+        vec3_t vec;
     };
+    real_t v[4];
 } quat_t;
+
+enum  {
+    EULER_ORDER_DEFAULT = 0, // XYZ.
+    EULER_ORDER_XYZ = 0,
+    EULER_ORDER_XZY,
+    EULER_ORDER_YXZ,
+    EULER_ORDER_YZX,
+    EULER_ORDER_ZXY,
+    EULER_ORDER_ZYX
+};
 
 #define VEC2(x, y) {{x, y}}
 #define VEC3(x, y, z) {{x, y, z}}
@@ -631,11 +642,11 @@ DECL void mat4_imul_quat(mat4_t *mat, quat_t q)
     *mat = mat4_mul_quat(*mat, q);
 }
 
-void mat3_to_eul_(const mat3_t *m, vec3_t *e);
-DECL vec3_t mat3_to_eul(mat3_t m)
+void mat3_to_eul_(const mat3_t *m, int order, vec3_t *e);
+DECL vec3_t mat3_to_eul(mat3_t m, int order)
 {
     vec3_t e;
-    mat3_to_eul_(&m, &e);
+    mat3_to_eul_(&m, order, &e);
     return e;
 }
 
@@ -647,18 +658,18 @@ DECL mat3_t quat_to_mat3(quat_t q)
     return m;
 }
 
-DECL vec3_t quat_to_eul(quat_t q)
+DECL vec3_t quat_to_eul(quat_t q, int order)
 {
     mat3_t m;
     m = quat_to_mat3(q);
-    return mat3_to_eul(m);
+    return mat3_to_eul(m, order);
 }
 
-void eul_to_quat_(const vec3_t *e, quat_t *q);
-DECL quat_t eul_to_quat(vec3_t e)
+void eul_to_quat_(const vec3_t *e, int order, quat_t *q);
+DECL quat_t eul_to_quat(vec3_t e, int order)
 {
     quat_t q;
-    eul_to_quat_(&e, &q);
+    eul_to_quat_(&e, order, &q);
     return q;
 }
 
