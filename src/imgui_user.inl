@@ -234,16 +234,30 @@ namespace ImGui {
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target)
     {
         ImVec4 c;
-        bool ret;
-        c = uvec4b_to_imvec4(*color);
+        ImVec2 ra, rb;
+        bool ret, highlight, hovered, held;
+        ImRect bb;
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImGuiWindow* window = GetCurrentWindow();
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID("#colorbutton");
+        bb = ImRect(window->DC.CursorPos, window->DC.CursorPos +
+                    ImVec2(20, 15));
+        highlight = color->r == target->r &&
+                    color->g == target->g &&
+                    color->b == target->b &&
+                    color->a == target->a;
 
-        // XXX: set border color according to color.
-        if (uvec4b_equal(*color, *target))
-            window->Flags |= ImGuiWindowFlags_ShowBorders;
-        ret = ImGui::ColorButton(c, true);
+        c = uvec4b_to_imvec4(*color);
+        ItemSize(bb, 0.0);
+        ret = ButtonBehavior(bb, id, &hovered, &held);
+        RenderFrame(bb.Min, bb.Max, GetColorU32(c), false,
+                    style.FrameRounding);
+        if (highlight)
+            draw_list->AddRect(bb.Min, bb.Max, 0xFFFFFFFF, 0, 0, 1);
         if (ret) *target = *color;
-        window->Flags &= ~ImGuiWindowFlags_ShowBorders;
+        window->DC.LastItemRect = bb;
         return ret;
     }
 

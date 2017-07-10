@@ -129,7 +129,10 @@ static gui_t *gui = NULL;
 // Notify the gui that we want the panel size to be at least as large as
 // the last item.
 static void auto_adjust_panel_size(void) {
-    gui->min_panel_size = max(gui->min_panel_size, ImGui::GetItemRectMax().x);
+    float w = ImGui::GetItemRectMax().x;
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (ImGui::GetScrollMaxY() > 0) w += style.ScrollbarSize;
+    gui->min_panel_size = max(gui->min_panel_size, w);
 }
 
 static void init_prog(prog_t *p)
@@ -536,9 +539,9 @@ static void palette_panel(goxel_t *goxel)
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
         ImGui::GoxPaletteEntry(&p->entries[i].color, &goxel->painter.color);
+        auto_adjust_panel_size();
         if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
-        auto_adjust_panel_size();
     }
 }
 
