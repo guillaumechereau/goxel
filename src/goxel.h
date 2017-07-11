@@ -1148,6 +1148,10 @@ void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
 void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);
 
 void goxel_import_image_plane(goxel_t *goxel, const char *path);
+
+// Render the view into an RGBA buffer.
+void goxel_render_to_buf(uint8_t *buf, int w, int h);
+
 // #############################
 
 void save_to_file(goxel_t *goxel, const char *path);
