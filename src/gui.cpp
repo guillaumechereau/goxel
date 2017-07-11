@@ -121,7 +121,8 @@ typedef struct gui_t {
         gesture_t drag;
         gesture_t hover;
     }       gestures;
-
+    bool    mouse_in_view;
+    bool    capture_mouse;
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -324,10 +325,15 @@ static void init_ImGui()
 
 static int on_gesture(const gesture_t *gest, void *user)
 {
+    gui_t *gui = (gui_t*)user;
     ImGuiIO& io = ImGui::GetIO();
     io.MousePos = ImVec2(gest->pos.x, gest->pos.y);
     io.MouseDown[0] = (gest->type == GESTURE_DRAG) &&
                       (gest->state != GESTURE_END);
+    if (gest->state == GESTURE_BEGIN && !gui->mouse_in_view)
+        gui->capture_mouse = true;
+    if (gest->state == GESTURE_END)
+        gui->capture_mouse = false;
     return 0;
 }
 
@@ -896,7 +902,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     static int current_panel = 0;
     float left_pane_width;
     unsigned int i;
-    bool popup_opened = false;
     ImGuiIO& io = ImGui::GetIO();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
     vec4_t display_rect = vec4(0, 0,
@@ -904,7 +909,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     io.DisplaySize = ImVec2((float)goxel->screen_size.x,
                             (float)goxel->screen_size.y);
     io.DeltaTime = 1.0 / 60;
-    gesture_update(2, gestures, inputs, &display_rect, NULL);
+    gesture_update(2, gestures, inputs, &display_rect, gui);
     io.MouseWheel = inputs->mouse_wheel;
 
     for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
@@ -979,13 +984,11 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     if (ImGui::BeginPopupModal("Shift Alpha", NULL,
                 ImGuiWindowFlags_AlwaysAutoResize)) {
-        popup_opened = true;
         shift_alpha_popup(goxel);
         ImGui::EndPopup();
     }
     if (ImGui::BeginPopupModal("About", NULL,
                 ImGuiWindowFlags_AlwaysAutoResize)) {
-        popup_opened = true;
         about_popup();
         ImGui::EndPopup();
     }
@@ -1004,13 +1007,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     draw_list->AddCallback(render_view, &view);
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
+    gui->mouse_in_view = ImGui::IsItemHovered();
     vec2_t view_size = vec2(view.rect.z, view.rect.w);
     vec4_t view_rect = vec4(canvas_pos.x,
                             io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
                             canvas_size.x, canvas_size.y);
 
     // Call mouse_in_view with inputs in the view referential.
-    if (!popup_opened) {
+    if (!gui->capture_mouse) {
         inputs_t inputs2 = *inputs;
         for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
             inputs2.touches[i].pos.y =
