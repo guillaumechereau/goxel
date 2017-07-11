@@ -17,4 +17,6 @@
 #   define DEBUG 0
 #endif
 
+#pragma clang diagnostic ignored "-Wconversion"
+
 #endif /* goxel_pch */

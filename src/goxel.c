@@ -545,7 +545,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     render_box(rend, &goxel->selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
 
     // XXX: make a toggle for debug informations.
-    if (0) {
+    if ((0)) {
         box_t b;
         uvec4b_t c;
         c = HEXCOLOR(0x00FF0050);

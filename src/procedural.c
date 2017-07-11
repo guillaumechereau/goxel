@@ -550,7 +550,7 @@ int proc_parse(const char *txt, gox_proc_t *proc)
         return -1;
     }
     proc->state = PROC_READY;
-    if (0) visit(proc->prog, 0);
+    if ((0)) visit(proc->prog, 0);
     return 0;
 }
 

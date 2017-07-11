@@ -48,7 +48,7 @@ static int kv6_import(const char *path)
     int i, r, ret = 0, w, h, d, blklen, x, y, z = 0, nb, p = 0;
     uint32_t *xoffsets = NULL;
     uint16_t *xyoffsets = NULL;
-    uvec4b_t *cube = NULL, color;
+    uvec4b_t *cube = NULL, color = uvec4b_zero;
     (void)r;
     struct {
         uint32_t color;
