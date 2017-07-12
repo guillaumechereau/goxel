@@ -164,6 +164,16 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
     DL_PREPEND_ELEM(img->layers, other, layer);
 }
 
+static void image_move_layer_up(image_t *img, layer_t *layer)
+{
+    image_move_layer(img, layer, +1);
+}
+
+static void image_move_layer_down(image_t *img, layer_t *layer)
+{
+    image_move_layer(img, layer, -1);
+}
+
 layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
@@ -232,6 +242,15 @@ void image_move_camera(image_t *img, camera_t *cam, int d)
     DL_PREPEND_ELEM(img->cameras, other, cam);
 }
 
+static void image_move_camera_up(image_t *img, camera_t *cam)
+{
+    image_move_camera(img, cam, +1);
+}
+
+static void image_move_camera_down(image_t *img, camera_t *cam)
+{
+    image_move_camera(img, cam, -1);
+}
 
 void image_set(image_t *img, image_t *other)
 {
@@ -322,6 +341,7 @@ ACTION_REGISTER(img_new_layer,
     .cfunc = image_add_layer,
     .csig = "vp",
     .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_ADD,
 )
 
 ACTION_REGISTER(img_del_layer,
@@ -329,6 +349,7 @@ ACTION_REGISTER(img_del_layer,
     .cfunc = image_delete_layer,
     .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_REMOVE,
 )
 
 ACTION_REGISTER(img_move_layer,
@@ -336,6 +357,22 @@ ACTION_REGISTER(img_move_layer,
     .cfunc = image_move_layer,
     .csig = "vppi",
     .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_move_layer_up,
+    .help = "Move the active layer up",
+    .cfunc = image_move_layer_up,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_ARROW_UPWARD,
+)
+
+ACTION_REGISTER(img_move_layer_down,
+    .help = "Move the active layer down",
+    .cfunc = image_move_layer_down,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_ARROW_DOWNWARD,
 )
 
 ACTION_REGISTER(img_duplicate_layer,
@@ -358,6 +395,7 @@ ACTION_REGISTER(img_new_camera,
     .cfunc = image_add_camera,
     .csig = "vp",
     .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_ADD,
 )
 
 ACTION_REGISTER(img_del_camera,
@@ -365,6 +403,7 @@ ACTION_REGISTER(img_del_camera,
     .cfunc = image_delete_camera,
     .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_REMOVE,
 )
 
 ACTION_REGISTER(img_move_camera,
@@ -372,4 +411,20 @@ ACTION_REGISTER(img_move_camera,
     .cfunc = image_move_camera,
     .csig = "vppi",
     .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_move_camera_up,
+    .help = "Move the active camera up",
+    .cfunc = image_move_camera_up,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_ARROW_UPWARD,
+)
+
+ACTION_REGISTER(img_move_camera_down,
+    .help = "Move the active camera down",
+    .cfunc = image_move_camera_down,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_ARROW_DOWNWARD,
 )

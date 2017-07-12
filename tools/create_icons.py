@@ -27,6 +27,12 @@ SRC = [
     'shape_cube.svg',
     'shape_cylinder.svg',
     None,
+
+    'add.svg',
+    'remove.svg',
+    'arrow_downward.svg',
+    'arrow_upward.svg',
+    None,
 ]
 
 ret_img = PIL.Image.new('L', (256, 256))

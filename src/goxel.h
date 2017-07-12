@@ -407,6 +407,7 @@ struct action {
     const char      *help;          // Help text.
     int             flags;
     const char      *shortcut;      // Optional shortcut.
+    int             icon;           // Optional icon id.
     int             (*func)(const action_t *a, astack_t *s);
     void            *data;
 
@@ -461,6 +462,11 @@ enum {
     ICON_SHAPE_SPHERE = 16,
     ICON_SHAPE_CUBE = 17,
     ICON_SHAPE_CYLINDER = 18,
+
+    ICON_ADD = 24,
+    ICON_REMOVE = 25,
+    ICON_ARROW_DOWNWARD = 26,
+    ICON_ARROW_UPWARD = 27,
 };
 
 

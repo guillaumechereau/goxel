@@ -506,17 +506,17 @@ static void layers_panel(goxel_t *goxel)
         ImGui::PopID();
         auto_adjust_panel_size();
     }
-    ImGui::GoxAction("img_new_layer", "Add", 0, "");
+    gui_action_button("img_new_layer", "Add", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_del_layer", "Del", 0, "");
+    gui_action_button("img_del_layer", "Del", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "▴", 0, "ppi", NULL, NULL, +1);
+    gui_action_button("img_move_layer_up", "^", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_layer", "▾", 0, "ppi", NULL, NULL, -1);
+    gui_action_button("img_move_layer_down", "v", 0, "");
 
     ImGui::GoxGroupBegin();
-    ImGui::GoxAction("img_duplicate_layer", "Duplicate", 1, "");
-    ImGui::GoxAction("img_merge_visible_layers", "Merge visible", 1, "");
+    gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
+    gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
     ImGui::GoxGroupEnd();
 }
 
@@ -728,13 +728,13 @@ static void cameras_panel(goxel_t *goxel)
         ImGui::PopID();
         i++;
     }
-    ImGui::GoxAction("img_new_camera", "Add", 0, "");
+    gui_action_button("img_new_camera", "Add", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_del_camera", "Del", 0, "");
+    gui_action_button("img_del_camera", "Del", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_camera", "▴", 0, "ppi", NULL, NULL, +1);
+    gui_action_button("img_move_camera_up", "^", 0, "");
     ImGui::SameLine();
-    ImGui::GoxAction("img_move_camera", "▾", 0, "ppi", NULL, NULL, -1);
+    gui_action_button("img_move_camera_down", "v", 0, "");
 
     cam = &goxel->camera;
     ImGui::GoxInputFloat("dist", &cam->dist, 10.0);
@@ -1137,17 +1137,38 @@ bool gui_action_button(const char *id, const char *label, float size,
 {
     va_list ap;
     float w = GetContentRegionAvailWidth();
-    assert(action_get(id));
-    if (Button(label, ImVec2(size * w, 0))) {
-        va_start(ap, sig);
-        action_execv(action_get(id), sig, ap);
-        va_end(ap);
-        return true;
+    const action_t *action;
+    bool ret;
+    ImVec2 uv0, uv1;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    action = action_get(id);
+    assert(action);
+
+    PushID(action->id);
+    if (action->icon) {
+        ret = Button("", ImVec2(20, 20));
+        uv0 = ImVec2((action->icon % 8) / 8.0, (action->icon / 8) / 8.0);
+        uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
+        uv0 += ImVec2(3 / 128., 3 / 128.);
+        uv1 -= ImVec2(3 / 128., 3 / 128.);
+        draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                            GetItemRectMin(), GetItemRectMax(),
+                            uv0, uv1, 0xFF000000);
+    } else {
+        ret = Button(label, ImVec2(size * w, 0));
     }
     if (IsItemHovered()) {
         goxel_set_help_text(goxel, action_get(id)->help);
     }
-    return false;
+
+    if (ret) {
+        va_start(ap, sig);
+        action_execv(action_get(id), sig, ap);
+        va_end(ap);
+    }
+    PopID();
+    return ret;
 }
 
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
