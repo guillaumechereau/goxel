@@ -65,9 +65,9 @@ static int gui(tool_t *tool)
     }
 
     gui_group_begin(NULL);
-    if (gui_button("flip X", -1)) mat4_iscale(&mat, -1,  1,  1);
-    if (gui_button("flip Y", -1)) mat4_iscale(&mat,  1, -1,  1);
-    if (gui_button("flip Z", -1)) mat4_iscale(&mat,  1,  1, -1);
+    if (gui_button("flip X", -1, 0)) mat4_iscale(&mat, -1,  1,  1);
+    if (gui_button("flip Y", -1, 0)) mat4_iscale(&mat,  1, -1,  1);
+    if (gui_button("flip Z", -1, 0)) mat4_iscale(&mat,  1,  1, -1);
     gui_group_end();
 
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {

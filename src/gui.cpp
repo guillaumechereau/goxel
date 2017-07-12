@@ -506,13 +506,13 @@ static void layers_panel(goxel_t *goxel)
         ImGui::PopID();
         auto_adjust_panel_size();
     }
-    gui_action_button("img_new_layer", "Add", 0, "");
+    gui_action_button("img_new_layer", NULL, 0, "");
     ImGui::SameLine();
-    gui_action_button("img_del_layer", "Del", 0, "");
+    gui_action_button("img_del_layer", NULL, 0, "");
     ImGui::SameLine();
-    gui_action_button("img_move_layer_up", "^", 0, "");
+    gui_action_button("img_move_layer_up", NULL, 0, "");
     ImGui::SameLine();
-    gui_action_button("img_move_layer_down", "v", 0, "");
+    gui_action_button("img_move_layer_down", NULL, 0, "");
 
     ImGui::GoxGroupBegin();
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
@@ -728,13 +728,13 @@ static void cameras_panel(goxel_t *goxel)
         ImGui::PopID();
         i++;
     }
-    gui_action_button("img_new_camera", "Add", 0, "");
+    gui_action_button("img_new_camera", NULL, 0, "");
     ImGui::SameLine();
-    gui_action_button("img_del_camera", "Del", 0, "");
+    gui_action_button("img_del_camera", NULL, 0, "");
     ImGui::SameLine();
-    gui_action_button("img_move_camera_up", "^", 0, "");
+    gui_action_button("img_move_camera_up", NULL, 0, "");
     ImGui::SameLine();
-    gui_action_button("img_move_camera_down", "v", 0, "");
+    gui_action_button("img_move_camera_down", NULL, 0, "");
 
     cam = &goxel->camera;
     ImGui::GoxInputFloat("dist", &cam->dist, 10.0);
@@ -1135,33 +1135,15 @@ bool gui_input_float(const char *label, float *v, float step,
 bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...)
 {
-    va_list ap;
-    float w = GetContentRegionAvailWidth();
-    const action_t *action;
     bool ret;
-    ImVec2 uv0, uv1;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    const action_t *action;
+    va_list ap;
 
     action = action_get(id);
     assert(action);
-
     PushID(action->id);
-    if (action->icon) {
-        ret = Button("", ImVec2(20, 20));
-        uv0 = ImVec2((action->icon % 8) / 8.0, (action->icon / 8) / 8.0);
-        uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
-        uv0 += ImVec2(3 / 128., 3 / 128.);
-        uv1 -= ImVec2(3 / 128., 3 / 128.);
-        draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
-                            GetItemRectMin(), GetItemRectMax(),
-                            uv0, uv1, 0xFF000000);
-    } else {
-        ret = Button(label, ImVec2(size * w, 0));
-    }
-    if (IsItemHovered()) {
-        goxel_set_help_text(goxel, action_get(id)->help);
-    }
-
+    ret = gui_button(label, size, action->icon);
+    if (IsItemHovered()) goxel_set_help_text(goxel, action_get(id)->help);
     if (ret) {
         va_start(ap, sig);
         action_execv(action_get(id), sig, ap);
@@ -1220,9 +1202,31 @@ bool gui_checkbox(const char *label, bool *v, const char *hint)
     return ret;
 }
 
-bool gui_button(const char *label, float w)
+bool gui_button(const char *label, float size, int icon)
 {
-    return Button(label, ImVec2(w, 0));
+    bool ret;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 uv0, uv1;
+    float h;
+    ImVec2 button_size;
+
+    button_size = ImVec2(size * GetContentRegionAvailWidth(), 20);
+    if (size == -1) button_size.x = GetContentRegionAvailWidth();
+    if (size == 0 && label == NULL) button_size.x = 20;
+    label = label ?: "";
+    ret = Button(label, button_size);
+    if (icon) {
+        uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
+        uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
+        uv0 += ImVec2(3 / 128., 3 / 128.);
+        uv1 -= ImVec2(3 / 128., 3 / 128.);
+        h = GetItemRectSize().y;
+        draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                            GetItemRectMin(),
+                            GetItemRectMin() + ImVec2(h, h),
+                            uv0, uv1, 0xFF000000);
+    }
+    return ret;
 }
 
 bool gui_input_text(const char *label, char *txt, int size)

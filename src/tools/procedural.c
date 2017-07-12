@@ -115,10 +115,10 @@ static int gui(tool_t *tool)
 
     if (auto_run && proc->state == PROC_READY && timer == 0) timer = 1;
     if (proc->state == PROC_RUNNING) {
-        if (gui_button("Stop", 0)) proc_stop(proc);
+        if (gui_button("Stop", 0, 0)) proc_stop(proc);
     } else {
         gui_enabled_begin(enabled);
-        if (    (gui_button("Run", 0) && enabled) ||
+        if (    (gui_button("Run", 0, 0) && enabled) ||
                 (auto_run && proc->state == PROC_READY &&
                  timer && timer++ >= 16)) {
             mesh_clear(goxel->image->active_layer->mesh);
@@ -132,7 +132,7 @@ static int gui(tool_t *tool)
         proc_parse(prog_buff, proc);
     gui_same_line();
 
-    if (gui_button("Export Animation", 0)) {
+    if (gui_button("Export Animation", 0, 0)) {
         const char *dir_path;
         dir_path = noc_file_dialog_open(
                     NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
@@ -149,7 +149,7 @@ static int gui(tool_t *tool)
     if (*prog_path) {
         gui_input_text("##path", prog_path, sizeof(prog_path));
     }
-    if (gui_button("Load", 0)) {
+    if (gui_button("Load", 0, 0)) {
         const char *path;
         path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
                                     "goxcf\0*.goxcf\0", NULL, NULL);
@@ -164,7 +164,7 @@ static int gui(tool_t *tool)
         proc_parse(prog_buff, proc);
     }
     gui_same_line();
-    if (gui_button("Save", 0)) {
+    if (gui_button("Save", 0, 0)) {
         if (!*prog_path) {
             const char *path;
             path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
