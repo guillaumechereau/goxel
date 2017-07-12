@@ -255,9 +255,6 @@ static inline void set_flag(int *x, int flag, bool v)
 
 char *read_file(const char *path, int *size);
 
-// Get the clock in nanoseconds
-int64_t get_clock(void);
-
 // Used internally by the LOG macro
 void dolog(int level, const char *msg,
            const char *func, const char *file, int line, ...);
@@ -315,6 +312,7 @@ char *sys_read_asset(const char *path, int *size);
 const char *sys_get_clipboard_text(void* user);
 void sys_set_clipboard_text(void *user, const char *text);
 GLuint sys_get_screen_framebuffer(void);
+double sys_get_time(void); // Unix time.
 // #############################
 
 
@@ -1096,7 +1094,7 @@ typedef struct goxel
     char       *hint_text;  // Seen in the bottom of the screen.
 
     int        frame_count;       // Global frames counter.
-    int64_t    frame_clock;       // Clock time at beginning of the frame.
+    double     frame_time;        // Clock time at beginning of the frame.
 
     // Global uid counter.
     uint64_t   next_uid;

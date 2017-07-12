@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include <sys/time.h>
 
 #ifdef __linux__
 #define NOC_FILE_DIALOG_GTK
@@ -39,6 +40,13 @@ void sys_log(const char *msg)
 const char *sys_get_data_dir(void)
 {
     return "./user_data";
+}
+
+double sys_get_time(void)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return (double)now.tv_sec + now.tv_usec / 1000000.0;
 }
 
 #ifndef __APPLE__

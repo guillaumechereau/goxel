@@ -629,7 +629,7 @@ int proc_iter(gox_proc_t *proc)
             break;
         }
         if (last) break;
-        if (get_clock() - goxel->frame_clock > 16000000) {
+        if (sys_get_time() - goxel->frame_time > 16 / 1000.) {
             proc->in_frame = true;
             return 0;
         }

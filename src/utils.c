@@ -50,32 +50,11 @@
 #   define LOG_TIME 1
 #endif
 
-#ifndef __MACH__
-int64_t get_clock(void)
-{
-    struct timespec tp;
-    clock_gettime(CLOCK_REALTIME, &tp);
-    return (int64_t)tp.tv_sec * 1000 * 1000 * 1000
-         + (int64_t)tp.tv_nsec;
-}
-#else
-
-// Apparently clock_gettime does not exists on OSX.
-#include <sys/time.h>
-int64_t get_clock(void)
-{
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    return (int64_t)now.tv_sec * 1000 * 1000 * 1000 +
-           (int64_t)now.tv_usec * 1000;
-}
-#endif
-
 static double get_log_time()
 {
     static double origin = 0;
     double time;
-    time = get_clock() / (1000.0 * 1000.0 * 1000.0);
+    time = sys_get_time();
     if (!origin) origin = time;
     return time - origin;
 }
