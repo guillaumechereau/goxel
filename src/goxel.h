@@ -284,6 +284,8 @@ void img_downsample(const uint8_t *img, int w, int h, int bpp,
                     uint8_t *out);
 bool str_endswith(const char *str, const char *end);
 bool str_startswith(const char *s1, const char *s2);
+// Get gregorian date from unix time.
+int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s);
 
 static inline bool str_equ(const char *s1, const char *s2) {
     return strcmp(s1, s2) == 0;

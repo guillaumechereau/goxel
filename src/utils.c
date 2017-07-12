@@ -359,3 +359,18 @@ vec3_t unproject(const vec3_t *win, const mat4_t *model,
     if (p.w != 0) vec3_imul(&(p.xyz), 1 / p.w);
     return p.xyz;
 }
+
+int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s)
+{
+    time_t time = (int)t;
+    struct tm *tm;
+    tm = localtime(&time);
+    if (!tm) return -1;
+    *iy = tm->tm_year + 1900;
+    *im = tm->tm_mon + 1;
+    *id = tm->tm_mday;
+    *h = tm->tm_hour;
+    *m = tm->tm_min;
+    *s = tm->tm_sec;
+    return 0;
+}
