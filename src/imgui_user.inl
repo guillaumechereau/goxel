@@ -85,7 +85,8 @@ void stencil_callback(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 
 namespace ImGui {
 
-    void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill)
+    void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
+                 int rounding_corners_flags = ~0)
     {
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
@@ -95,21 +96,24 @@ namespace ImGui {
         if (fill) {
             window->DrawList->AddRectFilled(
                     pos, pos + size,
-                    ImGui::ColorConvertFloat4ToU32(color), r);
+                    ImGui::ColorConvertFloat4ToU32(color), r,
+                    rounding_corners_flags);
         } else {
             window->DrawList->AddRect(
                     pos, pos + size,
-                    ImGui::ColorConvertFloat4ToU32(color), r);
+                    ImGui::ColorConvertFloat4ToU32(color), r,
+                    rounding_corners_flags);
         }
     }
 
-    void GoxBox(ImVec2 pos, ImVec2 size, bool selected)
+    void GoxBox(ImVec2 pos, ImVec2 size, bool selected,
+                int rounding_corners_flags = ~0)
     {
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
         ImVec4 color  = style.Colors[selected ? ImGuiCol_ButtonActive :
                                      ImGuiCol_Button];
-        return GoxBox2(pos, size, color, true);
+        return GoxBox2(pos, size, color, true, rounding_corners_flags);
     }
 
     void GoxStencil(int op)
@@ -404,8 +408,11 @@ namespace ImGui {
         if (*v) color = style.Colors[ImGuiCol_ButtonActive];
         ImGui::PushStyleColor(ImGuiCol_Button, color);
         ImGui::PushID(text);
-        ret = ImGui::Button("", ImVec2(text_size.y + pad * 2,
-                                       text_size.x + pad * 2));
+
+        ret = InvisibleButton("", ImVec2(text_size.y + pad * 2,
+                                         text_size.x + pad * 2));
+        GoxBox(GetItemRectMin(), GetItemRectSize(), false, 0x09);
+
         ImGui::PopStyleColor();
         text_color = ImGui::ColorConvertFloat4ToU32(
                 style.Colors[ImGuiCol_Text]);

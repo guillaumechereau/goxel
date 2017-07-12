@@ -20,7 +20,9 @@ extern "C" {
 #include "goxel.h"
 }
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
+#include "imgui_internal.h"
 
 static inline ImVec4 IMHEXCOLOR(uint32_t v)
 {
@@ -903,6 +905,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     float left_pane_width;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
+    ImDrawList* draw_list;
+    ImGuiStyle& style = ImGui::GetStyle();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
     vec4_t display_rect = vec4(0, 0,
                                goxel->screen_size.x, goxel->screen_size.y);
@@ -962,12 +966,23 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     };
 
     ImGui::BeginGroup();
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IMHEXCOLOR(0x607272FF));
+    ImGui::PushStyleColor(ImGuiCol_Button, IMHEXCOLOR(0x455656FF));
+
+    draw_list = ImGui::GetWindowDrawList();
+    ImVec2 rmin = ImGui::GetCursorScreenPos() - style.FramePadding;
+    ImVec2 rmax = rmin + ImVec2(26, ImGui::GetWindowHeight());
+    draw_list->AddRectFilled(rmin, rmax,
+                ImGui::ColorConvertFloat4ToU32(IMHEXCOLOR(0x304242FF)));
+
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
         if (ImGui::GoxTab(PANELS[i].name, &b))
             current_panel = i;
     }
+    ImGui::PopStyleColor(2);
     ImGui::EndGroup();
+
     ImGui::SameLine();
     ImGui::BeginGroup();
 
@@ -1003,7 +1018,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
     canvas_size.y -= 20; // Leave space for the help label.
     view.rect = vec4(canvas_pos.x, canvas_pos.y, canvas_size.x, canvas_size.y);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list = ImGui::GetWindowDrawList();
     draw_list->AddCallback(render_view, &view);
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
