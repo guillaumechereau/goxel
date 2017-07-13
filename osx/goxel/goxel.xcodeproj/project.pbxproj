@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F0158ECC1F17289B008893E6 /* sound_openal.inl in Resources */ = {isa = PBXBuildFile; fileRef = F0158ECA1F17289B008893E6 /* sound_openal.inl */; };
+		F0158ECD1F17289B008893E6 /* sound.c in Sources */ = {isa = PBXBuildFile; fileRef = F0158ECB1F17289B008893E6 /* sound.c */; };
 		F037D5C31EA6061F00C96D10 /* gox.c in Sources */ = {isa = PBXBuildFile; fileRef = F037D5C21EA6061F00C96D10 /* gox.c */; };
 		F037D5C51EA6066300C96D10 /* vec.c in Sources */ = {isa = PBXBuildFile; fileRef = F037D5C41EA6066300C96D10 /* vec.c */; };
 		F037D5CF1EA6069A00C96D10 /* brush.c in Sources */ = {isa = PBXBuildFile; fileRef = F037D5C71EA6069A00C96D10 /* brush.c */; };
@@ -67,6 +69,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F0158ECA1F17289B008893E6 /* sound_openal.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sound_openal.inl; sourceTree = "<group>"; };
+		F0158ECB1F17289B008893E6 /* sound.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sound.c; sourceTree = "<group>"; };
 		F037D5C21EA6061F00C96D10 /* gox.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gox.c; sourceTree = "<group>"; };
 		F037D5C41EA6066300C96D10 /* vec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vec.c; sourceTree = "<group>"; };
 		F037D5C71EA6069A00C96D10 /* brush.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = brush.c; sourceTree = "<group>"; };
@@ -213,6 +217,8 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F0158ECA1F17289B008893E6 /* sound_openal.inl */,
+				F0158ECB1F17289B008893E6 /* sound.c */,
 				F097B3F11F0C97DB00A3622B /* gesture.c */,
 				F097B3F21F0C97DB00A3622B /* gesture3d.c */,
 				F037D5C61EA6069A00C96D10 /* tools */,
@@ -389,6 +395,7 @@
 				F0EEB7E61C8EC472004AB676 /* procedural.inl in Resources */,
 				F07DEA071BD0F31500BAA1AD /* imgui_user.inl in Resources */,
 				F0AE90F81C8EE01300C29080 /* assets.inl in Resources */,
+				F0158ECC1F17289B008893E6 /* sound_openal.inl in Resources */,
 				F07DE9D51BD0F03900BAA1AD /* Assets.xcassets in Resources */,
 				F0EEB7E01C8EC25D004AB676 /* procedural.leg in Resources */,
 				F07DE9D81BD0F03900BAA1AD /* MainMenu.xib in Resources */,
@@ -434,6 +441,7 @@
 				F0A160021E962F1300C6EF33 /* vox.c in Sources */,
 				F07DEA121BD0F31500BAA1AD /* tools.c in Sources */,
 				F07DEA2D1BD0F33A00BAA1AD /* imgui_draw.cpp in Sources */,
+				F0158ECD1F17289B008893E6 /* sound.c in Sources */,
 				F037D5C51EA6066300C96D10 /* vec.c in Sources */,
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
 				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,
