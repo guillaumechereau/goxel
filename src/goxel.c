@@ -253,6 +253,7 @@ void goxel_init(goxel_t *gox)
 
     render_init();
     shapes_init();
+    sound_init();
     goxel->camera.ofs = vec3_zero;
     goxel->camera.rot = quat_identity;
     goxel->camera.dist = 128;
@@ -341,6 +342,7 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->rend.view_mat = goxel->camera.view_mat;
     goxel->rend.proj_mat = goxel->camera.proj_mat;
     gui_iter(goxel, inputs);
+    sound_iter();
     goxel->frame_count++;
 }
 

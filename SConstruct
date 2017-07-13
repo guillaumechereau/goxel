@@ -14,6 +14,7 @@ glut = int(ARGUMENTS.get('glut', 0))
 emscripten = ARGUMENTS.get('emscripten', 0)
 werror = int(ARGUMENTS.get("werror", 1))
 clang = int(ARGUMENTS.get("clang", 0))
+sound = False
 
 if profile: debug = 0
 if emscripten: target_os = 'js'
@@ -103,5 +104,9 @@ if target_os == 'js':
     env.Append(CCFLAGS=['-DGLES2 1', '-DNO_ZLIB', '-DNO_ARGP'] + flags)
     env.Append(LINKFLAGS=flags)
     env.Append(LIBS=['GL'])
+
+if sound:
+    env.Append(LIBS='openal')
+    env.Append(CCFLAGS='-DSOUND=OPENAL')
 
 env.Program(target='goxel', source=sources)

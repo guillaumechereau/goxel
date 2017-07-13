@@ -138,6 +138,11 @@ static void auto_adjust_panel_size(void) {
     gui->min_panel_size = max(gui->min_panel_size, w);
 }
 
+static void on_click(void) {
+    if (DEFINED(GUI_SOUND))
+        sound_play("click");
+}
+
 static void init_prog(prog_t *p)
 {
     p->prog = create_program(VSHADER, FSHADER, NULL);
@@ -448,8 +453,7 @@ static void tools_panel(goxel_t *goxel)
             if (action->shortcut)
                 sprintf(label, "%s (%s)", values[i].name, action->shortcut);
         }
-        if (ImGui::GoxSelectable(label, &v, g_tex_icons->tex,
-                                 values[i].icon)) {
+        if (gui_selectable_icon(label, &v, values[i].icon)) {
             action_exec(action, "");
         }
         auto_grid(nb, i, 4);
@@ -570,17 +574,17 @@ static void render_advanced_panel(goxel_t *goxel)
     ImGui::Text("Light");
     ImGui::GoxInputAngle("Pitch", &goxel->rend.light.pitch, -90, +90);
     ImGui::GoxInputAngle("Yaw", &goxel->rend.light.yaw, 0, 360);
-    ImGui::Checkbox("Fixed", &goxel->rend.light.fixed);
+    gui_checkbox("Fixed", &goxel->rend.light.fixed, NULL);
 
     ImGui::GoxGroupBegin();
     v = goxel->rend.settings.border_shadow;
-    if (ImGui::GoxInputFloat("bshadow", &v, 0.1)) {
+    if (gui_input_float("bshadow", &v, 0.1, 0.0, 1.0, NULL)) {
         v = clamp(v, 0, 1); \
         goxel->rend.settings.border_shadow = v;
     }
 #define MAT_FLOAT(name, min, max) \
     v = goxel->rend.settings.name;  \
-    if (ImGui::GoxInputFloat(#name, &v, 0.1, min, max)) { \
+    if (gui_input_float(#name, &v, 0.1, min, max, NULL)) { \
         v = clamp(v, min, max); \
         goxel->rend.settings.name = v; \
     }
@@ -977,8 +981,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
-        if (ImGui::GoxTab(PANELS[i].name, &b))
+        if (ImGui::GoxTab(PANELS[i].name, &b)) {
+            on_click();
             current_panel = i;
+        }
     }
     ImGui::PopStyleColor(2);
     ImGui::EndGroup();
@@ -1113,23 +1119,29 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
 {
     float minvf = minv;
     float maxvf = maxv;
+    bool ret;
     if (minv == 0 && maxv == 0) {
         minvf = -FLT_MAX;
         maxvf = +FLT_MAX;
     }
-    return GoxInputInt(label, v, 1, minvf, maxvf);
+    ret = GoxInputInt(label, v, 1, minvf, maxvf);
+    if (ret) on_click();
+    return ret;
 }
 
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
+    bool ret;
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
         maxv = +FLT_MAX;
     }
     if (step == 0.f) step = 0.1f;
     if (!format) format = "%.1f";
-    return GoxInputFloat(label, v, step, minv, maxv, format);
+    ret = GoxInputFloat(label, v, step, minv, maxv, format);
+    if (ret) on_click();
+    return ret;
 }
 
 bool gui_action_button(const char *id, const char *label, float size,
@@ -1155,14 +1167,20 @@ bool gui_action_button(const char *id, const char *label, float size,
 
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
 {
+    bool ret;
     ImGuiStyle& style = ImGui::GetStyle();
     float h = 14 + 2 * style.FramePadding.y;
-    return GoxSelectable(name, v, 0, 0, tooltip, ImVec2(w, h));
+    ret = GoxSelectable(name, v, 0, 0, tooltip, ImVec2(w, h));
+    if (ret) on_click();
+    return ret;
 }
 
 bool gui_selectable_icon(const char *name, bool *v, int icon)
 {
-    return GoxSelectable(name, v, g_tex_icons->tex, icon);
+    bool ret;
+    ret = GoxSelectable(name, v, g_tex_icons->tex, icon);
+    if (ret) on_click();
+    return ret;
 }
 
 float gui_get_avail_width(void)
@@ -1199,6 +1217,7 @@ bool gui_checkbox(const char *label, bool *v, const char *hint)
     bool ret;
     ret = Checkbox(label, v);
     if (hint && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", hint);
+    if (ret) on_click();
     return ret;
 }
 
@@ -1226,6 +1245,7 @@ bool gui_button(const char *label, float size, int icon)
                             GetItemRectMin() + ImVec2(h, h),
                             uv0, uv1, 0xFF000000);
     }
+    if (ret) on_click();
     return ret;
 }
 

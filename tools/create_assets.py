@@ -24,7 +24,7 @@
 from collections import namedtuple
 import os
 
-TYPES = [".png", ".goxcf", ".gpl", ".pov", ".ttf"]
+TYPES = [".png", ".goxcf", ".gpl", ".pov", ".ttf", ".wav"]
 
 File = namedtuple('File', 'path name data size')
 
