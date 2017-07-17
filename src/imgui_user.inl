@@ -22,7 +22,6 @@ extern "C" {
 
 static texture_t *g_hsl_tex = NULL;
 static texture_t *g_hue_tex = NULL;
-static int g_group = 0;
 
 static ImVec4 uvec4b_to_imvec4(uvec4b_t v)
 {
@@ -64,33 +63,6 @@ static void hue_bitmap(uint8_t *buffer, int w, int h)
     }
 }
 
-void stencil_callback(const ImDrawList* parent_list, const ImDrawCmd* cmd)
-{
-    int op = ((intptr_t)cmd->UserCallbackData);
-
-    switch (op) {
-    case 0: // Reset
-        GL(glDisable(GL_STENCIL_TEST));
-        GL(glStencilMask(0x00));
-        break;
-    case 1: // Write
-        GL(glEnable(GL_STENCIL_TEST));
-        GL(glStencilFunc(GL_ALWAYS, 1, 0xFF));
-        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
-        GL(glStencilMask(0xFF));
-        break;
-    case 2: // Filter
-        GL(glEnable(GL_STENCIL_TEST));
-        GL(glStencilFunc(GL_EQUAL, 1, 0xFF));
-        GL(glStencilMask(0x00));
-        break;
-    default:
-        assert(false);
-        break;
-    }
-}
-
-
 namespace ImGui {
 
     void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
@@ -122,48 +94,6 @@ namespace ImGui {
         ImVec4 color  = style.Colors[selected ? ImGuiCol_ButtonActive :
                                      ImGuiCol_Button];
         return GoxBox2(pos, size, color, true, rounding_corners_flags);
-    }
-
-    void GoxStencil(int op)
-    {
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->AddCallback(stencil_callback, (void*)(intptr_t)op);
-    }
-
-    void GoxGroupBegin(const char *label)
-    {
-        if (label) ImGui::Text("%s", label);
-        ImGui::PushID(label ? label : "group");
-        g_group++;
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->ChannelsSplit(2);
-        draw_list->ChannelsSetCurrent(1);
-        ImGui::BeginGroup();
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 1));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
-    }
-
-    void GoxGroupEnd(void)
-    {
-        g_group--;
-        ImGui::PopStyleVar(2);
-        ImGui::Dummy(ImVec2(0, 0));
-        ImGui::EndGroup();
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        draw_list->ChannelsSetCurrent(0);
-        ImVec2 pos = ImGui::GetItemRectMin();
-        ImVec2 size = ImGui::GetItemRectMax() - pos;
-        ImGuiStyle& style = ImGui::GetStyle();
-
-        GoxStencil(1); // Stencil write.
-        GoxBox2(pos + ImVec2(1, 1), size - ImVec2(2, 2),
-                style.Colors[ImGuiCol_Border], true);
-        GoxStencil(2); // Stencil filter.
-
-        draw_list->ChannelsMerge();
-        GoxStencil(0); // Stencil reset.
-        GoxBox2(pos, size, style.Colors[ImGuiCol_Border], false);
-        ImGui::PopID();
     }
 
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
@@ -515,11 +445,6 @@ namespace ImGui {
     bool GoxInputFloat(const char *label, float *v, float step,
                        float minv, float maxv, const char *format)
     {
-        bool self_group = false;
-        if (g_group == 0) {
-            GoxGroupBegin(NULL);
-            self_group = true;
-        }
         const theme_t *theme = theme_get();
         bool ret = false;
         ImGuiContext& g = *GImGui;
@@ -570,7 +495,6 @@ namespace ImGui {
 
         ImGui::PopStyleVar();
         ImGui::PopID();
-        if (self_group) GoxGroupEnd();
 
         if (ret)
             *v = clamp(*v, minv, maxv);

@@ -63,8 +63,9 @@ namespace ImGui {
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = -FLT_MAX, float maxv = FLT_MAX,
                        const char *format = "%.1f");
-    void GoxGroupBegin(const char *label = NULL);
-    void GoxGroupEnd(void);
+
+    void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
+                 int rounding_corners_flags = ~0);
 };
 
 static texture_t *g_tex_icons = NULL;
@@ -134,6 +135,7 @@ typedef struct gui_t {
     }       gestures;
     bool    mouse_in_view;
     bool    capture_mouse;
+    int     group;
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -435,7 +437,7 @@ static void tools_panel(goxel_t *goxel)
     char label[64];
     const action_t *action = NULL;
 
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     for (i = 0; i < nb; i++) {
         v = goxel->tool->id == values[i].tool;
         sprintf(label, "%s", values[i].name);
@@ -451,7 +453,7 @@ static void tools_panel(goxel_t *goxel)
         }
         auto_grid(nb, i, 4);
     }
-    ImGui::GoxGroupEnd();
+    gui_group_end();
     auto_adjust_panel_size();
 
     if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
@@ -511,10 +513,10 @@ static void layers_panel(goxel_t *goxel)
     ImGui::SameLine();
     gui_action_button("img_move_layer_down", NULL, 0, "");
 
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
-    ImGui::GoxGroupEnd();
+    gui_group_end();
 }
 
 static void palette_panel(goxel_t *goxel)
@@ -569,7 +571,7 @@ static void render_advanced_panel(goxel_t *goxel)
     gui_angle("Yaw", &goxel->rend.light.yaw, 0, 360);
     gui_checkbox("Fixed", &goxel->rend.light.fixed, NULL);
 
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     v = goxel->rend.settings.border_shadow;
     if (gui_input_float("bshadow", &v, 0.1, 0.0, 1.0, NULL)) {
         v = clamp(v, 0, 1); \
@@ -589,7 +591,7 @@ static void render_advanced_panel(goxel_t *goxel)
     MAT_FLOAT(smoothness, 0, 1);
 
 #undef MAT_FLOAT
-    ImGui::GoxGroupEnd();
+    gui_group_end();
 
     ImGui::CheckboxFlags("Borders",
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS);
@@ -641,7 +643,7 @@ static void render_panel(goxel_t *goxel)
             goxel->rend.settings = settings;
     }
     v = goxel->rend.settings.shadow;
-    if (ImGui::GoxInputFloat("shadow", &v, 0.1)) {
+    if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
     if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
@@ -655,14 +657,14 @@ static void export_panel(goxel_t *goxel)
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
     goxel->show_export_viewport = true;
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     i = goxel->image->export_width;
     if (gui_input_int("width", &i, 1, maxsize))
         goxel->image->export_width = clamp(i, 1, maxsize);
     i = goxel->image->export_height;
     if (gui_input_int("height", &i, 1, maxsize))
         goxel->image->export_height = clamp(i, 1, maxsize);
-    ImGui::GoxGroupEnd();
+    gui_group_end();
 }
 
 static void image_panel(goxel_t *goxel)
@@ -734,23 +736,23 @@ static void cameras_panel(goxel_t *goxel)
     gui_action_button("img_move_camera_down", NULL, 0, "");
 
     cam = &goxel->camera;
-    ImGui::GoxInputFloat("dist", &cam->dist, 10.0);
+    gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 
-    ImGui::GoxGroupBegin("Offset");
-    ImGui::GoxInputFloat("x", &cam->ofs.x, 1.0);
-    ImGui::GoxInputFloat("y", &cam->ofs.y, 1.0);
-    ImGui::GoxInputFloat("z", &cam->ofs.z, 1.0);
-    ImGui::GoxGroupEnd();
+    gui_group_begin("Offset");
+    gui_input_float("x", &cam->ofs.x, 1.0, 0, 0, NULL);
+    gui_input_float("y", &cam->ofs.y, 1.0, 0, 0, NULL);
+    gui_input_float("z", &cam->ofs.z, 1.0, 0, 0, NULL);
+    gui_group_end();
 
     gui_quat("Rotation", &cam->rot);
 
-    ImGui::GoxGroupBegin("Set");
+    gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();
     gui_action_button("view_right", "right", 1.0, "");
     gui_action_button("view_front", "front", 0.5, ""); ImGui::SameLine();
     gui_action_button("view_top", "top", 1.0, "");
     gui_action_button("view_default", "default", 1.0, "");
-    ImGui::GoxGroupEnd();
+    gui_group_end();
 }
 
 static void import_image_plane(goxel_t *goxel)
@@ -1154,14 +1156,70 @@ void gui_render(void)
 extern "C" {
 using namespace ImGui;
 
+static void stencil_callback(
+        const ImDrawList* parent_list, const ImDrawCmd* cmd)
+{
+    int op = ((intptr_t)cmd->UserCallbackData);
+
+    switch (op) {
+    case 0: // Reset
+        GL(glDisable(GL_STENCIL_TEST));
+        GL(glStencilMask(0x00));
+        break;
+    case 1: // Write
+        GL(glEnable(GL_STENCIL_TEST));
+        GL(glStencilFunc(GL_ALWAYS, 1, 0xFF));
+        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+        GL(glStencilMask(0xFF));
+        break;
+    case 2: // Filter
+        GL(glEnable(GL_STENCIL_TEST));
+        GL(glStencilFunc(GL_EQUAL, 1, 0xFF));
+        GL(glStencilMask(0x00));
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
+
 void gui_group_begin(const char *label)
 {
-    GoxGroupBegin(label);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    if (label) ImGui::Text("%s", label);
+    ImGui::PushID(label ? label : "group");
+    gui->group++;
+    draw_list->ChannelsSplit(2);
+    draw_list->ChannelsSetCurrent(1);
+    ImGui::BeginGroup();
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 }
 
 void gui_group_end(void)
 {
-    GoxGroupEnd();
+    gui->group--;
+    ImGui::PopStyleVar(2);
+    ImGui::Dummy(ImVec2(0, 0));
+    ImGui::EndGroup();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->ChannelsSetCurrent(0);
+    ImVec2 pos = ImGui::GetItemRectMin();
+    ImVec2 size = ImGui::GetItemRectMax() - pos;
+    ImGuiStyle& style = ImGui::GetStyle();
+
+    // Stencil write.
+    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)1);
+    GoxBox2(pos + ImVec2(1, 1), size - ImVec2(2, 2),
+            style.Colors[ImGuiCol_Border], true);
+    // Stencil filter.
+    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)2);
+
+    draw_list->ChannelsMerge();
+    // Stencil reset.
+    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)0);
+    GoxBox2(pos, size, style.Colors[ImGuiCol_Border], false);
+    ImGui::PopID();
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -1182,15 +1240,22 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
-    bool ret;
+    bool self_group = false, ret;
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
         maxv = +FLT_MAX;
     }
+
+    if (gui->group == 0) {
+        gui_group_begin(NULL);
+        self_group = true;
+    }
+
     if (step == 0.f) step = 0.1f;
     if (!format) format = "%.1f";
-    ret = GoxInputFloat(label, v, step, minv, maxv, format);
+    ret = ImGui::GoxInputFloat(label, v, step, minv, maxv, format);
     if (ret) on_click();
+    if (self_group) gui_group_end();
     return ret;
 }
 
