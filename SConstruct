@@ -79,6 +79,10 @@ sources += glob.glob('ext_src/imgui/*.cpp')
 env.Append(CPPPATH=['ext_src/imgui'])
 env.Append(CXXFLAGS='-DIMGUI_INCLUDE_IMGUI_USER_INL')
 
+sources += glob.glob('ext_src/inih/*.c')
+env.Append(CPPPATH=['ext_src/inih'])
+env.Append(CFLAGS='-DINI_HANDLER_LINENO=1')
+
 if target_os == 'posix':
     env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
 

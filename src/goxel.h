@@ -308,7 +308,10 @@ vec3_t unproject(const vec3_t *win, const mat4_t *model,
 
 // #### System #################
 void sys_log(const char *msg);
-const char *sys_get_data_dir(void);
+
+const char *sys_get_user_dir(void);
+int sys_make_dir(const char *path);
+
 bool sys_asset_exists(const char *path);
 char *sys_read_asset(const char *path, int *size);
 const char *sys_get_clipboard_text(void* user);
@@ -1197,6 +1200,8 @@ struct theme {
 
 // Return the current theme.
 theme_t *theme_get(void);
+void theme_revert_default(void);
+void theme_save(void);
 
 void gui_init(void);
 void gui_release(void);

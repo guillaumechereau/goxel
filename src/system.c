@@ -23,6 +23,9 @@
 #define NOC_FILE_DIALOG_GTK
 #define NOC_FILE_DIALOG_IMPLEMENTATION
 #include "noc_file_dialog.h"
+#include <pwd.h>
+#include <sys/stat.h>
+#include <errno.h>
 #endif
 
 #ifdef WIN32
@@ -37,9 +40,35 @@ void sys_log(const char *msg)
     fflush(stdout);
 }
 
-const char *sys_get_data_dir(void)
+const char *sys_get_user_dir(void)
 {
-    return "./user_data";
+    static char *ret = NULL;
+    const char *home;
+    if (!ret) {
+        home = getenv("XDG_CONFIG_HOME");
+        if (home) {
+            asprintf(&ret, "%s/goxel", home);
+        } else {
+            home = getenv("HOME");
+            if (!home) home = getpwuid(getuid())->pw_dir;
+            asprintf(&ret, "%s/.config/goxel", home);
+        }
+    }
+    return ret;
+}
+
+int sys_make_dir(const char *path)
+{
+    char tmp[PATH_MAX];
+    char *p;
+    strcpy(tmp, path);
+    for (p = tmp + 1; *p; p++) {
+        if (*p != '/') continue;
+        *p = '\0';
+        if ((mkdir(tmp, S_IRWXU) != 0) && (errno != EEXIST)) return -1;
+        *p = '/';
+    }
+    return 0;
 }
 
 double sys_get_time(void)

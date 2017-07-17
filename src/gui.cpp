@@ -833,6 +833,10 @@ static void settings_popup(void)
     gui_color("tabs_background", &theme->colors.tabs_background);
     gui_color("tabs", &theme->colors.tabs);
 
+    if (ImGui::Button("Revert")) theme_revert_default();
+    ImGui::SameLine();
+    if (ImGui::Button("Save")) theme_save();
+
     if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
 }
 
