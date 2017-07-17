@@ -96,52 +96,6 @@ namespace ImGui {
         return GoxBox2(pos, size, color, true, rounding_corners_flags);
     }
 
-    bool GoxSelectable(const char *name, bool *v, int tex, int icon,
-                       const char *tooltip, ImVec2 size) {
-        const theme_t *theme = theme_get();
-        ImGuiWindow* window = GetCurrentWindow();
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
-        ImVec2 pos = ImGui::GetCursorScreenPos();
-        if (size.x == 0) size.x = 32;
-        if (size.y == 0) size.y = 32;
-
-        const ImVec2 padding = ImVec2(0, 0);
-        const ImRect image_bb(pos + padding, pos + padding + size);
-        bool ret = false;
-        ImVec2 uv0, uv1; // The position in the icon texture.
-        uvec4b_t color;
-
-        if (!tooltip) tooltip = name;
-        ImGui::PushID(name);
-
-        color = (*v) ? theme->colors.inner_selected : theme->colors.inner;
-        PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
-        PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
-                    style.Colors[ImGuiCol_Button], 1.2));
-        color = (*v) ? theme->colors.text_selected : theme->colors.text;
-        PushStyleColor(ImGuiCol_Text, uvec4b_to_imvec4(color));
-
-        if (tex) {
-            ret = ImGui::Button("", size);
-            uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
-            uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-            window->DrawList->AddImage((void*)tex, image_bb.Min, image_bb.Max,
-                                       uv0, uv1, 0xFF000000);
-        } else {
-            ret = ImGui::Button(name, size);
-        }
-        ImGui::PopStyleColor(3);
-        if (ret) *v = !*v;
-        if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("%s", tooltip);
-            goxel_set_help_text(goxel, tooltip);
-        }
-        ImGui::PopID();
-
-        return ret;
-    }
-
     static int create_hsl_texture(int hue) {
         uint8_t *buffer;
         if (!g_hsl_tex) {

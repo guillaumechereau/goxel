@@ -50,8 +50,6 @@ static inline uvec4b_t color_lighten(uvec4b_t c, float k)
 }
 
 namespace ImGui {
-    bool GoxSelectable(const char *name, bool *v, int tex = 0, int icon = 0,
-                       const char *tooltip = NULL, ImVec2 size = ImVec2(0, 0));
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
     bool GoxTab(const char *label, bool *v);
@@ -1331,22 +1329,66 @@ bool gui_action_checkbox(const char *id, const char *label)
     return false;
 }
 
-bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
+static bool _selectable(const char *label, bool *v, const char *tooltip,
+                        float w, int icon)
 {
-    bool ret;
-    ImGuiStyle& style = ImGui::GetStyle();
-    float h = 14 + 2 * style.FramePadding.y;
-    ret = GoxSelectable(name, v, 0, 0, tooltip, ImVec2(w, h));
+    const theme_t *theme = theme_get();
+    ImGuiWindow* window = GetCurrentWindow();
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    ImVec2 size;
+
+    if (icon != -1)
+        size = ImVec2(32, 32);
+    else
+        size = ImVec2(w, theme->sizes.item_height);
+    ImVec2 padding = ImVec2(0, 0);
+    ImRect image_bb(pos + padding, pos + padding + size);
+    bool ret = false;
+    ImVec2 uv0, uv1; // The position in the icon texture.
+    uvec4b_t color;
+
+    if (!tooltip) tooltip = label;
+    ImGui::PushID(label);
+
+    color = (*v) ? theme->colors.inner_selected : theme->colors.inner;
+    PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
+    PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
+                style.Colors[ImGuiCol_Button], 1.2));
+    color = (*v) ? theme->colors.text_selected : theme->colors.text;
+    PushStyleColor(ImGuiCol_Text, uvec4b_to_imvec4(color));
+
+    if (icon != -1) {
+        ret = ImGui::Button("", size);
+        uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
+        uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
+        window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                                   image_bb.Min, image_bb.Max,
+                                   uv0, uv1, 0xFF000000);
+    } else {
+        ret = ImGui::Button(label, size);
+    }
+    ImGui::PopStyleColor(3);
+    if (ret) *v = !*v;
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("%s", tooltip);
+        goxel_set_help_text(goxel, tooltip);
+    }
+    ImGui::PopID();
+
     if (ret) on_click();
     return ret;
 }
 
+bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
+{
+    return _selectable(name, v, tooltip, w, -1);
+}
+
 bool gui_selectable_icon(const char *name, bool *v, int icon)
 {
-    bool ret;
-    ret = GoxSelectable(name, v, g_tex_icons->tex, icon);
-    if (ret) on_click();
-    return ret;
+    return _selectable(name, v, NULL, 0, icon);
 }
 
 float gui_get_avail_width(void)
