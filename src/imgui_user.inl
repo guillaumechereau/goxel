@@ -132,36 +132,6 @@ namespace ImGui {
         return ImVec4(v.r / 255.0, v.g / 255.0, v.b / 255.0, v.a / 255.0);
     }
 
-    bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target)
-    {
-        ImVec4 c;
-        ImVec2 ra, rb;
-        bool ret, highlight, hovered, held;
-        ImRect bb;
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        ImGuiWindow* window = GetCurrentWindow();
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
-        const ImGuiID id = window->GetID("#colorbutton");
-        bb = ImRect(window->DC.CursorPos, window->DC.CursorPos +
-                    ImVec2(20, 15));
-        highlight = color->r == target->r &&
-                    color->g == target->g &&
-                    color->b == target->b &&
-                    color->a == target->a;
-
-        c = uvec4b_to_imvec4(*color);
-        ItemSize(bb, 0.0);
-        ret = ButtonBehavior(bb, id, &hovered, &held);
-        RenderFrame(bb.Min, bb.Max, GetColorU32(c), false,
-                    style.FrameRounding);
-        if (highlight)
-            draw_list->AddRect(bb.Min, bb.Max, 0xFFFFFFFF, 0, 0, 1);
-        if (ret) *target = *color;
-        window->DC.LastItemRect = bb;
-        return ret;
-    }
-
     bool GoxColorEdit(const char *name, uvec4b_t *color) {
         bool ret = false;
         ImVec2 c_pos;

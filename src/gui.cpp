@@ -51,7 +51,6 @@ static inline uvec4b_t color_lighten(uvec4b_t c, float k)
 
 namespace ImGui {
     bool GoxColorEdit(const char *name, uvec4b_t *color);
-    bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
     bool GoxTab(const char *label, bool *v);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = -FLT_MAX, float maxv = FLT_MAX,
@@ -519,6 +518,25 @@ static void layers_panel(goxel_t *goxel)
     gui_group_end();
 }
 
+
+static bool render_palette_entry(const uvec4b_t *color, uvec4b_t *target)
+{
+    bool ret;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, *color);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, *color);
+    ret = ImGui::Button("", ImVec2(20, 20));
+    if (color->uint32 == target->uint32) {
+        draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                           0xFFFFFFFF, 0, 0, 1);
+    }
+    ImGui::PopStyleColor(2);
+    if (ret) *target = *color;
+    return ret;
+}
+
+
 static void palette_panel(goxel_t *goxel)
 {
     palette_t *p;
@@ -545,7 +563,7 @@ static void palette_panel(goxel_t *goxel)
 
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
-        ImGui::GoxPaletteEntry(&p->entries[i].color, &goxel->painter.color);
+        render_palette_entry(&p->entries[i].color, &goxel->painter.color);
         auto_adjust_panel_size();
         if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
