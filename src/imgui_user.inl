@@ -271,19 +271,6 @@ namespace ImGui {
         return ret;
     }
 
-    bool GoxIsCharPressed(int c)
-    {
-        ImGuiContext& g = *GImGui;
-        return g.IO.InputCharacters[0] == c;
-    }
-
-    bool GoxCollapsingHeader(const char *label, const char *str_id,
-                             bool display_frame,
-                             bool default_open)
-    {
-        return ImGui::CollapsingHeader(label, str_id, display_frame, default_open);
-    }
-
     bool GoxMenuItem(const char *id, const char *label)
     {
         const action_t *action = action_get(id);

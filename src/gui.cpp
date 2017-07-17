@@ -30,6 +30,7 @@ extern "C" {
             return uvec4b(x * 255, y * 255, z * 255, w * 255); }
 
 #define IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
 #include "imgui_internal.h"
 
@@ -53,11 +54,6 @@ namespace ImGui {
                        const char *tooltip = NULL, ImVec2 size = ImVec2(0, 0));
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
-    bool GoxIsCharPressed(int c);
-    bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
-                             bool display_frame = true,
-                             bool default_open = false);
-
     bool GoxMenuItem(const char *id, const char *label);
     bool GoxTab(const char *label, bool *v);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
@@ -152,6 +148,12 @@ static void auto_adjust_panel_size(void) {
 static void on_click(void) {
     if (DEFINED(GUI_SOUND))
         sound_play("click");
+}
+
+static bool isCharPressed(int c)
+{
+    ImGuiContext& g = *GImGui;
+    return g.IO.InputCharacters[0] == c;
 }
 
 static void init_prog(prog_t *p)
@@ -456,7 +458,8 @@ static void tools_panel(goxel_t *goxel)
     gui_group_end();
     auto_adjust_panel_size();
 
-    if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
+    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    if (ImGui::CollapsingHeader("Tool Options"))
         tool_gui(goxel->tool);
 }
 
@@ -646,7 +649,8 @@ static void render_panel(goxel_t *goxel)
     if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
-    if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
+    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    if (ImGui::CollapsingHeader("Render Advanced"))
         render_advanced_panel(goxel);
 }
 
@@ -791,6 +795,7 @@ static void about_popup(void)
     ImGui::Text("Guillaume Chereau <guillaume@noctua-software.com>");
     ImGui::Text("GPL 3 License");
 
+    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
     if (ImGui::CollapsingHeader("Credits")) {
         ImGui::Text("Code:");
         ImGui::BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
@@ -848,7 +853,7 @@ static int check_action_shortcut(const action_t *action, void *user)
     if (io.KeyShift) {
         check_key = false;
     }
-    if (    (check_char && ImGui::GoxIsCharPressed(s[0])) ||
+    if (    (check_char && isCharPressed(s[0])) ||
             (check_key && ImGui::IsKeyPressed(s[0], false))) {
         action_exec(action, "");
         return 1;
@@ -1129,8 +1134,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     float last_tool_radius = goxel->tool_radius;
 
     if (!io.WantCaptureKeyboard) {
-        if (ImGui::GoxIsCharPressed('[')) goxel->tool_radius -= 0.5;
-        if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
+        if (isCharPressed('[')) goxel->tool_radius -= 0.5;
+        if (isCharPressed(']')) goxel->tool_radius += 0.5;
         if (goxel->tool_radius != last_tool_radius) {
             goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
         }
@@ -1141,8 +1146,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         // either find a solution, either find a replacement for GLFW.
         // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
         // key 25 and 26, which might makes more sense.  Here I test for both.
-        if (ImGui::GoxIsCharPressed(26)) action_exec2("undo", "");
-        if (ImGui::GoxIsCharPressed(25)) action_exec2("redo", "");
+        if (isCharPressed(26)) action_exec2("undo", "");
+        if (isCharPressed(25)) action_exec2("redo", "");
         // Check the action shortcuts.
         actions_iter(check_action_shortcut, NULL);
     }
