@@ -54,7 +54,6 @@ namespace ImGui {
                        const char *tooltip = NULL, ImVec2 size = ImVec2(0, 0));
     bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
-    bool GoxMenuItem(const char *id, const char *label);
     bool GoxTab(const char *label, bool *v);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = -FLT_MAX, float maxv = FLT_MAX,
@@ -877,6 +876,17 @@ static int export_menu_action_callback(const action_t *a, void *user)
     return 0;
 }
 
+static bool render_menu_item(const char *id, const char *label)
+{
+    const action_t *action = action_get(id);
+    assert(action);
+    if (ImGui::MenuItem(label, action->shortcut)) {
+        action_exec(action, "");
+        return true;
+    }
+    return false;
+}
+
 static void render_menu(void)
 {
     bool popup_about = false;
@@ -885,9 +895,9 @@ static void render_menu(void)
 
     if (!ImGui::BeginMenuBar()) return;
     if (ImGui::BeginMenu("File")) {
-        ImGui::GoxMenuItem("save", "Save");
-        ImGui::GoxMenuItem("save_as", "Save as");
-        ImGui::GoxMenuItem("open", "Open");
+        render_menu_item("save", "Save");
+        render_menu_item("save_as", "Save as");
+        render_menu_item("open", "Open");
         if (ImGui::BeginMenu("Import...")) {
             if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
             actions_iter(import_menu_action_callback, NULL);
@@ -897,16 +907,16 @@ static void render_menu(void)
             actions_iter(export_menu_action_callback, NULL);
             ImGui::EndMenu();
         }
-        ImGui::GoxMenuItem("quit", "Quit");
+        render_menu_item("quit", "Quit");
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("Clear", "Delete"))
             action_exec2("layer_clear", "");
-        ImGui::GoxMenuItem("undo", "Undo");
+        render_menu_item("undo", "Undo");
         ImGui::MenuItem("redo", "Redo");
-        ImGui::GoxMenuItem("copy", "Copy");
-        ImGui::GoxMenuItem("past", "Past");
+        render_menu_item("copy", "Copy");
+        render_menu_item("past", "Past");
         if (ImGui::MenuItem("Shift Alpha"))
             popup_shift_alpha = true;
         if (ImGui::MenuItem("Settings"))
@@ -914,11 +924,11 @@ static void render_menu(void)
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
-        ImGui::GoxMenuItem("view_left", "Left");
-        ImGui::GoxMenuItem("view_right", "Right");
-        ImGui::GoxMenuItem("view_front", "Front");
-        ImGui::GoxMenuItem("view_top", "Top");
-        ImGui::GoxMenuItem("view_default", "Default");
+        render_menu_item("view_left", "Left");
+        render_menu_item("view_right", "Right");
+        render_menu_item("view_front", "Front");
+        render_menu_item("view_top", "Top");
+        render_menu_item("view_default", "Default");
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {

@@ -271,17 +271,6 @@ namespace ImGui {
         return ret;
     }
 
-    bool GoxMenuItem(const char *id, const char *label)
-    {
-        const action_t *action = action_get(id);
-        assert(action);
-        if (ImGui::MenuItem(label, action->shortcut)) {
-            action_exec(action, "");
-            return true;
-        }
-        return false;
-    }
-
     bool GoxTab(const char *text, bool *v)
     {
         ImFont *font = GImGui->Font;
