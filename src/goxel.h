@@ -1170,6 +1170,34 @@ uvec3b_t rgb_to_hsl(uvec3b_t rgb);
 
 // #### Gui ####################
 
+typedef struct theme theme_t;
+struct theme {
+    char name[64];
+
+    struct {
+        int  item_height;
+        int  item_padding_h;
+        int  item_rounding;
+        int  item_spacing_h;
+        int  item_spacing_v;
+        int  item_inner_spacing_h;
+    } sizes;
+
+    struct {
+        uvec4b_t background;
+        uvec4b_t outline;
+        uvec4b_t inner;
+        uvec4b_t inner_selected;
+        uvec4b_t text;
+        uvec4b_t text_selected;
+        uvec4b_t tabs;
+        uvec4b_t tabs_background;
+    } colors;
+};
+
+// Return the current theme.
+theme_t *theme_get(void);
+
 void gui_init(void);
 void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);
@@ -1188,7 +1216,7 @@ bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_icon(const char *name, bool *v, int icon);
-bool gui_color(uvec4b_t *color);
+bool gui_color(const char *label, uvec4b_t *color);
 bool gui_input_text(const char *label, char *buf, int size);
 bool gui_input_text_multiline(const char *label, char *buf, int size,
                               float width, float height);
@@ -1242,5 +1270,6 @@ void *cache_get(cache_t *cache, const void *key, int keylen);
 void sound_init(void);
 void sound_play(const char *sound);
 void sound_iter(void);
+
 
 #endif // GOXEL_H

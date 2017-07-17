@@ -29,6 +29,14 @@ static ImVec4 uvec4b_to_imvec4(uvec4b_t v)
     return ImVec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255);
 }
 
+static inline ImVec4 color_lighten(ImVec4 c, float k)
+{
+    c.x *= k;
+    c.y *= k;
+    c.z *= k;
+    return c;
+}
+
 // Create an Sat/Hue bitmap with all the value for a given hue.
 static void hsl_bitmap(int hue, uint8_t *buffer, int w, int h)
 {
@@ -145,20 +153,22 @@ namespace ImGui {
         draw_list->ChannelsSetCurrent(0);
         ImVec2 pos = ImGui::GetItemRectMin();
         ImVec2 size = ImGui::GetItemRectMax() - pos;
+        ImGuiStyle& style = ImGui::GetStyle();
 
         GoxStencil(1); // Stencil write.
         GoxBox2(pos + ImVec2(1, 1), size - ImVec2(2, 2),
-                ImVec4(0.3, 0.3, 0.3, 1), true);
+                style.Colors[ImGuiCol_Border], true);
         GoxStencil(2); // Stencil filter.
 
         draw_list->ChannelsMerge();
         GoxStencil(0); // Stencil reset.
-        GoxBox2(pos, size, ImVec4(0.3, 0.3, 0.3, 1), false);
+        GoxBox2(pos, size, style.Colors[ImGuiCol_Border], false);
         ImGui::PopID();
     }
 
     bool GoxSelectable(const char *name, bool *v, int tex, int icon,
                        const char *tooltip, ImVec2 size) {
+        const theme_t *theme = theme_get();
         ImGuiWindow* window = GetCurrentWindow();
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
@@ -170,14 +180,17 @@ namespace ImGui {
         const ImRect image_bb(pos + padding, pos + padding + size);
         bool ret = false;
         ImVec2 uv0, uv1; // The position in the icon texture.
-        ImVec4 color;
+        uvec4b_t color;
 
         if (!tooltip) tooltip = name;
         ImGui::PushID(name);
 
-        color = style.Colors[ImGuiCol_Button];
-        if (*v) color = style.Colors[ImGuiCol_ButtonActive];
-        ImGui::PushStyleColor(ImGuiCol_Button, color);
+        color = (*v) ? theme->colors.inner_selected : theme->colors.inner;
+        PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
+        PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
+                    style.Colors[ImGuiCol_Button], 1.2));
+        color = (*v) ? theme->colors.text_selected : theme->colors.text;
+        PushStyleColor(ImGuiCol_Text, uvec4b_to_imvec4(color));
 
         if (tex) {
             ret = ImGui::Button("", size);
@@ -188,7 +201,7 @@ namespace ImGui {
         } else {
             ret = ImGui::Button(name, size);
         }
-        ImGui::PopStyleColor();
+        ImGui::PopStyleColor(3);
         if (ret) *v = !*v;
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("%s", tooltip);
@@ -399,14 +412,21 @@ namespace ImGui {
         const ImGuiStyle& style = g.Style;
         float pad = style.FramePadding.x;
         uint32_t text_color;
-        ImVec4 color;
+        const theme_t *theme = theme_get();
+        uvec4b_t color;
         ImVec2 text_size = CalcTextSize(text);
         ImGuiWindow* window = GetCurrentWindow();
         ImVec2 pos = window->DC.CursorPos + ImVec2(pad, text_size.x + pad);
 
+        /*
         color = style.Colors[ImGuiCol_Button];
         if (*v) color = style.Colors[ImGuiCol_ButtonActive];
         ImGui::PushStyleColor(ImGuiCol_Button, color);
+        */
+
+        color = (*v) ? theme->colors.background : theme->colors.tabs;
+        ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
+
         ImGui::PushID(text);
 
         ret = InvisibleButton("", ImVec2(text_size.y + pad * 2,
@@ -543,6 +563,7 @@ namespace ImGui {
             GoxGroupBegin(NULL);
             self_group = true;
         }
+        const theme_t *theme = theme_get();
         bool ret = false;
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
@@ -569,7 +590,14 @@ namespace ImGui {
                 ImGui::GetContentRegionAvailWidth() -
                 button_sz.x - style.ItemSpacing.x);
 
+        ImGui::PushStyleColor(ImGuiCol_FrameBg,
+                              uvec4b_to_imvec4(theme->colors.inner));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
+                              color_lighten(
+                                  uvec4b_to_imvec4(theme->colors.inner), 1.2));
+
         ret |= ImGui::GoxDragFloat("", label, v, speed, minv, maxv, format, 1.0);
+        ImGui::PopStyleColor(2);
         ImGui::PopItemWidth();
 
         ImGui::SameLine();

@@ -20,14 +20,32 @@ extern "C" {
 #include "goxel.h"
 }
 
+#define IM_VEC4_CLASS_EXTRA \
+        ImVec4(const uvec4b_t& f) { \
+            x = f.x / 255.; \
+            y = f.y / 255.; \
+            z = f.z / 255.; \
+            w = f.w / 255.; }     \
+        operator uvec4b_t() const { \
+            return uvec4b(x * 255, y * 255, z * 255, w * 255); }
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_internal.h"
+
 
 static inline ImVec4 IMHEXCOLOR(uint32_t v)
 {
     uvec4b_t c = HEXCOLOR(v);
     return ImVec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
+}
+
+static inline uvec4b_t color_lighten(uvec4b_t c, float k)
+{
+    c.r *= k;
+    c.g *= k;
+    c.b *= k;
+    return c;
 }
 
 namespace ImGui {
@@ -277,7 +295,6 @@ static void load_fonts_texture()
 
 static void init_ImGui()
 {
-    float padding_k = 1;
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = 1.0f/60.0f;
 
@@ -310,23 +327,8 @@ static void init_ImGui()
     load_fonts_texture();
 
     ImGuiStyle& style = ImGui::GetStyle();
-    style.FrameRounding = 4;
     style.WindowRounding = 0;
     style.WindowPadding = ImVec2(4, 4);
-    style.ItemSpacing = ImVec2(4, 4);
-    style.FramePadding = ImVec2(4 * padding_k, 2 * padding_k);
-
-    style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x607272FF);
-    style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
-    style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
-    style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0x000000FF);
-    style.Colors[ImGuiCol_Button] = IMHEXCOLOR(0xA1A1A1FF);
-    style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
-    style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
-    style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x7777CCFF);
-    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
-    style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
-    style.Colors[ImGuiCol_MenuBarBg] = IMHEXCOLOR(0x607272FF);
 }
 
 
@@ -811,6 +813,29 @@ static void about_popup(void)
     }
 }
 
+static void settings_popup(void)
+{
+    theme_t *theme = theme_get();
+
+    gui_input_int("item height", &theme->sizes.item_height, 0, 1000);
+    gui_input_int("item padding_h", &theme->sizes.item_padding_h, 0, 1000);
+    gui_input_int("item rounding", &theme->sizes.item_rounding, 0, 1000);
+    gui_input_int("item spacing h", &theme->sizes.item_spacing_h, 0, 1000);
+    gui_input_int("item spacing v", &theme->sizes.item_spacing_v, 0, 1000);
+    gui_input_int("item inner spacing h", &theme->sizes.item_inner_spacing_h, 0, 1000);
+
+    gui_color("background", &theme->colors.background);
+    gui_color("outline", &theme->colors.outline);
+    gui_color("inner", &theme->colors.inner);
+    gui_color("inner_selected", &theme->colors.inner_selected);
+    gui_color("text", &theme->colors.text);
+    gui_color("text_selected", &theme->colors.text_selected);
+    gui_color("tabs_background", &theme->colors.tabs_background);
+    gui_color("tabs", &theme->colors.tabs);
+
+    if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+}
+
 static int check_action_shortcut(const action_t *action, void *user)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -854,6 +879,7 @@ static void render_menu(void)
 {
     bool popup_about = false;
     bool popup_shift_alpha = false;
+    bool popup_settings = false;
 
     if (!ImGui::BeginMenuBar()) return;
     if (ImGui::BeginMenu("File")) {
@@ -881,6 +907,8 @@ static void render_menu(void)
         ImGui::GoxMenuItem("past", "Past");
         if (ImGui::MenuItem("Shift Alpha"))
             popup_shift_alpha = true;
+        if (ImGui::MenuItem("Settings"))
+            popup_settings = true;
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
@@ -900,6 +928,7 @@ static void render_menu(void)
 
     if (popup_about) ImGui::OpenPopup("About");
     if (popup_shift_alpha) ImGui::OpenPopup("Shift Alpha");
+    if (popup_settings) ImGui::OpenPopup("Settings");
 }
 
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
@@ -911,9 +940,12 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list;
     ImGuiStyle& style = ImGui::GetStyle();
+    const theme_t *theme = theme_get();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
     vec4_t display_rect = vec4(0, 0,
                                goxel->screen_size.x, goxel->screen_size.y);
+    float font_size = ImGui::GetFontSize();
+
     io.DisplaySize = ImVec2((float)goxel->screen_size.x,
                             (float)goxel->screen_size.y);
     io.DeltaTime = 1.0 / 60;
@@ -929,6 +961,28 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         if (!inputs->chars[i]) break;
         io.AddInputCharacter(inputs->chars[i]);
     }
+
+    // Setup theme.
+    style.FramePadding = ImVec2(theme->sizes.item_padding_h,
+                                (theme->sizes.item_height - font_size) / 2);
+    style.FrameRounding = theme->sizes.item_rounding;
+    style.ItemSpacing = ImVec2(theme->sizes.item_spacing_h,
+                               theme->sizes.item_spacing_v);
+    style.ItemInnerSpacing = ImVec2(theme->sizes.item_inner_spacing_h, 0);
+
+    style.Colors[ImGuiCol_WindowBg] = theme->colors.background;
+    style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
+    style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
+    style.Colors[ImGuiCol_Text] = theme->colors.text;
+    style.Colors[ImGuiCol_Button] = theme->colors.inner;
+    style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
+    style.Colors[ImGuiCol_ButtonActive] = theme->colors.inner_selected;
+    style.Colors[ImGuiCol_ButtonHovered] =
+        color_lighten(theme->colors.inner, 1.2);
+    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
+    style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_MenuBarBg] = theme->colors.background;
+    style.Colors[ImGuiCol_Border] = theme->colors.outline;
 
     ImGui::NewFrame();
 
@@ -970,14 +1024,11 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     };
 
     ImGui::BeginGroup();
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IMHEXCOLOR(0x607272FF));
-    ImGui::PushStyleColor(ImGuiCol_Button, IMHEXCOLOR(0x455656FF));
-
     draw_list = ImGui::GetWindowDrawList();
     ImVec2 rmin = ImGui::GetCursorScreenPos() - style.FramePadding;
     ImVec2 rmax = rmin + ImVec2(26, ImGui::GetWindowHeight());
     draw_list->AddRectFilled(rmin, rmax,
-                ImGui::ColorConvertFloat4ToU32(IMHEXCOLOR(0x304242FF)));
+                ImGui::ColorConvertFloat4ToU32(theme->colors.tabs_background));
 
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
@@ -986,7 +1037,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             current_panel = i;
         }
     }
-    ImGui::PopStyleColor(2);
     ImGui::EndGroup();
 
     ImGui::SameLine();
@@ -1011,6 +1061,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (ImGui::BeginPopupModal("About", NULL,
                 ImGuiWindowFlags_AlwaysAutoResize)) {
         about_popup();
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("Settings", NULL)) {
+        settings_popup();
         ImGui::EndPopup();
     }
 
@@ -1198,10 +1252,11 @@ void gui_same_line(void)
     SameLine();
 }
 
-bool gui_color(uvec4b_t *color)
+bool gui_color(const char *label, uvec4b_t *color)
 {
     ImVec4 icolor;
     icolor = uvec4b_to_imvec4(*color);
+    ImGui::PushID(label);
     ImGui::ColorButton(icolor);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
         ImGui::GoxColorEdit("##edit", color);
@@ -1209,6 +1264,11 @@ bool gui_color(uvec4b_t *color)
             ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
+    if (label && label[0] != '#') {
+        ImGui::SameLine();
+        ImGui::Text("%s", label);
+    }
+    ImGui::PopID();
     return false;
 }
 
