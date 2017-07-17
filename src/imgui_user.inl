@@ -418,12 +418,6 @@ namespace ImGui {
         ImGuiWindow* window = GetCurrentWindow();
         ImVec2 pos = window->DC.CursorPos + ImVec2(pad, text_size.x + pad);
 
-        /*
-        color = style.Colors[ImGuiCol_Button];
-        if (*v) color = style.Colors[ImGuiCol_ButtonActive];
-        ImGui::PushStyleColor(ImGuiCol_Button, color);
-        */
-
         color = (*v) ? theme->colors.background : theme->colors.tabs;
         ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
 
