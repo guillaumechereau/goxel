@@ -354,43 +354,6 @@ namespace ImGui {
         return ImGui::CollapsingHeader(label, str_id, display_frame, default_open);
     }
 
-    bool GoxAction(const char *id, const char *label, float size,
-                   const char *sig, ...)
-    {
-        va_list ap;
-        float w = ImGui::GetContentRegionAvailWidth();
-        assert(action_get(id));
-        if (ImGui::Button(label, ImVec2(size * w, 0))) {
-            va_start(ap, sig);
-            action_execv(action_get(id), sig, ap);
-            va_end(ap);
-            return true;
-        }
-        if (ImGui::IsItemHovered()) {
-            goxel_set_help_text(goxel, action_get(id)->help);
-        }
-        return false;
-    }
-
-    bool GoxCheckbox(const char *id, const char *label)
-    {
-        bool b;
-        const action_t *action = action_get(id);
-        action_exec(action, ">b", &b);
-        if (ImGui::Checkbox(label, &b)) {
-            action_exec(action, "b", b);
-            return true;
-        }
-        if (ImGui::IsItemHovered()) {
-            if (!action->shortcut)
-                goxel_set_help_text(goxel, action->help);
-            else
-                goxel_set_help_text(goxel, "%s (%s)",
-                        action->help, action->shortcut);
-        }
-        return false;
-    }
-
     bool GoxMenuItem(const char *id, const char *label)
     {
         const action_t *action = action_get(id);
@@ -614,62 +577,5 @@ namespace ImGui {
 
         return ret;
     }
-
-    bool GoxInputInt(const char *format, int *v, int step, float minv, float maxv)
-    {
-        float vf = *v;
-        bool ret = GoxInputFloat(format, &vf, 1.0f, minv, maxv, "%.0f");
-        if (ret) *v = vf;
-        return ret;
-    }
-
-    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax)
-    {
-        int a;
-        bool ret;
-        a = round(*v * DR2D);
-        ret = GoxInputInt(id, &a, 1, vmin, vmax);
-        if (ret) {
-            if (vmin == 0 && vmax == 360) {
-                while (a < 0) a += 360;
-                a %= 360;
-            }
-            a = clamp(a, vmin, vmax);
-            *v = (float)(a * DD2R);
-        }
-        return ret;
-    }
-
-    bool GoxInputQuat(const char *label, quat_t *q)
-    {
-        // Hack to prevent weird behavior when we change the euler angles.
-        // We keep track of the last used euler angles value and reuse them if
-        // the quaternion is the same.
-        static struct {
-            quat_t quat;
-            vec3_t eul;
-        } last = {};
-
-        vec3_t eul;
-        bool ret = false;
-
-        if (memcmp(q, &last.quat, sizeof(*q)) == 0)
-            eul = last.eul;
-        else
-            eul = quat_to_eul(*q, EULER_ORDER_DEFAULT);
-        GoxGroupBegin(label);
-        if (GoxInputAngle("x", &eul.x, -180, +180)) ret = true;
-        if (GoxInputAngle("y", &eul.y, -180, +180)) ret = true;
-        if (GoxInputAngle("z", &eul.z, -180, +180)) ret = true;
-        GoxGroupEnd();
-
-        if (ret) {
-            *q = eul_to_quat(eul, EULER_ORDER_DEFAULT);
-            last.quat = *q;
-            last.eul = eul;
-        }
-        return ret;
-    }
-
 };
 

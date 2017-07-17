@@ -1217,8 +1217,11 @@ bool gui_checkbox(const char *label, bool *v, const char *hint);
 bool gui_input_int(const char *label, int *v, int minv, int maxv);
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);
+bool gui_angle(const char *id, float *v, int vmin, int vmax);
+bool gui_quat(const char *label, quat_t *q);
 bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...);
+bool gui_action_checkbox(const char *id, const char *label);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_icon(const char *name, bool *v, int icon);
 bool gui_color(const char *label, uvec4b_t *color);

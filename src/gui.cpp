@@ -57,21 +57,12 @@ namespace ImGui {
     bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
                              bool display_frame = true,
                              bool default_open = false);
-    bool GoxAction(const char *id, const char *label, float size,
-                   const char *sig, ...);
 
-    bool GoxCheckbox(const char *id, const char *label);
     bool GoxMenuItem(const char *id, const char *label);
-    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
     bool GoxTab(const char *label, bool *v);
-    bool GoxInputInt(const char *label, int *v, int step = 1,
-                     float minv = -FLT_MAX, float maxv = FLT_MAX);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = -FLT_MAX, float maxv = FLT_MAX,
                        const char *format = "%.1f");
-
-    bool GoxInputQuat(const char *label, quat_t *q);
-
     void GoxGroupBegin(const char *label = NULL);
     void GoxGroupEnd(void);
 };
@@ -574,8 +565,8 @@ static void render_advanced_panel(goxel_t *goxel)
     };
 
     ImGui::Text("Light");
-    ImGui::GoxInputAngle("Pitch", &goxel->rend.light.pitch, -90, +90);
-    ImGui::GoxInputAngle("Yaw", &goxel->rend.light.yaw, 0, 360);
+    gui_angle("Pitch", &goxel->rend.light.pitch, -90, +90);
+    gui_angle("Yaw", &goxel->rend.light.yaw, 0, 360);
     gui_checkbox("Fixed", &goxel->rend.light.fixed, NULL);
 
     ImGui::GoxGroupBegin();
@@ -629,7 +620,7 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::Text("%s", COLORS[i].label);
         ImGui::PopID();
     }
-    ImGui::GoxCheckbox("grid_visible", "Show grid");
+    gui_action_checkbox("grid_visible", "Show grid");
 }
 
 
@@ -666,10 +657,10 @@ static void export_panel(goxel_t *goxel)
     goxel->show_export_viewport = true;
     ImGui::GoxGroupBegin();
     i = goxel->image->export_width;
-    if (ImGui::GoxInputInt("width", &i, 1, 1, maxsize))
+    if (gui_input_int("width", &i, 1, maxsize))
         goxel->image->export_width = clamp(i, 1, maxsize);
     i = goxel->image->export_height;
-    if (ImGui::GoxInputInt("height", &i, 1, 1, maxsize))
+    if (gui_input_int("height", &i, 1, maxsize))
         goxel->image->export_height = clamp(i, 1, maxsize);
     ImGui::GoxGroupEnd();
 }
@@ -751,14 +742,14 @@ static void cameras_panel(goxel_t *goxel)
     ImGui::GoxInputFloat("z", &cam->ofs.z, 1.0);
     ImGui::GoxGroupEnd();
 
-    ImGui::GoxInputQuat("Rotation", &cam->rot);
+    gui_quat("Rotation", &cam->rot);
 
     ImGui::GoxGroupBegin("Set");
-    ImGui::GoxAction("view_left", "left", 0.5, ""); ImGui::SameLine();
-    ImGui::GoxAction("view_right", "right", 1.0, "");
-    ImGui::GoxAction("view_front", "front", 0.5, ""); ImGui::SameLine();
-    ImGui::GoxAction("view_top", "top", 1.0, "");
-    ImGui::GoxAction("view_default", "default", 1.0, "");
+    gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();
+    gui_action_button("view_right", "right", 1.0, "");
+    gui_action_button("view_front", "front", 0.5, ""); ImGui::SameLine();
+    gui_action_button("view_top", "top", 1.0, "");
+    gui_action_button("view_default", "default", 1.0, "");
     ImGui::GoxGroupEnd();
 }
 
@@ -1178,12 +1169,13 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
     float minvf = minv;
     float maxvf = maxv;
     bool ret;
+    float vf = *v;
     if (minv == 0 && maxv == 0) {
         minvf = -FLT_MAX;
         maxvf = +FLT_MAX;
     }
-    ret = GoxInputInt(label, v, 1, minvf, maxvf);
-    if (ret) on_click();
+    ret = gui_input_float(label, &vf, 1, minvf, maxvf, "%.0f");
+    if (ret) *v = vf;
     return ret;
 }
 
@@ -1199,6 +1191,23 @@ bool gui_input_float(const char *label, float *v, float step,
     if (!format) format = "%.1f";
     ret = GoxInputFloat(label, v, step, minv, maxv, format);
     if (ret) on_click();
+    return ret;
+}
+
+bool gui_angle(const char *id, float *v, int vmin, int vmax)
+{
+    int a;
+    bool ret;
+    a = round(*v * DR2D);
+    ret = gui_input_int(id, &a, vmin, vmax);
+    if (ret) {
+        if (vmin == 0 && vmax == 360) {
+            while (a < 0) a += 360;
+            a %= 360;
+        }
+        a = clamp(a, vmin, vmax);
+        *v = (float)(a * DD2R);
+    }
     return ret;
 }
 
@@ -1221,6 +1230,25 @@ bool gui_action_button(const char *id, const char *label, float size,
     }
     PopID();
     return ret;
+}
+
+bool gui_action_checkbox(const char *id, const char *label)
+{
+    bool b;
+    const action_t *action = action_get(id);
+    action_exec(action, ">b", &b);
+    if (ImGui::Checkbox(label, &b)) {
+        action_exec(action, "b", b);
+        return true;
+    }
+    if (ImGui::IsItemHovered()) {
+        if (!action->shortcut)
+            goxel_set_help_text(goxel, action->help);
+        else
+            goxel_set_help_text(goxel, "%s (%s)",
+                    action->help, action->shortcut);
+    }
+    return false;
 }
 
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
@@ -1361,6 +1389,37 @@ void gui_enabled_begin(bool enabled)
 void gui_enabled_end(void)
 {
     ImGui::PopStyleColor();
+}
+
+bool gui_quat(const char *label, quat_t *q)
+{
+    // Hack to prevent weird behavior when we change the euler angles.
+    // We keep track of the last used euler angles value and reuse them if
+    // the quaternion is the same.
+    static struct {
+        quat_t quat;
+        vec3_t eul;
+    } last = {};
+
+    vec3_t eul;
+    bool ret = false;
+
+    if (memcmp(q, &last.quat, sizeof(*q)) == 0)
+        eul = last.eul;
+    else
+        eul = quat_to_eul(*q, EULER_ORDER_DEFAULT);
+    gui_group_begin(label);
+    if (gui_angle("x", &eul.x, -180, +180)) ret = true;
+    if (gui_angle("y", &eul.y, -180, +180)) ret = true;
+    if (gui_angle("z", &eul.z, -180, +180)) ret = true;
+    gui_group_end();
+
+    if (ret) {
+        *q = eul_to_quat(eul, EULER_ORDER_DEFAULT);
+        last.quat = *q;
+        last.eul = eul;
+    }
+    return ret;
 }
 
 }
