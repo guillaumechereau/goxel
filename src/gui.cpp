@@ -157,6 +157,8 @@ static bool isCharPressed(int c)
     return g.IO.InputCharacters[0] == c;
 }
 
+#define COLOR(g, c, s) theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s))
+
 static void init_prog(prog_t *p)
 {
     p->prog = create_program(VSHADER, FSHADER, NULL);
@@ -956,6 +958,7 @@ static void about_popup(void)
 static void settings_popup(void)
 {
     theme_t *theme = theme_get();
+    uvec4b_t *colors = theme->groups[THEME_GROUP_BASE].colors;
 
     gui_group_begin(NULL);
     gui_input_int("item height", &theme->sizes.item_height, 0, 1000);
@@ -967,16 +970,12 @@ static void settings_popup(void)
     gui_input_int("item inner spacing h", &theme->sizes.item_inner_spacing_h, 0, 1000);
     gui_group_end();
 
-    gui_color("background", &theme->colors.background);
-    gui_color("outline", &theme->colors.outline);
-    gui_color("inner", &theme->colors.inner);
-    gui_color("inner_selected", &theme->colors.inner_selected);
-    gui_color("text", &theme->colors.text);
-    gui_color("text_selected", &theme->colors.text_selected);
-    gui_color("tabs_background", &theme->colors.tabs_background);
-    gui_color("tabs", &theme->colors.tabs);
-    gui_color("icons", &theme->colors.icons);
-    gui_color("icons_selected", &theme->colors.icons_selected);
+    gui_color("background", &colors[THEME_COLOR_BACKGROUND]);
+    gui_color("outline", &colors[THEME_COLOR_OUTLINE]);
+    gui_color("inner", &colors[THEME_COLOR_INNER]);
+    gui_color("inner_selected", &colors[THEME_COLOR_INNER_SELECTED]);
+    gui_color("text", &colors[THEME_COLOR_TEXT]);
+    gui_color("text_selected", &colors[THEME_COLOR_TEXT_SELECTED]);
 
     if (ImGui::Button("Revert")) theme_revert_default();
     ImGui::SameLine();
@@ -1108,7 +1107,7 @@ static bool render_tab(const char *label, bool *v)
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     ImVec2 pos = window->DC.CursorPos + ImVec2(0, text_size.x + pad);
 
-    color = (*v) ? theme->colors.background : theme->colors.tabs;
+    color = COLOR(TAB, INNER, *v);
     ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
 
     ImGui::PushID(label);
@@ -1182,19 +1181,19 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                                theme->sizes.item_spacing_v);
     style.ItemInnerSpacing = ImVec2(theme->sizes.item_inner_spacing_h, 0);
 
-    style.Colors[ImGuiCol_WindowBg] = theme->colors.background;
+    style.Colors[ImGuiCol_WindowBg] = COLOR(BASE, BACKGROUND, 0);
     style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
-    style.Colors[ImGuiCol_Text] = theme->colors.text;
-    style.Colors[ImGuiCol_Button] = theme->colors.inner;
+    style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, 0);
+    style.Colors[ImGuiCol_Button] = COLOR(BASE, INNER, 0);
     style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
-    style.Colors[ImGuiCol_ButtonActive] = theme->colors.inner_selected;
+    style.Colors[ImGuiCol_ButtonActive] = COLOR(BASE, INNER, 1);
     style.Colors[ImGuiCol_ButtonHovered] =
-        color_lighten(theme->colors.inner, 1.2);
+        color_lighten(COLOR(BASE, INNER, 0), 1.2);
     style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
     style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
-    style.Colors[ImGuiCol_MenuBarBg] = theme->colors.background;
-    style.Colors[ImGuiCol_Border] = theme->colors.outline;
+    style.Colors[ImGuiCol_MenuBarBg] = COLOR(BASE, BACKGROUND, 0);
+    style.Colors[ImGuiCol_Border] = COLOR(BASE, OUTLINE, 0);
 
     ImGui::NewFrame();
 
@@ -1241,7 +1240,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImVec2 rmax = rmin + ImVec2(theme->sizes.item_height + 4,
                                 ImGui::GetWindowHeight());
     draw_list->AddRectFilled(rmin, rmax,
-                ImGui::ColorConvertFloat4ToU32(theme->colors.tabs_background));
+                ImGui::ColorConvertFloat4ToU32(COLOR(TAB, BACKGROUND, 0)));
 
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
@@ -1553,16 +1552,15 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     if (!tooltip) tooltip = label;
     ImGui::PushID(label);
 
-    color = (*v) ? theme->colors.inner_selected : theme->colors.inner;
-    PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
+    color = COLOR(BUTTON, INNER, *v);
+    PushStyleColor(ImGuiCol_Button, color);
     PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
                 style.Colors[ImGuiCol_Button], 1.2));
-    color = (*v) ? theme->colors.text_selected : theme->colors.text;
-    PushStyleColor(ImGuiCol_Text, uvec4b_to_imvec4(color));
-
+    color = COLOR(BUTTON, TEXT, *v);
+    PushStyleColor(ImGuiCol_Text, color);
 
     if (icon != -1) {
-        color = (*v) ? theme->colors.icons_selected : theme->colors.icons;
+        color = COLOR(ICON, TEXT, (*v));
         ret = ImGui::Button("", size);
         center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
         uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
@@ -1647,7 +1645,6 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 uv0, uv1;
     float h;
     ImVec2 button_size;
-    const theme_t *theme = theme_get();
 
     button_size = ImVec2(size * GetContentRegionAvailWidth(), 20);
     if (size == -1) button_size.x = GetContentRegionAvailWidth();
@@ -1663,7 +1660,7 @@ bool gui_button(const char *label, float size, int icon)
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             GetItemRectMin(),
                             GetItemRectMin() + ImVec2(h, h),
-                            uv0, uv1, theme->colors.icons.uint32);
+                            uv0, uv1, COLOR(BUTTON, TEXT, 0).uint32);
     }
     if (ret) on_click();
     return ret;

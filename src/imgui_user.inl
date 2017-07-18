@@ -171,7 +171,6 @@ namespace ImGui {
     bool GoxInputFloat(const char *label, float *v, float step,
                        float minv, float maxv, const char *format)
     {
-        const theme_t *theme = theme_get();
         bool ret = false;
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
@@ -180,6 +179,7 @@ namespace ImGui {
         int button_flags =
             ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         float speed = step / 20;
+        uvec4b_t color;
 
         ImGui::PushID(label);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
@@ -198,11 +198,10 @@ namespace ImGui {
                 ImGui::GetContentRegionAvailWidth() -
                 button_sz.x - style.ItemSpacing.x);
 
-        ImGui::PushStyleColor(ImGuiCol_FrameBg,
-                              uvec4b_to_imvec4(theme->colors.inner));
+        color = theme_get_color(THEME_GROUP_INPUT, THEME_COLOR_INNER, 0);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, uvec4b_to_imvec4(color));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
-                              color_lighten(
-                                  uvec4b_to_imvec4(theme->colors.inner), 1.2));
+            color_lighten(uvec4b_to_imvec4(color), 1.2));
 
         ret |= ImGui::GoxDragFloat("", label, v, speed, minv, maxv, format, 1.0);
         ImGui::PopStyleColor(2);

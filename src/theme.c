@@ -20,7 +20,7 @@
 #include "ini.h"
 
 
-#define SIZE_ATTRS(X) \
+#define THEME_SIZES(X) \
     X(item_height) \
     X(icons_height) \
     X(item_padding_h) \
@@ -29,19 +29,8 @@
     X(item_spacing_v) \
     X(item_inner_spacing_h)
 
-#define COLOR_ATTRS(X) \
-    X(background) \
-    X(outline) \
-    X(inner) \
-    X(inner_selected) \
-    X(text) \
-    X(text_selected) \
-    X(tabs) \
-    X(tabs_background) \
-    X(icons) \
-    X(icons_selected) \
 
-static const theme_t g_default_theme = {
+static theme_t g_default_theme = {
     .name = "default",
     .sizes = {
         .item_height = 18,
@@ -52,17 +41,25 @@ static const theme_t g_default_theme = {
         .item_spacing_v = 4,
         .item_inner_spacing_h = 6,
     },
-    .colors = {
-        .background = VEC4(96, 114, 114, 255),
-        .outline = VEC4(77, 77, 77, 255),
-        .inner = VEC4(161, 161, 161, 255),
-        .text = VEC4(17, 17, 17, 255),
-        .inner_selected = VEC4(102, 102, 204, 255),
-        .text_selected = VEC4(17, 17, 17, 255),
-        .tabs_background = VEC4(48, 66, 66, 255),
-        .tabs = VEC4(69, 86, 86, 255),
-        .icons = VEC4(0, 0, 0, 255),
-        .icons_selected = VEC4(0, 0, 0, 255),
+
+    .groups = {
+        [THEME_GROUP_BASE] = {
+            .colors = {
+                [THEME_COLOR_BACKGROUND] = VEC4(96, 114, 114, 255),
+                [THEME_COLOR_OUTLINE] = VEC4(77, 77, 77, 255),
+                [THEME_COLOR_INNER] = VEC4(161, 161, 161, 255),
+                [THEME_COLOR_TEXT] = VEC4(17, 17, 17, 255),
+                [THEME_COLOR_INNER_SELECTED] = VEC4(102, 102, 204, 255),
+                [THEME_COLOR_TEXT_SELECTED] = VEC4(17, 17, 17, 255),
+            },
+        },
+        [THEME_GROUP_TAB] = {
+            .colors = {
+                [THEME_COLOR_BACKGROUND] = VEC4(48, 66, 66, 255),
+                [THEME_COLOR_INNER] = VEC4(69, 86, 86, 255),
+                [THEME_COLOR_INNER_SELECTED] = VEC4(96, 114, 114, 255),
+            },
+        },
     },
 };
 
@@ -92,14 +89,18 @@ static int theme_ini_handler(void *user, const char *section,
                              const char *name, const char *value, int lineno)
 {
     if (strcmp(section, "sizes") == 0) {
-        #define X_CHECK_SIZE(n) \
+        #define X(n) \
         if (strcmp(name, #n) == 0) g_theme.sizes.n = atoi(value);
-        SIZE_ATTRS(X_CHECK_SIZE)
+        THEME_SIZES(X)
+        #undef X
     }
     if (strcmp(section, "colors") == 0) {
-        #define X_CHECK_COLOR(n) \
-        if (strcmp(name, #n) == 0) g_theme.colors.n = parse_color(value);
-        COLOR_ATTRS(X_CHECK_COLOR)
+        #define X(a, n) \
+        if (strcmp(name, #n) == 0) \
+            g_theme.groups[THEME_GROUP_BASE].colors[THEME_COLOR_##a] = \
+                parse_color(value);
+        THEME_COLORS(X)
+        #undef X
     }
 
     return 0;
@@ -120,6 +121,11 @@ void theme_set(const char *name)
         ini_parse_file(file, theme_ini_handler, NULL);
         fclose(file);
     }
+
+    #define X(a, p) \
+        g_theme.groups[THEME_GROUP_##a].parent = THEME_GROUP_##p;
+    THEME_GROUPS(X)
+    #undef X
 }
 
 theme_t *theme_get(void)
@@ -143,15 +149,27 @@ void theme_save(void)
     file = fopen(path, "w");
 
     fprintf(file, "[sizes]\n");
-    #define X_SAVE_SIZE(n) \
+    #define X(n) \
     fprintf(file, #n "=%d\n", t->sizes.n);
-    SIZE_ATTRS(X_SAVE_SIZE)
+    THEME_SIZES(X)
+    #undef X
 
-    fprintf(file, "[colors]\n");
-    #define X_SAVE_COLOR(n) \
-    fprintf(file, #n "=#%X\n", tohex(t->colors.n));
-    COLOR_ATTRS(X_SAVE_COLOR)
+    fprintf(file, "[base]\n");
+    #define X(a, n) \
+    fprintf(file, #n "=#%X\n", tohex(\
+                t->groups[THEME_GROUP_BASE].colors[THEME_COLOR_##a]));
+    THEME_COLORS(X)
+    #undef X
 
     fclose(file);
     free(path);
+}
+
+uvec4b_t theme_get_color(int g, int color, bool sel)
+{
+    const theme_t *theme = theme_get();
+    if (sel) color++;
+    while (g && !theme->groups[g].colors[color].a)
+        g = theme->groups[g].parent;
+    return theme->groups[g].colors[color];
 }

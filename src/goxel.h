@@ -1173,6 +1173,43 @@ uvec3b_t rgb_to_hsl(uvec3b_t rgb);
 
 // #### Gui ####################
 
+#define THEME_GROUPS(X) \
+    X(BASE, BASE) \
+    X(WIDGET, BASE) \
+    X(BUTTON, WIDGET) \
+    X(INPUT, WIDGET) \
+    X(ICON, WIDGET) \
+    X(TAB, BASE) \
+    X(MENU, BASE) \
+
+#define THEME_COLORS(X) \
+    X(BACKGROUND, background) \
+    X(OUTLINE, outline) \
+    X(INNER, inner) \
+    X(INNER_SELECTED, inner_selected) \
+    X(TEXT, text) \
+    X(TEXT_SELECTED, text_selected) \
+
+enum {
+#define X(a, _) THEME_GROUP_##a,
+    THEME_GROUPS(X)
+#undef X
+    THEME_GROUP_COUNT
+};
+
+enum {
+#define X(a, _) THEME_COLOR_##a,
+    THEME_COLORS(X)
+#undef X
+    THEME_COLOR_COUNT
+};
+
+
+typedef struct {
+    int      parent;
+    uvec4b_t colors[THEME_COLOR_COUNT];
+} theme_group_t;
+
 typedef struct theme theme_t;
 struct theme {
     char name[64];
@@ -1187,24 +1224,14 @@ struct theme {
         int  item_inner_spacing_h;
     } sizes;
 
-    struct {
-        uvec4b_t background;
-        uvec4b_t outline;
-        uvec4b_t inner;
-        uvec4b_t inner_selected;
-        uvec4b_t text;
-        uvec4b_t text_selected;
-        uvec4b_t tabs;
-        uvec4b_t tabs_background;
-        uvec4b_t icons;
-        uvec4b_t icons_selected;
-    } colors;
+    theme_group_t groups[THEME_GROUP_COUNT];
 };
 
 // Return the current theme.
 theme_t *theme_get(void);
 void theme_revert_default(void);
 void theme_save(void);
+uvec4b_t theme_get_color(int group, int color, bool selected);
 
 void gui_init(void);
 void gui_release(void);
