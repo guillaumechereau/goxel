@@ -1195,6 +1195,8 @@ struct theme {
         uvec4b_t text_selected;
         uvec4b_t tabs;
         uvec4b_t tabs_background;
+        uvec4b_t icons;
+        uvec4b_t icons_selected;
     } colors;
 };
 

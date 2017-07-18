@@ -36,7 +36,9 @@
     X(text) \
     X(text_selected) \
     X(tabs) \
-    X(tabs_background)
+    X(tabs_background) \
+    X(icons) \
+    X(icons_selected) \
 
 static const theme_t g_default_theme = {
     .name = "default",
@@ -57,6 +59,8 @@ static const theme_t g_default_theme = {
         .text_selected = VEC4(17, 17, 17, 255),
         .tabs_background = VEC4(48, 66, 66, 255),
         .tabs = VEC4(69, 86, 86, 255),
+        .icons = VEC4(0, 0, 0, 255),
+        .icons_selected = VEC4(0, 0, 0, 255),
     },
 };
 

@@ -972,6 +972,8 @@ static void settings_popup(void)
     gui_color("text_selected", &theme->colors.text_selected);
     gui_color("tabs_background", &theme->colors.tabs_background);
     gui_color("tabs", &theme->colors.tabs);
+    gui_color("icons", &theme->colors.icons);
+    gui_color("icons_selected", &theme->colors.icons_selected);
 
     if (ImGui::Button("Revert")) theme_revert_default();
     ImGui::SameLine();
@@ -1555,13 +1557,15 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     color = (*v) ? theme->colors.text_selected : theme->colors.text;
     PushStyleColor(ImGuiCol_Text, uvec4b_to_imvec4(color));
 
+
     if (icon != -1) {
+        color = (*v) ? theme->colors.icons_selected : theme->colors.icons;
         ret = ImGui::Button("", size);
         uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
         uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
         window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
                                    image_bb.Min, image_bb.Max,
-                                   uv0, uv1, 0xFF000000);
+                                   uv0, uv1, color.uint32);
     } else {
         ret = ImGui::Button(label, size);
     }
@@ -1638,6 +1642,7 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 uv0, uv1;
     float h;
     ImVec2 button_size;
+    const theme_t *theme = theme_get();
 
     button_size = ImVec2(size * GetContentRegionAvailWidth(), 20);
     if (size == -1) button_size.x = GetContentRegionAvailWidth();
@@ -1653,7 +1658,7 @@ bool gui_button(const char *label, float size, int icon)
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             GetItemRectMin(),
                             GetItemRectMin() + ImVec2(h, h),
-                            uv0, uv1, 0xFF000000);
+                            uv0, uv1, theme->colors.icons.uint32);
     }
     if (ret) on_click();
     return ret;
