@@ -1099,20 +1099,21 @@ static bool render_tab(const char *label, bool *v)
     bool ret;
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    float pad = style.FramePadding.x;
     uint32_t text_color;
     const theme_t *theme = theme_get();
+    int pad = theme->sizes.item_padding_h;
     uvec4b_t color;
     ImVec2 text_size = ImGui::CalcTextSize(label);
+    int xpad = (theme->sizes.item_height - text_size.y) / 2;
     ImGuiWindow* window = ImGui::GetCurrentWindow();
-    ImVec2 pos = window->DC.CursorPos + ImVec2(pad, text_size.x + pad);
+    ImVec2 pos = window->DC.CursorPos + ImVec2(0, text_size.x + pad);
 
     color = (*v) ? theme->colors.background : theme->colors.tabs;
     ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
 
     ImGui::PushID(label);
 
-    ret = ImGui::InvisibleButton("", ImVec2(text_size.y + pad * 2,
+    ret = ImGui::InvisibleButton("", ImVec2(theme->sizes.item_height,
                                             text_size.x + pad * 2));
     ImGui::GoxBox(ImGui::GetItemRectMin(), ImGui::GetItemRectSize(),
                   false, 0x09);
@@ -1126,10 +1127,10 @@ static bool render_tab(const char *label, bool *v)
 
         window->DrawList->PrimReserve(6, 4);
         window->DrawList->PrimQuadUV(
-                pos + ImVec2(glyph->Y0, -glyph->X0),
-                pos + ImVec2(glyph->Y0, -glyph->X1),
-                pos + ImVec2(glyph->Y1, -glyph->X1),
-                pos + ImVec2(glyph->Y1, -glyph->X0),
+                pos + ImVec2(glyph->Y0 + xpad, -glyph->X0),
+                pos + ImVec2(glyph->Y0 + xpad, -glyph->X1),
+                pos + ImVec2(glyph->Y1 + xpad, -glyph->X1),
+                pos + ImVec2(glyph->Y1 + xpad, -glyph->X0),
 
                 ImVec2(glyph->U0, glyph->V0),
                 ImVec2(glyph->U1, glyph->V0),
@@ -1236,8 +1237,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     ImGui::BeginGroup();
     draw_list = ImGui::GetWindowDrawList();
-    ImVec2 rmin = ImGui::GetCursorScreenPos() - style.FramePadding;
-    ImVec2 rmax = rmin + ImVec2(26, ImGui::GetWindowHeight());
+    ImVec2 rmin = ImGui::GetCursorScreenPos() - ImVec2(4, 4);
+    ImVec2 rmax = rmin + ImVec2(theme->sizes.item_height + 4,
+                                ImGui::GetWindowHeight());
     draw_list->AddRectFilled(rmin, rmax,
                 ImGui::ColorConvertFloat4ToU32(theme->colors.tabs_background));
 
