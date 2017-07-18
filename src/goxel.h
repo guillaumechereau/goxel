@@ -1173,40 +1173,47 @@ uvec3b_t rgb_to_hsl(uvec3b_t rgb);
 
 // #### Gui ####################
 
-#define THEME_GROUPS(X) \
-    X(BASE, BASE) \
-    X(WIDGET, BASE) \
-    X(BUTTON, WIDGET) \
-    X(INPUT, WIDGET) \
-    X(ICON, WIDGET) \
-    X(TAB, BASE) \
-    X(MENU, BASE) \
+#define THEME_SIZES(X) \
+    X(item_height) \
+    X(icons_height) \
+    X(item_padding_h) \
+    X(item_rounding) \
+    X(item_spacing_h) \
+    X(item_spacing_v) \
+    X(item_inner_spacing_h)
 
-#define THEME_COLORS(X) \
-    X(BACKGROUND, background) \
-    X(OUTLINE, outline) \
-    X(INNER, inner) \
-    X(INNER_SELECTED, inner_selected) \
-    X(TEXT, text) \
-    X(TEXT_SELECTED, text_selected) \
 
 enum {
-#define X(a, _) THEME_GROUP_##a,
-    THEME_GROUPS(X)
-#undef X
+    THEME_GROUP_BASE,
+    THEME_GROUP_WIDGET,
+    THEME_GROUP_TAB,
+    THEME_GROUP_MENU,
     THEME_GROUP_COUNT
 };
 
 enum {
-#define X(a, _) THEME_COLOR_##a,
-    THEME_COLORS(X)
-#undef X
+    THEME_COLOR_BACKGROUND,
+    THEME_COLOR_OUTLINE,
+    THEME_COLOR_INNER,
+    THEME_COLOR_INNER_SELECTED,
+    THEME_COLOR_TEXT,
+    THEME_COLOR_TEXT_SELECTED,
     THEME_COLOR_COUNT
 };
 
+typedef struct {
+    const char *name;
+    int parent;
+    bool colors[THEME_COLOR_COUNT];
+} theme_group_info_t;
+extern theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT];
 
 typedef struct {
-    int      parent;
+    const char *name;
+} theme_color_info_t;
+extern theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT];
+
+typedef struct {
     uvec4b_t colors[THEME_COLOR_COUNT];
 } theme_group_t;
 

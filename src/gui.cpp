@@ -952,25 +952,28 @@ static void about_popup(void)
 
 static void settings_popup(void)
 {
+    int group, color;
     theme_t *theme = theme_get();
-    uvec4b_t *colors = theme->groups[THEME_GROUP_BASE].colors;
+    ImVec4 fcolor;
 
-    gui_group_begin(NULL);
-    gui_input_int("item height", &theme->sizes.item_height, 0, 1000);
-    gui_input_int("icons height", &theme->sizes.icons_height, 0, 1000);
-    gui_input_int("item padding_h", &theme->sizes.item_padding_h, 0, 1000);
-    gui_input_int("item rounding", &theme->sizes.item_rounding, 0, 1000);
-    gui_input_int("item spacing h", &theme->sizes.item_spacing_h, 0, 1000);
-    gui_input_int("item spacing v", &theme->sizes.item_spacing_v, 0, 1000);
-    gui_input_int("item inner spacing h", &theme->sizes.item_inner_spacing_h, 0, 1000);
+    gui_group_begin("Sizes");
+    #define X(a) gui_input_int(#a, &theme->sizes.a, 0, 1000);
+    THEME_SIZES(X)
+    #undef X
     gui_group_end();
 
-    gui_color("background", &colors[THEME_COLOR_BACKGROUND]);
-    gui_color("outline", &colors[THEME_COLOR_OUTLINE]);
-    gui_color("inner", &colors[THEME_COLOR_INNER]);
-    gui_color("inner_selected", &colors[THEME_COLOR_INNER_SELECTED]);
-    gui_color("text", &colors[THEME_COLOR_TEXT]);
-    gui_color("text_selected", &colors[THEME_COLOR_TEXT_SELECTED]);
+    for (group = 0; group < THEME_GROUP_COUNT; group++) {
+        if (ImGui::CollapsingHeader(THEME_GROUP_INFOS[group].name)) {
+            for (color = 0; color < THEME_COLOR_COUNT; color++) {
+                if (!THEME_GROUP_INFOS[group].colors[color]) continue;
+                fcolor = theme->groups[group].colors[color];
+                if (ImGui::ColorEdit4(THEME_COLOR_INFOS[color].name,
+                                      (float*)&fcolor)) {
+                    theme->groups[group].colors[color] = fcolor;
+                }
+            }
+        }
+    }
 
     if (ImGui::Button("Revert")) theme_revert_default();
     ImGui::SameLine();
@@ -1416,19 +1419,18 @@ void gui_group_end(void)
     draw_list->ChannelsSetCurrent(0);
     ImVec2 pos = ImGui::GetItemRectMin();
     ImVec2 size = ImGui::GetItemRectMax() - pos;
-    ImGuiStyle& style = ImGui::GetStyle();
 
     // Stencil write.
     draw_list->AddCallback(stencil_callback, (void*)(intptr_t)1);
     GoxBox2(pos + ImVec2(1, 1), size - ImVec2(2, 2),
-            style.Colors[ImGuiCol_Border], true);
+            COLOR(WIDGET, OUTLINE, 0), true);
     // Stencil filter.
     draw_list->AddCallback(stencil_callback, (void*)(intptr_t)2);
 
     draw_list->ChannelsMerge();
     // Stencil reset.
     draw_list->AddCallback(stencil_callback, (void*)(intptr_t)0);
-    GoxBox2(pos, size, style.Colors[ImGuiCol_Border], false);
+    GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), false);
     ImGui::PopID();
 }
 
@@ -1543,19 +1545,19 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     bool ret = false;
     ImVec2 uv0, uv1; // The position in the icon texture.
     uvec4b_t color;
+    int group = THEME_GROUP_WIDGET;
 
     if (!tooltip) tooltip = label;
     ImGui::PushID(label);
 
-    color = COLOR(BUTTON, INNER, *v);
+    color = theme_get_color(group, THEME_COLOR_INNER, *v);
     PushStyleColor(ImGuiCol_Button, color);
     PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
                 style.Colors[ImGuiCol_Button], 1.2));
-    color = COLOR(BUTTON, TEXT, *v);
+    color = theme_get_color(group, THEME_COLOR_TEXT, *v);
     PushStyleColor(ImGuiCol_Text, color);
 
     if (icon != -1) {
-        color = COLOR(ICON, TEXT, (*v));
         ret = ImGui::Button("", size);
         center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
         uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
@@ -1653,7 +1655,7 @@ bool gui_button(const char *label, float size, int icon)
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             GetItemRectMin(),
                             GetItemRectMin() + ImVec2(h, h),
-                            uv0, uv1, COLOR(BUTTON, TEXT, 0).uint32);
+                            uv0, uv1, COLOR(WIDGET, TEXT, 0).uint32);
     }
     if (ret) on_click();
     return ret;

@@ -19,16 +19,60 @@
 #include "goxel.h"
 #include "ini.h"
 
+theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT] = {
+    [THEME_GROUP_BASE] = {
+        .name = "base",
+        .colors = {
+            [THEME_COLOR_BACKGROUND] = true,
+            [THEME_COLOR_OUTLINE] = true,
+            [THEME_COLOR_INNER] = true,
+            [THEME_COLOR_INNER_SELECTED] = true,
+            [THEME_COLOR_TEXT] = true,
+            [THEME_COLOR_TEXT_SELECTED] = true,
+        },
+    },
+    [THEME_GROUP_WIDGET] = {
+        .name = "widget",
+        .parent = THEME_GROUP_BASE,
+        .colors = {
+            [THEME_COLOR_OUTLINE] = true,
+            [THEME_COLOR_INNER] = true,
+            [THEME_COLOR_INNER_SELECTED] = true,
+            [THEME_COLOR_TEXT] = true,
+            [THEME_COLOR_TEXT_SELECTED] = true,
+        },
+    },
+    [THEME_GROUP_TAB] = {
+        .name = "tab",
+        .parent = THEME_GROUP_BASE,
+        .colors = {
+            [THEME_COLOR_BACKGROUND] = true,
+            [THEME_COLOR_INNER] = true,
+            [THEME_COLOR_INNER_SELECTED] = true,
+            [THEME_COLOR_TEXT] = true,
+            [THEME_COLOR_TEXT_SELECTED] = true,
+        },
+    },
+    [THEME_GROUP_MENU] = {
+        .name = "menu",
+        .parent = THEME_GROUP_BASE,
+        .colors = {
+            [THEME_COLOR_INNER] = true,
+            [THEME_COLOR_INNER_SELECTED] = true,
+            [THEME_COLOR_TEXT] = true,
+            [THEME_COLOR_TEXT_SELECTED] = true,
+        },
+    },
+};
 
-#define THEME_SIZES(X) \
-    X(item_height) \
-    X(icons_height) \
-    X(item_padding_h) \
-    X(item_rounding) \
-    X(item_spacing_h) \
-    X(item_spacing_v) \
-    X(item_inner_spacing_h)
-
+theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT] = {
+    [THEME_COLOR_BACKGROUND] = {.name = "background"},
+    [THEME_COLOR_OUTLINE] = {.name = "outline"},
+    [THEME_COLOR_INNER] = {.name = "inner"},
+    [THEME_COLOR_INNER_SELECTED] = {.name = "inner_selected"},
+    [THEME_COLOR_TEXT] = {.name = "text"},
+    [THEME_COLOR_TEXT_SELECTED] = {.name = "text_selected"},
+};
 
 static theme_t g_default_theme = {
     .name = "default",
@@ -88,6 +132,7 @@ static uvec4b_t parse_color(const char *s)
 static int theme_ini_handler(void *user, const char *section,
                              const char *name, const char *value, int lineno)
 {
+    int i;
     if (strcmp(section, "sizes") == 0) {
         #define X(n) \
         if (strcmp(name, #n) == 0) g_theme.sizes.n = atoi(value);
@@ -95,12 +140,12 @@ static int theme_ini_handler(void *user, const char *section,
         #undef X
     }
     if (strcmp(section, "colors") == 0) {
-        #define X(a, n) \
-        if (strcmp(name, #n) == 0) \
-            g_theme.groups[THEME_GROUP_BASE].colors[THEME_COLOR_##a] = \
-                parse_color(value);
-        THEME_COLORS(X)
-        #undef X
+        for (i = 0; i < THEME_COLOR_COUNT; i++) {
+            if (strcmp(name, THEME_COLOR_INFOS[i].name) == 0) {
+                g_theme.groups[THEME_GROUP_BASE].colors[i] =
+                    parse_color(value);
+            }
+        }
     }
 
     return 0;
@@ -121,11 +166,6 @@ void theme_set(const char *name)
         ini_parse_file(file, theme_ini_handler, NULL);
         fclose(file);
     }
-
-    #define X(a, p) \
-        g_theme.groups[THEME_GROUP_##a].parent = THEME_GROUP_##p;
-    THEME_GROUPS(X)
-    #undef X
 }
 
 theme_t *theme_get(void)
@@ -144,6 +184,7 @@ void theme_save(void)
     char *path;
     FILE *file;
     const theme_t *t = &g_theme;
+    int i;
     asprintf(&path, "%s/themes/default.ini", sys_get_user_dir());
     sys_make_dir(path);
     file = fopen(path, "w");
@@ -155,11 +196,10 @@ void theme_save(void)
     #undef X
 
     fprintf(file, "[base]\n");
-    #define X(a, n) \
-    fprintf(file, #n "=#%X\n", tohex(\
-                t->groups[THEME_GROUP_BASE].colors[THEME_COLOR_##a]));
-    THEME_COLORS(X)
-    #undef X
+    for (i = 0; i < THEME_COLOR_COUNT; i++) {
+        fprintf(file, "%s=#%X\n", THEME_COLOR_INFOS[i].name, tohex(
+                t->groups[THEME_GROUP_BASE].colors[i]));
+    }
 
     fclose(file);
     free(path);
@@ -170,6 +210,6 @@ uvec4b_t theme_get_color(int g, int color, bool sel)
     const theme_t *theme = theme_get();
     if (sel) color++;
     while (g && !theme->groups[g].colors[color].a)
-        g = theme->groups[g].parent;
+        g = THEME_GROUP_INFOS[g].parent;
     return theme->groups[g].colors[color];
 }

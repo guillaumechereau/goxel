@@ -198,7 +198,7 @@ namespace ImGui {
                 ImGui::GetContentRegionAvailWidth() -
                 button_sz.x - style.ItemSpacing.x);
 
-        color = theme_get_color(THEME_GROUP_INPUT, THEME_COLOR_INNER, 0);
+        color = theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_INNER, 0);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, uvec4b_to_imvec4(color));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
             color_lighten(uvec4b_to_imvec4(color), 1.2));
