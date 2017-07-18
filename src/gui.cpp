@@ -129,6 +129,10 @@ typedef struct gui_t {
     bool    mouse_in_view;
     bool    capture_mouse;
     int     group;
+
+    // Textures for the color editor.
+    texture_t *hsl_tex;
+    texture_t *hue_tex;
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -322,6 +326,128 @@ static void init_ImGui()
     style.WindowRounding = 0;
     style.WindowPadding = ImVec2(4, 4);
 }
+
+// Create an Sat/Hue bitmap with all the value for a given hue.
+static void hsl_bitmap(int hue, uint8_t *buffer, int w, int h)
+{
+    int x, y, sat, light;
+    uvec3b_t rgb;
+    for (y = 0; y < h; y++)
+    for (x = 0; x < w; x++) {
+        sat = 256 * (h - y - 1) / h;
+        light = 256 * x / w;
+        rgb = hsl_to_rgb(uvec3b(hue, sat, light));
+        memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
+    }
+}
+
+static void hue_bitmap(uint8_t *buffer, int w, int h)
+{
+    int x, y, hue;
+    uvec3b_t rgb;
+    for (y = 0; y < h; y++) {
+        hue = 256 * (h - y - 1) / h;
+        rgb = hsl_to_rgb(uvec3b(hue, 255, 127));
+        for (x = 0; x < w; x++) {
+            memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
+        }
+    }
+}
+
+static int create_hsl_texture(int hue) {
+    uint8_t *buffer;
+    if (!gui->hsl_tex) {
+        gui->hsl_tex = texture_new_surface(256, 256, TF_RGB);
+    }
+    buffer = (uint8_t*)malloc(256 * 256 * 3); 
+    hsl_bitmap(hue, buffer, 256, 256);
+
+    glBindTexture(GL_TEXTURE_2D, gui->hsl_tex->tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, buffer);
+
+    free(buffer);
+    return gui->hsl_tex->tex;
+}
+
+static int create_hue_texture(void)
+{
+    uint8_t *buffer;
+    if (!gui->hue_tex) {
+        gui->hue_tex = texture_new_surface(32, 256, TF_RGB);
+        buffer = (uint8_t*)malloc(32 * 256 * 3);
+        hue_bitmap(buffer, 32, 256);
+        glBindTexture(GL_TEXTURE_2D, gui->hue_tex->tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 32, 256, 0,
+                GL_RGB, GL_UNSIGNED_BYTE, buffer);
+        free(buffer);
+    }
+    return gui->hue_tex->tex;
+}
+
+static bool color_edit(const char *name, uvec4b_t *color) {
+    bool ret = false;
+    ImVec2 c_pos;
+    ImGuiIO& io = ImGui::GetIO();
+    uvec4b_t hsl;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImGui::Text("Edit color");
+    ImVec4 c = *color;
+    hsl.xyz = rgb_to_hsl(color->rgb);
+    hsl.a = color->a;
+
+    c_pos = ImGui::GetCursorScreenPos();
+    int tex_size = 256;
+    ImGui::Image((void*)(uintptr_t)create_hsl_texture(hsl.x),
+            ImVec2(tex_size, tex_size));
+    // Draw lines.
+    draw_list->AddLine(c_pos + ImVec2(hsl.z * tex_size / 255, 0),
+            c_pos + ImVec2(hsl.z * tex_size / 255, 256),
+            0xFFFFFFFF, 2.0f);
+    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl.y * tex_size / 255),
+            c_pos + ImVec2(256, 256 - hsl.y * tex_size / 255),
+            0xFFFFFFFF, 2.0f);
+
+    draw_list->AddLine(c_pos + ImVec2(hsl.z * tex_size / 255, 0),
+            c_pos + ImVec2(hsl.z * tex_size / 255, 256),
+            0xFF000000, 1.0f);
+    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl.y * tex_size / 255),
+            c_pos + ImVec2(256, 256 - hsl.y * tex_size / 255),
+            0xFF000000, 1.0f);
+
+    if (ImGui::IsItemHovered() && io.MouseDown[0]) {
+        ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
+                ImGui::GetIO().MousePos.y - c_pos.y);
+        int sat = 255 - pos.y;
+        int light = pos.x;
+        color->rgb = hsl_to_rgb(uvec3b(hsl.x, sat, light));
+        c = *color;
+        ret = true;
+    }
+    ImGui::SameLine();
+    c_pos = ImGui::GetCursorScreenPos();
+    ImGui::Image((void*)(uintptr_t)create_hue_texture(), ImVec2(32, 256));
+    draw_list->AddLine(c_pos + ImVec2( 0, 255 - hsl.x * 256 / 255),
+            c_pos + ImVec2(31, 255 - hsl.x * 256 / 255),
+            0xFFFFFFFF, 2.0f);
+
+    if (ImGui::IsItemHovered() && io.MouseDown[0]) {
+        ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
+                ImGui::GetIO().MousePos.y - c_pos.y);
+        int hue = 255 - pos.y;
+        color->rgb = hsl_to_rgb(uvec3b(hue, hsl.y, hsl.z));
+        c = *color;
+        ret = true;
+    }
+
+    ret = ImGui::ColorEdit3(name, (float*)&c) || ret;
+    if (ret) {
+        *color = uvec4b(c.x * 255, c.y * 255, c.z * 255, c.w * 255);
+    }
+    return ret;
+}
+
 
 
 static int on_gesture(const gesture_t *gest, void *user)
@@ -632,7 +758,7 @@ static void render_advanced_panel(goxel_t *goxel)
         c = uvec4b_to_imvec4(*COLORS[i].color);
         ImGui::ColorButton(c);
         if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            ImGui::GoxColorEdit("##edit", COLORS[i].color);
+            color_edit("##edit", COLORS[i].color);
             if (ImGui::Button("Close"))
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
@@ -1483,7 +1609,7 @@ bool gui_color(const char *label, uvec4b_t *color)
     ImGui::PushID(label);
     ImGui::ColorButton(icolor);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-        ImGui::GoxColorEdit("##edit", color);
+        color_edit("##edit", color);
         if (ImGui::Button("Close"))
             ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
