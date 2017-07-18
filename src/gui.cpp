@@ -957,6 +957,7 @@ static void settings_popup(void)
 {
     theme_t *theme = theme_get();
 
+    gui_group_begin(NULL);
     gui_input_int("item height", &theme->sizes.item_height, 0, 1000);
     gui_input_int("icons height", &theme->sizes.icons_height, 0, 1000);
     gui_input_int("item padding_h", &theme->sizes.item_padding_h, 0, 1000);
@@ -964,6 +965,7 @@ static void settings_popup(void)
     gui_input_int("item spacing h", &theme->sizes.item_spacing_h, 0, 1000);
     gui_input_int("item spacing v", &theme->sizes.item_spacing_v, 0, 1000);
     gui_input_int("item inner spacing h", &theme->sizes.item_inner_spacing_h, 0, 1000);
+    gui_group_end();
 
     gui_color("background", &theme->colors.background);
     gui_color("outline", &theme->colors.outline);
