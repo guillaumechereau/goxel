@@ -51,11 +51,12 @@ static inline uvec4b_t color_lighten(uvec4b_t c, float k)
 
 namespace ImGui {
     bool GoxColorEdit(const char *name, uvec4b_t *color);
-    bool GoxTab(const char *label, bool *v);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = -FLT_MAX, float maxv = FLT_MAX,
                        const char *format = "%.1f");
 
+    void GoxBox(ImVec2 pos, ImVec2 size, bool selected,
+                int rounding_corners_flags = ~0);
     void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
                  int rounding_corners_flags = ~0);
 };
@@ -959,6 +960,57 @@ static void render_menu(void)
     if (popup_settings) ImGui::OpenPopup("Settings");
 }
 
+static bool render_tab(const char *label, bool *v)
+{
+    ImFont *font = GImGui->Font;
+    const ImFont::Glyph *glyph;
+    char c;
+    bool ret;
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    float pad = style.FramePadding.x;
+    uint32_t text_color;
+    const theme_t *theme = theme_get();
+    uvec4b_t color;
+    ImVec2 text_size = ImGui::CalcTextSize(label);
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    ImVec2 pos = window->DC.CursorPos + ImVec2(pad, text_size.x + pad);
+
+    color = (*v) ? theme->colors.background : theme->colors.tabs;
+    ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
+
+    ImGui::PushID(label);
+
+    ret = ImGui::InvisibleButton("", ImVec2(text_size.y + pad * 2,
+                                            text_size.x + pad * 2));
+    ImGui::GoxBox(ImGui::GetItemRectMin(), ImGui::GetItemRectSize(),
+                  false, 0x09);
+
+    ImGui::PopStyleColor();
+    text_color = ImGui::ColorConvertFloat4ToU32(
+            style.Colors[ImGuiCol_Text]);
+    while ((c = *label++)) {
+        glyph = font->FindGlyph(c);
+        if (!glyph) continue;
+
+        window->DrawList->PrimReserve(6, 4);
+        window->DrawList->PrimQuadUV(
+                pos + ImVec2(glyph->Y0, -glyph->X0),
+                pos + ImVec2(glyph->Y0, -glyph->X1),
+                pos + ImVec2(glyph->Y1, -glyph->X1),
+                pos + ImVec2(glyph->Y1, -glyph->X0),
+
+                ImVec2(glyph->U0, glyph->V0),
+                ImVec2(glyph->U1, glyph->V0),
+                ImVec2(glyph->U1, glyph->V1),
+                ImVec2(glyph->U0, glyph->V1),
+                text_color);
+        pos.y -= glyph->XAdvance;
+    }
+    ImGui::PopID();
+    return ret;
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     static view_t view;
@@ -1060,7 +1112,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
-        if (ImGui::GoxTab(PANELS[i].name, &b)) {
+        if (render_tab(PANELS[i].name, &b)) {
             on_click();
             current_panel = i;
         }

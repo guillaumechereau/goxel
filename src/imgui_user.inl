@@ -195,56 +195,6 @@ namespace ImGui {
         return ret;
     }
 
-    bool GoxTab(const char *text, bool *v)
-    {
-        ImFont *font = GImGui->Font;
-        const ImFont::Glyph *glyph;
-        char c;
-        bool ret;
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
-        float pad = style.FramePadding.x;
-        uint32_t text_color;
-        const theme_t *theme = theme_get();
-        uvec4b_t color;
-        ImVec2 text_size = CalcTextSize(text);
-        ImGuiWindow* window = GetCurrentWindow();
-        ImVec2 pos = window->DC.CursorPos + ImVec2(pad, text_size.x + pad);
-
-        color = (*v) ? theme->colors.background : theme->colors.tabs;
-        ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
-
-        ImGui::PushID(text);
-
-        ret = InvisibleButton("", ImVec2(text_size.y + pad * 2,
-                                         text_size.x + pad * 2));
-        GoxBox(GetItemRectMin(), GetItemRectSize(), false, 0x09);
-
-        ImGui::PopStyleColor();
-        text_color = ImGui::ColorConvertFloat4ToU32(
-                style.Colors[ImGuiCol_Text]);
-        while ((c = *text++)) {
-            glyph = font->FindGlyph(c);
-            if (!glyph) continue;
-
-            window->DrawList->PrimReserve(6, 4);
-            window->DrawList->PrimQuadUV(
-                    pos + ImVec2(glyph->Y0, -glyph->X0),
-                    pos + ImVec2(glyph->Y0, -glyph->X1),
-                    pos + ImVec2(glyph->Y1, -glyph->X1),
-                    pos + ImVec2(glyph->Y1, -glyph->X0),
-
-                    ImVec2(glyph->U0, glyph->V0),
-                    ImVec2(glyph->U1, glyph->V0),
-                    ImVec2(glyph->U1, glyph->V1),
-                    ImVec2(glyph->U0, glyph->V1),
-                    text_color);
-            pos.y -= glyph->XAdvance;
-        }
-        ImGui::PopID();
-        return ret;
-    }
-
     // Copied from imgui, with some customization...
     bool GoxInputScalarAsWidgetReplacement(const ImRect& aabb, const char* label, ImGuiDataType data_type, void* data_ptr, ImGuiID id, int decimal_precision)
     {
