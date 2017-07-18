@@ -57,10 +57,9 @@ theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT] = {
         .name = "menu",
         .parent = THEME_GROUP_BASE,
         .colors = {
+            [THEME_COLOR_BACKGROUND] = true,
             [THEME_COLOR_INNER] = true,
-            [THEME_COLOR_INNER_SELECTED] = true,
             [THEME_COLOR_TEXT] = true,
-            [THEME_COLOR_TEXT_SELECTED] = true,
         },
     },
 };

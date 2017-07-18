@@ -180,9 +180,20 @@ namespace ImGui {
             ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         float speed = step / 20;
         uvec4b_t color;
+        color = theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_INNER, 0);
 
         ImGui::PushID(label);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
+
+        ImGui::PushStyleColor(ImGuiCol_Text, uvec4b_to_imvec4(
+                theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_TEXT, 0)));
+        ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, uvec4b_to_imvec4(color));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
+            color_lighten(uvec4b_to_imvec4(color), 1.2));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+            color_lighten(uvec4b_to_imvec4(color), 1.2));
+
 
         ImGui::SetWindowFontScale(0.75);
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -198,13 +209,7 @@ namespace ImGui {
                 ImGui::GetContentRegionAvailWidth() -
                 button_sz.x - style.ItemSpacing.x);
 
-        color = theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_INNER, 0);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, uvec4b_to_imvec4(color));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
-            color_lighten(uvec4b_to_imvec4(color), 1.2));
-
         ret |= ImGui::GoxDragFloat("", label, v, speed, minv, maxv, format, 1.0);
-        ImGui::PopStyleColor(2);
         ImGui::PopItemWidth();
 
         ImGui::SameLine();
@@ -218,6 +223,7 @@ namespace ImGui {
         ImGui::PopStyleVar();
         ImGui::SetWindowFontScale(1);
 
+        ImGui::PopStyleColor(5);
         ImGui::PopStyleVar();
         ImGui::PopID();
 
