@@ -1179,6 +1179,7 @@ struct theme {
 
     struct {
         int  item_height;
+        int  icons_height;
         int  item_padding_h;
         int  item_rounding;
         int  item_spacing_h;

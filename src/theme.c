@@ -22,6 +22,7 @@
 
 #define SIZE_ATTRS(X) \
     X(item_height) \
+    X(icons_height) \
     X(item_padding_h) \
     X(item_rounding) \
     X(item_spacing_h) \
@@ -44,6 +45,7 @@ static const theme_t g_default_theme = {
     .name = "default",
     .sizes = {
         .item_height = 18,
+        .icons_height = 32,
         .item_padding_h = 4,
         .item_rounding = 4,
         .item_spacing_h = 4,

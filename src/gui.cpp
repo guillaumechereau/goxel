@@ -958,6 +958,7 @@ static void settings_popup(void)
     theme_t *theme = theme_get();
 
     gui_input_int("item height", &theme->sizes.item_height, 0, 1000);
+    gui_input_int("icons height", &theme->sizes.icons_height, 0, 1000);
     gui_input_int("item padding_h", &theme->sizes.item_padding_h, 0, 1000);
     gui_input_int("item rounding", &theme->sizes.item_rounding, 0, 1000);
     gui_input_int("item spacing h", &theme->sizes.item_spacing_h, 0, 1000);
@@ -1534,15 +1535,13 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     ImGuiWindow* window = GetCurrentWindow();
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
-    ImVec2 pos = ImGui::GetCursorScreenPos();
     ImVec2 size;
 
     if (icon != -1)
-        size = ImVec2(32, 32);
+        size = ImVec2(theme->sizes.icons_height, theme->sizes.icons_height);
     else
         size = ImVec2(w, theme->sizes.item_height);
-    ImVec2 padding = ImVec2(0, 0);
-    ImRect image_bb(pos + padding, pos + padding + size);
+    ImVec2 center;
     bool ret = false;
     ImVec2 uv0, uv1; // The position in the icon texture.
     uvec4b_t color;
@@ -1561,10 +1560,12 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     if (icon != -1) {
         color = (*v) ? theme->colors.icons_selected : theme->colors.icons;
         ret = ImGui::Button("", size);
+        center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
         uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
         uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
         window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
-                                   image_bb.Min, image_bb.Max,
+                                   center - ImVec2(16, 16),
+                                   center + ImVec2(16, 16),
                                    uv0, uv1, color.uint32);
     } else {
         ret = ImGui::Button(label, size);
