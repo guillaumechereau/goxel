@@ -65,11 +65,6 @@ static texture_t *g_tex_icons = NULL;
 
 static const int MiB = 1 << 20;
 
-static ImVec4 uvec4b_to_imvec4(uvec4b_t v)
-{
-    return ImVec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255);
-}
-
 static const char *VSHADER =
     "                                                               \n"
     "attribute vec3 a_pos;                                          \n"
@@ -757,7 +752,7 @@ static void render_advanced_panel(goxel_t *goxel)
     ImGui::Text("Other");
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
         ImGui::PushID(COLORS[i].label);
-        c = uvec4b_to_imvec4(*COLORS[i].color);
+        c = *COLORS[i].color;
         ImGui::ColorButton(c);
         if (ImGui::BeginPopupContextItem("color context menu", 0)) {
             color_edit("##edit", COLORS[i].color);
@@ -1108,7 +1103,7 @@ static bool render_tab(const char *label, bool *v)
     ImVec2 pos = window->DC.CursorPos + ImVec2(0, text_size.x + pad);
 
     color = COLOR(TAB, INNER, *v);
-    ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
+    ImGui::PushStyleColor(ImGuiCol_Button, color);
 
     ImGui::PushID(label);
 
@@ -1611,10 +1606,8 @@ void gui_same_line(void)
 
 bool gui_color(const char *label, uvec4b_t *color)
 {
-    ImVec4 icolor;
-    icolor = uvec4b_to_imvec4(*color);
     ImGui::PushID(label);
-    ImGui::ColorButton(icolor);
+    ImGui::ColorButton(*color);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
         color_edit("##edit", color);
         if (ImGui::Button("Close"))
