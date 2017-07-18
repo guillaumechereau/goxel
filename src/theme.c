@@ -132,18 +132,18 @@ static uvec4b_t parse_color(const char *s)
 static int theme_ini_handler(void *user, const char *section,
                              const char *name, const char *value, int lineno)
 {
-    int i;
+    int group, i;
     if (strcmp(section, "sizes") == 0) {
         #define X(n) \
         if (strcmp(name, #n) == 0) g_theme.sizes.n = atoi(value);
         THEME_SIZES(X)
         #undef X
     }
-    if (strcmp(section, "colors") == 0) {
+    for (group = 0; group < THEME_GROUP_COUNT; group++) {
+        if (strcmp(section, THEME_GROUP_INFOS[group].name) != 0) continue;
         for (i = 0; i < THEME_COLOR_COUNT; i++) {
             if (strcmp(name, THEME_COLOR_INFOS[i].name) == 0) {
-                g_theme.groups[THEME_GROUP_BASE].colors[i] =
-                    parse_color(value);
+                g_theme.groups[group].colors[i] = parse_color(value);
             }
         }
     }
@@ -184,7 +184,7 @@ void theme_save(void)
     char *path;
     FILE *file;
     const theme_t *t = &g_theme;
-    int i;
+    int group, i;
     asprintf(&path, "%s/themes/default.ini", sys_get_user_dir());
     sys_make_dir(path);
     file = fopen(path, "w");
@@ -195,10 +195,14 @@ void theme_save(void)
     THEME_SIZES(X)
     #undef X
 
-    fprintf(file, "[base]\n");
-    for (i = 0; i < THEME_COLOR_COUNT; i++) {
-        fprintf(file, "%s=#%X\n", THEME_COLOR_INFOS[i].name, tohex(
-                t->groups[THEME_GROUP_BASE].colors[i]));
+    for (group = 0; group < THEME_GROUP_COUNT; group++) {
+        fprintf(file, "\n");
+        fprintf(file, "[%s]\n", THEME_GROUP_INFOS[group].name);
+        for (i = 0; i < THEME_COLOR_COUNT; i++) {
+            if (!t->groups[group].colors[i].a) continue;
+            fprintf(file, "%s=#%X\n", THEME_COLOR_INFOS[i].name, tohex(
+                    t->groups[group].colors[i]));
+        }
     }
 
     fclose(file);
