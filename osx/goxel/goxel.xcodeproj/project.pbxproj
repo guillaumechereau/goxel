@@ -61,6 +61,9 @@
 		F0D463BD1E48759A004F1A37 /* cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0D463BC1E48759A004F1A37 /* cache.c */; };
 		F0D463BF1E4875CA004F1A37 /* stack.c in Sources */ = {isa = PBXBuildFile; fileRef = F0D463BE1E4875CA004F1A37 /* stack.c */; };
 		F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */; };
+		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
+		F0E71BB01F1DA7A100D20C7C /* ini.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAE1F1DA7A100D20C7C /* ini.c */; };
+		F0E71BB21F1DAD2E00D20C7C /* system_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BB11F1DAD2E00D20C7C /* system_osx.m */; };
 		F0EEB7DE1C8EC25D004AB676 /* procedural.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7D91C8EC25D004AB676 /* procedural.c */; };
 		F0EEB7E01C8EC25D004AB676 /* procedural.leg in Resources */ = {isa = PBXBuildFile; fileRef = F0EEB7DB1C8EC25D004AB676 /* procedural.leg */; };
 		F0EEB7E41C8EC27C004AB676 /* action.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7E31C8EC27C004AB676 /* action.c */; };
@@ -144,6 +147,10 @@
 		F0D463BE1E4875CA004F1A37 /* stack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stack.c; sourceTree = "<group>"; };
 		F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noc_file_dialog.h; sourceTree = "<group>"; };
 		F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = dialogs_osx.m; sourceTree = "<group>"; };
+		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
+		F0E71BAE1F1DA7A100D20C7C /* ini.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ini.c; sourceTree = "<group>"; };
+		F0E71BAF1F1DA7A100D20C7C /* ini.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ini.h; sourceTree = "<group>"; };
+		F0E71BB11F1DAD2E00D20C7C /* system_osx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = system_osx.m; sourceTree = "<group>"; };
 		F0EEB7D91C8EC25D004AB676 /* procedural.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = procedural.c; sourceTree = "<group>"; };
 		F0EEB7DB1C8EC25D004AB676 /* procedural.leg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = procedural.leg; sourceTree = "<group>"; };
 		F0EEB7E31C8EC27C004AB676 /* action.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = action.c; sourceTree = "<group>"; };
@@ -217,6 +224,8 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F0E71BB11F1DAD2E00D20C7C /* system_osx.m */,
+				F0E71BAB1F1DA30D00D20C7C /* theme.c */,
 				F0158ECA1F17289B008893E6 /* sound_openal.inl */,
 				F0158ECB1F17289B008893E6 /* sound.c */,
 				F097B3F11F0C97DB00A3622B /* gesture.c */,
@@ -265,6 +274,7 @@
 		F07DEA151BD0F33A00BAA1AD /* ext_src */ = {
 			isa = PBXGroup;
 			children = (
+				F0E71BAD1F1DA7A100D20C7C /* inih */,
 				F0DE970D1E6FE8BF000354AF /* noc */,
 				F07DEA1B1BD0F33A00BAA1AD /* imgui */,
 				F07DEA211BD0F33A00BAA1AD /* stb */,
@@ -331,6 +341,15 @@
 				F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */,
 			);
 			path = noc;
+			sourceTree = "<group>";
+		};
+		F0E71BAD1F1DA7A100D20C7C /* inih */ = {
+			isa = PBXGroup;
+			children = (
+				F0E71BAE1F1DA7A100D20C7C /* ini.c */,
+				F0E71BAF1F1DA7A100D20C7C /* ini.h */,
+			);
+			path = inih;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -418,6 +437,7 @@
 				F037D5D41EA6069A00C96D10 /* procedural.c in Sources */,
 				F07DEA061BD0F31500BAA1AD /* image.c in Sources */,
 				F06C683C1D2EAECC00887FCE /* camera.c in Sources */,
+				F0E71BB21F1DAD2E00D20C7C /* system_osx.m in Sources */,
 				F037D5D11EA6069A00C96D10 /* laser.c in Sources */,
 				F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */,
 				F07DEA111BD0F31500BAA1AD /* texture.c in Sources */,
@@ -434,6 +454,7 @@
 				F0A15FFD1E962F1300C6EF33 /* png.c in Sources */,
 				F037D5D01EA6069A00C96D10 /* color_picker.c in Sources */,
 				F07DEA001BD0F31500BAA1AD /* color.c in Sources */,
+				F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */,
 				F0A160091E962F4600C6EF33 /* mustache.c in Sources */,
 				F07DE9D31BD0F03900BAA1AD /* AppDelegate.swift in Sources */,
 				F0EEB7DE1C8EC25D004AB676 /* procedural.c in Sources */,
@@ -453,6 +474,7 @@
 				F037D5D21EA6069A00C96D10 /* move.c in Sources */,
 				F06C683D1D2EAECC00887FCE /* quantization.c in Sources */,
 				F07DEA051BD0F31500BAA1AD /* gui.cpp in Sources */,
+				F0E71BB01F1DA7A100D20C7C /* ini.c in Sources */,
 				F0D463BD1E48759A004F1A37 /* cache.c in Sources */,
 				F07DEA0D1BD0F31500BAA1AD /* render.c in Sources */,
 				F037D5C31EA6061F00C96D10 /* gox.c in Sources */,
