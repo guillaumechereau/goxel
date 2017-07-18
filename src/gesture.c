@@ -141,7 +141,10 @@ int gesture_update(int nb, gesture_t *gestures[],
 
     for (i = 0; allup && i < ARRAY_SIZE(inputs->touches); i++) {
         for (j = 0; allup && j < ARRAY_SIZE(inputs->touches[i].down); j++) {
-            if (inputs->touches[i].down[i]) allup = false;
+            if (inputs->touches[i].down[i]) {
+                allup = false;
+                break;
+            }
         }
     }
 
