@@ -171,7 +171,7 @@ int tool_gui_smoothness(void)
 int tool_gui_color(void)
 {
     gui_text("Color");
-    gui_color(&goxel->painter.color);
+    gui_color("##color", &goxel->painter.color);
     return 0;
 }
 

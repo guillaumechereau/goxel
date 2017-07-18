@@ -20,9 +20,20 @@ extern "C" {
 #include "goxel.h"
 }
 
+#define IM_VEC4_CLASS_EXTRA \
+        ImVec4(const uvec4b_t& f) { \
+            x = f.x / 255.; \
+            y = f.y / 255.; \
+            z = f.z / 255.; \
+            w = f.w / 255.; }     \
+        operator uvec4b_t() const { \
+            return uvec4b(x * 255, y * 255, z * 255, w * 255); }
+
 #define IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
 #include "imgui_internal.h"
+
 
 static inline ImVec4 IMHEXCOLOR(uint32_t v)
 {
@@ -30,42 +41,29 @@ static inline ImVec4 IMHEXCOLOR(uint32_t v)
     return ImVec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
 }
 
-namespace ImGui {
-    bool GoxSelectable(const char *name, bool *v, int tex = 0, int icon = 0,
-                       const char *tooltip = NULL, ImVec2 size = ImVec2(0, 0));
-    bool GoxColorEdit(const char *name, uvec4b_t *color);
-    bool GoxPaletteEntry(const uvec4b_t *color, uvec4b_t *target);
-    bool GoxIsCharPressed(int c);
-    bool GoxCollapsingHeader(const char *label, const char *str_id = NULL,
-                             bool display_frame = true,
-                             bool default_open = false);
-    bool GoxAction(const char *id, const char *label, float size,
-                   const char *sig, ...);
+static inline uvec4b_t color_lighten(uvec4b_t c, float k)
+{
+    c.r *= k;
+    c.g *= k;
+    c.b *= k;
+    return c;
+}
 
-    bool GoxCheckbox(const char *id, const char *label);
-    bool GoxMenuItem(const char *id, const char *label);
-    bool GoxInputAngle(const char *id, float *v, int vmin, int vmax);
-    bool GoxTab(const char *label, bool *v);
-    bool GoxInputInt(const char *label, int *v, int step = 1,
-                     float minv = -FLT_MAX, float maxv = FLT_MAX);
+namespace ImGui {
+    bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = -FLT_MAX, float maxv = FLT_MAX,
                        const char *format = "%.1f");
 
-    bool GoxInputQuat(const char *label, quat_t *q);
-
-    void GoxGroupBegin(const char *label = NULL);
-    void GoxGroupEnd(void);
+    void GoxBox(ImVec2 pos, ImVec2 size, bool selected,
+                int rounding_corners_flags = ~0);
+    void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
+                 int rounding_corners_flags = ~0);
 };
 
 static texture_t *g_tex_icons = NULL;
 
 static const int MiB = 1 << 20;
-
-static ImVec4 uvec4b_to_imvec4(uvec4b_t v)
-{
-    return ImVec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255);
-}
 
 static const char *VSHADER =
     "                                                               \n"
@@ -125,6 +123,11 @@ typedef struct gui_t {
     }       gestures;
     bool    mouse_in_view;
     bool    capture_mouse;
+    int     group;
+
+    // Textures for the color editor.
+    texture_t *hsl_tex;
+    texture_t *hue_tex;
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -142,6 +145,14 @@ static void on_click(void) {
     if (DEFINED(GUI_SOUND))
         sound_play("click");
 }
+
+static bool isCharPressed(int c)
+{
+    ImGuiContext& g = *GImGui;
+    return g.IO.InputCharacters[0] == c;
+}
+
+#define COLOR(g, c, s) theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s))
 
 static void init_prog(prog_t *p)
 {
@@ -277,7 +288,6 @@ static void load_fonts_texture()
 
 static void init_ImGui()
 {
-    float padding_k = 1;
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = 1.0f/60.0f;
 
@@ -310,24 +320,131 @@ static void init_ImGui()
     load_fonts_texture();
 
     ImGuiStyle& style = ImGui::GetStyle();
-    style.FrameRounding = 4;
     style.WindowRounding = 0;
     style.WindowPadding = ImVec2(4, 4);
-    style.ItemSpacing = ImVec2(4, 4);
-    style.FramePadding = ImVec2(4 * padding_k, 2 * padding_k);
-
-    style.Colors[ImGuiCol_WindowBg] = IMHEXCOLOR(0x607272FF);
-    style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
-    style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
-    style.Colors[ImGuiCol_Text] = IMHEXCOLOR(0x000000FF);
-    style.Colors[ImGuiCol_Button] = IMHEXCOLOR(0xA1A1A1FF);
-    style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
-    style.Colors[ImGuiCol_ButtonActive] = IMHEXCOLOR(0x6666CCFF);
-    style.Colors[ImGuiCol_ButtonHovered] = IMHEXCOLOR(0x7777CCFF);
-    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
-    style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
-    style.Colors[ImGuiCol_MenuBarBg] = IMHEXCOLOR(0x607272FF);
 }
+
+// Create an Sat/Hue bitmap with all the value for a given hue.
+static void hsl_bitmap(int hue, uint8_t *buffer, int w, int h)
+{
+    int x, y, sat, light;
+    uvec3b_t rgb;
+    for (y = 0; y < h; y++)
+    for (x = 0; x < w; x++) {
+        sat = 256 * (h - y - 1) / h;
+        light = 256 * x / w;
+        rgb = hsl_to_rgb(uvec3b(hue, sat, light));
+        memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
+    }
+}
+
+static void hue_bitmap(uint8_t *buffer, int w, int h)
+{
+    int x, y, hue;
+    uvec3b_t rgb;
+    for (y = 0; y < h; y++) {
+        hue = 256 * (h - y - 1) / h;
+        rgb = hsl_to_rgb(uvec3b(hue, 255, 127));
+        for (x = 0; x < w; x++) {
+            memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
+        }
+    }
+}
+
+static int create_hsl_texture(int hue) {
+    uint8_t *buffer;
+    if (!gui->hsl_tex) {
+        gui->hsl_tex = texture_new_surface(256, 256, TF_RGB);
+    }
+    buffer = (uint8_t*)malloc(256 * 256 * 3); 
+    hsl_bitmap(hue, buffer, 256, 256);
+
+    glBindTexture(GL_TEXTURE_2D, gui->hsl_tex->tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, buffer);
+
+    free(buffer);
+    return gui->hsl_tex->tex;
+}
+
+static int create_hue_texture(void)
+{
+    uint8_t *buffer;
+    if (!gui->hue_tex) {
+        gui->hue_tex = texture_new_surface(32, 256, TF_RGB);
+        buffer = (uint8_t*)malloc(32 * 256 * 3);
+        hue_bitmap(buffer, 32, 256);
+        glBindTexture(GL_TEXTURE_2D, gui->hue_tex->tex);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 32, 256, 0,
+                GL_RGB, GL_UNSIGNED_BYTE, buffer);
+        free(buffer);
+    }
+    return gui->hue_tex->tex;
+}
+
+static bool color_edit(const char *name, uvec4b_t *color) {
+    bool ret = false;
+    ImVec2 c_pos;
+    ImGuiIO& io = ImGui::GetIO();
+    uvec4b_t hsl;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImGui::Text("Edit color");
+    ImVec4 c = *color;
+    hsl.xyz = rgb_to_hsl(color->rgb);
+    hsl.a = color->a;
+
+    c_pos = ImGui::GetCursorScreenPos();
+    int tex_size = 256;
+    ImGui::Image((void*)(uintptr_t)create_hsl_texture(hsl.x),
+            ImVec2(tex_size, tex_size));
+    // Draw lines.
+    draw_list->AddLine(c_pos + ImVec2(hsl.z * tex_size / 255, 0),
+            c_pos + ImVec2(hsl.z * tex_size / 255, 256),
+            0xFFFFFFFF, 2.0f);
+    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl.y * tex_size / 255),
+            c_pos + ImVec2(256, 256 - hsl.y * tex_size / 255),
+            0xFFFFFFFF, 2.0f);
+
+    draw_list->AddLine(c_pos + ImVec2(hsl.z * tex_size / 255, 0),
+            c_pos + ImVec2(hsl.z * tex_size / 255, 256),
+            0xFF000000, 1.0f);
+    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl.y * tex_size / 255),
+            c_pos + ImVec2(256, 256 - hsl.y * tex_size / 255),
+            0xFF000000, 1.0f);
+
+    if (ImGui::IsItemHovered() && io.MouseDown[0]) {
+        ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
+                ImGui::GetIO().MousePos.y - c_pos.y);
+        int sat = 255 - pos.y;
+        int light = pos.x;
+        color->rgb = hsl_to_rgb(uvec3b(hsl.x, sat, light));
+        c = *color;
+        ret = true;
+    }
+    ImGui::SameLine();
+    c_pos = ImGui::GetCursorScreenPos();
+    ImGui::Image((void*)(uintptr_t)create_hue_texture(), ImVec2(32, 256));
+    draw_list->AddLine(c_pos + ImVec2( 0, 255 - hsl.x * 256 / 255),
+            c_pos + ImVec2(31, 255 - hsl.x * 256 / 255),
+            0xFFFFFFFF, 2.0f);
+
+    if (ImGui::IsItemHovered() && io.MouseDown[0]) {
+        ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
+                ImGui::GetIO().MousePos.y - c_pos.y);
+        int hue = 255 - pos.y;
+        color->rgb = hsl_to_rgb(uvec3b(hue, hsl.y, hsl.z));
+        c = *color;
+        ret = true;
+    }
+
+    ret = ImGui::ColorEdit3(name, (float*)&c) || ret;
+    if (ret) {
+        *color = uvec4b(c.x * 255, c.y * 255, c.z * 255, c.w * 255);
+    }
+    return ret;
+}
+
 
 
 static int on_gesture(const gesture_t *gest, void *user)
@@ -442,7 +559,7 @@ static void tools_panel(goxel_t *goxel)
     char label[64];
     const action_t *action = NULL;
 
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     for (i = 0; i < nb; i++) {
         v = goxel->tool->id == values[i].tool;
         sprintf(label, "%s", values[i].name);
@@ -458,10 +575,11 @@ static void tools_panel(goxel_t *goxel)
         }
         auto_grid(nb, i, 4);
     }
-    ImGui::GoxGroupEnd();
+    gui_group_end();
     auto_adjust_panel_size();
 
-    if (ImGui::GoxCollapsingHeader("Tool Options", NULL, true, true))
+    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    if (ImGui::CollapsingHeader("Tool Options"))
         tool_gui(goxel->tool);
 }
 
@@ -518,11 +636,30 @@ static void layers_panel(goxel_t *goxel)
     ImGui::SameLine();
     gui_action_button("img_move_layer_down", NULL, 0, "");
 
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
-    ImGui::GoxGroupEnd();
+    gui_group_end();
 }
+
+
+static bool render_palette_entry(const uvec4b_t *color, uvec4b_t *target)
+{
+    bool ret;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, *color);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, *color);
+    ret = ImGui::Button("", ImVec2(20, 20));
+    if (color->uint32 == target->uint32) {
+        draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                           0xFFFFFFFF, 0, 0, 1);
+    }
+    ImGui::PopStyleColor(2);
+    if (ret) *target = *color;
+    return ret;
+}
+
 
 static void palette_panel(goxel_t *goxel)
 {
@@ -550,7 +687,7 @@ static void palette_panel(goxel_t *goxel)
 
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
-        ImGui::GoxPaletteEntry(&p->entries[i].color, &goxel->painter.color);
+        render_palette_entry(&p->entries[i].color, &goxel->painter.color);
         auto_adjust_panel_size();
         if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
@@ -572,11 +709,11 @@ static void render_advanced_panel(goxel_t *goxel)
     };
 
     ImGui::Text("Light");
-    ImGui::GoxInputAngle("Pitch", &goxel->rend.light.pitch, -90, +90);
-    ImGui::GoxInputAngle("Yaw", &goxel->rend.light.yaw, 0, 360);
+    gui_angle("Pitch", &goxel->rend.light.pitch, -90, +90);
+    gui_angle("Yaw", &goxel->rend.light.yaw, 0, 360);
     gui_checkbox("Fixed", &goxel->rend.light.fixed, NULL);
 
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     v = goxel->rend.settings.border_shadow;
     if (gui_input_float("bshadow", &v, 0.1, 0.0, 1.0, NULL)) {
         v = clamp(v, 0, 1); \
@@ -596,7 +733,7 @@ static void render_advanced_panel(goxel_t *goxel)
     MAT_FLOAT(smoothness, 0, 1);
 
 #undef MAT_FLOAT
-    ImGui::GoxGroupEnd();
+    gui_group_end();
 
     ImGui::CheckboxFlags("Borders",
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_BORDERS);
@@ -615,10 +752,10 @@ static void render_advanced_panel(goxel_t *goxel)
     ImGui::Text("Other");
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
         ImGui::PushID(COLORS[i].label);
-        c = uvec4b_to_imvec4(*COLORS[i].color);
+        c = *COLORS[i].color;
         ImGui::ColorButton(c);
         if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            ImGui::GoxColorEdit("##edit", COLORS[i].color);
+            color_edit("##edit", COLORS[i].color);
             if (ImGui::Button("Close"))
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
@@ -627,7 +764,7 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::Text("%s", COLORS[i].label);
         ImGui::PopID();
     }
-    ImGui::GoxCheckbox("grid_visible", "Show grid");
+    gui_action_checkbox("grid_visible", "Show grid");
 }
 
 
@@ -648,10 +785,11 @@ static void render_panel(goxel_t *goxel)
             goxel->rend.settings = settings;
     }
     v = goxel->rend.settings.shadow;
-    if (ImGui::GoxInputFloat("shadow", &v, 0.1)) {
+    if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
-    if (ImGui::GoxCollapsingHeader("Render Advanced", NULL, true, false))
+    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    if (ImGui::CollapsingHeader("Render Advanced"))
         render_advanced_panel(goxel);
 }
 
@@ -662,14 +800,14 @@ static void export_panel(goxel_t *goxel)
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
     goxel->show_export_viewport = true;
-    ImGui::GoxGroupBegin();
+    gui_group_begin(NULL);
     i = goxel->image->export_width;
-    if (ImGui::GoxInputInt("width", &i, 1, 1, maxsize))
+    if (gui_input_int("width", &i, 1, maxsize))
         goxel->image->export_width = clamp(i, 1, maxsize);
     i = goxel->image->export_height;
-    if (ImGui::GoxInputInt("height", &i, 1, 1, maxsize))
+    if (gui_input_int("height", &i, 1, maxsize))
         goxel->image->export_height = clamp(i, 1, maxsize);
-    ImGui::GoxGroupEnd();
+    gui_group_end();
 }
 
 static void image_panel(goxel_t *goxel)
@@ -741,23 +879,23 @@ static void cameras_panel(goxel_t *goxel)
     gui_action_button("img_move_camera_down", NULL, 0, "");
 
     cam = &goxel->camera;
-    ImGui::GoxInputFloat("dist", &cam->dist, 10.0);
+    gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 
-    ImGui::GoxGroupBegin("Offset");
-    ImGui::GoxInputFloat("x", &cam->ofs.x, 1.0);
-    ImGui::GoxInputFloat("y", &cam->ofs.y, 1.0);
-    ImGui::GoxInputFloat("z", &cam->ofs.z, 1.0);
-    ImGui::GoxGroupEnd();
+    gui_group_begin("Offset");
+    gui_input_float("x", &cam->ofs.x, 1.0, 0, 0, NULL);
+    gui_input_float("y", &cam->ofs.y, 1.0, 0, 0, NULL);
+    gui_input_float("z", &cam->ofs.z, 1.0, 0, 0, NULL);
+    gui_group_end();
 
-    ImGui::GoxInputQuat("Rotation", &cam->rot);
+    gui_quat("Rotation", &cam->rot);
 
-    ImGui::GoxGroupBegin("Set");
-    ImGui::GoxAction("view_left", "left", 0.5, ""); ImGui::SameLine();
-    ImGui::GoxAction("view_right", "right", 1.0, "");
-    ImGui::GoxAction("view_front", "front", 0.5, ""); ImGui::SameLine();
-    ImGui::GoxAction("view_top", "top", 1.0, "");
-    ImGui::GoxAction("view_default", "default", 1.0, "");
-    ImGui::GoxGroupEnd();
+    gui_group_begin("Set");
+    gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();
+    gui_action_button("view_right", "right", 1.0, "");
+    gui_action_button("view_front", "front", 0.5, ""); ImGui::SameLine();
+    gui_action_button("view_top", "top", 1.0, "");
+    gui_action_button("view_default", "default", 1.0, "");
+    gui_group_end();
 }
 
 static void import_image_plane(goxel_t *goxel)
@@ -796,6 +934,7 @@ static void about_popup(void)
     ImGui::Text("Guillaume Chereau <guillaume@noctua-software.com>");
     ImGui::Text("GPL 3 License");
 
+    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
     if (ImGui::CollapsingHeader("Credits")) {
         ImGui::Text("Code:");
         ImGui::BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
@@ -809,6 +948,38 @@ static void about_popup(void)
     if (ImGui::Button("OK")) {
         ImGui::CloseCurrentPopup();
     }
+}
+
+static void settings_popup(void)
+{
+    int group, color;
+    theme_t *theme = theme_get();
+    ImVec4 fcolor;
+
+    gui_group_begin("Sizes");
+    #define X(a) gui_input_int(#a, &theme->sizes.a, 0, 1000);
+    THEME_SIZES(X)
+    #undef X
+    gui_group_end();
+
+    for (group = 0; group < THEME_GROUP_COUNT; group++) {
+        if (ImGui::CollapsingHeader(THEME_GROUP_INFOS[group].name)) {
+            for (color = 0; color < THEME_COLOR_COUNT; color++) {
+                if (!THEME_GROUP_INFOS[group].colors[color]) continue;
+                fcolor = theme->groups[group].colors[color];
+                if (ImGui::ColorEdit4(THEME_COLOR_INFOS[color].name,
+                                      (float*)&fcolor)) {
+                    theme->groups[group].colors[color] = fcolor;
+                }
+            }
+        }
+    }
+
+    if (ImGui::Button("Revert")) theme_revert_default();
+    ImGui::SameLine();
+    if (ImGui::Button("Save")) theme_save();
+
+    if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
 }
 
 static int check_action_shortcut(const action_t *action, void *user)
@@ -826,7 +997,7 @@ static int check_action_shortcut(const action_t *action, void *user)
     if (io.KeyShift) {
         check_key = false;
     }
-    if (    (check_char && ImGui::GoxIsCharPressed(s[0])) ||
+    if (    (check_char && isCharPressed(s[0])) ||
             (check_key && ImGui::IsKeyPressed(s[0], false))) {
         action_exec(action, "");
         return 1;
@@ -850,16 +1021,31 @@ static int export_menu_action_callback(const action_t *a, void *user)
     return 0;
 }
 
+static bool render_menu_item(const char *id, const char *label)
+{
+    const action_t *action = action_get(id);
+    assert(action);
+    if (ImGui::MenuItem(label, action->shortcut)) {
+        action_exec(action, "");
+        return true;
+    }
+    return false;
+}
+
 static void render_menu(void)
 {
     bool popup_about = false;
     bool popup_shift_alpha = false;
+    bool popup_settings = false;
+
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(MENU, INNER, 0));
+    ImGui::PushStyleColor(ImGuiCol_Text, COLOR(MENU, TEXT, 0));
 
     if (!ImGui::BeginMenuBar()) return;
     if (ImGui::BeginMenu("File")) {
-        ImGui::GoxMenuItem("save", "Save");
-        ImGui::GoxMenuItem("save_as", "Save as");
-        ImGui::GoxMenuItem("open", "Open");
+        render_menu_item("save", "Save");
+        render_menu_item("save_as", "Save as");
+        render_menu_item("open", "Open");
         if (ImGui::BeginMenu("Import...")) {
             if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
             actions_iter(import_menu_action_callback, NULL);
@@ -869,26 +1055,28 @@ static void render_menu(void)
             actions_iter(export_menu_action_callback, NULL);
             ImGui::EndMenu();
         }
-        ImGui::GoxMenuItem("quit", "Quit");
+        render_menu_item("quit", "Quit");
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("Clear", "Delete"))
             action_exec2("layer_clear", "");
-        ImGui::GoxMenuItem("undo", "Undo");
+        render_menu_item("undo", "Undo");
         ImGui::MenuItem("redo", "Redo");
-        ImGui::GoxMenuItem("copy", "Copy");
-        ImGui::GoxMenuItem("past", "Past");
+        render_menu_item("copy", "Copy");
+        render_menu_item("past", "Past");
         if (ImGui::MenuItem("Shift Alpha"))
             popup_shift_alpha = true;
+        if (ImGui::MenuItem("Settings"))
+            popup_settings = true;
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
-        ImGui::GoxMenuItem("view_left", "Left");
-        ImGui::GoxMenuItem("view_right", "Right");
-        ImGui::GoxMenuItem("view_front", "Front");
-        ImGui::GoxMenuItem("view_top", "Top");
-        ImGui::GoxMenuItem("view_default", "Default");
+        render_menu_item("view_left", "Left");
+        render_menu_item("view_right", "Right");
+        render_menu_item("view_front", "Front");
+        render_menu_item("view_top", "Top");
+        render_menu_item("view_default", "Default");
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {
@@ -900,6 +1088,56 @@ static void render_menu(void)
 
     if (popup_about) ImGui::OpenPopup("About");
     if (popup_shift_alpha) ImGui::OpenPopup("Shift Alpha");
+    if (popup_settings) ImGui::OpenPopup("Settings");
+
+    ImGui::PopStyleColor(2);
+}
+
+static bool render_tab(const char *label, bool *v)
+{
+    ImFont *font = GImGui->Font;
+    const ImFont::Glyph *glyph;
+    char c;
+    bool ret;
+    const theme_t *theme = theme_get();
+    int pad = theme->sizes.item_padding_h;
+    uvec4b_t color;
+    ImVec2 text_size = ImGui::CalcTextSize(label);
+    int xpad = (theme->sizes.item_height - text_size.y) / 2;
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    ImVec2 pos = window->DC.CursorPos + ImVec2(0, text_size.x + pad);
+
+    color = COLOR(TAB, INNER, *v);
+    ImGui::PushStyleColor(ImGuiCol_Button, color);
+
+    ImGui::PushID(label);
+
+    ret = ImGui::InvisibleButton("", ImVec2(theme->sizes.item_height,
+                                            text_size.x + pad * 2));
+    ImGui::GoxBox(ImGui::GetItemRectMin(), ImGui::GetItemRectSize(),
+                  false, 0x09);
+
+    ImGui::PopStyleColor();
+    while ((c = *label++)) {
+        glyph = font->FindGlyph(c);
+        if (!glyph) continue;
+
+        window->DrawList->PrimReserve(6, 4);
+        window->DrawList->PrimQuadUV(
+                pos + ImVec2(glyph->Y0 + xpad, -glyph->X0),
+                pos + ImVec2(glyph->Y0 + xpad, -glyph->X1),
+                pos + ImVec2(glyph->Y1 + xpad, -glyph->X1),
+                pos + ImVec2(glyph->Y1 + xpad, -glyph->X0),
+
+                ImVec2(glyph->U0, glyph->V0),
+                ImVec2(glyph->U1, glyph->V0),
+                ImVec2(glyph->U1, glyph->V1),
+                ImVec2(glyph->U0, glyph->V1),
+                ImGui::ColorConvertFloat4ToU32(COLOR(TAB, TEXT, *v)));
+        pos.y -= glyph->XAdvance;
+    }
+    ImGui::PopID();
+    return ret;
 }
 
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
@@ -911,9 +1149,12 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list;
     ImGuiStyle& style = ImGui::GetStyle();
+    const theme_t *theme = theme_get();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
     vec4_t display_rect = vec4(0, 0,
                                goxel->screen_size.x, goxel->screen_size.y);
+    float font_size = ImGui::GetFontSize();
+
     io.DisplaySize = ImVec2((float)goxel->screen_size.x,
                             (float)goxel->screen_size.y);
     io.DeltaTime = 1.0 / 60;
@@ -929,6 +1170,28 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         if (!inputs->chars[i]) break;
         io.AddInputCharacter(inputs->chars[i]);
     }
+
+    // Setup theme.
+    style.FramePadding = ImVec2(theme->sizes.item_padding_h,
+                                (theme->sizes.item_height - font_size) / 2);
+    style.FrameRounding = theme->sizes.item_rounding;
+    style.ItemSpacing = ImVec2(theme->sizes.item_spacing_h,
+                               theme->sizes.item_spacing_v);
+    style.ItemInnerSpacing = ImVec2(theme->sizes.item_inner_spacing_h, 0);
+
+    style.Colors[ImGuiCol_WindowBg] = COLOR(BASE, BACKGROUND, 0);
+    style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
+    style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
+    style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, 0);
+    style.Colors[ImGuiCol_Button] = COLOR(BASE, INNER, 0);
+    style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
+    style.Colors[ImGuiCol_ButtonActive] = COLOR(BASE, INNER, 1);
+    style.Colors[ImGuiCol_ButtonHovered] =
+        color_lighten(COLOR(BASE, INNER, 0), 1.2);
+    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
+    style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, 0);
+    style.Colors[ImGuiCol_Border] = COLOR(BASE, OUTLINE, 0);
 
     ImGui::NewFrame();
 
@@ -970,23 +1233,20 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     };
 
     ImGui::BeginGroup();
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, IMHEXCOLOR(0x607272FF));
-    ImGui::PushStyleColor(ImGuiCol_Button, IMHEXCOLOR(0x455656FF));
-
     draw_list = ImGui::GetWindowDrawList();
-    ImVec2 rmin = ImGui::GetCursorScreenPos() - style.FramePadding;
-    ImVec2 rmax = rmin + ImVec2(26, ImGui::GetWindowHeight());
+    ImVec2 rmin = ImGui::GetCursorScreenPos() - ImVec2(4, 4);
+    ImVec2 rmax = rmin + ImVec2(theme->sizes.item_height + 4,
+                                ImGui::GetWindowHeight());
     draw_list->AddRectFilled(rmin, rmax,
-                ImGui::ColorConvertFloat4ToU32(IMHEXCOLOR(0x304242FF)));
+                ImGui::ColorConvertFloat4ToU32(COLOR(TAB, BACKGROUND, 0)));
 
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (current_panel == (int)i);
-        if (ImGui::GoxTab(PANELS[i].name, &b)) {
+        if (render_tab(PANELS[i].name, &b)) {
             on_click();
             current_panel = i;
         }
     }
-    ImGui::PopStyleColor(2);
     ImGui::EndGroup();
 
     ImGui::SameLine();
@@ -1011,6 +1271,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     if (ImGui::BeginPopupModal("About", NULL,
                 ImGuiWindowFlags_AlwaysAutoResize)) {
         about_popup();
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("Settings", NULL)) {
+        settings_popup();
         ImGui::EndPopup();
     }
 
@@ -1078,8 +1342,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     float last_tool_radius = goxel->tool_radius;
 
     if (!io.WantCaptureKeyboard) {
-        if (ImGui::GoxIsCharPressed('[')) goxel->tool_radius -= 0.5;
-        if (ImGui::GoxIsCharPressed(']')) goxel->tool_radius += 0.5;
+        if (isCharPressed('[')) goxel->tool_radius -= 0.5;
+        if (isCharPressed(']')) goxel->tool_radius += 0.5;
         if (goxel->tool_radius != last_tool_radius) {
             goxel->tool_radius = clamp(goxel->tool_radius, 0.5, 64);
         }
@@ -1090,8 +1354,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         // either find a solution, either find a replacement for GLFW.
         // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
         // key 25 and 26, which might makes more sense.  Here I test for both.
-        if (ImGui::GoxIsCharPressed(26)) action_exec2("undo", "");
-        if (ImGui::GoxIsCharPressed(25)) action_exec2("redo", "");
+        if (isCharPressed(26)) action_exec2("undo", "");
+        if (isCharPressed(25)) action_exec2("redo", "");
         // Check the action shortcuts.
         actions_iter(check_action_shortcut, NULL);
     }
@@ -1105,14 +1369,69 @@ void gui_render(void)
 extern "C" {
 using namespace ImGui;
 
+static void stencil_callback(
+        const ImDrawList* parent_list, const ImDrawCmd* cmd)
+{
+    int op = ((intptr_t)cmd->UserCallbackData);
+
+    switch (op) {
+    case 0: // Reset
+        GL(glDisable(GL_STENCIL_TEST));
+        GL(glStencilMask(0x00));
+        break;
+    case 1: // Write
+        GL(glEnable(GL_STENCIL_TEST));
+        GL(glStencilFunc(GL_ALWAYS, 1, 0xFF));
+        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
+        GL(glStencilMask(0xFF));
+        break;
+    case 2: // Filter
+        GL(glEnable(GL_STENCIL_TEST));
+        GL(glStencilFunc(GL_EQUAL, 1, 0xFF));
+        GL(glStencilMask(0x00));
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
+
 void gui_group_begin(const char *label)
 {
-    GoxGroupBegin(label);
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    if (label) ImGui::Text("%s", label);
+    ImGui::PushID(label ? label : "group");
+    gui->group++;
+    draw_list->ChannelsSplit(2);
+    draw_list->ChannelsSetCurrent(1);
+    ImGui::BeginGroup();
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 1));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
 }
 
 void gui_group_end(void)
 {
-    GoxGroupEnd();
+    gui->group--;
+    ImGui::PopStyleVar(2);
+    ImGui::Dummy(ImVec2(0, 0));
+    ImGui::EndGroup();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->ChannelsSetCurrent(0);
+    ImVec2 pos = ImGui::GetItemRectMin();
+    ImVec2 size = ImGui::GetItemRectMax() - pos;
+
+    // Stencil write.
+    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)1);
+    GoxBox2(pos + ImVec2(1, 1), size - ImVec2(2, 2),
+            COLOR(WIDGET, OUTLINE, 0), true);
+    // Stencil filter.
+    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)2);
+
+    draw_list->ChannelsMerge();
+    // Stencil reset.
+    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)0);
+    GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), false);
+    ImGui::PopID();
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -1120,27 +1439,52 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
     float minvf = minv;
     float maxvf = maxv;
     bool ret;
+    float vf = *v;
     if (minv == 0 && maxv == 0) {
         minvf = -FLT_MAX;
         maxvf = +FLT_MAX;
     }
-    ret = GoxInputInt(label, v, 1, minvf, maxvf);
-    if (ret) on_click();
+    ret = gui_input_float(label, &vf, 1, minvf, maxvf, "%.0f");
+    if (ret) *v = vf;
     return ret;
 }
 
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
-    bool ret;
+    bool self_group = false, ret;
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
         maxv = +FLT_MAX;
     }
+
+    if (gui->group == 0) {
+        gui_group_begin(NULL);
+        self_group = true;
+    }
+
     if (step == 0.f) step = 0.1f;
     if (!format) format = "%.1f";
-    ret = GoxInputFloat(label, v, step, minv, maxv, format);
+    ret = ImGui::GoxInputFloat(label, v, step, minv, maxv, format);
     if (ret) on_click();
+    if (self_group) gui_group_end();
+    return ret;
+}
+
+bool gui_angle(const char *id, float *v, int vmin, int vmax)
+{
+    int a;
+    bool ret;
+    a = round(*v * DR2D);
+    ret = gui_input_int(id, &a, vmin, vmax);
+    if (ret) {
+        if (vmin == 0 && vmax == 360) {
+            while (a < 0) a += 360;
+            a %= 360;
+        }
+        a = clamp(a, vmin, vmax);
+        *v = (float)(a * DD2R);
+    }
     return ret;
 }
 
@@ -1165,22 +1509,86 @@ bool gui_action_button(const char *id, const char *label, float size,
     return ret;
 }
 
-bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
+bool gui_action_checkbox(const char *id, const char *label)
 {
-    bool ret;
-    ImGuiStyle& style = ImGui::GetStyle();
-    float h = 14 + 2 * style.FramePadding.y;
-    ret = GoxSelectable(name, v, 0, 0, tooltip, ImVec2(w, h));
+    bool b;
+    const action_t *action = action_get(id);
+    action_exec(action, ">b", &b);
+    if (ImGui::Checkbox(label, &b)) {
+        action_exec(action, "b", b);
+        return true;
+    }
+    if (ImGui::IsItemHovered()) {
+        if (!action->shortcut)
+            goxel_set_help_text(goxel, action->help);
+        else
+            goxel_set_help_text(goxel, "%s (%s)",
+                    action->help, action->shortcut);
+    }
+    return false;
+}
+
+static bool _selectable(const char *label, bool *v, const char *tooltip,
+                        float w, int icon)
+{
+    const theme_t *theme = theme_get();
+    ImGuiWindow* window = GetCurrentWindow();
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    ImVec2 size;
+
+    if (icon != -1)
+        size = ImVec2(theme->sizes.icons_height, theme->sizes.icons_height);
+    else
+        size = ImVec2(w, theme->sizes.item_height);
+    ImVec2 center;
+    bool ret = false;
+    ImVec2 uv0, uv1; // The position in the icon texture.
+    uvec4b_t color;
+    int group = THEME_GROUP_WIDGET;
+
+    if (!tooltip) tooltip = label;
+    ImGui::PushID(label);
+
+    color = theme_get_color(group, THEME_COLOR_INNER, *v);
+    PushStyleColor(ImGuiCol_Button, color);
+    PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
+                style.Colors[ImGuiCol_Button], 1.2));
+    color = theme_get_color(group, THEME_COLOR_TEXT, *v);
+    PushStyleColor(ImGuiCol_Text, color);
+
+    if (icon != -1) {
+        ret = ImGui::Button("", size);
+        center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
+        uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
+        uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
+        window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                                   center - ImVec2(16, 16),
+                                   center + ImVec2(16, 16),
+                                   uv0, uv1, color.uint32);
+    } else {
+        ret = ImGui::Button(label, size);
+    }
+    ImGui::PopStyleColor(3);
+    if (ret) *v = !*v;
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("%s", tooltip);
+        goxel_set_help_text(goxel, tooltip);
+    }
+    ImGui::PopID();
+
     if (ret) on_click();
     return ret;
 }
 
+bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
+{
+    return _selectable(name, v, tooltip, w, -1);
+}
+
 bool gui_selectable_icon(const char *name, bool *v, int icon)
 {
-    bool ret;
-    ret = GoxSelectable(name, v, g_tex_icons->tex, icon);
-    if (ret) on_click();
-    return ret;
+    return _selectable(name, v, NULL, 0, icon);
 }
 
 float gui_get_avail_width(void)
@@ -1198,17 +1606,21 @@ void gui_same_line(void)
     SameLine();
 }
 
-bool gui_color(uvec4b_t *color)
+bool gui_color(const char *label, uvec4b_t *color)
 {
-    ImVec4 icolor;
-    icolor = uvec4b_to_imvec4(*color);
-    ImGui::ColorButton(icolor);
+    ImGui::PushID(label);
+    ImGui::ColorButton(*color);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-        ImGui::GoxColorEdit("##edit", color);
+        color_edit("##edit", color);
         if (ImGui::Button("Close"))
             ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
+    if (label && label[0] != '#') {
+        ImGui::SameLine();
+        ImGui::Text("%s", label);
+    }
+    ImGui::PopID();
     return false;
 }
 
@@ -1243,7 +1655,7 @@ bool gui_button(const char *label, float size, int icon)
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             GetItemRectMin(),
                             GetItemRectMin() + ImVec2(h, h),
-                            uv0, uv1, 0xFF000000);
+                            uv0, uv1, COLOR(WIDGET, TEXT, 0).uint32);
     }
     if (ret) on_click();
     return ret;
@@ -1297,6 +1709,37 @@ void gui_enabled_begin(bool enabled)
 void gui_enabled_end(void)
 {
     ImGui::PopStyleColor();
+}
+
+bool gui_quat(const char *label, quat_t *q)
+{
+    // Hack to prevent weird behavior when we change the euler angles.
+    // We keep track of the last used euler angles value and reuse them if
+    // the quaternion is the same.
+    static struct {
+        quat_t quat;
+        vec3_t eul;
+    } last = {};
+
+    vec3_t eul;
+    bool ret = false;
+
+    if (memcmp(q, &last.quat, sizeof(*q)) == 0)
+        eul = last.eul;
+    else
+        eul = quat_to_eul(*q, EULER_ORDER_DEFAULT);
+    gui_group_begin(label);
+    if (gui_angle("x", &eul.x, -180, +180)) ret = true;
+    if (gui_angle("y", &eul.y, -180, +180)) ret = true;
+    if (gui_angle("z", &eul.z, -180, +180)) ret = true;
+    gui_group_end();
+
+    if (ret) {
+        *q = eul_to_quat(eul, EULER_ORDER_DEFAULT);
+        last.quat = *q;
+        last.eul = eul;
+    }
+    return ret;
 }
 
 }

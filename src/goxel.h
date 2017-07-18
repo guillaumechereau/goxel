@@ -308,7 +308,10 @@ vec3_t unproject(const vec3_t *win, const mat4_t *model,
 
 // #### System #################
 void sys_log(const char *msg);
-const char *sys_get_data_dir(void);
+
+const char *sys_get_user_dir(void);
+int sys_make_dir(const char *path);
+
 bool sys_asset_exists(const char *path);
 char *sys_read_asset(const char *path, int *size);
 const char *sys_get_clipboard_text(void* user);
@@ -1170,6 +1173,73 @@ uvec3b_t rgb_to_hsl(uvec3b_t rgb);
 
 // #### Gui ####################
 
+#define THEME_SIZES(X) \
+    X(item_height) \
+    X(icons_height) \
+    X(item_padding_h) \
+    X(item_rounding) \
+    X(item_spacing_h) \
+    X(item_spacing_v) \
+    X(item_inner_spacing_h)
+
+
+enum {
+    THEME_GROUP_BASE,
+    THEME_GROUP_WIDGET,
+    THEME_GROUP_TAB,
+    THEME_GROUP_MENU,
+    THEME_GROUP_COUNT
+};
+
+enum {
+    THEME_COLOR_BACKGROUND,
+    THEME_COLOR_OUTLINE,
+    THEME_COLOR_INNER,
+    THEME_COLOR_INNER_SELECTED,
+    THEME_COLOR_TEXT,
+    THEME_COLOR_TEXT_SELECTED,
+    THEME_COLOR_COUNT
+};
+
+typedef struct {
+    const char *name;
+    int parent;
+    bool colors[THEME_COLOR_COUNT];
+} theme_group_info_t;
+extern theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT];
+
+typedef struct {
+    const char *name;
+} theme_color_info_t;
+extern theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT];
+
+typedef struct {
+    uvec4b_t colors[THEME_COLOR_COUNT];
+} theme_group_t;
+
+typedef struct theme theme_t;
+struct theme {
+    char name[64];
+
+    struct {
+        int  item_height;
+        int  icons_height;
+        int  item_padding_h;
+        int  item_rounding;
+        int  item_spacing_h;
+        int  item_spacing_v;
+        int  item_inner_spacing_h;
+    } sizes;
+
+    theme_group_t groups[THEME_GROUP_COUNT];
+};
+
+// Return the current theme.
+theme_t *theme_get(void);
+void theme_revert_default(void);
+void theme_save(void);
+uvec4b_t theme_get_color(int group, int color, bool selected);
+
 void gui_init(void);
 void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);
@@ -1184,11 +1254,14 @@ bool gui_checkbox(const char *label, bool *v, const char *hint);
 bool gui_input_int(const char *label, int *v, int minv, int maxv);
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);
+bool gui_angle(const char *id, float *v, int vmin, int vmax);
+bool gui_quat(const char *label, quat_t *q);
 bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...);
+bool gui_action_checkbox(const char *id, const char *label);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_icon(const char *name, bool *v, int icon);
-bool gui_color(uvec4b_t *color);
+bool gui_color(const char *label, uvec4b_t *color);
 bool gui_input_text(const char *label, char *buf, int size);
 bool gui_input_text_multiline(const char *label, char *buf, int size,
                               float width, float height);
@@ -1242,5 +1315,6 @@ void *cache_get(cache_t *cache, const void *key, int keylen);
 void sound_init(void);
 void sound_play(const char *sound);
 void sound_iter(void);
+
 
 #endif // GOXEL_H
