@@ -647,10 +647,12 @@ static bool render_palette_entry(const uvec4b_t *color, uvec4b_t *target)
 {
     bool ret;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    const theme_t *theme = theme_get();
 
     ImGui::PushStyleColor(ImGuiCol_Button, *color);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, *color);
-    ret = ImGui::Button("", ImVec2(20, 20));
+    ret = ImGui::Button("", ImVec2(theme->sizes.item_height,
+                                   theme->sizes.item_height));
     if (color->uint32 == target->uint32) {
         draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
                            0xFFFFFFFF, 0, 0, 1);
