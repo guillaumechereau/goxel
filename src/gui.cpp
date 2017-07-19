@@ -1539,16 +1539,15 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     ImVec2 size;
-
-    if (icon != -1)
-        size = ImVec2(theme->sizes.icons_height, theme->sizes.icons_height);
-    else
-        size = ImVec2(w, theme->sizes.item_height);
     ImVec2 center;
     bool ret = false;
     ImVec2 uv0, uv1; // The position in the icon texture.
     uvec4b_t color;
     int group = THEME_GROUP_WIDGET;
+
+    size = (icon != -1) ?
+        ImVec2(theme->sizes.icons_height, theme->sizes.icons_height) :
+        ImVec2(w, theme->sizes.item_height);
 
     if (!tooltip) tooltip = label;
     ImGui::PushID(label);
