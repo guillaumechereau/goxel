@@ -103,6 +103,11 @@ static theme_t g_default_theme = {
                 [THEME_COLOR_INNER_SELECTED] = VEC4(96, 114, 114, 255),
             },
         },
+        [THEME_GROUP_MENU] = {
+            .colors = {
+                [THEME_COLOR_INNER] = VEC4(90, 110, 110, 255),
+            },
+        },
     },
 };
 
