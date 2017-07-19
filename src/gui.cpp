@@ -1640,10 +1640,12 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 uv0, uv1;
     float h;
     ImVec2 button_size;
+    const theme_t *theme = theme_get();
 
-    button_size = ImVec2(size * GetContentRegionAvailWidth(), 20);
+    button_size = ImVec2(size * GetContentRegionAvailWidth(),
+                         theme->sizes.item_height);
     if (size == -1) button_size.x = GetContentRegionAvailWidth();
-    if (size == 0 && label == NULL) button_size.x = 20;
+    if (size == 0 && label == NULL) button_size.x = theme->sizes.item_height;
     label = label ?: "";
     ret = Button(label, button_size);
     if (icon) {
