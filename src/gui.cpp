@@ -1180,6 +1180,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     style.ItemSpacing = ImVec2(theme->sizes.item_spacing_h,
                                theme->sizes.item_spacing_v);
     style.ItemInnerSpacing = ImVec2(theme->sizes.item_inner_spacing_h, 0);
+    style.ScrollbarSize = theme->sizes.item_height;
 
     style.Colors[ImGuiCol_WindowBg] = COLOR(BASE, BACKGROUND, 0);
     style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
