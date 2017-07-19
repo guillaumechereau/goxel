@@ -1641,9 +1641,9 @@ bool gui_button(const char *label, float size, int icon)
     bool ret;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImVec2 uv0, uv1;
-    float h;
     ImVec2 button_size;
     const theme_t *theme = theme_get();
+    ImVec2 center;
 
     button_size = ImVec2(size * GetContentRegionAvailWidth(),
                          theme->sizes.item_height);
@@ -1652,14 +1652,12 @@ bool gui_button(const char *label, float size, int icon)
     label = label ?: "";
     ret = Button(label, button_size);
     if (icon) {
+        center = (GetItemRectMin() + GetItemRectMax()) / 2;
         uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
-        uv0 += ImVec2(3 / 128., 3 / 128.);
-        uv1 -= ImVec2(3 / 128., 3 / 128.);
-        h = GetItemRectSize().y;
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
-                            GetItemRectMin(),
-                            GetItemRectMin() + ImVec2(h, h),
+                            center - ImVec2(16, 16),
+                            center + ImVec2(16, 16),
                             uv0, uv1, COLOR(WIDGET, TEXT, 0).uint32);
     }
     if (ret) on_click();
