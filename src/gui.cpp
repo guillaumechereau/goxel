@@ -676,7 +676,7 @@ static void palette_panel(goxel_t *goxel)
         names[i++] = p->name;
     }
     ImGui::PushItemWidth(-1);
-    if (ImGui::Combo("", &current, names, nb)) {
+    if (gui_combo("##palettes", &current, names, nb)) {
         goxel->palette = goxel->palettes;
         for (i = 0; i < current; i++) goxel->palette = goxel->palette->next;
     }
@@ -1686,7 +1686,15 @@ bool gui_input_text_multiline(const char *label, char *buf, int size,
 
 bool gui_combo(const char *label, int *v, const char **names, int nb)
 {
-    return Combo(label, v, names, nb);
+    const theme_t *theme = theme_get();
+    bool ret;
+    float font_size = ImGui::GetFontSize();
+
+    PushStyleVar(ImGuiStyleVar_ItemSpacing,
+                 ImVec2(0, (theme->sizes.item_height - font_size) / 2));
+    ret = Combo(label, v, names, nb);
+    PopStyleVar();
+    return ret;
 }
 
 void gui_input_text_multiline_highlight(int line)
