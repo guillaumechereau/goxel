@@ -239,7 +239,9 @@ static int gui(tool_t *tool)
     gui_text("Drag mode");
     gui_combo("##drag_mode", &g_drag_mode,
               (const char*[]) {"Resize", "Move"}, 2);
-    gui_action_button("clear_selection", "Clear selection", 1.0, "");
+    if (gui_action_button("clear_selection", "Clear selection", 1.0, ""))
+        return 0;
+
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
     w = round(box->w.x * 2);
     h = round(box->h.y * 2);
