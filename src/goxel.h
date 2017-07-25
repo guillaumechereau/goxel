@@ -929,11 +929,10 @@ struct image {
     int     export_height;
 
     image_t *history;
-    image_t *history_next, *history_prev, *history_current;
+    image_t *history_next, *history_prev;
 };
 
 image_t *image_new(void);
-image_t *image_copy(image_t *img);
 void image_delete(image_t *img);
 layer_t *image_add_layer(image_t *img);
 void image_delete_layer(image_t *img, layer_t *layer);

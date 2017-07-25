@@ -25,19 +25,19 @@
     For example, if we did three operations, A, B, C, and now the image is
     in the D state, the history list looks like this:
 
-    img->history     img->history_current -> NULL      img
-        |                                               |
-        v                                               v
-    +--------+       +--------+       +--------+     +--------+
-    |        |       |        |       |        |     |        |
-    |   A    |------>|   B    |------>|   C    |     |   D    |
-    |        |       |        |       |        |     |        |
-    +--------+       +--------+       +--------+     +--------+
+    img->history                                        img
+        |                                                |
+        v                                                v
+    +--------+       +--------+       +--------+      +--------+
+    |        |       |        |       |        |      |        |
+    |   A    |------>|   B    |------>|   C    |----->|   D    |
+    |        |       |        |       |        |      |        |
+    +--------+       +--------+       +--------+      +--------+
 
     After an undo, we get:
 
-    img->history                        img->history_current
-        |                               img
+    img->history                        img
+        |                                |
         v                                v
     +--------+       +--------+       +--------+     +--------+
     |        |       |        |       |        |     |        |
@@ -88,11 +88,12 @@ image_t *image_new(void)
     layer = layer_new("background");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
+    DL_APPEND2(img->history, img, history_prev, history_next);
     img->active_layer = layer;
     return img;
 }
 
-image_t *image_copy(image_t *other)
+static image_t *image_snap(image_t *other)
 {
     image_t *img;
     layer_t *layer, *other_layer;
@@ -106,19 +107,25 @@ image_t *image_copy(image_t *other)
         if (other_layer == other->active_layer)
             img->active_layer = layer;
     }
+    img->history_next = img->history_prev = NULL;
     assert(img->active_layer);
     return img;
 }
 
 void image_delete(image_t *img)
 {
-    layer_t *layer, *tmp;
-    DL_FOREACH_SAFE(img->layers, layer, tmp) {
-        DL_DELETE(img->layers, layer);
-        layer_delete(layer);
-    }
+    image_t *hist, *snap, *snap_tmp;
+    layer_t *layer, *layer_tmp;
     free(img->path);
-    free(img);
+    hist = img->history;
+    DL_FOREACH_SAFE2(hist, snap, snap_tmp, history_next) {
+        DL_FOREACH_SAFE(snap->layers, layer, layer_tmp) {
+            DL_DELETE(snap->layers, layer);
+            layer_delete(layer);
+        }
+        DL_DELETE2(hist, snap, history_prev, history_next);
+        free(snap);
+    }
 }
 
 layer_t *image_add_layer(image_t *img)
@@ -267,49 +274,65 @@ void image_set(image_t *img, image_t *other)
     }
 }
 
+static void debug_print_history(image_t *img)
+{
+    return;
+    int i = 0;
+    image_t *hist;
+    DL_FOREACH2(img->history, hist, history_next) {
+        printf("%d%s  ", i++, hist == img ? "*" : " ");
+    }
+    printf("\n");
+}
+
 void image_history_push(image_t *img)
 {
-    image_t *snap = image_copy(img);
-    image_t *tmp;
-
+    image_t *snap = image_snap(img);
+    image_t *hist;
     // Discard previous undo.
-    // XXX: also need to delete the images!!
-    while (img->history_current) {
-        tmp = img->history_current;
-        img->history_current = tmp->history_next;
-        DL_DELETE2(img->history, tmp, history_prev, history_next);
+    while ((hist = img->history_next)) {
+        DL_DELETE2(img->history, hist, history_prev, history_next);
+        debug_print_history(img);
     }
 
+    DL_DELETE2(img->history, img,  history_prev, history_next);
     DL_APPEND2(img->history, snap, history_prev, history_next);
-    img->history_current = NULL;
+    DL_APPEND2(img->history, img,  history_prev, history_next);
+    debug_print_history(img);
+}
+
+static void swap(image_t *a, image_t *b)
+{
+    SWAP(a->layers, b->layers);
+    SWAP(a->active_layer, b->active_layer);
 }
 
 void image_undo(image_t *img)
 {
-    if (img->history_current == img->history) {
+    image_t *prev = img->history_prev;
+    if (img->history == img) {
         LOG_D("No more undo");
         return;
     }
-    if (!img->history_current) {
-        image_t *snap = image_copy(img);
-        DL_APPEND2(img->history, snap, history_prev, history_next);
-        img->history_current = img->history->history_prev;
-    }
-
-    image_set(img, img->history_current->history_prev);
-    img->history_current = img->history_current->history_prev;
+    DL_DELETE2(img->history, img, history_prev, history_next);
+    DL_PREPEND_ELEM2(img->history, prev, img, history_prev, history_next);
+    swap(img, prev);
     goxel_update_meshes(goxel, -1);
+    debug_print_history(img);
 }
 
 void image_redo(image_t *img)
 {
-    if (!img->history_current || !img->history_current->history_next) {
+    image_t *next = img->history_next;
+    if (!next) {
         LOG_D("No more redo");
         return;
     }
-    img->history_current = img->history_current->history_next;
-    image_set(img, img->history_current);
+    DL_DELETE2(img->history, next, history_prev, history_next);
+    DL_PREPEND_ELEM2(img->history, img, next, history_prev, history_next);
+    swap(img, next);
     goxel_update_meshes(goxel, -1);
+    debug_print_history(img);
 }
 
 void image_clear_layer(layer_t *layer, const box_t *box)
