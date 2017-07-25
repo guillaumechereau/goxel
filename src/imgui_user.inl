@@ -167,11 +167,13 @@ namespace ImGui {
     bool GoxInputFloat(const char *label, float *v, float step,
                        float minv, float maxv, const char *format)
     {
+        const theme_t *theme = theme_get();
         bool ret = false;
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
         const ImVec2 button_sz = ImVec2(
-                g.FontSize * 2.0f, g.FontSize + style.FramePadding.y * 2.0f);
+                max(g.FontSize * 2.0f, theme->sizes.item_height),
+                g.FontSize + style.FramePadding.y * 2.0f);
         int button_flags =
             ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         float speed = step / 20;
