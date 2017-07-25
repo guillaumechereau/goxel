@@ -667,7 +667,7 @@ static bool render_palette_entry(const uvec4b_t *color, uvec4b_t *target)
 static void palette_panel(goxel_t *goxel)
 {
     palette_t *p;
-    int i, current, nb = 0;
+    int i, current, nb = 0, nb_col = 8;
     const char **names;
 
     DL_COUNT(goxel->palettes, p, nb);
@@ -692,7 +692,7 @@ static void palette_panel(goxel_t *goxel)
         ImGui::PushID(i);
         render_palette_entry(&p->entries[i].color, &goxel->painter.color);
         auto_adjust_panel_size();
-        if ((i + 1) % 6 && i != p->size - 1) ImGui::SameLine();
+        if ((i + 1) % nb_col && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
     }
 }

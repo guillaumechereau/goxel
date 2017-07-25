@@ -1,0 +1,20 @@
+GIMP Palette
+Name: DB16
+Columns: 8
+#
+ 20  12  28    Dark1
+ 68  36  52    Dark2
+ 48  52 109    Dark3
+ 78  74  78    Dark4
+133  76  48    Dark5
+ 52 101  36    Dark6
+208  70  72    Dark7
+117 113  97    Dark8
+ 89 125 206    Light1
+210 125  44    Light2
+133 149 161    Light3
+109 170  44    Light4
+210 170 153    Light5
+109 194 202    Light6
+218 212  94    Light7
+222 238 214    Light8
