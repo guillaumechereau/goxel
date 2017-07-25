@@ -267,6 +267,11 @@ DECL real_t vec3_dist2(vec3_t a, vec3_t b)
     return vec3_norm2(vec3_sub(a, b));
 }
 
+DECL real_t vec3_dist(vec3_t a, vec3_t b)
+{
+    return sqrt(vec3_dist2(a, b));
+}
+
 DECL vec2_t vec2_mix(vec2_t a, vec2_t b, real_t t)
 {
     return vec2(a.x * (1 - t) + b.x * t,

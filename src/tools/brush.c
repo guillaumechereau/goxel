@@ -25,7 +25,9 @@ typedef struct {
     mesh_t *mesh_orig; // Original mesh.
     mesh_t *mesh;      // Mesh containing only the tool path.
 
+    // Gesture start and last pos (should we put it in the 3d gesture?)
     vec3_t start_pos;
+    vec3_t last_pos;
     // Cache of the last operation.
     // XXX: could we remove this?
     struct     {
@@ -99,10 +101,14 @@ static int on_drag(gesture3d_t *gest, void *user)
     box_t box;
     cursor_t *curs = gest->cursor;
     bool shift = curs->flags & CURSOR_SHIFT;
+    float r = goxel->tool_radius;
+    int nb, i;
+    vec3_t pos;
 
     if (gest->state == GESTURE_BEGIN) {
         mesh_set(brush->mesh_orig, mesh);
         brush->last_op.mode = 0; // Discard last op.
+        brush->last_pos = curs->pos;
         image_history_push(goxel->image);
         mesh_clear(brush->mesh);
 
@@ -111,7 +117,7 @@ static int on_drag(gesture3d_t *gest, void *user)
             painter2.shape = &shape_cylinder;
             painter2.mode = MODE_MAX;
             box = get_box(&brush->start_pos, &curs->pos, &curs->normal,
-                          goxel->tool_radius, NULL);
+                          r, NULL);
             mesh_op(brush->mesh, &painter2, &box);
         }
     }
@@ -120,11 +126,19 @@ static int on_drag(gesture3d_t *gest, void *user)
             (check_can_skip(brush, curs, goxel->painter.mode)))
         return 0;
 
-    box = get_box(&curs->pos, NULL, &curs->normal,
-                  goxel->tool_radius, NULL);
     painter2 = goxel->painter;
     painter2.mode = MODE_MAX;
-    mesh_op(brush->mesh, &painter2, &box);
+
+    // Render several times if the space between the current pos
+    // and the last pos is larger than the size of the tool shape.
+    nb = ceil(vec3_dist(curs->pos, brush->last_pos) / (2 * r));
+    nb = max(nb, 1);
+    for (i = 0; i < nb; i++) {
+        pos = vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb);
+        box = get_box(&pos, NULL, &curs->normal, r, NULL);
+        mesh_op(brush->mesh, &painter2, &box);
+    }
+
     mesh_set(mesh, brush->mesh_orig);
     mesh_merge(mesh, brush->mesh, goxel->painter.mode);
     goxel_update_meshes(goxel, MESH_LAYERS);
@@ -135,6 +149,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         mesh_set(brush->mesh_orig, mesh);
         goxel_update_meshes(goxel, -1);
     }
+    brush->last_pos = curs->pos;
     return 0;
 }
 
