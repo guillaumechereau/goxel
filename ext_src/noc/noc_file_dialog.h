@@ -132,7 +132,8 @@ const char *noc_file_dialog_open(int flags,
         patterns = buf;
         while (*patterns) {
             gtk_file_filter_add_pattern(filter, patterns);
-            patterns += strlen(patterns) + 1;
+            patterns += strlen(patterns);
+            if (*patterns) patterns++;
         }
 
         gtk_file_chooser_add_filter(chooser, filter);
@@ -262,7 +263,8 @@ const char *noc_file_dialog_open(int flags,
                 assert(strncmp(patterns, "*.", 2) == 0);
                 patterns += 2; // Skip the "*."
                 [types_array addObject:[NSString stringWithUTF8String: patterns]];
-                patterns += strlen(patterns) + 1;
+                patterns += strlen(patterns);
+                if (*patterns) patterns++;
             }
             filters += strlen(filters) + 1;
         }
