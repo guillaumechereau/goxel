@@ -66,11 +66,6 @@ namespace ImGui {
         return GoxBox2(pos, size, color, true, rounding_corners_flags);
     }
 
-    static ImVec4 uvec4b_to_imvec(uvec4b_t v)
-    {
-        return ImVec4(v.r / 255.0, v.g / 255.0, v.b / 255.0, v.a / 255.0);
-    }
-
     // Copied from imgui, with some customization...
     bool GoxInputScalarAsWidgetReplacement(const ImRect& aabb, const char* label, ImGuiDataType data_type, void* data_ptr, ImGuiID id, int decimal_precision)
     {
