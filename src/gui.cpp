@@ -1300,9 +1300,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     vec4_t view_rect = vec4(canvas_pos.x,
                             io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
                             canvas_size.x, canvas_size.y);
-
     // Call mouse_in_view with inputs in the view referential.
-    if (!gui->capture_mouse) {
+    if (!(!gui->mouse_in_view && inputs->mouse_wheel) &&
+            !gui->capture_mouse) {
         inputs_t inputs2 = *inputs;
         for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
             inputs2.touches[i].pos.y =
