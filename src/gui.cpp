@@ -1065,7 +1065,7 @@ static void render_menu(void)
         if (ImGui::MenuItem("Clear", "Delete"))
             action_exec2("layer_clear", "");
         render_menu_item("undo", "Undo");
-        ImGui::MenuItem("redo", "Redo");
+        render_menu_item("redo", "Redo");
         render_menu_item("copy", "Copy");
         render_menu_item("past", "Past");
         if (ImGui::MenuItem("Shift Alpha"))
