@@ -508,9 +508,11 @@ void block_merge(block_t *block, const block_t *other, int mode)
         uint64_t id1;
         uint64_t id2;
         int      mode;
+        int      _pad;
     } key = {
         block->data->id, other->data->id, mode
     };
+    _Static_assert(sizeof(key) == 24, "");
     data = cache_get(cache, &key, sizeof(key));
     if (data) {
         block_set_data(block, data);
