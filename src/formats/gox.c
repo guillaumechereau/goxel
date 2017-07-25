@@ -331,8 +331,6 @@ void load_from_file(goxel_t *goxel, const char *path)
     char dict_value[256];
     camera_t *camera;
 
-    image_history_push(goxel->image);
-
     LOG_I("Load from file %s", path);
     in = gzopen(path, "rb");
 
@@ -442,6 +440,8 @@ static void action_open(const char *path)
         path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
                                     NULL, NULL);
     if (!path) return;
+    image_delete(goxel->image);
+    goxel->image = image_new();
     load_from_file(goxel, path);
 }
 
