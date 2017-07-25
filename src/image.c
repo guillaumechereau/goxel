@@ -112,10 +112,15 @@ static image_t *image_snap(image_t *other)
     return img;
 }
 
+
+static void image_delete_camera(image_t *img, camera_t *cam);
+
 void image_delete(image_t *img)
 {
     image_t *hist, *snap, *snap_tmp;
     layer_t *layer, *layer_tmp;
+    while (img->cameras)
+        image_delete_camera(img, img->cameras);
     free(img->path);
     hist = img->history;
     DL_FOREACH_SAFE2(hist, snap, snap_tmp, history_next) {
@@ -220,7 +225,7 @@ camera_t *image_add_camera(image_t *img)
     return cam;
 }
 
-void image_delete_camera(image_t *img, camera_t *cam)
+static void image_delete_camera(image_t *img, camera_t *cam)
 {
     img = img ?: goxel->image;
     cam = cam ?: img->active_camera;
