@@ -238,7 +238,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
         quantization_gen_palette(mesh, 256, palette);
 
     children_size = 12 + 4 * 3 +      // SIZE chunk
-                    12 + 4 * nb_vox + // XYZI chunk
+                    12 + 4 + 4 * nb_vox + // XYZI chunk
                     (use_default_palette ? 0 : (12 + 4 * 256)); // RGBA chunk.
 
     file = fopen(path, "wb");
