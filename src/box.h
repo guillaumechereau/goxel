@@ -284,4 +284,22 @@ static inline float box_get_volume(box_t box)
     return 8 * fabs(a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h);
 }
 
+static inline void box_get_vertices(box_t box, vec3_t vertices[8])
+{
+    int i;
+    const vec3_t P[8] = {
+        vec3(-1, -1, +1),
+        vec3(+1, -1, +1),
+        vec3(+1, +1, +1),
+        vec3(-1, +1, +1),
+        vec3(-1, -1, -1),
+        vec3(+1, -1, -1),
+        vec3(+1, +1, -1),
+        vec3(-1, +1, -1),
+    };
+    for (i = 0; i < 8; i++) {
+        vertices[i] = mat4_mul_vec3(box.mat, P[i]);
+    }
+}
+
 #endif // BOX_H
