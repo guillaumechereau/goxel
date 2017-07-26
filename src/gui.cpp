@@ -1313,10 +1313,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     }
 
     render_axis_arrows(goxel, &view_size);
-
-    // Apparently there is a bug if we do not render anything.  So I render
-    // a '.' if there is nothing.  This is a hack.
-    ImGui::Text("%s", goxel->hint_text ?: ".");
+    ImGui::Text("%s", goxel->hint_text ?: "");
     ImGui::SameLine(180);
     ImGui::Text("%s", goxel->help_text ?: "");
 
