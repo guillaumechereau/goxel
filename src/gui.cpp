@@ -935,25 +935,33 @@ static void shift_alpha_popup(goxel_t *goxel)
 
 static void about_popup(void)
 {
-    ImGui::Text("Goxel " GOXEL_VERSION_STR);
-    ImGui::Text("Copyright © 2015-2017");
-    ImGui::Text("Guillaume Chereau <guillaume@noctua-software.com>");
-    ImGui::Text("GPL 3 License");
+    using namespace ImGui;
+    Text("Goxel " GOXEL_VERSION_STR);
+    Text("Copyright © 2015-2017 Guillaume Chereau");
+    Text("<guillaume@noctua-software.com>");
+    Text("GPL 3 License");
+    Text("http://guillaumechereau.github.io/goxel");
 
-    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
-    if (ImGui::CollapsingHeader("Credits")) {
-        ImGui::Text("Code:");
-        ImGui::BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
-        ImGui::BulletText("Dustin Willis Webber <dustin.webber@gmail.com>");
-        ImGui::BulletText("Pablo Hugo Reda <pabloreda@gmail.com>");
-        ImGui::BulletText("Othelarian (https://github.com/othelarian)");
-        ImGui::Text("Art:");
-        ImGui::BulletText("Michal (https://github.com/YarlBoro)");
+    SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    if (CollapsingHeader("Credits")) {
+        Text("Code:");
+        BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
+        BulletText("Dustin Willis Webber <dustin.webber@gmail.com>");
+        BulletText("Pablo Hugo Reda <pabloreda@gmail.com>");
+        BulletText("Othelarian (https://github.com/othelarian)");
+
+        Text("Libraries:");
+        BulletText("dear imgui (https://github.com/ocornut/imgui)");
+        BulletText("stb (https://github.com/nothings/stb)");
+        BulletText("uthash (https://troydhanson.github.io/uthash/)");
+        BulletText("inih (https://github.com/benhoyt/inih)");
+
+        Text("Design:");
+        BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
+        BulletText("Michal (https://github.com/YarlBoro)");
     }
 
-    if (ImGui::Button("OK")) {
-        ImGui::CloseCurrentPopup();
-    }
+    if (Button("OK")) CloseCurrentPopup();
 }
 
 static void settings_popup(void)
