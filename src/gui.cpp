@@ -712,6 +712,7 @@ static void render_advanced_panel(goxel_t *goxel)
         {&goxel->image_box_color, "Box color"},
     };
 
+    ImGui::PushID("render_advanced");
     ImGui::Text("Light");
     gui_angle("Pitch", &goxel->rend.light.pitch, -90, +90);
     gui_angle("Yaw", &goxel->rend.light.yaw, 0, 360);
@@ -769,6 +770,7 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::PopID();
     }
     gui_action_checkbox("grid_visible", "Show grid");
+    ImGui::PopID();
 }
 
 
