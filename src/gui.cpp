@@ -229,12 +229,13 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
         const ImDrawIdx* idx_buffer_offset = 0;
-
-        GL(glBufferData(GL_ARRAY_BUFFER,
+        if (cmd_list->VtxBuffer.size())
+            GL(glBufferData(GL_ARRAY_BUFFER,
                     (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert),
                     (GLvoid*)&cmd_list->VtxBuffer.front(), GL_DYNAMIC_DRAW));
 
-        GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+        if (cmd_list->IdxBuffer.size())
+            GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                     (GLsizeiptr)cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx),
                     (GLvoid*)&cmd_list->IdxBuffer.front(), GL_DYNAMIC_DRAW));
 
