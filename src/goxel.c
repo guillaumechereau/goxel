@@ -275,7 +275,7 @@ void goxel_init(goxel_t *gox)
     // Load and set default palette.
     palette_load_all(&goxel->palettes);
     DL_FOREACH(goxel->palettes, goxel->palette) {
-        if (strcmp(goxel->palette->name, "Tango icons") == 0)
+        if (strcmp(goxel->palette->name, "DB32") == 0)
             break;
     }
     goxel->palette = goxel->palette ?: goxel->palettes;
@@ -286,7 +286,7 @@ void goxel_init(goxel_t *gox)
         .shape = &shape_cube,
         .mode = MODE_OVER,
         .smoothness = 0,
-        .color = HEXCOLOR(0xEEEEECFF),
+        .color = HEXCOLOR(0xFFFFFFFF),
     };
     goxel->rend = (renderer_t) {
         .light = {
