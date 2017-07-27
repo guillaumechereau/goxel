@@ -103,6 +103,24 @@ static inline box_t bbox_from_npoints(int n, const vec3_t *points)
                             (v1.z - v0.z) / 2);
 }
 
+static inline box_t bbox_intersection(box_t a, box_t b) {
+    assert(box_is_bbox(a));
+    assert(box_is_bbox(b));
+    vec3_t a0, a1, b0, b1, c0, c1;
+    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
+    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
+    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
+    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    c0 = vec3(max(a0.x, b0.x), max(a0.y, b0.y), max(a0.z, b0.z));
+    c1 = vec3(min(a1.x, b1.x), min(a1.y, b1.y), min(a1.z, b1.z));
+    if (c0.x >= c1.x || c0.y > c1.y || c0.z > c1.z)
+        return box_null;
+    return bbox_from_extents(vec3_mix(c0, c1, 0.5),
+                             (c1.x - c0.x) / 2,
+                             (c1.y - c0.y) / 2,
+                             (c1.z - c0.z) / 2);
+}
+
 static inline bool bbox_intersect(box_t a, box_t b) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));

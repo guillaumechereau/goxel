@@ -239,6 +239,12 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
                               painter->smoothness);
     bbox = bbox_grow(box_get_bbox(full_box), 1, 1, 1);
 
+    if (painter->box) {
+        bbox = bbox_intersection(bbox, *painter->box);
+        if (box_is_null(bbox)) return;
+        bbox = bbox_grow(bbox, 1, 1, 1);
+    }
+
     // For constructive modes, we have to add blocks if they are not present.
     mesh_prepare_write(mesh);
     if (IS_IN(painter->mode, MODE_OVER, MODE_MAX)) {

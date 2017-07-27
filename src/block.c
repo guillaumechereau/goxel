@@ -447,6 +447,8 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
     shape_func = painter->shape->func;
     bool invert = false;
+    int min_x = 0, min_y = 0, min_z = 0, max_x = N, max_y = N, max_z = N;
+    box_t clip;
 
     if (mode == MODE_INTERSECT) {
         mode = MODE_SUB;
@@ -461,7 +463,19 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
     mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
-    BLOCK_ITER(x, y, z) {
+    if (painter->box) {
+        clip = *painter->box;
+        min_x = max(min_x, clip.p.x - clip.w.x - block->pos.x + N / 2);
+        max_x = min(max_x, clip.p.x + clip.w.x - block->pos.x + N / 2);
+        min_y = max(min_y, clip.p.y - clip.h.y - block->pos.y + N / 2);
+        max_y = min(max_y, clip.p.y + clip.h.y - block->pos.y + N / 2);
+        min_z = max(min_z, clip.p.z - clip.d.z - block->pos.z + N / 2);
+        max_z = min(max_z, clip.p.z + clip.d.z - block->pos.z + N / 2);
+    }
+
+    for (z = min_z; z < max_z; z++)
+    for (y = min_y; y < max_y; y++)
+    for (x = min_x; x < max_x; x++) {
         c = painter->color;
         if (can_skip(BLOCK_AT(block, x, y, z), mode, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));

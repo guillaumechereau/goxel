@@ -523,6 +523,7 @@ typedef struct painter {
     uvec4b_t        color;
     float           smoothness;
     int             symmetry; // bitfield X Y Z
+    box_t           *box;     // Clipping box (can be null)
 } painter_t;
 
 // #### Block ##################
