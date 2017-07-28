@@ -472,6 +472,13 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
+
+        // Auto adjust the camera rotation position.
+        vec3_t p, n;
+        if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
+                                    goxel->pick_mesh, &p, &n)) {
+            camera_set_target(&goxel->camera, &p);
+        }
         return;
     }
 
