@@ -889,6 +889,9 @@ camera_t *camera_new(const char *name);
 void camera_delete(camera_t *camera);
 void camera_set(camera_t *camera, const camera_t *other);
 void camera_update(camera_t *camera);
+// Adjust the camera settings so that the rotation works for a given
+// position.
+void camera_set_target(camera_t *camera, const vec3_t *pos);
 
 // Get the raytracing ray of the camera at a given screen position.
 // win:     pixel position in screen coordinates.

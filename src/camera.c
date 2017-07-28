@@ -108,3 +108,20 @@ void camera_get_ray(const camera_t *camera, const vec2_t *win,
     *o = o1;
     *d = vec3_normalized(vec3_sub(o2, o1));
 }
+
+// Adjust the camera settings so that the rotation works for a given
+// position.
+void camera_set_target(camera_t *cam, const vec3_t *pos)
+{
+    // Adjust the offset z coordinate (in the rotated referential) to put
+    // it in the xy plan intersecting the target point.  Then adjust the
+    // distance so that the final view matrix stays the same.
+    vec3_t u, v;
+    float d;
+    quat_t roti = quat(cam->rot.w, -cam->rot.x, -cam->rot.y, -cam->rot.z);
+    u = quat_mul_vec4(roti, vec4(0, 0, 1, 0)).xyz;
+    v = vec3_sub(*pos, vec3_neg(cam->ofs));
+    d = vec3_dot(v, u);
+    vec3_iaddk(&cam->ofs, u, -d);
+    cam->dist -= d;
+}

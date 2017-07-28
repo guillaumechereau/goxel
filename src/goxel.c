@@ -491,12 +491,11 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
         quat_irotate(&goxel->camera.rot, +0.05, x_axis.x, x_axis.y, x_axis.z);
     }
     // C: recenter the view:
-    // XXX: need to do it only on key down!
     if (inputs->keys['C']) {
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
                                     goxel->pick_mesh, &p, &n)) {
-            // XXX nothing for the moment.
+            camera_set_target(&goxel->camera, &p);
         }
     }
 }
