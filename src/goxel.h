@@ -880,10 +880,6 @@ struct camera
     float  fovy;
     float  aspect;
 
-    // If set, we smoothly update the offset to reach target.
-    bool   move_to_target;
-    vec3_t target;
-
     // Auto computed from other values:
     mat4_t view_mat;    // Model to view transformation.
     mat4_t proj_mat;    // Proj transform from camera coordinates.

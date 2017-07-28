@@ -76,10 +76,6 @@ void camera_update(camera_t *camera)
     float clip_near, clip_far;
 
     camera->fovy = 20.;
-    if (camera->move_to_target) {
-        camera->move_to_target = !vec3_ilerp_const(
-                &camera->ofs, vec3_neg(camera->target), camera->dist / 128);
-    }
     // Update the camera mats
     camera->view_mat = mat4_identity;
     mat4_itranslate(&camera->view_mat, 0, 0, -camera->dist);

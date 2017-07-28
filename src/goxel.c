@@ -418,7 +418,6 @@ static int on_pan(const gesture_t *gest, void *user)
     if (!goxel->camera.ortho)
         vec3_imul(&odelta, goxel->camera.dist);
     goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs, odelta);
-    goxel->camera.target = vec3_neg(goxel->camera.ofs);
     return 0;
 }
 
@@ -428,7 +427,6 @@ static int on_rotate(const gesture_t *gest, void *user)
         goxel->move_origin.rotation = goxel->camera.rot;
         goxel->move_origin.pos = gest->pos;
     }
-    goxel->camera.move_to_target = true;
     goxel->camera.rot = quat_mul(goxel->move_origin.rotation,
             compute_view_rotation(&goxel->move_origin.rotation,
                 &goxel->move_origin.pos, &gest->pos,
@@ -498,8 +496,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
                                     goxel->pick_mesh, &p, &n)) {
-            goxel->camera.target = p;
-            goxel->camera.move_to_target = true;
+            // XXX nothing for the moment.
         }
     }
 }
