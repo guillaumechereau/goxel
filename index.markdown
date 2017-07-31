@@ -49,7 +49,7 @@ Open Source 3D voxel editor for Mac Windows and Linux.
 </div>
 <div class="col m6">
 Goxel is a 3D program that lets you create voxel volumes, a bit similar to
-minecraft.  The code it Open Source and fully available on Github.
+minecraft.  The code is Open Source and fully available on Github.
 {: .flow-text}
 </div>
 </div>
