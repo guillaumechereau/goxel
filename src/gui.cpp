@@ -1232,12 +1232,12 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
     style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, 0);
     style.Colors[ImGuiCol_Button] = COLOR(BASE, INNER, 0);
-    style.Colors[ImGuiCol_FrameBg] = IMHEXCOLOR(0xA1A1A1FF);
+    style.Colors[ImGuiCol_FrameBg] = COLOR(BASE, INNER, 0);
     style.Colors[ImGuiCol_ButtonActive] = COLOR(BASE, INNER, 1);
     style.Colors[ImGuiCol_ButtonHovered] =
         color_lighten(COLOR(BASE, INNER, 0), 1.2);
-    style.Colors[ImGuiCol_CheckMark] = IMHEXCOLOR(0x00000AA);
-    style.Colors[ImGuiCol_ComboBg] = IMHEXCOLOR(0x727272FF);
+    style.Colors[ImGuiCol_CheckMark] = COLOR(WIDGET, INNER, 1);
+    style.Colors[ImGuiCol_ComboBg] = COLOR(WIDGET, INNER, 0);
     style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, 0);
     style.Colors[ImGuiCol_Border] = COLOR(BASE, OUTLINE, 0);
 
