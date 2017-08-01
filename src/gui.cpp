@@ -475,7 +475,7 @@ static int on_gesture(const gesture_t *gest, void *user)
 }
 
 
-void gui_init(const inputs_t *inputs)
+static void gui_init(const inputs_t *inputs)
 {
     gui = (gui_t*)calloc(1, sizeof(*gui));
     init_prog(&gui->prog);
@@ -1161,6 +1161,7 @@ static bool render_tab(const char *label, bool *v)
 
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
+    if (!gui) gui_init(inputs);
     static int current_panel = 0;
     float left_pane_width;
     unsigned int i;

@@ -1130,7 +1130,7 @@ typedef struct goxel
 // the global goxel instance.
 extern goxel_t *goxel;
 
-void goxel_init(goxel_t *goxel, inputs_t *inputs);
+void goxel_init(goxel_t *goxel);
 void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);
 void goxel_render(goxel_t *goxel);
@@ -1245,7 +1245,6 @@ void theme_revert_default(void);
 void theme_save(void);
 uvec4b_t theme_get_color(int group, int color, bool selected);
 
-void gui_init(const inputs_t *inputs);
 void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);
 void gui_render(void);

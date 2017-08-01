@@ -246,7 +246,7 @@ static int on_pan(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
 static int on_hover(const gesture_t *gest, void *user);
 
-void goxel_init(goxel_t *gox, inputs_t *inputs)
+void goxel_init(goxel_t *gox)
 {
     goxel = gox;
     memset(goxel, 0, sizeof(*goxel));
@@ -302,7 +302,6 @@ void goxel_init(goxel_t *gox, inputs_t *inputs)
     model3d_init();
     goxel->plane = plane(vec3_zero, vec3(1, 0, 0), vec3(0, 1, 0));
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
-    gui_init(inputs);
 
     goxel->gestures.drag = (gesture_t) {
         .type = GESTURE_DRAG,

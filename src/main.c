@@ -162,8 +162,6 @@ int main(int argc, char **argv)
     int ret = 0;
     inputs_t inputs = {};
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
-    int fb_size[2], win_size[2];
-
     g_inputs = &inputs;
     g_goxel = calloc(1, sizeof(*g_goxel));
 
@@ -184,14 +182,7 @@ int main(int argc, char **argv)
 #ifdef WIN32
     glewInit();
 #endif
-
-    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
-    glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
-    g_inputs->window_size[0] = win_size[0];
-    g_inputs->window_size[1] = win_size[1];
-    g_inputs->scale = fb_size[0] / win_size[0];
-
-    goxel_init(g_goxel, g_inputs);
+    goxel_init(g_goxel);
     if (args.input)
         action_exec2("import", "p", args.input);
     if (args.export) {
@@ -325,7 +316,7 @@ int main(int argc, char **argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutCreateWindow("Goxel " GOXEL_VERSION_STR);
 
-    goxel_init(&goxel, g_inputs);
+    goxel_init(&goxel);
 
     glutDisplayFunc(on_display);
     glutReshapeFunc(on_reshape);
