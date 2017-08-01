@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "ini.h"
 
 
 bool gui_settings_popup(void)
@@ -72,7 +73,56 @@ bool gui_settings_popup(void)
     ImGui::SameLine();
     if (ImGui::Button("Save")) theme_save();
 #endif
+
     gui_popup_body_end();
+    if (gui_action_button("settings_save", "Save", 0, ""));
     gui_same_line();
     return gui_button("OK", 0, 0);
 }
+
+static int settings_ini_handler(void *user, const char *section,
+                                const char *name, const char *value,
+                                int lineno)
+{
+    if (strcmp(section, "") == 0) {
+        if (strcmp(name, "theme") == 0) {
+            theme_set(value);
+        }
+    }
+    return 0;
+}
+
+static void settings_load(const char *path)
+{
+    char *path_ = NULL;
+    if (!path) {
+        asprintf(&path_, "%s/settings.ini", sys_get_user_dir());
+        path = path_;
+    }
+    ini_parse(path, settings_ini_handler, NULL);
+    free(path_);
+}
+
+static void settings_save(void)
+{
+    char *path;
+    FILE *file;
+    asprintf(&path, "%s/settings.ini", sys_get_user_dir());
+    sys_make_dir(path);
+    file = fopen(path, "w");
+    fprintf(file, "theme=%s\n", theme_get()->name);
+    fclose(file);
+    free(path);
+}
+
+ACTION_REGISTER(settings_load,
+    .help = "Load the settings from disk",
+    .cfunc = settings_load,
+    .csig = "vp",
+)
+
+ACTION_REGISTER(settings_save,
+    .help = "Save the settings to disk",
+    .cfunc = settings_save,
+    .csig = "v",
+)

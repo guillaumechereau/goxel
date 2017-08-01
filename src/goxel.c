@@ -322,6 +322,8 @@ void goxel_init(goxel_t *gox)
         .type = GESTURE_HOVER,
         .callback = on_hover,
     };
+
+    action_exec2("settings_load", "");
 }
 
 void goxel_release(goxel_t *goxel)
