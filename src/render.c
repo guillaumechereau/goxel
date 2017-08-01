@@ -831,6 +831,7 @@ void render_render(renderer_t *rend, const int rect[4],
 {
     render_item_t *item, *tmp;
     mat4_t shadow_mvp;
+    const float s = rend->scale;
     bool shadow = rend->settings.shadow &&
         !(rend->settings.effects & (EFFECT_RENDER_POS | EFFECT_SHADOW_MAP));
 
@@ -841,8 +842,9 @@ void render_render(renderer_t *rend, const int rect[4],
 
     GL(glBindFramebuffer(GL_FRAMEBUFFER, rend->fbo));
     GL(glEnable(GL_SCISSOR_TEST));
-    GL(glViewport(rect[0], rect[1], rect[2], rect[3]));
-    GL(glScissor(rect[0], rect[1], rect[2], rect[3]));
+    GL(glViewport(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
+    GL(glScissor(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
+    GL(glLineWidth(rend->scale));
     if (clear_color) {
         GL(glClearColor(clear_color->r,
                         clear_color->g,

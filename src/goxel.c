@@ -139,13 +139,14 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
 
     rend.settings.shadow = 0;
     rend.fbo = goxel->pick_fbo->framebuffer;
+    rend.scale = 1;
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
 
     render_render(&rend, rect, &vec4_zero);
 
     x = round(pos->x - view->x);
     y = round(pos->y - view->y);
-    GL(glViewport(0, 0, goxel->screen_size.x, goxel->screen_size.y));
+    GL(glViewport(0, 0, goxel->pick_fbo->w, goxel->pick_fbo->h));
     if (x < 0 || x >= view_size.x ||
         y < 0 || y >= view_size.y) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
@@ -245,7 +246,7 @@ static int on_pan(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
 static int on_hover(const gesture_t *gest, void *user);
 
-void goxel_init(goxel_t *gox)
+void goxel_init(goxel_t *gox, inputs_t *inputs)
 {
     goxel = gox;
     memset(goxel, 0, sizeof(*goxel));
@@ -301,7 +302,7 @@ void goxel_init(goxel_t *gox)
     model3d_init();
     goxel->plane = plane(vec3_zero, vec3(1, 0, 0), vec3(0, 1, 0));
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
-    gui_init();
+    gui_init(inputs);
 
     goxel->gestures.drag = (gesture_t) {
         .type = GESTURE_DRAG,
@@ -336,6 +337,9 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel_set_help_text(goxel, NULL);
     goxel_set_hint_text(goxel, NULL);
     goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
+    goxel->screen_scale = inputs->scale;
+    goxel->rend.fbo = inputs->framebuffer;
+    goxel->rend.scale = inputs->scale;
     camera_update(&goxel->camera);
     if (goxel->image->active_camera)
         camera_set(goxel->image->active_camera, &goxel->camera);
@@ -509,8 +513,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
 
 void goxel_render(goxel_t *goxel)
 {
-    GL(glViewport(0, 0, goxel->screen_size.x, goxel->screen_size.y));
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL(glViewport(0, 0, goxel->screen_size.x * goxel->screen_scale,
+                        goxel->screen_size.y * goxel->screen_scale));
+    GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel->rend.fbo));
     GL(glClearColor(0, 0, 0, 1));
     GL(glStencilMask(0xFF));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |

@@ -676,6 +676,7 @@ struct renderer
     mat4_t view_mat;
     mat4_t proj_mat;
     int    fbo;     // The renderer target framebuffer.
+    float  scale;   // For retina display.
 
     struct {
         float  pitch;
@@ -823,10 +824,12 @@ typedef struct {
 typedef struct inputs
 {
     int         window_size[2];
+    float       scale;
     bool        keys[512]; // Table of all the pressed keys.
     uint32_t    chars[16];
     touch_t     touches[4];
     float       mouse_wheel;
+    int         framebuffer; // Screen framebuffer
 } inputs_t;
 
 
@@ -1052,6 +1055,7 @@ int tool_gui_symmetry(void);
 typedef struct goxel
 {
     vec2i_t    screen_size;
+    float      screen_scale;
     image_t    *image;
 
     mesh_t     *layers_mesh; // All the layers combined.
@@ -1126,7 +1130,7 @@ typedef struct goxel
 // the global goxel instance.
 extern goxel_t *goxel;
 
-void goxel_init(goxel_t *goxel);
+void goxel_init(goxel_t *goxel, inputs_t *inputs);
 void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);
 void goxel_render(goxel_t *goxel);
@@ -1241,7 +1245,7 @@ void theme_revert_default(void);
 void theme_save(void);
 uvec4b_t theme_get_color(int group, int color, bool selected);
 
-void gui_init(void);
+void gui_init(const inputs_t *inputs);
 void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);
 void gui_render(void);

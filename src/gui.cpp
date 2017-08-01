@@ -224,6 +224,7 @@ static void render_prepare_context(void)
 static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
 {
     const float height = ImGui::GetIO().DisplaySize.y;
+    const float scale = ImGui::GetIO().DisplayFramebufferScale.y;
     render_prepare_context();
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
@@ -249,9 +250,10 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
             else
             {
                 GL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId));
-                GL(glScissor((int)pcmd->ClipRect.x, (int)(height - pcmd->ClipRect.w),
-                             (int)(pcmd->ClipRect.z - pcmd->ClipRect.x),
-                             (int)(pcmd->ClipRect.w - pcmd->ClipRect.y)));
+                GL(glScissor((int)pcmd->ClipRect.x * scale,
+                             (int)(height - pcmd->ClipRect.w) * scale,
+                             (int)(pcmd->ClipRect.z - pcmd->ClipRect.x) * scale,
+                             (int)(pcmd->ClipRect.w - pcmd->ClipRect.y) * scale));
                 GL(glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
                                   GL_UNSIGNED_SHORT, idx_buffer_offset));
             }
@@ -265,6 +267,7 @@ static void load_fonts_texture()
 {
     ImGuiIO& io = ImGui::GetIO();
 
+    float scale = io.DisplayFramebufferScale.y;
     unsigned char* pixels;
     int width, height;
     const void *data;
@@ -280,7 +283,8 @@ static void load_fonts_texture()
 
     data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
     assert(data);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14, &conf, ranges);
+    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14 * scale,
+                                   &conf, ranges);
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
@@ -293,7 +297,7 @@ static void load_fonts_texture()
     io.Fonts->TexID = (void *)(intptr_t)tex_id;
 }
 
-static void init_ImGui()
+static void init_ImGui(const inputs_t *inputs)
 {
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = 1.0f/60.0f;
@@ -317,6 +321,8 @@ static void init_ImGui()
     io.KeyMap[ImGuiKey_X]           = 'X';
     io.KeyMap[ImGuiKey_Y]           = 'Y';
     io.KeyMap[ImGuiKey_Z]           = 'Z';
+    io.DisplayFramebufferScale = ImVec2(inputs->scale, inputs->scale);
+    io.FontGlobalScale = 1 / inputs->scale;
 
     if (DEFINED(__linux__)) {
         io.SetClipboardTextFn = sys_set_clipboard_text;
@@ -469,13 +475,13 @@ static int on_gesture(const gesture_t *gest, void *user)
 }
 
 
-void gui_init(void)
+void gui_init(const inputs_t *inputs)
 {
     gui = (gui_t*)calloc(1, sizeof(*gui));
     init_prog(&gui->prog);
     GL(glGenBuffers(1, &gui->array_buffer));
     GL(glGenBuffers(1, &gui->index_buffer));
-    init_ImGui();
+    init_ImGui(inputs);
     gui->gestures.drag.type = GESTURE_DRAG;
     gui->gestures.drag.callback = on_gesture;
     gui->gestures.hover.type = GESTURE_HOVER;
@@ -516,6 +522,7 @@ void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
 
 void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 {
+    float scale = ImGui::GetIO().DisplayFramebufferScale.y;
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
@@ -528,7 +535,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 
     goxel_render_view(goxel, &view->rect);
     render_render(&goxel->rend, rect, &back_color);
-    GL(glViewport(0, 0, width, height));
+    GL(glViewport(0, 0, width * scale, height * scale));
 }
 
 // XXX: better replace this by something more automatic.
@@ -1118,6 +1125,7 @@ static bool render_tab(const char *label, bool *v)
     uvec4b_t color;
     ImVec2 text_size = ImGui::CalcTextSize(label);
     int xpad = (theme->sizes.item_height - text_size.y) / 2;
+    float scale = ImGui::GetIO().DisplayFramebufferScale.y;
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     ImVec2 pos = window->DC.CursorPos + ImVec2(0, text_size.x + pad);
 
@@ -1138,17 +1146,17 @@ static bool render_tab(const char *label, bool *v)
 
         window->DrawList->PrimReserve(6, 4);
         window->DrawList->PrimQuadUV(
-                pos + ImVec2(glyph->Y0 + xpad, -glyph->X0),
-                pos + ImVec2(glyph->Y0 + xpad, -glyph->X1),
-                pos + ImVec2(glyph->Y1 + xpad, -glyph->X1),
-                pos + ImVec2(glyph->Y1 + xpad, -glyph->X0),
+                pos + ImVec2(glyph->Y0 + xpad, -glyph->X0) / scale,
+                pos + ImVec2(glyph->Y0 + xpad, -glyph->X1) / scale,
+                pos + ImVec2(glyph->Y1 + xpad, -glyph->X1) / scale,
+                pos + ImVec2(glyph->Y1 + xpad, -glyph->X0) / scale,
 
                 ImVec2(glyph->U0, glyph->V0),
                 ImVec2(glyph->U1, glyph->V0),
                 ImVec2(glyph->U1, glyph->V1),
                 ImVec2(glyph->U0, glyph->V1),
                 ImGui::ColorConvertFloat4ToU32(COLOR(TAB, TEXT, *v)));
-        pos.y -= glyph->XAdvance;
+        pos.y -= glyph->XAdvance / scale;
     }
     ImGui::PopID();
     return ret;
@@ -1170,6 +1178,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     io.DisplaySize = ImVec2((float)goxel->screen_size.x,
                             (float)goxel->screen_size.y);
+
+    io.DisplayFramebufferScale = ImVec2(goxel->screen_scale,
+                                        goxel->screen_scale);
     io.DeltaTime = 1.0 / 60;
     gesture_update(2, gestures, inputs, &display_rect, gui);
     io.MouseWheel = inputs->mouse_wheel;

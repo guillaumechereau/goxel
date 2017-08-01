@@ -114,15 +114,15 @@ static void loop_function(void) {
     // size.
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
     glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
-    g_inputs->window_size[0] = fb_size[0];
-    g_inputs->window_size[1] = fb_size[1];
+    g_inputs->window_size[0] = win_size[0];
+    g_inputs->window_size[1] = win_size[1];
+    g_inputs->scale = fb_size[0] / win_size[0];
 
     for (i = 0; i <= GLFW_KEY_LAST; i++) {
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    g_inputs->touches[0].pos = vec2(xpos * fb_size[0] / win_size[0],
-                                    ypos * fb_size[1] / win_size[1]);
+    g_inputs->touches[0].pos = vec2(xpos, ypos);
     g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
@@ -162,6 +162,7 @@ int main(int argc, char **argv)
     int ret = 0;
     inputs_t inputs = {};
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
+    int fb_size[2], win_size[2];
 
     g_inputs = &inputs;
     g_goxel = calloc(1, sizeof(*g_goxel));
@@ -184,7 +185,13 @@ int main(int argc, char **argv)
     glewInit();
 #endif
 
-    goxel_init(g_goxel);
+    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
+    glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
+    g_inputs->window_size[0] = win_size[0];
+    g_inputs->window_size[1] = win_size[1];
+    g_inputs->scale = fb_size[0] / win_size[0];
+
+    goxel_init(g_goxel, g_inputs);
     if (args.input)
         action_exec2("import", "p", args.input);
     if (args.export) {
@@ -311,13 +318,14 @@ int main(int argc, char **argv)
     g_goxel = &goxel;
     g_inputs = &inputs;
     memset(g_inputs, 0, sizeof(*g_inputs));
+    g_inputs->scale = 1;
 
     glutInit(&argc, argv);
     glutInitWindowSize(w, h);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutCreateWindow("Goxel " GOXEL_VERSION_STR);
 
-    goxel_init(&goxel);
+    goxel_init(&goxel, g_inputs);
 
     glutDisplayFunc(on_display);
     glutReshapeFunc(on_reshape);
