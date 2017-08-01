@@ -68,7 +68,28 @@ static int on_palette(int i, const char *path, void *user)
     return 0;
 }
 
+static int on_palette2(const char *dir, const char *name, void *user)
+{
+    palette_t **list = user;
+    char *data, *path;
+    palette_t *pal;
+    asprintf(&path, "%s/%s", dir, name);
+    pal = calloc(1, sizeof(*pal));
+    data = read_file(path, NULL);
+    pal->size = parse_gpl(data, pal->name, &pal->columns, NULL);
+    pal->entries = calloc(pal->size, sizeof(*pal->entries));
+    parse_gpl(data, NULL, NULL, pal->entries);
+    DL_APPEND(*list, pal);
+    free(path);
+    free(data);
+    return 0;
+}
+
+
 void palette_load_all(palette_t **list)
 {
+    char *dir;
     assets_list("data/palettes/", list, on_palette);
+    asprintf(&dir, "%s/palettes", sys_get_user_dir());
+    sys_list_dir(dir, on_palette2, list);
 }
