@@ -530,11 +530,8 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
                    (int)(height - view->rect.y - view->rect.w),
                    (int)view->rect.z,
                    (int)view->rect.w};
-    vec4_t back_color;
-    back_color = uvec4b_to_vec4(goxel->back_color);
-
     goxel_render_view(goxel, &view->rect);
-    render_render(&goxel->rend, rect, &back_color);
+    render_render(&goxel->rend, rect, &goxel->back_color);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 

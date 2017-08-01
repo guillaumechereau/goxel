@@ -142,7 +142,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     rend.scale = 1;
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
 
-    render_render(&rend, rect, &vec4_zero);
+    render_render(&rend, rect, &uvec4b_zero);
 
     x = round(pos->x - view->x);
     y = round(pos->y - view->y);
@@ -622,7 +622,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h)
     rend.fbo = fbo->framebuffer;
 
     render_mesh(&rend, mesh, 0);
-    render_render(&rend, rect, &vec4_zero);
+    render_render(&rend, rect, &uvec4b_zero);
     tmp_buf = calloc(w * h * 4 , 4);
     texture_get_data(fbo, w * 2, h * 2, 4, tmp_buf);
     img_downsample(tmp_buf, w * 2, h * 2, 4, buf);

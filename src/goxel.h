@@ -707,7 +707,7 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects);
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
 void render_render(renderer_t *rend, const int rect[4],
-                   const vec4_t *clear_color);
+                   const uvec4b_t *clear_color);
 int render_get_default_settings(int i, char **name, render_settings_t *out);
 // Compute the light direction in the model coordinates (toward the light)
 vec3_t render_get_light_dir(const renderer_t *rend);

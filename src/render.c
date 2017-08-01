@@ -827,7 +827,7 @@ static mat4_t render_shadow_map(renderer_t *rend)
     return ret;
 }
 void render_render(renderer_t *rend, const int rect[4],
-                   const vec4_t *clear_color)
+                   const uvec4b_t *clear_color)
 {
     render_item_t *item, *tmp;
     mat4_t shadow_mvp;
@@ -846,10 +846,10 @@ void render_render(renderer_t *rend, const int rect[4],
     GL(glScissor(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
     GL(glLineWidth(rend->scale));
     if (clear_color) {
-        GL(glClearColor(clear_color->r,
-                        clear_color->g,
-                        clear_color->b,
-                        clear_color->a));
+        GL(glClearColor(clear_color->r / 255.,
+                        clear_color->g / 255.,
+                        clear_color->b / 255.,
+                        clear_color->a / 255.));
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     }
 
