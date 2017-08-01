@@ -131,25 +131,6 @@ static int theme_ini_handler(void *user, const char *section,
     return 0;
 }
 
-/*
-void theme_set(const char *name)
-{
-    char *path;
-    FILE *file;
-
-    name = name ?: "default";
-    asprintf(&path, "%s/themes/%s.ini", sys_get_user_dir(), name);
-    file = fopen(path, "r");
-    free(path);
-    g_theme = g_default_theme;
-
-    if (file) {
-        ini_parse_file(file, theme_ini_handler, NULL);
-        fclose(file);
-    }
-}
-*/
-
 static int on_theme(int i, const char *path, void *user)
 {
     const char *data;
@@ -184,6 +165,7 @@ theme_t *theme_get_list(void)
 void theme_set(const char *name)
 {
     theme_t *theme;
+    if (!g_themes) themes_init();
     DL_FOREACH(g_themes, theme) {
         if (strcmp(theme->name, name) == 0)
             g_theme = *theme;
