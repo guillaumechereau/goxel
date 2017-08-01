@@ -132,6 +132,12 @@ typedef struct gui_t {
     bool    capture_mouse;
     int     group;
 
+    struct {
+        const char *title;
+        bool      (*func)(void);
+        int         flags;
+    } popup;
+
     // Textures for the color editor.
     texture_t *hsl_tex;
     texture_t *hue_tex;
@@ -918,7 +924,7 @@ static void import_image_plane(goxel_t *goxel)
     goxel_import_image_plane(goxel, path);
 }
 
-static void shift_alpha_popup(goxel_t *goxel)
+static bool shift_alpha_popup(void)
 {
     static int v = 0;
     static mesh_t *original_mesh = NULL;
@@ -934,11 +940,12 @@ static void shift_alpha_popup(goxel_t *goxel)
     if (ImGui::Button("OK")) {
         mesh_delete(original_mesh);
         original_mesh = NULL;
-        ImGui::CloseCurrentPopup();
+        return true;
     }
+    return false;
 }
 
-static void about_popup(void)
+static bool about_popup(void)
 {
     using namespace ImGui;
     Text("Goxel " GOXEL_VERSION_STR);
@@ -965,11 +972,11 @@ static void about_popup(void)
         BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
         BulletText("Michal (https://github.com/YarlBoro)");
     }
-
-    if (Button("OK")) CloseCurrentPopup();
+    return gui_button("OK", 0, 0);
 }
 
-static void settings_popup(void)
+
+static bool settings_popup(void)
 {
     const char **names;
     theme_t *theme;
@@ -1023,7 +1030,7 @@ static void settings_popup(void)
     if (ImGui::Button("Save")) theme_save();
 #endif
 
-    if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
+    return gui_button("OK", 0, 0);
 }
 
 static int check_action_shortcut(const action_t *action, void *user)
@@ -1078,10 +1085,6 @@ static bool render_menu_item(const char *id, const char *label)
 
 static void render_menu(void)
 {
-    bool popup_about = false;
-    bool popup_shift_alpha = false;
-    bool popup_settings = false;
-
     ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(MENU, INNER, 0));
     ImGui::PushStyleColor(ImGuiCol_Text, COLOR(MENU, TEXT, 0));
 
@@ -1110,9 +1113,10 @@ static void render_menu(void)
         render_menu_item("copy", "Copy");
         render_menu_item("past", "Past");
         if (ImGui::MenuItem("Shift Alpha"))
-            popup_shift_alpha = true;
+            gui_open_popup("Shift Alpha", shift_alpha_popup, 0);
         if (ImGui::MenuItem("Settings"))
-            popup_settings = true;
+            gui_open_popup("Settings", settings_popup,
+                    GUI_POPUP_FULL | GUI_POPUP_RESIZE);
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
@@ -1125,15 +1129,10 @@ static void render_menu(void)
     }
     if (ImGui::BeginMenu("Help")) {
         if (ImGui::MenuItem("About"))
-            popup_about = true;
+            gui_open_popup("About", about_popup, 0);
         ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
-
-    if (popup_about) ImGui::OpenPopup("About");
-    if (popup_shift_alpha) ImGui::OpenPopup("Shift Alpha");
-    if (popup_settings) ImGui::OpenPopup("Settings");
-
     ImGui::PopStyleColor(2);
 }
 
@@ -1313,22 +1312,33 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     render_left_panel();
     ImGui::SameLine();
 
-    if (ImGui::BeginPopupModal("Shift Alpha", NULL,
-                ImGuiWindowFlags_AlwaysAutoResize)) {
-        shift_alpha_popup(goxel);
-        ImGui::EndPopup();
+    if (gui->popup.title) {
+        ImGui::OpenPopup(gui->popup.title);
+        int flags = ImGuiWindowFlags_AlwaysAutoResize |
+                    ImGuiWindowFlags_NoMove;
+        if (gui->popup.flags & GUI_POPUP_FULL) {
+            ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x - 40,
+                                            io.DisplaySize.y - 40),
+                        (gui->popup.flags & GUI_POPUP_RESIZE) ?
+                            ImGuiSetCond_Once : 0);
+        }
+        if (gui->popup.flags & GUI_POPUP_RESIZE) {
+            flags &= ~(ImGuiWindowFlags_NoMove |
+                       ImGuiWindowFlags_AlwaysAutoResize);
+        }
+        if (ImGui::BeginPopupModal(gui->popup.title, NULL, flags)) {
+            typeof(gui->popup.func) func = gui->popup.func;
+            if (func()) {
+                ImGui::CloseCurrentPopup();
+                // Only reset if there was no change.
+                if (func == gui->popup.func) {
+                    gui->popup.title = NULL;
+                    gui->popup.func = NULL;
+                }
+            }
+            ImGui::EndPopup();
+        }
     }
-    if (ImGui::BeginPopupModal("About", NULL,
-                ImGuiWindowFlags_AlwaysAutoResize)) {
-        about_popup();
-        ImGui::EndPopup();
-    }
-    if (ImGui::BeginPopupModal("Settings", NULL)) {
-        settings_popup();
-        ImGui::EndPopup();
-    }
-
-    ImGui::SameLine();
 
     ImGui::BeginChild("3d view", ImVec2(0, 0), false,
                       ImGuiWindowFlags_NoScrollWithMouse);
@@ -1794,6 +1804,13 @@ bool gui_quat(const char *label, quat_t *q)
         last.eul = eul;
     }
     return ret;
+}
+
+void gui_open_popup(const char *title, bool (*func)(void), int flags)
+{
+    gui->popup.title = title;
+    gui->popup.func = func;
+    gui->popup.flags = flags;
 }
 
 }

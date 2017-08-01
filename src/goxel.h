@@ -1281,6 +1281,12 @@ void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
 
+enum {
+    GUI_POPUP_FULL      = 1 << 0,
+    GUI_POPUP_RESIZE    = 1 << 1,
+};
+
+void gui_open_popup(const char *title, bool (*func)(void), int flags);
 
 // #############################
 
