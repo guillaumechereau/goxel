@@ -8,6 +8,7 @@ layout: default
 
 - [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.6.0/goxel-0.6.0-windows.zip)
 - [Mac](https://github.com/guillaumechereau/goxel/releases/download/v0.6.0/goxel-0.6.0-mac.zip)
+- [iOS](https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826)
 
 #### Version 0.5
 
