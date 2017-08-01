@@ -54,10 +54,7 @@ int sys_list_dir(const char *dirpath,
     DIR *dir;
     struct dirent *dirent;
     dir = opendir(dirpath);
-    if (!dir) {
-        LOG_W("Cannot open dir %s", dirpath);
-        return -1;
-    }
+    if (!dir) return -1;
     while ((dirent = readdir(dir))) {
         if (dirent->d_name[0] == '.') continue;
         if (callback(dirpath, dirent->d_name, user) != 0) break;
