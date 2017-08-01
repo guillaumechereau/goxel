@@ -75,7 +75,7 @@ bool gui_settings_popup(void)
 #endif
 
     gui_popup_body_end();
-    if (gui_action_button("settings_save", "Save", 0, ""));
+    gui_action_button("settings_save", "Save", 0, "");
     gui_same_line();
     return gui_button("OK", 0, 0);
 }
