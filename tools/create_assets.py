@@ -24,7 +24,29 @@
 from collections import namedtuple
 import os
 
-TYPES = [".png", ".goxcf", ".gpl", ".pov", ".ttf", ".wav"]
+TYPES = {
+    "png": {
+        "text": False,
+    },
+    "goxcf": {
+        "text": True,
+    },
+    "gpl": {
+        "text": True,
+    },
+    "pov": {
+        "text": True,
+    },
+    "ttf": {
+        "text": False
+    },
+    "wav": {
+        "text": False
+    },
+    "ini": {
+        "text": True
+    },
+}
 
 File = namedtuple('File', 'path name data size')
 
@@ -36,7 +58,7 @@ def list_files():
     ret = []
     for root, dirs, files in os.walk("data"):
         for f in files:
-            if any(f.endswith(x) for x in TYPES):
+            if any(f.endswith('.' + x) for x in TYPES):
                 ret.append(os.path.join(root, f))
     return sorted(ret, key=lambda x: x.upper())
 
@@ -71,7 +93,8 @@ def create_file(f):
     data = open(f).read()
     size = len(data)
     name = f.replace('/', '_').replace('.', '_').replace('-', '_')
-    if f.endswith(".goxcf") or f.endswith('.gpl') or f.endswith(".pov"):
+    ext = f.split(".")[-1]
+    if TYPES[ext]['text']:
         size += 1 # So that we NULL terminate the string.
         data = encode_str(data)
     else:
