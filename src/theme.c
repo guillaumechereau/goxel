@@ -73,8 +73,8 @@ theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT] = {
     [THEME_COLOR_TEXT_SELECTED] = {.name = "text_selected"},
 };
 
-static theme_t g_default_theme = {
-    .name = "default",
+static theme_t g_base_theme = {
+    .name = "Unamed",
     .sizes = {
         .item_height = 18,
         .icons_height = 32,
@@ -84,34 +84,10 @@ static theme_t g_default_theme = {
         .item_spacing_v = 4,
         .item_inner_spacing_h = 6,
     },
-
-    .groups = {
-        [THEME_GROUP_BASE] = {
-            .colors = {
-                [THEME_COLOR_BACKGROUND] = VEC4(96, 114, 114, 255),
-                [THEME_COLOR_OUTLINE] = VEC4(77, 77, 77, 255),
-                [THEME_COLOR_INNER] = VEC4(161, 161, 161, 255),
-                [THEME_COLOR_TEXT] = VEC4(17, 17, 17, 255),
-                [THEME_COLOR_INNER_SELECTED] = VEC4(102, 102, 204, 255),
-                [THEME_COLOR_TEXT_SELECTED] = VEC4(17, 17, 17, 255),
-            },
-        },
-        [THEME_GROUP_TAB] = {
-            .colors = {
-                [THEME_COLOR_BACKGROUND] = VEC4(48, 66, 66, 255),
-                [THEME_COLOR_INNER] = VEC4(69, 86, 86, 255),
-                [THEME_COLOR_INNER_SELECTED] = VEC4(96, 114, 114, 255),
-            },
-        },
-        [THEME_GROUP_MENU] = {
-            .colors = {
-                [THEME_COLOR_INNER] = VEC4(90, 110, 110, 255),
-            },
-        },
-    },
 };
 
-static theme_t g_theme = {};
+static theme_t *g_themes = NULL; // List of all the themes.
+static theme_t g_theme = {};   // Current theme.
 
 static uint32_t tohex(uvec4b_t c)
 {
@@ -136,25 +112,26 @@ static uvec4b_t parse_color(const char *s)
 static int theme_ini_handler(void *user, const char *section,
                              const char *name, const char *value, int lineno)
 {
+    theme_t *theme = user;
     int group, i;
-    if (strcmp(section, "sizes") == 0) {
-        #define X(n) \
-        if (strcmp(name, #n) == 0) g_theme.sizes.n = atoi(value);
-        THEME_SIZES(X)
-        #undef X
+
+    if (strcmp(section, "theme") == 0) {
+        if (strcmp(name, "name") == 0)
+            strncpy(theme->name, value, sizeof(theme->name) - 1);
     }
+
     for (group = 0; group < THEME_GROUP_COUNT; group++) {
         if (strcmp(section, THEME_GROUP_INFOS[group].name) != 0) continue;
         for (i = 0; i < THEME_COLOR_COUNT; i++) {
             if (strcmp(name, THEME_COLOR_INFOS[i].name) == 0) {
-                g_theme.groups[group].colors[i] = parse_color(value);
+                theme->groups[group].colors[i] = parse_color(value);
             }
         }
     }
-
     return 0;
 }
 
+/*
 void theme_set(const char *name)
 {
     char *path;
@@ -171,16 +148,55 @@ void theme_set(const char *name)
         fclose(file);
     }
 }
+*/
+
+static int on_theme(int i, const char *path, void *user)
+{
+    const char *data;
+    theme_t *theme = calloc(1, sizeof(*theme));
+    *theme = g_base_theme;
+    data = assets_get(path, NULL);
+    ini_parse_string(data, theme_ini_handler, theme);
+    DL_APPEND(g_themes, theme);
+    if (strcmp(theme->name, "default") == 0)
+        g_theme = *theme;
+    return 0;
+}
+
+static void themes_init(void)
+{
+    // Load all the themes.
+    assets_list("data/themes/", NULL, on_theme);
+}
 
 theme_t *theme_get(void)
 {
-    if (!(*g_theme.name)) theme_set(NULL);
+    if (!g_themes) themes_init();
     return &g_theme;
+}
+
+theme_t *theme_get_list(void)
+{
+    if (!g_themes) themes_init();
+    return g_themes;
+}
+
+void theme_set(const char *name)
+{
+    theme_t *theme;
+    DL_FOREACH(g_themes, theme) {
+        if (strcmp(theme->name, name) == 0)
+            g_theme = *theme;
+    }
 }
 
 void theme_revert_default(void)
 {
-    g_theme = g_default_theme;
+    theme_t *theme;
+    DL_FOREACH(g_themes, theme) {
+        if (strcmp(theme->name, "default") == 0)
+            g_theme = *theme;
+    }
 }
 
 void theme_save(void)

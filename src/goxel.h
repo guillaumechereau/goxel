@@ -1237,13 +1237,17 @@ struct theme {
     } sizes;
 
     theme_group_t groups[THEME_GROUP_COUNT];
+
+    theme_t *prev, *next; // Global list of themes.
 };
 
 // Return the current theme.
 theme_t *theme_get(void);
+theme_t *theme_get_list(void);
 void theme_revert_default(void);
 void theme_save(void);
 uvec4b_t theme_get_color(int group, int color, bool selected);
+void theme_set(const char *name);
 
 void gui_release(void);
 void gui_iter(goxel_t *goxel, const inputs_t *inputs);

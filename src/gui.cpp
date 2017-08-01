@@ -970,6 +970,30 @@ static void about_popup(void)
 
 static void settings_popup(void)
 {
+    const char **names;
+    theme_t *theme;
+    int i, nb, current;
+    theme_t *themes = theme_get_list();
+
+    DL_COUNT(themes, theme, nb);
+    names = (const char**)calloc(nb, sizeof(*names));
+    i = 0;
+    DL_FOREACH(themes, theme) {
+        if (strcmp(theme->name, theme_get()->name) == 0) current = i;
+        names[i++] = theme->name;
+    }
+
+    gui_text("theme");
+    ImGui::PushItemWidth(-1);
+    if (gui_combo("##themes", &current, names, nb)) {
+        theme_set(names[current]);
+    }
+    ImGui::PopItemWidth();
+
+    free(names);
+
+    // For the moment I disable the theme editor!
+#if 0
     int group, color;
     theme_t *theme = theme_get();
     ImVec4 fcolor;
@@ -996,6 +1020,7 @@ static void settings_popup(void)
     if (ImGui::Button("Revert")) theme_revert_default();
     ImGui::SameLine();
     if (ImGui::Button("Save")) theme_save();
+#endif
 
     if (ImGui::Button("OK")) ImGui::CloseCurrentPopup();
 }

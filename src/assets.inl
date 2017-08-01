@@ -5914,6 +5914,53 @@ static const uint8_t DATA_data_sounds_click_wav[524]
     18,2,243,245,254,3,
 };
 
+static const uint8_t DATA_data_themes_dark_ini[206]
+                     __attribute__((aligned(4))) =
+    "[theme]\n"
+    "name=dark\n"
+    "\n"
+    "[base]\n"
+    "background=#2D2D2DFF\n"
+    "outline=#FF\n"
+    "inner=#2B3944FF\n"
+    "inner_selected=#516882FF\n"
+    "text=#C8C8C8FF\n"
+    "text_selected=#FF\n"
+    "\n"
+    "[widget]\n"
+    "\n"
+    "[tab]\n"
+    "background=#FF\n"
+    "inner=#2D2D2DFF\n"
+    "\n"
+    "[menu]\n"
+    "inner=#5A6E6EFF\n"
+    "";
+
+static const uint8_t DATA_data_themes_default_ini[252]
+                     __attribute__((aligned(4))) =
+    "[theme]\n"
+    "name=default\n"
+    "\n"
+    "[base]\n"
+    "background=#607272FF\n"
+    "outline=#4D4D4DFF\n"
+    "inner=#A1A1A1FF\n"
+    "inner_selected=#6666CCFF\n"
+    "text=#111111FF\n"
+    "text_selected=#111111FF\n"
+    "\n"
+    "[widget]\n"
+    "\n"
+    "[tab]\n"
+    "background=#304242FF\n"
+    "inner=#455656FF\n"
+    "inner_selected=#607272FF\n"
+    "\n"
+    "[menu]\n"
+    "inner=#5A6E6EFF\n"
+    "";
+
 
 
 
@@ -6115,6 +6162,18 @@ static asset_t ASSETS[] = {
         .path = "data/sounds/click.wav",
         .data = DATA_data_sounds_click_wav,
         .size = 524,
+    },
+
+    {
+        .path = "data/themes/dark.ini",
+        .data = DATA_data_themes_dark_ini,
+        .size = 206,
+    },
+
+    {
+        .path = "data/themes/default.ini",
+        .data = DATA_data_themes_default_ini,
+        .size = 252,
     },
 
     {0}
