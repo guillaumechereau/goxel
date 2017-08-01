@@ -374,3 +374,54 @@ int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s)
     *s = tm->tm_sec;
     return 0;
 }
+
+// From blender source code.
+int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8)
+{
+    char *out8end = out8 + size8;
+    wchar_t u = 0;
+    int err = 0;
+    if (!size8 || !in16 || !out8) return -1;
+    out8end--;
+
+    for (; out8 < out8end && (u = *in16); in16++, out8++) {
+        if (u < 0x0080) {
+            *out8 = u;
+        }
+        else if (u < 0x0800) {
+            if (out8 + 1 >= out8end) break;
+            *out8++ = (0x3 << 6) | (0x1F & (u >> 6));
+            *out8  = (0x1 << 7) | (0x3F & (u));
+        }
+        else if (u < 0xD800 || u >= 0xE000) {
+            if (out8 + 2 >= out8end) break;
+            *out8++ = (0x7 << 5) | (0xF & (u >> 12));
+            *out8++ = (0x1 << 7) | (0x3F & (u >> 6));
+            *out8  = (0x1 << 7) | (0x3F & (u));
+        }
+        else if (u < 0xDC00) {
+            wchar_t u2 = *++in16;
+
+            if (!u2) break;
+            if (u2 >= 0xDC00 && u2 < 0xE000) {
+                if (out8 + 3 >= out8end) break; else {
+                    unsigned int uc = 0x10000 + (u2 - 0xDC00) + ((u - 0xD800) << 10);
+
+                    *out8++ = (0xF << 4) | (0x7 & (uc >> 18));
+                    *out8++ = (0x1 << 7) | (0x3F & (uc >> 12));
+                    *out8++ = (0x1 << 7) | (0x3F & (uc >> 6));
+                    *out8  = (0x1 << 7) | (0x3F & (uc));
+                }
+            }
+            else {
+                out8--; err = -1;
+            }
+        }
+        else if (u < 0xE000) {
+            out8--; err = -1;
+        }
+    }
+    *out8 = *out8end = 0;
+    if (*in16) err = -1;
+    return err;
+}

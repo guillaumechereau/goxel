@@ -286,6 +286,7 @@ bool str_endswith(const char *str, const char *end);
 bool str_startswith(const char *s1, const char *s2);
 // Get gregorian date from unix time.
 int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s);
+int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
 
 static inline bool str_equ(const char *s1, const char *s2) {
     return strcmp(s1, s2) == 0;

@@ -101,7 +101,7 @@ static uvec4b_t parse_color(const char *s)
 {
     uint32_t v;
     uvec4b_t ret;
-    v = strtol(s + 1, NULL, 16);
+    v = strtoul(s + 1, NULL, 16);
     ret.r = (v >> 24) & 0xff;
     ret.g = (v >> 16) & 0xff;
     ret.b = (v >>  8) & 0xff;
