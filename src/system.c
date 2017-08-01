@@ -19,6 +19,7 @@
 #include "goxel.h"
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <errno.h>
 
 #ifdef __linux__
