@@ -983,6 +983,8 @@ static bool settings_popup(void)
     int i, nb, current;
     theme_t *themes = theme_get_list();
 
+    ImGui::BeginChild("body",
+            ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
     DL_COUNT(themes, theme, nb);
     names = (const char**)calloc(nb, sizeof(*names));
     i = 0;
@@ -1030,6 +1032,7 @@ static bool settings_popup(void)
     if (ImGui::Button("Save")) theme_save();
 #endif
 
+    ImGui::EndChild();
     return gui_button("OK", 0, 0);
 }
 
