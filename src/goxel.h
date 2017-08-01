@@ -1287,6 +1287,8 @@ enum {
 };
 
 void gui_open_popup(const char *title, bool (*func)(void), int flags);
+void gui_popup_body_begin(void);
+void gui_popup_body_end(void);
 
 // #############################
 

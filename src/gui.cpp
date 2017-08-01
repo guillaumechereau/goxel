@@ -34,6 +34,9 @@ extern "C" {
 #include "imgui.h"
 #include "imgui_internal.h"
 
+extern "C" {
+    bool gui_settings_popup(void);
+}
 
 static inline ImVec4 IMHEXCOLOR(uint32_t v)
 {
@@ -975,67 +978,6 @@ static bool about_popup(void)
     return gui_button("OK", 0, 0);
 }
 
-
-static bool settings_popup(void)
-{
-    const char **names;
-    theme_t *theme;
-    int i, nb, current;
-    theme_t *themes = theme_get_list();
-
-    ImGui::BeginChild("body",
-            ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
-    DL_COUNT(themes, theme, nb);
-    names = (const char**)calloc(nb, sizeof(*names));
-    i = 0;
-    DL_FOREACH(themes, theme) {
-        if (strcmp(theme->name, theme_get()->name) == 0) current = i;
-        names[i++] = theme->name;
-    }
-
-    gui_text("theme");
-    ImGui::PushItemWidth(-1);
-    if (gui_combo("##themes", &current, names, nb)) {
-        theme_set(names[current]);
-    }
-    ImGui::PopItemWidth();
-
-    free(names);
-
-    // For the moment I disable the theme editor!
-#if 0
-    int group, color;
-    theme_t *theme = theme_get();
-    ImVec4 fcolor;
-
-    gui_group_begin("Sizes");
-    #define X(a) gui_input_int(#a, &theme->sizes.a, 0, 1000);
-    THEME_SIZES(X)
-    #undef X
-    gui_group_end();
-
-    for (group = 0; group < THEME_GROUP_COUNT; group++) {
-        if (ImGui::CollapsingHeader(THEME_GROUP_INFOS[group].name)) {
-            for (color = 0; color < THEME_COLOR_COUNT; color++) {
-                if (!THEME_GROUP_INFOS[group].colors[color]) continue;
-                fcolor = theme->groups[group].colors[color];
-                if (ImGui::ColorEdit4(THEME_COLOR_INFOS[color].name,
-                                      (float*)&fcolor)) {
-                    theme->groups[group].colors[color] = fcolor;
-                }
-            }
-        }
-    }
-
-    if (ImGui::Button("Revert")) theme_revert_default();
-    ImGui::SameLine();
-    if (ImGui::Button("Save")) theme_save();
-#endif
-
-    ImGui::EndChild();
-    return gui_button("OK", 0, 0);
-}
-
 static int check_action_shortcut(const action_t *action, void *user)
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -1118,7 +1060,7 @@ static void render_menu(void)
         if (ImGui::MenuItem("Shift Alpha"))
             gui_open_popup("Shift Alpha", shift_alpha_popup, 0);
         if (ImGui::MenuItem("Settings"))
-            gui_open_popup("Settings", settings_popup,
+            gui_open_popup("Settings", gui_settings_popup,
                     GUI_POPUP_FULL | GUI_POPUP_RESIZE);
         ImGui::EndMenu();
     }
@@ -1814,6 +1756,15 @@ void gui_open_popup(const char *title, bool (*func)(void), int flags)
     gui->popup.title = title;
     gui->popup.func = func;
     gui->popup.flags = flags;
+}
+
+void gui_popup_body_begin(void) {
+    ImGui::BeginChild("body",
+            ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+}
+
+void gui_popup_body_end(void) {
+    ImGui::EndChild();
 }
 
 }
