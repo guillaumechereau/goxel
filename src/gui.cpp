@@ -121,6 +121,7 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
 
+    int     current_panel;
     view_t  view;
     int     min_panel_size;
     struct {
@@ -1184,11 +1185,64 @@ static bool render_tab(const char *label, bool *v)
     return ret;
 }
 
+static void render_left_panel(void)
+{
+    int i;
+    const theme_t *theme = theme_get();
+    float left_pane_width;
+    const struct {
+        const char *name;
+        void (*fn)(goxel_t *goxel);
+    } PANELS[] = {
+        {"Tools", tools_panel},
+        {"Palette", palette_panel},
+        {"Layers", layers_panel},
+        {"Render", render_panel},
+        {"Cameras", cameras_panel},
+        {"Image", image_panel},
+        {"Export", export_panel},
+    };
+    ImDrawList* draw_list;
+
+    left_pane_width = max(168, gui->min_panel_size);
+    gui->min_panel_size = 0;
+    ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
+
+    ImGui::BeginGroup();
+    draw_list = ImGui::GetWindowDrawList();
+    ImVec2 rmin = ImGui::GetCursorScreenPos() - ImVec2(4, 4);
+    ImVec2 rmax = rmin + ImVec2(theme->sizes.item_height + 4,
+                                ImGui::GetWindowHeight());
+    draw_list->AddRectFilled(rmin, rmax,
+                ImGui::ColorConvertFloat4ToU32(COLOR(TAB, BACKGROUND, 0)));
+
+    for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
+        bool b = (gui->current_panel == (int)i);
+        if (render_tab(PANELS[i].name, &b)) {
+            on_click();
+            gui->current_panel = i;
+        }
+    }
+    ImGui::EndGroup();
+
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+
+    goxel->show_export_viewport = false;
+
+    ImGui::PushID("panel");
+    ImGui::PushID(PANELS[gui->current_panel].name);
+    PANELS[gui->current_panel].fn(goxel);
+    ImGui::PopID();
+    ImGui::PopID();
+
+    ImGui::EndGroup();
+    ImGui::EndChild();
+}
+
 void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 {
     if (!gui) gui_init(inputs);
-    static int current_panel = 0;
-    float left_pane_width;
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list;
@@ -1256,60 +1310,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::Begin("Goxel", NULL, window_flags);
 
     render_menu();
-
-    left_pane_width = max(168, gui->min_panel_size);
-    gui->min_panel_size = 0;
-
-    /*
-    if (current_panel == 0 && goxel->tool->id == TOOL_PROCEDURAL) {
-        left_pane_width = 400;
-    }
-    */
-    ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
-
-    const struct {
-        const char *name;
-        void (*fn)(goxel_t *goxel);
-    } PANELS[] = {
-        {"Tools", tools_panel},
-        {"Palette", palette_panel},
-        {"Layers", layers_panel},
-        {"Render", render_panel},
-        {"Cameras", cameras_panel},
-        {"Image", image_panel},
-        {"Export", export_panel},
-    };
-
-    ImGui::BeginGroup();
-    draw_list = ImGui::GetWindowDrawList();
-    ImVec2 rmin = ImGui::GetCursorScreenPos() - ImVec2(4, 4);
-    ImVec2 rmax = rmin + ImVec2(theme->sizes.item_height + 4,
-                                ImGui::GetWindowHeight());
-    draw_list->AddRectFilled(rmin, rmax,
-                ImGui::ColorConvertFloat4ToU32(COLOR(TAB, BACKGROUND, 0)));
-
-    for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
-        bool b = (current_panel == (int)i);
-        if (render_tab(PANELS[i].name, &b)) {
-            on_click();
-            current_panel = i;
-        }
-    }
-    ImGui::EndGroup();
-
+    render_left_panel();
     ImGui::SameLine();
-    ImGui::BeginGroup();
-
-    goxel->show_export_viewport = false;
-
-    ImGui::PushID("panel");
-    ImGui::PushID(PANELS[current_panel].name);
-    PANELS[current_panel].fn(goxel);
-    ImGui::PopID();
-    ImGui::PopID();
-
-    ImGui::EndGroup();
-    ImGui::EndChild();
 
     if (ImGui::BeginPopupModal("Shift Alpha", NULL,
                 ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -1364,7 +1366,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::EndChild();
 
     if (DEBUG) {
-        ImGui::SetCursorPos(ImVec2(left_pane_width + 20, 30));
+        ImGui::SetCursorPos(ImVec2(400, 30));
         ImGui::BeginChild("debug", ImVec2(0, 0), false,
                           ImGuiWindowFlags_NoInputs);
         ImGui::Text("Blocks: %d (%.2g MiB)", goxel->block_count,
