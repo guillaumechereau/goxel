@@ -44,6 +44,27 @@ void sys_log(const char *msg)
     fflush(stdout);
 }
 
+// List all the files in a directory.
+int sys_list_dir(const char *dirpath,
+                 int (*callback)(const char *dirpath, const char *name,
+                                 void *user),
+                 void *user)
+{
+    DIR *dir;
+    struct dirent *dirent;
+    dir = opendir(dirpath);
+    if (!dir) {
+        LOG_W("Cannot open dir %s", dirpath);
+        return -1;
+    }
+    while ((dirent = readdir(dir))) {
+        if (dirent->d_name[0] == '.') continue;
+        if (callback(dirpath, dirent->d_name, user) != 0) break;
+    }
+    closedir(dir);
+    return 0;
+}
+
 double sys_get_time(void)
 {
     struct timeval now;
