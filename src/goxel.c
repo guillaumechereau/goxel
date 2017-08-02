@@ -183,7 +183,7 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
         goto end;
     }
 
-    for (i = 0; i < 6; i++) {
+    for (i = 0; i < 7; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(goxel, view, pos,
@@ -200,6 +200,12 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
             r = goxel_unproject_on_box(goxel, view, pos,
                                        &goxel->selection, false,
                                        &p, &n, NULL);
+        if ((1 << i) == SNAP_LAYER_OUT) {
+            box_t box = mesh_get_box(goxel->image->active_layer->mesh, true);
+            r = goxel_unproject_on_box(goxel, view, pos,
+                                       &box, false,
+                                       &p, &n, NULL);
+        }
         if ((1 << i) == SNAP_IMAGE_BOX)
             r = goxel_unproject_on_box(goxel, view, pos,
                                        &goxel->image->box, true,

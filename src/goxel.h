@@ -811,6 +811,7 @@ enum {
     SNAP_MESH           = 1 << 3,
     SNAP_PLANE          = 1 << 4,
     SNAP_CAMERA         = 1 << 5, // Used for laser tool.
+    SNAP_LAYER_OUT      = 1 << 6, // Snap the layer box.
 
     SNAP_ROUNDED        = 1 << 8, // Round the result.
 };
