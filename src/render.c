@@ -923,7 +923,7 @@ void render_render(renderer_t *rend, const int rect[4],
 
 int render_get_default_settings(int i, char **name, render_settings_t *out)
 {
-    if (!out) return 5;
+    if (!out) return 6;
 
     *out = (render_settings_t) {
         .border_shadow = 0.4,
@@ -955,6 +955,11 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             out->shadow = 0;
             break;
         case 4:
+            if (name) *name = "Half smooth";
+            out->smoothness = 0.2;
+            out->effects = EFFECT_BORDERS_ALL;
+            break;
+        case 5:
             if (name) *name = "Marching";
             out->smoothness = 1.0;
             out->effects = EFFECT_MARCHING_CUBES | EFFECT_FLAT;
