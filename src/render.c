@@ -89,6 +89,8 @@ static const char *POS_DATA_VSHADER;
 static const char *POS_DATA_FSHADER;
 static const char *SHADOW_MAP_VSHADER;
 static const char *SHADOW_MAP_FSHADER;
+static const char *BACKGROUND_VSHADER;
+static const char *BACKGROUND_FSHADER;
 
 typedef struct {
     // Those values are used as a key to identify the shader.
@@ -118,10 +120,11 @@ typedef struct {
 
 // Static list of programs.  Need to be big enough for all the possible
 // shaders we are going to use.
-static prog_t g_progs[4] = {};
+static prog_t g_progs[5] = {};
 
 
 static GLuint index_buffer;
+static GLuint g_background_array_buffer;
 static GLuint g_border_tex;
 static GLuint g_bump_tex;
 static GLuint g_shadow_map_fbo;
@@ -328,6 +331,7 @@ void render_init()
 {
     LOG_D("render init");
     GL(glGenBuffers(1, &index_buffer));
+    GL(glGenBuffers(1, &g_background_array_buffer));
 
     // 6 vertices (2 triangles) per face.
     uint16_t *index_array = NULL;
@@ -826,6 +830,53 @@ static mat4_t render_shadow_map(renderer_t *rend)
     mat4_imul(&ret, view_mat);
     return ret;
 }
+
+static void render_background(renderer_t *rend, const uvec4b_t *col)
+{
+    prog_t *prog;
+    typedef struct {
+        vec3b_t  pos       __attribute__((aligned(4)));
+        vec4_t   color     __attribute__((aligned(4)));
+    } vertex_t;
+    vertex_t vertices[4];
+    vec4_t c1, c2;
+
+    if (col->a == 0) {
+        GL(glClearColor(0, 0, 0, 0));
+        GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        return;
+    }
+
+    // Add a small gradient to the color.
+    c1 = vec4(col->r / 255., col->g / 255., col->b / 255., col->a / 255.);
+    c2 = vec4(col->r / 255., col->g / 255., col->b / 255., col->a / 255.);
+    vec3_iadd(&c1.rgb, vec3(+0.2, +0.2, +0.2));
+    vec3_iadd(&c2.rgb, vec3(-0.2, -0.2, -0.2));
+
+    vertices[0] = (vertex_t){vec3b(-1, -1, 0), c1};
+    vertices[1] = (vertex_t){vec3b(+1, -1, 0), c1};
+    vertices[2] = (vertex_t){vec3b(+1, +1, 0), c2};
+    vertices[3] = (vertex_t){vec3b(-1, +1, 0), c2};
+
+    prog = get_prog(BACKGROUND_VSHADER, BACKGROUND_FSHADER, NULL);
+    GL(glUseProgram(prog->prog));
+
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBindBuffer(GL_ARRAY_BUFFER, g_background_array_buffer));
+    GL(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),
+                    vertices, GL_DYNAMIC_DRAW));
+
+    GL(glEnableVertexAttribArray(0));
+    GL(glVertexAttribPointer(0, 3, GL_BYTE, false, sizeof(vertex_t),
+                             (void*)(intptr_t)offsetof(vertex_t, pos)));
+    GL(glEnableVertexAttribArray(2));
+    GL(glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(vertex_t),
+                             (void*)(intptr_t)offsetof(vertex_t, color)));
+    GL(glDepthMask(false));
+    GL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0));
+    GL(glDepthMask(true));
+}
+
 void render_render(renderer_t *rend, const int rect[4],
                    const uvec4b_t *clear_color)
 {
@@ -845,13 +896,7 @@ void render_render(renderer_t *rend, const int rect[4],
     GL(glViewport(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
     GL(glScissor(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
     GL(glLineWidth(rend->scale));
-    if (clear_color) {
-        GL(glClearColor(clear_color->r / 255.,
-                        clear_color->g / 255.,
-                        clear_color->b / 255.,
-                        clear_color->a / 255.));
-        GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    }
+    if (clear_color) render_background(rend, clear_color);
 
     DL_SORT(rend->items, item_sort_cmp);
     DL_FOREACH_SAFE(rend->items, item, tmp) {
@@ -1118,5 +1163,33 @@ static const char *SHADOW_MAP_FSHADER =
     "                                                                   \n"
     "void main()                                                        \n"
     "{                                                                  \n"
+    "}                                                                  \n"
+;
+
+static const char *BACKGROUND_VSHADER =
+    "                                                                   \n"
+    "attribute vec3 a_pos;                                              \n"
+    "attribute vec4 a_color;                                            \n"
+    "                                                                   \n"
+    "varying vec4 v_color;                                              \n"
+    "                                                                   \n"
+    "void main()                                                        \n"
+    "{                                                                  \n"
+    "    gl_Position = vec4(a_pos, 1.0);                                \n"
+    "    v_color = a_color;                                             \n"
+    "}                                                                  \n"
+;
+
+static const char *BACKGROUND_FSHADER =
+    "                                                                   \n"
+    "#ifdef GL_ES                                                       \n"
+    "precision mediump float;                                           \n"
+    "#endif                                                             \n"
+    "                                                                   \n"
+    "varying vec4 v_color;                                              \n"
+    "                                                                   \n"
+    "void main()                                                        \n"
+    "{                                                                  \n"
+    "    gl_FragColor = v_color;                                        \n"
     "}                                                                  \n"
 ;

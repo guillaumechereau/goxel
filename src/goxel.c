@@ -270,8 +270,8 @@ void goxel_init(goxel_t *gox)
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
-    goxel->back_color = HEXCOLOR(0x393939ff);
-    goxel->grid_color = HEXCOLOR(0x4a4a4aff);
+    goxel->back_color = HEXCOLOR(0x464646ff);
+    goxel->grid_color = HEXCOLOR(0x191919ff);
     goxel->image_box_color = HEXCOLOR(0xccccffff);
 
     // Load and set default palette.
