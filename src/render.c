@@ -123,7 +123,7 @@ typedef struct {
 static prog_t g_progs[5] = {};
 
 
-static GLuint index_buffer;
+static GLuint g_index_buffer;
 static GLuint g_background_array_buffer;
 static GLuint g_border_tex;
 static GLuint g_bump_tex;
@@ -330,7 +330,7 @@ static prog_t *get_prog(const char *vshader, const char *fshader,
 void render_init()
 {
     LOG_D("render init");
-    GL(glGenBuffers(1, &index_buffer));
+    GL(glGenBuffers(1, &g_index_buffer));
     GL(glGenBuffers(1, &g_background_array_buffer));
 
     // 6 vertices (2 triangles) per face.
@@ -341,7 +341,7 @@ void render_init()
         index_array[i] = (i / 6) * 4 + ((int[]){0, 1, 2, 2, 3, 0})[i % 6];
     }
 
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, BATCH_QUAD_COUNT * 6 * 2,
                     index_array, GL_STATIC_DRAW));
     free(index_array);
@@ -367,8 +367,8 @@ void render_deinit(void)
             delete_program(g_progs[i].prog);
     }
     memset(&g_progs, 0, sizeof(g_progs));
-    GL(glDeleteBuffers(1, &index_buffer));
-    index_buffer = 0;
+    GL(glDeleteBuffers(1, &g_index_buffer));
+    g_index_buffer = 0;
 }
 
 // A global buffer large enough to contain all the vertices for any block.
@@ -604,7 +604,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));
 
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
     MESH_ITER_BLOCKS(mesh, block) {
         render_block_(rend, block, effects, prog, &model);
@@ -861,7 +861,7 @@ static void render_background(renderer_t *rend, const uvec4b_t *col)
     prog = get_prog(BACKGROUND_VSHADER, BACKGROUND_FSHADER, NULL);
     GL(glUseProgram(prog->prog));
 
-    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer));
+    GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, g_background_array_buffer));
     GL(glBufferData(GL_ARRAY_BUFFER, sizeof(vertices),
                     vertices, GL_DYNAMIC_DRAW));
