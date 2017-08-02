@@ -34,6 +34,7 @@ typedef struct {
         vec3_t     pos;
         bool       pressed;
         int        mode;
+        uint64_t   mesh_id;
     } last_op;
 
     struct {
@@ -49,8 +50,10 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     const bool pressed = curs->flags & CURSOR_PRESSED;
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
+            brush->last_op.mesh_id == goxel->layers_mesh->id &&
             vec3_equal(curs->pos, brush->last_op.pos))
         return true;
+    brush->last_op.mesh_id = goxel->layers_mesh->id;
     brush->last_op.pressed = pressed;
     brush->last_op.mode = mode;
     brush->last_op.pos = curs->pos;
