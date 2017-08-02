@@ -294,10 +294,16 @@ void image_history_push(image_t *img)
 {
     image_t *snap = image_snap(img);
     image_t *hist;
+    layer_t *layer, *layer_tmp;
+
     // Discard previous undo.
     while ((hist = img->history_next)) {
+        DL_FOREACH_SAFE(hist->layers, layer, layer_tmp) {
+            DL_DELETE(hist->layers, layer);
+            layer_delete(layer);
+        }
         DL_DELETE2(img->history, hist, history_prev, history_next);
-        debug_print_history(img);
+        free(hist);
     }
 
     DL_DELETE2(img->history, img,  history_prev, history_next);
