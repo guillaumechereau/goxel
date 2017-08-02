@@ -790,25 +790,34 @@ static void render_advanced_panel(goxel_t *goxel)
 
 static void render_panel(goxel_t *goxel)
 {
-    int i, current = 0;
+    int i, current = -1;
     int nb = render_get_default_settings(0, NULL, NULL);
     float v;
     char *name;
+    const char **names;
     render_settings_t settings;
 
     ImGui::Checkbox("Ortho", &goxel->camera.ortho);
+    names = (const char**)calloc(nb, sizeof(*names));
     for (i = 0; i < nb; i++) {
         render_get_default_settings(i, &name, &settings);
-        current = memcmp(&goxel->rend.settings, &settings,
-                         sizeof(settings)) == 0;
-        if (ImGui::RadioButton(name, current) && !current)
-            goxel->rend.settings = settings;
+        names[i] = name;
+        if (memcmp(&goxel->rend.settings, &settings,
+                         sizeof(settings)) == 0)
+            current = i;
     }
+    gui_text("Presets:");
+    if (gui_combo("##Presets", &current, names, nb)) {
+        render_get_default_settings(current, NULL, &settings);
+        goxel->rend.settings = settings;
+    }
+    free(names);
+
     v = goxel->rend.settings.shadow;
     if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
-    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    ImGui::SetNextTreeNodeOpen(false, ImGuiSetCond_Once);
     if (ImGui::CollapsingHeader("Render Advanced"))
         render_advanced_panel(goxel);
 }
