@@ -279,9 +279,9 @@ void image_set(image_t *img, image_t *other)
     }
 }
 
+#if 0 // For debugging purpose.
 static void debug_print_history(image_t *img)
 {
-    return;
     int i = 0;
     image_t *hist;
     DL_FOREACH2(img->history, hist, history_next) {
@@ -289,6 +289,9 @@ static void debug_print_history(image_t *img)
     }
     printf("\n");
 }
+#else
+static void debug_print_history(image_t *img) {}
+#endif
 
 void image_history_push(image_t *img)
 {
