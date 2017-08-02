@@ -505,6 +505,7 @@ enum {
 enum {
     MESH_LAYERS = 1 << 0,
     MESH_PICK   = 1 << 1,
+    MESH_RENDER = 1 << 2,
 };
 
 typedef struct shape {
@@ -1062,6 +1063,7 @@ typedef struct goxel
     mesh_t     *layers_mesh; // All the layers combined.
     mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
     mesh_t     *tool_mesh;   // Preview of the tool action.
+    mesh_t     *render_mesh; // All the layers + tool mesh.
 
     struct     {
         mesh_t *mesh;

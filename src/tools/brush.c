@@ -141,7 +141,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     mesh_set(mesh, brush->mesh_orig);
     mesh_merge(mesh, brush->mesh, goxel->painter.mode);
-    goxel_update_meshes(goxel, MESH_LAYERS);
+    goxel_update_meshes(goxel, MESH_RENDER);
     brush->start_pos = curs->pos;
 
     if (gest->state == GESTURE_END) {
@@ -173,7 +173,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, mesh);
     mesh_op(goxel->tool_mesh, &goxel->painter, &box);
-    goxel_update_meshes(goxel, MESH_LAYERS);
+    goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
         mesh_delete(goxel->tool_mesh);

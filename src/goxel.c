@@ -266,6 +266,7 @@ void goxel_init(goxel_t *gox)
 
     goxel->layers_mesh = mesh_new();
     goxel->pick_mesh = mesh_new();
+    goxel->render_mesh = mesh_new();
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
@@ -547,7 +548,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
 
     goxel->camera.aspect = rect->z / rect->w;
     camera_update(&goxel->camera);
-    render_mesh(rend, goxel->layers_mesh, 0);
+    render_mesh(rend, goxel->render_mesh, 0);
 
     // Render all the image layers.
     DL_FOREACH(goxel->image->layers, layer) {
@@ -582,23 +583,27 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
     layer_t *layer;
     mesh_t *mesh;
 
-    // Hack so that we never use the tool mesh in the pick layer.
-    if (goxel->tool_mesh && (mask & MESH_PICK)) {
-        mesh_delete(goxel->tool_mesh);
-        goxel->tool_mesh = NULL;
-    }
-
-    if (mask & MESH_LAYERS) {
+    if (    (mask & MESH_LAYERS) || (mask & MESH_PICK) ||
+            ((mask & MESH_RENDER) && !goxel->tool_mesh)) {
         mesh_clear(goxel->layers_mesh);
         DL_FOREACH(goxel->image->layers, layer) {
             if (!layer->visible) continue;
-            mesh = layer->mesh;
-            if (    goxel->tool_mesh &&
-                    (mesh == goxel->image->active_layer->mesh))
-                mesh = goxel->tool_mesh;
-            mesh_merge(goxel->layers_mesh, mesh, MODE_OVER);
+            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_OVER);
         }
     }
+
+    if ((mask & MESH_RENDER) && goxel->tool_mesh) {
+        mesh_clear(goxel->render_mesh);
+        DL_FOREACH(goxel->image->layers, layer) {
+            if (!layer->visible) continue;
+            mesh = layer->mesh;
+            if (mesh == goxel->image->active_layer->mesh)
+                mesh = goxel->tool_mesh;
+            mesh_merge(goxel->render_mesh, mesh, MODE_OVER);
+        }
+    }
+    if ((mask & MESH_RENDER) && !goxel->tool_mesh)
+        mesh_set(goxel->render_mesh, goxel->layers_mesh);
     if (mask & MESH_PICK)
         mesh_set(goxel->pick_mesh, goxel->layers_mesh);
 }
