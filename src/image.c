@@ -48,7 +48,29 @@
 
 */
 
-static layer_t *layer_new(const char *name)
+static layer_t *img_get_layer(const image_t *img, int id)
+{
+    layer_t *layer;
+    if (id == 0) return NULL;
+    DL_FOREACH(img->layers, layer)
+        if (layer->id == id) return layer;
+    assert(false);
+    return NULL;
+}
+
+static int img_get_new_id(const image_t *img)
+{
+    int id;
+    layer_t *layer;
+    for (id = 1;; id++) {
+        DL_FOREACH(img->layers, layer)
+            if (layer->id == id) break;
+        if (layer == NULL) break;
+    }
+    return id;
+}
+
+static layer_t *layer_new(const image_t *img, const char *name)
 {
     layer_t *layer;
     layer = calloc(1, sizeof(*layer));
@@ -56,6 +78,7 @@ static layer_t *layer_new(const char *name)
     strncpy(layer->name, name, sizeof(layer->name));
     layer->mesh = mesh_new();
     layer->mat = mat4_identity;
+    layer->id = img_get_new_id(img);
     return layer;
 }
 
@@ -68,7 +91,37 @@ static layer_t *layer_copy(layer_t *other)
     layer->mesh = mesh_copy(other->mesh);
     layer->image = texture_copy(other->image);
     layer->mat = other->mat;
+    layer->id = other->id;
+    layer->base_id = other->base_id;
+    layer->base_mesh_id = other->base_mesh_id;
     return layer;
+}
+
+static layer_t *layer_clone(layer_t *other)
+{
+    layer_t *layer;
+    layer = calloc(1, sizeof(*layer));
+    snprintf(layer->name, sizeof(layer->name) - 1, "%s clone", other->name);
+    layer->visible = other->visible;
+    layer->mesh = mesh_copy(other->mesh);
+    layer->mat = mat4_identity;
+    layer->base_id = other->id;
+    layer->base_mesh_id = other->mesh->id;
+    return layer;
+}
+
+// Make sure the layer mesh is up to date.
+void image_update(image_t *img)
+{
+    layer_t *layer, *base;
+    DL_FOREACH(img->layers, layer) {
+        base = img_get_layer(img, layer->base_id);
+        if (base && layer->base_mesh_id != base->mesh->id) {
+            mesh_set(layer->mesh, base->mesh);
+            mesh_move(layer->mesh, &layer->mat);
+            layer->base_mesh_id = base->mesh->id;
+        }
+    }
 }
 
 static void layer_delete(layer_t *layer)
@@ -85,7 +138,7 @@ image_t *image_new(void)
     img->export_width = 1024;
     img->export_height = 1024;
     img->box = box_null;
-    layer = layer_new("background");
+    layer = layer_new(img, "background");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     DL_APPEND2(img->history, img, history_prev, history_next);
@@ -137,7 +190,7 @@ layer_t *image_add_layer(image_t *img)
 {
     layer_t *layer;
     img = img ?: goxel->image;
-    layer = layer_new("unamed");
+    layer = layer_new(img, "unamed");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
@@ -146,13 +199,22 @@ layer_t *image_add_layer(image_t *img)
 
 void image_delete_layer(image_t *img, layer_t *layer)
 {
+    layer_t *other;
     img = img ?: goxel->image;
     layer = layer ?: img->active_layer;
     DL_DELETE(img->layers, layer);
     if (layer == img->active_layer) img->active_layer = NULL;
+
+    // Unclone all layers cloned from this one.
+    DL_FOREACH(goxel->image->layers, other) {
+        if (other->base_id == layer->id) {
+            other->base_id = 0;
+        }
+    }
+
     layer_delete(layer);
     if (img->layers == NULL) {
-        layer = layer_new("unamed");
+        layer = layer_new(img, "unamed");
         layer->visible = true;
         DL_APPEND(img->layers, layer);
     }
@@ -192,6 +254,20 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
     img = img ?: goxel->image;
     other = other ?: img->active_layer;
     layer = layer_copy(other);
+    layer->id = img_get_new_id(img);
+    layer->visible = true;
+    DL_APPEND(img->layers, layer);
+    img->active_layer = layer;
+    return layer;
+}
+
+layer_t *image_clone_layer(image_t *img, layer_t *other)
+{
+    layer_t *layer;
+    img = img ?: goxel->image;
+    other = other ?: img->active_layer;
+    layer = layer_clone(other);
+    layer->id = img_get_new_id(img);
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
@@ -415,6 +491,13 @@ ACTION_REGISTER(img_move_layer_down,
 ACTION_REGISTER(img_duplicate_layer,
     .help = "Duplicate the active layer",
     .cfunc = image_duplicate_layer,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_clone_layer,
+    .help = "Clone the active layer",
+    .cfunc = image_clone_layer,
     .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
 )

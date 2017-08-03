@@ -584,10 +584,13 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
         render_export_viewport(goxel, rect);
 }
 
+void image_update(image_t *img);
 void goxel_update_meshes(goxel_t *goxel, int mask)
 {
     layer_t *layer;
     mesh_t *mesh;
+
+    image_update(goxel->image);
 
     if (    (mask & MESH_LAYERS) || (mask & MESH_PICK) ||
             ((mask & MESH_RENDER) && !goxel->tool_mesh)) {

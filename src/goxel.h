@@ -915,12 +915,15 @@ typedef struct layer layer_t;
 struct layer {
     layer_t     *next, *prev;
     mesh_t      *mesh;
+    int         id;         // Uniq id in the image (for clones).
     bool        visible;
     char        name[128];  // 127 chars max.
-    // mat and image can be used to render a 2d image on top of the layer.
-    // This is convenient when want to draw something using a picture model.
     mat4_t      mat;
+    // For 2d image layers.
     texture_t   *image;
+    // For clone layers:
+    int         base_id;
+    uint64_t    base_mesh_id;
 };
 
 typedef struct image image_t;
