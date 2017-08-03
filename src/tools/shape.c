@@ -204,5 +204,6 @@ static int gui(tool_t *tool)
 TOOL_REGISTER(TOOL_SHAPE, shape, tool_shape_t,
               .iter_fn = iter,
               .gui_fn = gui,
+              .flags = TOOL_REQUIRE_CAN_EDIT,
               .shortcut = "S",
 )

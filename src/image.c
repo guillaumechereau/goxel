@@ -442,6 +442,11 @@ void image_clear_layer(layer_t *layer, const box_t *box)
     mesh_op(layer->mesh, &painter, box);
 }
 
+bool image_layer_can_edit(const image_t *img, const layer_t *layer)
+{
+    return !layer->base_id && !layer->image;
+}
+
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .cfunc = image_clear_layer,

@@ -46,6 +46,11 @@ void tool_register_(const tool_t *tool)
 int tool_iter(tool_t *tool, const vec4_t *view)
 {
     assert(tool);
+    if (    (tool->flags & TOOL_REQUIRE_CAN_EDIT) &&
+            !image_layer_can_edit(goxel->image, goxel->image->active_layer)) {
+        goxel_set_help_text(goxel, "Cannot edit this layer");
+        return 0;
+    }
     tool->state = tool->iter_fn(tool, view);
     return tool->state;
 }

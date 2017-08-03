@@ -96,5 +96,6 @@ static int gui(tool_t *tool)
 TOOL_REGISTER(TOOL_LASER, laser, tool_laser_t,
               .iter_fn = iter,
               .gui_fn = gui,
+              .flags = TOOL_REQUIRE_CAN_EDIT,
               .shortcut = "L",
 )

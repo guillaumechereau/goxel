@@ -953,6 +953,7 @@ void image_merge_visible_layers(image_t *img);
 void image_history_push(image_t *img);
 void image_undo(image_t *img);
 void image_redo(image_t *img);
+bool image_layer_can_edit(const image_t *img, const layer_t *layer);
 
 // ##### Procedural rendering ########################
 
@@ -1020,6 +1021,11 @@ struct gesture3d
 
 int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user);
 
+enum {
+    // Tools flags.
+    TOOL_REQUIRE_CAN_EDIT = 1 << 0, // Set to tools that can edit the layer.
+    TOOL_REQUIRE_CAN_MOVE = 1 << 1, // Set to tools that can move the layer.
+};
 
 // Tools
 typedef struct tool tool_t;
@@ -1030,6 +1036,7 @@ struct tool {
     int (*gui_fn)(tool_t *tool);
     const char *shortcut;
     int state; // XXX: to be removed I guess.
+    int flags;
 };
 
 #define TOOL_REGISTER(id_, name_, klass_, ...) \

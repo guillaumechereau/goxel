@@ -178,5 +178,6 @@ static int gui(tool_t *tool)
 TOOL_REGISTER(TOOL_MOVE, move, tool_move_t,
               .iter_fn = iter,
               .gui_fn = gui,
+              .flags = TOOL_REQUIRE_CAN_MOVE,
               .shortcut = "M",
 )
