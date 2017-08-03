@@ -615,33 +615,52 @@ static void toggle_layer_only_visible(goxel_t *goxel, layer_t *layer)
     layer->visible = true;
 }
 
+static bool layer_item(int i, bool *visible, bool *edit, char *name, int len)
+{
+    const theme_t *theme = theme_get();
+    float font_size = ImGui::GetFontSize();
+    bool ret = false;
+    ImGui::PushID(i);
+    if (edit && gui_selectable_icon("##edit", NULL, *edit ? ICON_EDIT : 0)) {
+        *edit = !*edit;
+        ret = true;
+    }
+    ImGui::SameLine();
+    if (visible && gui_selectable_icon("##visible", NULL,
+                *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
+        *visible = !*visible;
+        ret = true;
+    }
+    ImGui::SameLine();
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+            ImVec2(theme->sizes.item_padding_h,
+                (theme->sizes.icons_height - font_size) / 2));
+    ImGui::InputText("##name", name, len);
+    ImGui::PopStyleVar();
+    ImGui::PopID();
+    return ret;
+}
+
 static void layers_panel(goxel_t *goxel)
 {
     layer_t *layer;
     int i = 0;
-    bool current;
+    bool current, visible;
     DL_FOREACH(goxel->image->layers, layer) {
-        ImGui::PushID(i);
-        ImGui::AlignFirstTextHeightToWidgets();
         current = goxel->image->active_layer == layer;
-        if (ImGui::Selectable(current ? "●" : " ", &current, 0,
-                              ImVec2(12, 12))) {
-            if (current) {
-                goxel->image->active_layer = layer;
-                goxel_update_meshes(goxel, -1);
-            }
+        visible = layer->visible;
+        layer_item(i, &visible, &current, layer->name, sizeof(layer->name));
+        if (current && goxel->image->active_layer != layer) {
+            goxel->image->active_layer = layer;
+            goxel_update_meshes(goxel, -1);
         }
-        ImGui::SameLine();
-        if (ImGui::Selectable(layer->visible ? "v##v" : " ##v",
-                    &layer->visible, 0, ImVec2(12, 12))) {
+        if (visible != layer->visible) {
+            layer->visible = visible;
             if (ImGui::IsKeyDown(KEY_LEFT_SHIFT))
                 toggle_layer_only_visible(goxel, layer);
             goxel_update_meshes(goxel, -1);
         }
-        ImGui::SameLine();
-        ImGui::InputText("##name", layer->name, sizeof(layer->name));
         i++;
-        ImGui::PopID();
         auto_adjust_panel_size();
     }
     gui_action_button("img_new_layer", NULL, 0, "");
@@ -883,11 +902,8 @@ static void cameras_panel(goxel_t *goxel)
     int i = 0;
     bool current;
     DL_FOREACH(goxel->image->cameras, cam) {
-        ImGui::PushID(i);
-        ImGui::AlignFirstTextHeightToWidgets();
         current = goxel->image->active_camera == cam;
-        if (ImGui::Selectable(current ? "●" : " ", &current, 0,
-                              ImVec2(12, 12))) {
+        if (layer_item(i, NULL, &current, cam->name, sizeof(cam->name))) {
             if (current) {
                 camera_set(&goxel->camera, cam);
                 goxel->image->active_camera = cam;
@@ -895,9 +911,6 @@ static void cameras_panel(goxel_t *goxel)
                 goxel->image->active_camera = NULL;
             }
         }
-        ImGui::SameLine();
-        ImGui::InputText("##name", cam->name, sizeof(cam->name));
-        ImGui::PopID();
         i++;
     }
     gui_action_button("img_new_camera", NULL, 0, "");
@@ -1550,10 +1563,12 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     ImVec2 size;
     ImVec2 center;
     bool ret = false;
+    bool default_v = false;
     ImVec2 uv0, uv1; // The position in the icon texture.
     uvec4b_t color;
     int group = THEME_GROUP_WIDGET;
 
+    v = v ? v : &default_v;
     size = (icon != -1) ?
         ImVec2(theme->sizes.icons_height, theme->sizes.icons_height) :
         ImVec2(w, theme->sizes.item_height);
@@ -1570,13 +1585,15 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
 
     if (icon != -1) {
         ret = ImGui::Button("", size);
-        center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
-        uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
-        uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-        window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
-                                   center - ImVec2(16, 16),
-                                   center + ImVec2(16, 16),
-                                   uv0, uv1, color.uint32);
+        if (icon) {
+            center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
+            uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
+            uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
+            window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                                       center - ImVec2(16, 16),
+                                       center + ImVec2(16, 16),
+                                       uv0, uv1, color.uint32);
+        }
     } else {
         ret = ImGui::Button(label, size);
     }
@@ -1661,7 +1678,7 @@ bool gui_button(const char *label, float size, int icon)
     ret = Button(label, button_size);
     if (icon) {
         center = (GetItemRectMin() + GetItemRectMax()) / 2;
-        uv0 = ImVec2((icon % 8) / 8.0, (icon / 8) / 8.0);
+        uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             center - ImVec2(16, 16),

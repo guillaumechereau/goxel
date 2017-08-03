@@ -450,29 +450,34 @@ void actions_iter(int (*f)(const action_t *action, void *user), void *user);
 // #############################
 
 
-// All the icons positions inside icon.png (as Y*8 + X).
+// All the icons positions inside icon.png (as Y*8 + X + 1).
 enum {
-    ICON_TOOL_BRUSH = 0,
-    ICON_TOOL_SHAPE = 1,
-    ICON_TOOL_LASER = 2,
-    ICON_TOOL_PLANE = 3,
-    ICON_TOOL_MOVE = 4,
-    ICON_TOOL_PICK = 5,
-    ICON_TOOL_SELECTION = 6,
-    ICON_TOOL_PROCEDURAL = 7,
+    ICON_NULL = 0,
 
-    ICON_MODE_ADD = 8,
-    ICON_MODE_SUB = 9,
-    ICON_MODE_PAINT = 10,
+    ICON_TOOL_BRUSH = 1,
+    ICON_TOOL_SHAPE = 2,
+    ICON_TOOL_LASER = 3,
+    ICON_TOOL_PLANE = 4,
+    ICON_TOOL_MOVE = 5,
+    ICON_TOOL_PICK = 6,
+    ICON_TOOL_SELECTION = 7,
+    ICON_TOOL_PROCEDURAL = 8,
 
-    ICON_SHAPE_SPHERE = 16,
-    ICON_SHAPE_CUBE = 17,
-    ICON_SHAPE_CYLINDER = 18,
+    ICON_MODE_ADD = 9,
+    ICON_MODE_SUB = 10,
+    ICON_MODE_PAINT = 11,
 
-    ICON_ADD = 24,
-    ICON_REMOVE = 25,
-    ICON_ARROW_DOWNWARD = 26,
-    ICON_ARROW_UPWARD = 27,
+    ICON_SHAPE_SPHERE = 17,
+    ICON_SHAPE_CUBE = 18,
+    ICON_SHAPE_CYLINDER = 19,
+
+    ICON_ADD = 25,
+    ICON_REMOVE = 26,
+    ICON_ARROW_DOWNWARD = 27,
+    ICON_ARROW_UPWARD = 28,
+    ICON_VISIBILITY = 29,
+    ICON_VISIBILITY_OFF = 30,
+    ICON_EDIT = 31,
 };
 
 

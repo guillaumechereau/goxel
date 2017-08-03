@@ -32,6 +32,9 @@ SRC = [
     'remove.svg',
     'arrow_downward.svg',
     'arrow_upward.svg',
+    'visibility.svg',
+    'visibility_off.svg',
+    'edit.svg',
     None,
 ]
 
