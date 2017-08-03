@@ -257,20 +257,27 @@ void save_to_file(goxel_t *goxel, const char *path)
     DL_FOREACH(goxel->image->layers, layer) {
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
-        nb_blocks = HASH_COUNT(layer->mesh->blocks);
+        if (!layer->base_id)
+            nb_blocks = HASH_COUNT(layer->mesh->blocks);
         chunk_write_int32(&c, out, nb_blocks);
-        MESH_ITER_BLOCKS(layer->mesh, block) {
-            HASH_FIND_PTR(blocks_table, &block->data, data);
-            chunk_write_int32(&c, out, data->index);
-            chunk_write_int32(&c, out, block->pos.x);
-            chunk_write_int32(&c, out, block->pos.y);
-            chunk_write_int32(&c, out, block->pos.z);
-            chunk_write_int32(&c, out, 0);
+        if (!layer->base_id) {
+            MESH_ITER_BLOCKS(layer->mesh, block) {
+                HASH_FIND_PTR(blocks_table, &block->data, data);
+                chunk_write_int32(&c, out, data->index);
+                chunk_write_int32(&c, out, block->pos.x);
+                chunk_write_int32(&c, out, block->pos.y);
+                chunk_write_int32(&c, out, block->pos.z);
+                chunk_write_int32(&c, out, 0);
+            }
         }
         chunk_write_dict_value(&c, out, "name", layer->name,
                                strlen(layer->name));
         chunk_write_dict_value(&c, out, "mat", &layer->mat,
                                sizeof(layer->mat));
+        chunk_write_dict_value(&c, out, "id", &layer->id,
+                               sizeof(layer->id));
+        chunk_write_dict_value(&c, out, "base_id", &layer->base_id,
+                               sizeof(layer->base_id));
         if (layer->image) {
             chunk_write_dict_value(&c, out, "img-path", layer->image->path,
                                strlen(layer->image->path));
@@ -391,6 +398,10 @@ void load_from_file(goxel_t *goxel, const char *path)
                 if (strcmp(dict_key, "img-path") == 0) {
                     layer->image = texture_new_image(dict_value, TF_NEAREST);
                 }
+                if (strcmp(dict_key, "id") == 0)
+                    memcpy(&layer->id, dict_value, dict_value_size);
+                if (strcmp(dict_key, "base_id") == 0)
+                    memcpy(&layer->base_id, dict_value, dict_value_size);
             }
         } else if (strncmp(c.type, "CAMR", 4) == 0) {
             camera = camera_new("unamed");
