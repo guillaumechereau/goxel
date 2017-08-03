@@ -28,6 +28,17 @@ typedef struct {
     } gestures;
 } tool_move_t;
 
+static void do_move(layer_t *layer, mat4_t mat)
+{
+    if (layer->base_id || layer->image) {
+        layer->mat = mat4_mul(mat, layer->mat);
+        layer->base_mesh_id = 0;
+    } else {
+        mesh_move(layer->mesh, &mat);
+    }
+    goxel_update_meshes(goxel, -1);
+}
+
 // Get the face index from the normal.
 static int get_face(vec3_t n)
 {
@@ -85,9 +96,7 @@ static int on_move(gesture3d_t *gest, void *user)
 
         mat = mat4_identity;
         mat4_itranslate(&mat, ofs.x, ofs.y, ofs.z);
-        mesh_move(layer->mesh, &mat);
-        layer->mat = mat4_mul(mat, layer->mat);
-        goxel_update_meshes(goxel, -1);
+        do_move(layer, mat);
 
         if (gest->state == GESTURE_END) {
             gest->type = GESTURE_HOVER;
@@ -161,9 +170,7 @@ static int gui(tool_t *tool)
 
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
         image_history_push(goxel->image);
-        mesh_move(layer->mesh, &mat);
-        layer->mat = mat4_mul(mat, layer->mat);
-        goxel_update_meshes(goxel, -1);
+        do_move(layer, mat);
     }
     return 0;
 }
