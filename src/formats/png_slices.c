@@ -37,7 +37,6 @@ static void export_as_png_slices(const char *path)
     h = box.h.y * 2;
     d = box.d.z * 2;
     start_pos = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
-    LOG_D("XXX %f %f %f", VEC3_SPLIT(start_pos));
 
     img = calloc(w * h * d, 4);
     for (z = 0; z < d; z++)
