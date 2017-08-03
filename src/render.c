@@ -664,9 +664,9 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
 
     mat4_imul(&view2, item->mat);
     n = 3;
-    for (y = -n; y <= n; y++)
-    for (x = -n; x <= n; x++) {
-        view3 = mat4_translate(view2, x, y, 0);
+    for (y = -n; y < n; y++)
+    for (x = -n; x < n; x++) {
+        view3 = mat4_translate(view2, x + 0.5, y + 0.5, 0);
         model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
                        NULL, NULL, 0);
     }
