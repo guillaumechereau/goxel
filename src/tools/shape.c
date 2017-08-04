@@ -146,6 +146,7 @@ static int on_adjust(gesture3d_t *gest, void *user)
         goxel->tool_plane = plane_null;
         mesh_set(shape->mesh_orig, mesh);
         shape->adjust = false;
+        goxel_update_meshes(goxel, -1);
     }
 
     return 0;
