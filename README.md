@@ -18,6 +18,17 @@ About
 You can use goxel to create voxel graphics (3D images formed of cubes).  It
 works on Linux, Windows and OSX
 
+
+Download
+--------
+
+The last release files can be downloaded from [there](
+https://github.com/guillaumechereau/goxel/releases/latest).
+
+There is also in iOS version on [iTune](
+https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826).
+
+
 ![goxel screenshot 0](/screenshots/screenshot-castle.png?raw=true)
 ![goxel screenshot 1](/screenshots/screenshot-procedural-city.png?raw=true)
 ![goxel screenshot 2](/screenshots/screenshot-dicom.png?raw=true)
@@ -81,9 +92,3 @@ Then to build:
 
     make release
 
-
-Download
---------
-
-The last release files can be downloaded from [there](
-https://github.com/guillaumechereau/goxel/releases/latest).
