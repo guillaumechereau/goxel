@@ -324,7 +324,7 @@ void img_write(const uint8_t *img, int w, int h, int bpp, const char *path)
 
     png_write_info(png_ptr, info_ptr);
     for (i = 0; i < h; i++)
-        png_write_row(png_ptr, img + i * w * bpp);
+        png_write_row(png_ptr, (png_bytep)(img + i * w * bpp));
     png_write_end(png_ptr, info_ptr);
     png_destroy_write_struct(&png_ptr, &info_ptr);
     fclose(fp);
