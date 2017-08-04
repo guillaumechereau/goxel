@@ -196,7 +196,7 @@ static int gui(tool_t *tool)
     if (proc->state == PROC_RUNNING) {
         proc_iter(proc);
         if (!proc->in_frame)
-            goxel_update_meshes(goxel, MESH_LAYERS);
+            goxel_update_meshes(goxel, MESH_RENDER);
     }
     return 0;
 }
