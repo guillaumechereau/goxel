@@ -20,6 +20,7 @@ if profile: debug = 0
 if emscripten: target_os = 'js'
 
 env = Environment(ENV = os.environ)
+conf = env.Configure()
 
 if clang:
     env.Replace(CC='clang', CXX='clang++')
@@ -74,6 +75,9 @@ if target_os == 'darwin':
 env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
+
+if conf.CheckLib('libpng'):
+    env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
 
 sources += glob.glob('ext_src/imgui/*.cpp')
 env.Append(CPPPATH=['ext_src/imgui'])

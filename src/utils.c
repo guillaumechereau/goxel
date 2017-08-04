@@ -42,6 +42,10 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
+#if DEFINED(HAVE_LIBPNG)
+#include <png.h>
+#endif
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
@@ -282,10 +286,51 @@ uint8_t *img_read(const char *path, int *width, int *height, int *bpp)
     return img;
 }
 
+#if !DEFINED(HAVE_LIBPNG)
+
 void img_write(const uint8_t *img, int w, int h, int bpp, const char *path)
 {
     stbi_write_png(path, w, h, bpp, img, 0);
 }
+
+#else
+
+void img_write(const uint8_t *img, int w, int h, int bpp, const char *path)
+{
+    int i;
+    FILE *fp;
+    png_structp png_ptr;
+    png_infop info_ptr;
+
+    fp = fopen(path, "wb");
+    if (!fp) {
+        LOG_E("Cannot open %s", path);
+        return;
+    }
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+                                      NULL, NULL, NULL);
+    info_ptr = png_create_info_struct(png_ptr);
+    if (setjmp(png_jmpbuf(png_ptr))) {
+       png_destroy_write_struct(&png_ptr, &info_ptr);
+       fclose(fp);
+       return;
+    }
+    png_init_io(png_ptr, fp);
+    png_set_IHDR(png_ptr, info_ptr, w, h, 8,
+                 bpp == 3 ? PNG_COLOR_TYPE_RGB : PNG_COLOR_TYPE_RGB_ALPHA,
+                 PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT,
+                 PNG_FILTER_TYPE_DEFAULT);
+
+    png_write_info(png_ptr, info_ptr);
+    for (i = 0; i < h; i++)
+        png_write_row(png_ptr, img + i * w * bpp);
+    png_write_end(png_ptr, info_ptr);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+    fclose(fp);
+}
+
+#endif
 
 uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp, int *size)
 {
