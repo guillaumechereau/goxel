@@ -274,6 +274,13 @@ layer_t *image_clone_layer(image_t *img, layer_t *other)
     return layer;
 }
 
+void image_unclone_layer(image_t *img, layer_t *layer)
+{
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
+    layer->base_id = 0;
+}
+
 void image_merge_visible_layers(image_t *img)
 {
     layer_t *layer, *last = NULL;
@@ -503,6 +510,13 @@ ACTION_REGISTER(img_duplicate_layer,
 ACTION_REGISTER(img_clone_layer,
     .help = "Clone the active layer",
     .cfunc = image_clone_layer,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_unclone_layer,
+    .help = "Unclone the active layer",
+    .cfunc = image_unclone_layer,
     .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
 )
