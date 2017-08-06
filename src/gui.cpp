@@ -618,25 +618,48 @@ static void toggle_layer_only_visible(goxel_t *goxel, layer_t *layer)
 static bool layer_item(int i, bool *visible, bool *edit, char *name, int len)
 {
     const theme_t *theme = theme_get();
-    float font_size = ImGui::GetFontSize();
     bool ret = false;
+    bool edit_ = *edit;
+    static char *edit_name = NULL;
+    static bool start_edit;
+    float font_size = ImGui::GetFontSize();
+
     ImGui::PushID(i);
-    if (edit && gui_selectable_icon("##edit", NULL, *edit ? ICON_EDIT : 0)) {
-        *edit = !*edit;
-        ret = true;
-    }
-    ImGui::SameLine();
-    if (visible && gui_selectable_icon("##visible", NULL,
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *edit));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+            color_lighten(COLOR(WIDGET, INNER, *edit), 1.2));
+    if (visible) {
+        if (gui_selectable_icon("##visible", &edit_,
                 *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
-        *visible = !*visible;
-        ret = true;
+            *visible = !*visible;
+            ret = true;
+        }
+        ImGui::SameLine();
     }
-    ImGui::SameLine();
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-            ImVec2(theme->sizes.item_padding_h,
-                (theme->sizes.icons_height - font_size) / 2));
-    ImGui::InputText("##name", name, len);
-    ImGui::PopStyleVar();
+
+    if (edit_name != name) {
+        ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
+        if (ImGui::Button(name, ImVec2(-1, theme->sizes.icons_height))) {
+            *edit = true;
+            ret = true;
+        }
+        ImGui::PopStyleVar();
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+            edit_name = name;
+            start_edit = true;
+        }
+    } else {
+        if (start_edit) ImGui::SetKeyboardFocusHere();
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                            ImVec2(theme->sizes.item_padding_h,
+                            (theme->sizes.icons_height - font_size) / 2));
+        ImGui::InputText("##name_edit", name, len,
+                         ImGuiInputTextFlags_AutoSelectAll);
+        if (!start_edit && !ImGui::IsItemActive()) edit_name = NULL;
+        start_edit = false;
+        ImGui::PopStyleVar();
+    }
+    ImGui::PopStyleColor(2);
     ImGui::PopID();
     return ret;
 }
@@ -646,6 +669,7 @@ static void layers_panel(goxel_t *goxel)
     layer_t *layer;
     int i = 0;
     bool current, visible;
+    gui_group_begin(NULL);
     DL_FOREACH(goxel->image->layers, layer) {
         current = goxel->image->active_layer == layer;
         visible = layer->visible;
@@ -663,6 +687,7 @@ static void layers_panel(goxel_t *goxel)
         i++;
         auto_adjust_panel_size();
     }
+    gui_group_end();
     gui_action_button("img_new_layer", NULL, 0, "");
     ImGui::SameLine();
     gui_action_button("img_del_layer", NULL, 0, "");
@@ -903,6 +928,7 @@ static void cameras_panel(goxel_t *goxel)
     camera_t *cam;
     int i = 0;
     bool current;
+    gui_group_begin(NULL);
     DL_FOREACH(goxel->image->cameras, cam) {
         current = goxel->image->active_camera == cam;
         if (layer_item(i, NULL, &current, cam->name, sizeof(cam->name))) {
@@ -915,6 +941,7 @@ static void cameras_panel(goxel_t *goxel)
         }
         i++;
     }
+    gui_group_end();
     gui_action_button("img_new_camera", NULL, 0, "");
     ImGui::SameLine();
     gui_action_button("img_del_camera", NULL, 0, "");
