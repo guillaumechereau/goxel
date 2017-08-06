@@ -1575,7 +1575,10 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
         ImVec2(theme->sizes.icons_height, theme->sizes.icons_height) :
         ImVec2(w, theme->sizes.item_height);
 
-    if (!tooltip) tooltip = label;
+    if (!tooltip) {
+        tooltip = label;
+        while (*tooltip == '#') tooltip++;
+    }
     ImGui::PushID(label);
 
     color = theme_get_color(group, THEME_COLOR_INNER, *v);
