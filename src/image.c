@@ -281,6 +281,13 @@ void image_unclone_layer(image_t *img, layer_t *layer)
     layer->base_id = 0;
 }
 
+void image_select_parent_layer(image_t *img, layer_t *layer)
+{
+    img = img ?: goxel->image;
+    layer = layer ?: img->active_layer;
+    img->active_layer = img_get_layer(img, layer->base_id);
+}
+
 void image_merge_visible_layers(image_t *img)
 {
     layer_t *layer, *last = NULL;
@@ -517,6 +524,13 @@ ACTION_REGISTER(img_clone_layer,
 ACTION_REGISTER(img_unclone_layer,
     .help = "Unclone the active layer",
     .cfunc = image_unclone_layer,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_select_parent_layer,
+    .help = "Select the parent of a layer",
+    .cfunc = image_select_parent_layer,
     .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
 )

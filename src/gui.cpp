@@ -699,10 +699,15 @@ static void layers_panel(goxel_t *goxel)
     gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
     gui_action_button("img_clone_layer", "Clone", 1, "");
-    if (goxel->image->active_layer->base_id)
-        gui_action_button("img_unclone_layer", "Unclone", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
     gui_group_end();
+
+    if (goxel->image->active_layer->base_id) {
+        gui_group_begin(NULL);
+        gui_action_button("img_unclone_layer", "Unclone", 1, "");
+        gui_action_button("img_select_parent_layer", "Select parent", 1, "");
+        gui_group_end();
+    }
 }
 
 
