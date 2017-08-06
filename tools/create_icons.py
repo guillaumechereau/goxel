@@ -35,6 +35,7 @@ SRC = [
     'visibility.svg',
     'visibility_off.svg',
     'edit.svg',
+    'link.svg',
     None,
 ]
 

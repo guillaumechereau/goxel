@@ -497,7 +497,7 @@ static void gui_init(const inputs_t *inputs)
     gui->gestures.hover.type = GESTURE_HOVER;
     gui->gestures.hover.callback = on_gesture;
 
-    g_tex_icons = texture_new_image("asset://data/icons.png", TF_NEAREST);
+    g_tex_icons = texture_new_image("asset://data/icons.png", 0);
     GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
 }
 
@@ -615,7 +615,8 @@ static void toggle_layer_only_visible(goxel_t *goxel, layer_t *layer)
     layer->visible = true;
 }
 
-static bool layer_item(int i, bool *visible, bool *edit, char *name, int len)
+static bool layer_item(int i, int icon, bool *visible, bool *edit,
+                       char *name, int len)
 {
     const theme_t *theme = theme_get();
     bool ret = false;
@@ -623,6 +624,9 @@ static bool layer_item(int i, bool *visible, bool *edit, char *name, int len)
     static char *edit_name = NULL;
     static bool start_edit;
     float font_size = ImGui::GetFontSize();
+    ImVec2 center;
+    ImVec2 uv0, uv1;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     ImGui::PushID(i);
     ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *edit));
@@ -639,9 +643,26 @@ static bool layer_item(int i, bool *visible, bool *edit, char *name, int len)
 
     if (edit_name != name) {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
+        if (icon != -1) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                    ImVec2(theme->sizes.icons_height / 1.5, 0));
+        }
         if (ImGui::Button(name, ImVec2(-1, theme->sizes.icons_height))) {
             *edit = true;
             ret = true;
+        }
+        if (icon != -1) ImGui::PopStyleVar();
+        if (icon > 0) {
+            center = ImGui::GetItemRectMin() +
+                ImVec2(theme->sizes.icons_height / 2 / 1.5,
+                       theme->sizes.icons_height / 2);
+            uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
+            uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
+            draw_list->AddImage(
+                    (void*)(intptr_t)g_tex_icons->tex,
+                    center - ImVec2(12, 12),
+                    center + ImVec2(12, 12),
+                    uv0, uv1, COLOR(WIDGET, TEXT, 0).uint32);
         }
         ImGui::PopStyleVar();
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
@@ -667,13 +688,15 @@ static bool layer_item(int i, bool *visible, bool *edit, char *name, int len)
 static void layers_panel(goxel_t *goxel)
 {
     layer_t *layer;
-    int i = 0;
+    int i = 0, icon;
     bool current, visible;
     gui_group_begin(NULL);
     DL_FOREACH(goxel->image->layers, layer) {
         current = goxel->image->active_layer == layer;
         visible = layer->visible;
-        layer_item(i, &visible, &current, layer->name, sizeof(layer->name));
+        icon = layer->base_id ? ICON_LINK : -1;
+        layer_item(i, icon, &visible, &current,
+                   layer->name, sizeof(layer->name));
         if (current && goxel->image->active_layer != layer) {
             goxel->image->active_layer = layer;
             goxel_update_meshes(goxel, -1);
@@ -936,7 +959,7 @@ static void cameras_panel(goxel_t *goxel)
     gui_group_begin(NULL);
     DL_FOREACH(goxel->image->cameras, cam) {
         current = goxel->image->active_camera == cam;
-        if (layer_item(i, NULL, &current, cam->name, sizeof(cam->name))) {
+        if (layer_item(i, -1, NULL, &current, cam->name, sizeof(cam->name))) {
             if (current) {
                 camera_set(&goxel->camera, cam);
                 goxel->image->active_camera = cam;

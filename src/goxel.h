@@ -478,6 +478,7 @@ enum {
     ICON_VISIBILITY = 29,
     ICON_VISIBILITY_OFF = 30,
     ICON_EDIT = 31,
+    ICON_LINK = 32,
 };
 
 
