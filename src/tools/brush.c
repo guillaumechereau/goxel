@@ -51,9 +51,9 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
             brush->last_op.mesh_id == goxel->layers_mesh->id &&
-            vec3_equal(curs->pos, brush->last_op.pos))
+            vec3_equal(curs->pos, brush->last_op.pos)) {
         return true;
-    brush->last_op.mesh_id = goxel->layers_mesh->id;
+    }
     brush->last_op.pressed = pressed;
     brush->last_op.mode = mode;
     brush->last_op.pos = curs->pos;
@@ -146,6 +146,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_merge(mesh, brush->mesh, goxel->painter.mode);
     goxel_update_meshes(goxel, MESH_RENDER);
     brush->start_pos = curs->pos;
+    brush->last_op.mesh_id = goxel->layers_mesh->id;
 
     if (gest->state == GESTURE_END) {
         mesh_set(goxel->pick_mesh, goxel->layers_mesh);
@@ -182,6 +183,7 @@ static int on_hover(gesture3d_t *gest, void *user)
         mesh_delete(goxel->tool_mesh);
         goxel->tool_mesh = NULL;
     }
+    brush->last_op.mesh_id = goxel->layers_mesh->id;
 
     return 0;
 }
