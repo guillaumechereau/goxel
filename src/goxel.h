@@ -503,6 +503,7 @@ enum {
     TOOL_PICK_COLOR,
     TOOL_SELECTION,
     TOOL_PROCEDURAL,
+    TOOL_EXTRUDE,
 
     TOOL_COUNT
 };
@@ -626,6 +627,15 @@ void mesh_blit(mesh_t *mesh, uvec4b_t *data,
                int x, int y, int z,
                int w, int h, int d);
 void mesh_shift_alpha(mesh_t *mesh, int v);
+
+// Compute the selection mask for a given condition.
+int mesh_select(const mesh_t *mesh,
+                const vec3_t *start_pos,
+                int (*cond)(uvec4b_t value,
+                            const uvec4b_t neighboors[6],
+                            const uint8_t mask[6],
+                            void *user),
+                void *user, mesh_t *selection);
 
 #define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
 

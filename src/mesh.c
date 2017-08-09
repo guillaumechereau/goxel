@@ -347,7 +347,7 @@ void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v)
 {
     block_t *block;
     mesh_prepare_write(mesh);
-    add_blocks(mesh, bbox_from_extents(*pos, 1, 1, 1));
+    add_blocks(mesh, bbox_from_extents(*pos, 2, 2, 2));
     MESH_ITER_BLOCKS(mesh, block) {
         if (bbox_contains_vec(block_get_box(block, false), *pos))
             block_set_at(block, pos, v);
@@ -398,4 +398,58 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
         block_shift_alpha(block, v);
     }
     mesh_remove_empty_blocks(mesh);
+}
+
+int mesh_select(const mesh_t *mesh,
+                const vec3_t *start_pos,
+                int (*cond)(uvec4b_t value,
+                            const uvec4b_t neighboors[6],
+                            const uint8_t mask[6],
+                            void *user),
+                void *user, mesh_t *selection)
+{
+    block_t *block;
+    int x, y, z, i, j, a;
+    uvec4b_t v1, v2;
+    vec3_t pos, p, p2;
+    bool keep = true;
+    uvec4b_t neighboors[6];
+    uint8_t mask[6];
+
+    mesh_clear(selection);
+    mesh_set_at(selection, start_pos, uvec4b(255, 255, 255, 255));
+
+    // XXX: Very inefficient algorithm!
+    // Iter and test all the neighbors of the selection until there is
+    // no more possible changes.
+    while (keep) {
+        keep = false;
+        MESH_ITER_VOXELS(selection, block, x, y, z, v1) {
+            pos = vec3(x + block->pos.x - BLOCK_SIZE / 2,
+                       y + block->pos.y - BLOCK_SIZE / 2,
+                       z + block->pos.z - BLOCK_SIZE / 2);
+            for (i = 0; i < 6; i++) {
+                p = vec3(pos.x + FACES_NORMALS[i].x,
+                         pos.y + FACES_NORMALS[i].y,
+                         pos.z + FACES_NORMALS[i].z);
+                v2 = mesh_get_at(selection, &p);
+                if (v2.a) continue; // Already done.
+                v2 = mesh_get_at(mesh, &p);
+                // Compute neighboors and mask.
+                for (j = 0; j < 6; j++) {
+                    p2 = vec3(p.x + FACES_NORMALS[j].x,
+                              p.y + FACES_NORMALS[j].y,
+                              p.z + FACES_NORMALS[j].z);
+                    neighboors[j] = mesh_get_at(mesh, &p2);
+                    mask[j] = mesh_get_at(selection, &p2).a;
+                }
+                a = cond(v2, neighboors, mask, user);
+                if (a) {
+                    mesh_set_at(selection, &p, uvec4b(255, 255, 255, a));
+                    keep = true;
+                }
+            }
+        }
+    }
+    return 0;
 }

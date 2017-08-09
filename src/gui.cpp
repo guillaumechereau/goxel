@@ -567,6 +567,7 @@ static void tools_panel(goxel_t *goxel)
         {TOOL_PICK_COLOR,   "pick_color","Pick Color",   ICON_TOOL_PICK},
         {TOOL_SELECTION,    "selection", "Selection",    ICON_TOOL_SELECTION},
         {TOOL_PROCEDURAL,   "procedural","Procedural",   ICON_TOOL_PROCEDURAL},
+        {TOOL_EXTRUDE,      "extrude",   "Extrude",      ICON_TOOL_MOVE},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
