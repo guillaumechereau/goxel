@@ -561,9 +561,12 @@ void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v)
     int x, y, z;
     vec3_t p = *pos;
     block_prepare_write(block);
-    x = round(p.x - block->pos.x + N / 2 - 0.5f);
-    y = round(p.y - block->pos.y + N / 2 - 0.5f);
-    z = round(p.z - block->pos.z + N / 2 - 0.5f);
+    // We want to round halfway cases in the positive direction,
+    // e.g : -0.5 -> 1.
+    // That's why I add the +1!
+    x = round(p.x - block->pos.x + N / 2 + 0.5f) - 1;
+    y = round(p.y - block->pos.y + N / 2 + 0.5f) - 1;
+    z = round(p.z - block->pos.z + N / 2 + 0.5f) - 1;
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
