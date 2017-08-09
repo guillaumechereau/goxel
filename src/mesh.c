@@ -199,9 +199,9 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 
     if (painter->symmetry) {
         painter2 = *painter;
-        painter2.symmetry = 0;
         for (i = 0; i < 3; i++) {
             if (!(painter->symmetry & (1 << i))) continue;
+            painter2.symmetry &= ~(1 << i);
             box2 = *box;
             box2.mat = mat4_identity;
             if (i == 0) mat4_iscale(&box2.mat, -1,  1,  1);
