@@ -41,7 +41,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define GOXEL_VERSION_STR "0.7.0"
+#define GOXEL_VERSION_STR "0.7.1"
 
 // #### Set the DEBUG macro ####
 #ifndef DEBUG
