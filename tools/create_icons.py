@@ -4,6 +4,7 @@
 
 import PIL.Image
 from shutil import copyfile
+import os
 import subprocess
 import re
 
@@ -61,3 +62,11 @@ for src in SRC:
 white_img = PIL.Image.new('L', (256, 256), "white")
 ret_img = PIL.Image.merge('LA', (white_img, ret_img))
 ret_img.save('data/icons.png')
+
+# Also create the application icons (in data/icons)
+if not os.path.exists('data/icons'): os.makedirs('data/icons')
+base = PIL.Image.open('icon.png').convert('RGBA')
+
+for size in [16, 32, 48]:
+    img = base.resize((size, size), PIL.Image.BILINEAR)
+    img.save('data/icons/icon%d.png' % size)
