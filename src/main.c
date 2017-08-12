@@ -108,15 +108,21 @@ static void loop_function(void) {
     int i;
     double xpos, ypos;
 
-    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+    if (    !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
+             glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
+        glfwWaitEvents();
+        goto end;
+    }
     // The input struct gets all the values in framebuffer coordinates,
     // On retina display, this might not be the same as the window
     // size.
-    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
     glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
+    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
     g_inputs->window_size[0] = win_size[0];
     g_inputs->window_size[1] = win_size[1];
     g_inputs->scale = fb_size[0] / win_size[0];
+
+    GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     for (i = 0; i <= GLFW_KEY_LAST; i++) {
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
@@ -134,6 +140,7 @@ static void loop_function(void) {
 
     memset(g_inputs, 0, sizeof(*g_inputs));
     glfwSwapBuffers(g_window);
+end:
     glfwPollEvents();
 }
 
