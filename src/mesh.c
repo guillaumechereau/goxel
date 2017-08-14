@@ -59,6 +59,11 @@ void mesh_remove_empty_blocks(mesh_t *mesh)
     }
 }
 
+bool mesh_is_empty(const mesh_t *mesh)
+{
+    return mesh->blocks == NULL;
+}
+
 mesh_t *mesh_new(void)
 {
     mesh_t *mesh;
