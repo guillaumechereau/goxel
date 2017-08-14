@@ -30,14 +30,26 @@ static int select_cond(uvec4b_t value,
                        const uint8_t mask[6],
                        void *user)
 {
-    int i;
+    int i, snap_face = *((int*)user);
+    int opp_face = ((int[6]){1, 0, 3, 2, 5, 4})[snap_face];
     if (value.a == 0) return 0;
-    if (neighboors[3].a) return 0;
+    if (neighboors[snap_face].a) return 0;
     for (i = 0; i < 6; i++) {
-        if (i == 2 || i == 3) continue;
+        if (i == snap_face || i == opp_face) continue;
         if (mask[i]) return 255;
     }
     return 0;
+}
+
+// Get the face index from the normal.
+static int get_face(vec3_t n)
+{
+    int f;
+    for (f = 0; f < 6; f++) {
+        if (vec3_dot(n, vec3(VEC3_SPLIT(FACES_NORMALS[f]))) > 0.5)
+            return f;
+    }
+    return -1;
 }
 
 static int on_drag(gesture3d_t *gest, void *user)
@@ -46,8 +58,9 @@ static int on_drag(gesture3d_t *gest, void *user)
     cursor_t *curs = gest->cursor;
 
     if (gest->state == GESTURE_BEGIN) {
+        int snap_face = get_face(curs->normal);
         mesh_t *test = mesh_new();
-        mesh_select(mesh, &curs->pos, select_cond, NULL, test);
+        mesh_select(mesh, &curs->pos, select_cond, &snap_face, test);
         mesh_merge(mesh, test, MODE_SUB);
         mesh_delete(test);
         goxel_update_meshes(goxel, -1);
