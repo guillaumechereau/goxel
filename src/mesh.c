@@ -475,10 +475,11 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 {
     mesh_prepare_write(mesh);
     block_t *block;
+    box_t bbox;
     mat4_t proj;
     vec3_t n = plane->n, pos;
     vec3_normalize(&n);
-    pos = vec3_addk(plane->p, n, -0.5);
+    pos = plane->p;
 
     // Generate the projection into the plane.
     // XXX: *very* ugly code, fix this!
@@ -497,7 +498,8 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
         proj.v[14] = pos.z;
     }
 
-    add_blocks(mesh, *box);
+    bbox = bbox_grow(*box, 1, 1, 1);
+    add_blocks(mesh, bbox);
     MESH_ITER_BLOCKS(mesh, block) {
         block_fill(block, mesh_extrude_callback, USER_PASS(mesh, &proj, box));
     }

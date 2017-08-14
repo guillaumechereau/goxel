@@ -55,6 +55,9 @@ static int get_face(vec3_t n)
     return -1;
 }
 
+// XXX: this code is just too ugly.  Needs a lot of cleanup.
+// The problem is that we should use some generic functions to handle
+// box resize, since we do it a lot, and the code is never very clear.
 static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_extrude_t *tool = (tool_extrude_t*)user;
@@ -96,16 +99,24 @@ static int on_drag(gesture3d_t *gest, void *user)
     pos.x = round(pos.x);
     pos.y = round(pos.y);
     pos.z = round(pos.z);
-    box = box_move_face(box, tool->snap_face, pos);
-    render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
+    // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     mesh_set(mesh, tool->mesh_orig);
     tmp_mesh = mesh_copy(tool->mesh);
 
-    if (delta > 0) {
+    if (delta >= 1) {
+        vec3_iaddk(&face_plane.p, n, -0.5);
+        box = box_move_face(box, tool->snap_face, pos);
         mesh_extrude(tmp_mesh, &face_plane, &box);
+        mesh_merge(mesh, tmp_mesh, MODE_OVER);
     }
-    mesh_merge(mesh, tmp_mesh, MODE_OVER);
+    if (delta < 0.5) {
+        box = box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos);
+        vec3_imul(&face_plane.n, -1.0);
+        vec3_iaddk(&face_plane.p, n, -0.5);
+        mesh_extrude(tmp_mesh, &face_plane, &box);
+        mesh_merge(mesh, tmp_mesh, MODE_SUB);
+    }
     mesh_delete(tmp_mesh);
     goxel_update_meshes(goxel, MESH_RENDER);
 
@@ -122,6 +133,7 @@ static int iter(tool_t *tool_, const vec4_t *view)
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
     cursor_t *curs = &goxel->cursor;
     curs->snap_offset = -0.5;
+    curs->snap_mask &= ~SNAP_ROUNDED;
 
     if (!tool->mesh_orig) tool->mesh_orig = mesh_new();
     if (!tool->gestures.drag.type) {
