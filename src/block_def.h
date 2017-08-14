@@ -53,6 +53,10 @@ static const int FACES_VERTICES[6][4] = {
     {0, 3, 7, 4}
 };
 
+static const int FACES_OPPOSITES[6] = {
+    1, 0, 3, 2, 5, 4
+};
+
 // face index + edge -> neighbor face index.
 static const int FACES_NEIGHBORS[6][4] = {
     {2, 4, 3, 5},
