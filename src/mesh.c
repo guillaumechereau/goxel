@@ -458,3 +458,47 @@ int mesh_select(const mesh_t *mesh,
     }
     return 0;
 }
+
+static uvec4b_t mesh_extrude_callback(const vec3_t *pos, void *user)
+{
+    mesh_t *mesh = USER_GET(user, 0);
+    mat4_t *proj = USER_GET(user, 1);
+    box_t *box = USER_GET(user, 2);
+    if (!bbox_contains_vec(*box, *pos)) return uvec4b(0, 0, 0, 0);
+    vec3_t p = mat4_mul_vec3(*proj, *pos);
+    return mesh_get_at(mesh, &p);
+}
+
+// XXX: need to redo this function from scratch.  Even the API is a bit
+// stupid.
+void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
+{
+    mesh_prepare_write(mesh);
+    block_t *block;
+    mat4_t proj;
+    vec3_t n = plane->n, pos;
+    vec3_normalize(&n);
+    pos = vec3_addk(plane->p, n, -0.5);
+
+    // Generate the projection into the plane.
+    // XXX: *very* ugly code, fix this!
+    proj = mat4_identity;
+
+    if (fabs(plane->n.x) > 0.1) {
+        proj.v[0] = 0;
+        proj.v[12] = pos.x;
+    }
+    if (fabs(plane->n.y) > 0.1) {
+        proj.v[5] = 0;
+        proj.v[13] = pos.y;
+    }
+    if (fabs(plane->n.z) > 0.1) {
+        proj.v[10] = 0;
+        proj.v[14] = pos.z;
+    }
+
+    add_blocks(mesh, *box);
+    MESH_ITER_BLOCKS(mesh, block) {
+        block_fill(block, mesh_extrude_callback, USER_PASS(mesh, &proj, box));
+    }
+}

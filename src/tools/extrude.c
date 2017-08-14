@@ -64,6 +64,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     box_t box;
     plane_t face_plane;
     vec3_t n, pos;
+    float delta;
 
     if (gest->state == GESTURE_BEGIN) {
         tool->snap_face = get_face(curs->normal);
@@ -87,6 +88,9 @@ static int on_drag(gesture3d_t *gest, void *user)
     // time!
     face_plane.mat = mat4_mul(box.mat, FACES_MATS[tool->snap_face]);
     n = vec3_normalized(face_plane.n);
+    // XXX: Is there a better way to compute the delta??
+    delta = vec3_dot(n,
+                vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
     pos = vec3_add(goxel->tool_plane.p,
                    vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
     pos.x = round(pos.x);
@@ -97,7 +101,10 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     mesh_set(mesh, tool->mesh_orig);
     tmp_mesh = mesh_copy(tool->mesh);
-    mesh_op(tmp_mesh, &goxel->painter, &box);
+
+    if (delta > 0) {
+        mesh_extrude(tmp_mesh, &face_plane, &box);
+    }
     mesh_merge(mesh, tmp_mesh, MODE_OVER);
     mesh_delete(tmp_mesh);
     goxel_update_meshes(goxel, MESH_RENDER);
@@ -107,7 +114,6 @@ static int on_drag(gesture3d_t *gest, void *user)
         goxel->tool_plane = plane_null;
         goxel_update_meshes(goxel, -1);
     }
-
     return 0;
 }
 

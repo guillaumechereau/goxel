@@ -622,6 +622,8 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
 void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v);
 void mesh_remove_empty_blocks(mesh_t *mesh);
 bool mesh_is_empty(const mesh_t *mesh);
+// XXX: to cleanup.
+void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
 
 // XXX: clean up this.  We should use a struct to represent a data cube.
 void mesh_blit(mesh_t *mesh, uvec4b_t *data,
