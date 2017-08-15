@@ -60,6 +60,7 @@
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
 		F0AE90F81C8EE01300C29080 /* assets.inl in Resources */ = {isa = PBXBuildFile; fileRef = F0AE90F61C8EE01300C29080 /* assets.inl */; };
 		F0C4F1421F308976002E73C5 /* gui_settings.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C4F1411F308976002E73C5 /* gui_settings.c */; };
+		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
 		F0D463BD1E48759A004F1A37 /* cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0D463BC1E48759A004F1A37 /* cache.c */; };
 		F0D463BF1E4875CA004F1A37 /* stack.c in Sources */ = {isa = PBXBuildFile; fileRef = F0D463BE1E4875CA004F1A37 /* stack.c */; };
 		F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */; };
@@ -147,6 +148,7 @@
 		F0AE90F51C8EE01200C29080 /* assets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = assets.c; sourceTree = "<group>"; };
 		F0AE90F61C8EE01300C29080 /* assets.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = assets.inl; sourceTree = "<group>"; };
 		F0C4F1411F308976002E73C5 /* gui_settings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gui_settings.c; sourceTree = "<group>"; };
+		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
 		F0D463BC1E48759A004F1A37 /* cache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cache.c; sourceTree = "<group>"; };
 		F0D463BE1E4875CA004F1A37 /* stack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stack.c; sourceTree = "<group>"; };
 		F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noc_file_dialog.h; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 		F037D5C61EA6069A00C96D10 /* tools */ = {
 			isa = PBXGroup;
 			children = (
+				F0C5368A1F42EE43003A0DCA /* extrude.c */,
 				F037D5C71EA6069A00C96D10 /* brush.c */,
 				F037D5C81EA6069A00C96D10 /* color_picker.c */,
 				F037D5C91EA6069A00C96D10 /* laser.c */,
@@ -436,6 +439,7 @@
 			files = (
 				F025C7DB1F33239000C52709 /* png_slices.c in Sources */,
 				F037D5D31EA6069A00C96D10 /* plane.c in Sources */,
+				F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */,
 				F037D5CF1EA6069A00C96D10 /* brush.c in Sources */,
 				F0A160041E962F1300C6EF33 /* vxl.c in Sources */,
 				F0A15FFC1E962F1300C6EF33 /* dicom.c in Sources */,
