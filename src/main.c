@@ -174,7 +174,7 @@ static void load_icon(GLFWimage *image, const char *path)
     image->pixels = img;
 }
 
-static void set_window_icon(GLFWwindo *window)
+static void set_window_icon(GLFWwindow *window)
 {
     GLFWimage icons[3];
     int i;
@@ -215,14 +215,13 @@ int main(int argc, char **argv)
     glfwSetScrollCallback(window, on_scroll);
     glfwSetCharCallback(window, on_char);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
-
-    // Set the window icon.
     set_window_icon(window);
 
 #ifdef WIN32
     glewInit();
 #endif
     goxel_init(g_goxel);
+
     if (args.input)
         action_exec2("import", "p", args.input);
     if (args.export) {
