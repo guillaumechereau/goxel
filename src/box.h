@@ -201,9 +201,9 @@ static inline bool bbox_contains_vec(box_t b, vec3_t v)
     b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
     b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
 
-    return (b0.x <= v.x && b1.x >= v.x &&
-            b0.y <= v.y && b1.y >= v.y &&
-            b0.z <= v.z && b1.z >= v.z);
+    return (b0.x <= v.x && b1.x > v.x &&
+            b0.y <= v.y && b1.y > v.y &&
+            b0.z <= v.z && b1.z > v.z);
 }
 
 static inline box_t box_get_bbox(box_t b)

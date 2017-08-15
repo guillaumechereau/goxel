@@ -554,6 +554,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
 
     goxel->camera.aspect = rect->z / rect->w;
     camera_update(&goxel->camera);
+
     render_mesh(rend, goxel->render_mesh, 0);
 
     // Render all the image layers.

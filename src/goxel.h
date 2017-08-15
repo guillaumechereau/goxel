@@ -466,6 +466,7 @@ enum {
     ICON_MODE_ADD = 9,
     ICON_MODE_SUB = 10,
     ICON_MODE_PAINT = 11,
+    ICON_TOOL_EXTRUDE = 12,
 
     ICON_SHAPE_SPHERE = 17,
     ICON_SHAPE_CUBE = 18,
@@ -503,6 +504,7 @@ enum {
     TOOL_PICK_COLOR,
     TOOL_SELECTION,
     TOOL_PROCEDURAL,
+    TOOL_EXTRUDE,
 
     TOOL_COUNT
 };
@@ -620,12 +622,24 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
 void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v);
 void mesh_remove_empty_blocks(mesh_t *mesh);
+bool mesh_is_empty(const mesh_t *mesh);
+// XXX: to cleanup.
+void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
 
 // XXX: clean up this.  We should use a struct to represent a data cube.
 void mesh_blit(mesh_t *mesh, uvec4b_t *data,
                int x, int y, int z,
                int w, int h, int d);
 void mesh_shift_alpha(mesh_t *mesh, int v);
+
+// Compute the selection mask for a given condition.
+int mesh_select(const mesh_t *mesh,
+                const vec3_t *start_pos,
+                int (*cond)(uvec4b_t value,
+                            const uvec4b_t neighboors[6],
+                            const uint8_t mask[6],
+                            void *user),
+                void *user, mesh_t *selection);
 
 #define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
 

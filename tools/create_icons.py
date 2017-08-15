@@ -22,6 +22,7 @@ SRC = [
     'mode_add.svg',
     'mode_sub.svg',
     'mode_paint.svg',
+    'tool_extrude.svg',
     None,
 
     'shape_sphere.svg',
