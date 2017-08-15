@@ -160,6 +160,8 @@ static void start_main_loop(void (*func)(void))
 }
 #endif
 
+#if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 2
+
 static void load_icon(GLFWimage *image, const char *path)
 {
     uint8_t *img;
@@ -172,15 +174,29 @@ static void load_icon(GLFWimage *image, const char *path)
     image->pixels = img;
 }
 
+static void set_window_icon(GLFWwindo *window)
+{
+    GLFWimage icons[3];
+    int i;
+    load_icon(&icons[0], "asset://data/icons/icon16.png");
+    load_icon(&icons[1], "asset://data/icons/icon32.png");
+    load_icon(&icons[2], "asset://data/icons/icon48.png");
+    glfwSetWindowIcon(window, 3, icons);
+    for (i = 0; i < 3; i++) free(icons[i].pixels);
+}
+
+#else
+static void set_window_icon(GLFWwindow *window) {}
+#endif
+
 int main(int argc, char **argv)
 {
     args_t args = {};
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
-    int i, ret = 0;
+    int ret = 0;
     inputs_t inputs = {};
-    GLFWimage icons[3];
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
     g_inputs = &inputs;
     g_goxel = calloc(1, sizeof(*g_goxel));
@@ -201,11 +217,7 @@ int main(int argc, char **argv)
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
 
     // Set the window icon.
-    load_icon(&icons[0], "asset://data/icons/icon16.png");
-    load_icon(&icons[1], "asset://data/icons/icon32.png");
-    load_icon(&icons[2], "asset://data/icons/icon48.png");
-    glfwSetWindowIcon(window, 3, icons);
-    for (i = 0; i < 3; i++) free(icons[i].pixels);
+    set_window_icon(window);
 
 #ifdef WIN32
     glewInit();
