@@ -14,6 +14,7 @@ glut = int(ARGUMENTS.get('glut', 0))
 emscripten = ARGUMENTS.get('emscripten', 0)
 werror = int(ARGUMENTS.get("werror", 1))
 clang = int(ARGUMENTS.get("clang", 0))
+argp_standalone = int(ARGUMENTS.get("argp_standalone", 0))
 sound = False
 
 if profile: debug = 0
@@ -60,6 +61,9 @@ if target_os == 'posix':
 
 if glut:
     env.Append(CCFLAGS='-DUSE_GLUT=1', LIBS='glut')
+
+if argp_standalone:
+    env.Append(LIBS='argp')
 
 if target_os == 'msys':
     env.Append(CCFLAGS='-DNO_ARGP')
