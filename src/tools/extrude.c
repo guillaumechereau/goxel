@@ -104,8 +104,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     // Skip if we didn't move.
-    if (gest->state == GESTURE_UPDATE && round(delta) == tool->last_delta)
-        return 0;
+    if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
     pos = vec3_add(goxel->tool_plane.p,
@@ -133,6 +132,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_delete(tmp_mesh);
     goxel_update_meshes(goxel, MESH_RENDER);
 
+end:
     if (gest->state == GESTURE_END) {
         mesh_delete(tool->mesh);
         goxel->tool_plane = plane_null;
