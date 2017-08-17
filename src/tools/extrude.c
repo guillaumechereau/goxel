@@ -72,9 +72,14 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     if (gest->state == GESTURE_BEGIN) {
         tool->snap_face = get_face(curs->normal);
-        tool->mesh = mesh_new();
+
+        tmp_mesh = mesh_new();
+        tool->mesh = mesh_copy(mesh);
         mesh_select(mesh, &curs->pos, select_cond, &tool->snap_face,
-                    tool->mesh);
+                    tmp_mesh);
+        mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA);
+        mesh_delete(tmp_mesh);
+
         mesh_set(tool->mesh_orig, mesh);
         image_history_push(goxel->image);
 
@@ -96,6 +101,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     // XXX: Is there a better way to compute the delta??
     delta = vec3_dot(n,
                 vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
+    // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     // Skip if we didn't move.
     if (gest->state == GESTURE_UPDATE && round(delta) == tool->last_delta)
@@ -107,7 +113,6 @@ static int on_drag(gesture3d_t *gest, void *user)
     pos.x = round(pos.x);
     pos.y = round(pos.y);
     pos.z = round(pos.z);
-    // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     mesh_set(mesh, tool->mesh_orig);
     tmp_mesh = mesh_copy(tool->mesh);

@@ -429,6 +429,11 @@ static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
     } else if (mode == MODE_SUB_CLAMP) {
         ret.a = min(aa, 255 - ba);
         ret.rgb = a.rgb;
+    } else if (mode == MODE_MULT_ALPHA) {
+        ret.r = ret.r * ba / 255;
+        ret.g = ret.g * ba / 255;
+        ret.b = ret.b * ba / 255;
+        ret.a = ret.a * ba / 255;
     } else {
         assert(false);
     }

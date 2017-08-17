@@ -492,6 +492,7 @@ enum {
     MODE_PAINT,
     MODE_MAX,
     MODE_INTERSECT,
+    MODE_MULT_ALPHA,
 };
 
 enum {

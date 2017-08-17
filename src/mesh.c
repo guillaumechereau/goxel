@@ -286,6 +286,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     assert(mesh && other);
     block_t *block, *other_block, *tmp;
     mesh_prepare_write(mesh);
+    bool is_empty;
 
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
@@ -298,12 +299,22 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 
     HASH_ITER(hh, mesh->blocks, block, tmp) {
         other_block = mesh_get_block_at(other, &block->pos);
+
+        // XXX: instead of testing here, we should do it in block_merge
+        // directly.
+        is_empty = false;
         if (    block_is_empty(block, true) &&
-                block_is_empty(other_block, true)) {
+                block_is_empty(other_block, true))
+            is_empty = true;
+        if (mode == MODE_MULT_ALPHA && block_is_empty(other_block, true))
+            is_empty = true;
+
+        if (is_empty) {
             HASH_DEL(mesh->blocks, block);
             block_delete(block);
             continue;
         }
+
         block_merge(block, other_block, mode);
     }
 }
