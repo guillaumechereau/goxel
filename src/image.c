@@ -443,8 +443,7 @@ void image_clear_layer(layer_t *layer, const box_t *box)
 {
     painter_t painter;
     layer = layer ?: goxel->image->active_layer;
-    box = box ?: &goxel->selection;
-    if (box_is_null(*box)) {
+    if (!box || box_is_null(*box)) {
         mesh_clear(layer->mesh);
         return;
     }

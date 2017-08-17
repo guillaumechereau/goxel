@@ -563,7 +563,9 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
             render_img(rend, layer->image, &layer->mat, EFFECT_NO_SHADING);
     }
 
-    render_box(rend, &goxel->selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
+    if (goxel->tool->id == TOOL_SELECTION)
+        render_box(rend, &goxel->selection, NULL,
+                   EFFECT_STRIP | EFFECT_WIREFRAME);
 
     // XXX: make a toggle for debug informations.
     if ((0)) {
@@ -781,16 +783,15 @@ ACTION_REGISTER(cut_as_new_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
 
-static void clear_selection(void)
+static void reset_selection(void)
 {
     goxel->selection = box_null;
 }
 
-ACTION_REGISTER(clear_selection,
-    .help = "Clear the selection",
-    .cfunc = clear_selection,
+ACTION_REGISTER(reset_selection,
+    .help = "Reset the selection",
+    .cfunc = reset_selection,
     .csig = "vp",
-    .flags = ACTION_TOUCH_IMAGE,
 )
 
 static void fill_selection(layer_t *layer)

@@ -239,10 +239,18 @@ static int gui(tool_t *tool)
     gui_text("Drag mode");
     gui_combo("##drag_mode", &g_drag_mode,
               (const char*[]) {"Resize", "Move"}, 2);
-    if (gui_action_button("clear_selection", "Clear selection", 1.0, ""))
-        return 0;
 
+    gui_group_begin(NULL);
+    if (gui_action_button("reset_selection", "Reset", 1.0, "")) {
+        gui_group_end();
+        return 0;
+    }
+    gui_action_button("fill_selection", "Fill", 1.0, "");
+    gui_action_button("layer_clear", "Clear", 1.0, "pp",
+                      goxel->image->active_layer, box);
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
+    gui_group_end();
+
     w = round(box->w.x * 2);
     h = round(box->h.y * 2);
     d = round(box->d.z * 2);
