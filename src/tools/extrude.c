@@ -23,6 +23,7 @@ typedef struct {
     mesh_t *mesh_orig;
     mesh_t *mesh;
     int    snap_face;
+    int    last_delta;
     struct {
         gesture3d_t drag;
     } gestures;
@@ -83,6 +84,7 @@ static int on_drag(gesture3d_t *gest, void *user)
                                   FACES_MATS[tool->snap_face]);
         goxel->tool_plane = plane(curs->pos, curs->normal,
                                   vec3_normalized(face_plane.u));
+        tool->last_delta = 0;
     }
 
     box = mesh_get_box(tool->mesh, true);
@@ -94,6 +96,12 @@ static int on_drag(gesture3d_t *gest, void *user)
     // XXX: Is there a better way to compute the delta??
     delta = vec3_dot(n,
                 vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
+
+    // Skip if we didn't move.
+    if (gest->state == GESTURE_UPDATE && round(delta) == tool->last_delta)
+        return 0;
+    tool->last_delta = round(delta);
+
     pos = vec3_add(goxel->tool_plane.p,
                    vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
     pos.x = round(pos.x);
