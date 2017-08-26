@@ -121,4 +121,11 @@ if sound:
     env.Append(LIBS='openal')
     env.Append(CCFLAGS='-DSOUND=OPENAL')
 
+# Append external environment flags
+env.Append(
+    CFLAGS=os.environ.get("CFLAGS", "").split(),
+    CXXFLAGS=os.environ.get("CXXFLAGS", "").split(),
+    LINKFLAGS=os.environ.get("LDFLAGS", "").split()
+)
+
 env.Program(target='goxel', source=sources)
