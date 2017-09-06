@@ -47,7 +47,6 @@ typedef struct {
 
 struct render_item_t
 {
-    UT_hash_handle  hh;             // Handle into the global hash.
     render_item_t   *next, *prev;   // The rendering queue.
     int             type;
     block_item_key_t key;
