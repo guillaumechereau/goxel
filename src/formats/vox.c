@@ -99,12 +99,14 @@ static void read_chunk(FILE *file, context_t *ctx)
         ctx->d = READ(uint32_t, file);
     } else if (strncmp(id, "RGBA", 4) == 0) {
         ctx->palette = malloc(4 * 256);
-        for (i = 0; i < 256; i++) {
+        for (i = 1; i < 256; i++) {
             ctx->palette[i].r = READ(uint8_t, file);
             ctx->palette[i].g = READ(uint8_t, file);
             ctx->palette[i].b = READ(uint8_t, file);
             ctx->palette[i].a = READ(uint8_t, file);
         }
+        // Skip the last value!
+        for (i = 0; i < 4; i++) READ(uint8_t, file);
     } else if (strncmp(id, "XYZI", 4) == 0) {
         ctx->nb = READ(uint32_t, file);
         ctx->voxels = calloc(ctx->nb, 4);
