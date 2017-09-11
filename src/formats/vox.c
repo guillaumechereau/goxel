@@ -288,8 +288,9 @@ static void vox_export(const mesh_t *mesh, const char *path)
         fprintf(file, "RGBA");
         WRITE(uint32_t, 4 * 256, file);
         WRITE(uint32_t, 0, file);
-        for (i = 0; i < 256; i++)
+        for (i = 1; i < 256; i++)
             WRITE(uint32_t, palette[i].uint32, file);
+        WRITE(uint32_t, 0, file);
     }
 
     fclose(file);
