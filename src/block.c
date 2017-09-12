@@ -548,13 +548,13 @@ void block_merge(block_t *block, const block_t *other, int mode)
     cache_add(cache, &key, sizeof(key), block->data, 1, block_del);
 }
 
-uvec4b_t block_get_at(const block_t *block, const vec3_t *pos)
+uvec4b_t block_get_at(const block_t *block, const vec3i_t *pos)
 {
     int x, y, z;
-    vec3_t p = *pos;
-    x = floor(p.x - block->pos.x + N / 2);
-    y = floor(p.y - block->pos.y + N / 2);
-    z = floor(p.z - block->pos.z + N / 2);
+    vec3i_t p = *pos;
+    x = p.x - block->pos.x + N / 2;
+    y = p.y - block->pos.y + N / 2;
+    z = p.z - block->pos.z + N / 2;
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);

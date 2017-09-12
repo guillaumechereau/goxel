@@ -590,7 +590,7 @@ int block_generate_vertices(const block_data_t *data, int effects,
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);
 void block_merge(block_t *block, const block_t *other, int op);
-uvec4b_t block_get_at(const block_t *block, const vec3_t *pos);
+uvec4b_t block_get_at(const block_t *block, const vec3i_t *pos);
 void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v);
 
 // XXX: I think we should clean up this one.
