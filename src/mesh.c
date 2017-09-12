@@ -333,6 +333,13 @@ block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos)
     return block;
 }
 
+// XXX: move this in goxel.h?
+static int mod(int a, int b)
+{
+    int r = a % b;
+    return r < 0 ? r + b : r;
+}
+
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos)
 {
     block_t *block;
@@ -340,24 +347,22 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos)
     static uint64_t last_mesh_id = 0;
     static vec3i_t last_p;
 
-    vec3i_t p, pi;
+    vec3i_t p;
     const int s = BLOCK_SIZE - 2;
 
-    pi = vec3i(floor(pos->x), floor(pos->y), floor(pos->z));
-    p = vec3i((int)(floor((pos->x + s / 2) / s) * s),
-              (int)(floor((pos->y + s / 2) / s) * s),
-              (int)(floor((pos->z + s / 2) / s) * s));
+    p = vec3i(pos->x + s / 2, pos->y + s / 2, pos->z + s / 2);
+    p = vec3i(p.x - mod(p.x, s), p.y - mod(p.y, s), p.z - mod(p.z, s));
 
     if (last_mesh_id == mesh->id) {
         if (memcmp(&last_p, &p, sizeof(p)) == 0)
-            return last_block ? block_get_at(last_block, &pi) : uvec4b_zero;
+            return last_block ? block_get_at(last_block, pos) : uvec4b_zero;
     }
 
     HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
     last_mesh_id = mesh->id;
     last_block = block;
     last_p = p;
-    return block ? block_get_at(block, &pi) : uvec4b_zero;
+    return block ? block_get_at(block, pos) : uvec4b_zero;
 }
 
 void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v)

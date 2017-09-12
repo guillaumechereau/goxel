@@ -358,11 +358,12 @@ int block_generate_vertices(const block_data_t *data, int effects,
     return nb;
 }
 
+// XXX: only used once.
 static vec3_t block_get_voxel_pos(const block_t *block, int x, int y, int z)
 {
-    return vec3(block->pos.x + x - BLOCK_SIZE / 2 + 0.5,
-                block->pos.y + y - BLOCK_SIZE / 2 + 0.5,
-                block->pos.z + z - BLOCK_SIZE / 2 + 0.5);
+    return vec3(block->pos.x + x - BLOCK_SIZE / 2,
+                block->pos.y + y - BLOCK_SIZE / 2,
+                block->pos.z + z - BLOCK_SIZE / 2);
 }
 
 // Copy the data if there are any other blocks having reference to it.
