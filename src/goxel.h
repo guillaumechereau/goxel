@@ -658,7 +658,7 @@ int mesh_select(const mesh_t *mesh,
             x_ + y_ * BLOCK_SIZE + z_ * BLOCK_SIZE * BLOCK_SIZE]).a) \
     if (x = x_ + b_->pos.x - BLOCK_SIZE / 2, \
         y = y_ + b_->pos.y - BLOCK_SIZE / 2, \
-        z = z_ + b_->pos.y - BLOCK_SIZE / 2, true)
+        z = z_ + b_->pos.z - BLOCK_SIZE / 2, true)
 
 // #############################
 
