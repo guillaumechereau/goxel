@@ -68,6 +68,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     box_t box;
     plane_t face_plane;
     vec3_t n, pos;
+    vec3i_t pi;
     float delta;
 
     if (gest->state == GESTURE_BEGIN) {
@@ -75,7 +76,8 @@ static int on_drag(gesture3d_t *gest, void *user)
 
         tmp_mesh = mesh_new();
         tool->mesh = mesh_copy(mesh);
-        mesh_select(mesh, &curs->pos, select_cond, &tool->snap_face,
+        pi = vec3i(curs->pos.x, curs->pos.y, curs->pos.z);
+        mesh_select(mesh, &pi, select_cond, &tool->snap_face,
                     tmp_mesh);
         mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA);
         mesh_delete(tmp_mesh);

@@ -591,7 +591,7 @@ void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);
 void block_merge(block_t *block, const block_t *other, int op);
 uvec4b_t block_get_at(const block_t *block, const vec3i_t *pos);
-void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v);
+void block_set_at(block_t *block, const vec3i_t *pos, uvec4b_t v);
 
 // XXX: I think we should clean up this one.
 void block_blit(block_t *block, uvec4b_t *data,
@@ -620,8 +620,8 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
-uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
-void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v);
+uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos);
+void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v);
 void mesh_remove_empty_blocks(mesh_t *mesh);
 bool mesh_is_empty(const mesh_t *mesh);
 // XXX: to cleanup.
@@ -635,7 +635,7 @@ void mesh_shift_alpha(mesh_t *mesh, int v);
 
 // Compute the selection mask for a given condition.
 int mesh_select(const mesh_t *mesh,
-                const vec3_t *start_pos,
+                const vec3i_t *start_pos,
                 int (*cond)(uvec4b_t value,
                             const uvec4b_t neighboors[6],
                             const uint8_t mask[6],

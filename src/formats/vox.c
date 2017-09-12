@@ -131,7 +131,7 @@ static void vox_import(const char *path)
 {
     FILE *file;
     char magic[4];
-    vec3_t pos;
+    vec3i_t pos;
     int version, r, i, x, y, z, c;
     mesh_t      *mesh;
     uvec4b_t color;
@@ -162,7 +162,7 @@ static void vox_import(const char *path)
         y = ctx.voxels[i * 4 + 1];
         z = ctx.voxels[i * 4 + 2];
         c = ctx.voxels[i * 4 + 3];
-        pos = vec3(x + 0.5 - ctx.w / 2, y + 0.5 - ctx.h / 2, z + 0.5);
+        pos = vec3i(x - ctx.w / 2, y - ctx.h / 2, z);
         if (!c) continue; // Not sure what c == 0 means.
         color = ctx.palette ? ctx.palette[c] :
                               HEXCOLOR(VOX_DEFAULT_PALETTE[c]);

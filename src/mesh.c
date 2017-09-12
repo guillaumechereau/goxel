@@ -333,7 +333,7 @@ block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos)
     return block;
 }
 
-uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
+uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos)
 {
     block_t *block;
     static block_t *last_block = NULL;
@@ -360,13 +360,14 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos)
     return block ? block_get_at(block, &pi) : uvec4b_zero;
 }
 
-void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v)
+void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v)
 {
     block_t *block;
+    vec3_t p = vec3(pos->x, pos->y, pos->z);
     mesh_prepare_write(mesh);
-    add_blocks(mesh, bbox_from_extents(*pos, 2, 2, 2));
+    add_blocks(mesh, bbox_from_extents(p, 2, 2, 2));
     MESH_ITER_BLOCKS(mesh, block) {
-        if (bbox_contains_vec(block_get_box(block, false), *pos))
+        if (bbox_contains_vec(block_get_box(block, false), p))
             block_set_at(block, pos, v);
     }
 }
@@ -376,7 +377,8 @@ static uvec4b_t mesh_move_get_color(const vec3_t *pos, void *user)
     mesh_t *mesh = USER_GET(user, 0);
     mat4_t *mat = USER_GET(user, 1);
     vec3_t p = mat4_mul_vec3(*mat, *pos);
-    return mesh_get_at(mesh, &p);
+    vec3i_t pi = vec3i(p.x, p.y, p.z);
+    return mesh_get_at(mesh, &pi);
 }
 
 void mesh_move(mesh_t *mesh, const mat4_t *mat)
@@ -418,7 +420,7 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
 }
 
 int mesh_select(const mesh_t *mesh,
-                const vec3_t *start_pos,
+                const vec3i_t *start_pos,
                 int (*cond)(uvec4b_t value,
                             const uvec4b_t neighboors[6],
                             const uint8_t mask[6],
@@ -427,7 +429,7 @@ int mesh_select(const mesh_t *mesh,
 {
     int x, y, z, i, j, a;
     uvec4b_t v1, v2;
-    vec3_t pos, p, p2;
+    vec3i_t pos, p, p2;
     bool keep = true;
     uvec4b_t neighboors[6];
     uint8_t mask[6];
@@ -441,19 +443,19 @@ int mesh_select(const mesh_t *mesh,
     while (keep) {
         keep = false;
         MESH_ITER_VOXELS(selection, x, y, z, v1) {
-            pos = vec3(x, y, z);
+            pos = vec3i(x, y, z);
             for (i = 0; i < 6; i++) {
-                p = vec3(pos.x + FACES_NORMALS[i].x,
-                         pos.y + FACES_NORMALS[i].y,
-                         pos.z + FACES_NORMALS[i].z);
+                p = vec3i(pos.x + FACES_NORMALS[i].x,
+                          pos.y + FACES_NORMALS[i].y,
+                          pos.z + FACES_NORMALS[i].z);
                 v2 = mesh_get_at(selection, &p);
                 if (v2.a) continue; // Already done.
                 v2 = mesh_get_at(mesh, &p);
                 // Compute neighboors and mask.
                 for (j = 0; j < 6; j++) {
-                    p2 = vec3(p.x + FACES_NORMALS[j].x,
-                              p.y + FACES_NORMALS[j].y,
-                              p.z + FACES_NORMALS[j].z);
+                    p2 = vec3i(p.x + FACES_NORMALS[j].x,
+                               p.y + FACES_NORMALS[j].y,
+                               p.z + FACES_NORMALS[j].z);
                     neighboors[j] = mesh_get_at(mesh, &p2);
                     mask[j] = mesh_get_at(selection, &p2).a;
                 }
@@ -475,7 +477,8 @@ static uvec4b_t mesh_extrude_callback(const vec3_t *pos, void *user)
     box_t *box = USER_GET(user, 2);
     if (!bbox_contains_vec(*box, *pos)) return uvec4b(0, 0, 0, 0);
     vec3_t p = mat4_mul_vec3(*proj, *pos);
-    return mesh_get_at(mesh, &p);
+    vec3i_t pi = vec3i(p.x, p.y, p.z);
+    return mesh_get_at(mesh, &pi);
 }
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
