@@ -22,10 +22,8 @@ static void export_as_txt(const char *path)
 {
     FILE *out;
     mesh_t *mesh = goxel->layers_mesh;
-    block_t *block;
     int x, y, z;
     uvec4b_t v;
-    const int N = BLOCK_SIZE;
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                     "text\0*.txt\0", NULL, "untitled.txt");
@@ -36,18 +34,9 @@ static void export_as_txt(const char *path)
     fprintf(out, "# One line per voxel\n");
     fprintf(out, "# X Y Z RRGGBB\n");
 
-    MESH_ITER_BLOCKS(mesh, block) {
-        for (z = 1; z < N - 1; z++)
-        for (y = 1; y < N - 1; y++)
-        for (x = 1; x < N - 1; x++) {
-            v = block->data->voxels[x + y * N + z * N * N];
-            if (v.a < 127) continue;
-            fprintf(out, "%d %d %d %2x%2x%2x\n",
-                    x + (int)block->pos.x,
-                    y + (int)block->pos.y,
-                    z + (int)block->pos.z,
-                    v.r, v.g, v.b);
-        }
+    MESH_ITER_VOXELS(mesh, x, y, z, v) {
+        if (v.a < 127) continue;
+        fprintf(out, "%d %d %d %2x%2x%2x\n", x, y, z, v.r, v.g, v.b);
     }
     fclose(out);
 }

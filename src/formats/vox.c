@@ -206,13 +206,12 @@ static int voxel_cmp(const void *a_, const void *b_)
 static void vox_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
-    int children_size, nb_vox = 0, i, x, y, z, vx, vy, vz;
+    int children_size, nb_vox = 0, i, x, y, z;
     int xmin = INT_MAX, ymin = INT_MAX, zmin = INT_MAX;
     int xmax = INT_MIN, ymax = INT_MIN, zmax = INT_MIN;
     uvec4b_t *palette;
     bool use_default_palette = true;
     uint8_t *voxels;
-    block_t *block;
     uvec4b_t v;
 
     palette = calloc(256, sizeof(*palette));
@@ -220,21 +219,18 @@ static void vox_export(const mesh_t *mesh, const char *path)
         palette[i] = HEXCOLOR(VOX_DEFAULT_PALETTE[i]);
 
     // Iter all the voxels to get the count and the size.
-    MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
+    MESH_ITER_VOXELS(mesh, x, y, z, v) {
         if (v.a < 127) continue;
         v.a = 255;
         use_default_palette = use_default_palette &&
                             get_color_index(v, palette, true) != -1;
         nb_vox++;
-        vx = round(x + block->pos.x - BLOCK_SIZE / 2);
-        vy = round(y + block->pos.y - BLOCK_SIZE / 2);
-        vz = round(z + block->pos.z - BLOCK_SIZE / 2);
-        xmin = min(xmin, vx);
-        ymin = min(ymin, vy);
-        zmin = min(zmin, vz);
-        xmax = max(xmax, vx + 1);
-        ymax = max(ymax, vy + 1);
-        zmax = max(zmax, vz + 1);
+        xmin = min(xmin, x);
+        ymin = min(ymin, y);
+        zmin = min(zmin, z);
+        xmax = max(xmax, x + 1);
+        ymax = max(ymax, y + 1);
+        zmax = max(zmax, z + 1);
     }
     if (!use_default_palette)
         quantization_gen_palette(mesh, 255, palette + 1);
@@ -264,18 +260,18 @@ static void vox_export(const mesh_t *mesh, const char *path)
 
     voxels = calloc(nb_vox, 4);
     i = 0;
-    MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
+    MESH_ITER_VOXELS(mesh, x, y, z, v) {
         if (v.a < 127) continue;
-        vx = round(x + block->pos.x - BLOCK_SIZE / 2) - xmin;
-        vy = round(y + block->pos.y - BLOCK_SIZE / 2) - ymin;
-        vz = round(z + block->pos.z - BLOCK_SIZE / 2) - zmin;
-        assert(vx >= 0 && vx < 255);
-        assert(vy >= 0 && vy < 255);
-        assert(vz >= 0 && vz < 255);
+        x -= xmin;
+        y -= ymin;
+        z -= zmin;
+        assert(x >= 0 && x < 255);
+        assert(y >= 0 && y < 255);
+        assert(z >= 0 && z < 255);
 
-        voxels[i * 4 + 0] = vx;
-        voxels[i * 4 + 1] = vy;
-        voxels[i * 4 + 2] = vz;
+        voxels[i * 4 + 0] = x;
+        voxels[i * 4 + 1] = y;
+        voxels[i * 4 + 2] = z;
         voxels[i * 4 + 3] = get_color_index(v, palette, false);
         i++;
     }

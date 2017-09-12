@@ -124,7 +124,6 @@ static int bucket_cmp(const void *a_, const void *b_)
 // This is based on https://en.wikipedia.org/wiki/Median_cut.
 void quantization_gen_palette(const mesh_t *mesh, int nb, uvec4b_t *palette)
 {
-    block_t *block;
     uvec4b_t v;
     int x, y, z, i;
     bucket_t *buckets, b;
@@ -133,7 +132,8 @@ void quantization_gen_palette(const mesh_t *mesh, int nb, uvec4b_t *palette)
 
     // Fill the initial bucket.
     utarray_new(buckets[0].values, &value_icd);
-    MESH_ITER_VOXELS(mesh, block, x, y, z, v) {
+    MESH_ITER_VOXELS(mesh, x, y, z, v) {
+        (void)x; (void)y; (void)z;
         if (v.a < 127) continue;
         v.a = 255;
         bucket_add(&buckets[0], v, 1, true);

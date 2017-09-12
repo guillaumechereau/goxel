@@ -24,8 +24,7 @@ static void export_as_pov(const char *path, int w, int h)
 {
     FILE *file;
     layer_t *layer;
-    block_t *block;
-    int size, x, y, z, vx, vy, vz;
+    int size, x, y, z;
     char *buf;
     const char *template;
     uvec4b_t v;
@@ -70,14 +69,10 @@ static void export_as_pov(const char *path, int w, int h)
 
     m_voxels = mustache_add_list(m, "voxels");
     DL_FOREACH(goxel->image->layers, layer) {
-        MESH_ITER_VOXELS(layer->mesh, block, x, y, z, v) {
+        MESH_ITER_VOXELS(layer->mesh, x, y, z, v) {
             if (v.a < 127) continue;
             m_voxel = mustache_add_dict(m_voxels, NULL);
-            vx = x + block->pos.x - BLOCK_SIZE / 2;
-            vy = y + block->pos.y - BLOCK_SIZE / 2;
-            vz = z + block->pos.z - BLOCK_SIZE / 2;
-            mustache_add_str(m_voxel, "pos", "<%d, %d, %d>",
-                             vx, vy, vz);
+            mustache_add_str(m_voxel, "pos", "<%d, %d, %d>", x, y, z);
             mustache_add_str(m_voxel, "color", "<%d, %d, %d>", v.r, v.g, v.b);
         }
     }

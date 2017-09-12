@@ -424,7 +424,6 @@ int mesh_select(const mesh_t *mesh,
                             void *user),
                 void *user, mesh_t *selection)
 {
-    block_t *block;
     int x, y, z, i, j, a;
     uvec4b_t v1, v2;
     vec3_t pos, p, p2;
@@ -440,10 +439,8 @@ int mesh_select(const mesh_t *mesh,
     // no more possible changes.
     while (keep) {
         keep = false;
-        MESH_ITER_VOXELS(selection, block, x, y, z, v1) {
-            pos = vec3(x + block->pos.x - BLOCK_SIZE / 2,
-                       y + block->pos.y - BLOCK_SIZE / 2,
-                       z + block->pos.z - BLOCK_SIZE / 2);
+        MESH_ITER_VOXELS(selection, x, y, z, v1) {
+            pos = vec3(x, y, z);
             for (i = 0; i < 6; i++) {
                 p = vec3(pos.x + FACES_NORMALS[i].x,
                          pos.y + FACES_NORMALS[i].y,
