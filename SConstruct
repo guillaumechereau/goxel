@@ -16,6 +16,7 @@ werror = int(ARGUMENTS.get("werror", 1))
 clang = int(ARGUMENTS.get("clang", 0))
 argp_standalone = int(ARGUMENTS.get("argp_standalone", 0))
 cycles = int(ARGUMENTS.get('cycles', 1))
+security = int(ARGUMENTS.get('security', 1))
 sound = False
 
 if os.environ.get('CC') == 'clang': clang = 1
@@ -178,6 +179,10 @@ if target_os == 'js':
 if sound:
     env.Append(LIBS='openal')
     env.Append(CCFLAGS='-DSOUND=OPENAL')
+
+if security and not clang:
+    env.Append(CFLAGS='-Wformat -Wformat-security -Werror=format-security -D_FORTIFY_SOURCE=2 -fPIE -pie')
+    env.Append(LINKFLAGS='-z relro -z now')
 
 # Append external environment flags
 env.Append(
