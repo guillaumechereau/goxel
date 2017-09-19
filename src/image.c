@@ -190,7 +190,7 @@ layer_t *image_add_layer(image_t *img)
 {
     layer_t *layer;
     img = img ?: goxel->image;
-    layer = layer_new(img, "unamed");
+    layer = layer_new(img, "unnamed");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
@@ -214,7 +214,7 @@ void image_delete_layer(image_t *img, layer_t *layer)
 
     layer_delete(layer);
     if (img->layers == NULL) {
-        layer = layer_new(img, "unamed");
+        layer = layer_new(img, "unnamed");
         layer->visible = true;
         DL_APPEND(img->layers, layer);
     }
@@ -309,7 +309,7 @@ camera_t *image_add_camera(image_t *img)
 {
     camera_t *cam;
     img = img ?: goxel->image;
-    cam = camera_new("unamed");
+    cam = camera_new("unnamed");
     DL_APPEND(img->cameras, cam);
     img->active_camera = cam;
     return cam;

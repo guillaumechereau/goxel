@@ -404,7 +404,7 @@ void load_from_file(goxel_t *goxel, const char *path)
                     memcpy(&layer->base_id, dict_value, dict_value_size);
             }
         } else if (strncmp(c.type, "CAMR", 4) == 0) {
-            camera = camera_new("unamed");
+            camera = camera_new("unnamed");
             DL_APPEND(goxel->image->cameras, camera);
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size))) {

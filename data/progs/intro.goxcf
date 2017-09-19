@@ -94,7 +94,7 @@ rule 1 {
 
 // Some other times render a shpere and stop
 rule 0.5 {
-    // 'hue 1 70' means that we immediatly set the hue
+    // 'hue 1 70' means that we immediately set the hue
     // to 70 (yellow).
     sphere [s 3 hue 1 70]
 }
