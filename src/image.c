@@ -99,9 +99,11 @@ static layer_t *layer_copy(layer_t *other)
 
 static layer_t *layer_clone(layer_t *other)
 {
+    int len;
     layer_t *layer;
     layer = calloc(1, sizeof(*layer));
-    snprintf(layer->name, sizeof(layer->name) - 1, "%s clone", other->name);
+    len = sizeof(layer->name) - 1 - strlen(" clone");
+    snprintf(layer->name, sizeof(layer->name), "%.*s clone", len, other->name);
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
     layer->mat = mat4_identity;
