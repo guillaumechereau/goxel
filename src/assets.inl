@@ -6048,7 +6048,7 @@ static const uint8_t DATA_data_progs_intro_goxcf[2551]
     "\n"
     "// Some other times render a shpere and stop\n"
     "rule 0.5 {\n"
-    "    // 'hue 1 70' means that we immediatly set the hue\n"
+    "    // 'hue 1 70' means that we immediately set the hue\n"
     "    // to 70 (yellow).\n"
     "    sphere [s 3 hue 1 70]\n"
     "}\n"
