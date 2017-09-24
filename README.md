@@ -16,7 +16,7 @@ About
 -----
 
 You can use goxel to create voxel graphics (3D images formed of cubes).  It
-works on Linux, Windows and OSX
+works on Linux, BSD, Windows and macOS.
 
 
 Download
@@ -25,7 +25,7 @@ Download
 The last release files can be downloaded from [there](
 https://github.com/guillaumechereau/goxel/releases/latest).
 
-There is also in iOS version on [iTune](
+There is also in iOS version on [iTunes](
 https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826).
 
 
@@ -70,7 +70,7 @@ release with 'scons debug=0'.  On Windows, I only tried to build with msys2.
 The code is in C99, using some gnu extensions, so it does not compile with
 msvc.
 
-# Linux
+# Linux/BSD
 
 Install dependencies: scons pkg-config libglfw3-dev libgtk-3-dev
 

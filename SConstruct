@@ -29,9 +29,12 @@ if clang:
 # Asan & Ubsan (need to come first).
 if debug and target_os == 'posix':
     env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
-               LIBS=['asan', 'ubsan'])
+               LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'])
+    if not clang:
+        env.Append(LIBS=['asan', 'ubsan'])
 
-env.Append(CFLAGS= '-Wall -std=gnu99 -Wno-unknown-pragmas',
+env.Append(CFLAGS= '-Wall -std=gnu99 -Wno-unknown-pragmas '
+                   '-Wno-unknown-warning-option',
            CXXFLAGS='-std=gnu++11 -Wall -Wno-narrowing '
                     '-Wno-unknown-pragmas -Wno-unused-function'
         )
@@ -56,6 +59,8 @@ sources = glob.glob('src/*.c') + glob.glob('src/*.cpp') + \
 
 if target_os == 'posix':
     env.Append(LIBS=['GL', 'm', 'z'])
+    if not conf.CheckDeclaration('__GLIBC__', includes='#include <features.h>'):
+        env.Append(LIBS=['argp'])
     # Note: add '--static' to link with all the libs needed by glfw3.
     env.ParseConfig('pkg-config --libs glfw3')
 
