@@ -22,7 +22,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#ifdef __linux__
+#ifdef __unix__
 #define NOC_FILE_DIALOG_GTK
 #define NOC_FILE_DIALOG_IMPLEMENTATION
 #include "noc_file_dialog.h"
@@ -94,7 +94,7 @@ GLuint sys_get_screen_framebuffer(void)
     return 0;
 }
 
-#ifdef __linux__
+#ifdef __unix__
 
 #include <gtk/gtk.h>
 

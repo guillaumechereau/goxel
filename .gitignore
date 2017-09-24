@@ -3,6 +3,9 @@
 *~
 *.obj
 .sconsign.dblite
+/.sconf_temp
 /goxel
+/imgui.ini
+/config.log
 .DS_Store
 xcuserdata/
