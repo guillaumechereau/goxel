@@ -162,7 +162,7 @@ static void mesh_fill(
     block_t *block;
     mesh_clear(mesh);
     add_blocks(mesh, bbox);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, block) {
+    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
         block_fill(block, get_color, user_data);
     }
 }
@@ -173,7 +173,7 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     block_t *block;
     if (!mesh->blocks) return box_null;
     ret = block_get_box(mesh->blocks, exact);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, block) {
+    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
         ret = bbox_merge(ret, block_get_box(block, exact));
     }
     return ret;
@@ -322,7 +322,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
-        MESH_ITER_BLOCKS(other, NULL, NULL, block) {
+        MESH_ITER_BLOCKS(other, NULL, NULL, NULL, block) {
             if (!mesh_get_block_at(mesh, &block->pos)) {
                 mesh_add_block(mesh, &block->pos);
             }
@@ -388,7 +388,7 @@ void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v,
     vec3_t p = vec3(pos->x, pos->y, pos->z);
     mesh_prepare_write(mesh);
     add_blocks(mesh, bbox_from_extents(p, 2, 2, 2));
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, block) {
+    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
         if (bbox_contains_vec(block_get_box(block, false), p))
             block_set_at(block, pos, v);
     }
@@ -425,7 +425,7 @@ void mesh_blit(mesh_t *mesh, uvec4b_t *data,
     block_t *block;
     box = bbox_from_points(vec3(x, y, z), vec3(x + w, y + h, z + d));
     add_blocks(mesh, box);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, block) {
+    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
         block_blit(block, data, x, y, z, w, h, d);
     }
     mesh_remove_empty_blocks(mesh);
@@ -435,7 +435,7 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
 {
     block_t *block;
     mesh_prepare_write(mesh);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, block) {
+    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
         block_shift_alpha(block, v);
     }
     mesh_remove_empty_blocks(mesh);
@@ -537,7 +537,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 
     bbox = bbox_grow(*box, 1, 1, 1);
     add_blocks(mesh, bbox);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, block) {
+    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
         block_fill(block, mesh_extrude_callback, USER_PASS(mesh, &proj, box));
     }
 }
@@ -576,13 +576,15 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
 }
 
 bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
-                      int pos[3], uint64_t *data_id, block_t **block)
+                      int pos[3], uint64_t *data_id, int *id,
+                      block_t **block)
 {
     if (it->finished || !mesh->blocks) return false;
     if (!it->block) it->block = mesh->blocks;
     if (block) *block = it->block;
     if (pos) memcpy(pos, it->block->pos.v, sizeof(it->block->pos));
     if (data_id) *data_id = it->block->data->id;
+    if (id) *id = it->block->id;
     it->block = it->block->hh.next;
     if (!it->block) it->finished = true;
     return true;

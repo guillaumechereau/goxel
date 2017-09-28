@@ -386,6 +386,7 @@ static render_item_t *get_item_for_block(
         const mesh_t *mesh, const block_t *block,
         const int block_pos[3],
         uint64_t block_data_id,
+        int block_id,
         int effects)
 {
     render_item_t *item;
@@ -411,7 +412,7 @@ static render_item_t *get_item_for_block(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
     item->nb_elements = mesh_generate_vertices(
-            mesh, block, block_pos, effects, block->id, g_vertices_buffer);
+            mesh, block, block_pos, effects, block_id, g_vertices_buffer);
     item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
     if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
@@ -432,13 +433,15 @@ static render_item_t *get_item_for_block(
 static void render_block_(renderer_t *rend, mesh_t *mesh, block_t *block,
                           const int block_pos[3],
                           uint64_t block_data_id,
+                          int block_id,
                           int effects, prog_t *prog, mat4_t *model)
 {
     render_item_t *item;
     mat4_t block_model;
     int attr;
 
-    item = get_item_for_block(mesh, block, block_pos, block_data_id, effects);
+    item = get_item_for_block(mesh, block, block_pos, block_data_id,
+                              block_id,effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
 
@@ -521,7 +524,7 @@ static void compute_shadow_map_box(
 
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
-        MESH_ITER_BLOCKS(item->mesh, bpos, NULL, block) {
+        MESH_ITER_BLOCKS(item->mesh, bpos, NULL, NULL, block) {
             for (i = 0; i < 8; i++) {
                 p = vec3(bpos[0], bpos[1], bpos[2]);
                 p = vec3_addk(p, POS[i], N);
@@ -543,7 +546,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     prog_t *prog;
     block_t *block;
     mat4_t model = mat4_identity;
-    int attr, block_pos[3];
+    int attr, block_pos[3], block_id;
     uint64_t block_data_id;
     float pos_scale = 1.0f;
     vec3_t light_dir = get_light_dir(rend, true);
@@ -612,9 +615,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    MESH_ITER_BLOCKS(mesh, block_pos, &block_data_id, block) {
+    MESH_ITER_BLOCKS(mesh, block_pos, &block_data_id, &block_id, block) {
         render_block_(rend, mesh, block, block_pos, block_data_id,
-                      effects, prog, &model);
+                      block_id, effects, prog, &model);
     }
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)

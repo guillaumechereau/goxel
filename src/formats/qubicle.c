@@ -132,7 +132,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, count, file);
 
     i = 0;
-    MESH_ITER_BLOCKS(mesh, bpos, NULL, block) {
+    MESH_ITER_BLOCKS(mesh, bpos, NULL, NULL, block) {
 
         sprintf(buff, "%d", i);
         WRITE(uint8_t, strlen(buff), file);
