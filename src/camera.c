@@ -57,7 +57,7 @@ static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
             }
         }
     }
-    MESH_ITER_BLOCKS(goxel->layers_mesh, bpos, block) {
+    MESH_ITER_BLOCKS(goxel->layers_mesh, bpos, NULL, block) {
         p = vec3(bpos[0], bpos[1], bpos[2]);
         p = mat4_mul_vec3(*view_mat, p);
         if (p.z < 0) {

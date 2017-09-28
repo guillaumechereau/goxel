@@ -383,7 +383,8 @@ static int item_delete(void *item_)
 }
 
 static render_item_t *get_item_for_block(
-        const mesh_t *mesh, const block_t *block, const int block_pos[3],
+        const mesh_t *mesh, const block_t *block, uint64_t block_data_id,
+        const int block_pos[3],
         int effects)
 {
     render_item_t *item;
@@ -393,7 +394,7 @@ static render_item_t *get_item_for_block(
     // For the moment we always compute the smooth normal no mater what.
     effects |= EFFECT_SMOOTH;
     block_item_key_t key = {
-        .id = block->data->id,
+        .id = block_data_id,
         .effects = effects & effects_mask,
     };
 
@@ -429,13 +430,14 @@ static render_item_t *get_item_for_block(
 
 static void render_block_(renderer_t *rend, mesh_t *mesh, block_t *block,
                           const int block_pos[3],
+                          uint64_t block_data_id,
                           int effects, prog_t *prog, mat4_t *model)
 {
     render_item_t *item;
     mat4_t block_model;
     int attr;
 
-    item = get_item_for_block(mesh, block, block_pos, effects);
+    item = get_item_for_block(mesh, block, block_data_id, block_pos, effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
 
@@ -518,7 +520,7 @@ static void compute_shadow_map_box(
 
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
-        MESH_ITER_BLOCKS(item->mesh, bpos, block) {
+        MESH_ITER_BLOCKS(item->mesh, bpos, NULL, block) {
             for (i = 0; i < 8; i++) {
                 p = vec3(bpos[0], bpos[1], bpos[2]);
                 p = vec3_addk(p, POS[i], N);
@@ -541,6 +543,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     block_t *block;
     mat4_t model = mat4_identity;
     int attr, block_pos[3];
+    uint64_t block_data_id;
     float pos_scale = 1.0f;
     vec3_t light_dir = get_light_dir(rend, true);
     bool shadow = false;
@@ -608,8 +611,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    MESH_ITER_BLOCKS(mesh, block_pos, block) {
-        render_block_(rend, mesh, block, block_pos, effects, prog, &model);
+    MESH_ITER_BLOCKS(mesh, block_pos, &block_data_id, block) {
+        render_block_(rend, mesh, block, block_pos, block_data_id,
+                      effects, prog, &model);
     }
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
