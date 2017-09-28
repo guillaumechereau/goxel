@@ -26,10 +26,8 @@ static const int N = BLOCK_SIZE;
         for (y = 1; y < N - 1; y++) \
             for (x = 1; x < N - 1; x++)
 
-#define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
-
 // Implemented in marchingcube.c
-int block_generate_vertices_mc(const block_data_t *data, int effects,
+int block_generate_vertices_mc(const block_t *block, int effects,
                                voxel_vertex_t *out);
 
 static bool block_is_face_visible(uint32_t neighboors_mask, int f)
@@ -156,20 +154,20 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
 #undef M
 }
 
-static uint32_t block_get_neighboors(const block_data_t *data,
-                                    int x, int y, int z,
-                                    uint8_t neighboors[27])
+static uint32_t block_get_neighboors(const block_t *block,
+                                     const vec3i_t pos,
+                                     uint8_t neighboors[27])
 {
     int xx, yy, zz, i = 0;
-    vec3b_t npos;
+    vec3i_t npos;
     uint32_t ret = 0;
 #define ITER_NEIGHBORS(x, y, z)         \
      for (z = -1; z <= 1; z++)           \
          for (y = -1; y <= 1; y++)       \
              for (x = -1; x <= 1; x++)
     ITER_NEIGHBORS(xx, yy, zz) {
-        npos = vec3b(x + xx, y + yy, z + zz);
-        neighboors[i] = DATA_AT(data, npos.x, npos.y, npos.z).a;
+        npos = vec3i(pos.x + xx, pos.y + yy, pos.z + zz);
+        neighboors[i] = block_get_at(block, &npos).a;
         if (neighboors[i] >= 127) ret |= 1 << i;
         i++;
     }
@@ -206,12 +204,17 @@ int block_generate_vertices(const block_t *block, int effects,
     vec3b_t normal;
     const int ts = VOXEL_TEXTURE_SIZE;
     uint8_t neighboors[27];
-    const block_data_t *data = block->data;
+    uvec4b_t v;
+    vec3i_t pos;
     if (effects & EFFECT_MARCHING_CUBES)
-        return block_generate_vertices_mc(data, effects, out);
+        return block_generate_vertices_mc(block, effects, out);
     BLOCK_ITER_INSIDE(x, y, z) {
-        if (DATA_AT(data, x, y, z).a < 127) continue;    // Non visible
-        neighboors_mask = block_get_neighboors(data, x, y, z, neighboors);
+        pos = vec3i(x + block->pos.x - N / 2,
+                    y + block->pos.y - N / 2,
+                    z + block->pos.z - N / 2);
+        v = block_get_at(block, &pos);
+        if (v.a < 127) continue;    // Non visible
+        neighboors_mask = block_get_neighboors(block, pos, neighboors);
         for (f = 0; f < 6; f++) {
             if (!block_is_face_visible(neighboors_mask, f)) continue;
             normal = block_get_normal(neighboors_mask, neighboors, f,
@@ -223,7 +226,7 @@ int block_generate_vertices(const block_t *block, int effects,
                         vec3b(x, y, z),
                         VERTICES_POSITIONS[FACES_VERTICES[f][i]]);
                 out[nb * 4 + i].normal = normal;
-                out[nb * 4 + i].color = DATA_AT(data, x, y, z);
+                out[nb * 4 + i].color = v;
                 out[nb * 4 + i].color.a = out[nb * 4 + i].color.a ? 255 : 0;
                 out[nb * 4 + i].bshadow_uv = uvec2b(
                     shadow_mask % 16 * ts + VERTICE_UV[i].x * (ts - 1),

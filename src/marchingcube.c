@@ -20,8 +20,6 @@
 
 static const int N = BLOCK_SIZE;
 
-#define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
-
 #define BLOCK_ITER_INSIDE(x, y, z) \
     for (z = 1; z < N - 1; z++) \
         for (y = 1; y < N - 1; y++) \
@@ -94,12 +92,13 @@ static vec3_t mc_interp_normal(const mc_vert_t *vert, int normals[8][3])
     return ret;
 }
 
-int block_generate_vertices_mc(const block_data_t *data, int effects,
+int block_generate_vertices_mc(const block_t *block, int effects,
                                voxel_vertex_t *out)
 {
     int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
     int a, sum_a;
     vec3_t n;
+    vec3i_t pos;
     uvec4b_t color;
     int colorbest;
     bool use_max_color;
@@ -113,10 +112,13 @@ int block_generate_vertices_mc(const block_data_t *data, int effects,
 
     // Add up the contribution of each voxel to the vertices values.
     BLOCK_ITER_INSIDE(x, y, z) {
+        pos = vec3i(x + block->pos.x - N / 2,
+                    y + block->pos.y - N / 2,
+                    z + block->pos.z - N / 2);
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
-        color = DATA_AT(data, x, y, z);
+        color = block_get_at(block, &pos);
         use_max_color = (color.a == 0);
         colorbest = 8;
         sum_a = 0;
@@ -130,12 +132,15 @@ int block_generate_vertices_mc(const block_data_t *data, int effects,
                 wx = vx + VERTICES_POSITIONS[w].x - 1;
                 wy = vy + VERTICES_POSITIONS[w].y - 1;
                 wz = vz + VERTICES_POSITIONS[w].z - 1;
-                a = DATA_AT(data, wx, wy, wz).a;
+                pos = vec3i(wx + block->pos.x - N / 2,
+                            wy + block->pos.y - N / 2,
+                            wz + block->pos.z - N / 2);
+                a = block_get_at(block, &pos).a;
 
                 if (use_max_color && a) {
                     d = abs(x - wx) + abs(y - wy) + abs(z - wz);
                     if (d < colorbest) {
-                        color = DATA_AT(data, wx, wy, wz);
+                        color = block_get_at(block, &pos);
                         colorbest = d;
                     }
                 }
