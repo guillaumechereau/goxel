@@ -92,8 +92,8 @@ static vec3_t mc_interp_normal(const mc_vert_t *vert, int normals[8][3])
     return ret;
 }
 
-int block_generate_vertices_mc(const block_t *block, int effects,
-                               voxel_vertex_t *out)
+int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
+                              int effects, voxel_vertex_t *out)
 {
     int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
     int a, sum_a;
@@ -102,6 +102,7 @@ int block_generate_vertices_mc(const block_t *block, int effects,
     uvec4b_t color;
     int colorbest;
     bool use_max_color;
+    mesh_iterator_t iter = {0};
 
     int densities[8];
     int normals[8][3];
@@ -118,7 +119,7 @@ int block_generate_vertices_mc(const block_t *block, int effects,
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
-        color = block_get_at(block, &pos);
+        color = mesh_get_at(mesh, &pos, &iter);
         use_max_color = (color.a == 0);
         colorbest = 8;
         sum_a = 0;
@@ -135,12 +136,12 @@ int block_generate_vertices_mc(const block_t *block, int effects,
                 pos = vec3i(wx + block->pos.x - N / 2,
                             wy + block->pos.y - N / 2,
                             wz + block->pos.z - N / 2);
-                a = block_get_at(block, &pos).a;
+                a = mesh_get_at(mesh, &pos, &iter).a;
 
                 if (use_max_color && a) {
                     d = abs(x - wx) + abs(y - wy) + abs(z - wz);
                     if (d < colorbest) {
-                        color = block_get_at(block, &pos);
+                        color = mesh_get_at(mesh, &pos, &iter);
                         colorbest = d;
                     }
                 }

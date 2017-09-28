@@ -32,6 +32,7 @@ void block_set_at(block_t *block, const vec3i_t *pos, uvec4b_t v);
 void block_blit(block_t *block, uvec4b_t *data,
                 int x, int y, int z, int w, int h, int d);
 void block_shift_alpha(block_t *block, int v);
+uvec4b_t block_get_at(const block_t *block, const vec3i_t *pos);
 
 #define N BLOCK_SIZE
 
@@ -367,12 +368,13 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos,
     p = vec3i(pos->x + s / 2, pos->y + s / 2, pos->z + s / 2);
     p = vec3i(p.x - mod(p.x, s), p.y - mod(p.y, s), p.z - mod(p.z, s));
 
-    if (iter && memcmp(&iter->pos, &p, sizeof(p)) == 0) {
+    if (iter && iter->found && memcmp(&iter->pos, &p, sizeof(p)) == 0) {
         return iter->block ? block_get_at(iter->block, pos) : uvec4b_zero;
     }
 
     HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
     if (iter) {
+        iter->found = true;
         iter->block = block;
         memcpy(iter->pos, p.v, sizeof(p));
     }

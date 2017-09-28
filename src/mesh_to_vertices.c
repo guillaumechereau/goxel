@@ -27,8 +27,8 @@ static const int N = BLOCK_SIZE;
             for (x = 1; x < N - 1; x++)
 
 // Implemented in marchingcube.c
-int block_generate_vertices_mc(const block_t *block, int effects,
-                               voxel_vertex_t *out);
+int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
+                              int effects, voxel_vertex_t *out);
 
 static bool block_is_face_visible(uint32_t neighboors_mask, int f)
 {
@@ -154,9 +154,10 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
 #undef M
 }
 
-static uint32_t block_get_neighboors(const block_t *block,
-                                     const vec3i_t pos,
-                                     uint8_t neighboors[27])
+static uint32_t mesh_get_neighboors(const mesh_t *mesh,
+                                    const vec3i_t pos,
+                                    mesh_iterator_t *iter,
+                                    uint8_t neighboors[27])
 {
     int xx, yy, zz, i = 0;
     vec3i_t npos;
@@ -167,7 +168,7 @@ static uint32_t block_get_neighboors(const block_t *block,
              for (x = -1; x <= 1; x++)
     ITER_NEIGHBORS(xx, yy, zz) {
         npos = vec3i(pos.x + xx, pos.y + yy, pos.z + zz);
-        neighboors[i] = block_get_at(block, &npos).a;
+        neighboors[i] = mesh_get_at(mesh, &npos, iter).a;
         if (neighboors[i] >= 127) ret |= 1 << i;
         i++;
     }
@@ -194,8 +195,8 @@ static uint32_t get_pos_data(uint32_t x, uint32_t y, uint32_t z, uint32_t f,
 }
 
 
-int block_generate_vertices(const block_t *block, int effects,
-                            int block_id, voxel_vertex_t *out)
+int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
+                           int effects, int block_id, voxel_vertex_t *out)
 {
     int x, y, z, f;
     int i, nb = 0;
@@ -206,15 +207,17 @@ int block_generate_vertices(const block_t *block, int effects,
     uint8_t neighboors[27];
     uvec4b_t v;
     vec3i_t pos;
+    mesh_iterator_t iter = {0};
+
     if (effects & EFFECT_MARCHING_CUBES)
-        return block_generate_vertices_mc(block, effects, out);
+        return mesh_generate_vertices_mc(mesh, block, effects, out);
     BLOCK_ITER_INSIDE(x, y, z) {
         pos = vec3i(x + block->pos.x - N / 2,
                     y + block->pos.y - N / 2,
                     z + block->pos.z - N / 2);
-        v = block_get_at(block, &pos);
+        v = mesh_get_at(mesh, &pos, &iter);
         if (v.a < 127) continue;    // Non visible
-        neighboors_mask = block_get_neighboors(block, pos, neighboors);
+        neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);
         for (f = 0; f < 6; f++) {
             if (!block_is_face_visible(neighboors_mask, f)) continue;
             normal = block_get_normal(neighboors_mask, neighboors, f,

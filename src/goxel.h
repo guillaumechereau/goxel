@@ -580,16 +580,17 @@ struct block
     vec3i_t         pos;
     int             id;     // id of the block in the mesh it belongs.
 };
-int block_generate_vertices(const block_t *block, int effects,
-                            int block_id, voxel_vertex_t *out);
-uvec4b_t block_get_at(const block_t *block, const vec3i_t *pos);
 
 
 // Fast iterator of all the mesh voxel.
 typedef struct {
     block_t *block;
     int pos[3];
-    bool finished;
+
+    union {
+        bool finished;
+        bool found;
+    };
 } mesh_iterator_t;
 
 typedef struct mesh mesh_t;
@@ -638,6 +639,10 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
 
 bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
                       block_t **block);
+
+
+int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
+                           int effects, int block_id, voxel_vertex_t *out);
 
 #define MESH_ITER_BLOCKS(m, b) \
     for (mesh_iterator_t it_ = {0}; mesh_iter_blocks(m, &it_, &b);)
