@@ -585,6 +585,13 @@ int block_generate_vertices(const block_t *block, int effects,
 uvec4b_t block_get_at(const block_t *block, const vec3i_t *pos);
 
 
+// Fast iterator of all the mesh voxel.
+typedef struct {
+    block_t *block;
+    int pos[3];
+    bool finished;
+} mesh_iterator_t;
+
 typedef struct mesh mesh_t;
 struct mesh
 {
@@ -602,8 +609,10 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
-uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos);
-void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v);
+uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos,
+                     mesh_iterator_t *iter);
+void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v,
+                 mesh_iterator_t *iter);
 void mesh_remove_empty_blocks(mesh_t *mesh);
 bool mesh_is_empty(const mesh_t *mesh);
 // XXX: to cleanup.
@@ -623,13 +632,6 @@ int mesh_select(const mesh_t *mesh,
                             const uint8_t mask[6],
                             void *user),
                 void *user, mesh_t *selection);
-
-// Fast iterator of all the mesh voxel.
-typedef struct {
-    block_t *block;
-    int pos[3];
-    bool finished;
-} mesh_iterator_t;
 
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4]);

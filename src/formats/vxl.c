@@ -241,6 +241,7 @@ static void export_as_vxl(const char *path)
     uint8_t (*map)[512][512][64];
     uint32_t (*color)[512][512][64];
     const mesh_t *mesh = goxel->layers_mesh;
+    mesh_iterator_t iter = {0};
     uvec4b_t c;
     int x, y, z;
     vec3i_t pos;
@@ -255,7 +256,7 @@ static void export_as_vxl(const char *path)
     for (y = 0; y < 512; y++)
     for (x = 0; x < 512; x++) {
         pos = vec3i(256 - x, y - 256, 31 - z);
-        c = mesh_get_at(mesh, &pos);
+        c = mesh_get_at(mesh, &pos, &iter);
         if (c.a <= 127) continue;
         (*map)[x][y][z] = 1;
         (*color)[x][y][z] = c.uint32;

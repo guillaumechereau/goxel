@@ -134,6 +134,7 @@ static void vox_import(const char *path)
     vec3i_t pos;
     int version, r, i, x, y, z, c;
     mesh_t      *mesh;
+    mesh_iterator_t iter = {0};
     uvec4b_t color;
     context_t ctx = {};
 
@@ -166,7 +167,7 @@ static void vox_import(const char *path)
         if (!c) continue; // Not sure what c == 0 means.
         color = ctx.palette ? ctx.palette[c] :
                               HEXCOLOR(VOX_DEFAULT_PALETTE[c]);
-        mesh_set_at(mesh, &pos, color);
+        mesh_set_at(mesh, &pos, color, &iter);
     }
     free(ctx.voxels);
     free(ctx.palette);
