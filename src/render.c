@@ -406,7 +406,7 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
         g_vertices_buffer = calloc(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
-    item->nb_elements = block_generate_vertices(block->data, effects,
+    item->nb_elements = block_generate_vertices(block, effects,
                                                 block->id, g_vertices_buffer);
     item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
     if (item->nb_elements > BATCH_QUAD_COUNT) {

@@ -585,7 +585,7 @@ box_t block_get_box(const block_t *block, bool exact);
 void block_fill(block_t *block,
                 uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
                 void *user_data);
-int block_generate_vertices(const block_data_t *data, int effects,
+int block_generate_vertices(const block_t *block, int effects,
                             int block_id, voxel_vertex_t *out);
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 bool block_is_empty(const block_t *block, bool fast);

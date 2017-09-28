@@ -196,7 +196,7 @@ static uint32_t get_pos_data(uint32_t x, uint32_t y, uint32_t z, uint32_t f,
 }
 
 
-int block_generate_vertices(const block_data_t *data, int effects,
+int block_generate_vertices(const block_t *block, int effects,
                             int block_id, voxel_vertex_t *out)
 {
     int x, y, z, f;
@@ -206,6 +206,7 @@ int block_generate_vertices(const block_data_t *data, int effects,
     vec3b_t normal;
     const int ts = VOXEL_TEXTURE_SIZE;
     uint8_t neighboors[27];
+    const block_data_t *data = block->data;
     if (effects & EFFECT_MARCHING_CUBES)
         return block_generate_vertices_mc(data, effects, out);
     BLOCK_ITER_INSIDE(x, y, z) {
