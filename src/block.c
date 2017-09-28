@@ -83,11 +83,11 @@ bool block_is_empty(const block_t *block, bool fast)
     return true;
 }
 
-block_t *block_new(const vec3i_t *pos, block_data_t *data)
+block_t *block_new(const vec3i_t *pos)
 {
     block_t *block = calloc(1, sizeof(*block));
     block->pos = *pos;
-    block->data = data ?: get_empty_data();
+    block->data = get_empty_data();
     block->data->ref++;
     return block;
 }

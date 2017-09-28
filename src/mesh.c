@@ -192,7 +192,7 @@ static void add_blocks(mesh_t *mesh, box_t box)
         assert(p.y % s == 0);
         assert(p.z % s == 0);
         if (!mesh_get_block_at(mesh, &p))
-            mesh_add_block(mesh, NULL, &p);
+            mesh_add_block(mesh, &p);
     }
 }
 
@@ -292,7 +292,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
         MESH_ITER_BLOCKS(other, block) {
             if (!mesh_get_block_at(mesh, &block->pos)) {
-                mesh_add_block(mesh, NULL, &block->pos);
+                mesh_add_block(mesh, &block->pos);
             }
         }
     }
@@ -319,7 +319,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     }
 }
 
-block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos)
+block_t *mesh_add_block(mesh_t *mesh, const vec3i_t *pos)
 {
     block_t *block;
     assert(pos->x % (BLOCK_SIZE - 2) == 0);
@@ -327,7 +327,7 @@ block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos)
     assert(pos->z % (BLOCK_SIZE - 2) == 0);
     assert(!mesh_get_block_at(mesh, pos));
     mesh_prepare_write(mesh);
-    block = block_new(pos, data);
+    block = block_new(pos);
     block->id = mesh->next_block_id++;
     HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
     return block;

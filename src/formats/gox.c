@@ -84,10 +84,12 @@ static int gzeof(gzFile file) {return feof(file);}
  *
  */
 
-// We create a hash table of all the blocks data.
+// We create a hash table of all the blocks, so that blocks with the same
+// ids get written only once.
 typedef struct {
     UT_hash_handle  hh;
-    block_data_t    *v;
+    void            *v;
+    uint64_t        id;
     int             index;
 } block_hash_t;
 
@@ -237,18 +239,19 @@ void save_to_file(goxel_t *goxel, const char *path)
     index = 0;
     DL_FOREACH(goxel->image->layers, layer) {
         MESH_ITER_BLOCKS(layer->mesh, block) {
-            HASH_FIND_PTR(blocks_table, &block->data, data);
+            HASH_FIND(hh, blocks_table, &block->id, sizeof(block->id), data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
-            data->v = block->data;
+            data->v = block->data->voxels;
+            data->id = block->id;
             data->index = index++;
-            HASH_ADD_PTR(blocks_table, v, data);
+            HASH_ADD(hh, blocks_table, id, sizeof(data->id), data);
         }
     }
 
     // Write all the blocks chunks.
     HASH_ITER(hh, blocks_table, data, data_tmp) {
-        png = img_write_to_mem((uint8_t*)data->v->voxels, 64, 64, 4, &size);
+        png = img_write_to_mem((uint8_t*)data->v, 64, 64, 4, &size);
         chunk_write_all(out, "BL16", (char*)png, size);
         free(png);
     }
@@ -262,7 +265,8 @@ void save_to_file(goxel_t *goxel, const char *path)
         chunk_write_int32(&c, out, nb_blocks);
         if (!layer->base_id) {
             MESH_ITER_BLOCKS(layer->mesh, block) {
-                HASH_FIND_PTR(blocks_table, &block->data, data);
+                HASH_FIND(hh, blocks_table, &block->id,
+                          sizeof(block->id), data);
                 chunk_write_int32(&c, out, data->index);
                 chunk_write_int32(&c, out, block->pos.x);
                 chunk_write_int32(&c, out, block->pos.y);
@@ -332,7 +336,6 @@ void load_from_file(goxel_t *goxel, const char *path)
     uint8_t *png;
     chunk_t c;
     int i, index, x, y, z;
-    vec3i_t pos;
     int  dict_value_size;
     char dict_key[256];
     char dict_value[256];
@@ -361,10 +364,10 @@ void load_from_file(goxel_t *goxel, const char *path)
             voxel_data = img_read_from_mem((void*)png, c.length, &w, &h, &bpp);
             assert(w == 64 && h == 64 && bpp == 4);
             data = calloc(1, sizeof(*data));
-            data->v = calloc(1, sizeof(*data->v));
-            memcpy(data->v->voxels, voxel_data, sizeof(data->v->voxels));
-            data->v->id = ++goxel->next_uid;
-            HASH_ADD_PTR(blocks_table, v, data);
+            data->v = calloc(1, 64 * 64 * 4);
+            memcpy(data->v, voxel_data, 64 * 64 * 4);
+            data->id = ++goxel->next_uid;
+            HASH_ADD(hh, blocks_table, id, sizeof(data->id), data);
             free(voxel_data);
             free(png);
 
@@ -384,8 +387,8 @@ void load_from_file(goxel_t *goxel, const char *path)
                 chunk_read_int32(&c, in);
                 data = hash_find_at(blocks_table, index);
                 assert(data);
-                pos = vec3i(x, y, z);
-                mesh_add_block(layer->mesh, data->v, &pos);
+                mesh_blit(layer->mesh, data->v,
+                          x - 8, y - 8, z - 8, 16, 16, 16);
             }
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size))) {
@@ -436,6 +439,7 @@ void load_from_file(goxel_t *goxel, const char *path)
     // they have been used by the meshes.
     HASH_ITER(hh, blocks_table, data, data_tmp) {
         HASH_DEL(blocks_table, data);
+        free(data->v);
         free(data);
     }
 

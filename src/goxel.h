@@ -578,7 +578,7 @@ struct block
     vec3i_t         pos;
     int             id;     // id of the block in the mesh it belongs.
 };
-block_t *block_new(const vec3i_t *pos, block_data_t *data);
+block_t *block_new(const vec3i_t *pos);
 void block_delete(block_t *block);
 block_t *block_copy(const block_t *other);
 box_t block_get_box(const block_t *block, bool exact);
@@ -618,7 +618,7 @@ void mesh_set(mesh_t *mesh, const mesh_t *other);
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
-block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos);
+block_t *mesh_add_block(mesh_t *mesh, const vec3i_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos);
 void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v);
