@@ -18,6 +18,21 @@
 
 #include "goxel.h"
 
+bool block_is_empty(const block_t *block, bool fast);
+void block_delete(block_t *block);
+block_t *block_new(const vec3i_t *pos);
+block_t *block_copy(const block_t *other);
+box_t block_get_box(const block_t *block, bool exact);
+void block_fill(block_t *block,
+                uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
+                void *user_data);
+void block_op(block_t *block, painter_t *painter, const box_t *box);
+void block_merge(block_t *block, const block_t *other, int op);
+void block_set_at(block_t *block, const vec3i_t *pos, uvec4b_t v);
+void block_blit(block_t *block, uvec4b_t *data,
+                int x, int y, int z, int w, int h, int d);
+void block_shift_alpha(block_t *block, int v);
+
 #define N BLOCK_SIZE
 
 // Keep track of the last operation, so that it is fast to do it again.

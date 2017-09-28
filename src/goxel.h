@@ -560,6 +560,8 @@ typedef struct voxel_vertex
     uvec2b_t bump_uv    __attribute__((aligned(4)));
 } voxel_vertex_t;
 
+
+// #### Mesh ###################
 // We use copy on write for the block data, so that it is cheap to copy
 // blocks.
 typedef struct block_data block_data_t;
@@ -578,30 +580,11 @@ struct block
     vec3i_t         pos;
     int             id;     // id of the block in the mesh it belongs.
 };
-block_t *block_new(const vec3i_t *pos);
-void block_delete(block_t *block);
-block_t *block_copy(const block_t *other);
-box_t block_get_box(const block_t *block, bool exact);
-void block_fill(block_t *block,
-                uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
-                void *user_data);
 int block_generate_vertices(const block_t *block, int effects,
                             int block_id, voxel_vertex_t *out);
-void block_op(block_t *block, painter_t *painter, const box_t *box);
-bool block_is_empty(const block_t *block, bool fast);
-void block_merge(block_t *block, const block_t *other, int op);
 uvec4b_t block_get_at(const block_t *block, const vec3i_t *pos);
-void block_set_at(block_t *block, const vec3i_t *pos, uvec4b_t v);
-
-// XXX: I think we should clean up this one.
-void block_blit(block_t *block, uvec4b_t *data,
-                int x, int y, int z, int w, int h, int d);
-void block_shift_alpha(block_t *block, int v);
-// #############################
 
 
-
-// #### Mesh ###################
 typedef struct mesh mesh_t;
 struct mesh
 {
