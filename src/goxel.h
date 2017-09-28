@@ -638,14 +638,14 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4]);
 
 bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
-                      block_t **block);
+                      int pos[3], block_t **block);
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
                            int effects, int block_id, voxel_vertex_t *out);
 
-#define MESH_ITER_BLOCKS(m, b) \
-    for (mesh_iterator_t it_ = {0}; mesh_iter_blocks(m, &it_, &b);)
+#define MESH_ITER_BLOCKS(m, p, b) \
+    for (mesh_iterator_t it_ = {0}; mesh_iter_blocks(m, &it_, p, &b);)
 
 // Convenience macro to iter all the voxels of a mesh.
 // Given:

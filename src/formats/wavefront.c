@@ -78,7 +78,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     voxel_vertex_t* verts;
     vec3_t v;
     uvec3b_t c;
-    int nb_quads, i, j;
+    int nb_quads, i, j, bpos[3];
     mat4_t mat;
     FILE *out;
     const int N = BLOCK_SIZE;
@@ -88,9 +88,9 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
-    MESH_ITER_BLOCKS(mesh, block) {
+    MESH_ITER_BLOCKS(mesh, bpos, block) {
         mat = mat4_identity;
-        mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
+        mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
         nb_quads = mesh_generate_vertices(mesh, block, 0, 0, verts);
@@ -150,7 +150,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     voxel_vertex_t* verts;
     vec3_t v;
     uvec3b_t c;
-    int nb_quads, i, j;
+    int nb_quads, i, j, bpos[3];
     mat4_t mat;
     FILE *out;
     const int N = BLOCK_SIZE;
@@ -160,9 +160,9 @@ void ply_export(const mesh_t *mesh, const char *path)
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
-    MESH_ITER_BLOCKS(mesh, block) {
+    MESH_ITER_BLOCKS(mesh, bpos, block) {
         mat = mat4_identity;
-        mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
+        mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
         nb_quads = mesh_generate_vertices(mesh, block, 0, 0, verts);

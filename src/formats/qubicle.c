@@ -111,7 +111,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
     block_t *block;
-    int i, count, x, y, z;
+    int i, count, x, y, z, bpos[3];
     char buff[16];
     mesh_t *m = mesh_copy(mesh);
     mat4_t mat = mat4_identity;
@@ -132,7 +132,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, count, file);
 
     i = 0;
-    MESH_ITER_BLOCKS(mesh, block) {
+    MESH_ITER_BLOCKS(mesh, bpos, block) {
 
         sprintf(buff, "%d", i);
         WRITE(uint8_t, strlen(buff), file);
@@ -141,9 +141,9 @@ void qubicle_export(const mesh_t *mesh, const char *path)
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(int32_t, block->pos.x - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, block->pos.y - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, block->pos.z - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[0] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[1] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[2] - BLOCK_SIZE / 2, file);
         for (z = 1; z < BLOCK_SIZE - 1; z++)
         for (y = 1; y < BLOCK_SIZE - 1; y++)
         for (x = 1; x < BLOCK_SIZE - 1; x++) {

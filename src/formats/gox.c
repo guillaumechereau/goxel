@@ -219,7 +219,7 @@ void save_to_file(goxel_t *goxel, const char *path)
     layer_t *layer;
     block_t *block;
     chunk_t c;
-    int nb_blocks, index, size;
+    int nb_blocks, index, size, bpos[3];
     gzFile out;
     uint8_t *png;
     camera_t *camera;
@@ -238,7 +238,7 @@ void save_to_file(goxel_t *goxel, const char *path)
     // Add all the blocks data into the hash table.
     index = 0;
     DL_FOREACH(goxel->image->layers, layer) {
-        MESH_ITER_BLOCKS(layer->mesh, block) {
+        MESH_ITER_BLOCKS(layer->mesh, NULL, block) {
             HASH_FIND(hh, blocks_table, &block->id, sizeof(block->id), data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
@@ -264,13 +264,13 @@ void save_to_file(goxel_t *goxel, const char *path)
             nb_blocks = HASH_COUNT(layer->mesh->blocks);
         chunk_write_int32(&c, out, nb_blocks);
         if (!layer->base_id) {
-            MESH_ITER_BLOCKS(layer->mesh, block) {
+            MESH_ITER_BLOCKS(layer->mesh, bpos, block) {
                 HASH_FIND(hh, blocks_table, &block->id,
                           sizeof(block->id), data);
                 chunk_write_int32(&c, out, data->index);
-                chunk_write_int32(&c, out, block->pos.x);
-                chunk_write_int32(&c, out, block->pos.y);
-                chunk_write_int32(&c, out, block->pos.z);
+                chunk_write_int32(&c, out, bpos[0]);
+                chunk_write_int32(&c, out, bpos[1]);
+                chunk_write_int32(&c, out, bpos[2]);
                 chunk_write_int32(&c, out, 0);
             }
         }

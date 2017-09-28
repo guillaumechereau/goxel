@@ -508,7 +508,7 @@ static void compute_shadow_map_box(
     render_item_t *item;
     block_t *block;
     vec3_t p;
-    int i;
+    int i, bpos[3];
     mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
                                   vec3(0, 0, 0), vec3(0, 1, 0));
     for (i = 0; i < 6; i++)
@@ -516,9 +516,9 @@ static void compute_shadow_map_box(
 
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
-        MESH_ITER_BLOCKS(item->mesh, block) {
+        MESH_ITER_BLOCKS(item->mesh, bpos, block) {
             for (i = 0; i < 8; i++) {
-                p = vec3(block->pos.x, block->pos.y, block->pos.z);
+                p = vec3(bpos[0], bpos[1], bpos[2]);
                 p = vec3_addk(p, POS[i], N);
                 p = mat4_mul_vec3(view_mat, p);
                 rect[0] = min(rect[0], p.x);
@@ -606,7 +606,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    MESH_ITER_BLOCKS(mesh, block) {
+    MESH_ITER_BLOCKS(mesh, NULL, block) {
         render_block_(rend, mesh, block, effects, prog, &model);
     }
 
