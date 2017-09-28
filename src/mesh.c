@@ -544,7 +544,7 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4])
 {
     int x, y, z;
-    if (!it->block && it->pos[0] == 1) return false;
+    if (it->finished || !mesh->blocks) return false;
     if (!it->block) {
         it->block = mesh->blocks;
         it->pos[0] = 1;
@@ -566,8 +566,20 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
             if (++it->pos[2] >= N -1) {
                 it->pos[2] = 1;
                 it->block = it->block->hh.next;
+                if (!it->block) it->finished = true;
             }
         }
     }
+    return true;
+}
+
+bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
+                      block_t **block)
+{
+    if (it->finished || !mesh->blocks) return false;
+    if (!it->block) it->block = mesh->blocks;
+    *block = it->block;
+    it->block = it->block->hh.next;
+    if (!it->block) it->finished = true;
     return true;
 }

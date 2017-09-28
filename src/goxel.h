@@ -628,11 +628,17 @@ int mesh_select(const mesh_t *mesh,
 typedef struct {
     block_t *block;
     int pos[3];
+    bool finished;
 } mesh_iterator_t;
+
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4]);
 
-#define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
+bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
+                      block_t **block);
+
+#define MESH_ITER_BLOCKS(m, b) \
+    for (mesh_iterator_t it_ = {0}; mesh_iter_blocks(m, &it_, &b);)
 
 // Convenience macro to iter all the voxels of a mesh.
 // Given:
