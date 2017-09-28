@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#define N BLOCK_SIZE
+
 // Keep track of the last operation, so that it is fast to do it again.
 typedef struct {
     mesh_t      *origin;
@@ -448,6 +450,7 @@ int mesh_select(const mesh_t *mesh,
     while (keep) {
         keep = false;
         MESH_ITER_VOXELS(selection, x, y, z, v1) {
+            (void)v1;
             pos = vec3i(x, y, z);
             for (i = 0; i < 6; i++) {
                 p = vec3i(pos.x + FACES_NORMALS[i].x,
@@ -520,4 +523,36 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
     MESH_ITER_BLOCKS(mesh, block) {
         block_fill(block, mesh_extrude_callback, USER_PASS(mesh, &proj, box));
     }
+}
+
+bool mesh_iterate(const mesh_t *mesh, mesh_iterator_t *it,
+                  int pos[3], uint8_t value[4])
+{
+    int x, y, z;
+    if (!it->block && it->pos[0] == 1) return false;
+    if (!it->block) {
+        it->block = mesh->blocks;
+        it->pos[0] = 1;
+        it->pos[1] = 1;
+        it->pos[2] = 1;
+    }
+    x = it->pos[0];
+    y = it->pos[1];
+    z = it->pos[2];
+    pos[0] = x + it->block->pos.x - N / 2;
+    pos[1] = y + it->block->pos.y - N / 2;
+    pos[2] = z + it->block->pos.z - N / 2;
+    memcpy(value, it->block->data->voxels[x + y * N + z * N * N].v, 4);
+
+    if (++it->pos[0] >= N - 1) {
+        it->pos[0] = 1;
+        if (++it->pos[1] >= N - 1) {
+            it->pos[1] = 1;
+            if (++it->pos[2] >= N -1) {
+                it->pos[2] = 1;
+                it->block = it->block->hh.next;
+            }
+        }
+    }
+    return true;
 }

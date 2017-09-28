@@ -642,6 +642,14 @@ int mesh_select(const mesh_t *mesh,
                             void *user),
                 void *user, mesh_t *selection);
 
+// Fast iterator of all the mesh voxel.
+typedef struct {
+    block_t *block;
+    int pos[3];
+} mesh_iterator_t;
+bool mesh_iterate(const mesh_t *mesh, mesh_iterator_t *it,
+                  int pos[3], uint8_t value[4]);
+
 #define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
 
 // Convenience macro to iter all the voxels of a mesh.
@@ -650,15 +658,11 @@ int mesh_select(const mesh_t *mesh,
 //    x, y, z   integer, set to the position of the voxel.
 //    v         uvec4b_t, set to the color of the voxel.
 #define MESH_ITER_VOXELS(m, x, y, z, v) \
-    for (block_t *b_ = m->blocks; b_; b_ = b_->hh.next) \
-    for (int z_ = 1; z_ < BLOCK_SIZE - 1; z_++) \
-    for (int y_ = 1; y_ < BLOCK_SIZE - 1; y_++) \
-    for (int x_ = 1; x_ < BLOCK_SIZE - 1; x_++) \
-    if ((v = b_->data->voxels[ \
-            x_ + y_ * BLOCK_SIZE + z_ * BLOCK_SIZE * BLOCK_SIZE]).a) \
-    if (x = x_ + b_->pos.x - BLOCK_SIZE / 2, \
-        y = y_ + b_->pos.y - BLOCK_SIZE / 2, \
-        z = z_ + b_->pos.z - BLOCK_SIZE / 2, true)
+    for (struct {mesh_iterator_t it; int p[3]; uint8_t v[4];} i_ = {0}; \
+         mesh_iterate(m, &i_.it, i_.p, i_.v);) \
+        if (i_.v[3]) \
+            if (x = i_.p[0], y = i_.p[1], z = i_.p[2], \
+                v.r = i_.v[0], v.g = i_.v[1], v.b = i_.v[2], v.a = i_.v[3], 1)
 
 // #############################
 
