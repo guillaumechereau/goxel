@@ -383,8 +383,9 @@ static int item_delete(void *item_)
 }
 
 static render_item_t *get_item_for_block(
-        const mesh_t *mesh, const block_t *block, uint64_t block_data_id,
+        const mesh_t *mesh, const block_t *block,
         const int block_pos[3],
+        uint64_t block_data_id,
         int effects)
 {
     render_item_t *item;
@@ -437,7 +438,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh, block_t *block,
     mat4_t block_model;
     int attr;
 
-    item = get_item_for_block(mesh, block, block_data_id, block_pos, effects);
+    item = get_item_for_block(mesh, block, block_pos, block_data_id, effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
 
