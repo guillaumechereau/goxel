@@ -540,8 +540,8 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
     }
 }
 
-bool mesh_iterate(const mesh_t *mesh, mesh_iterator_t *it,
-                  int pos[3], uint8_t value[4])
+bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
+                      int pos[3], uint8_t value[4])
 {
     int x, y, z;
     if (!it->block && it->pos[0] == 1) return false;

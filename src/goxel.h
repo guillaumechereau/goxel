@@ -629,8 +629,8 @@ typedef struct {
     block_t *block;
     int pos[3];
 } mesh_iterator_t;
-bool mesh_iterate(const mesh_t *mesh, mesh_iterator_t *it,
-                  int pos[3], uint8_t value[4]);
+bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
+                      int pos[3], uint8_t value[4]);
 
 #define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
 
@@ -641,7 +641,7 @@ bool mesh_iterate(const mesh_t *mesh, mesh_iterator_t *it,
 //    v         uvec4b_t, set to the color of the voxel.
 #define MESH_ITER_VOXELS(m, x, y, z, v) \
     for (struct {mesh_iterator_t it; int p[3]; uint8_t v[4];} i_ = {0}; \
-         mesh_iterate(m, &i_.it, i_.p, i_.v);) \
+         mesh_iter_voxels(m, &i_.it, i_.p, i_.v);) \
         if (i_.v[3]) \
             if (x = i_.p[0], y = i_.p[1], z = i_.p[2], \
                 v.r = i_.v[0], v.g = i_.v[1], v.b = i_.v[2], v.a = i_.v[3], 1)
