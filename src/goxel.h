@@ -601,7 +601,6 @@ void mesh_set(mesh_t *mesh, const mesh_t *other);
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
-block_t *mesh_add_block(mesh_t *mesh, const vec3i_t *pos);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
 uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3i_t *pos);
 void mesh_set_at(mesh_t *mesh, const vec3i_t *pos, uvec4b_t v);

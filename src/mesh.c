@@ -185,6 +185,20 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const vec3i_t *pos)
     return block;
 }
 
+static block_t *mesh_add_block(mesh_t *mesh, const vec3i_t *pos)
+{
+    block_t *block;
+    assert(pos->x % (BLOCK_SIZE - 2) == 0);
+    assert(pos->y % (BLOCK_SIZE - 2) == 0);
+    assert(pos->z % (BLOCK_SIZE - 2) == 0);
+    assert(!mesh_get_block_at(mesh, pos));
+    mesh_prepare_write(mesh);
+    block = block_new(pos);
+    block->id = mesh->next_block_id++;
+    HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
+    return block;
+}
+
 // Add blocks if needed to fill the box.
 static void add_blocks(mesh_t *mesh, box_t box)
 {
@@ -334,20 +348,6 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 
         block_merge(block, other_block, mode);
     }
-}
-
-block_t *mesh_add_block(mesh_t *mesh, const vec3i_t *pos)
-{
-    block_t *block;
-    assert(pos->x % (BLOCK_SIZE - 2) == 0);
-    assert(pos->y % (BLOCK_SIZE - 2) == 0);
-    assert(pos->z % (BLOCK_SIZE - 2) == 0);
-    assert(!mesh_get_block_at(mesh, pos));
-    mesh_prepare_write(mesh);
-    block = block_new(pos);
-    block->id = mesh->next_block_id++;
-    HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
-    return block;
 }
 
 // XXX: move this in goxel.h?
