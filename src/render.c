@@ -383,7 +383,8 @@ static int item_delete(void *item_)
 }
 
 static render_item_t *get_item_for_block(
-        const mesh_t *mesh, const block_t *block, int effects)
+        const mesh_t *mesh, const block_t *block, const int block_pos[3],
+        int effects)
 {
     render_item_t *item;
     const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
@@ -407,8 +408,8 @@ static render_item_t *get_item_for_block(
         g_vertices_buffer = calloc(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
-    item->nb_elements = mesh_generate_vertices(mesh, block, effects,
-                                               block->id, g_vertices_buffer);
+    item->nb_elements = mesh_generate_vertices(
+            mesh, block, block_pos, effects, block->id, g_vertices_buffer);
     item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
     if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
@@ -427,13 +428,14 @@ static render_item_t *get_item_for_block(
 }
 
 static void render_block_(renderer_t *rend, mesh_t *mesh, block_t *block,
+                          const int block_pos[3],
                           int effects, prog_t *prog, mat4_t *model)
 {
     render_item_t *item;
     mat4_t block_model;
     int attr;
 
-    item = get_item_for_block(mesh, block, effects);
+    item = get_item_for_block(mesh, block, block_pos, effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
 
@@ -538,7 +540,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     prog_t *prog;
     block_t *block;
     mat4_t model = mat4_identity;
-    int attr;
+    int attr, block_pos[3];
     float pos_scale = 1.0f;
     vec3_t light_dir = get_light_dir(rend, true);
     bool shadow = false;
@@ -606,8 +608,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    MESH_ITER_BLOCKS(mesh, NULL, block) {
-        render_block_(rend, mesh, block, effects, prog, &model);
+    MESH_ITER_BLOCKS(mesh, block_pos, block) {
+        render_block_(rend, mesh, block, block_pos, effects, prog, &model);
     }
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)

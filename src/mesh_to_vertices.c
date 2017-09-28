@@ -28,6 +28,7 @@ static const int N = BLOCK_SIZE;
 
 // Implemented in marchingcube.c
 int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
+                              const int block_pos[3],
                               int effects, voxel_vertex_t *out);
 
 static bool block_is_face_visible(uint32_t neighboors_mask, int f)
@@ -196,7 +197,8 @@ static uint32_t get_pos_data(uint32_t x, uint32_t y, uint32_t z, uint32_t f,
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
-                           int effects, int block_id, voxel_vertex_t *out)
+                           const int block_pos[3], int effects, int block_id,
+                           voxel_vertex_t *out)
 {
     int x, y, z, f;
     int i, nb = 0;
@@ -210,11 +212,11 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
     mesh_iterator_t iter = {0};
 
     if (effects & EFFECT_MARCHING_CUBES)
-        return mesh_generate_vertices_mc(mesh, block, effects, out);
+        return mesh_generate_vertices_mc(mesh, block, block_pos, effects, out);
     BLOCK_ITER_INSIDE(x, y, z) {
-        pos = vec3i(x + block->pos.x - N / 2,
-                    y + block->pos.y - N / 2,
-                    z + block->pos.z - N / 2);
+        pos = vec3i(x + block_pos[0] - N / 2,
+                    y + block_pos[1] - N / 2,
+                    z + block_pos[2] - N / 2);
         v = mesh_get_at(mesh, &pos, &iter);
         if (v.a < 127) continue;    // Non visible
         neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);

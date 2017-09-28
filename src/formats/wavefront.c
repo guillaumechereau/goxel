@@ -93,7 +93,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
-        nb_quads = mesh_generate_vertices(mesh, block, 0, 0, verts);
+        nb_quads = mesh_generate_vertices(mesh, block, bpos, 0, 0, verts);
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {
@@ -165,7 +165,7 @@ void ply_export(const mesh_t *mesh, const char *path)
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
-        nb_quads = mesh_generate_vertices(mesh, block, 0, 0, verts);
+        nb_quads = mesh_generate_vertices(mesh, block, bpos, 0, 0, verts);
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {

@@ -642,6 +642,7 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
+                           const int block_pos[3],
                            int effects, int block_id, voxel_vertex_t *out);
 
 #define MESH_ITER_BLOCKS(m, p, b) \
