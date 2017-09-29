@@ -76,7 +76,9 @@ static int on_drag(gesture3d_t *gest, void *user)
 
         tmp_mesh = mesh_new();
         tool->mesh = mesh_copy(mesh);
-        pi = vec3i(curs->pos.x, curs->pos.y, curs->pos.z);
+        pi = vec3i(round(curs->pos.x - 0.5),
+                   round(curs->pos.y - 0.5),
+                   round(curs->pos.z - 0.5));
         mesh_select(mesh, pi.v, select_cond, &tool->snap_face,
                     tmp_mesh);
         mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA);
