@@ -133,7 +133,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     uint32_t pixel;
     vec3b_t voxel_pos;
     block_t *block;
-    int face, block_id;
+    int face, block_id, bid, block_pos[3];
     int x, y;
     int rect[4] = {0, 0, view_size.x, view_size.y};
 
@@ -153,13 +153,13 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
 
     unpack_pos_data(pixel, &voxel_pos, &face, &block_id);
     if (!block_id) return false;
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
-        if (block->id == block_id) break;
+    MESH_ITER_BLOCKS(mesh, block_pos, NULL, &bid, block) {
+        if (bid == block_id) break;
     }
     assert(block);
-    *out = vec3(block->pos.x + voxel_pos.x - BLOCK_SIZE / 2 + 0.5,
-                block->pos.y + voxel_pos.y - BLOCK_SIZE / 2 + 0.5,
-                block->pos.z + voxel_pos.z - BLOCK_SIZE / 2 + 0.5);
+    *out = vec3(block_pos[0] + voxel_pos.x - BLOCK_SIZE / 2 + 0.5,
+                block_pos[1] + voxel_pos.y - BLOCK_SIZE / 2 + 0.5,
+                block_pos[2] + voxel_pos.z - BLOCK_SIZE / 2 + 0.5);
     *normal = vec3(VEC3_SPLIT(FACES_NORMALS[face]));
     vec3_iaddk(out, *normal, 0.5);
     return true;

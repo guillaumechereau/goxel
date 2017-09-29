@@ -562,25 +562,9 @@ typedef struct voxel_vertex
 
 
 // #### Mesh ###################
-// We use copy on write for the block data, so that it is cheap to copy
-// blocks.
-typedef struct block_data block_data_t;
-struct block_data
-{
-    int         ref;
-    uint64_t    id;
-    uvec4b_t    voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE]; // RGBA voxels.
-};
 
+typedef struct mesh mesh_t;
 typedef struct block block_t;
-struct block
-{
-    UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
-    block_data_t    *data;
-    vec3i_t         pos;
-    int             id;     // id of the block in the mesh it belongs.
-};
-
 
 // Fast iterator of all the mesh voxel.
 typedef struct {
@@ -592,8 +576,6 @@ typedef struct {
         bool found;
     };
 } mesh_iterator_t;
-
-typedef struct mesh mesh_t;
 
 mesh_t *mesh_new(void);
 void mesh_clear(mesh_t *mesh);
@@ -635,6 +617,7 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint64_t *data_id, int *block_id,
                       block_t **block);
 uint64_t mesh_get_id(const mesh_t *mesh);
+void *mesh_get_block_data(const mesh_t *mesh, const block_t *block);
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,

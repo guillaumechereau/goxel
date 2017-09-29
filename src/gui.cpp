@@ -1406,7 +1406,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         ImGui::BeginChild("debug", ImVec2(0, 0), false,
                           ImGuiWindowFlags_NoInputs);
         ImGui::Text("Blocks: %d (%.2g MiB)", goxel->block_count,
-                (float)goxel->block_count * sizeof(block_data_t) / MiB);
+                (float)goxel->block_count * sizeof(64 * 64 * 4) / MiB);
         ImGui::Text("uid: %lu", (unsigned long)goxel->next_uid);
         ImGui::EndChild();
     }

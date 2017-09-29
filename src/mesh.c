@@ -18,6 +18,23 @@
 
 #include "goxel.h"
 
+
+typedef struct block_data block_data_t;
+struct block_data
+{
+    int         ref;
+    uint64_t    id;
+    uvec4b_t    voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE]; // RGBA voxels.
+};
+
+struct block
+{
+    UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
+    block_data_t    *data;
+    vec3i_t         pos;
+    int             id;     // id of the block in the mesh it belongs.
+};
+
 struct mesh
 {
     block_t *blocks;
@@ -601,4 +618,9 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
 uint64_t mesh_get_id(const mesh_t *mesh)
 {
     return mesh->id;
+}
+
+void *mesh_get_block_data(const mesh_t *mesh, const block_t *block)
+{
+    return block->data->voxels;
 }
