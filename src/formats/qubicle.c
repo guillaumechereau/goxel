@@ -32,10 +32,12 @@ static void qubicle_import(const char *path)
     int i, j, r, index, len, w, h, d, pos[3], x, y, z;
     char buff[256];
     uvec4b_t v;
-    uvec4b_t *cube;
+    vec3i_t vpos;
     mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
+    mesh_t *mesh = goxel->image->active_layer->mesh;
+    mesh_iterator_t iter = {0};
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
                                         NULL, NULL, NULL);
@@ -49,7 +51,6 @@ static void qubicle_import(const char *path)
     orientation = READ(uint32_t, file);
     (void)orientation;
     compression = READ(uint32_t, file);
-    (void)compression;
     vmask = READ(uint32_t, file);
     (void)vmask;
     mat_count = READ(uint32_t, file);
@@ -65,12 +66,15 @@ static void qubicle_import(const char *path)
         pos[1] = READ(int32_t, file);
         pos[2] = READ(int32_t, file);
         (void)pos;
-        cube = calloc(w * h * d, sizeof(*cube));
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {
                 v.uint32 = READ(uint32_t, file);
+                if (!v.a) continue;
                 v.a = v.a ? 255 : 0;
-                cube[index] = v;
+                vpos.x = pos[0] + index % w;
+                vpos.y = pos[1] + (index % (w * h)) / w;
+                vpos.z = pos[2] + index / (w * h);
+                mesh_set_at(mesh, &vpos, v, &iter);
             }
         } else {
             for (z = 0; z < d; z++) {
@@ -90,15 +94,13 @@ static void qubicle_import(const char *path)
                         x = index % w;
                         y = index / w;
                         v.a = v.a ? 255 : 0;
-                        cube[x + y * w + z * w * h] = v;
+                        vpos = vec3i(pos[0] + x, pos[1] + y, pos[2] + z);
+                        mesh_set_at(mesh, &vpos, v, &iter);
                         index++;
                     }
                 }
             }
         }
-        mesh_blit(goxel->image->active_layer->mesh, cube,
-                  pos[0], pos[1], pos[2], w, h, d);
-        free(cube);
     }
 
     // Apply a 90 deg X rotation to fix axis.
