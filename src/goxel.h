@@ -1071,7 +1071,7 @@ int tool_gui_symmetry(void);
 
 typedef struct goxel
 {
-    vec2i_t    screen_size;
+    int        screen_size[2];
     float      screen_scale;
     image_t    *image;
 

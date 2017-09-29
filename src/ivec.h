@@ -25,15 +25,6 @@
 #define IVEC(...) {{__VA_ARGS__}}
 
 typedef union {
-    struct  { int x, y; };
-    int     v[2];
-} vec2i_t;
-
-static inline vec2i_t vec2i(int x, int y) {
-    return (vec2i_t)IVEC(x, y);
-}
-
-typedef union {
     struct  { uint8_t x, y; };
     uint8_t     v[2];
 } uvec2b_t;

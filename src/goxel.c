@@ -344,7 +344,8 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->frame_time = sys_get_time();
     goxel_set_help_text(goxel, NULL);
     goxel_set_hint_text(goxel, NULL);
-    goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
+    goxel->screen_size[0] = inputs->window_size[0];
+    goxel->screen_size[1] = inputs->window_size[1];
     goxel->screen_scale = inputs->scale;
     goxel->rend.fbo = inputs->framebuffer;
     goxel->rend.scale = inputs->scale;
@@ -521,8 +522,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
 
 void goxel_render(goxel_t *goxel)
 {
-    GL(glViewport(0, 0, goxel->screen_size.x * goxel->screen_scale,
-                        goxel->screen_size.y * goxel->screen_scale));
+    GL(glViewport(0, 0, goxel->screen_size[0] * goxel->screen_scale,
+                        goxel->screen_size[1] * goxel->screen_scale));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel->rend.fbo));
     GL(glClearColor(0, 0, 0, 1));
     GL(glStencilMask(0xFF));
