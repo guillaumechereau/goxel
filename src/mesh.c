@@ -399,7 +399,7 @@ static uvec4b_t mesh_move_get_color(const vec3_t *pos, void *user)
     mesh_t *mesh = USER_GET(user, 0);
     mat4_t *mat = USER_GET(user, 1);
     vec3_t p = mat4_mul_vec3(*mat, *pos);
-    vec3i_t pi = vec3i(p.x, p.y, p.z);
+    vec3i_t pi = vec3i(round(p.x), round(p.y), round(p.z));
     return mesh_get_at(mesh, &pi, NULL);
 }
 
