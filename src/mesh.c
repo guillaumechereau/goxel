@@ -488,7 +488,7 @@ int mesh_select(const mesh_t *mesh,
 
     mesh_clear(selection);
     mesh_set_at(selection, start_pos, (uint8_t[]){255, 255, 255, 255},
-                &iter2);
+                &iter1);
 
     // XXX: Very inefficient algorithm!
     // Iter and test all the neighbors of the selection until there is
@@ -510,13 +510,13 @@ int mesh_select(const mesh_t *mesh,
                     p2[0] = p[0] + FACES_NORMALS[j].x;
                     p2[1] = p[1] + FACES_NORMALS[j].y;
                     p2[2] = p[2] + FACES_NORMALS[j].z;
-                    mesh_get_at(mesh, p2, &iter1, neighboors[j]);
-                    mask[j] = mesh_get_alpha_at(selection, p2, &iter2);
+                    mesh_get_at(mesh, p2, &iter2, neighboors[j]);
+                    mask[j] = mesh_get_alpha_at(selection, p2, &iter1);
                 }
                 a = cond(v2.v, neighboors, mask, user);
                 if (a) {
                     mesh_set_at(selection, p, (uint8_t[]){255, 255, 255, a},
-                                &iter2);
+                                &iter1);
                     keep = true;
                 }
             }
