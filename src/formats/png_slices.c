@@ -22,10 +22,9 @@ static void export_as_png_slices(const char *path)
 {
     box_t box;
     mesh_t *mesh;
-    int x, y, z, w, h, d, pos[3];
+    int x, y, z, w, h, d, pos[3], start_pos[3];
     uint8_t c[4];
     uint8_t *img;
-    vec3i_t start_pos;
     mesh_iterator_t iter = {0};
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
@@ -37,15 +36,16 @@ static void export_as_png_slices(const char *path)
     w = box.w.x * 2;
     h = box.h.y * 2;
     d = box.d.z * 2;
-    start_pos = vec3i(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
-
+    vec3i_set(start_pos, box.p.x - box.w.x,
+                         box.p.y - box.h.y,
+                         box.p.z - box.d.z);
     img = calloc(w * h * d, 4);
     for (z = 0; z < d; z++)
     for (y = 0; y < h; y++)
     for (x = 0; x < w; x++) {
-        pos[0] = x + start_pos.x;
-        pos[1] = y + start_pos.y;
-        pos[2] = z + start_pos.z;
+        pos[0] = x + start_pos[0];
+        pos[1] = y + start_pos[1];
+        pos[2] = z + start_pos[2];
         mesh_get_at(mesh, pos, &iter, c);
         img[(y * w * d + z * w + x) * 4 + 0] = c[0];
         img[(y * w * d + z * w + x) * 4 + 1] = c[1];

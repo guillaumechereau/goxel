@@ -34,15 +34,6 @@ static inline vec2i_t vec2i(int x, int y) {
 }
 
 typedef union {
-    struct  { int x, y, z; };
-    int     v[3];
-} vec3i_t;
-
-static inline vec3i_t vec3i(int x, int y, int z) {
-    return (vec3i_t)IVEC(x, y, z);
-}
-
-typedef union {
     struct  { uint8_t x, y; };
     uint8_t     v[2];
 } uvec2b_t;
@@ -157,5 +148,19 @@ static inline vec3b_t vec3b_mix(vec3b_t a, vec3b_t b, float t)
 
 static const vec3b_t vec3b_zero = IVEC(0, 0, 0);
 static const uvec4b_t uvec4b_zero = IVEC(0, 0, 0, 0);
+
+static inline void vec3i_set(int v[3], int x, int y, int z)
+{
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
+}
+
+static inline void vec3i_copy(const int a[3], int out[3])
+{
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+}
 
 #endif // IVEC_H

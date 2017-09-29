@@ -31,7 +31,7 @@ struct block
 {
     UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
-    vec3i_t         pos;
+    int             pos[3];
     int             id;     // id of the block in the mesh it belongs.
 };
 
@@ -45,7 +45,7 @@ struct mesh
 
 bool block_is_empty(const block_t *block, bool fast);
 void block_delete(block_t *block);
-block_t *block_new(const vec3i_t *pos);
+block_t *block_new(const int pos[3]);
 block_t *block_copy(const block_t *other);
 box_t block_get_box(const block_t *block, bool exact);
 void block_fill(block_t *block,
@@ -202,19 +202,19 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     return ret;
 }
 
-static block_t *mesh_get_block_at(const mesh_t *mesh, const vec3i_t *pos)
+static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3])
 {
     block_t *block;
-    HASH_FIND(hh, mesh->blocks, pos, sizeof(*pos), block);
+    HASH_FIND(hh, mesh->blocks, pos, 3 * sizeof(int), block);
     return block;
 }
 
-static block_t *mesh_add_block(mesh_t *mesh, const vec3i_t *pos)
+static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
 {
     block_t *block;
-    assert(pos->x % (BLOCK_SIZE - 2) == 0);
-    assert(pos->y % (BLOCK_SIZE - 2) == 0);
-    assert(pos->z % (BLOCK_SIZE - 2) == 0);
+    assert(pos[0] % (BLOCK_SIZE - 2) == 0);
+    assert(pos[1] % (BLOCK_SIZE - 2) == 0);
+    assert(pos[2] % (BLOCK_SIZE - 2) == 0);
     assert(!mesh_get_block_at(mesh, pos));
     mesh_prepare_write(mesh);
     block = block_new(pos);
@@ -228,9 +228,8 @@ static void add_blocks(mesh_t *mesh, box_t box)
 {
     vec3_t a, b;
     float x, y, z;
-    int i;
+    int i, p[3];
     const int s = BLOCK_SIZE - 2;
-    vec3i_t p;
 
     a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
     b = vec3(box.p.x + box.w.x, box.p.y + box.h.y, box.p.z + box.d.z);
@@ -242,12 +241,12 @@ static void add_blocks(mesh_t *mesh, box_t box)
     for (y = a.y; y <= b.y; y += s)
     for (x = a.x; x <= b.x; x += s)
     {
-        p = vec3i(x, y, z);
-        assert(p.x % s == 0);
-        assert(p.y % s == 0);
-        assert(p.z % s == 0);
-        if (!mesh_get_block_at(mesh, &p))
-            mesh_add_block(mesh, &p);
+        vec3i_set(p, x, y, z);
+        assert(p[0] % s == 0);
+        assert(p[1] % s == 0);
+        assert(p[2] % s == 0);
+        if (!mesh_get_block_at(mesh, p))
+            mesh_add_block(mesh, p);
     }
 }
 
@@ -346,14 +345,14 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
         MESH_ITER_BLOCKS(other, NULL, NULL, NULL, block) {
-            if (!mesh_get_block_at(mesh, &block->pos)) {
-                mesh_add_block(mesh, &block->pos);
+            if (!mesh_get_block_at(mesh, block->pos)) {
+                mesh_add_block(mesh, block->pos);
             }
         }
     }
 
     HASH_ITER(hh, mesh->blocks, block, tmp) {
-        other_block = mesh_get_block_at(other, &block->pos);
+        other_block = mesh_get_block_at(other, block->pos);
 
         // XXX: instead of testing here, we should do it in block_merge
         // directly.
@@ -385,22 +384,24 @@ void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4])
 {
     block_t *block;
-    vec3i_t p;
+    int p[3];
     const int s = BLOCK_SIZE - 2;
 
-    p = vec3i(pos[0] + s / 2, pos[1] + s / 2, pos[2] + s / 2);
-    p = vec3i(p.x - mod(p.x, s), p.y - mod(p.y, s), p.z - mod(p.z, s));
+    vec3i_set(p, pos[0] + s / 2, pos[1] + s / 2, pos[2] + s / 2);
+    vec3i_set(p, p[0] - mod(p[0], s),
+                 p[1] - mod(p[1], s),
+                 p[2] - mod(p[2], s));
 
-    if (iter && iter->found && memcmp(&iter->pos, &p, sizeof(p)) == 0) {
+    if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
         block_get_at(iter->block, pos, out);
         return;
     }
 
-    HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
+    HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
     if (iter) {
         iter->found = true;
         iter->block = block;
-        memcpy(iter->pos, p.v, sizeof(p));
+        vec3i_copy(p, iter->pos);
     }
     return block_get_at(block, pos, out);
 }
@@ -479,8 +480,7 @@ int mesh_select(const mesh_t *mesh,
 {
     int x, y, z, i, j, a;
     uint8_t v1[4], v2[4];
-    vec3i_t pos;
-    int p[3], p2[3];
+    int pos[3], p[3], p2[3];
     bool keep = true;
     uint8_t neighboors[6][4];
     uint8_t mask[6];
@@ -497,11 +497,11 @@ int mesh_select(const mesh_t *mesh,
         keep = false;
         MESH_ITER_VOXELS(selection, x, y, z, v1) {
             (void)v1;
-            pos = vec3i(x, y, z);
+            vec3i_set(pos, x, y, z);
             for (i = 0; i < 6; i++) {
-                p[0] = pos.x + FACES_NORMALS[i].x;
-                p[1] = pos.y + FACES_NORMALS[i].y;
-                p[2] = pos.z + FACES_NORMALS[i].z;
+                p[0] = pos[0] + FACES_NORMALS[i].x;
+                p[1] = pos[1] + FACES_NORMALS[i].y;
+                p[2] = pos[2] + FACES_NORMALS[i].z;
                 mesh_get_at(selection, p, &iter1, v2);
                 if (v2[3]) continue; // Already done.
                 mesh_get_at(mesh, p, &iter2, v2);
@@ -588,9 +588,9 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
     x = it->pos[0];
     y = it->pos[1];
     z = it->pos[2];
-    pos[0] = x + it->block->pos.x - N / 2;
-    pos[1] = y + it->block->pos.y - N / 2;
-    pos[2] = z + it->block->pos.z - N / 2;
+    pos[0] = x + it->block->pos[0] - N / 2;
+    pos[1] = y + it->block->pos[1] - N / 2;
+    pos[2] = z + it->block->pos[2] - N / 2;
     memcpy(value, it->block->data->voxels[x + y * N + z * N * N].v, 4);
 
     if (++it->pos[0] >= N - 1) {
@@ -614,7 +614,7 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
     if (it->finished || !mesh->blocks) return false;
     if (!it->block) it->block = mesh->blocks;
     if (block) *block = it->block;
-    if (pos) memcpy(pos, it->block->pos.v, sizeof(it->block->pos));
+    if (pos) memcpy(pos, it->block->pos, sizeof(it->block->pos));
     if (data_id) *data_id = it->block->data->id;
     if (id) *id = it->block->id;
     it->block = it->block->hh.next;

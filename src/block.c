@@ -55,7 +55,7 @@ struct block
 {
     UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
-    vec3i_t         pos;
+    int             pos[3];
     int             id;     // id of the block in the mesh it belongs.
 };
 
@@ -99,10 +99,10 @@ bool block_is_empty(const block_t *block, bool fast)
     return true;
 }
 
-block_t *block_new(const vec3i_t *pos)
+block_t *block_new(const int pos[3])
 {
     block_t *block = calloc(1, sizeof(*block));
-    block->pos = *pos;
+    vec3i_copy(pos, block->pos);
     block->data = get_empty_data();
     block->data->ref++;
     return block;
@@ -143,7 +143,7 @@ box_t block_get_box(const block_t *block, bool exact)
     box_t ret;
     int x, y, z;
     int xmin = N, xmax = 0, ymin = N, ymax = 0, zmin = N, zmax = 0;
-    vec3_t pos = vec3(block->pos.x, block->pos.y, block->pos.z);
+    vec3_t pos = vec3(block->pos[0], block->pos[1], block->pos[2]);
     if (!exact)
         return bbox_from_extents(pos, N / 2, N / 2, N / 2);
     BLOCK_ITER(x, y, z) {
@@ -167,9 +167,9 @@ box_t block_get_box(const block_t *block, bool exact)
 // XXX: only used once.
 static vec3_t block_get_voxel_pos(const block_t *block, int x, int y, int z)
 {
-    return vec3(block->pos.x + x - BLOCK_SIZE / 2,
-                block->pos.y + y - BLOCK_SIZE / 2,
-                block->pos.z + z - BLOCK_SIZE / 2);
+    return vec3(block->pos[0] + x - BLOCK_SIZE / 2,
+                block->pos[1] + y - BLOCK_SIZE / 2,
+                block->pos[2] + z - BLOCK_SIZE / 2);
 }
 
 // Copy the data if there are any other blocks having reference to it.
@@ -272,17 +272,17 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
     mat4_invert(&mat);
 
-    mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
+    mat4_itranslate(&mat, block->pos[0], block->pos[1], block->pos[2]);
     mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
     if (painter->box) {
         clip = *painter->box;
-        min_x = max(min_x, clip.p.x - clip.w.x - block->pos.x + N / 2);
-        max_x = min(max_x, clip.p.x + clip.w.x - block->pos.x + N / 2);
-        min_y = max(min_y, clip.p.y - clip.h.y - block->pos.y + N / 2);
-        max_y = min(max_y, clip.p.y + clip.h.y - block->pos.y + N / 2);
-        min_z = max(min_z, clip.p.z - clip.d.z - block->pos.z + N / 2);
-        max_z = min(max_z, clip.p.z + clip.d.z - block->pos.z + N / 2);
+        min_x = max(min_x, clip.p.x - clip.w.x - block->pos[0] + N / 2);
+        max_x = min(max_x, clip.p.x + clip.w.x - block->pos[0] + N / 2);
+        min_y = max(min_y, clip.p.y - clip.h.y - block->pos[1] + N / 2);
+        max_y = min(max_y, clip.p.y + clip.h.y - block->pos[1] + N / 2);
+        min_z = max(min_z, clip.p.z - clip.d.z - block->pos[2] + N / 2);
+        max_z = min(max_z, clip.p.z + clip.d.z - block->pos[2] + N / 2);
     }
 
     for (z = min_z; z < max_z; z++)
@@ -362,9 +362,9 @@ void block_get_at(const block_t *block, const int pos[3], uint8_t out[4])
         memset(out, 0, 4);
         return;
     }
-    x = pos[0] - block->pos.x + N / 2;
-    y = pos[1] - block->pos.y + N / 2;
-    z = pos[2] - block->pos.z + N / 2;
+    x = pos[0] - block->pos[0] + N / 2;
+    y = pos[1] - block->pos[1] + N / 2;
+    z = pos[2] - block->pos[2] + N / 2;
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
@@ -375,9 +375,9 @@ void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
 {
     int x, y, z;
     block_prepare_write(block);
-    x = pos[0] - block->pos.x + N / 2;
-    y = pos[1] - block->pos.y + N / 2;
-    z = pos[2] - block->pos.z + N / 2;
+    x = pos[0] - block->pos[0] + N / 2;
+    y = pos[1] - block->pos[1] + N / 2;
+    z = pos[2] - block->pos[2] + N / 2;
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
