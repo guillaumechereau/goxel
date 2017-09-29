@@ -635,12 +635,11 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
 //    m         The mesh pointer.
 //    x, y, z   integer, set to the position of the voxel.
 //    v         uvec4b_t, set to the color of the voxel.
-#define MESH_ITER_VOXELS(m, x, y, z, v) \
+#define MESH_ITER_VOXELS(m, x, y, z, v_) \
     for (struct {mesh_iterator_t it; int p[3]; uint8_t v[4];} i_ = {0}; \
          mesh_iter_voxels(m, &i_.it, i_.p, i_.v);) \
         if (i_.v[3]) \
-            if (x = i_.p[0], y = i_.p[1], z = i_.p[2], \
-                v.r = i_.v[0], v.g = i_.v[1], v.b = i_.v[2], v.a = i_.v[3], 1)
+            if (x = i_.p[0], y = i_.p[1], z = i_.p[2], memcpy(v_, i_.v, 4), 1)
 
 // #############################
 

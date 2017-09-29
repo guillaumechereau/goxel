@@ -132,7 +132,7 @@ void quantization_gen_palette(const mesh_t *mesh, int nb, uvec4b_t *palette)
 
     // Fill the initial bucket.
     utarray_new(buckets[0].values, &value_icd);
-    MESH_ITER_VOXELS(mesh, x, y, z, v) {
+    MESH_ITER_VOXELS(mesh, x, y, z, v.v) {
         (void)x; (void)y; (void)z;
         if (v.a < 127) continue;
         v.a = 255;

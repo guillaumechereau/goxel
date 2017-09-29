@@ -495,7 +495,7 @@ int mesh_select(const mesh_t *mesh,
     // no more possible changes.
     while (keep) {
         keep = false;
-        MESH_ITER_VOXELS(selection, x, y, z, v1) {
+        MESH_ITER_VOXELS(selection, x, y, z, v1.v) {
             (void)v1;
             pos = vec3i(x, y, z);
             for (i = 0; i < 6; i++) {
