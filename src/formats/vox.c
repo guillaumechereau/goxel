@@ -168,7 +168,7 @@ static void vox_import(const char *path)
         if (!c) continue; // Not sure what c == 0 means.
         color = ctx.palette ? ctx.palette[c] :
                               HEXCOLOR(VOX_DEFAULT_PALETTE[c]);
-        mesh_set_at(mesh, pos, color, &iter);
+        mesh_set_at(mesh, pos, color.v, &iter);
     }
     free(ctx.voxels);
     free(ctx.palette);

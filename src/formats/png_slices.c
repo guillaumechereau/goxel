@@ -23,7 +23,7 @@ static void export_as_png_slices(const char *path)
     box_t box;
     mesh_t *mesh;
     int x, y, z, w, h, d, pos[3];
-    uvec4b_t c;
+    uint8_t c[4];
     uint8_t *img;
     vec3i_t start_pos;
     mesh_iterator_t iter = {0};
@@ -46,11 +46,11 @@ static void export_as_png_slices(const char *path)
         pos[0] = x + start_pos.x;
         pos[1] = y + start_pos.y;
         pos[2] = z + start_pos.z;
-        c = mesh_get_at(mesh, pos, &iter);
-        img[(y * w * d + z * w + x) * 4 + 0] = c.r;
-        img[(y * w * d + z * w + x) * 4 + 1] = c.g;
-        img[(y * w * d + z * w + x) * 4 + 2] = c.b;
-        img[(y * w * d + z * w + x) * 4 + 3] = c.a;
+        mesh_get_at(mesh, pos, &iter, c);
+        img[(y * w * d + z * w + x) * 4 + 0] = c[0];
+        img[(y * w * d + z * w + x) * 4 + 1] = c[1];
+        img[(y * w * d + z * w + x) * 4 + 2] = c[2];
+        img[(y * w * d + z * w + x) * 4 + 3] = c[3];
     }
     img_write(img, w * d, h, 4, path);
 

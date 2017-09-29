@@ -73,7 +73,7 @@ static void qubicle_import(const char *path)
                 vpos[0] = pos[0] + index % w;
                 vpos[1] = pos[1] + (index % (w * h)) / w;
                 vpos[2] = pos[2] + index / (w * h);
-                mesh_set_at(mesh, vpos, v, &iter);
+                mesh_set_at(mesh, vpos, v.v, &iter);
             }
         } else {
             for (z = 0; z < d; z++) {
@@ -96,7 +96,7 @@ static void qubicle_import(const char *path)
                         vpos[0] = pos[0] + x;
                         vpos[1] = pos[1] + y;
                         vpos[2] = pos[2] + z;
-                        mesh_set_at(mesh, vpos, v, &iter);
+                        mesh_set_at(mesh, vpos, v.v, &iter);
                         index++;
                     }
                 }
@@ -156,7 +156,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
             vpos[0] = bpos[0] - BLOCK_SIZE / 2 + x;
             vpos[1] = bpos[1] - BLOCK_SIZE / 2 + y;
             vpos[2] = bpos[2] - BLOCK_SIZE / 2 + z;
-            v = mesh_get_at(mesh, vpos, &iter);
+            mesh_get_at(mesh, vpos, &iter, v.v);
             WRITE(uint32_t, v.uint32, file);
         }
         i++;

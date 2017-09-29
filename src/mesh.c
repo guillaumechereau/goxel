@@ -53,11 +53,11 @@ void block_fill(block_t *block,
                 void *user_data);
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 void block_merge(block_t *block, const block_t *other, int op);
-void block_set_at(block_t *block, const int pos[3], uvec4b_t v);
+void block_set_at(block_t *block, const int pos[3], const uint8_t v[4]);
 void block_blit(block_t *block, uvec4b_t *data,
                 int x, int y, int z, int w, int h, int d);
 void block_shift_alpha(block_t *block, int v);
-uvec4b_t block_get_at(const block_t *block, const int pos[3]);
+void block_get_at(const block_t *block, const int pos[3], uint8_t out[4]);
 
 #define N BLOCK_SIZE
 
@@ -383,8 +383,8 @@ static int mod(int a, int b)
     return r < 0 ? r + b : r;
 }
 
-uvec4b_t mesh_get_at(const mesh_t *mesh, const int pos[3],
-                     mesh_iterator_t *iter)
+void mesh_get_at(const mesh_t *mesh, const int pos[3],
+                 mesh_iterator_t *iter, uint8_t out[4])
 {
     block_t *block;
     vec3i_t p;
@@ -394,7 +394,8 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const int pos[3],
     p = vec3i(p.x - mod(p.x, s), p.y - mod(p.y, s), p.z - mod(p.z, s));
 
     if (iter && iter->found && memcmp(&iter->pos, &p, sizeof(p)) == 0) {
-        return iter->block ? block_get_at(iter->block, pos) : uvec4b_zero;
+        block_get_at(iter->block, pos, out);
+        return;
     }
 
     HASH_FIND(hh, mesh->blocks, &p, sizeof(p), block);
@@ -403,10 +404,10 @@ uvec4b_t mesh_get_at(const mesh_t *mesh, const int pos[3],
         iter->block = block;
         memcpy(iter->pos, p.v, sizeof(p));
     }
-    return block ? block_get_at(block, pos) : uvec4b_zero;
+    return block_get_at(block, pos, out);
 }
 
-void mesh_set_at(mesh_t *mesh, const int pos[3], uvec4b_t v,
+void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                  mesh_iterator_t *iter)
 {
     block_t *block;
@@ -421,11 +422,13 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], uvec4b_t v,
 
 static uvec4b_t mesh_move_get_color(const vec3_t *pos, void *user)
 {
+    uvec4b_t ret;
     mesh_t *mesh = USER_GET(user, 0);
     mat4_t *mat = USER_GET(user, 1);
     vec3_t p = mat4_mul_vec3(*mat, *pos);
     int pi[3] = {round(p.x), round(p.y), round(p.z)};
-    return mesh_get_at(mesh, pi, NULL);
+    mesh_get_at(mesh, pi, NULL, ret.v);
+    return ret;
 }
 
 void mesh_move(mesh_t *mesh, const mat4_t *mat)
@@ -484,7 +487,8 @@ int mesh_select(const mesh_t *mesh,
     mesh_iterator_t iter1 = {0}, iter2 = {0};
 
     mesh_clear(selection);
-    mesh_set_at(selection, start_pos->v, uvec4b(255, 255, 255, 255), &iter2);
+    mesh_set_at(selection, start_pos->v, (uint8_t[]){255, 255, 255, 255},
+                &iter2);
 
     // XXX: Very inefficient algorithm!
     // Iter and test all the neighbors of the selection until there is
@@ -498,20 +502,20 @@ int mesh_select(const mesh_t *mesh,
                 p[0] = pos.x + FACES_NORMALS[i].x;
                 p[1] = pos.y + FACES_NORMALS[i].y;
                 p[2] = pos.z + FACES_NORMALS[i].z;
-                v2 = mesh_get_at(selection, p, &iter1);
+                mesh_get_at(selection, p, &iter1, v2.v);
                 if (v2.a) continue; // Already done.
-                v2 = mesh_get_at(mesh, p, &iter2);
+                mesh_get_at(mesh, p, &iter2, v2.v);
                 // Compute neighboors and mask.
                 for (j = 0; j < 6; j++) {
                     p2[0] = p[0] + FACES_NORMALS[j].x;
                     p2[1] = p[1] + FACES_NORMALS[j].y;
                     p2[2] = p[2] + FACES_NORMALS[j].z;
-                    neighboors[j] = mesh_get_at(mesh, p2, &iter1);
-                    mask[j] = mesh_get_at(selection, p2, &iter2).a;
+                    mesh_get_at(mesh, p2, &iter1, neighboors[j].v);
+                    mask[j] = mesh_get_alpha_at(selection, p2, &iter2);
                 }
                 a = cond(v2, neighboors, mask, user);
                 if (a) {
-                    mesh_set_at(selection, p, uvec4b(255, 255, 255, a),
+                    mesh_set_at(selection, p, (uint8_t[]){255, 255, 255, a},
                                 &iter2);
                     keep = true;
                 }
@@ -523,13 +527,15 @@ int mesh_select(const mesh_t *mesh,
 
 static uvec4b_t mesh_extrude_callback(const vec3_t *pos, void *user)
 {
+    uvec4b_t ret;
     mesh_t *mesh = USER_GET(user, 0);
     mat4_t *proj = USER_GET(user, 1);
     box_t *box = USER_GET(user, 2);
     if (!bbox_contains_vec(*box, *pos)) return uvec4b(0, 0, 0, 0);
     vec3_t p = mat4_mul_vec3(*proj, *pos);
     int pi[3] = {p.x, p.y, p.z};
-    return mesh_get_at(mesh, pi, NULL);
+    mesh_get_at(mesh, pi, NULL, ret.v);
+    return ret;
 }
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
@@ -624,4 +630,12 @@ uint64_t mesh_get_id(const mesh_t *mesh)
 void *mesh_get_block_data(const mesh_t *mesh, const block_t *block)
 {
     return block->data->voxels;
+}
+
+uint8_t mesh_get_alpha_at(const mesh_t *mesh, const int pos[3],
+                          mesh_iterator_t *iter)
+{
+    uint8_t v[4];
+    mesh_get_at(mesh, pos, iter, v);
+    return v[3];
 }

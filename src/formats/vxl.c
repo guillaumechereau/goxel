@@ -257,7 +257,7 @@ static void export_as_vxl(const char *path)
         pos[0] = 256 - x;
         pos[1] = y - 256;
         pos[2] = 31 - z;
-        c = mesh_get_at(mesh, pos, &iter);
+        mesh_get_at(mesh, pos, &iter, c.v);
         if (c.a <= 127) continue;
         (*map)[x][y][z] = 1;
         (*color)[x][y][z] = c.uint32;

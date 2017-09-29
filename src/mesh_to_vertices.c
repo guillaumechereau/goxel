@@ -163,19 +163,16 @@ static uint32_t mesh_get_neighboors(const mesh_t *mesh,
     int xx, yy, zz, i = 0;
     int npos[3];
     uint32_t ret = 0;
-#define ITER_NEIGHBORS(x, y, z)         \
-     for (z = -1; z <= 1; z++)           \
-         for (y = -1; y <= 1; y++)       \
-             for (x = -1; x <= 1; x++)
-    ITER_NEIGHBORS(xx, yy, zz) {
+    for (zz = -1; zz <= 1; zz++)
+    for (yy = -1; yy <= 1; yy++)
+    for (xx = -1; xx <= 1; xx++) {
         npos[0] = pos[0] + xx;
         npos[1] = pos[1] + yy;
         npos[2] = pos[2] + zz;
-        neighboors[i] = mesh_get_at(mesh, npos, iter).a;
+        neighboors[i] = mesh_get_alpha_at(mesh, npos, iter);
         if (neighboors[i] >= 127) ret |= 1 << i;
         i++;
     }
-#undef ITER_NEIGHBORS
     return ret;
 }
 
@@ -219,7 +216,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
         pos[0] = x + block_pos[0] - N / 2;
         pos[1] = y + block_pos[1] - N / 2;
         pos[2] = z + block_pos[2] - N / 2;
-        v = mesh_get_at(mesh, pos, &iter);
+        mesh_get_at(mesh, pos, &iter, v.v);
         if (v.a < 127) continue;    // Non visible
         neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);
         for (f = 0; f < 6; f++) {

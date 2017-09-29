@@ -355,19 +355,23 @@ void block_merge(block_t *block, const block_t *other, int mode)
     cache_add(cache, &key, sizeof(key), block->data, 1, block_del);
 }
 
-uvec4b_t block_get_at(const block_t *block, const int pos[3])
+void block_get_at(const block_t *block, const int pos[3], uint8_t out[4])
 {
     int x, y, z;
+    if (!block) {
+        memset(out, 0, 4);
+        return;
+    }
     x = pos[0] - block->pos.x + N / 2;
     y = pos[1] - block->pos.y + N / 2;
     z = pos[2] - block->pos.z + N / 2;
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
-    return BLOCK_AT(block, x, y, z);
+    memcpy(out, BLOCK_AT(block, x, y, z).v, 4);
 }
 
-void block_set_at(block_t *block, const int pos[3], uvec4b_t v)
+void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
 {
     int x, y, z;
     block_prepare_write(block);
@@ -377,7 +381,7 @@ void block_set_at(block_t *block, const int pos[3], uvec4b_t v)
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
-    BLOCK_AT(block, x, y, z) = v;
+    memcpy(BLOCK_AT(block, x, y, z).v, v, 4);
 }
 
 void block_blit(block_t *block, uvec4b_t *data,
