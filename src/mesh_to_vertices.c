@@ -156,20 +156,22 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
 }
 
 static uint32_t mesh_get_neighboors(const mesh_t *mesh,
-                                    const vec3i_t pos,
+                                    const int pos[3],
                                     mesh_iterator_t *iter,
                                     uint8_t neighboors[27])
 {
     int xx, yy, zz, i = 0;
-    vec3i_t npos;
+    int npos[3];
     uint32_t ret = 0;
 #define ITER_NEIGHBORS(x, y, z)         \
      for (z = -1; z <= 1; z++)           \
          for (y = -1; y <= 1; y++)       \
              for (x = -1; x <= 1; x++)
     ITER_NEIGHBORS(xx, yy, zz) {
-        npos = vec3i(pos.x + xx, pos.y + yy, pos.z + zz);
-        neighboors[i] = mesh_get_at(mesh, &npos, iter).a;
+        npos[0] = pos[0] + xx;
+        npos[1] = pos[1] + yy;
+        npos[2] = pos[2] + zz;
+        neighboors[i] = mesh_get_at(mesh, npos, iter).a;
         if (neighboors[i] >= 127) ret |= 1 << i;
         i++;
     }
@@ -208,16 +210,16 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
     const int ts = VOXEL_TEXTURE_SIZE;
     uint8_t neighboors[27];
     uvec4b_t v;
-    vec3i_t pos;
+    int pos[3];
     mesh_iterator_t iter = {0};
 
     if (effects & EFFECT_MARCHING_CUBES)
         return mesh_generate_vertices_mc(mesh, block, block_pos, effects, out);
     BLOCK_ITER_INSIDE(x, y, z) {
-        pos = vec3i(x + block_pos[0] - N / 2,
-                    y + block_pos[1] - N / 2,
-                    z + block_pos[2] - N / 2);
-        v = mesh_get_at(mesh, &pos, &iter);
+        pos[0] = x + block_pos[0] - N / 2;
+        pos[1] = y + block_pos[1] - N / 2;
+        pos[2] = z + block_pos[2] - N / 2;
+        v = mesh_get_at(mesh, pos, &iter);
         if (v.a < 127) continue;    // Non visible
         neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);
         for (f = 0; f < 6; f++) {

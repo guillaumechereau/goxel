@@ -99,7 +99,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
     int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
     int a, sum_a;
     vec3_t n;
-    vec3i_t pos;
+    int pos[3];
     uvec4b_t color;
     int colorbest;
     bool use_max_color;
@@ -114,13 +114,13 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
 
     // Add up the contribution of each voxel to the vertices values.
     BLOCK_ITER_INSIDE(x, y, z) {
-        pos = vec3i(x + block_pos[0] - N / 2,
-                    y + block_pos[1] - N / 2,
-                    z + block_pos[2] - N / 2);
+        pos[0] = x + block_pos[0] - N / 2;
+        pos[1] = y + block_pos[1] - N / 2;
+        pos[2] = z + block_pos[2] - N / 2;
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
-        color = mesh_get_at(mesh, &pos, &iter);
+        color = mesh_get_at(mesh, pos, &iter);
         use_max_color = (color.a == 0);
         colorbest = 8;
         sum_a = 0;
@@ -134,15 +134,15 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
                 wx = vx + VERTICES_POSITIONS[w].x - 1;
                 wy = vy + VERTICES_POSITIONS[w].y - 1;
                 wz = vz + VERTICES_POSITIONS[w].z - 1;
-                pos = vec3i(wx + block_pos[0] - N / 2,
-                            wy + block_pos[1] - N / 2,
-                            wz + block_pos[2] - N / 2);
-                a = mesh_get_at(mesh, &pos, &iter).a;
+                pos[0] = wx + block_pos[0] - N / 2;
+                pos[1] = wy + block_pos[1] - N / 2;
+                pos[2] = wz + block_pos[2] - N / 2;
+                a = mesh_get_at(mesh, pos, &iter).a;
 
                 if (use_max_color && a) {
                     d = abs(x - wx) + abs(y - wy) + abs(z - wz);
                     if (d < colorbest) {
-                        color = mesh_get_at(mesh, &pos, &iter);
+                        color = mesh_get_at(mesh, pos, &iter);
                         colorbest = d;
                     }
                 }

@@ -29,10 +29,9 @@ static void qubicle_import(const char *path)
 {
     FILE *file;
     int version, color_format, orientation, compression, vmask, mat_count;
-    int i, j, r, index, len, w, h, d, pos[3], x, y, z;
+    int i, j, r, index, len, w, h, d, pos[3], vpos[3], x, y, z;
     char buff[256];
     uvec4b_t v;
-    vec3i_t vpos;
     mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
@@ -71,10 +70,10 @@ static void qubicle_import(const char *path)
                 v.uint32 = READ(uint32_t, file);
                 if (!v.a) continue;
                 v.a = v.a ? 255 : 0;
-                vpos.x = pos[0] + index % w;
-                vpos.y = pos[1] + (index % (w * h)) / w;
-                vpos.z = pos[2] + index / (w * h);
-                mesh_set_at(mesh, &vpos, v, &iter);
+                vpos[0] = pos[0] + index % w;
+                vpos[1] = pos[1] + (index % (w * h)) / w;
+                vpos[2] = pos[2] + index / (w * h);
+                mesh_set_at(mesh, vpos, v, &iter);
             }
         } else {
             for (z = 0; z < d; z++) {
@@ -94,8 +93,10 @@ static void qubicle_import(const char *path)
                         x = index % w;
                         y = index / w;
                         v.a = v.a ? 255 : 0;
-                        vpos = vec3i(pos[0] + x, pos[1] + y, pos[2] + z);
-                        mesh_set_at(mesh, &vpos, v, &iter);
+                        vpos[0] = pos[0] + x;
+                        vpos[1] = pos[1] + y;
+                        vpos[2] = pos[2] + z;
+                        mesh_set_at(mesh, vpos, v, &iter);
                         index++;
                     }
                 }
@@ -113,9 +114,8 @@ void qubicle_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
     block_t *block;
-    int i, count, x, y, z, bpos[3];
+    int i, count, x, y, z, bpos[3], vpos[3];
     uvec4b_t v;
-    vec3i_t vpos;
     char buff[16];
     mesh_t *m = mesh_copy(mesh);
     mat4_t mat = mat4_identity;
@@ -153,10 +153,10 @@ void qubicle_export(const mesh_t *mesh, const char *path)
         for (z = 1; z < BLOCK_SIZE - 1; z++)
         for (y = 1; y < BLOCK_SIZE - 1; y++)
         for (x = 1; x < BLOCK_SIZE - 1; x++) {
-            vpos = vec3i(bpos[0] - BLOCK_SIZE / 2 + x,
-                         bpos[1] - BLOCK_SIZE / 2 + y,
-                         bpos[2] - BLOCK_SIZE / 2 + z);
-            v = mesh_get_at(mesh, &vpos, &iter);
+            vpos[0] = bpos[0] - BLOCK_SIZE / 2 + x;
+            vpos[1] = bpos[1] - BLOCK_SIZE / 2 + y;
+            vpos[2] = bpos[2] - BLOCK_SIZE / 2 + z;
+            v = mesh_get_at(mesh, vpos, &iter);
             WRITE(uint32_t, v.uint32, file);
         }
         i++;

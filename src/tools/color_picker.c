@@ -29,13 +29,13 @@ int tool_color_picker_iter(tool_t *tool, const vec4_t *view)
     uvec4b_t color;
     mesh_t *mesh = goxel->layers_mesh;
     cursor_t *curs = &goxel->cursor;
-    vec3i_t pi = vec3i(curs->pos.x, curs->pos.y, curs->pos.z);
+    int pi[3] = {curs->pos.x, curs->pos.y, curs->pos.z};
     curs->snap_mask = SNAP_MESH;
     curs->snap_offset = -0.5;
 
     goxel_set_help_text(goxel, "Click on a voxel to pick the color");
     if (!curs->snaped) return 0;
-    color = mesh_get_at(mesh, &pi, NULL);
+    color = mesh_get_at(mesh, pi, NULL);
     color.a = 255;
     goxel_set_help_text(goxel, "%d %d %d", color.r, color.g, color.b);
     if (curs->flags & CURSOR_PRESSED) goxel->painter.color = color;
