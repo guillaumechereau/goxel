@@ -114,9 +114,12 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     FILE *file;
     block_t *block;
     int i, count, x, y, z, bpos[3];
+    uvec4b_t v;
+    vec3i_t vpos;
     char buff[16];
     mesh_t *m = mesh_copy(mesh);
     mat4_t mat = mat4_identity;
+    mesh_iterator_t iter = {0};
 
     // Apply a -90 deg X rotation to fix axis.
     mat4_irotate(&mat, -M_PI / 2, 1, 0, 0);
@@ -143,15 +146,17 @@ void qubicle_export(const mesh_t *mesh, const char *path)
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
         WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(int32_t, bpos[0] - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, bpos[1] - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, bpos[2] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[0] - BLOCK_SIZE / 2 + 1, file);
+        WRITE(int32_t, bpos[1] - BLOCK_SIZE / 2 + 1, file);
+        WRITE(int32_t, bpos[2] - BLOCK_SIZE / 2 + 1, file);
         for (z = 1; z < BLOCK_SIZE - 1; z++)
         for (y = 1; y < BLOCK_SIZE - 1; y++)
         for (x = 1; x < BLOCK_SIZE - 1; x++) {
-            WRITE(uint32_t, block->data->voxels[
-                  x + y * BLOCK_SIZE + z * BLOCK_SIZE * BLOCK_SIZE].uint32,
-                  file);
+            vpos = vec3i(bpos[0] - BLOCK_SIZE / 2 + x,
+                         bpos[1] - BLOCK_SIZE / 2 + y,
+                         bpos[2] - BLOCK_SIZE / 2 + z);
+            v = mesh_get_at(mesh, &vpos, &iter);
+            WRITE(uint32_t, v.uint32, file);
         }
         i++;
     }
