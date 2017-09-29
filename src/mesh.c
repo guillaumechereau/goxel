@@ -478,7 +478,7 @@ int mesh_select(const mesh_t *mesh,
                 void *user, mesh_t *selection)
 {
     int x, y, z, i, j, a;
-    uvec4b_t v1, v2;
+    uint8_t v1[4], v2[4];
     vec3i_t pos;
     int p[3], p2[3];
     bool keep = true;
@@ -495,16 +495,16 @@ int mesh_select(const mesh_t *mesh,
     // no more possible changes.
     while (keep) {
         keep = false;
-        MESH_ITER_VOXELS(selection, x, y, z, v1.v) {
+        MESH_ITER_VOXELS(selection, x, y, z, v1) {
             (void)v1;
             pos = vec3i(x, y, z);
             for (i = 0; i < 6; i++) {
                 p[0] = pos.x + FACES_NORMALS[i].x;
                 p[1] = pos.y + FACES_NORMALS[i].y;
                 p[2] = pos.z + FACES_NORMALS[i].z;
-                mesh_get_at(selection, p, &iter1, v2.v);
-                if (v2.a) continue; // Already done.
-                mesh_get_at(mesh, p, &iter2, v2.v);
+                mesh_get_at(selection, p, &iter1, v2);
+                if (v2[3]) continue; // Already done.
+                mesh_get_at(mesh, p, &iter2, v2);
                 // Compute neighboors and mask.
                 for (j = 0; j < 6; j++) {
                     p2[0] = p[0] + FACES_NORMALS[j].x;
@@ -513,7 +513,7 @@ int mesh_select(const mesh_t *mesh,
                     mesh_get_at(mesh, p2, &iter2, neighboors[j]);
                     mask[j] = mesh_get_alpha_at(selection, p2, &iter1);
                 }
-                a = cond(v2.v, neighboors, mask, user);
+                a = cond(v2, neighboors, mask, user);
                 if (a) {
                     mesh_set_at(selection, p, (uint8_t[]){255, 255, 255, a},
                                 &iter1);
