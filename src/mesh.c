@@ -470,9 +470,9 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
 }
 
 int mesh_select(const mesh_t *mesh,
-                const vec3i_t *start_pos,
-                int (*cond)(uvec4b_t value,
-                            const uvec4b_t neighboors[6],
+                const int start_pos[3],
+                int (*cond)(const uint8_t value[4],
+                            const uint8_t neighboors[6][4],
                             const uint8_t mask[6],
                             void *user),
                 void *user, mesh_t *selection)
@@ -482,12 +482,12 @@ int mesh_select(const mesh_t *mesh,
     vec3i_t pos;
     int p[3], p2[3];
     bool keep = true;
-    uvec4b_t neighboors[6];
+    uint8_t neighboors[6][4];
     uint8_t mask[6];
     mesh_iterator_t iter1 = {0}, iter2 = {0};
 
     mesh_clear(selection);
-    mesh_set_at(selection, start_pos->v, (uint8_t[]){255, 255, 255, 255},
+    mesh_set_at(selection, start_pos, (uint8_t[]){255, 255, 255, 255},
                 &iter2);
 
     // XXX: Very inefficient algorithm!
@@ -510,10 +510,10 @@ int mesh_select(const mesh_t *mesh,
                     p2[0] = p[0] + FACES_NORMALS[j].x;
                     p2[1] = p[1] + FACES_NORMALS[j].y;
                     p2[2] = p[2] + FACES_NORMALS[j].z;
-                    mesh_get_at(mesh, p2, &iter1, neighboors[j].v);
+                    mesh_get_at(mesh, p2, &iter1, neighboors[j]);
                     mask[j] = mesh_get_alpha_at(selection, p2, &iter2);
                 }
-                a = cond(v2, neighboors, mask, user);
+                a = cond(v2.v, neighboors, mask, user);
                 if (a) {
                     mesh_set_at(selection, p, (uint8_t[]){255, 255, 255, a},
                                 &iter2);

@@ -29,15 +29,15 @@ typedef struct {
     } gestures;
 } tool_extrude_t;
 
-static int select_cond(uvec4b_t value,
-                       const uvec4b_t neighboors[6],
+static int select_cond(const uint8_t value[4],
+                       const uint8_t neighboors[6][4],
                        const uint8_t mask[6],
                        void *user)
 {
     int i, snap_face = *((int*)user);
     int opp_face = ((int[6]){1, 0, 3, 2, 5, 4})[snap_face];
-    if (value.a == 0) return 0;
-    if (neighboors[snap_face].a) return 0;
+    if (value[3] == 0) return 0;
+    if (neighboors[snap_face][3]) return 0;
     for (i = 0; i < 6; i++) {
         if (i == snap_face || i == opp_face) continue;
         if (mask[i]) return 255;
@@ -77,7 +77,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         tmp_mesh = mesh_new();
         tool->mesh = mesh_copy(mesh);
         pi = vec3i(curs->pos.x, curs->pos.y, curs->pos.z);
-        mesh_select(mesh, &pi, select_cond, &tool->snap_face,
+        mesh_select(mesh, pi.v, select_cond, &tool->snap_face,
                     tmp_mesh);
         mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA);
         mesh_delete(tmp_mesh);
