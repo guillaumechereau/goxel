@@ -65,8 +65,8 @@ static void vox_import_old(const char *path)
         cube[i] = color;
     }
 
-    mesh_blit(goxel->image->active_layer->mesh, cube,
-              -w / 2, -h / 2, -d / 2, w, h, d);
+    mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
+              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     free(palette);
     free(voxels);
     free(cube);

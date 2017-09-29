@@ -359,8 +359,8 @@ static void dicom_import(const char *dirpath)
     free(data);
 
     // This could belong to the caller function.
-    mesh_blit(goxel->image->active_layer->mesh, cube,
-              -w / 2, -h / 2, -d / 2, w, h, d);
+    mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
+              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
 
     free(cube);
 }

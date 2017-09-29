@@ -384,26 +384,6 @@ void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     memcpy(BLOCK_AT(block, x, y, z).v, v, 4);
 }
 
-void block_blit(block_t *block, uvec4b_t *data,
-                int x, int y, int z, int w, int h, int d)
-{
-    int bx, by, bz;
-    int dx, dy, dz;
-    uvec4b_t v;
-    BLOCK_ITER(bx, by, bz) {
-        dx = bx - x + block->pos.x - N / 2;
-        dy = by - y + block->pos.y - N / 2;
-        dz = bz - z + block->pos.z - N / 2;
-        if (dx < 0 || dx >= w || dy < 0 || dy >= h || dz < 0 || dz >= d)
-            continue;
-        v = data[dz * w * h + dy * w + dx];
-        if (v.a) {
-            block_prepare_write(block);
-            BLOCK_AT(block, bx, by, bz) = v;
-        }
-    }
-}
-
 void block_shift_alpha(block_t *block, int v)
 {
     block_prepare_write(block);

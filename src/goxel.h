@@ -597,10 +597,10 @@ bool mesh_is_empty(const mesh_t *mesh);
 // XXX: to cleanup.
 void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
 
-// XXX: clean up this.  We should use a struct to represent a data cube.
-void mesh_blit(mesh_t *mesh, uvec4b_t *data,
-               int x, int y, int z,
-               int w, int h, int d);
+void mesh_blit(mesh_t *mesh, const uint8_t *data,
+               int x, int y, int z, int w, int h, int d,
+               mesh_iterator_t *iter);
+
 void mesh_shift_alpha(mesh_t *mesh, int v);
 
 // Compute the selection mask for a given condition.

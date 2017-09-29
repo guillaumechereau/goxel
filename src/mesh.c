@@ -54,8 +54,6 @@ void block_fill(block_t *block,
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 void block_merge(block_t *block, const block_t *other, int op);
 void block_set_at(block_t *block, const int pos[3], const uint8_t v[4]);
-void block_blit(block_t *block, uvec4b_t *data,
-                int x, int y, int z, int w, int h, int d);
 void block_shift_alpha(block_t *block, int v);
 void block_get_at(const block_t *block, const int pos[3], uint8_t out[4]);
 
@@ -445,16 +443,18 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat)
     mesh_remove_empty_blocks(mesh);
 }
 
-void mesh_blit(mesh_t *mesh, uvec4b_t *data,
-               int x, int y, int z,
-               int w, int h, int d)
+void mesh_blit(mesh_t *mesh, const uint8_t *data,
+               int x, int y, int z, int w, int h, int d,
+               mesh_iterator_t *iter)
 {
-    box_t box;
-    block_t *block;
-    box = bbox_from_points(vec3(x, y, z), vec3(x + w, y + h, z + d));
-    add_blocks(mesh, box);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
-        block_blit(block, data, x, y, z, w, h, d);
+    mesh_iterator_t default_iter = {0};
+    int pos[3];
+    if (!iter) iter = &default_iter;
+    for (pos[2] = z; pos[2] < z + d; pos[2]++)
+    for (pos[1] = y; pos[1] < y + h; pos[1]++)
+    for (pos[0] = x; pos[0] < x + w; pos[0]++) {
+        mesh_set_at(mesh, pos, data, iter);
+        data += 4;
     }
     mesh_remove_empty_blocks(mesh);
 }

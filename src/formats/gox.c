@@ -389,7 +389,7 @@ void load_from_file(goxel_t *goxel, const char *path)
                 data = hash_find_at(blocks_table, index);
                 assert(data);
                 mesh_blit(layer->mesh, data->v,
-                          x - 8, y - 8, z - 8, 16, 16, 16);
+                          x - 8, y - 8, z - 8, 16, 16, 16, NULL);
             }
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size))) {
