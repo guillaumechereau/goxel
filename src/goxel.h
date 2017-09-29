@@ -594,13 +594,7 @@ typedef struct {
 } mesh_iterator_t;
 
 typedef struct mesh mesh_t;
-struct mesh
-{
-    block_t *blocks;
-    int next_block_id;
-    int *ref;   // Used to implement copy on write of the blocks.
-    uint64_t id;     // global uniq id, change each time a mesh changes.
-};
+
 mesh_t *mesh_new(void);
 void mesh_clear(mesh_t *mesh);
 void mesh_delete(mesh_t *mesh);
@@ -640,6 +634,7 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
 bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint64_t *data_id, int *block_id,
                       block_t **block);
+uint64_t mesh_get_id(const mesh_t *mesh);
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,

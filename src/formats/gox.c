@@ -260,8 +260,10 @@ void save_to_file(goxel_t *goxel, const char *path)
     DL_FOREACH(goxel->image->layers, layer) {
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
-        if (!layer->base_id)
-            nb_blocks = HASH_COUNT(layer->mesh->blocks);
+        if (!layer->base_id) {
+            MESH_ITER_BLOCKS(layer->mesh, NULL, NULL, NULL, block)
+                nb_blocks++;
+        }
         chunk_write_int32(&c, out, nb_blocks);
         if (!layer->base_id) {
             MESH_ITER_BLOCKS(layer->mesh, bpos, NULL, NULL, block) {

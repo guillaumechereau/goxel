@@ -126,7 +126,8 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     mesh_move(m, &mat);
     mesh = m;
 
-    count = HASH_COUNT(mesh->blocks);
+    count = 0;
+    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) count++;
 
     file = fopen(path, "wb");
     WRITE(uint32_t, 257, file); // version

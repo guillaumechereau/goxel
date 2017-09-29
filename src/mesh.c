@@ -18,6 +18,14 @@
 
 #include "goxel.h"
 
+struct mesh
+{
+    block_t *blocks;
+    int next_block_id;
+    int *ref;   // Used to implement copy on write of the blocks.
+    uint64_t id;     // global uniq id, change each time a mesh changes.
+};
+
 bool block_is_empty(const block_t *block, bool fast);
 void block_delete(block_t *block);
 block_t *block_new(const vec3i_t *pos);
@@ -588,4 +596,9 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
     it->block = it->block->hh.next;
     if (!it->block) it->finished = true;
     return true;
+}
+
+uint64_t mesh_get_id(const mesh_t *mesh)
+{
+    return mesh->id;
 }
