@@ -144,15 +144,15 @@ void qubicle_export(const mesh_t *mesh, const char *path)
         WRITE(uint8_t, strlen(buff), file);
         fwrite(buff, strlen(buff), 1, file);
 
-        WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(int32_t, bpos[0] - BLOCK_SIZE / 2 + 1, file);
-        WRITE(int32_t, bpos[1] - BLOCK_SIZE / 2 + 1, file);
-        WRITE(int32_t, bpos[2] - BLOCK_SIZE / 2 + 1, file);
-        for (z = 1; z < BLOCK_SIZE - 1; z++)
-        for (y = 1; y < BLOCK_SIZE - 1; y++)
-        for (x = 1; x < BLOCK_SIZE - 1; x++) {
+        WRITE(uint32_t, BLOCK_SIZE, file);
+        WRITE(uint32_t, BLOCK_SIZE, file);
+        WRITE(uint32_t, BLOCK_SIZE, file);
+        WRITE(int32_t, bpos[0] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[1] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[2] - BLOCK_SIZE / 2, file);
+        for (z = 0; z < BLOCK_SIZE; z++)
+        for (y = 0; y < BLOCK_SIZE; y++)
+        for (x = 0; x < BLOCK_SIZE; x++) {
             vpos[0] = bpos[0] - BLOCK_SIZE / 2 + x;
             vpos[1] = bpos[1] - BLOCK_SIZE / 2 + y;
             vpos[2] = bpos[2] - BLOCK_SIZE / 2 + z;

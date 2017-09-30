@@ -66,11 +66,6 @@ static const int N = BLOCK_SIZE;
         for (y = 0; y < N; y++) \
             for (x = 0; x < N; x++)
 
-#define BLOCK_ITER_INSIDE(x, y, z) \
-    for (z = 1; z < N - 1; z++) \
-        for (y = 1; y < N - 1; y++) \
-            for (x = 1; x < N - 1; x++)
-
 #define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
 #define BLOCK_AT(c, x, y, z) (DATA_AT(c->data, x, y, z))
 

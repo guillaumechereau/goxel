@@ -212,9 +212,9 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3])
 static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
 {
     block_t *block;
-    assert(pos[0] % (BLOCK_SIZE - 2) == 0);
-    assert(pos[1] % (BLOCK_SIZE - 2) == 0);
-    assert(pos[2] % (BLOCK_SIZE - 2) == 0);
+    assert(pos[0] % BLOCK_SIZE == 0);
+    assert(pos[1] % BLOCK_SIZE == 0);
+    assert(pos[2] % BLOCK_SIZE == 0);
     assert(!mesh_get_block_at(mesh, pos));
     mesh_prepare_write(mesh);
     block = block_new(pos);
@@ -229,7 +229,7 @@ static void add_blocks(mesh_t *mesh, box_t box)
     vec3_t a, b;
     float x, y, z;
     int i, p[3];
-    const int s = BLOCK_SIZE - 2;
+    const int s = BLOCK_SIZE;
 
     a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
     b = vec3(box.p.x + box.w.x, box.p.y + box.h.y, box.p.z + box.d.z);
@@ -385,7 +385,7 @@ void mesh_get_at(const mesh_t *mesh, const int pos[3],
 {
     block_t *block;
     int p[3];
-    const int s = BLOCK_SIZE - 2;
+    const int s = BLOCK_SIZE;
 
     vec3i_set(p, pos[0] + s / 2, pos[1] + s / 2, pos[2] + s / 2);
     vec3i_set(p, p[0] - mod(p[0], s),
