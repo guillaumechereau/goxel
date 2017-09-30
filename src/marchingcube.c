@@ -20,11 +20,6 @@
 
 static const int N = BLOCK_SIZE;
 
-#define BLOCK_ITER_INSIDE(x, y, z) \
-    for (z = 1; z < N - 1; z++) \
-        for (y = 1; y < N - 1; y++) \
-            for (x = 1; x < N - 1; x++)
-
 // Marching cube data.
 static const int MC_EDGE_TABLE[256];
 static const int8_t MC_TRI_TABLE[256][16];
@@ -113,7 +108,9 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
     if (!(effects & EFFECT_FLAT)) k = 8;
 
     // Add up the contribution of each voxel to the vertices values.
-    BLOCK_ITER_INSIDE(x, y, z) {
+    for (z = 0; z < N; z++)
+    for (y = 0; y < N; y++)
+    for (x = 0; x < N; x++) {
         pos[0] = x + block_pos[0] - N / 2;
         pos[1] = y + block_pos[1] - N / 2;
         pos[2] = z + block_pos[2] - N / 2;
