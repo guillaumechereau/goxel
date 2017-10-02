@@ -71,11 +71,4 @@ static inline void vec3i_set(int v[3], int x, int y, int z)
     v[2] = z;
 }
 
-static inline void vec3i_copy(const int a[3], int out[3])
-{
-    out[0] = a[0];
-    out[1] = a[1];
-    out[2] = a[2];
-}
-
 #endif // IVEC_H

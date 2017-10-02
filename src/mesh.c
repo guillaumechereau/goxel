@@ -401,7 +401,7 @@ void mesh_get_at(const mesh_t *mesh, const int pos[3],
     if (iter) {
         iter->found = true;
         iter->block = block;
-        vec3i_copy(p, iter->pos);
+        memcpy(iter->pos, p, sizeof(iter->pos));
     }
     return block_get_at(block, pos, out);
 }

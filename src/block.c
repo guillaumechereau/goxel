@@ -97,7 +97,7 @@ bool block_is_empty(const block_t *block, bool fast)
 block_t *block_new(const int pos[3])
 {
     block_t *block = calloc(1, sizeof(*block));
-    vec3i_copy(pos, block->pos);
+    memcpy(block->pos, pos, sizeof(block->pos));
     block->data = get_empty_data();
     block->data->ref++;
     return block;
