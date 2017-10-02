@@ -95,7 +95,7 @@ model3d_t *model3d_cube(void)
     model3d_t *model = calloc(1, sizeof(*model));
     model->solid = true;
     model->cull = true;
-    vec3b_t p;
+    const int *p;
     model->nb_vertices = 6 * 6;
     model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
     for (f = 0; f < 6; f++) {
@@ -103,9 +103,10 @@ model3d_t *model3d_cube(void)
             v = (int[]){0, 1, 2, 2, 3, 0}[i];
             p = VERTICES_POSITIONS[FACES_VERTICES[f][v]];
             model->vertices[f * 6 + i].pos =
-                vec3((p.x - 0.5) * 2, (p.y - 0.5) * 2, (p.z - 0.5) * 2);
-            model->vertices[f * 6 + i].normal =
-                vec3(VEC3_SPLIT(FACES_NORMALS[f]));
+                vec3((p[0] - 0.5) * 2, (p[1] - 0.5) * 2, (p[2] - 0.5) * 2);
+            model->vertices[f * 6 + i].normal = vec3(FACES_NORMALS[f][0],
+                                                     FACES_NORMALS[f][1],
+                                                     FACES_NORMALS[f][2]);
             model->vertices[f * 6 + i].color = uvec4b(255, 255, 255, 255);
         }
     }
@@ -116,7 +117,7 @@ model3d_t *model3d_cube(void)
 model3d_t *model3d_wire_cube(void)
 {
     int f, i, v;
-    vec3b_t p;
+    const int *p;
     model3d_t *model = calloc(1, sizeof(*model));
     model->nb_vertices = 6 * 8;
     model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
@@ -125,7 +126,7 @@ model3d_t *model3d_wire_cube(void)
             v = (int[]){0, 1, 1, 2, 2, 3, 3, 0}[i];
             p = VERTICES_POSITIONS[FACES_VERTICES[f][v]];
             model->vertices[f * 8 + i].pos =
-                vec3((p.x - 0.5) * 2, (p.y - 0.5) * 2, (p.z - 0.5) * 2);
+                vec3((p[0] - 0.5) * 2, (p[1] - 0.5) * 2, (p[2] - 0.5) * 2);
             model->vertices[f * 8 + i].color = uvec4b(255, 255, 255, 255);
             model->vertices[f * 8 + i].uv = vec2(0.5, 0.5);
         }

@@ -223,21 +223,21 @@ static uvec3b_t bump_neighbor_value(int f, int e)
 {
     assert(e >= 0 && e < 4);
     assert(f >= 0 && f < 6);
-    vec3b_t n0, n1;
+    const int *n0, *n1;
     n0 = FACES_NORMALS[f];
     n1 = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
     return uvec3b(
-        (int)(n0.x + n1.x) * 127 / 2 + 127,
-        (int)(n0.y + n1.y) * 127 / 2 + 127,
-        (int)(n0.z + n1.z) * 127 / 2 + 127
+        (int)(n0[0] + n1[0]) * 127 / 2 + 127,
+        (int)(n0[1] + n1[1]) * 127 / 2 + 127,
+        (int)(n0[2] + n1[2]) * 127 / 2 + 127
     );
 }
 
 static void set_bump_block(uvec3b_t *data, int bx, int by, int f, int mask)
 {
-    uvec3b_t v = uvec3b(127 + FACES_NORMALS[f].x * 127,
-                        127 + FACES_NORMALS[f].y * 127,
-                        127 + FACES_NORMALS[f].z * 127);
+    uvec3b_t v = uvec3b(127 + FACES_NORMALS[f][0] * 127,
+                        127 + FACES_NORMALS[f][1] * 127,
+                        127 + FACES_NORMALS[f][2] * 127);
     bump_img_fill(data, bx * 16, by * 16, 16, 16, v);
     if (mask & 1) bump_img_fill(data, bx * 16, by * 16, 16, 1,
                                 bump_neighbor_value(f, 0));

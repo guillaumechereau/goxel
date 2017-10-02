@@ -37,14 +37,19 @@ static bool block_is_face_visible(uint32_t neighboors_mask, int f)
     return !(MASKS[f] & neighboors_mask);
 }
 
-static vec3b_t block_get_normal(uint32_t neighboors_mask,
-                                const uint8_t neighboors[27], int f,
-                                bool smooth)
+static void block_get_normal(uint32_t neighboors_mask,
+                             const uint8_t neighboors[27], int f,
+                             bool smooth, int8_t out[3])
 {
     int x, y, z, i = 0;
     int sx = 0, sy = 0, sz = 0;
     int smax;
-    if (!smooth) return FACES_NORMALS[f];
+    if (!smooth) {
+        out[0] = FACES_NORMALS[f][0];
+        out[1] = FACES_NORMALS[f][1];
+        out[2] = FACES_NORMALS[f][2];
+        return;
+    }
     for (z = -1; z <= +1; z++)
     for (y = -1; y <= +1; y++)
     for (x = -1; x <= +1; x++) {
@@ -55,10 +60,16 @@ static vec3b_t block_get_normal(uint32_t neighboors_mask,
         }
         i++;
     }
-    if (sx == 0 && sy == 0 && sz == 0)
-        return FACES_NORMALS[f];
+    if (sx == 0 && sy == 0 && sz == 0) {
+        out[0] = FACES_NORMALS[f][0];
+        out[1] = FACES_NORMALS[f][1];
+        out[2] = FACES_NORMALS[f][2];
+        return;
+    }
     smax = max(abs(sx), max(abs(sy), abs(sz)));
-    return vec3b(sx * 127 / smax, sy * 127 / smax, sz * 127 / smax);
+    out[0] = sx * 127 / smax;
+    out[1] = sy * 127 / smax;
+    out[2] = sz * 127 / smax;
 }
 
 static bool block_get_edge_border(uint32_t neighboors_mask, int f, int e)
@@ -138,12 +149,12 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
 #define M(x, y, z) (1 << ((x + 1) + (y + 1) * 3 + (z + 1) * 9))
     int e;
     int ret = 0;
-    vec3b_t n;
+    const int *n;
     if (effects & EFFECT_BORDERS_ALL) return 15;
     if (!(effects & EFFECT_BORDERS)) return 0;
     for (e = 0; e < 4; e++) {
         n = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
-        if (!(neighboors_mask & M(n.x, n.y, n.z)))
+        if (!(neighboors_mask & M(n[0], n[1], n[2])))
             ret |= 1 << e;
     }
     return ret;
@@ -198,11 +209,11 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
     int i, nb = 0;
     uint32_t neighboors_mask;
     uint8_t shadow_mask, borders_mask;
-    vec3b_t normal;
     const int ts = VOXEL_TEXTURE_SIZE;
-    uint8_t neighboors[27];
-    uvec4b_t v;
+    uint8_t neighboors[27], v[4];
+    int8_t normal[3];
     int pos[3];
+    const int *vpos;
     mesh_iterator_t iter = {0};
 
     if (effects & EFFECT_MARCHING_CUBES)
@@ -213,30 +224,33 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
         pos[0] = x + block_pos[0] - N / 2;
         pos[1] = y + block_pos[1] - N / 2;
         pos[2] = z + block_pos[2] - N / 2;
-        mesh_get_at(mesh, pos, &iter, v.v);
-        if (v.a < 127) continue;    // Non visible
+        mesh_get_at(mesh, pos, &iter, v);
+        if (v[3] < 127) continue;    // Non visible
         neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);
         for (f = 0; f < 6; f++) {
             if (!block_is_face_visible(neighboors_mask, f)) continue;
-            normal = block_get_normal(neighboors_mask, neighboors, f,
-                     effects & EFFECT_SMOOTH);
+            block_get_normal(neighboors_mask, neighboors, f,
+                             effects & EFFECT_SMOOTH, normal);
             shadow_mask = block_get_shadow_mask(neighboors_mask, f);
             borders_mask = block_get_border_mask(neighboors_mask, f, effects);
             for (i = 0; i < 4; i++) {
-                out[nb * 4 + i].pos = vec3b_add(
-                        vec3b(x, y, z),
-                        VERTICES_POSITIONS[FACES_VERTICES[f][i]]);
-                out[nb * 4 + i].normal = normal;
-                out[nb * 4 + i].color = v;
-                out[nb * 4 + i].color.a = out[nb * 4 + i].color.a ? 255 : 0;
-                out[nb * 4 + i].bshadow_uv = uvec2b(
-                    shadow_mask % 16 * ts + VERTICE_UV[i].x * (ts - 1),
-                    shadow_mask / 16 * ts + VERTICE_UV[i].y * (ts - 1));
-                out[nb * 4 + i].uv = uvec2b(VERTICE_UV[i].x * 255,
-                                            VERTICE_UV[i].y * 255);
+                vpos = VERTICES_POSITIONS[FACES_VERTICES[f][i]];
+                out[nb * 4 + i].pos[0] = x + vpos[0];
+                out[nb * 4 + i].pos[1] = y + vpos[1];
+                out[nb * 4 + i].pos[2] = z + vpos[2];
+                memcpy(out[nb * 4 + i].normal, normal, sizeof(normal));
+                memcpy(out[nb * 4 + i].color, v, sizeof(v));
+                out[nb * 4 + i].color[4] = out[nb * 4 + i].color[3] ? 255 : 0;
+                out[nb * 4 + i].bshadow_uv[0] =
+                    shadow_mask % 16 * ts + VERTICE_UV[i][0] * (ts - 1);
+                out[nb * 4 + i].bshadow_uv[1] =
+                    shadow_mask / 16 * ts + VERTICE_UV[i][1] * (ts - 1);
+                out[nb * 4 + i].uv[0] = VERTICE_UV[i][0] * 255;
+                out[nb * 4 + i].uv[1] = VERTICE_UV[i][1] * 255;
                 // For testing:
                 // This put a border bump on all the edges of the voxel.
-                out[nb * 4 + i].bump_uv = uvec2b(borders_mask * 16, f * 16);
+                out[nb * 4 + i].bump_uv[0] = borders_mask * 16;
+                out[nb * 4 + i].bump_uv[1] = f * 16;
                 out[nb * 4 + i].pos_data = get_pos_data(x, y, z, f, block_id);
             }
             nb++;

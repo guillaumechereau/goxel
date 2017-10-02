@@ -160,7 +160,9 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     *out = vec3(block_pos[0] + voxel_pos.x - BLOCK_SIZE / 2 + 0.5,
                 block_pos[1] + voxel_pos.y - BLOCK_SIZE / 2 + 0.5,
                 block_pos[2] + voxel_pos.z - BLOCK_SIZE / 2 + 0.5);
-    *normal = vec3(VEC3_SPLIT(FACES_NORMALS[face]));
+    normal->x = FACES_NORMALS[face][0];
+    normal->y = FACES_NORMALS[face][1];
+    normal->z = FACES_NORMALS[face][2];
     vec3_iaddk(out, *normal, 0.5);
     return true;
 }

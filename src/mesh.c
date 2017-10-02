@@ -499,17 +499,17 @@ int mesh_select(const mesh_t *mesh,
             (void)v1;
             vec3i_set(pos, x, y, z);
             for (i = 0; i < 6; i++) {
-                p[0] = pos[0] + FACES_NORMALS[i].x;
-                p[1] = pos[1] + FACES_NORMALS[i].y;
-                p[2] = pos[2] + FACES_NORMALS[i].z;
+                p[0] = pos[0] + FACES_NORMALS[i][0];
+                p[1] = pos[1] + FACES_NORMALS[i][1];
+                p[2] = pos[2] + FACES_NORMALS[i][2];
                 mesh_get_at(selection, p, &iter1, v2);
                 if (v2[3]) continue; // Already done.
                 mesh_get_at(mesh, p, &iter2, v2);
                 // Compute neighboors and mask.
                 for (j = 0; j < 6; j++) {
-                    p2[0] = p[0] + FACES_NORMALS[j].x;
-                    p2[1] = p[1] + FACES_NORMALS[j].y;
-                    p2[2] = p[2] + FACES_NORMALS[j].z;
+                    p2[0] = p[0] + FACES_NORMALS[j][0];
+                    p2[1] = p[1] + FACES_NORMALS[j][1];
+                    p2[2] = p[2] + FACES_NORMALS[j][2];
                     mesh_get_at(mesh, p2, &iter2, neighboors[j]);
                     mask[j] = mesh_get_alpha_at(selection, p2, &iter1);
                 }

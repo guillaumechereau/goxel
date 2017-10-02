@@ -23,7 +23,7 @@ typedef struct {
     union {
         struct {
             vec3_t   v;
-            uvec3b_t c;
+            uint8_t  c[3];
         };
         vec3_t vn;
         struct {
@@ -77,7 +77,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     block_t *block;
     voxel_vertex_t* verts;
     vec3_t v;
-    uvec3b_t c;
+    uint8_t c[3];
     int nb_quads, i, j, bpos[3];
     mat4_t mat;
     FILE *out;
@@ -97,19 +97,19 @@ void wavefront_export(const mesh_t *mesh, const char *path)
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].pos.x,
-                         verts[i * 4 + j].pos.y,
-                         verts[i * 4 + j].pos.z);
+                v = vec3(verts[i * 4 + j].pos[0],
+                         verts[i * 4 + j].pos[1],
+                         verts[i * 4 + j].pos[2]);
                 v = mat4_mul_vec3(mat, v);
-                c = verts[i * 4 + j].color.rgb;
-                line = (line_t){"v ", .v = v, .c = c};
+                memcpy(c, verts[i * 4 + j].color, 3);
+                line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);
             }
             // Put the normals
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].normal.x,
-                         verts[i * 4 + j].normal.y,
-                         verts[i * 4 + j].normal.z);
+                v = vec3(verts[i * 4 + j].normal[0],
+                         verts[i * 4 + j].normal[1],
+                         verts[i * 4 + j].normal[2]);
                 line = (line_t){"vn", .vn = v};
                 face.vns[j] = lines_add(lines, &line);
             }
@@ -123,9 +123,9 @@ void wavefront_export(const mesh_t *mesh, const char *path)
         if (strncmp(line_ptr->type, "v ", 2) == 0)
             fprintf(out, "v %g %g %g %f %f %f\n",
                     VEC3_SPLIT(line_ptr->v),
-                    line_ptr->c.r / 255.,
-                    line_ptr->c.g / 255.,
-                    line_ptr->c.b / 255.);
+                    line_ptr->c[0] / 255.,
+                    line_ptr->c[1] / 255.,
+                    line_ptr->c[2] / 255.);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "vn", 2) == 0)
@@ -149,7 +149,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     block_t *block;
     voxel_vertex_t* verts;
     vec3_t v;
-    uvec3b_t c;
+    uint8_t c[3];
     int nb_quads, i, j, bpos[3];
     mat4_t mat;
     FILE *out;
@@ -169,19 +169,19 @@ void ply_export(const mesh_t *mesh, const char *path)
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].pos.x,
-                         verts[i * 4 + j].pos.y,
-                         verts[i * 4 + j].pos.z);
+                v = vec3(verts[i * 4 + j].pos[0],
+                         verts[i * 4 + j].pos[1],
+                         verts[i * 4 + j].pos[2]);
                 v = mat4_mul_vec3(mat, v);
-                c = verts[i * 4 + j].color.rgb;
-                line = (line_t){"v ", .v = v, .c = c};
+                memcpy(c, verts[i * 4 + j].color, 3);
+                line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);
             }
             // Put the normals
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].normal.x,
-                         verts[i * 4 + j].normal.y,
-                         verts[i * 4 + j].normal.z);
+                v = vec3(verts[i * 4 + j].normal[0],
+                         verts[i * 4 + j].normal[1],
+                         verts[i * 4 + j].normal[2]);
                 line = (line_t){"vn", .vn = v};
                 face.vns[j] = lines_add(lines, &line);
             }
@@ -207,7 +207,7 @@ void ply_export(const mesh_t *mesh, const char *path)
         if (strncmp(line_ptr->type, "v ", 2) == 0)
             fprintf(out, "%g %g %g %d %d %d\n",
                     VEC3_SPLIT(line_ptr->v),
-                    VEC3_SPLIT(line_ptr->c));
+                    line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "f ", 2) == 0)

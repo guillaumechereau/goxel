@@ -551,13 +551,13 @@ typedef struct painter {
 // XXX: we can probably make it smaller.
 typedef struct voxel_vertex
 {
-    vec3b_t  pos        __attribute__((aligned(4)));
-    vec3b_t  normal     __attribute__((aligned(4)));
-    uvec4b_t color      __attribute__((aligned(4)));
-    uint32_t pos_data   __attribute__((aligned(4)));
-    uvec2b_t uv         __attribute__((aligned(4)));
-    uvec2b_t bshadow_uv __attribute__((aligned(4)));
-    uvec2b_t bump_uv    __attribute__((aligned(4)));
+    int8_t   pos[3]                     __attribute__((aligned(4)));
+    int8_t   normal[3]                  __attribute__((aligned(4)));
+    uint8_t  color[4]                   __attribute__((aligned(4)));
+    uint32_t pos_data                   __attribute__((aligned(4)));
+    uint8_t  uv[2]                      __attribute__((aligned(4)));
+    uint8_t  bshadow_uv[2]              __attribute__((aligned(4)));
+    uint8_t  bump_uv[2]                 __attribute__((aligned(4)));
 } voxel_vertex_t;
 
 
