@@ -25,16 +25,6 @@
 #define IVEC(...) {{__VA_ARGS__}}
 
 typedef union {
-    struct { int8_t x, y, z, w; };
-    struct { int8_t r, g, b, a; };
-    int8_t v[4];
-} vec4b_t;
-
-static inline vec4b_t vec4b(int8_t x, int8_t y, int8_t z, int8_t w) {
-    return (vec4b_t)IVEC(x, y, z, w);
-}
-
-typedef union {
     struct  { uint8_t x, y, z; };
     struct  { uint8_t r, g, b; };
     uint8_t v[3];

@@ -105,16 +105,6 @@ static const mat4_t FACES_MATS[6] = {
     MAT(0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0, -1, 0, 0, 1),
 };
 
-// XXX: Keep orientation.
-static const vec4b_t FACES_ROTATIONS[6] = {
-    IVEC( 1,  1,  0,  0),
-    IVEC(-1,  1,  0,  0),
-    IVEC( 2,  1,  0,  0),
-    IVEC( 0,  1,  0,  0),
-    IVEC( 1,  0,  1,  0),
-    IVEC(-1,  0,  1,  0),
-};
-
 static const int EDGES_VERTICES[12][2] = {
     {0, 1}, {1, 2}, {2, 3}, {3, 0},
     {4, 5}, {5, 6}, {6, 7}, {7, 4},
