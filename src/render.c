@@ -845,8 +845,8 @@ static void render_background(renderer_t *rend, const uvec4b_t *col)
 {
     prog_t *prog;
     typedef struct {
-        vec3b_t  pos       __attribute__((aligned(4)));
-        vec4_t   color     __attribute__((aligned(4)));
+        int8_t  pos[3]       __attribute__((aligned(4)));
+        vec4_t  color        __attribute__((aligned(4)));
     } vertex_t;
     vertex_t vertices[4];
     vec4_t c1, c2;
@@ -863,10 +863,10 @@ static void render_background(renderer_t *rend, const uvec4b_t *col)
     vec3_iadd(&c1.rgb, vec3(+0.2, +0.2, +0.2));
     vec3_iadd(&c2.rgb, vec3(-0.2, -0.2, -0.2));
 
-    vertices[0] = (vertex_t){vec3b(-1, -1, 0), c1};
-    vertices[1] = (vertex_t){vec3b(+1, -1, 0), c1};
-    vertices[2] = (vertex_t){vec3b(+1, +1, 0), c2};
-    vertices[3] = (vertex_t){vec3b(-1, +1, 0), c2};
+    vertices[0] = (vertex_t){{-1, -1, 0}, c1};
+    vertices[1] = (vertex_t){{+1, -1, 0}, c1};
+    vertices[2] = (vertex_t){{+1, +1, 0}, c2};
+    vertices[3] = (vertex_t){{-1, +1, 0}, c2};
 
     prog = get_prog(BACKGROUND_VSHADER, BACKGROUND_FSHADER, NULL);
     GL(glUseProgram(prog->prog));

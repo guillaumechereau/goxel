@@ -21,7 +21,7 @@
 
 goxel_t *goxel = NULL;
 
-static void unpack_pos_data(uint32_t v, vec3b_t *pos, int *face,
+static void unpack_pos_data(uint32_t v, int pos[3], int *face,
                             int *cube_id)
 {
     assert(BLOCK_SIZE == 16);
@@ -32,7 +32,9 @@ static void unpack_pos_data(uint32_t v, vec3b_t *pos, int *face,
     f = (v >> 16) & 0x0f;
     i = v & 0xffff;
     assert(f < 6);
-    *pos = vec3b(x, y, z);
+    pos[0] = x;
+    pos[1] = y;
+    pos[2] = z;
     *face = f;
     *cube_id = i;
 }
@@ -131,7 +133,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
         .settings = goxel->rend.settings,
     };
     uint32_t pixel;
-    vec3b_t voxel_pos;
+    int voxel_pos[3];
     block_t *block;
     int face, block_id, bid, block_pos[3];
     int x, y;
@@ -151,15 +153,15 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
         y < 0 || y >= view_size.y) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
 
-    unpack_pos_data(pixel, &voxel_pos, &face, &block_id);
+    unpack_pos_data(pixel, voxel_pos, &face, &block_id);
     if (!block_id) return false;
     MESH_ITER_BLOCKS(mesh, block_pos, NULL, &bid, block) {
         if (bid == block_id) break;
     }
     assert(block);
-    *out = vec3(block_pos[0] + voxel_pos.x - BLOCK_SIZE / 2 + 0.5,
-                block_pos[1] + voxel_pos.y - BLOCK_SIZE / 2 + 0.5,
-                block_pos[2] + voxel_pos.z - BLOCK_SIZE / 2 + 0.5);
+    *out = vec3(block_pos[0] + voxel_pos[0] - BLOCK_SIZE / 2 + 0.5,
+                block_pos[1] + voxel_pos[1] - BLOCK_SIZE / 2 + 0.5,
+                block_pos[2] + voxel_pos[2] - BLOCK_SIZE / 2 + 0.5);
     normal->x = FACES_NORMALS[face][0];
     normal->y = FACES_NORMALS[face][1];
     normal->z = FACES_NORMALS[face][2];
