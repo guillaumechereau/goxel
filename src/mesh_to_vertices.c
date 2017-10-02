@@ -240,7 +240,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
                 out[nb * 4 + i].pos[2] = z + vpos[2];
                 memcpy(out[nb * 4 + i].normal, normal, sizeof(normal));
                 memcpy(out[nb * 4 + i].color, v, sizeof(v));
-                out[nb * 4 + i].color[4] = out[nb * 4 + i].color[3] ? 255 : 0;
+                out[nb * 4 + i].color[3] = out[nb * 4 + i].color[3] ? 255 : 0;
                 out[nb * 4 + i].bshadow_uv[0] =
                     shadow_mask % 16 * ts + VERTICE_UV[i][0] * (ts - 1);
                 out[nb * 4 + i].bshadow_uv[1] =
