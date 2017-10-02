@@ -69,6 +69,13 @@ typedef struct {
 
 static operation_t g_last_op= {};
 
+// XXX: move this in goxel.h?
+static int mod(int a, int b)
+{
+    int r = a % b;
+    return r < 0 ? r + b : r;
+}
+
 static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
@@ -227,26 +234,33 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
 static void add_blocks(mesh_t *mesh, box_t box)
 {
     vec3_t a, b;
-    float x, y, z;
+    int x, y, z, ia[3], ib[3];
     int i, p[3];
-    const int s = BLOCK_SIZE;
 
     a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
     b = vec3(box.p.x + box.w.x, box.p.y + box.h.y, box.p.z + box.d.z);
     for (i = 0; i < 3; i++) {
-        a.v[i] = round(a.v[i] / s) * s;
-        b.v[i] = round(b.v[i] / s) * s;
+        ia[i] = floor(a.v[i]);
+        ib[i] =  ceil(b.v[i]);
+        ia[i] = ia[i] - mod(ia[i], N);
+        ib[i] = ib[i] - mod(ib[i], N);
     }
-    for (z = a.z; z <= b.z; z += s)
-    for (y = a.y; y <= b.y; y += s)
-    for (x = a.x; x <= b.x; x += s)
+    for (z = ia[2]; z <= ib[2]; z += N)
+    for (y = ia[1]; y <= ib[1]; y += N)
+    for (x = ia[0]; x <= ib[0]; x += N)
     {
         vec3i_set(p, x, y, z);
-        assert(p[0] % s == 0);
-        assert(p[1] % s == 0);
-        assert(p[2] % s == 0);
-        if (!mesh_get_block_at(mesh, p))
+        assert(p[0] % N == 0);
+        assert(p[1] % N == 0);
+        assert(p[2] % N == 0);
+        if (!mesh_get_block_at(mesh, p)) {
+            /*
+            box_t bb = bbox_from_extents(vec3(x + N/2, y + N/2, z + N/2),
+                                         N/2, N/2, N/2);
+            render_box(&goxel->rend, &bb, NULL, EFFECT_WIREFRAME);
+            */
             mesh_add_block(mesh, p);
+        }
     }
 }
 
@@ -373,13 +387,6 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     }
 }
 
-// XXX: move this in goxel.h?
-static int mod(int a, int b)
-{
-    int r = a % b;
-    return r < 0 ? r + b : r;
-}
-
 void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4])
 {
@@ -387,10 +394,9 @@ void mesh_get_at(const mesh_t *mesh, const int pos[3],
     int p[3];
     const int s = BLOCK_SIZE;
 
-    vec3i_set(p, pos[0] + s / 2, pos[1] + s / 2, pos[2] + s / 2);
-    vec3i_set(p, p[0] - mod(p[0], s),
-                 p[1] - mod(p[1], s),
-                 p[2] - mod(p[2], s));
+    vec3i_set(p, pos[0] - mod(pos[0], s),
+                 pos[1] - mod(pos[1], s),
+                 pos[2] - mod(pos[2], s));
 
     if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
         block_get_at(iter->block, pos, out);
@@ -581,24 +587,24 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
     if (it->finished || !mesh->blocks) return false;
     if (!it->block) {
         it->block = mesh->blocks;
-        it->pos[0] = 1;
-        it->pos[1] = 1;
-        it->pos[2] = 1;
+        it->pos[0] = 0;
+        it->pos[1] = 0;
+        it->pos[2] = 0;
     }
     x = it->pos[0];
     y = it->pos[1];
     z = it->pos[2];
-    pos[0] = x + it->block->pos[0] - N / 2;
-    pos[1] = y + it->block->pos[1] - N / 2;
-    pos[2] = z + it->block->pos[2] - N / 2;
+    pos[0] = x + it->block->pos[0];
+    pos[1] = y + it->block->pos[1];
+    pos[2] = z + it->block->pos[2];
     memcpy(value, it->block->data->voxels[x + y * N + z * N * N].v, 4);
 
-    if (++it->pos[0] >= N - 1) {
-        it->pos[0] = 1;
-        if (++it->pos[1] >= N - 1) {
-            it->pos[1] = 1;
-            if (++it->pos[2] >= N -1) {
-                it->pos[2] = 1;
+    if (++it->pos[0] >= N) {
+        it->pos[0] = 0;
+        if (++it->pos[1] >= N) {
+            it->pos[1] = 0;
+            if (++it->pos[2] >= N) {
+                it->pos[2] = 0;
                 it->block = it->block->hh.next;
                 if (!it->block) it->finished = true;
             }

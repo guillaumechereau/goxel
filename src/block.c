@@ -138,7 +138,9 @@ box_t block_get_box(const block_t *block, bool exact)
     box_t ret;
     int x, y, z;
     int xmin = N, xmax = 0, ymin = N, ymax = 0, zmin = N, zmax = 0;
-    vec3_t pos = vec3(block->pos[0], block->pos[1], block->pos[2]);
+    vec3_t pos = vec3(block->pos[0] + N / 2,
+                      block->pos[1] + N / 2,
+                      block->pos[2] + N / 2);
     if (!exact)
         return bbox_from_extents(pos, N / 2, N / 2, N / 2);
     BLOCK_ITER(x, y, z) {
@@ -268,16 +270,15 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     mat4_invert(&mat);
 
     mat4_itranslate(&mat, block->pos[0], block->pos[1], block->pos[2]);
-    mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
     if (painter->box) {
         clip = *painter->box;
-        min_x = max(min_x, clip.p.x - clip.w.x - block->pos[0] + N / 2);
-        max_x = min(max_x, clip.p.x + clip.w.x - block->pos[0] + N / 2);
-        min_y = max(min_y, clip.p.y - clip.h.y - block->pos[1] + N / 2);
-        max_y = min(max_y, clip.p.y + clip.h.y - block->pos[1] + N / 2);
-        min_z = max(min_z, clip.p.z - clip.d.z - block->pos[2] + N / 2);
-        max_z = min(max_z, clip.p.z + clip.d.z - block->pos[2] + N / 2);
+        min_x = max(min_x, clip.p.x - clip.w.x - block->pos[0]);
+        max_x = min(max_x, clip.p.x + clip.w.x - block->pos[0]);
+        min_y = max(min_y, clip.p.y - clip.h.y - block->pos[1]);
+        max_y = min(max_y, clip.p.y + clip.h.y - block->pos[1]);
+        min_z = max(min_z, clip.p.z - clip.d.z - block->pos[2]);
+        max_z = min(max_z, clip.p.z + clip.d.z - block->pos[2]);
     }
 
     for (z = min_z; z < max_z; z++)
@@ -357,9 +358,9 @@ void block_get_at(const block_t *block, const int pos[3], uint8_t out[4])
         memset(out, 0, 4);
         return;
     }
-    x = pos[0] - block->pos[0] + N / 2;
-    y = pos[1] - block->pos[1] + N / 2;
-    z = pos[2] - block->pos[2] + N / 2;
+    x = pos[0] - block->pos[0];
+    y = pos[1] - block->pos[1];
+    z = pos[2] - block->pos[2];
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
@@ -370,9 +371,9 @@ void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
 {
     int x, y, z;
     block_prepare_write(block);
-    x = pos[0] - block->pos[0] + N / 2;
-    y = pos[1] - block->pos[1] + N / 2;
-    z = pos[2] - block->pos[2] + N / 2;
+    x = pos[0] - block->pos[0];
+    y = pos[1] - block->pos[1];
+    z = pos[2] - block->pos[2];
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);

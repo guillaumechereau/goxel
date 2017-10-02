@@ -456,9 +456,6 @@ static void render_block_(renderer_t *rend, mesh_t *mesh, block_t *block,
 
     block_model = *model;
     mat4_itranslate(&block_model, block_pos[0], block_pos[1], block_pos[2]);
-    mat4_itranslate(&block_model, -BLOCK_SIZE / 2,
-                                  -BLOCK_SIZE / 2,
-                                  -BLOCK_SIZE / 2);
     GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, block_model.v));
     if (item->size == 4) {
         // Use indexed triangles.

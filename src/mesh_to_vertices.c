@@ -221,9 +221,9 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
     for (x = 0; x < N; x++) {
-        pos[0] = x + block_pos[0] - N / 2;
-        pos[1] = y + block_pos[1] - N / 2;
-        pos[2] = z + block_pos[2] - N / 2;
+        pos[0] = x + block_pos[0];
+        pos[1] = y + block_pos[1];
+        pos[2] = z + block_pos[2];
         mesh_get_at(mesh, pos, &iter, v);
         if (v[3] < 127) continue;    // Non visible
         neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);

@@ -159,9 +159,9 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
         if (bid == block_id) break;
     }
     assert(block);
-    *out = vec3(block_pos[0] + voxel_pos[0] - BLOCK_SIZE / 2 + 0.5,
-                block_pos[1] + voxel_pos[1] - BLOCK_SIZE / 2 + 0.5,
-                block_pos[2] + voxel_pos[2] - BLOCK_SIZE / 2 + 0.5);
+    *out = vec3(block_pos[0] + voxel_pos[0] + 0.5,
+                block_pos[1] + voxel_pos[1] + 0.5,
+                block_pos[2] + voxel_pos[2] + 0.5);
     normal->x = FACES_NORMALS[face][0];
     normal->y = FACES_NORMALS[face][1];
     normal->z = FACES_NORMALS[face][2];
