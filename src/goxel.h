@@ -178,13 +178,8 @@ enum {
         _ret; \
     })
 
-static inline uvec4b_t HEXCOLOR(uint32_t v)
-{
-    return uvec4b((v >> 24) & 0xff,
-                  (v >> 16) & 0xff,
-                  (v >>  8) & 0xff,
-                  (v >>  0) & 0xff);
-}
+#define vec4_set(v, x, y, z, w) do { \
+    (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
 
 // Convertion between radian and degree.
 #define DR2D (180 / M_PI)

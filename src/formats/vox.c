@@ -23,6 +23,14 @@
 
 static const uint32_t VOX_DEFAULT_PALETTE[256];
 
+static inline uvec4b_t HEXCOLOR(uint32_t v)
+{
+    return uvec4b((v >> 24) & 0xff,
+                  (v >> 16) & 0xff,
+                  (v >>  8) & 0xff,
+                  (v >>  0) & 0xff);
+}
+
 #define READ(type, file) \
     ({ type v; size_t r = fread(&v, sizeof(v), 1, file); (void)r; v;})
 #define WRITE(type, v, file) \

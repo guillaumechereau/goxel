@@ -280,9 +280,9 @@ void goxel_init(goxel_t *gox)
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
-    goxel->back_color = HEXCOLOR(0x464646ff);
-    goxel->grid_color = HEXCOLOR(0x191919ff);
-    goxel->image_box_color = HEXCOLOR(0xccccffff);
+    vec4_set(goxel->back_color.v, 70, 70, 70, 255);
+    vec4_set(goxel->grid_color.v, 19, 19, 19, 255);
+    vec4_set(goxel->image_box_color.v, 204, 204, 255, 255);
 
     // Load and set default palette.
     palette_load_all(&goxel->palettes);
@@ -298,7 +298,7 @@ void goxel_init(goxel_t *gox)
         .shape = &shape_cube,
         .mode = MODE_OVER,
         .smoothness = 0,
-        .color = HEXCOLOR(0xFFFFFFFF),
+        .color = uvec4b(255, 255, 255, 255),
     };
     goxel->rend = (renderer_t) {
         .light = {
@@ -575,13 +575,13 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     // XXX: make a toggle for debug informations.
     if ((0)) {
         box_t b;
-        uvec4b_t c;
-        c = HEXCOLOR(0x00FF0050);
+        uint8_t c[4];
+        vec4_set(c, 0, 255, 0, 80);
         b = mesh_get_box(goxel->layers_mesh, true);
-        render_box(rend, &b, c.v, EFFECT_WIREFRAME);
-        c = HEXCOLOR(0x00FFFF50);
+        render_box(rend, &b, c, EFFECT_WIREFRAME);
+        vec4_set(c, 0, 255, 255, 80);
         b = mesh_get_box(goxel->layers_mesh, false);
-        render_box(rend, &b, c.v, EFFECT_WIREFRAME);
+        render_box(rend, &b, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)
         render_plane(rend, &goxel->plane, goxel->grid_color.v);

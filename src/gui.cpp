@@ -43,12 +43,6 @@ extern "C" {
     bool gui_settings_popup(void);
 }
 
-static inline ImVec4 IMHEXCOLOR(uint32_t v)
-{
-    uvec4b_t c = HEXCOLOR(v);
-    return ImVec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
-}
-
 static inline uvec4b_t color_lighten(uvec4b_t c, float k)
 {
     c.r *= k;
@@ -1318,7 +1312,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     style.ScrollbarSize = theme->sizes.item_height;
 
     style.Colors[ImGuiCol_WindowBg] = COLOR(BASE, BACKGROUND, 0);
-    style.Colors[ImGuiCol_PopupBg] = IMHEXCOLOR(0x626262FF);
+    style.Colors[ImGuiCol_PopupBg] = ImVec4(0.38, 0.38, 0.38, 1.0);
     style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
     style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, 0);
     style.Colors[ImGuiCol_Button] = COLOR(BASE, INNER, 0);
