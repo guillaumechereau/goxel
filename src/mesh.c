@@ -545,7 +545,7 @@ static uvec4b_t mesh_extrude_callback(const vec3_t *pos, void *user)
     box_t *box = USER_GET(user, 2);
     if (!bbox_contains_vec(*box, *pos)) return uvec4b(0, 0, 0, 0);
     vec3_t p = mat4_mul_vec3(*proj, *pos);
-    int pi[3] = {p.x, p.y, p.z};
+    int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
     mesh_get_at(mesh, pi, NULL, ret.v);
     return ret;
 }
