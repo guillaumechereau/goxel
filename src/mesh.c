@@ -392,17 +392,13 @@ void mesh_get_at(const mesh_t *mesh, const int pos[3],
 {
     block_t *block;
     int p[3];
-    const int s = BLOCK_SIZE;
-
-    vec3i_set(p, pos[0] - mod(pos[0], s),
-                 pos[1] - mod(pos[1], s),
-                 pos[2] - mod(pos[2], s));
-
+    vec3i_set(p, pos[0] - mod(pos[0], N),
+                 pos[1] - mod(pos[1], N),
+                 pos[2] - mod(pos[2], N));
     if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
         block_get_at(iter->block, pos, out);
         return;
     }
-
     HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
     if (iter) {
         iter->found = true;
