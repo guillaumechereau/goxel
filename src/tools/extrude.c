@@ -53,7 +53,7 @@ static int get_face(vec3_t n)
     const int *n2;
     for (f = 0; f < 6; f++) {
         n2 = FACES_NORMALS[f];
-        if (vec3_dot(n, vec3(n2[0], n2[1], n2[3])) > 0.5)
+        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2])) > 0.5)
             return f;
     }
     return -1;
