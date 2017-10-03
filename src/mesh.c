@@ -24,7 +24,7 @@ struct block_data
 {
     int         ref;
     uint64_t    id;
-    uint8_t     voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE][3]; // RGBA voxels.
+    uint8_t     voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE][4]; // RGBA voxels.
 };
 
 struct block
