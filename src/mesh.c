@@ -49,7 +49,8 @@ block_t *block_new(const int pos[3]);
 block_t *block_copy(const block_t *other);
 box_t block_get_box(const block_t *block, bool exact);
 void block_fill(block_t *block,
-                uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
+                void (*get_color)(const vec3_t *pos, uint8_t out[4],
+                                  void *user_data),
                 void *user_data);
 void block_op(block_t *block, painter_t *painter, const box_t *box);
 void block_merge(block_t *block, const block_t *other, int op);
@@ -185,7 +186,7 @@ static void add_blocks(mesh_t *mesh, box_t box);
 static void mesh_fill(
         mesh_t *mesh,
         const box_t *box,
-        uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
+        void (*get_color)(const vec3_t *pos, uint8_t out[4], void *user_data),
         void *user_data)
 {
     box_t bbox = box_get_bbox(*box);
@@ -431,15 +432,13 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
     return block_set_at(block, pos, v);
 }
 
-static uvec4b_t mesh_move_get_color(const vec3_t *pos, void *user)
+static void mesh_move_get_color(const vec3_t *pos, uint8_t c[4], void *user)
 {
-    uvec4b_t ret;
     mesh_t *mesh = USER_GET(user, 0);
     mat4_t *mat = USER_GET(user, 1);
     vec3_t p = mat4_mul_vec3(*mat, *pos);
     int pi[3] = {round(p.x), round(p.y), round(p.z)};
-    mesh_get_at(mesh, pi, NULL, ret.v);
-    return ret;
+    mesh_get_at(mesh, pi, NULL, c);
 }
 
 void mesh_move(mesh_t *mesh, const mat4_t *mat)
@@ -537,17 +536,19 @@ int mesh_select(const mesh_t *mesh,
     return 0;
 }
 
-static uvec4b_t mesh_extrude_callback(const vec3_t *pos, void *user)
+static void mesh_extrude_callback(const vec3_t *pos, uint8_t color[4],
+                                  void *user)
 {
-    uvec4b_t ret;
     mesh_t *mesh = USER_GET(user, 0);
     mat4_t *proj = USER_GET(user, 1);
     box_t *box = USER_GET(user, 2);
-    if (!bbox_contains_vec(*box, *pos)) return uvec4b(0, 0, 0, 0);
+    if (!bbox_contains_vec(*box, *pos)) {
+        memset(color, 0, 4);
+        return;
+    }
     vec3_t p = mat4_mul_vec3(*proj, *pos);
     int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
-    mesh_get_at(mesh, pi, NULL, ret.v);
-    return ret;
+    mesh_get_at(mesh, pi, NULL, color);
 }
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
