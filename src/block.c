@@ -202,40 +202,48 @@ static bool can_skip(const uint8_t v[4], int mode, const uint8_t c[4])
 
 // XXX: cleanup, or even better: remove totally and do that at the mesh
 // level.
-static uvec4b_t combine(uint8_t a[4], uint8_t b[4], int mode)
+static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
+                    uint8_t out[4])
 {
-    uvec4b_t ret = uvec4b(a[0], a[1], a[2], a[3]);
     int i, aa = a[3], ba = b[3];
+    uint8_t ret[4];
+    memcpy(ret, a, 4);
     if (mode == MODE_PAINT) {
-        ret.r = mix(a[0], b[0], ba / 255.);
-        ret.g = mix(a[1], b[1], ba / 255.);
-        ret.b = mix(a[2], b[2], ba / 255.);
+        ret[0] = mix(a[0], b[0], ba / 255.);
+        ret[1] = mix(a[1], b[1], ba / 255.);
+        ret[2] = mix(a[2], b[2], ba / 255.);
     }
     else if (mode == MODE_OVER) {
         if (255 * ba + aa * (255 - ba)) {
             for (i = 0; i < 3; i++) {
-                ret.v[i] = (255 * b[i] * ba + a[i] * aa * (255 - ba)) /
-                           (255 * ba + aa * (255 - ba));
+                ret[i] = (255 * b[i] * ba + a[i] * aa * (255 - ba)) /
+                         (255 * ba + aa * (255 - ba));
             }
         }
-        ret.a = ba + aa * (255 - ba) / 255;
+        ret[3] = ba + aa * (255 - ba) / 255;
     }
     else if (mode == MODE_SUB) {
-        ret.a = max(0, aa - ba);
+        ret[3] = max(0, aa - ba);
     }
     else if (mode == MODE_MAX) {
-        ret = uvec4b(b[0], b[1], b[2], max(a[3], b[3]));
+        ret[0] = b[0];
+        ret[1] = b[1];
+        ret[2] = b[2];
+        ret[3] = max(a[3], b[3]);
     } else if (mode == MODE_SUB_CLAMP) {
-        ret = uvec4b(a[0], a[1], a[2], min(aa, 255 - ba));
+        ret[0] = a[0];
+        ret[1] = a[1];
+        ret[2] = a[2];
+        ret[3] = min(aa, 255 - ba);
     } else if (mode == MODE_MULT_ALPHA) {
-        ret.r = ret.r * ba / 255;
-        ret.g = ret.g * ba / 255;
-        ret.b = ret.b * ba / 255;
-        ret.a = ret.a * ba / 255;
+        ret[0] = ret[0] * ba / 255;
+        ret[1] = ret[1] * ba / 255;
+        ret[2] = ret[2] * ba / 255;
+        ret[3] = ret[3] * ba / 255;
     } else {
         assert(false);
     }
-    return ret;
+    memcpy(out, ret, 4);
 }
 
 // XXX: cleanup this function.
@@ -288,8 +296,8 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
         if (v) {
             block_prepare_write(block);
             c[3] *= v;
-            BLOCK_AT(block, x, y, z) = combine(
-                BLOCK_AT(block, x, y, z).v, c, mode);
+            combine(BLOCK_AT(block, x, y, z).v, c, mode,
+                    BLOCK_AT(block, x, y, z).v);
         }
     }
 }
@@ -337,9 +345,10 @@ void block_merge(block_t *block, const block_t *other, int mode)
 
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
-        BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z).v,
-                                           DATA_AT(other->data, x, y, z).v,
-                                           mode);
+        combine(DATA_AT(block->data, x, y, z).v,
+                DATA_AT(other->data, x, y, z).v,
+                mode,
+                BLOCK_AT(block, x, y, z).v);
     }
     block->data->ref++;
     cache_add(cache, &key, sizeof(key), block->data, 1, block_del);
