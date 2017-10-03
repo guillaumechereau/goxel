@@ -1191,8 +1191,8 @@ void load_from_file(goxel_t *goxel, const char *path);
 
 
 // #### Colors functions #######
-uvec3b_t hsl_to_rgb(uvec3b_t hsl);
-uvec3b_t rgb_to_hsl(uvec3b_t rgb);
+void hsl_to_rgb(const uint8_t hsl[3], uint8_t rgb[3]);
+void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
 
 // #### Gui ####################
 

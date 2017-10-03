@@ -356,7 +356,7 @@ static void hsl_bitmap(int hue, uint8_t *buffer, int w, int h)
     for (x = 0; x < w; x++) {
         sat = 256 * (h - y - 1) / h;
         light = 256 * x / w;
-        rgb = hsl_to_rgb(uvec3b(hue, sat, light));
+        hsl_to_rgb(uvec3b(hue, sat, light).v, rgb.v);
         memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
     }
 }
@@ -367,7 +367,7 @@ static void hue_bitmap(uint8_t *buffer, int w, int h)
     uvec3b_t rgb;
     for (y = 0; y < h; y++) {
         hue = 256 * (h - y - 1) / h;
-        rgb = hsl_to_rgb(uvec3b(hue, 255, 127));
+        hsl_to_rgb(uvec3b(hue, 255, 127).v, rgb.v);
         for (x = 0; x < w; x++) {
             memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
         }
@@ -414,7 +414,7 @@ static bool color_edit(const char *name, uvec4b_t *color) {
 
     ImGui::Text("Edit color");
     ImVec4 c = *color;
-    hsl.xyz = rgb_to_hsl(color->rgb);
+    rgb_to_hsl(color->rgb.v, hsl.v);
     hsl.a = color->a;
 
     c_pos = ImGui::GetCursorScreenPos();
@@ -441,7 +441,7 @@ static bool color_edit(const char *name, uvec4b_t *color) {
                 ImGui::GetIO().MousePos.y - c_pos.y);
         int sat = 255 - pos.y;
         int light = pos.x;
-        color->rgb = hsl_to_rgb(uvec3b(hsl.x, sat, light));
+        hsl_to_rgb(uvec3b(hsl.x, sat, light).v, color->v);
         c = *color;
         ret = true;
     }
@@ -456,7 +456,7 @@ static bool color_edit(const char *name, uvec4b_t *color) {
         ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
                 ImGui::GetIO().MousePos.y - c_pos.y);
         int hue = 255 - pos.y;
-        color->rgb = hsl_to_rgb(uvec3b(hue, hsl.y, hsl.z));
+        hsl_to_rgb(uvec3b(hue, hsl.y, hsl.z).v, color->v);
         c = *color;
         ret = true;
     }
