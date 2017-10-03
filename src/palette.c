@@ -44,7 +44,10 @@ static int parse_gpl(const char *data, char *name, int *columns,
         if (sscanf(start, "%d %d %d %[^\n]", &r, &g, &b, entry_name) >= 3) {
             if (entries) {
                 strcpy(entries[nb].name, entry_name);
-                entries[nb].color = uvec4b(r, g, b, 255);
+                entries[nb].color[0] = r;
+                entries[nb].color[1] = g;
+                entries[nb].color[2] = b;
+                entries[nb].color[3] = 255;
             }
             nb++;
         }

@@ -746,22 +746,22 @@ static void layers_panel(goxel_t *goxel)
 }
 
 
-static bool render_palette_entry(const uvec4b_t *color, uvec4b_t *target)
+static bool render_palette_entry(const uint8_t color[4], uvec4b_t *target)
 {
     bool ret;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     const theme_t *theme = theme_get();
 
-    ImGui::PushStyleColor(ImGuiCol_Button, *color);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, *color);
+    ImGui::PushStyleColor(ImGuiCol_Button, color);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
     ret = ImGui::Button("", ImVec2(theme->sizes.item_height,
                                    theme->sizes.item_height));
-    if (color->uint32 == target->uint32) {
+    if (memcmp(color, target->v, 4) == 0) {
         draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
                            0xFFFFFFFF, 0, 0, 1);
     }
     ImGui::PopStyleColor(2);
-    if (ret) *target = *color;
+    if (ret) memcpy(target, color, 4);
     return ret;
 }
 
@@ -792,7 +792,7 @@ static void palette_panel(goxel_t *goxel)
 
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
-        render_palette_entry(&p->entries[i].color, &goxel->painter.color);
+        render_palette_entry(p->entries[i].color, &goxel->painter.color);
         auto_adjust_panel_size();
         if ((i + 1) % nb_col && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
