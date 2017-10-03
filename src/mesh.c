@@ -200,10 +200,8 @@ static void mesh_fill(
 
 box_t mesh_get_box(const mesh_t *mesh, bool exact)
 {
-    box_t ret;
+    box_t ret = box_null;
     block_t *block;
-    if (!mesh->blocks) return box_null;
-    ret = block_get_box(mesh->blocks, exact);
     MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
         ret = bbox_merge(ret, block_get_box(block, exact));
     }
