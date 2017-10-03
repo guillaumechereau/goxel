@@ -1288,7 +1288,7 @@ bool gui_action_button(const char *id, const char *label, float size,
 bool gui_action_checkbox(const char *id, const char *label);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_icon(const char *name, bool *v, int icon);
-bool gui_color(const char *label, uvec4b_t *color);
+bool gui_color(const char *label, uint8_t color[4]);
 bool gui_input_text(const char *label, char *buf, int size);
 bool gui_input_text_multiline(const char *label, char *buf, int size,
                               float width, float height);

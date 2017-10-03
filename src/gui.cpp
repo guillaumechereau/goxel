@@ -413,7 +413,7 @@ static int create_hue_texture(void)
     return gui->hue_tex->tex;
 }
 
-static bool color_edit(const char *name, uvec4b_t *color) {
+static bool color_edit(const char *name, uint8_t color[4]) {
     bool ret = false;
     ImVec2 c_pos;
     ImGuiIO& io = ImGui::GetIO();
@@ -421,9 +421,9 @@ static bool color_edit(const char *name, uvec4b_t *color) {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     ImGui::Text("Edit color");
-    ImVec4 c = *color;
-    rgb_to_hsl(color->rgb.v, hsl.v);
-    hsl.a = color->a;
+    ImVec4 c = color;
+    rgb_to_hsl(color, hsl.v);
+    hsl.a = color[3];
 
     c_pos = ImGui::GetCursorScreenPos();
     int tex_size = 256;
@@ -449,8 +449,8 @@ static bool color_edit(const char *name, uvec4b_t *color) {
                 ImGui::GetIO().MousePos.y - c_pos.y);
         int sat = 255 - pos.y;
         int light = pos.x;
-        hsl_to_rgb(uvec3b(hsl.x, sat, light).v, color->v);
-        c = *color;
+        hsl_to_rgb(uvec3b(hsl.x, sat, light).v, color);
+        c = color;
         ret = true;
     }
     ImGui::SameLine();
@@ -464,14 +464,17 @@ static bool color_edit(const char *name, uvec4b_t *color) {
         ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
                 ImGui::GetIO().MousePos.y - c_pos.y);
         int hue = 255 - pos.y;
-        hsl_to_rgb(uvec3b(hue, hsl.y, hsl.z).v, color->v);
-        c = *color;
+        hsl_to_rgb(uvec3b(hue, hsl.y, hsl.z).v, color);
+        c = color;
         ret = true;
     }
 
     ret = ImGui::ColorEdit3(name, (float*)&c) || ret;
     if (ret) {
-        *color = uvec4b(c.x * 255, c.y * 255, c.z * 255, c.w * 255);
+        color[0] = c.x * 255;
+        color[1] = c.y * 255;
+        color[2] = c.z * 255;
+        color[3] = c.w * 255;
     }
     return ret;
 }
@@ -858,7 +861,7 @@ static void render_advanced_panel(goxel_t *goxel)
         c = *COLORS[i].color;
         ImGui::ColorButton(c);
         if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            color_edit("##edit", COLORS[i].color);
+            color_edit("##edit", COLORS[i].color->v);
             if (ImGui::Button("Close"))
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
@@ -1703,10 +1706,10 @@ void gui_same_line(void)
     SameLine();
 }
 
-bool gui_color(const char *label, uvec4b_t *color)
+bool gui_color(const char *label, uint8_t color[4])
 {
     ImGui::PushID(label);
-    ImGui::ColorButton(*color);
+    ImGui::ColorButton(color);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
         color_edit("##edit", color);
         if (ImGui::Button("Close"))
