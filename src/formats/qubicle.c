@@ -119,13 +119,12 @@ static void qubicle_import(const char *path)
 void qubicle_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
-    block_t *block;
     int i, count, x, y, z, bpos[3], vpos[3];
     uint8_t v[4];
     char buff[16];
     mesh_t *m = mesh_copy(mesh);
     mat4_t mat = mat4_identity;
-    mesh_iterator_t iter = {0};
+    mesh_iterator_t iter;
 
     // Apply a -90 deg X rotation to fix axis.
     mat4_irotate(&mat, -M_PI / 2, 1, 0, 0);
@@ -133,7 +132,8 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     mesh = m;
 
     count = 0;
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) count++;
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_blocks(mesh, &iter, NULL, NULL, NULL, NULL)) count++;
 
     file = fopen(path, "wb");
     WRITE(uint32_t, 257, file); // version
@@ -144,8 +144,8 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, count, file);
 
     i = 0;
-    MESH_ITER_BLOCKS(mesh, bpos, NULL, NULL, block) {
-
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL, NULL)) {
         sprintf(buff, "%d", i);
         WRITE(uint8_t, strlen(buff), file);
         fwrite(buff, strlen(buff), 1, file);

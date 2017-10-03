@@ -139,6 +139,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     int x, y;
     int rect[4] = {0, 0, view_size.x, view_size.y};
     uint8_t clear_color[4] = {0, 0, 0, 0};
+    mesh_iterator_t iter;
 
     rend.settings.shadow = 0;
     rend.fbo = goxel->pick_fbo->framebuffer;
@@ -156,7 +157,8 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
 
     unpack_pos_data(pixel, voxel_pos, &face, &block_id);
     if (!block_id) return false;
-    MESH_ITER_BLOCKS(mesh, block_pos, NULL, &bid, block) {
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_blocks(mesh, &iter, block_pos, NULL, &bid, &block)) {
         if (bid == block_id) break;
     }
     assert(block);

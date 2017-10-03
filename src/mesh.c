@@ -18,6 +18,9 @@
 
 #include "goxel.h"
 
+#define MESH_ITER_BLOCKS(m, pos, data_id, id, b) \
+    for (mesh_iterator_t it_ = mesh_get_iterator(m); \
+            mesh_iter_blocks(m, &it_, pos, data_id, id, &b);)
 
 typedef struct block_data block_data_t;
 struct block_data

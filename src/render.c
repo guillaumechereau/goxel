@@ -534,6 +534,7 @@ static void compute_shadow_map_box(
     block_t *block;
     vec3_t p;
     int i, bpos[3];
+    mesh_iterator_t iter;
     mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
                                   vec3(0, 0, 0), vec3(0, 1, 0));
     for (i = 0; i < 6; i++)
@@ -541,7 +542,8 @@ static void compute_shadow_map_box(
 
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
-        MESH_ITER_BLOCKS(item->mesh, bpos, NULL, NULL, block) {
+        iter = mesh_get_iterator(item->mesh);
+        while (mesh_iter_blocks(item->mesh, &iter, bpos, NULL, NULL, &block)) {
             for (i = 0; i < 8; i++) {
                 p = vec3(bpos[0], bpos[1], bpos[2]);
                 p = vec3_addk(p, POS[i], N);
@@ -568,6 +570,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     float pos_scale = 1.0f;
     vec3_t light_dir = get_light_dir(rend, true);
     bool shadow = false;
+    mesh_iterator_t iter;
 
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
@@ -632,7 +635,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    MESH_ITER_BLOCKS(mesh, block_pos, &block_data_id, &block_id, block) {
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_blocks(mesh, &iter, block_pos, &block_data_id,
+                            &block_id, &block)) {
         render_block_(rend, mesh, block, block_pos, block_data_id,
                       block_id, effects, prog, &model);
     }
