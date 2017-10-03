@@ -780,7 +780,8 @@ struct palette {
 void palette_load_all(palette_t **list);
 
 // Generate an optimal palette whith a fixed number of colors from a mesh.
-void quantization_gen_palette(const mesh_t *mesh, int nb, uvec4b_t *palette);
+void quantization_gen_palette(const mesh_t *mesh, int nb,
+                              uint8_t (*palette)[4]);
 
 // #############################
 

@@ -235,7 +235,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
         zmax = max(zmax, z + 1);
     }
     if (!use_default_palette)
-        quantization_gen_palette(mesh, 255, palette + 1);
+        quantization_gen_palette(mesh, 255, (void*)(palette + 1));
 
     children_size = 12 + 4 * 3 +      // SIZE chunk
                     12 + 4 + 4 * nb_vox + // XYZI chunk
