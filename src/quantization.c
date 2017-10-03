@@ -132,16 +132,17 @@ void quantization_gen_palette(const mesh_t *mesh, int nb,
                               uint8_t (*palette)[4])
 {
     uint8_t v[4];
-    int x, y, z, i;
+    int i, pos[3];
     bucket_t *buckets, b;
+    mesh_iterator_t iter;
 
     buckets = calloc(nb, sizeof(*buckets));
 
     // Fill the initial bucket.
     utarray_new(buckets[0].values, &value_icd);
-    MESH_ITER_VOXELS(mesh, x, y, z, v) {
-        (void)x; (void)y; (void)z;
-        if (v[4] < 127) continue;
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_voxels(mesh, &iter, pos, v)) {
+        if (v[3] < 127) continue;
         v[3] = 255;
         bucket_add(&buckets[0], v, 1, true);
     }

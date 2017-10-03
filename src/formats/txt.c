@@ -22,8 +22,9 @@ static void export_as_txt(const char *path)
 {
     FILE *out;
     mesh_t *mesh = goxel->layers_mesh;
-    int x, y, z;
+    int p[3];
     uint8_t v[4];
+    mesh_iterator_t iter;
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                     "text\0*.txt\0", NULL, "untitled.txt");
@@ -34,9 +35,11 @@ static void export_as_txt(const char *path)
     fprintf(out, "# One line per voxel\n");
     fprintf(out, "# X Y Z RRGGBB\n");
 
-    MESH_ITER_VOXELS(mesh, x, y, z, v) {
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_voxels(mesh, &iter, p, v)) {
         if (v[3] < 127) continue;
-        fprintf(out, "%d %d %d %2x%2x%2x\n", x, y, z, v[0], v[1], v[2]);
+        fprintf(out, "%d %d %d %2x%2x%2x\n",
+                p[0], p[1], p[2], v[0], v[1], v[2]);
     }
     fclose(out);
 }

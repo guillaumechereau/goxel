@@ -576,6 +576,7 @@ typedef struct {
         bool found;
     };
 } mesh_iterator_t;
+typedef mesh_iterator_t mesh_accessor_t;
 
 mesh_t *mesh_new(void);
 void mesh_clear(mesh_t *mesh);
@@ -586,6 +587,7 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
+mesh_accessor_t mesh_get_accessor(const mesh_t *mesh);
 void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4]);
 uint8_t mesh_get_alpha_at(const mesh_t *mesh, const int pos[3],
@@ -612,6 +614,7 @@ int mesh_select(const mesh_t *mesh,
                             void *user),
                 void *user, mesh_t *selection);
 
+mesh_iterator_t mesh_get_iterator(const mesh_t *mesh);
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4]);
 
@@ -629,17 +632,6 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
 #define MESH_ITER_BLOCKS(m, pos, data_id, id, b) \
     for (mesh_iterator_t it_ = {0}; \
             mesh_iter_blocks(m, &it_, pos, data_id, id, &b);)
-
-// Convenience macro to iter all the voxels of a mesh.
-// Given:
-//    m         The mesh pointer.
-//    x, y, z   integer, set to the position of the voxel.
-//    v         uint8_t[4], set to the color of the voxel.
-#define MESH_ITER_VOXELS(m, x, y, z, v_) \
-    for (struct {mesh_iterator_t it; int p[3]; uint8_t v[4];} i_ = {0}; \
-         mesh_iter_voxels(m, &i_.it, i_.p, i_.v);) \
-        if (i_.v[3]) \
-            if (x = i_.p[0], y = i_.p[1], z = i_.p[2], memcpy(v_, i_.v, 4), 1)
 
 // #############################
 

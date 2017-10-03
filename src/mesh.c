@@ -114,6 +114,17 @@ mesh_t *mesh_new(void)
     return mesh;
 }
 
+mesh_iterator_t mesh_get_iterator(const mesh_t *mesh)
+{
+    return (mesh_iterator_t){0};
+}
+
+mesh_accessor_t mesh_get_accessor(const mesh_t *mesh)
+{
+    return (mesh_accessor_t){0};
+}
+
+
 void mesh_clear(mesh_t *mesh)
 {
     assert(mesh);
@@ -452,45 +463,49 @@ int mesh_select(const mesh_t *mesh,
                             void *user),
                 void *user, mesh_t *selection)
 {
-    int x, y, z, i, j, a;
+    int i, j, a;
     uint8_t v1[4], v2[4];
     int pos[3], p[3], p2[3];
     bool keep = true;
     uint8_t neighboors[6][4];
     uint8_t mask[6];
-    mesh_iterator_t iter1 = {0}, iter2 = {0};
-
+    mesh_iterator_t iter;
+    mesh_accessor_t mesh_accessor, selection_accessor;
     mesh_clear(selection);
+
+    mesh_accessor = mesh_get_accessor(mesh);
+    selection_accessor = mesh_get_accessor(selection);
+
     mesh_set_at(selection, start_pos, (uint8_t[]){255, 255, 255, 255},
-                &iter1);
+                &selection_accessor);
 
     // XXX: Very inefficient algorithm!
     // Iter and test all the neighbors of the selection until there is
     // no more possible changes.
     while (keep) {
         keep = false;
-        MESH_ITER_VOXELS(selection, x, y, z, v1) {
-            (void)v1;
-            pos[0] = x; pos[1] = y; pos[2] = z;
+        iter = mesh_get_iterator(selection);
+        while (mesh_iter_voxels(selection, &iter, pos, v1)) {
             for (i = 0; i < 6; i++) {
                 p[0] = pos[0] + FACES_NORMALS[i][0];
                 p[1] = pos[1] + FACES_NORMALS[i][1];
                 p[2] = pos[2] + FACES_NORMALS[i][2];
-                mesh_get_at(selection, p, &iter1, v2);
+                mesh_get_at(selection, p, &selection_accessor, v2);
                 if (v2[3]) continue; // Already done.
-                mesh_get_at(mesh, p, &iter2, v2);
+                mesh_get_at(mesh, p, &mesh_accessor, v2);
                 // Compute neighboors and mask.
                 for (j = 0; j < 6; j++) {
                     p2[0] = p[0] + FACES_NORMALS[j][0];
                     p2[1] = p[1] + FACES_NORMALS[j][1];
                     p2[2] = p[2] + FACES_NORMALS[j][2];
-                    mesh_get_at(mesh, p2, &iter2, neighboors[j]);
-                    mask[j] = mesh_get_alpha_at(selection, p2, &iter1);
+                    mesh_get_at(mesh, p2, &mesh_accessor, neighboors[j]);
+                    mask[j] = mesh_get_alpha_at(selection, p2,
+                                                &selection_accessor);
                 }
                 a = cond(v2, neighboors, mask, user);
                 if (a) {
                     mesh_set_at(selection, p, (uint8_t[]){255, 255, 255, a},
-                                &iter1);
+                                &selection_accessor);
                     keep = true;
                 }
             }

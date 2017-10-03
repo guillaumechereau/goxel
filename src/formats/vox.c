@@ -217,31 +217,33 @@ static int voxel_cmp(const void *a_, const void *b_)
 static void vox_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
-    int children_size, nb_vox = 0, i, x, y, z;
+    int children_size, nb_vox = 0, i, pos[3];
     int xmin = INT_MAX, ymin = INT_MAX, zmin = INT_MAX;
     int xmax = INT_MIN, ymax = INT_MIN, zmax = INT_MIN;
     uint8_t (*palette)[4];
     bool use_default_palette = true;
     uint8_t *voxels;
     uint8_t v[4];
+    mesh_iterator_t iter;
 
     palette = calloc(256, sizeof(*palette));
     for (i = 0; i < 256; i++)
         hexcolor(VOX_DEFAULT_PALETTE[i], palette[i]);
 
     // Iter all the voxels to get the count and the size.
-    MESH_ITER_VOXELS(mesh, x, y, z, v) {
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_voxels(mesh, &iter, pos, v)) {
         if (v[3] < 127) continue;
         v[3] = 255;
         use_default_palette = use_default_palette &&
                             get_color_index(v, palette, true) != -1;
         nb_vox++;
-        xmin = min(xmin, x);
-        ymin = min(ymin, y);
-        zmin = min(zmin, z);
-        xmax = max(xmax, x + 1);
-        ymax = max(ymax, y + 1);
-        zmax = max(zmax, z + 1);
+        xmin = min(xmin, pos[0]);
+        ymin = min(ymin, pos[1]);
+        zmin = min(zmin, pos[2]);
+        xmax = max(xmax, pos[0] + 1);
+        ymax = max(ymax, pos[1] + 1);
+        zmax = max(zmax, pos[2] + 1);
     }
     if (!use_default_palette)
         quantization_gen_palette(mesh, 255, (void*)(palette + 1));
@@ -271,18 +273,19 @@ static void vox_export(const mesh_t *mesh, const char *path)
 
     voxels = calloc(nb_vox, 4);
     i = 0;
-    MESH_ITER_VOXELS(mesh, x, y, z, v) {
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_voxels(mesh, &iter, pos, v)) {
         if (v[3] < 127) continue;
-        x -= xmin;
-        y -= ymin;
-        z -= zmin;
-        assert(x >= 0 && x < 255);
-        assert(y >= 0 && y < 255);
-        assert(z >= 0 && z < 255);
+        pos[0] -= xmin;
+        pos[1] -= ymin;
+        pos[2] -= zmin;
+        assert(pos[0] >= 0 && pos[0] < 255);
+        assert(pos[1] >= 0 && pos[1] < 255);
+        assert(pos[2] >= 0 && pos[2] < 255);
 
-        voxels[i * 4 + 0] = x;
-        voxels[i * 4 + 1] = y;
-        voxels[i * 4 + 2] = z;
+        voxels[i * 4 + 0] = pos[0];
+        voxels[i * 4 + 1] = pos[1];
+        voxels[i * 4 + 2] = pos[2];
         voxels[i * 4 + 3] = get_color_index(v, palette, false);
         i++;
     }
