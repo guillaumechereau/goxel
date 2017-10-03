@@ -1238,7 +1238,7 @@ typedef struct {
 extern theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT];
 
 typedef struct {
-    uvec4b_t colors[THEME_COLOR_COUNT];
+    uint8_t colors[THEME_COLOR_COUNT][4];
 } theme_group_t;
 
 typedef struct theme theme_t;
@@ -1265,7 +1265,7 @@ theme_t *theme_get(void);
 theme_t *theme_get_list(void);
 void theme_revert_default(void);
 void theme_save(void);
-uvec4b_t theme_get_color(int group, int color, bool selected);
+void theme_get_color(int group, int color, bool selected, uint8_t out[4]);
 void theme_set(const char *name);
 
 void gui_release(void);

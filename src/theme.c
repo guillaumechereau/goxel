@@ -89,24 +89,22 @@ static theme_t g_base_theme = {
 static theme_t *g_themes = NULL; // List of all the themes.
 static theme_t g_theme = {};   // Current theme.
 
-static uint32_t tohex(uvec4b_t c)
+static uint32_t tohex(const uint8_t c[4])
 {
-    return (int)c.r << 24 |
-           (int)c.g << 16 |
-           (int)c.b <<  8 |
-           (int)c.a <<  0;
+    return (int)c[0] << 24 |
+           (int)c[1] << 16 |
+           (int)c[2] <<  8 |
+           (int)c[3] <<  0;
 }
 
-static uvec4b_t parse_color(const char *s)
+static void parse_color(const char *s, uint8_t out[4])
 {
     uint32_t v;
-    uvec4b_t ret;
     v = strtoul(s + 1, NULL, 16);
-    ret.r = (v >> 24) & 0xff;
-    ret.g = (v >> 16) & 0xff;
-    ret.b = (v >>  8) & 0xff;
-    ret.a = (v >>  0) & 0xff;
-    return ret;
+    out[0] = (v >> 24) & 0xff;
+    out[1] = (v >> 16) & 0xff;
+    out[2] = (v >>  8) & 0xff;
+    out[3] = (v >>  0) & 0xff;
 }
 
 static int theme_ini_handler(void *user, const char *section,
@@ -124,7 +122,7 @@ static int theme_ini_handler(void *user, const char *section,
         if (strcmp(section, THEME_GROUP_INFOS[group].name) != 0) continue;
         for (i = 0; i < THEME_COLOR_COUNT; i++) {
             if (strcmp(name, THEME_COLOR_INFOS[i].name) == 0) {
-                theme->groups[group].colors[i] = parse_color(value);
+                parse_color(value, theme->groups[group].colors[i]);
             }
         }
     }
@@ -219,7 +217,7 @@ void theme_save(void)
         fprintf(file, "\n");
         fprintf(file, "[%s]\n", THEME_GROUP_INFOS[group].name);
         for (i = 0; i < THEME_COLOR_COUNT; i++) {
-            if (!t->groups[group].colors[i].a) continue;
+            if (!t->groups[group].colors[i][3]) continue;
             fprintf(file, "%s=#%X\n", THEME_COLOR_INFOS[i].name, tohex(
                     t->groups[group].colors[i]));
         }
@@ -229,11 +227,11 @@ void theme_save(void)
     free(path);
 }
 
-uvec4b_t theme_get_color(int g, int color, bool sel)
+void theme_get_color(int g, int color, bool sel, uint8_t out[4])
 {
     const theme_t *theme = theme_get();
     if (sel) color++;
-    while (g && !theme->groups[g].colors[color].a)
+    while (g && !theme->groups[g].colors[color][3])
         g = THEME_GROUP_INFOS[g].parent;
-    return theme->groups[g].colors[color];
+    memcpy(out, theme->groups[g].colors[color], 4);
 }

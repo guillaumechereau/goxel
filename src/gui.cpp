@@ -26,6 +26,11 @@ extern "C" {
             y = f.y / 255.; \
             z = f.z / 255.; \
             w = f.w / 255.; }     \
+        ImVec4(const uint8_t f[4]) { \
+            x = f[0] / 255.; \
+            y = f[1] / 255.; \
+            z = f[2] / 255.; \
+            w = f[3] / 255.; }     \
         operator uvec4b_t() const { \
             return uvec4b(x * 255, y * 255, z * 255, w * 255); }
 
@@ -168,7 +173,10 @@ static bool isCharPressed(int c)
     return g.IO.InputCharacters[0] == c;
 }
 
-#define COLOR(g, c, s) theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s))
+#define COLOR(g, c, s) ({ \
+        uint8_t c_[4]; \
+        theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s), c_); \
+        ImVec4 ret_ = c_; ret_; })
 
 static void init_prog(prog_t *p)
 {
@@ -663,7 +671,7 @@ static bool layer_item(int i, int icon, bool *visible, bool *edit,
                     (void*)(intptr_t)g_tex_icons->tex,
                     center - ImVec2(12, 12),
                     center + ImVec2(12, 12),
-                    uv0, uv1, COLOR(WIDGET, TEXT, 0).uint32);
+                    uv0, uv1, ImGui::GetColorU32(COLOR(WIDGET, TEXT, 0)));
         }
         ImGui::PopStyleVar();
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
@@ -1637,11 +1645,11 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     }
     ImGui::PushID(label);
 
-    color = theme_get_color(group, THEME_COLOR_INNER, *v);
+    theme_get_color(group, THEME_COLOR_INNER, *v, color.v);
     PushStyleColor(ImGuiCol_Button, color);
     PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
                 style.Colors[ImGuiCol_Button], 1.2));
-    color = theme_get_color(group, THEME_COLOR_TEXT, *v);
+    theme_get_color(group, THEME_COLOR_TEXT, *v, color.v);
     PushStyleColor(ImGuiCol_Text, color);
 
     if (icon != -1) {
@@ -1744,7 +1752,8 @@ bool gui_button(const char *label, float size, int icon)
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             center - ImVec2(16, 16),
                             center + ImVec2(16, 16),
-                            uv0, uv1, COLOR(WIDGET, TEXT, 0).uint32);
+                            uv0, uv1,
+                            ImGui::GetColorU32(COLOR(WIDGET, TEXT, 0)));
     }
     if (ret) on_click();
     return ret;
