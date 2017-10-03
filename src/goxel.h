@@ -624,7 +624,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
 // Given:
 //    m         The mesh pointer.
 //    x, y, z   integer, set to the position of the voxel.
-//    v         uvec4b_t, set to the color of the voxel.
+//    v         uint8_t[4], set to the color of the voxel.
 #define MESH_ITER_VOXELS(m, x, y, z, v_) \
     for (struct {mesh_iterator_t it; int p[3]; uint8_t v[4];} i_ = {0}; \
          mesh_iter_voxels(m, &i_.it, i_.p, i_.v);) \
@@ -1086,9 +1086,9 @@ typedef struct goxel
 
     camera_t   camera;
 
-    uvec4b_t   back_color;
-    uvec4b_t   grid_color;
-    uvec4b_t   image_box_color;
+    uint8_t    back_color[4];
+    uint8_t    grid_color[4];
+    uint8_t    image_box_color[4];
 
     texture_t  *pick_fbo;
     painter_t  painter;

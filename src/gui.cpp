@@ -546,7 +546,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
                    (int)view->rect.z,
                    (int)view->rect.w};
     goxel_render_view(goxel, &view->rect);
-    render_render(&goxel->rend, rect, goxel->back_color.v);
+    render_render(&goxel->rend, rect, goxel->back_color);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
@@ -799,12 +799,12 @@ static void render_advanced_panel(goxel_t *goxel)
     ImVec4 c;
     int i;
     const struct {
-        uvec4b_t   *color;
+        uint8_t    *color;
         const char *label;
     } COLORS[] = {
-        {&goxel->back_color, "Back color"},
-        {&goxel->grid_color, "Grid color"},
-        {&goxel->image_box_color, "Box color"},
+        {goxel->back_color, "Back color"},
+        {goxel->grid_color, "Grid color"},
+        {goxel->image_box_color, "Box color"},
     };
 
     ImGui::PushID("render_advanced");
@@ -852,10 +852,10 @@ static void render_advanced_panel(goxel_t *goxel)
     ImGui::Text("Other");
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
         ImGui::PushID(COLORS[i].label);
-        c = *COLORS[i].color;
+        c = COLORS[i].color;
         ImGui::ColorButton(c);
         if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            color_edit("##edit", COLORS[i].color->v);
+            color_edit("##edit", COLORS[i].color);
             if (ImGui::Button("Close"))
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();

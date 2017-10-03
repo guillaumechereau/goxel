@@ -280,9 +280,9 @@ void goxel_init(goxel_t *gox)
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
-    vec4_set(goxel->back_color.v, 70, 70, 70, 255);
-    vec4_set(goxel->grid_color.v, 19, 19, 19, 255);
-    vec4_set(goxel->image_box_color.v, 204, 204, 255, 255);
+    vec4_set(goxel->back_color, 70, 70, 70, 255);
+    vec4_set(goxel->grid_color, 19, 19, 19, 255);
+    vec4_set(goxel->image_box_color, 204, 204, 255, 255);
 
     // Load and set default palette.
     palette_load_all(&goxel->palettes);
@@ -584,9 +584,9 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
         render_box(rend, &b, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)
-        render_plane(rend, &goxel->plane, goxel->grid_color.v);
+        render_plane(rend, &goxel->plane, goxel->grid_color);
     if (!box_is_null(goxel->image->box))
-        render_box(rend, &goxel->image->box, goxel->image_box_color.v,
+        render_box(rend, &goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, rect);
