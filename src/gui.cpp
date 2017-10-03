@@ -21,18 +21,11 @@ extern "C" {
 }
 
 #define IM_VEC4_CLASS_EXTRA \
-        ImVec4(const uvec4b_t& f) { \
-            x = f.x / 255.; \
-            y = f.y / 255.; \
-            z = f.z / 255.; \
-            w = f.w / 255.; }     \
         ImVec4(const uint8_t f[4]) { \
             x = f[0] / 255.; \
             y = f[1] / 255.; \
             z = f[2] / 255.; \
             w = f[3] / 255.; }     \
-        operator uvec4b_t() const { \
-            return uvec4b(x * 255, y * 255, z * 255, w * 255); }
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
@@ -43,16 +36,15 @@ extern "C" {
     bool gui_settings_popup(void);
 }
 
-static inline uvec4b_t color_lighten(uvec4b_t c, float k)
+static inline ImVec4 color_lighten(ImVec4 c, float k)
 {
-    c.r *= k;
-    c.g *= k;
-    c.b *= k;
+    c.x *= k;
+    c.y *= k;
+    c.z *= k;
     return c;
 }
 
 namespace ImGui {
-    bool GoxColorEdit(const char *name, uvec4b_t *color);
     bool GoxInputFloat(const char *label, float *v, float step = 0.1,
                        float minv = -FLT_MAX, float maxv = FLT_MAX,
                        const char *format = "%.1f");
@@ -411,31 +403,31 @@ static bool color_edit(const char *name, uint8_t color[4]) {
     bool ret = false;
     ImVec2 c_pos;
     ImGuiIO& io = ImGui::GetIO();
-    uvec4b_t hsl;
+    uint8_t hsl[4];
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
     ImGui::Text("Edit color");
     ImVec4 c = color;
-    rgb_to_hsl(color, hsl.v);
-    hsl.a = color[3];
+    rgb_to_hsl(color, hsl);
+    hsl[3] = color[3];
 
     c_pos = ImGui::GetCursorScreenPos();
     int tex_size = 256;
-    ImGui::Image((void*)(uintptr_t)create_hsl_texture(hsl.x),
+    ImGui::Image((void*)(uintptr_t)create_hsl_texture(hsl[0]),
             ImVec2(tex_size, tex_size));
     // Draw lines.
-    draw_list->AddLine(c_pos + ImVec2(hsl.z * tex_size / 255, 0),
-            c_pos + ImVec2(hsl.z * tex_size / 255, 256),
+    draw_list->AddLine(c_pos + ImVec2(hsl[2] * tex_size / 255, 0),
+            c_pos + ImVec2(hsl[2] * tex_size / 255, 256),
             0xFFFFFFFF, 2.0f);
-    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl.y * tex_size / 255),
-            c_pos + ImVec2(256, 256 - hsl.y * tex_size / 255),
+    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl[1] * tex_size / 255),
+            c_pos + ImVec2(256, 256 - hsl[1] * tex_size / 255),
             0xFFFFFFFF, 2.0f);
 
-    draw_list->AddLine(c_pos + ImVec2(hsl.z * tex_size / 255, 0),
-            c_pos + ImVec2(hsl.z * tex_size / 255, 256),
+    draw_list->AddLine(c_pos + ImVec2(hsl[2] * tex_size / 255, 0),
+            c_pos + ImVec2(hsl[2] * tex_size / 255, 256),
             0xFF000000, 1.0f);
-    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl.y * tex_size / 255),
-            c_pos + ImVec2(256, 256 - hsl.y * tex_size / 255),
+    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl[1] * tex_size / 255),
+            c_pos + ImVec2(256, 256 - hsl[1] * tex_size / 255),
             0xFF000000, 1.0f);
 
     if (ImGui::IsItemHovered() && io.MouseDown[0]) {
@@ -443,22 +435,22 @@ static bool color_edit(const char *name, uint8_t color[4]) {
                 ImGui::GetIO().MousePos.y - c_pos.y);
         int sat = 255 - pos.y;
         int light = pos.x;
-        hsl_to_rgb(uvec3b(hsl.x, sat, light).v, color);
+        hsl_to_rgb(uvec3b(hsl[0], sat, light).v, color);
         c = color;
         ret = true;
     }
     ImGui::SameLine();
     c_pos = ImGui::GetCursorScreenPos();
     ImGui::Image((void*)(uintptr_t)create_hue_texture(), ImVec2(32, 256));
-    draw_list->AddLine(c_pos + ImVec2( 0, 255 - hsl.x * 256 / 255),
-            c_pos + ImVec2(31, 255 - hsl.x * 256 / 255),
+    draw_list->AddLine(c_pos + ImVec2( 0, 255 - hsl[0] * 256 / 255),
+            c_pos + ImVec2(31, 255 - hsl[0] * 256 / 255),
             0xFFFFFFFF, 2.0f);
 
     if (ImGui::IsItemHovered() && io.MouseDown[0]) {
         ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
                 ImGui::GetIO().MousePos.y - c_pos.y);
         int hue = 255 - pos.y;
-        hsl_to_rgb(uvec3b(hue, hsl.y, hsl.z).v, color);
+        hsl_to_rgb(uvec3b(hue, hsl[1], hsl[2]).v, color);
         c = color;
         ret = true;
     }
@@ -519,7 +511,7 @@ void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
     const int d = 40;  // Distance to corner of the view.
     vec2_t spos = vec2(d, d);
     vec3_t pos, normal, b;
-    uvec4b_t c;
+    uint8_t c[4];
     float s = 1;
     vec4_t view = vec4(0, 0, view_size->x, view_size->y);
     camera_get_ray(&goxel->camera, &spos, &view, &pos, &normal);
@@ -530,8 +522,8 @@ void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
 
     for (i = 0; i < 3; i++) {
         b = vec3_addk(pos, AXIS[i], 2.0 * s);
-        c = uvec4b(AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
-        render_line(&goxel->rend, &pos, &b, c.v);
+        vec4_set(c, AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
+        render_line(&goxel->rend, &pos, &b, c);
     }
 }
 
@@ -1175,15 +1167,13 @@ static bool render_tab(const char *label, bool *v)
     bool ret;
     const theme_t *theme = theme_get();
     int pad = theme->sizes.item_padding_h;
-    uvec4b_t color;
     ImVec2 text_size = ImGui::CalcTextSize(label);
     int xpad = (theme->sizes.item_height - text_size.y) / 2;
     float scale = ImGui::GetIO().DisplayFramebufferScale.y;
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     ImVec2 pos = window->DC.CursorPos + ImVec2(0, text_size.x + pad);
 
-    color = COLOR(TAB, INNER, *v);
-    ImGui::PushStyleColor(ImGuiCol_Button, color);
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(TAB, INNER, *v));
 
     ImGui::PushID(label);
 
@@ -1628,7 +1618,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     bool ret = false;
     bool default_v = false;
     ImVec2 uv0, uv1; // The position in the icon texture.
-    uvec4b_t color;
+    uint8_t color[4];
     int group = THEME_GROUP_WIDGET;
 
     v = v ? v : &default_v;
@@ -1642,11 +1632,11 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     }
     ImGui::PushID(label);
 
-    theme_get_color(group, THEME_COLOR_INNER, *v, color.v);
+    theme_get_color(group, THEME_COLOR_INNER, *v, color);
     PushStyleColor(ImGuiCol_Button, color);
     PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
                 style.Colors[ImGuiCol_Button], 1.2));
-    theme_get_color(group, THEME_COLOR_TEXT, *v, color.v);
+    theme_get_color(group, THEME_COLOR_TEXT, *v, color);
     PushStyleColor(ImGuiCol_Text, color);
 
     if (icon != -1) {
@@ -1658,7 +1648,8 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
             window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
                                        center - ImVec2(16, 16),
                                        center + ImVec2(16, 16),
-                                       uv0, uv1, color.uint32);
+                                       uv0, uv1,
+                                       ImGui::GetColorU32(color));
         }
     } else {
         ret = ImGui::Button(label, size);
