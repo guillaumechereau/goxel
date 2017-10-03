@@ -570,11 +570,7 @@ typedef struct block block_t;
 typedef struct {
     block_t *block;
     int pos[3];
-
-    union {
-        bool finished;
-        bool found;
-    };
+    int flags;
 } mesh_iterator_t;
 typedef mesh_iterator_t mesh_accessor_t;
 

@@ -18,6 +18,12 @@
 
 #include "goxel.h"
 
+// Flags for the iterator/accessor status.
+enum {
+    MESH_FOUND          = 1 << 0,
+    MESH_ITER_FINISHED  = 1 << 1,
+};
+
 #define MESH_ITER_BLOCKS(m, pos, data_id, id, b) \
     for (mesh_iterator_t it_ = mesh_get_iterator(m); \
             mesh_iter_blocks(m, &it_, pos, data_id, id, &b);)
@@ -373,13 +379,14 @@ void mesh_get_at(const mesh_t *mesh, const int pos[3],
     int p[3] = {pos[0] - mod(pos[0], N),
                 pos[1] - mod(pos[1], N),
                 pos[2] - mod(pos[2], N)};
-    if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
+    if (iter && (iter->flags & MESH_FOUND) &&
+            memcmp(&iter->pos, p, sizeof(p)) == 0) {
         block_get_at(iter->block, pos, out);
         return;
     }
     HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
     if (iter) {
-        iter->found = true;
+        iter->flags |= MESH_FOUND;
         iter->block = block;
         memcpy(iter->pos, p, sizeof(iter->pos));
     }
@@ -394,14 +401,15 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                 pos[1] - mod(pos[1], N),
                 pos[2] - mod(pos[2], N)};
     mesh_prepare_write(mesh);
-    if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
+    if (iter && (iter->flags & MESH_FOUND) &&
+            memcmp(&iter->pos, p, sizeof(p)) == 0) {
         if (!iter->block) iter->block = mesh_add_block(mesh, p);
         return block_set_at(iter->block, pos, v);
     }
     HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
     if (!block) block = mesh_add_block(mesh, p);
     if (iter) {
-        iter->found = true;
+        iter->flags |= MESH_FOUND;
         iter->block = block;
         memcpy(iter->pos, p, sizeof(iter->pos));
     }
@@ -573,7 +581,7 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4])
 {
     int x, y, z;
-    if (it->finished || !mesh->blocks) return false;
+    if ((it->flags & MESH_ITER_FINISHED) || !mesh->blocks) return false;
     if (!it->block) {
         it->block = mesh->blocks;
         it->pos[0] = 0;
@@ -595,7 +603,7 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
             if (++it->pos[2] >= N) {
                 it->pos[2] = 0;
                 it->block = it->block->hh.next;
-                if (!it->block) it->finished = true;
+                if (!it->block) it->flags |= MESH_ITER_FINISHED;
             }
         }
     }
@@ -606,14 +614,14 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint64_t *data_id, int *id,
                       block_t **block)
 {
-    if (it->finished || !mesh->blocks) return false;
+    if ((it->flags & MESH_ITER_FINISHED) || !mesh->blocks) return false;
     if (!it->block) it->block = mesh->blocks;
     if (block) *block = it->block;
     if (pos) memcpy(pos, it->block->pos, sizeof(it->block->pos));
     if (data_id) *data_id = it->block->data->id;
     if (id) *id = it->block->id;
     it->block = it->block->hh.next;
-    if (!it->block) it->finished = true;
+    if (!it->block) it->flags |= MESH_ITER_FINISHED;
     return true;
 }
 
