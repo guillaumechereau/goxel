@@ -29,7 +29,7 @@ int tool_color_picker_iter(tool_t *tool, const vec4_t *view)
     uint8_t color[4];
     mesh_t *mesh = goxel->layers_mesh;
     cursor_t *curs = &goxel->cursor;
-    int pi[3] = {curs->pos.x, curs->pos.y, curs->pos.z};
+    int pi[3] = {floor(curs->pos.x), floor(curs->pos.y), floor(curs->pos.z)};
     curs->snap_mask = SNAP_MESH;
     curs->snap_offset = -0.5;
 
