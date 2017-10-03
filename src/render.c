@@ -221,49 +221,57 @@ static void init_border_texture(void)
                     0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data));
 }
 
-static void bump_img_fill(uvec3b_t *data, int x, int y, int w, int h,
-                          uvec3b_t v)
+static void bump_img_fill(uint8_t (*data)[3], int x, int y, int w, int h,
+                          const uint8_t v[3])
 {
     int i, j;
-    for (j = y; j < y + h; j++)
-    for (i = x; i < x + w; i++) {
-        data[j * 256 + i] = v;
+    for (j = y; j < y + h; j++) {
+        for (i = x; i < x + w; i++) {
+            memcpy(data[j * 256 + i], v, 3);
+        }
     }
 }
 
-static uvec3b_t bump_neighbor_value(int f, int e)
+static void bump_neighbor_value(int f, int e, uint8_t out[3])
 {
     assert(e >= 0 && e < 4);
     assert(f >= 0 && f < 6);
     const int *n0, *n1;
     n0 = FACES_NORMALS[f];
     n1 = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
-    return uvec3b(
-        (int)(n0[0] + n1[0]) * 127 / 2 + 127,
-        (int)(n0[1] + n1[1]) * 127 / 2 + 127,
-        (int)(n0[2] + n1[2]) * 127 / 2 + 127
-    );
+    out[0] = (int)(n0[0] + n1[0]) * 127 / 2 + 127;
+    out[1] = (int)(n0[1] + n1[1]) * 127 / 2 + 127;
+    out[2] = (int)(n0[2] + n1[2]) * 127 / 2 + 127;
 }
 
-static void set_bump_block(uvec3b_t *data, int bx, int by, int f, int mask)
+static void set_bump_block(uint8_t (*data)[3], int bx, int by, int f, int mask)
 {
-    uvec3b_t v = uvec3b(127 + FACES_NORMALS[f][0] * 127,
-                        127 + FACES_NORMALS[f][1] * 127,
-                        127 + FACES_NORMALS[f][2] * 127);
+    const uint8_t v[3] = {127 + FACES_NORMALS[f][0] * 127,
+                          127 + FACES_NORMALS[f][1] * 127,
+                          127 + FACES_NORMALS[f][2] * 127};
+    uint8_t nv[3];
     bump_img_fill(data, bx * 16, by * 16, 16, 16, v);
-    if (mask & 1) bump_img_fill(data, bx * 16, by * 16, 16, 1,
-                                bump_neighbor_value(f, 0));
-    if (mask & 2) bump_img_fill(data, bx * 16 + 15, by * 16, 1, 16,
-                                bump_neighbor_value(f, 1));
-    if (mask & 4) bump_img_fill(data, bx * 16, by * 16 + 15, 16, 1,
-                                bump_neighbor_value(f, 2));
-    if (mask & 8) bump_img_fill(data, bx * 16, by * 16, 1, 16,
-                                bump_neighbor_value(f, 3));
+    if (mask & 1) {
+        bump_neighbor_value(f, 0, nv);
+        bump_img_fill(data, bx * 16, by * 16, 16, 1, nv);
+    }
+    if (mask & 2) {
+        bump_neighbor_value(f, 1, nv);
+        bump_img_fill(data, bx * 16 + 15, by * 16, 1, 16, nv);
+    }
+    if (mask & 4) {
+        bump_neighbor_value(f, 2, nv);
+        bump_img_fill(data, bx * 16, by * 16 + 15, 16, 1, nv);
+    }
+    if (mask & 8) {
+        bump_neighbor_value(f, 3, nv);
+        bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
+    }
 }
 
 static void init_bump_texture(void)
 {
-    uvec3b_t *data;
+    uint8_t (*data)[3];
     int i, f, mask;
     data = calloc(1, 256 * 256 * 3);
     for (i = 0; i < 256; i++) {

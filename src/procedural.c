@@ -425,10 +425,10 @@ static int set_args(gox_proc_t *proc, node_t *node, ctx_t *ctx)
 static void call_shape(const ctx_t *ctx, const shape_t *shape)
 {
     mesh_t *mesh = goxel->image->active_layer->mesh;
-    uvec3b_t hsl = uvec3b(ctx->color.x / 360 * 255,
-                          ctx->color.y * 255,
-                          ctx->color.z * 255);
-    hsl_to_rgb(hsl.v, goxel->painter.color);
+    uint8_t hsl[3] = {ctx->color.x / 360 * 255,
+                      ctx->color.y * 255,
+                      ctx->color.z * 255};
+    hsl_to_rgb(hsl, goxel->painter.color);
     goxel->painter.shape = shape;
     goxel->painter.mode = ctx->mode;
     goxel->painter.smoothness = ctx->antialiased ? 1 : 0;
