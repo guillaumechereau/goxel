@@ -48,7 +48,7 @@ struct block_data
 {
     int         ref;
     uint64_t    id;
-    uvec4b_t    voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE]; // RGBA voxels.
+    uint8_t     voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE][4]; // RGBA voxels.
 };
 
 struct block
@@ -89,7 +89,7 @@ bool block_is_empty(const block_t *block, bool fast)
     if (fast) return false;
 
     BLOCK_ITER(x, y, z) {
-        if (BLOCK_AT(block, x, y, z).a) return false;
+        if (BLOCK_AT(block, x, y, z)[3]) return false;
     }
     return true;
 }
@@ -144,7 +144,7 @@ box_t block_get_box(const block_t *block, bool exact)
     if (!exact)
         return bbox_from_extents(pos, N / 2, N / 2, N / 2);
     BLOCK_ITER(x, y, z) {
-        if (BLOCK_AT(block, x, y, z).a) {
+        if (BLOCK_AT(block, x, y, z)[3]) {
             xmin = min(xmin, x);
             ymin = min(ymin, y);
             zmin = min(zmin, z);
@@ -188,7 +188,7 @@ void block_fill(block_t *block,
     BLOCK_ITER(x, y, z) {
         p = vec3(block->pos[0] + x, block->pos[1] + y, block->pos[2] + z);
         c = get_color(&p, user_data);
-        BLOCK_AT(block, x, y, z) = c;
+        memcpy(BLOCK_AT(block, x, y, z), c.v, 4);
     }
 }
 
@@ -287,7 +287,7 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     for (y = min_y; y < max_y; y++)
     for (x = min_x; x < max_x; x++) {
         vec4_copy(painter->color, c);
-        if (can_skip(BLOCK_AT(block, x, y, z).v, mode, c)) continue;
+        if (can_skip(BLOCK_AT(block, x, y, z), mode, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
@@ -296,8 +296,8 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
         if (v) {
             block_prepare_write(block);
             c[3] *= v;
-            combine(BLOCK_AT(block, x, y, z).v, c, mode,
-                    BLOCK_AT(block, x, y, z).v);
+            combine(BLOCK_AT(block, x, y, z), c, mode,
+                    BLOCK_AT(block, x, y, z));
         }
     }
 }
@@ -345,10 +345,10 @@ void block_merge(block_t *block, const block_t *other, int mode)
 
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
-        combine(DATA_AT(block->data, x, y, z).v,
-                DATA_AT(other->data, x, y, z).v,
+        combine(DATA_AT(block->data, x, y, z),
+                DATA_AT(other->data, x, y, z),
                 mode,
-                BLOCK_AT(block, x, y, z).v);
+                BLOCK_AT(block, x, y, z));
     }
     block->data->ref++;
     cache_add(cache, &key, sizeof(key), block->data, 1, block_del);
@@ -367,7 +367,7 @@ void block_get_at(const block_t *block, const int pos[3], uint8_t out[4])
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
-    memcpy(out, BLOCK_AT(block, x, y, z).v, 4);
+    memcpy(out, BLOCK_AT(block, x, y, z), 4);
 }
 
 void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
@@ -380,7 +380,7 @@ void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     assert(x >= 0 && x < N);
     assert(y >= 0 && y < N);
     assert(z >= 0 && z < N);
-    memcpy(BLOCK_AT(block, x, y, z).v, v, 4);
+    memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
 
 void block_shift_alpha(block_t *block, int v)
@@ -388,7 +388,7 @@ void block_shift_alpha(block_t *block, int v)
     block_prepare_write(block);
     int i;
     for (i = 0; i < N * N * N; i++) {
-        block->data->voxels[i].a = clamp(block->data->voxels[i].a + v, 0, 255);
+        block->data->voxels[i][3] = clamp(block->data->voxels[i][3] + v, 0, 255);
     }
 }
 

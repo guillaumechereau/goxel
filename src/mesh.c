@@ -24,7 +24,7 @@ struct block_data
 {
     int         ref;
     uint64_t    id;
-    uvec4b_t    voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE]; // RGBA voxels.
+    uint8_t     voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE][3]; // RGBA voxels.
 };
 
 struct block
@@ -603,7 +603,7 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
     pos[0] = x + it->block->pos[0];
     pos[1] = y + it->block->pos[1];
     pos[2] = z + it->block->pos[2];
-    memcpy(value, it->block->data->voxels[x + y * N + z * N * N].v, 4);
+    memcpy(value, it->block->data->voxels[x + y * N + z * N * N], 4);
 
     if (++it->pos[0] >= N) {
         it->pos[0] = 0;
