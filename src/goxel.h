@@ -729,7 +729,7 @@ vec3_t render_get_light_dir(const renderer_t *rend);
 typedef struct {
      vec3_t   pos       __attribute__((aligned(4)));
      vec3_t   normal    __attribute__((aligned(4)));
-     uvec4b_t color     __attribute__((aligned(4)));
+     uint8_t  color[4]  __attribute__((aligned(4)));
      vec2_t   uv        __attribute__((aligned(4)));
 } model_vertex_t;
 
