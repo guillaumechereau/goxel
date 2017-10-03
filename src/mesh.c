@@ -60,16 +60,6 @@ void block_get_at(const block_t *block, const int pos[3], uint8_t out[4]);
 
 #define N BLOCK_SIZE
 
-// Keep track of the last operation, so that it is fast to do it again.
-typedef struct {
-    mesh_t      *origin;
-    mesh_t      *result;
-    painter_t   painter;
-    box_t       box;
-} operation_t;
-
-static operation_t g_last_op= {};
-
 // XXX: move this in goxel.h?
 static int mod(int a, int b)
 {
@@ -278,22 +268,6 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         }
     }
 
-    // In case we are doing the same operation as last time, we can just use
-    // the value we buffered.
-    if (!g_last_op.origin) g_last_op.origin = mesh_new();
-    if (!g_last_op.result) g_last_op.result = mesh_new();
-    #define EQUAL(a, b) (memcmp(&(a), &(b), sizeof(a)) == 0)
-    if (    mesh->blocks == g_last_op.origin->blocks &&
-            EQUAL(*painter, g_last_op.painter) &&
-            EQUAL(*box, g_last_op.box)) {
-        mesh_set(mesh, g_last_op.result);
-        return;
-    }
-    #undef EQUAL
-    mesh_set(g_last_op.origin, mesh);
-    g_last_op.painter   = *painter;
-    g_last_op.box       = *box;
-
     block_t *block, *tmp;
     box_t full_box, bbox, block_box;
     bool empty;
@@ -338,8 +312,6 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
             block_delete(block);
         }
     }
-
-    mesh_set(g_last_op.result, mesh);
 }
 
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
