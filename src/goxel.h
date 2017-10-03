@@ -700,11 +700,11 @@ void render_init(void);
 void render_deinit(void);
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
 void render_plane(renderer_t *rend, const plane_t *plane,
-                  const uvec4b_t *color);
+                  const uint8_t color[4]);
 void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
-                 const uvec4b_t *color);
+                 const uint8_t color[4]);
 void render_box(renderer_t *rend, const box_t *box,
-                const uvec4b_t *color, int effects);
+                const uint8_t color[4], int effects);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
 void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
                 int efffects);
@@ -713,7 +713,7 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects);
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
 void render_render(renderer_t *rend, const int rect[4],
-                   const uvec4b_t *clear_color);
+                   const uint8_t clear_color[4]);
 int render_get_default_settings(int i, char **name, render_settings_t *out);
 // Compute the light direction in the model coordinates (toward the light)
 vec3_t render_get_light_dir(const renderer_t *rend);
@@ -755,7 +755,7 @@ model3d_t *model3d_rect(void);
 model3d_t *model3d_wire_rect(void);
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
-                    const uvec4b_t *color,
+                    const uint8_t color[4],
                     const texture_t *tex,
                     const vec3_t *light,
                     int   effects);

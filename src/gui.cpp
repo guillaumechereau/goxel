@@ -526,7 +526,7 @@ void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
     for (i = 0; i < 3; i++) {
         b = vec3_addk(pos, AXIS[i], 2.0 * s);
         c = uvec4b(AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
-        render_line(&goxel->rend, &pos, &b, &c);
+        render_line(&goxel->rend, &pos, &b, c.v);
     }
 }
 
@@ -541,7 +541,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
                    (int)view->rect.z,
                    (int)view->rect.w};
     goxel_render_view(goxel, &view->rect);
-    render_render(&goxel->rend, rect, &goxel->back_color);
+    render_render(&goxel->rend, rect, goxel->back_color.v);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 

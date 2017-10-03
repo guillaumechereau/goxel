@@ -56,7 +56,7 @@ struct render_item_t
         mat4_t          mat;
     };
     vec3_t          grid;
-    uvec4b_t        color;
+    uint8_t         color[4];
     bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
     texture_t       *tex;
@@ -168,6 +168,18 @@ static const struct {
  *  the 4 corners and the 4 edges => 8bit => 256 blocks.
  *
  */
+
+static void copy_color(const uint8_t in[4], uint8_t out[4])
+{
+    if (in == NULL) {
+        out[0] = 255;
+        out[1] = 255;
+        out[2] = 255;
+        out[3] = 255;
+    } else {
+        memcpy(out, in, 4);
+    }
+}
 
 static float get_border_dist(float x, float y, int mask)
 {
@@ -659,7 +671,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     if (!(item->effects & EFFECT_WIREFRAME))
         light = get_light_dir(rend, false);
 
-    model3d_render(item->model3d, &view, proj_mat, &item->color,
+    model3d_render(item->model3d, &view, proj_mat, item->color,
                    item->tex, &light, item->effects);
 }
 
@@ -674,20 +686,20 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
         view3 = mat4_translate(view2, x + 0.5, y + 0.5, 0);
-        model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
+        model3d_render(item->model3d, &view3, &rend->proj_mat, item->color,
                        NULL, NULL, 0);
     }
 }
 
 void render_plane(renderer_t *rend, const plane_t *plane,
-                  const uvec4b_t *color)
+                  const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
     item->mat = plane->mat;
     mat4_iscale(&item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
-    item->color = *color;
+    copy_color(color, item->color);
     DL_APPEND(rend->items, item);
 }
 
@@ -700,7 +712,7 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
     item->proj_screen = !mat;
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
-    item->color = uvec4b(255, 255, 255, 255);
+    copy_color(NULL, item->color);
     item->effects = effects;
     DL_APPEND(rend->items, item);
 }
@@ -712,7 +724,7 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects)
     item->type = ITEM_MODEL3D;
     item->mat = plane->mat;
     item->model3d = g_wire_rect_model;
-    item->color = uvec4b(255, 255, 255, 255);
+    copy_color(NULL, item->color);
     item->proj_screen = true;
     item->effects = effects;
     DL_APPEND(rend->items, item);
@@ -729,26 +741,26 @@ static plane_t line_create_plane(const vec3_t *a, const vec3_t *b)
 }
 
 void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
-                 const uvec4b_t *color)
+                 const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
     item->model3d = g_line_model;
     item->mat = line_create_plane(a, b).mat;
-    item->color = color ? *color : HEXCOLOR(0xffffffff);
+    copy_color(color, item->color);
     mat4_itranslate(&item->mat, 0.5, 0, 0);
     DL_APPEND(rend->items, item);
 }
 
 void render_box(renderer_t *rend, const box_t *box,
-                const uvec4b_t *color, int effects)
+                const uint8_t color[4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
             == effects);
     item->type = ITEM_MODEL3D;
     item->mat = box->mat;
-    item->color = color ? *color : HEXCOLOR(0xffffffff);
+    copy_color(color, item->color);
     item->effects = effects;
     item->model3d = (effects & EFFECT_WIREFRAME) ? g_wire_cube_model :
                                                    g_cube_model;
@@ -838,7 +850,7 @@ static mat4_t render_shadow_map(renderer_t *rend)
     return ret;
 }
 
-static void render_background(renderer_t *rend, const uvec4b_t *col)
+static void render_background(renderer_t *rend, const uint8_t col[4])
 {
     prog_t *prog;
     typedef struct {
@@ -848,15 +860,15 @@ static void render_background(renderer_t *rend, const uvec4b_t *col)
     vertex_t vertices[4];
     vec4_t c1, c2;
 
-    if (col->a == 0) {
+    if (col[3] == 0) {
         GL(glClearColor(0, 0, 0, 0));
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         return;
     }
 
     // Add a small gradient to the color.
-    c1 = vec4(col->r / 255., col->g / 255., col->b / 255., col->a / 255.);
-    c2 = vec4(col->r / 255., col->g / 255., col->b / 255., col->a / 255.);
+    c1 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
+    c2 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
     vec3_iadd(&c1.rgb, vec3(+0.2, +0.2, +0.2));
     vec3_iadd(&c2.rgb, vec3(-0.2, -0.2, -0.2));
 
@@ -885,7 +897,7 @@ static void render_background(renderer_t *rend, const uvec4b_t *col)
 }
 
 void render_render(renderer_t *rend, const int rect[4],
-                   const uvec4b_t *clear_color)
+                   const uint8_t clear_color[4])
 {
     render_item_t *item, *tmp;
     mat4_t shadow_mvp;

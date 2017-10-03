@@ -264,17 +264,30 @@ model3d_t *model3d_wire_rect(void)
     return model;
 }
 
+static void copy_color(const uint8_t in[4], uint8_t out[4])
+{
+    if (in == NULL) {
+        out[0] = 255;
+        out[1] = 255;
+        out[2] = 255;
+        out[3] = 255;
+    } else {
+        memcpy(out, in, 4);
+    }
+}
+
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
-                    const uvec4b_t *color,
+                    const uint8_t color[4],
                     const texture_t *tex,
                     const vec3_t *light,
                     int   effects)
 {
-    uvec4b_t c = color ? *color : HEXCOLOR(0xffffffff);
+    uint8_t c[4];
     vec4_t cf;
     vec3_t light_dir;
 
+    copy_color(color, c);
     GL(glUseProgram(prog.prog));
     GL(glUniformMatrix4fv(prog.u_model_l, 1, 0, model->v));
     GL(glUniformMatrix4fv(prog.u_proj_l, 1, 0, proj->v));
@@ -288,7 +301,7 @@ void model3d_render(model3d_t *model3d,
                     GL(glDisable(GL_CULL_FACE));
     GL(glCullFace(effects & EFFECT_SEE_BACK ? GL_FRONT : GL_BACK));
 
-    cf = vec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
+    cf = vec4(c[0] / 255.0, c[1] / 255.0, c[2] / 255.0, c[3] / 255.0);
     GL(glUniform4fv(prog.u_color_l, 1, cf.v));
     GL(glUniform1f(prog.u_strip_l, effects & EFFECT_STRIP ? 1.0 : 0.0));
     GL(glUniform1f(prog.u_time_l, 0)); // No moving strip effects.
