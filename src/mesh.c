@@ -412,13 +412,23 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                  mesh_iterator_t *iter)
 {
     block_t *block;
-    vec3_t p = vec3(pos[0], pos[1], pos[2]);
+    int p[3];
     mesh_prepare_write(mesh);
-    add_blocks(mesh, bbox_from_extents(p, 2, 2, 2));
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
-        if (bbox_contains_vec(block_get_box(block, false), p))
-            block_set_at(block, pos, v);
+    vec3i_set(p, pos[0] - mod(pos[0], N),
+                 pos[1] - mod(pos[1], N),
+                 pos[2] - mod(pos[2], N));
+    if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
+        if (!iter->block) iter->block = mesh_add_block(mesh, p);
+        return block_set_at(iter->block, pos, v);
     }
+    HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
+    if (!block) block = mesh_add_block(mesh, p);
+    if (iter) {
+        iter->found = true;
+        iter->block = block;
+        memcpy(iter->pos, p, sizeof(iter->pos));
+    }
+    return block_set_at(block, pos, v);
 }
 
 static uvec4b_t mesh_move_get_color(const vec3_t *pos, void *user)
