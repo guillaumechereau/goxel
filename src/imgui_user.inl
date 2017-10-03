@@ -20,11 +20,6 @@ extern "C" {
 #include "goxel.h"
 }
 
-static ImVec4 imvec4(uvec4b_t v)
-{
-    return ImVec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255.);
-}
-
 static ImVec4 imvec4(const uint8_t v[4])
 {
     return ImVec4(v[0] / 255., v[1] / 255., v[2] / 255., v[3] / 255.);

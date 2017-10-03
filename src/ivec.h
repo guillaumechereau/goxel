@@ -41,29 +41,6 @@ static inline uvec3b_t uvec3b_mix(uvec3b_t a, uvec3b_t b, float t)
                   a.z * (1 - t) + b.z * t);
 }
 
-typedef union {
-    struct  { uint8_t x, y, z, w; };
-    struct  { uint8_t r, g, b, a; };
-    uvec3b_t xyz;
-    uvec3b_t rgb;
-    uint8_t v[4];
-    uint32_t uint32;
-} uvec4b_t;
-
-static inline uvec4b_t uvec4b(uint8_t x, uint8_t y, uint8_t z, uint8_t w) {
-    return (uvec4b_t)IVEC(x, y, z, w);
-}
-
-static inline bool uvec4b_equal(uvec4b_t a, uvec4b_t b)
-{
-    int i;
-    for (i = 0; i < 4; i++)
-        if (a.v[i] != b.v[i]) return false;
-    return true;
-}
-
-static const uvec4b_t uvec4b_zero = IVEC(0, 0, 0, 0);
-
 static inline void vec3i_set(int v[3], int x, int y, int z)
 {
     v[0] = x;
