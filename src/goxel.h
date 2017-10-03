@@ -186,11 +186,6 @@ static inline uvec4b_t HEXCOLOR(uint32_t v)
                   (v >>  0) & 0xff);
 }
 
-static inline vec4_t uvec4b_to_vec4(uvec4b_t v)
-{
-    return vec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255.);
-}
-
 // Convertion between radian and degree.
 #define DR2D (180 / M_PI)
 #define DD2R (M_PI / 180)
