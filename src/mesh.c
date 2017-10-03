@@ -235,7 +235,7 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
 static void add_blocks(mesh_t *mesh, box_t box)
 {
     vec3_t a, b;
-    int x, y, z, ia[3], ib[3];
+    int ia[3], ib[3];
     int i, p[3];
 
     a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
@@ -246,20 +246,14 @@ static void add_blocks(mesh_t *mesh, box_t box)
         ia[i] = ia[i] - mod(ia[i], N);
         ib[i] = ib[i] - mod(ib[i], N);
     }
-    for (z = ia[2]; z <= ib[2]; z += N)
-    for (y = ia[1]; y <= ib[1]; y += N)
-    for (x = ia[0]; x <= ib[0]; x += N)
+    for (p[2] = ia[2]; p[2] <= ib[2]; p[2] += N)
+    for (p[1] = ia[1]; p[1] <= ib[1]; p[1] += N)
+    for (p[0] = ia[0]; p[0] <= ib[0]; p[0] += N)
     {
-        vec3i_set(p, x, y, z);
         assert(p[0] % N == 0);
         assert(p[1] % N == 0);
         assert(p[2] % N == 0);
         if (!mesh_get_block_at(mesh, p)) {
-            /*
-            box_t bb = bbox_from_extents(vec3(x + N/2, y + N/2, z + N/2),
-                                         N/2, N/2, N/2);
-            render_box(&goxel->rend, &bb, NULL, EFFECT_WIREFRAME);
-            */
             mesh_add_block(mesh, p);
         }
     }
@@ -392,10 +386,9 @@ void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4])
 {
     block_t *block;
-    int p[3];
-    vec3i_set(p, pos[0] - mod(pos[0], N),
-                 pos[1] - mod(pos[1], N),
-                 pos[2] - mod(pos[2], N));
+    int p[3] = {pos[0] - mod(pos[0], N),
+                pos[1] - mod(pos[1], N),
+                pos[2] - mod(pos[2], N)};
     if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
         block_get_at(iter->block, pos, out);
         return;
@@ -413,11 +406,10 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                  mesh_iterator_t *iter)
 {
     block_t *block;
-    int p[3];
+    int p[3] = {pos[0] - mod(pos[0], N),
+                pos[1] - mod(pos[1], N),
+                pos[2] - mod(pos[2], N)};
     mesh_prepare_write(mesh);
-    vec3i_set(p, pos[0] - mod(pos[0], N),
-                 pos[1] - mod(pos[1], N),
-                 pos[2] - mod(pos[2], N));
     if (iter && iter->found && memcmp(&iter->pos, p, sizeof(p)) == 0) {
         if (!iter->block) iter->block = mesh_add_block(mesh, p);
         return block_set_at(iter->block, pos, v);
@@ -508,7 +500,7 @@ int mesh_select(const mesh_t *mesh,
         keep = false;
         MESH_ITER_VOXELS(selection, x, y, z, v1) {
             (void)v1;
-            vec3i_set(pos, x, y, z);
+            pos[0] = x; pos[1] = y; pos[2] = z;
             for (i = 0; i < 6; i++) {
                 p[0] = pos[0] + FACES_NORMALS[i][0];
                 p[1] = pos[1] + FACES_NORMALS[i][1];

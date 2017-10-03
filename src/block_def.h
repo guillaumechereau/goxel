@@ -40,7 +40,6 @@
  *
  */
 
-#include "ivec.h"
 #include "vec.h"
 
 // face index -> [vertex0, vertex1, vertex2, vertex3]

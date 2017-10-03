@@ -344,26 +344,27 @@ static void init_ImGui(const inputs_t *inputs)
 // Create an Sat/Hue bitmap with all the value for a given hue.
 static void hsl_bitmap(int hue, uint8_t *buffer, int w, int h)
 {
-    int x, y, sat, light;
-    uvec3b_t rgb;
+    int x, y;
+    uint8_t hsl[3], rgb[3];
     for (y = 0; y < h; y++)
     for (x = 0; x < w; x++) {
-        sat = 256 * (h - y - 1) / h;
-        light = 256 * x / w;
-        hsl_to_rgb(uvec3b(hue, sat, light).v, rgb.v);
-        memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
+        hsl[0] = hue;
+        hsl[1] = 256 * (h - y - 1) / h;
+        hsl[2] = 256 * x / w;
+        hsl_to_rgb(hsl, rgb);
+        memcpy(&buffer[(y * w + x) * 3], rgb, 3);
     }
 }
 
 static void hue_bitmap(uint8_t *buffer, int w, int h)
 {
-    int x, y, hue;
-    uvec3b_t rgb;
+    int x, y;
+    uint8_t rgb[3], hsl[3] = {0, 255, 127};
     for (y = 0; y < h; y++) {
-        hue = 256 * (h - y - 1) / h;
-        hsl_to_rgb(uvec3b(hue, 255, 127).v, rgb.v);
+        hsl[0] = 256 * (h - y - 1) / h;
+        hsl_to_rgb(hsl, rgb);
         for (x = 0; x < w; x++) {
-            memcpy(&buffer[(y * w + x) * 3], rgb.v, 3);
+            memcpy(&buffer[(y * w + x) * 3], rgb, 3);
         }
     }
 }
@@ -433,9 +434,9 @@ static bool color_edit(const char *name, uint8_t color[4]) {
     if (ImGui::IsItemHovered() && io.MouseDown[0]) {
         ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
                 ImGui::GetIO().MousePos.y - c_pos.y);
-        int sat = 255 - pos.y;
-        int light = pos.x;
-        hsl_to_rgb(uvec3b(hsl[0], sat, light).v, color);
+        hsl[1] = 255 - pos.y;
+        hsl[2] = pos.x;
+        hsl_to_rgb(hsl, color);
         c = color;
         ret = true;
     }
@@ -449,8 +450,8 @@ static bool color_edit(const char *name, uint8_t color[4]) {
     if (ImGui::IsItemHovered() && io.MouseDown[0]) {
         ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
                 ImGui::GetIO().MousePos.y - c_pos.y);
-        int hue = 255 - pos.y;
-        hsl_to_rgb(uvec3b(hue, hsl[1], hsl[2]).v, color);
+        hsl[0] = 255 - pos.y;
+        hsl_to_rgb(hsl, color);
         c = color;
         ret = true;
     }

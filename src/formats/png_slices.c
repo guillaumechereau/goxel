@@ -36,9 +36,9 @@ static void export_as_png_slices(const char *path)
     w = box.w.x * 2;
     h = box.h.y * 2;
     d = box.d.z * 2;
-    vec3i_set(start_pos, box.p.x - box.w.x,
-                         box.p.y - box.h.y,
-                         box.p.z - box.d.z);
+    start_pos[0] = box.p.x - box.w.x;
+    start_pos[1] = box.p.y - box.h.y;
+    start_pos[2] = box.p.z - box.d.z;
     img = calloc(w * h * d, 4);
     for (z = 0; z < d; z++)
     for (y = 0; y < h; y++)

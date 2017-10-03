@@ -31,7 +31,6 @@
 #include "utlist.h"
 #include "uthash.h"
 #include "utarray.h"
-#include "ivec.h"
 #include "noc_file_dialog.h"
 #include "block_def.h"
 #include <float.h>
