@@ -178,17 +178,19 @@ static void block_prepare_write(block_t *block)
 }
 
 void block_fill(block_t *block,
-                void (*get_color)(const vec3_t *pos, uint8_t out[4],
+                void (*get_color)(const int pos[3], uint8_t out[4],
                                   void *user_data),
                 void *user_data)
 {
     int x, y, z;
-    vec3_t p;
+    int p[3];
     uint8_t c[4];
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
-        p = vec3(block->pos[0] + x, block->pos[1] + y, block->pos[2] + z);
-        get_color(&p, c, user_data);
+        p[0] = block->pos[0] + x;
+        p[1] = block->pos[1] + y;
+        p[2] = block->pos[2] + z;
+        get_color(p, c, user_data);
         memcpy(BLOCK_AT(block, x, y, z), c, 4);
     }
 }
