@@ -428,7 +428,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
     uvec3b_t hsl = uvec3b(ctx->color.x / 360 * 255,
                           ctx->color.y * 255,
                           ctx->color.z * 255);
-    hsl_to_rgb(hsl.v, goxel->painter.color.rgb.v);
+    hsl_to_rgb(hsl.v, goxel->painter.color);
     goxel->painter.shape = shape;
     goxel->painter.mode = ctx->mode;
     goxel->painter.smoothness = ctx->antialiased ? 1 : 0;

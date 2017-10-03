@@ -26,7 +26,7 @@ typedef struct {
 
 int tool_color_picker_iter(tool_t *tool, const vec4_t *view)
 {
-    uvec4b_t color;
+    uint8_t color[4];
     mesh_t *mesh = goxel->layers_mesh;
     cursor_t *curs = &goxel->cursor;
     int pi[3] = {curs->pos.x, curs->pos.y, curs->pos.z};
@@ -35,10 +35,10 @@ int tool_color_picker_iter(tool_t *tool, const vec4_t *view)
 
     goxel_set_help_text(goxel, "Click on a voxel to pick the color");
     if (!curs->snaped) return 0;
-    mesh_get_at(mesh, pi, NULL, color.v);
-    color.a = 255;
-    goxel_set_help_text(goxel, "%d %d %d", color.r, color.g, color.b);
-    if (curs->flags & CURSOR_PRESSED) goxel->painter.color = color;
+    mesh_get_at(mesh, pi, NULL, color);
+    color[3] = 255;
+    goxel_set_help_text(goxel, "%d %d %d", color[0], color[1], color[2]);
+    if (curs->flags & CURSOR_PRESSED) vec4_copy(color, goxel->painter.color);
     return 0;
 }
 

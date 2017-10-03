@@ -740,7 +740,7 @@ static void layers_panel(goxel_t *goxel)
 }
 
 
-static bool render_palette_entry(const uint8_t color[4], uvec4b_t *target)
+static bool render_palette_entry(const uint8_t color[4], uint8_t target[4])
 {
     bool ret;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -750,7 +750,7 @@ static bool render_palette_entry(const uint8_t color[4], uvec4b_t *target)
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
     ret = ImGui::Button("", ImVec2(theme->sizes.item_height,
                                    theme->sizes.item_height));
-    if (memcmp(color, target->v, 4) == 0) {
+    if (memcmp(color, target, 4) == 0) {
         draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
                            0xFFFFFFFF, 0, 0, 1);
     }
@@ -786,7 +786,7 @@ static void palette_panel(goxel_t *goxel)
 
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
-        render_palette_entry(p->entries[i].color, &goxel->painter.color);
+        render_palette_entry(p->entries[i].color, goxel->painter.color);
         auto_adjust_panel_size();
         if ((i + 1) % nb_col && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();

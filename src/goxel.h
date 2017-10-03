@@ -178,8 +178,19 @@ enum {
         _ret; \
     })
 
+// Some useful vector macros.
 #define vec4_set(v, x, y, z, w) do { \
     (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
+
+#define vec4_copy(a, b) do { \
+        (b)[0] = (a)[0]; (b)[1] = (a)[1]; (b)[2] = (a)[2]; (b)[3] = (a)[3]; \
+    } while (0)
+
+#define vec4_equal(a, b) ({ \
+        (a)[0] == (b)[0] && \
+        (a)[1] == (b)[1] && \
+        (a)[2] == (b)[2] && \
+        (a)[3] == (b)[3]; })
 
 // Convertion between radian and degree.
 #define DR2D (180 / M_PI)
@@ -523,7 +534,7 @@ extern shape_t shape_cylinder;
 typedef struct painter {
     int             mode;
     const shape_t   *shape;
-    uvec4b_t        color;
+    uint8_t         color[4];
     float           smoothness;
     int             symmetry; // bitfield X Y Z
     box_t           *box;     // Clipping box (can be null)

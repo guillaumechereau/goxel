@@ -298,7 +298,7 @@ void goxel_init(goxel_t *gox)
         .shape = &shape_cube,
         .mode = MODE_OVER,
         .smoothness = 0,
-        .color = uvec4b(255, 255, 255, 255),
+        .color = {255, 255, 255, 255},
     };
     goxel->rend = (renderer_t) {
         .light = {
@@ -773,7 +773,7 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_INTERSECT,
-        .color = uvec4b(255, 255, 255, 255),
+        .color = {255, 255, 255, 255},
     };
     mesh_op(new_layer->mesh, &painter, box);
     painter.mode = MODE_SUB;
@@ -839,7 +839,7 @@ static void copy_action(void)
         painter = (painter_t) {
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
-            .color = uvec4b(255, 255, 255, 255),
+            .color = {255, 255, 255, 255},
         };
         mesh_op(goxel->clipboard.mesh, &painter, &goxel->selection);
     }

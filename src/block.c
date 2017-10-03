@@ -192,25 +192,29 @@ void block_fill(block_t *block,
     }
 }
 
-static bool can_skip(uvec4b_t v, int mode, uvec4b_t c)
+static bool can_skip(const uint8_t v[4], int mode, const uint8_t c[4])
 {
-    return (v.a && (mode == MODE_OVER) && uvec4b_equal(c, v)) ||
-            (!v.a && (mode == MODE_SUB ||
-                      mode == MODE_PAINT ||
-                      mode == MODE_SUB_CLAMP));
+    return (v[3] && (mode == MODE_OVER) && vec4_equal(c, v)) ||
+            (!v[3] && (mode == MODE_SUB ||
+                       mode == MODE_PAINT ||
+                       mode == MODE_SUB_CLAMP));
 }
 
-static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
+// XXX: cleanup, or even better: remove totally and do that at the mesh
+// level.
+static uvec4b_t combine(uint8_t a[4], uint8_t b[4], int mode)
 {
-    uvec4b_t ret = a;
-    int i, aa = a.a, ba = b.a;
+    uvec4b_t ret = uvec4b(a[0], a[1], a[2], a[3]);
+    int i, aa = a[3], ba = b[3];
     if (mode == MODE_PAINT) {
-        ret.rgb = uvec3b_mix(a.rgb, b.rgb, ba / 255.);
+        ret.r = mix(a[0], b[0], ba / 255.);
+        ret.g = mix(a[1], b[1], ba / 255.);
+        ret.b = mix(a[2], b[2], ba / 255.);
     }
     else if (mode == MODE_OVER) {
         if (255 * ba + aa * (255 - ba)) {
             for (i = 0; i < 3; i++) {
-                ret.v[i] = (255 * b.v[i] * ba + a.v[i] * aa * (255 - ba)) /
+                ret.v[i] = (255 * b[i] * ba + a[i] * aa * (255 - ba)) /
                            (255 * ba + aa * (255 - ba));
             }
         }
@@ -220,11 +224,9 @@ static uvec4b_t combine(uvec4b_t a, uvec4b_t b, int mode)
         ret.a = max(0, aa - ba);
     }
     else if (mode == MODE_MAX) {
-        ret.a = max(a.a, b.a);
-        ret.rgb = b.rgb;
+        ret = uvec4b(b[0], b[1], b[2], max(a[3], b[3]));
     } else if (mode == MODE_SUB_CLAMP) {
-        ret.a = min(aa, 255 - ba);
-        ret.rgb = a.rgb;
+        ret = uvec4b(a[0], a[1], a[2], min(aa, 255 - ba));
     } else if (mode == MODE_MULT_ALPHA) {
         ret.r = ret.r * ba / 255;
         ret.g = ret.g * ba / 255;
@@ -244,7 +246,7 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     vec3_t p, size;
     float k, v;
     int mode = painter->mode;
-    uvec4b_t c;
+    uint8_t c[4];
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
     shape_func = painter->shape->func;
     bool invert = false;
@@ -276,8 +278,8 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
     for (z = min_z; z < max_z; z++)
     for (y = min_y; y < max_y; y++)
     for (x = min_x; x < max_x; x++) {
-        c = painter->color;
-        if (can_skip(BLOCK_AT(block, x, y, z), mode, c)) continue;
+        vec4_copy(painter->color, c);
+        if (can_skip(BLOCK_AT(block, x, y, z).v, mode, c)) continue;
         p = mat4_mul_vec3(mat, vec3(x, y, z));
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
@@ -285,9 +287,9 @@ void block_op(block_t *block, painter_t *painter, const box_t *box)
         if (invert) v = 1.0f - v;
         if (v) {
             block_prepare_write(block);
-            c.a *= v;
+            c[3] *= v;
             BLOCK_AT(block, x, y, z) = combine(
-                BLOCK_AT(block, x, y, z), c, mode);
+                BLOCK_AT(block, x, y, z).v, c, mode);
         }
     }
 }
@@ -335,8 +337,8 @@ void block_merge(block_t *block, const block_t *other, int mode)
 
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
-        BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z),
-                                           DATA_AT(other->data, x, y, z),
+        BLOCK_AT(block, x, y, z) = combine(DATA_AT(block->data, x, y, z).v,
+                                           DATA_AT(other->data, x, y, z).v,
                                            mode);
     }
     block->data->ref++;
