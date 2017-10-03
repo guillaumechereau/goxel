@@ -161,14 +161,6 @@ box_t block_get_box(const block_t *block, bool exact)
     return ret;
 }
 
-// XXX: only used once.
-static vec3_t block_get_voxel_pos(const block_t *block, int x, int y, int z)
-{
-    return vec3(block->pos[0] + x - BLOCK_SIZE / 2,
-                block->pos[1] + y - BLOCK_SIZE / 2,
-                block->pos[2] + z - BLOCK_SIZE / 2);
-}
-
 // Copy the data if there are any other blocks having reference to it.
 static void block_prepare_write(block_t *block)
 {
@@ -194,7 +186,7 @@ void block_fill(block_t *block,
     uvec4b_t c;
     block_prepare_write(block);
     BLOCK_ITER(x, y, z) {
-        p = block_get_voxel_pos(block, x, y, z);
+        p = vec3(block->pos[0] + x, block->pos[1] + y, block->pos[2] + z);
         c = get_color(&p, user_data);
         BLOCK_AT(block, x, y, z) = c;
     }
