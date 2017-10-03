@@ -19,7 +19,7 @@
 #ifndef BOX_H
 #define BOX_H
 
-#include "goxel.h"
+#include "vec.h"
 
 // A Box is represented as the 4x4 matrix that transforms the unit cube into
 // the box.
