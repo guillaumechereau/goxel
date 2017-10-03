@@ -35,13 +35,14 @@ static inline int AT(int x, int y, int z) {
     return x + y * 512 + z * 512 * 512;
 }
 
-static uvec4b_t swap_color(uint32_t v)
+static void swap_color(uint32_t v, uint8_t ret[4])
 {
-    uvec4b_t ret;
-    ret.uint32 = v;
-    SWAP(ret.r, ret.b);
-    ret.a = 255;
-    return ret;
+    uint8_t o[4];
+    memcpy(o, &v, 4);
+    ret[0] = o[2];
+    ret[1] = o[1];
+    ret[2] = o[0];
+    ret[3] = o[3];
 }
 
 static int vxl_import(const char *path)
@@ -52,7 +53,7 @@ static int vxl_import(const char *path)
     // ext_src/stb!).
     int ret = 0, size;
     int w = 512, h = 512, d = 64, x, y, z;
-    uvec4b_t *cube = NULL;
+    uint8_t (*cube)[4] = NULL;
     uint8_t *data, *v;
 
     uint32_t *color;
@@ -77,7 +78,7 @@ static int vxl_import(const char *path)
     for (x = 0; x < w; x++) {
 
         for (z = 0; z < 64; z++)
-            cube[AT(x, y, z)].a = 255;
+            cube[AT(x, y, z)][3] = 255;
 
         z = 0;
         while (true) {
@@ -86,12 +87,12 @@ static int vxl_import(const char *path)
             top_color_end = v[2];
 
             for (i = z; i < top_color_start; i++)
-                cube[AT(x, y, i)].a = 0;
+                cube[AT(x, y, i)][3] = 0;
 
             color = (uint32_t*)(v + 4);
             for (z = top_color_start; z <= top_color_end; z++) {
                 CHECK(z >= 0 && z < d);
-                cube[AT(x, y, z)] = swap_color(*color++);
+                swap_color(*color++, cube[AT(x, y, z)]);
             }
 
             len_bottom = top_color_end - top_color_start + 1;
@@ -115,7 +116,7 @@ static int vxl_import(const char *path)
             bottom_color_start = bottom_color_end - len_top;
 
             for(z = bottom_color_start; z < bottom_color_end; z++)
-                cube[AT(x, y, z)] = swap_color(*color++);
+                swap_color(*color++, cube[AT(x, y, z)]);
         }
     }
 
@@ -143,12 +144,12 @@ static int is_surface(int x, int y, int z, uint8_t map[512][512][64])
 
 static void write_color(FILE *f, uint32_t color)
 {
-    uvec4b_t c;
-    c.uint32 = color;
-    fputc(c.b, f);
-    fputc(c.g, f);
-    fputc(c.r, f);
-    fputc(c.a, f);
+    uint8_t c[4];
+    memcpy(c, &color, 4);
+    fputc(c[2], f);
+    fputc(c[1], f);
+    fputc(c[0], f);
+    fputc(c[3], f);
 }
 
 #define MAP_Z  64
@@ -242,7 +243,7 @@ static void export_as_vxl(const char *path)
     uint32_t (*color)[512][512][64];
     const mesh_t *mesh = goxel->layers_mesh;
     mesh_iterator_t iter = {0};
-    uvec4b_t c;
+    uint8_t c[4];
     int x, y, z, pos[3];
 
     map = calloc(1, sizeof(*map));
@@ -257,10 +258,10 @@ static void export_as_vxl(const char *path)
         pos[0] = 256 - x;
         pos[1] = y - 256;
         pos[2] = 31 - z;
-        mesh_get_at(mesh, pos, &iter, c.v);
-        if (c.a <= 127) continue;
+        mesh_get_at(mesh, pos, &iter, c);
+        if (c[3] <= 127) continue;
         (*map)[x][y][z] = 1;
-        (*color)[x][y][z] = c.uint32;
+        memcpy(&((*color)[x][y][z]), c, 4);
     }
     write_map(path, *map, *color);
     free(map);

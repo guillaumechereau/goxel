@@ -31,7 +31,13 @@ static void qubicle_import(const char *path)
     int version, color_format, orientation, compression, vmask, mat_count;
     int i, j, r, index, len, w, h, d, pos[3], vpos[3], x, y, z;
     char buff[256];
-    uvec4b_t v;
+    union {
+        uint8_t v[4];
+        uint32_t uint32;
+        struct {
+            uint8_t r, g, b, a;
+        };
+    } v;
     mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
@@ -115,7 +121,7 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     FILE *file;
     block_t *block;
     int i, count, x, y, z, bpos[3], vpos[3];
-    uvec4b_t v;
+    uint8_t v[4];
     char buff[16];
     mesh_t *m = mesh_copy(mesh);
     mat4_t mat = mat4_identity;
@@ -156,8 +162,8 @@ void qubicle_export(const mesh_t *mesh, const char *path)
             vpos[0] = bpos[0] - BLOCK_SIZE / 2 + x;
             vpos[1] = bpos[1] - BLOCK_SIZE / 2 + y;
             vpos[2] = bpos[2] - BLOCK_SIZE / 2 + z;
-            mesh_get_at(mesh, vpos, &iter, v.v);
-            WRITE(uint32_t, v.uint32, file);
+            mesh_get_at(mesh, vpos, &iter, v);
+            fwrite(v, 4, 1, file);
         }
         i++;
     }
