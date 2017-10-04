@@ -346,7 +346,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     int vp[3];
     uint8_t value[4];
     mesh_iterator_t iter;
-    mesh_accessor_t accessor, accessor2;
+    mesh_accessor_t accessor;
     vec3_t size, p;
     mat4_t mat = mat4_identity;
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
@@ -369,7 +369,6 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     // XXX: for the moment we cannot use the same accessor for both
     // setting and getting!  Need to fix that!!
     accessor = mesh_get_accessor(mesh);
-    accessor2 = mesh_get_accessor(mesh);
     iter = mesh_get_box_iterator(mesh, *box, false);
     while (mesh_iter_voxels(mesh, &iter, vp, value)) {
         p = mat4_mul_vec3(mat, vec3(vp[0], vp[1], vp[2]));
@@ -380,7 +379,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         if (v) {
             mesh_get_at(mesh, vp, &accessor, value);
             combine(value, painter->color, mode, value);
-            mesh_set_at(mesh, vp, value, &accessor2);
+            mesh_set_at(mesh, vp, value, &accessor);
         }
     }
 }
@@ -452,6 +451,8 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                 pos[1] - mod(pos[1], N),
                 pos[2] - mod(pos[2], N)};
     mesh_prepare_write(mesh);
+    if (iter && iter->block && iter->block->data->ref > 1)
+        iter->flags &= ~MESH_FOUND;
     if (iter && (iter->flags & MESH_FOUND) &&
             memcmp(&iter->pos, p, sizeof(p)) == 0) {
         if (!iter->block) iter->block = mesh_add_block(mesh, p);
