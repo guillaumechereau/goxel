@@ -165,6 +165,7 @@ box_t block_get_box(const block_t *block, bool exact)
 static void block_prepare_write(block_t *block)
 {
     if (block->data->ref == 1) {
+        block->data->id = ++goxel->next_uid;
         return;
     }
     block->data->ref--;
