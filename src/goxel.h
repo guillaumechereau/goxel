@@ -570,6 +570,11 @@ typedef struct block block_t;
 typedef struct {
     block_t *block;
     int pos[3];
+
+    box_t box;
+    int bbox[2][3];
+    int bpos[3];
+
     int flags;
 } mesh_iterator_t;
 typedef mesh_iterator_t mesh_accessor_t;
@@ -611,6 +616,11 @@ int mesh_select(const mesh_t *mesh,
                 void *user, mesh_t *selection);
 
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh);
+
+// Return an iterator that follow a given box shape.
+// if skip_empty is set to false, we get values even for the empty blocks.
+mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
+                                      const box_t box, bool skip_empty);
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4]);
 

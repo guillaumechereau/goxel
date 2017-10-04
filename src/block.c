@@ -195,14 +195,6 @@ void block_fill(block_t *block,
     }
 }
 
-static bool can_skip(const uint8_t v[4], int mode, const uint8_t c[4])
-{
-    return (v[3] && (mode == MODE_OVER) && vec4_equal(c, v)) ||
-            (!v[3] && (mode == MODE_SUB ||
-                       mode == MODE_PAINT ||
-                       mode == MODE_SUB_CLAMP));
-}
-
 // XXX: cleanup, or even better: remove totally and do that at the mesh
 // level.
 static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
@@ -249,61 +241,6 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
     memcpy(out, ret, 4);
 }
 
-// XXX: cleanup this function.
-void block_op(block_t *block, painter_t *painter, const box_t *box)
-{
-    int x, y, z;
-    mat4_t mat = mat4_identity;
-    vec3_t p, size;
-    float k, v;
-    int mode = painter->mode;
-    uint8_t c[4];
-    float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
-    shape_func = painter->shape->func;
-    bool invert = false;
-    int min_x = 0, min_y = 0, min_z = 0, max_x = N, max_y = N, max_z = N;
-    box_t clip;
-
-    if (mode == MODE_INTERSECT) {
-        mode = MODE_SUB;
-        invert = true;
-    }
-
-    size = box_get_size(*box);
-    mat4_imul(&mat, box->mat);
-    mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
-    mat4_invert(&mat);
-
-    mat4_itranslate(&mat, block->pos[0], block->pos[1], block->pos[2]);
-
-    if (painter->box) {
-        clip = *painter->box;
-        min_x = max(min_x, clip.p.x - clip.w.x - block->pos[0]);
-        max_x = min(max_x, clip.p.x + clip.w.x - block->pos[0]);
-        min_y = max(min_y, clip.p.y - clip.h.y - block->pos[1]);
-        max_y = min(max_y, clip.p.y + clip.h.y - block->pos[1]);
-        min_z = max(min_z, clip.p.z - clip.d.z - block->pos[2]);
-        max_z = min(max_z, clip.p.z + clip.d.z - block->pos[2]);
-    }
-
-    for (z = min_z; z < max_z; z++)
-    for (y = min_y; y < max_y; y++)
-    for (x = min_x; x < max_x; x++) {
-        vec4_copy(painter->color, c);
-        if (can_skip(BLOCK_AT(block, x, y, z), mode, c)) continue;
-        p = mat4_mul_vec3(mat, vec3(x, y, z));
-        k = shape_func(&p, &size, painter->smoothness);
-        k = clamp(k / painter->smoothness, -1.0f, 1.0f);
-        v = k / 2.0f + 0.5f;
-        if (invert) v = 1.0f - v;
-        if (v) {
-            block_prepare_write(block);
-            c[3] *= v;
-            combine(BLOCK_AT(block, x, y, z), c, mode,
-                    BLOCK_AT(block, x, y, z));
-        }
-    }
-}
 
 // Used for the cache.
 static int block_del(void *data_)
@@ -317,6 +254,7 @@ static int block_del(void *data_)
     return 0;
 }
 
+// XXX: can we remove that?
 void block_merge(block_t *block, const block_t *other, int mode)
 {
     int x, y, z;

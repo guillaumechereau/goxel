@@ -17,11 +17,14 @@
  */
 
 #include "goxel.h"
+#include <limits.h>
 
 // Flags for the iterator/accessor status.
 enum {
-    MESH_FOUND          = 1 << 0,
-    MESH_ITER_FINISHED  = 1 << 1,
+    MESH_FOUND                          = 1 << 0,
+    MESH_ITER_FINISHED                  = 1 << 1,
+    MESH_ITER_BOX                       = 1 << 2,
+    MESH_ITER_SKIP_EMPTY                = 1 << 3,
 };
 
 #define MESH_ITER_BLOCKS(m, pos, data_id, id, b) \
@@ -61,7 +64,6 @@ void block_fill(block_t *block,
                 void (*get_color)(const int pos[3], uint8_t out[4],
                                   void *user_data),
                 void *user_data);
-void block_op(block_t *block, painter_t *painter, const box_t *box);
 void block_merge(block_t *block, const block_t *other, int op);
 void block_set_at(block_t *block, const int pos[3], const uint8_t v[4]);
 void block_shift_alpha(block_t *block, int v);
@@ -126,6 +128,33 @@ mesh_t *mesh_new(void)
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh)
 {
     return (mesh_iterator_t){0};
+}
+
+mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
+            const box_t box, bool skip_empty)
+{
+    int i, j;
+    vec3_t vertices[8];
+    mesh_iterator_t iter = {
+        .box = box,
+        .flags = MESH_ITER_BOX | (skip_empty ? MESH_ITER_SKIP_EMPTY : 0),
+        .bbox = {{INT_MAX, INT_MAX, INT_MAX}, {INT_MIN, INT_MIN, INT_MIN}},
+    };
+    // Compute the bbox from the box.
+    box_get_vertices(box, vertices);
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 3; j++) {
+            iter.bbox[0][j] = min(iter.bbox[0][j], vertices[i].v[j]);
+            iter.bbox[1][j] = max(iter.bbox[1][j], vertices[i].v[j]);
+        }
+    }
+    // Initial block position:
+    iter.bpos[0] = iter.bbox[0][0] - mod(iter.bbox[0][0], N);
+    iter.bpos[1] = iter.bbox[0][1] - mod(iter.bbox[0][1], N);
+    iter.bpos[2] = iter.bbox[0][2] - mod(iter.bbox[0][2], N);
+    // Initial block.
+    HASH_FIND(hh, mesh->blocks, iter.bpos, 3 * sizeof(int), iter.block);
+    return iter;
 }
 
 mesh_accessor_t mesh_get_accessor(const mesh_t *mesh)
@@ -267,69 +296,91 @@ static void add_blocks(mesh_t *mesh, box_t box)
     }
 }
 
+// XXX: cleanup this: in fact we might not need that many modes!
+static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
+                    uint8_t out[4])
+{
+    int i, aa = a[3], ba = b[3];
+    uint8_t ret[4];
+    memcpy(ret, a, 4);
+    if (mode == MODE_PAINT) {
+        ret[0] = mix(a[0], b[0], ba / 255.);
+        ret[1] = mix(a[1], b[1], ba / 255.);
+        ret[2] = mix(a[2], b[2], ba / 255.);
+    }
+    else if (mode == MODE_OVER) {
+        if (255 * ba + aa * (255 - ba)) {
+            for (i = 0; i < 3; i++) {
+                ret[i] = (255 * b[i] * ba + a[i] * aa * (255 - ba)) /
+                         (255 * ba + aa * (255 - ba));
+            }
+        }
+        ret[3] = ba + aa * (255 - ba) / 255;
+    }
+    else if (mode == MODE_SUB) {
+        ret[3] = max(0, aa - ba);
+    }
+    else if (mode == MODE_MAX) {
+        ret[0] = b[0];
+        ret[1] = b[1];
+        ret[2] = b[2];
+        ret[3] = max(a[3], b[3]);
+    } else if (mode == MODE_SUB_CLAMP) {
+        ret[0] = a[0];
+        ret[1] = a[1];
+        ret[2] = a[2];
+        ret[3] = min(aa, 255 - ba);
+    } else if (mode == MODE_MULT_ALPHA) {
+        ret[0] = ret[0] * ba / 255;
+        ret[1] = ret[1] * ba / 255;
+        ret[2] = ret[2] * ba / 255;
+        ret[3] = ret[3] * ba / 255;
+    } else {
+        assert(false);
+    }
+    memcpy(out, ret, 4);
+}
+
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
-    int i;
-    painter_t painter2;
-    box_t box2;
+    int vp[3];
+    uint8_t value[4];
+    mesh_iterator_t iter;
+    mesh_accessor_t accessor, accessor2;
+    vec3_t size, p;
+    mat4_t mat = mat4_identity;
+    float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
+    float k, v;
+    int mode = painter->mode;
+    bool invert = false;
 
-    if (painter->symmetry) {
-        painter2 = *painter;
-        for (i = 0; i < 3; i++) {
-            if (!(painter->symmetry & (1 << i))) continue;
-            painter2.symmetry &= ~(1 << i);
-            box2 = *box;
-            box2.mat = mat4_identity;
-            if (i == 0) mat4_iscale(&box2.mat, -1,  1,  1);
-            if (i == 1) mat4_iscale(&box2.mat,  1, -1,  1);
-            if (i == 2) mat4_iscale(&box2.mat,  1,  1, -1);
-            mat4_imul(&box2.mat, box->mat);
-            mesh_op(mesh, &painter2, &box2);
-        }
+    // XXX: don't do that anymore.
+    if (mode == MODE_INTERSECT) {
+        mode = MODE_SUB;
+        invert = true;
     }
 
-    block_t *block, *tmp;
-    box_t full_box, bbox, block_box;
-    bool empty;
+    shape_func = painter->shape->func;
+    size = box_get_size(*box);
+    mat4_imul(&mat, box->mat);
+    mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
+    mat4_invert(&mat);
 
-    // Grow the box to take the smoothness into account.
-    full_box = *box;
-    mat4_igrow(&full_box.mat, painter->smoothness,
-                              painter->smoothness,
-                              painter->smoothness);
-    bbox = bbox_grow(box_get_bbox(full_box), 1, 1, 1);
-
-    if (painter->box) {
-        bbox = bbox_intersection(bbox, *painter->box);
-        if (box_is_null(bbox)) return;
-        bbox = bbox_grow(bbox, 1, 1, 1);
-    }
-
-    // For constructive modes, we have to add blocks if they are not present.
-    mesh_prepare_write(mesh);
-    if (IS_IN(painter->mode, MODE_OVER, MODE_MAX)) {
-        add_blocks(mesh, bbox);
-    }
-    HASH_ITER(hh, mesh->blocks, block, tmp) {
-        block_box = block_get_box(block, false);
-        if (!bbox_intersect(bbox, block_box)) {
-            if (painter->mode == MODE_INTERSECT) empty = true;
-            else continue;
-        }
-        empty = false;
-        // Optimization for the case when we delete large blocks.
-        // XXX: this is too specific.  we need a way to tell if a given
-        // shape totally contains a box.
-        if (    painter->shape == &shape_cube && painter->mode == MODE_SUB &&
-                box_contains(full_box, block_box))
-            empty = true;
-        if (!empty) {
-            block_op(block, painter, box);
-            if (block_is_empty(block, true)) empty = true;
-        }
-        if (empty) {
-            HASH_DEL(mesh->blocks, block);
-            block_delete(block);
+    // XXX: for the moment we cannot use the same accessor for both
+    // setting and getting!  Need to fix that!!
+    accessor = mesh_get_accessor(mesh);
+    accessor2 = mesh_get_accessor(mesh);
+    iter = mesh_get_box_iterator(mesh, *box, false);
+    while (mesh_iter_voxels(mesh, &iter, vp, value)) {
+        p = mat4_mul_vec3(mat, vec3(vp[0], vp[1], vp[2]));
+        k = shape_func(&p, &size, painter->smoothness);
+        k = clamp(k / painter->smoothness, -1.0f, 1.0f);
+        v = k / 2.0f + 0.5f;
+        if (invert) v = 1.0f - v;
+        if (v) {
+            mesh_get_at(mesh, vp, &accessor, value);
+            combine(value, painter->color, mode, value);
+            mesh_set_at(mesh, vp, value, &accessor2);
         }
     }
 }
@@ -580,32 +631,49 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4])
 {
-    int x, y, z;
-    if ((it->flags & MESH_ITER_FINISHED) || !mesh->blocks) return false;
-    if (!it->block) {
-        it->block = mesh->blocks;
-        it->pos[0] = 0;
-        it->pos[1] = 0;
-        it->pos[2] = 0;
-    }
-    x = it->pos[0];
-    y = it->pos[1];
-    z = it->pos[2];
-    pos[0] = x + it->block->pos[0];
-    pos[1] = y + it->block->pos[1];
-    pos[2] = z + it->block->pos[2];
-    memcpy(value, it->block->data->voxels[x + y * N + z * N * N], 4);
-
-    if (++it->pos[0] >= N) {
-        it->pos[0] = 0;
-        if (++it->pos[1] >= N) {
-            it->pos[1] = 0;
-            if (++it->pos[2] >= N) {
-                it->pos[2] = 0;
-                it->block = it->block->hh.next;
-                if (!it->block) it->flags |= MESH_ITER_FINISHED;
-            }
+    int i;
+    if (it->flags & MESH_ITER_FINISHED) return false;
+    if (!(it->flags & MESH_ITER_BOX)) {
+        if (!mesh->blocks) return false;
+        if (!it->block) it->block = mesh->blocks;
+        pos[0] = it->pos[0] + it->block->pos[0];
+        pos[1] = it->pos[1] + it->block->pos[1];
+        pos[2] = it->pos[2] + it->block->pos[2];
+        memcpy(value, it->block->data->voxels[
+                it->pos[0] + it->pos[1] * N + it->pos[2] * N * N], 4);
+        for (i = 0; i < 3; i++) {
+            if (++it->pos[i] < N) break;
+            it->pos[i] = 0;
         }
+        if (i == 3) {
+            it->block = it->block->hh.next;
+            if (!it->block) it->flags |= MESH_ITER_FINISHED;
+        }
+    } else {
+        assert(!(it->flags & MESH_ITER_SKIP_EMPTY)); // TODO later?
+        pos[0] = it->bpos[0] + it->pos[0];
+        pos[1] = it->bpos[1] + it->pos[1];
+        pos[2] = it->bpos[2] + it->pos[2];
+        block_get_at(it->block, pos, value);
+        // Increase position in the block.
+        for (i = 0; i < 3; i++) {
+            if (++it->pos[i] < N) break;
+            it->pos[i] = 0;
+        }
+        if (i < 3) return true; // Still in the same block.
+
+        // If not then we look for the next block pos in the box.
+        for (i = 0; i < 3; i++) {
+            it->bpos[i] += N;
+            if (it->bpos[i] < it->bbox[1][i]) break;
+            it->bpos[i] = it->bbox[0][i] - mod(it->bbox[0][i], N);
+        }
+        if (i == 3) {
+            it->flags |= MESH_ITER_FINISHED;
+            return true;
+        }
+        // Test if the new block intersect the box. and skip it if not!
+        // Need to implement a good box/box collision algo.
     }
     return true;
 }
