@@ -1,6 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Name=goxel
-Exec=goxel
-Icon=${SNAP}/icon.png
-Type=Application
