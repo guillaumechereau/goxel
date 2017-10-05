@@ -24,6 +24,7 @@ parts:
       make release
     install: |
       cp goxel $SNAPCRAFT_PART_INSTALL
+      cp icon.png $SNAPCRAFT_PART_INSTALL
     source-tag: 'v0.7.1'
     build-packages:
       - scons
