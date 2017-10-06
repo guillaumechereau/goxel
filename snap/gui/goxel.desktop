@@ -1,6 +1,9 @@
 [Desktop Entry]
+Version=1.0
 Encoding=UTF-8
 Name=goxel
+Comment=3D Voxel Editor
 Exec=goxel
 Icon=${SNAP}/icon.png
 Type=Application
+Categories=Graphics;
