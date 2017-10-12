@@ -531,7 +531,6 @@ static void compute_shadow_map_box(
     const int N = BLOCK_SIZE;
 
     render_item_t *item;
-    block_t *block;
     vec3_t p;
     int i, bpos[3];
     mesh_iterator_t iter;
@@ -543,7 +542,7 @@ static void compute_shadow_map_box(
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
         iter = mesh_get_iterator(item->mesh);
-        while (mesh_iter_blocks(item->mesh, &iter, bpos, NULL, NULL, &block)) {
+        while (mesh_iter_blocks(item->mesh, &iter, bpos, NULL, NULL, NULL)) {
             for (i = 0; i < 8; i++) {
                 p = vec3(bpos[0], bpos[1], bpos[2]);
                 p = vec3_addk(p, POS[i], N);
