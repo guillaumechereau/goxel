@@ -55,14 +55,6 @@ struct mesh
     uint64_t id;     // global uniq id, change each time a mesh changes.
 };
 
-bool block_is_empty(const block_t *block, bool fast);
-void block_delete(block_t *block);
-block_t *block_new(const int pos[3]);
-block_t *block_copy(const block_t *other);
-void block_merge(block_t *block, const block_t *other, int op);
-void block_set_at(block_t *block, const int pos[3], const uint8_t v[4]);
-void block_get_at(const block_t *block, const int pos[3], uint8_t out[4]);
-
 #define N BLOCK_SIZE
 
 // XXX: move this in goxel.h?
@@ -70,6 +62,225 @@ static int mod(int a, int b)
 {
     int r = a % b;
     return r < 0 ? r + b : r;
+}
+
+#define BLOCK_ITER(x, y, z) \
+    for (z = 0; z < N; z++) \
+        for (y = 0; y < N; y++) \
+            for (x = 0; x < N; x++)
+
+#define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
+#define BLOCK_AT(c, x, y, z) (DATA_AT(c->data, x, y, z))
+
+static block_data_t *get_empty_data(void)
+{
+    static block_data_t *data = NULL;
+    if (!data) {
+        data = calloc(1, sizeof(*data));
+        data->ref = 1;
+        data->id = 0;
+        goxel->block_count++;
+    }
+    return data;
+}
+
+static bool block_is_empty(const block_t *block, bool fast)
+{
+    int x, y, z;
+    if (!block) return true;
+    if (block->data->id == 0) return true;
+    if (fast) return false;
+
+    BLOCK_ITER(x, y, z) {
+        if (BLOCK_AT(block, x, y, z)[3]) return false;
+    }
+    return true;
+}
+
+static block_t *block_new(const int pos[3])
+{
+    block_t *block = calloc(1, sizeof(*block));
+    memcpy(block->pos, pos, sizeof(block->pos));
+    block->data = get_empty_data();
+    block->data->ref++;
+    return block;
+}
+
+static void block_delete(block_t *block)
+{
+    block->data->ref--;
+    if (block->data->ref == 0) {
+        free(block->data);
+        goxel->block_count--;
+    }
+    free(block);
+}
+
+static block_t *block_copy(const block_t *other)
+{
+    block_t *block = malloc(sizeof(*block));
+    *block = *other;
+    memset(&block->hh, 0, sizeof(block->hh));
+    block->data->ref++;
+    return block;
+}
+
+static void block_set_data(block_t *block, block_data_t *data)
+{
+    block->data->ref--;
+    if (block->data->ref == 0) {
+        free(block->data);
+        goxel->block_count--;
+    }
+    block->data = data;
+    data->ref++;
+}
+
+// Copy the data if there are any other blocks having reference to it.
+static void block_prepare_write(block_t *block)
+{
+    if (block->data->ref == 1) {
+        block->data->id = ++goxel->next_uid;
+        return;
+    }
+    block->data->ref--;
+    block_data_t *data;
+    data = calloc(1, sizeof(*block->data));
+    memcpy(data->voxels, block->data->voxels, N * N * N * 4);
+    data->ref = 1;
+    block->data = data;
+    block->data->id = ++goxel->next_uid;
+    goxel->block_count++;
+}
+
+// XXX: cleanup, or even better: remove totally and do that at the mesh
+// level.
+static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
+                    uint8_t out[4])
+{
+    int i, aa = a[3], ba = b[3];
+    uint8_t ret[4];
+    memcpy(ret, a, 4);
+    if (mode == MODE_PAINT) {
+        ret[0] = mix(a[0], b[0], ba / 255.);
+        ret[1] = mix(a[1], b[1], ba / 255.);
+        ret[2] = mix(a[2], b[2], ba / 255.);
+    }
+    else if (mode == MODE_OVER) {
+        if (255 * ba + aa * (255 - ba)) {
+            for (i = 0; i < 3; i++) {
+                ret[i] = (255 * b[i] * ba + a[i] * aa * (255 - ba)) /
+                         (255 * ba + aa * (255 - ba));
+            }
+        }
+        ret[3] = ba + aa * (255 - ba) / 255;
+    }
+    else if (mode == MODE_SUB) {
+        ret[3] = max(0, aa - ba);
+    }
+    else if (mode == MODE_MAX) {
+        ret[0] = b[0];
+        ret[1] = b[1];
+        ret[2] = b[2];
+        ret[3] = max(a[3], b[3]);
+    } else if (mode == MODE_SUB_CLAMP) {
+        ret[0] = a[0];
+        ret[1] = a[1];
+        ret[2] = a[2];
+        ret[3] = min(aa, 255 - ba);
+    } else if (mode == MODE_MULT_ALPHA) {
+        ret[0] = ret[0] * ba / 255;
+        ret[1] = ret[1] * ba / 255;
+        ret[2] = ret[2] * ba / 255;
+        ret[3] = ret[3] * ba / 255;
+    } else {
+        assert(false);
+    }
+    memcpy(out, ret, 4);
+}
+
+
+// Used for the cache.
+static int block_del(void *data_)
+{
+    block_data_t *data = data_;
+    data->ref--;
+    if (data->ref == 0) {
+        free(data);
+        goxel->block_count--;
+    }
+    return 0;
+}
+
+// XXX: can we remove that?
+static void block_merge(block_t *block, const block_t *other, int mode)
+{
+    int x, y, z;
+    block_data_t *data;
+    static cache_t *cache = NULL;
+
+    if (!other || other->data == get_empty_data()) return;
+    if (IS_IN(mode, MODE_OVER, MODE_MAX) && block->data == get_empty_data()) {
+        block_set_data(block, other->data);
+        return;
+    }
+
+    // Check if the merge op has been cached.
+    if (!cache) cache = cache_create(512);
+    struct {
+        uint64_t id1;
+        uint64_t id2;
+        int      mode;
+        int      _pad;
+    } key = {
+        block->data->id, other->data->id, mode
+    };
+    _Static_assert(sizeof(key) == 24, "");
+    data = cache_get(cache, &key, sizeof(key));
+    if (data) {
+        block_set_data(block, data);
+        return;
+    }
+
+    block_prepare_write(block);
+    BLOCK_ITER(x, y, z) {
+        combine(DATA_AT(block->data, x, y, z),
+                DATA_AT(other->data, x, y, z),
+                mode,
+                BLOCK_AT(block, x, y, z));
+    }
+    block->data->ref++;
+    cache_add(cache, &key, sizeof(key), block->data, 1, block_del);
+}
+
+static void block_get_at(const block_t *block, const int pos[3],
+                         uint8_t out[4])
+{
+    int x, y, z;
+    if (!block) {
+        memset(out, 0, 4);
+        return;
+    }
+    x = pos[0] - block->pos[0];
+    y = pos[1] - block->pos[1];
+    z = pos[2] - block->pos[2];
+    assert(x >= 0 && x < N);
+    assert(y >= 0 && y < N);
+    assert(z >= 0 && z < N);
+    memcpy(out, BLOCK_AT(block, x, y, z), 4);
+}
+
+static void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
+{
+    int x, y, z;
+    block_prepare_write(block);
+    x = pos[0] - block->pos[0];
+    y = pos[1] - block->pos[1];
+    z = pos[2] - block->pos[2];
+    assert(x >= 0 && x < N);
+    assert(y >= 0 && y < N);
+    assert(z >= 0 && z < N);
+    memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
 
 static void mesh_prepare_write(mesh_t *mesh)
