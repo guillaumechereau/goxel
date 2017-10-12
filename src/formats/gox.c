@@ -89,7 +89,7 @@ static int gzeof(gzFile file) {return feof(file);}
 typedef struct {
     UT_hash_handle  hh;
     void            *v;
-    uint64_t        id;
+    int             id;
     int             index;
 } block_hash_t;
 
@@ -217,7 +217,6 @@ void save_to_file(goxel_t *goxel, const char *path)
     LOG_I("Save to %s", path);
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
     layer_t *layer;
-    block_t *block;
     chunk_t c;
     int nb_blocks, index, size, bpos[3], bid;
     gzFile out;
@@ -241,11 +240,12 @@ void save_to_file(goxel_t *goxel, const char *path)
     DL_FOREACH(goxel->image->layers, layer) {
         iter = mesh_get_iterator(layer->mesh);
         while (mesh_iter_blocks(layer->mesh, &iter, bpos, NULL,
-                                &bid, &block)) {
+                                &bid, NULL)) {
             HASH_FIND(hh, blocks_table, &bid, sizeof(bid), data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
             data->v = mesh_get_block_data(layer->mesh, bpos, &iter);
+            assert(data->v);
             data->id = bid;
             data->index = index++;
             HASH_ADD(hh, blocks_table, id, sizeof(data->id), data);
@@ -274,8 +274,9 @@ void save_to_file(goxel_t *goxel, const char *path)
         if (!layer->base_id) {
             iter = mesh_get_iterator(layer->mesh);
             while (mesh_iter_blocks(layer->mesh, &iter, bpos, NULL,
-                                    &bid, &block)) {
+                                    &bid, NULL)) {
                 HASH_FIND(hh, blocks_table, &bid, sizeof(bid), data);
+                assert(data);
                 chunk_write_int32(&c, out, data->index);
                 chunk_write_int32(&c, out, bpos[0]);
                 chunk_write_int32(&c, out, bpos[1]);
