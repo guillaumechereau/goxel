@@ -89,7 +89,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
     iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL, NULL)) {
+    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL)) {
         mat = mat4_identity;
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
@@ -162,7 +162,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
     iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL, NULL)) {
+    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL)) {
         mat = mat4_identity;
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);

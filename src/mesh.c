@@ -455,7 +455,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
         iter = mesh_get_iterator(other);
-        while (mesh_iter_blocks(other, &iter, bpos, NULL, NULL, NULL)) {
+        while (mesh_iter_blocks(other, &iter, bpos, NULL, NULL)) {
             if (!mesh_get_block_at(mesh, bpos)) {
                 mesh_add_block(mesh, bpos);
             }
@@ -582,12 +582,10 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
 }
 
 bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
-                      int pos[3], uint64_t *data_id, int *id,
-                      block_t **block)
+                      int pos[3], uint64_t *data_id, int *id)
 {
     if ((it->flags & MESH_ITER_FINISHED) || !mesh->blocks) return false;
     if (!it->block) it->block = mesh->blocks;
-    if (block) *block = it->block;
     if (pos) memcpy(pos, it->block->pos, sizeof(it->block->pos));
     if (data_id) *data_id = it->block->data->id;
     if (id) *id = it->block->id;
