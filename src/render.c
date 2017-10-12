@@ -432,7 +432,7 @@ static render_item_t *get_item_for_block(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
     item->nb_elements = mesh_generate_vertices(
-            mesh, block, block_pos, effects, block_id, g_vertices_buffer);
+            mesh, block_pos, effects, block_id, g_vertices_buffer);
     item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
     if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");

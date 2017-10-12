@@ -22,8 +22,7 @@
 static const int N = BLOCK_SIZE;
 
 // Implemented in marchingcube.c
-int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
-                              const int block_pos[3],
+int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                               int effects, voxel_vertex_t *out);
 
 static bool block_is_face_visible(uint32_t neighboors_mask, int f)
@@ -201,9 +200,8 @@ static uint32_t get_pos_data(uint32_t x, uint32_t y, uint32_t z, uint32_t f,
 }
 
 
-int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
-                           const int block_pos[3], int effects, int block_id,
-                           voxel_vertex_t *out)
+int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
+                           int effects, int block_id, voxel_vertex_t *out)
 {
     int x, y, z, f;
     int i, nb = 0;
@@ -217,7 +215,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
     mesh_iterator_t iter = {0};
 
     if (effects & EFFECT_MARCHING_CUBES)
-        return mesh_generate_vertices_mc(mesh, block, block_pos, effects, out);
+        return mesh_generate_vertices_mc(mesh, block_pos, effects, out);
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
     for (x = 0; x < N; x++) {

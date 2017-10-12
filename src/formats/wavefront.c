@@ -74,7 +74,6 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     // XXX: Merge faces that can be merged into bigger ones.
     //      Allow to chose between quads or triangles.
     //      Also export mlt file for the colors.
-    block_t *block;
     voxel_vertex_t* verts;
     vec3_t v;
     uint8_t c[3];
@@ -90,12 +89,12 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
     iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL, &block)) {
+    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL, NULL)) {
         mat = mat4_identity;
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
-        nb_quads = mesh_generate_vertices(mesh, block, bpos, 0, 0, verts);
+        nb_quads = mesh_generate_vertices(mesh, bpos, 0, 0, verts);
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {
@@ -148,7 +147,6 @@ void wavefront_export(const mesh_t *mesh, const char *path)
 
 void ply_export(const mesh_t *mesh, const char *path)
 {
-    block_t *block;
     voxel_vertex_t* verts;
     vec3_t v;
     uint8_t c[3];
@@ -164,12 +162,12 @@ void ply_export(const mesh_t *mesh, const char *path)
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
     iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL, &block)) {
+    while (mesh_iter_blocks(mesh, &iter, bpos, NULL, NULL, NULL)) {
         mat = mat4_identity;
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
-        nb_quads = mesh_generate_vertices(mesh, block, bpos, 0, 0, verts);
+        nb_quads = mesh_generate_vertices(mesh, bpos, 0, 0, verts);
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {

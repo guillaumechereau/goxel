@@ -634,8 +634,7 @@ int mesh_select(const mesh_t *mesh,
                 void *user, mesh_t *selection);
 
 
-int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
-                           const int block_pos[3],
+int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                            int effects, int block_id, voxel_vertex_t *out);
 
 // #### Renderer ###############

@@ -85,9 +85,8 @@ static vec3_t mc_interp_normal(const mc_vert_t *vert, int normals[8][3])
     return ret;
 }
 
-int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
-                              const int block_pos[3], int effects,
-                              voxel_vertex_t *out)
+int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
+                              int effects, voxel_vertex_t *out)
 {
     int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
     int a, sum_a;
