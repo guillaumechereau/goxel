@@ -27,10 +27,6 @@ enum {
     MESH_ITER_SKIP_EMPTY                = 1 << 3,
 };
 
-#define MESH_ITER_BLOCKS(m, pos, data_id, id, b) \
-    for (mesh_iterator_t it_ = mesh_get_iterator(m); \
-            mesh_iter_blocks(m, &it_, pos, data_id, id, &b);)
-
 typedef struct block_data block_data_t;
 struct block_data
 {
@@ -453,12 +449,15 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     block_t *block, *other_block, *tmp;
     mesh_prepare_write(mesh);
     bool is_empty;
+    mesh_iterator_t iter;
+    int bpos[3];
 
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
-        MESH_ITER_BLOCKS(other, NULL, NULL, NULL, block) {
-            if (!mesh_get_block_at(mesh, block->pos)) {
-                mesh_add_block(mesh, block->pos);
+        iter = mesh_get_iterator(other);
+        while (mesh_iter_blocks(other, &iter, bpos, NULL, NULL, NULL)) {
+            if (!mesh_get_block_at(mesh, bpos)) {
+                mesh_add_block(mesh, bpos);
             }
         }
     }
