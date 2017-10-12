@@ -59,7 +59,6 @@ bool block_is_empty(const block_t *block, bool fast);
 void block_delete(block_t *block);
 block_t *block_new(const int pos[3]);
 block_t *block_copy(const block_t *other);
-box_t block_get_box(const block_t *block, bool exact);
 void block_merge(block_t *block, const block_t *other, int op);
 void block_set_at(block_t *block, const int pos[3], const uint8_t v[4]);
 void block_get_at(const block_t *block, const int pos[3], uint8_t out[4]);
@@ -214,16 +213,6 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     mesh->ref = other->ref;
     mesh->next_block_id = other->next_block_id;
     (*mesh->ref)++;
-}
-
-box_t mesh_get_box(const mesh_t *mesh, bool exact)
-{
-    box_t ret = box_null;
-    block_t *block;
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
-        ret = bbox_merge(ret, block_get_box(block, exact));
-    }
-    return ret;
 }
 
 static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3])

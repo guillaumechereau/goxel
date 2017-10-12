@@ -133,34 +133,6 @@ void block_set_data(block_t *block, block_data_t *data)
     data->ref++;
 }
 
-box_t block_get_box(const block_t *block, bool exact)
-{
-    box_t ret;
-    int x, y, z;
-    int xmin = N, xmax = 0, ymin = N, ymax = 0, zmin = N, zmax = 0;
-    vec3_t pos = vec3(block->pos[0] + N / 2,
-                      block->pos[1] + N / 2,
-                      block->pos[2] + N / 2);
-    if (!exact)
-        return bbox_from_extents(pos, N / 2, N / 2, N / 2);
-    BLOCK_ITER(x, y, z) {
-        if (BLOCK_AT(block, x, y, z)[3]) {
-            xmin = min(xmin, x);
-            ymin = min(ymin, y);
-            zmin = min(zmin, z);
-            xmax = max(xmax, x);
-            ymax = max(ymax, y);
-            zmax = max(zmax, z);
-        }
-    }
-    if (xmin > xmax) return box_null;
-    ret = bbox_from_points(vec3(xmin - 0.5, ymin - 0.5, zmin - 0.5),
-                           vec3(xmax + 0.5, ymax + 0.5, zmax + 0.5));
-    vec3_iadd(&ret.p, pos);
-    vec3_isub(&ret.p, vec3(N / 2 - 0.5, N / 2 - 0.5, N / 2 - 0.5));
-    return ret;
-}
-
 // Copy the data if there are any other blocks having reference to it.
 static void block_prepare_write(block_t *block)
 {

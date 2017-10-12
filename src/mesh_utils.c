@@ -17,6 +17,9 @@
  */
 
 #include "goxel.h"
+#include <limits.h>
+
+#define N BLOCK_SIZE
 
 int mesh_select(const mesh_t *mesh,
                 const int start_pos[3],
@@ -283,5 +286,40 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
             mesh_set_at(mesh, vp, value, &accessor);
         }
     }
+}
+
+box_t mesh_get_box(const mesh_t *mesh, bool exact)
+{
+    box_t ret = box_null, box;
+    mesh_iterator_t iter;
+    vec3_t pos;
+    int vpos[3];
+    uint8_t value[4];
+    int xmin = INT_MAX, xmax = INT_MIN;
+    int ymin = INT_MAX, ymax = INT_MIN;
+    int zmin = INT_MAX, zmax = INT_MIN;
+
+    iter = mesh_get_iterator(mesh);
+    if (!exact) {
+        while (mesh_iter_blocks(mesh, &iter, vpos, NULL, NULL, NULL)) {
+            pos = vec3(vpos[0] + N / 2, vpos[1] + N / 2, vpos[2] + N / 2);
+            box = bbox_from_extents(pos, N / 2, N / 2, N / 2);
+            ret = bbox_merge(ret, box);
+        }
+    } else {
+        while (mesh_iter_voxels(mesh, &iter, vpos, value)) {
+            if (!value[3]) continue;
+            xmin = min(xmin, vpos[0]);
+            ymin = min(ymin, vpos[1]);
+            zmin = min(zmin, vpos[2]);
+            xmax = max(xmax, vpos[0]);
+            ymax = max(ymax, vpos[1]);
+            zmax = max(zmax, vpos[2]);
+        }
+        if (xmin > xmax) return box_null;
+        ret = bbox_from_points(vec3(xmin, ymin, zmin),
+                               vec3(xmax + 1, ymax + 1, zmax + 1));
+    }
+    return ret;
 }
 

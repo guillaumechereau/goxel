@@ -584,7 +584,6 @@ void mesh_clear(mesh_t *mesh);
 void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
 void mesh_set(mesh_t *mesh, const mesh_t *other);
-box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 mesh_accessor_t mesh_get_accessor(const mesh_t *mesh);
 void mesh_get_at(const mesh_t *mesh, const int pos[3],
@@ -614,6 +613,7 @@ void *mesh_get_block_data(const mesh_t *mesh, const block_t *block);
 
 // #### Mesh util functions ############################
 
+box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 // XXX: to cleanup.
 void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
