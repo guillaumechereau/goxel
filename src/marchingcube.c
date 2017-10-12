@@ -109,9 +109,9 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
     for (x = 0; x < N; x++) {
-        pos[0] = x + block_pos[0] - N / 2;
-        pos[1] = y + block_pos[1] - N / 2;
-        pos[2] = z + block_pos[2] - N / 2;
+        pos[0] = x + block_pos[0];
+        pos[1] = y + block_pos[1];
+        pos[2] = z + block_pos[2];
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
@@ -129,9 +129,9 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const block_t *block,
                 wx = vx + VERTICES_POSITIONS[w][0] - 1;
                 wy = vy + VERTICES_POSITIONS[w][1] - 1;
                 wz = vz + VERTICES_POSITIONS[w][2] - 1;
-                pos[0] = wx + block_pos[0] - N / 2;
-                pos[1] = wy + block_pos[1] - N / 2;
-                pos[2] = wz + block_pos[2] - N / 2;
+                pos[0] = wx + block_pos[0];
+                pos[1] = wy + block_pos[1];
+                pos[2] = wz + block_pos[2];
                 a = mesh_get_alpha_at(mesh, pos, &iter);
 
                 if (use_max_color && a) {
