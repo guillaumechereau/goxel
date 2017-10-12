@@ -403,7 +403,7 @@ static int item_delete(void *item_)
 }
 
 static render_item_t *get_item_for_block(
-        const mesh_t *mesh, const block_t *block,
+        const mesh_t *mesh,
         const int block_pos[3],
         uint64_t block_data_id,
         int block_id,
@@ -450,7 +450,7 @@ static render_item_t *get_item_for_block(
     return item;
 }
 
-static void render_block_(renderer_t *rend, mesh_t *mesh, block_t *block,
+static void render_block_(renderer_t *rend, mesh_t *mesh,
                           const int block_pos[3],
                           uint64_t block_data_id,
                           int block_id,
@@ -460,7 +460,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh, block_t *block,
     mat4_t block_model;
     int attr;
 
-    item = get_item_for_block(mesh, block, block_pos, block_data_id,
+    item = get_item_for_block(mesh, block_pos, block_data_id,
                               block_id,effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
@@ -562,7 +562,6 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
                          const mat4_t *shadow_mvp)
 {
     prog_t *prog;
-    block_t *block;
     mat4_t model = mat4_identity;
     int attr, block_pos[3], block_id;
     uint64_t block_data_id;
@@ -636,8 +635,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     iter = mesh_get_iterator(mesh);
     while (mesh_iter_blocks(mesh, &iter, block_pos, &block_data_id,
-                            &block_id, &block)) {
-        render_block_(rend, mesh, block, block_pos, block_data_id,
+                            &block_id, NULL)) {
+        render_block_(rend, mesh, block_pos, block_data_id,
                       block_id, effects, prog, &model);
     }
 
