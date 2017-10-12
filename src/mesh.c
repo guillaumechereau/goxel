@@ -60,10 +60,6 @@ void block_delete(block_t *block);
 block_t *block_new(const int pos[3]);
 block_t *block_copy(const block_t *other);
 box_t block_get_box(const block_t *block, bool exact);
-void block_fill(block_t *block,
-                void (*get_color)(const int pos[3], uint8_t out[4],
-                                  void *user_data),
-                void *user_data);
 void block_merge(block_t *block, const block_t *other, int op);
 void block_set_at(block_t *block, const int pos[3], const uint8_t v[4]);
 void block_shift_alpha(block_t *block, int v);
@@ -221,7 +217,6 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     (*mesh->ref)++;
 }
 
-static void add_blocks(mesh_t *mesh, box_t box);
 static void mesh_fill(
         mesh_t *mesh,
         const box_t *box,
@@ -271,34 +266,6 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
     block->id = mesh->next_block_id++;
     HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
     return block;
-}
-
-// Add blocks if needed to fill the box.
-static void add_blocks(mesh_t *mesh, box_t box)
-{
-    vec3_t a, b;
-    int ia[3], ib[3];
-    int i, p[3];
-
-    a = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
-    b = vec3(box.p.x + box.w.x, box.p.y + box.h.y, box.p.z + box.d.z);
-    for (i = 0; i < 3; i++) {
-        ia[i] = floor(a.v[i]);
-        ib[i] =  ceil(b.v[i]);
-        ia[i] = ia[i] - mod(ia[i], N);
-        ib[i] = ib[i] - mod(ib[i], N);
-    }
-    for (p[2] = ia[2]; p[2] <= ib[2]; p[2] += N)
-    for (p[1] = ia[1]; p[1] <= ib[1]; p[1] += N)
-    for (p[0] = ia[0]; p[0] <= ib[0]; p[0] += N)
-    {
-        assert(p[0] % N == 0);
-        assert(p[1] % N == 0);
-        assert(p[2] % N == 0);
-        if (!mesh_get_block_at(mesh, p)) {
-            mesh_add_block(mesh, p);
-        }
-    }
 }
 
 // XXX: cleanup this: in fact we might not need that many modes!
@@ -582,31 +549,18 @@ int mesh_select(const mesh_t *mesh,
     return 0;
 }
 
-static void mesh_extrude_callback(const int pos[3], uint8_t color[4],
-                                  void *user)
-{
-    vec3_t p = vec3(pos[0], pos[1], pos[2]);
-    mesh_t *mesh = USER_GET(user, 0);
-    mat4_t *proj = USER_GET(user, 1);
-    box_t *box = USER_GET(user, 2);
-    if (!bbox_contains_vec(*box, p)) {
-        memset(color, 0, 4);
-        return;
-    }
-    p = mat4_mul_vec3(*proj, p);
-    int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
-    mesh_get_at(mesh, pi, NULL, color);
-}
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
 // stupid.
 void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 {
     mesh_prepare_write(mesh);
-    block_t *block;
-    box_t bbox;
     mat4_t proj;
     vec3_t n = plane->n, pos;
+    mesh_iterator_t iter;
+    int vpos[3];
+    uint8_t value[4];
+
     vec3_normalize(&n);
     pos = plane->p;
 
@@ -627,11 +581,20 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
         proj.v[14] = pos.z;
     }
 
-    bbox = bbox_grow(*box, 1, 1, 1);
-    add_blocks(mesh, bbox);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
-        block_fill(block, mesh_extrude_callback, USER_PASS(mesh, &proj, box));
+    // XXX: use an accessor to speed up access.
+    iter = mesh_get_box_iterator(mesh, *box, false);
+    while (mesh_iter_voxels(mesh, &iter, vpos, value)) {
+        vec3_t p = vec3(vpos[0], vpos[1], vpos[2]);
+        if (!bbox_contains_vec(*box, p)) {
+            memset(value, 0, 4);
+        } else {
+            p = mat4_mul_vec3(proj, p);
+            int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
+            mesh_get_at(mesh, pi, NULL, value);
+        }
+        mesh_set_at(mesh, vpos, value, NULL);
     }
+
 }
 
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,

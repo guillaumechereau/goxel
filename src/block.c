@@ -178,24 +178,6 @@ static void block_prepare_write(block_t *block)
     goxel->block_count++;
 }
 
-void block_fill(block_t *block,
-                void (*get_color)(const int pos[3], uint8_t out[4],
-                                  void *user_data),
-                void *user_data)
-{
-    int x, y, z;
-    int p[3];
-    uint8_t c[4];
-    block_prepare_write(block);
-    BLOCK_ITER(x, y, z) {
-        p[0] = block->pos[0] + x;
-        p[1] = block->pos[1] + y;
-        p[2] = block->pos[2] + z;
-        get_color(p, c, user_data);
-        memcpy(BLOCK_AT(block, x, y, z), c, 4);
-    }
-}
-
 // XXX: cleanup, or even better: remove totally and do that at the mesh
 // level.
 static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
