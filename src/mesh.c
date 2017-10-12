@@ -602,9 +602,17 @@ uint64_t mesh_get_id(const mesh_t *mesh)
     return mesh->id;
 }
 
-void *mesh_get_block_data(const mesh_t *mesh, const block_t *block)
+void *mesh_get_block_data(const mesh_t *mesh, const int bpos[3],
+                          mesh_accessor_t *iter)
 {
-    return block->data->voxels;
+    block_t *block = NULL;
+    if (iter && (iter->flags & MESH_FOUND) &&
+            memcmp(&iter->pos, bpos, sizeof(iter->pos)) == 0) {
+        block = iter->block;
+    } else {
+        HASH_FIND(hh, mesh->blocks, bpos, sizeof(iter->pos), block);
+    }
+    return block ? block->data->voxels : NULL;
 }
 
 uint8_t mesh_get_alpha_at(const mesh_t *mesh, const int pos[3],

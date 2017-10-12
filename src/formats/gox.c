@@ -240,12 +240,12 @@ void save_to_file(goxel_t *goxel, const char *path)
     index = 0;
     DL_FOREACH(goxel->image->layers, layer) {
         iter = mesh_get_iterator(layer->mesh);
-        while (mesh_iter_blocks(layer->mesh, &iter, NULL, NULL,
+        while (mesh_iter_blocks(layer->mesh, &iter, bpos, NULL,
                                 &bid, &block)) {
             HASH_FIND(hh, blocks_table, &bid, sizeof(bid), data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
-            data->v = mesh_get_block_data(layer->mesh, block);
+            data->v = mesh_get_block_data(layer->mesh, bpos, &iter);
             data->id = bid;
             data->index = index++;
             HASH_ADD(hh, blocks_table, id, sizeof(data->id), data);

@@ -608,7 +608,8 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint64_t *data_id, int *block_id,
                       block_t **block);
 uint64_t mesh_get_id(const mesh_t *mesh);
-void *mesh_get_block_data(const mesh_t *mesh, const block_t *block);
+void *mesh_get_block_data(const mesh_t *mesh, const int bpos[3],
+                          mesh_accessor_t *accessor);
 
 
 // #### Mesh util functions ############################
