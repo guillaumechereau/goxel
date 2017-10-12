@@ -62,7 +62,6 @@ block_t *block_copy(const block_t *other);
 box_t block_get_box(const block_t *block, bool exact);
 void block_merge(block_t *block, const block_t *other, int op);
 void block_set_at(block_t *block, const int pos[3], const uint8_t v[4]);
-void block_shift_alpha(block_t *block, int v);
 void block_get_at(const block_t *block, const int pos[3], uint8_t out[4]);
 
 #define N BLOCK_SIZE
@@ -482,12 +481,15 @@ void mesh_blit(mesh_t *mesh, const uint8_t *data,
 
 void mesh_shift_alpha(mesh_t *mesh, int v)
 {
-    block_t *block;
-    mesh_prepare_write(mesh);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
-        block_shift_alpha(block, v);
+    mesh_iterator_t iter;
+    int pos[3];
+    uint8_t value[4];
+
+    iter = mesh_get_iterator(mesh);
+    while (mesh_iter_voxels(mesh, &iter, pos, value)) {
+        value[3] = clamp(value[3] + v, 0, 255);
+        mesh_set_at(mesh, pos, value, NULL);
     }
-    mesh_remove_empty_blocks(mesh);
 }
 
 int mesh_select(const mesh_t *mesh,

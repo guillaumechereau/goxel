@@ -306,13 +306,3 @@ void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     assert(z >= 0 && z < N);
     memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
-
-void block_shift_alpha(block_t *block, int v)
-{
-    block_prepare_write(block);
-    int i;
-    for (i = 0; i < N * N * N; i++) {
-        block->data->voxels[i][3] = clamp(block->data->voxels[i][3] + v, 0, 255);
-    }
-}
-
