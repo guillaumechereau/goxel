@@ -228,12 +228,17 @@ static void mesh_fill(
         void (*get_color)(const int pos[3], uint8_t out[4], void *user_data),
         void *user_data)
 {
-    box_t bbox = box_get_bbox(*box);
-    block_t *block;
+    int pos[3];
+    uint8_t value[4], color[4];
+    mesh_iterator_t iter;
+    mesh_accessor_t accessor;
+
     mesh_clear(mesh);
-    add_blocks(mesh, bbox);
-    MESH_ITER_BLOCKS(mesh, NULL, NULL, NULL, block) {
-        block_fill(block, get_color, user_data);
+    accessor = mesh_get_accessor(mesh);
+    iter = mesh_get_box_iterator(mesh, *box, false);
+    while (mesh_iter_voxels(mesh, &iter, pos, value)) {
+        get_color(pos, color, user_data);
+        mesh_set_at(mesh, pos, color, &accessor);
     }
 }
 
@@ -673,6 +678,7 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
             it->flags |= MESH_ITER_FINISHED;
             return true;
         }
+        HASH_FIND(hh, mesh->blocks, it->bpos, 3 * sizeof(int), it->block);
         // Test if the new block intersect the box. and skip it if not!
         // Need to implement a good box/box collision algo.
     }
