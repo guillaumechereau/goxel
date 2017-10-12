@@ -585,9 +585,7 @@ void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
 void mesh_set(mesh_t *mesh, const mesh_t *other);
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
-void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
-void mesh_move(mesh_t *mesh, const mat4_t *mat);
 mesh_accessor_t mesh_get_accessor(const mesh_t *mesh);
 void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4]);
@@ -597,23 +595,6 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                  mesh_iterator_t *iter);
 void mesh_remove_empty_blocks(mesh_t *mesh);
 bool mesh_is_empty(const mesh_t *mesh);
-// XXX: to cleanup.
-void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
-
-void mesh_blit(mesh_t *mesh, const uint8_t *data,
-               int x, int y, int z, int w, int h, int d,
-               mesh_iterator_t *iter);
-
-void mesh_shift_alpha(mesh_t *mesh, int v);
-
-// Compute the selection mask for a given condition.
-int mesh_select(const mesh_t *mesh,
-                const int start_pos[3],
-                int (*cond)(const uint8_t value[4],
-                            const uint8_t neighboors[6][4],
-                            const uint8_t mask[6],
-                            void *user),
-                void *user, mesh_t *selection);
 
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh);
 
@@ -629,6 +610,28 @@ bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
                       block_t **block);
 uint64_t mesh_get_id(const mesh_t *mesh);
 void *mesh_get_block_data(const mesh_t *mesh, const block_t *block);
+
+
+// #### Mesh util functions ############################
+
+void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
+// XXX: to cleanup.
+void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
+
+void mesh_blit(mesh_t *mesh, const uint8_t *data,
+               int x, int y, int z, int w, int h, int d,
+               mesh_iterator_t *iter);
+void mesh_move(mesh_t *mesh, const mat4_t *mat);
+void mesh_shift_alpha(mesh_t *mesh, int v);
+
+// Compute the selection mask for a given condition.
+int mesh_select(const mesh_t *mesh,
+                const int start_pos[3],
+                int (*cond)(const uint8_t value[4],
+                            const uint8_t neighboors[6][4],
+                            const uint8_t mask[6],
+                            void *user),
+                void *user, mesh_t *selection);
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const block_t *block,
