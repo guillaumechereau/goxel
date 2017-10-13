@@ -53,6 +53,8 @@ struct mesh
 
 #define N BLOCK_SIZE
 
+#define vec3_copy(a, b) do {b[0] = a[0]; b[1] = a[1]; b[2] = a[2];} while (0)
+
 // XXX: move this in goxel.h?
 static int mod(int a, int b)
 {
@@ -422,10 +424,27 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     (*mesh->ref)++;
 }
 
-static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3])
+static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
+                                  mesh_accessor_t *it)
 {
     block_t *block;
-    HASH_FIND(hh, mesh->blocks, pos, 3 * sizeof(int), block);
+    int p[3] = {pos[0] - mod(pos[0], N),
+                pos[1] - mod(pos[1], N),
+                pos[2] - mod(pos[2], N)};
+
+    if (!it) {
+        HASH_FIND(hh, mesh->blocks, pos, 3 * sizeof(int), block);
+        return block;
+    }
+
+    if ((it->flags & MESH_FOUND) &&
+            memcmp(&it->block_pos, p, sizeof(p)) == 0) {
+        return it->block;
+    }
+    HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
+    it->block = block;
+    vec3_copy(p, it->block_pos);
+    it->flags |= MESH_FOUND;
     return block;
 }
 
@@ -435,7 +454,7 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
     assert(pos[0] % BLOCK_SIZE == 0);
     assert(pos[1] % BLOCK_SIZE == 0);
     assert(pos[2] % BLOCK_SIZE == 0);
-    assert(!mesh_get_block_at(mesh, pos));
+    assert(!mesh_get_block_at(mesh, pos, NULL));
     mesh_prepare_write(mesh);
     block = block_new(pos);
     block->id = mesh->next_block_id++;
@@ -456,14 +475,14 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
         iter = mesh_get_iterator(other);
         while (mesh_iter_blocks(other, &iter, bpos, NULL, NULL)) {
-            if (!mesh_get_block_at(mesh, bpos)) {
+            if (!mesh_get_block_at(mesh, bpos, NULL)) {
                 mesh_add_block(mesh, bpos);
             }
         }
     }
 
     HASH_ITER(hh, mesh->blocks, block, tmp) {
-        other_block = mesh_get_block_at(other, block->pos);
+        other_block = mesh_get_block_at(other, block->pos, NULL);
 
         // XXX: instead of testing here, we should do it in block_merge
         // directly.
@@ -487,46 +506,24 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4])
 {
-    block_t *block;
-    int p[3] = {pos[0] - mod(pos[0], N),
-                pos[1] - mod(pos[1], N),
-                pos[2] - mod(pos[2], N)};
-    if (iter && (iter->flags & MESH_FOUND) &&
-            memcmp(&iter->pos, p, sizeof(p)) == 0) {
-        block_get_at(iter->block, pos, out);
-        return;
-    }
-    HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
-    if (iter) {
-        iter->flags |= MESH_FOUND;
-        iter->block = block;
-        memcpy(iter->pos, p, sizeof(iter->pos));
-    }
+    block_t *block = mesh_get_block_at(mesh, pos, iter);
     return block_get_at(block, pos, out);
 }
 
 void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                  mesh_iterator_t *iter)
 {
-    block_t *block;
     int p[3] = {pos[0] - mod(pos[0], N),
                 pos[1] - mod(pos[1], N),
                 pos[2] - mod(pos[2], N)};
     mesh_prepare_write(mesh);
+    // XXX: it would be better to avoid this.  Instead all the blocks could
+    // be stored in an array each with a uniq id (!= hash or mesh id), and
+    // we could check that a block hasn't changed somehow.
     if (iter && iter->block && iter->block->data->ref > 1)
         iter->flags &= ~MESH_FOUND;
-    if (iter && (iter->flags & MESH_FOUND) &&
-            memcmp(&iter->pos, p, sizeof(p)) == 0) {
-        if (!iter->block) iter->block = mesh_add_block(mesh, p);
-        return block_set_at(iter->block, pos, v);
-    }
-    HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
+    block_t *block = mesh_get_block_at(mesh, p, iter);
     if (!block) block = mesh_add_block(mesh, p);
-    if (iter) {
-        iter->flags |= MESH_FOUND;
-        iter->block = block;
-        memcpy(iter->pos, p, sizeof(iter->pos));
-    }
     return block_set_at(block, pos, v);
 }
 

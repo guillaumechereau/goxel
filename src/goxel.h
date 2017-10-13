@@ -568,9 +568,13 @@ typedef struct block block_t;
 
 // Fast iterator of all the mesh voxel.
 typedef struct {
+    // Current cached block and its position.
+    // the block can be NULL if there is no block at this position.
     block_t *block;
-    int pos[3];
+    int block_pos[3];
+    int block_id;
 
+    int pos[3];
     box_t box;
     int bbox[2][3];
     int bpos[3];
