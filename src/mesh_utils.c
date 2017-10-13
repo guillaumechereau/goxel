@@ -301,7 +301,7 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
 
     iter = mesh_get_iterator(mesh);
     if (!exact) {
-        while (mesh_iter_blocks(mesh, &iter, vpos, NULL, NULL)) {
+        while (mesh_iter_blocks(mesh, &iter, vpos, NULL)) {
             pos = vec3(vpos[0] + N / 2, vpos[1] + N / 2, vpos[2] + N / 2);
             box = bbox_from_extents(pos, N / 2, N / 2, N / 2);
             ret = bbox_merge(ret, box);

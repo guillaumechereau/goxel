@@ -40,13 +40,11 @@ struct block
     UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
     int             pos[3];
-    int             id;     // id of the block in the mesh it belongs.
 };
 
 struct mesh
 {
     block_t *blocks;
-    int next_block_id;
     int *ref;   // Used to implement copy on write of the blocks.
     uint64_t id;     // global uniq id, change each time a mesh changes.
 };
@@ -295,7 +293,6 @@ static void mesh_prepare_write(mesh_t *mesh)
     mesh->blocks = NULL;
     for (block = blocks; block; block = block->hh.next) {
         new_block = block_copy(block);
-        new_block->id = block->id;
         HASH_ADD(hh, mesh->blocks, pos, sizeof(new_block->pos), new_block);
     }
 }
@@ -321,7 +318,6 @@ mesh_t *mesh_new(void)
 {
     mesh_t *mesh;
     mesh = calloc(1, sizeof(*mesh));
-    mesh->next_block_id = 1;
     mesh->ref = calloc(1, sizeof(*mesh->ref));
     mesh->id = goxel->next_uid++;
     *mesh->ref = 1;
@@ -376,7 +372,6 @@ void mesh_clear(mesh_t *mesh)
         block_delete(block);
     }
     mesh->blocks = NULL;
-    mesh->next_block_id = 1;
 }
 
 void mesh_delete(mesh_t *mesh)
@@ -400,7 +395,6 @@ mesh_t *mesh_copy(const mesh_t *other)
     mesh->blocks = other->blocks;
     mesh->ref = other->ref;
     mesh->id = other->id;
-    mesh->next_block_id = other->next_block_id;
     (*mesh->ref)++;
     return mesh;
 }
@@ -420,7 +414,6 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     }
     mesh->blocks = other->blocks;
     mesh->ref = other->ref;
-    mesh->next_block_id = other->next_block_id;
     (*mesh->ref)++;
 }
 
@@ -457,7 +450,6 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
     assert(!mesh_get_block_at(mesh, pos, NULL));
     mesh_prepare_write(mesh);
     block = block_new(pos);
-    block->id = mesh->next_block_id++;
     HASH_ADD(hh, mesh->blocks, pos, sizeof(block->pos), block);
     return block;
 }
@@ -474,7 +466,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
         iter = mesh_get_iterator(other);
-        while (mesh_iter_blocks(other, &iter, bpos, NULL, NULL)) {
+        while (mesh_iter_blocks(other, &iter, bpos, NULL)) {
             if (!mesh_get_block_at(mesh, bpos, NULL)) {
                 mesh_add_block(mesh, bpos);
             }
@@ -582,13 +574,12 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
 }
 
 bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
-                      int pos[3], uint64_t *data_id, int *id)
+                      int pos[3], uint64_t *data_id)
 {
     if ((it->flags & MESH_ITER_FINISHED) || !mesh->blocks) return false;
     if (!it->block) it->block = mesh->blocks;
     if (pos) memcpy(pos, it->block->pos, sizeof(it->block->pos));
     if (data_id) *data_id = it->block->data->id;
-    if (id) *id = it->block->id;
     it->block = it->block->hh.next;
     if (!it->block) it->flags |= MESH_ITER_FINISHED;
     return true;
