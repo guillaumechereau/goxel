@@ -188,20 +188,18 @@ static uint32_t mesh_get_neighboors(const mesh_t *mesh,
  *    z   :  4 bits
  *    pad :  1 bit
  *    face:  3 bits
- *    id  : 16 bits
  *    -------------
- *    tot : 32 bits
+ *    tot : 16 bits
  */
-static uint32_t get_pos_data(uint32_t x, uint32_t y, uint32_t z, uint32_t f,
-                             uint32_t i)
+static uint16_t get_pos_data(uint16_t x, uint16_t y, uint16_t z, uint16_t f)
 {
     assert(BLOCK_SIZE == 16);
-    return (x << 28) | (y << 24) | (z << 20) | (f << 16) | (i & 0xffff);
+    return (x << 12) | (y << 8) | (z << 4) | (f << 0);
 }
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
-                           int effects, int block_id, voxel_vertex_t *out)
+                           int effects, voxel_vertex_t *out)
 {
     int x, y, z, f;
     int i, nb = 0;
@@ -249,7 +247,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                 // This put a border bump on all the edges of the voxel.
                 out[nb * 4 + i].bump_uv[0] = borders_mask * 16;
                 out[nb * 4 + i].bump_uv[1] = f * 16;
-                out[nb * 4 + i].pos_data = get_pos_data(x, y, z, f, block_id);
+                out[nb * 4 + i].pos_data = get_pos_data(x, y, z, f);
             }
             nb++;
         }

@@ -554,7 +554,7 @@ typedef struct voxel_vertex
     int8_t   pos[3]                     __attribute__((aligned(4)));
     int8_t   normal[3]                  __attribute__((aligned(4)));
     uint8_t  color[4]                   __attribute__((aligned(4)));
-    uint32_t pos_data                   __attribute__((aligned(4)));
+    uint16_t pos_data                   __attribute__((aligned(4)));
     uint8_t  uv[2]                      __attribute__((aligned(4)));
     uint8_t  bshadow_uv[2]              __attribute__((aligned(4)));
     uint8_t  bump_uv[2]                 __attribute__((aligned(4)));
@@ -639,7 +639,7 @@ int mesh_select(const mesh_t *mesh,
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
-                           int effects, int block_id, voxel_vertex_t *out);
+                           int effects, voxel_vertex_t *out);
 
 // #### Renderer ###############
 
