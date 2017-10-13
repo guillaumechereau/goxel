@@ -640,10 +640,10 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
     iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, block_pos, &block_data_id,
-                            &block_id)) {
+    block_id = 1;
+    while (mesh_iter_blocks(mesh, &iter, block_pos, &block_data_id, NULL)) {
         render_block_(rend, mesh, block_pos, block_data_id,
-                      block_id, effects, prog, &model);
+                      block_id++, effects, prog, &model);
     }
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
