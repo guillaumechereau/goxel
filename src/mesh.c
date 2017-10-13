@@ -433,7 +433,7 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
                 pos[2] - mod(pos[2], N)};
 
     if (!it) {
-        HASH_FIND(hh, mesh->blocks, pos, 3 * sizeof(int), block);
+        HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
         return block;
     }
 
@@ -523,7 +523,10 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
     if (iter && iter->block && iter->block->data->ref > 1)
         iter->flags &= ~MESH_FOUND;
     block_t *block = mesh_get_block_at(mesh, p, iter);
-    if (!block) block = mesh_add_block(mesh, p);
+    if (!block) {
+        block = mesh_add_block(mesh, p);
+        iter->flags &= ~MESH_FOUND;
+    }
     return block_set_at(block, pos, v);
 }
 
