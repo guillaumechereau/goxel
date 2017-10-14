@@ -517,9 +517,35 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
     block_t *block = mesh_get_block_at(mesh, p, iter);
     if (!block) {
         block = mesh_add_block(mesh, p);
-        iter->flags &= ~MESH_FOUND;
+        if (iter) iter->flags &= ~MESH_FOUND;
     }
     return block_set_at(block, pos, v);
+}
+
+bool mesh_iter_voxels2(const mesh_t *mesh, mesh_iterator_t *it, int pos[3])
+{
+    int i;
+    if (!it->block_found) {
+        if (!mesh->blocks) return false;
+        it->block_found = true;
+        it->block = mesh->blocks;
+        vec3_copy(it->block->pos, it->block_pos);
+        vec3_copy(it->block->pos, it->pos);
+        goto end;
+    }
+    for (i = 0; i < 3; i++) {
+        if (++it->pos[i] < it->block_pos[i] + N) break;
+        it->pos[i] = it->block_pos[i];
+    }
+    if (i == 3) {
+        it->block = it->block->hh.next;
+        if (!it->block) return false;
+        vec3_copy(it->block->pos, it->block_pos);
+        vec3_copy(it->block->pos, it->pos);
+    }
+end:
+    vec3_copy(it->pos, pos);
+    return true;
 }
 
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,

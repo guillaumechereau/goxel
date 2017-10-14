@@ -30,7 +30,7 @@ int mesh_select(const mesh_t *mesh,
                 void *user, mesh_t *selection)
 {
     int i, j, a;
-    uint8_t v1[4], v2[4];
+    uint8_t v2[4];
     int pos[3], p[3], p2[3];
     bool keep = true;
     uint8_t neighboors[6][4];
@@ -51,7 +51,7 @@ int mesh_select(const mesh_t *mesh,
     while (keep) {
         keep = false;
         iter = mesh_get_iterator(selection);
-        while (mesh_iter_voxels(selection, &iter, pos, v1)) {
+        while (mesh_iter_voxels2(selection, &iter, pos)) {
             for (i = 0; i < 6; i++) {
                 p[0] = pos[0] + FACES_NORMALS[i][0];
                 p[1] = pos[1] + FACES_NORMALS[i][1];
@@ -113,7 +113,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 
     // XXX: use an accessor to speed up access.
     iter = mesh_get_box_iterator(mesh, *box, false);
-    while (mesh_iter_voxels(mesh, &iter, vpos, value)) {
+    while (mesh_iter_voxels2(mesh, &iter, vpos)) {
         vec3_t p = vec3(vpos[0], vpos[1], vpos[2]);
         if (!bbox_contains_vec(*box, p)) {
             memset(value, 0, 4);
@@ -134,14 +134,14 @@ static void mesh_fill(
         void *user_data)
 {
     int pos[3];
-    uint8_t value[4], color[4];
+    uint8_t color[4];
     mesh_iterator_t iter;
     mesh_accessor_t accessor;
 
     mesh_clear(mesh);
     accessor = mesh_get_accessor(mesh);
     iter = mesh_get_box_iterator(mesh, *box, false);
-    while (mesh_iter_voxels(mesh, &iter, pos, value)) {
+    while (mesh_iter_voxels2(mesh, &iter, pos)) {
         get_color(pos, color, user_data);
         mesh_set_at(mesh, pos, color, &accessor);
     }
@@ -193,7 +193,8 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
     uint8_t value[4];
 
     iter = mesh_get_iterator(mesh);
-    while (mesh_iter_voxels(mesh, &iter, pos, value)) {
+    while (mesh_iter_voxels2(mesh, &iter, pos)) {
+        mesh_get_at(mesh, pos, &iter, value);
         value[3] = clamp(value[3] + v, 0, 255);
         mesh_set_at(mesh, pos, value, NULL);
     }
@@ -307,7 +308,8 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
             ret = bbox_merge(ret, box);
         }
     } else {
-        while (mesh_iter_voxels(mesh, &iter, vpos, value)) {
+        while (mesh_iter_voxels2(mesh, &iter, vpos)) {
+            mesh_get_at(mesh, vpos, &iter, value);
             if (!value[3]) continue;
             xmin = min(xmin, vpos[0]);
             ymin = min(ymin, vpos[1]);
