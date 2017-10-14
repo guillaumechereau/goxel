@@ -25,6 +25,7 @@ enum {
     MESH_ITER_FINISHED                  = 1 << 1,
     MESH_ITER_BOX                       = 1 << 2,
     MESH_ITER_SKIP_EMPTY                = 1 << 3,
+    MESH_ITER_BLOCKS                    = 1 << 4,
 };
 
 typedef struct block_data block_data_t;
@@ -326,7 +327,17 @@ mesh_t *mesh_new(void)
 
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh)
 {
-    return (mesh_iterator_t){0};
+    return (mesh_iterator_t){
+        .mesh = mesh,
+    };
+}
+
+mesh_iterator_t mesh_get_blocks_iterator(const mesh_t *mesh)
+{
+    return (mesh_iterator_t){
+        .mesh = mesh,
+        .flags = MESH_ITER_BLOCKS,
+    };
 }
 
 mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
@@ -465,8 +476,8 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
-        iter = mesh_get_iterator(other);
-        while (mesh_iter_blocks(other, &iter, bpos)) {
+        iter = mesh_get_blocks_iterator(other);
+        while (mesh_iter(&iter, bpos)) {
             if (!mesh_get_block_at(mesh, bpos, NULL)) {
                 mesh_add_block(mesh, bpos);
             }
@@ -522,8 +533,9 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
     return block_set_at(block, pos, v);
 }
 
-bool mesh_iter_voxels2(const mesh_t *mesh, mesh_iterator_t *it, int pos[3])
+bool mesh_iter(mesh_iterator_t *it, int pos[3])
 {
+    const mesh_t *mesh = it->mesh;
     int i;
     if (!it->block_found) {
         if (!mesh->blocks) return false;
@@ -533,16 +545,20 @@ bool mesh_iter_voxels2(const mesh_t *mesh, mesh_iterator_t *it, int pos[3])
         vec3_copy(it->block->pos, it->pos);
         goto end;
     }
+    if (it->flags & MESH_ITER_BLOCKS) goto next_block;
+
     for (i = 0; i < 3; i++) {
         if (++it->pos[i] < it->block_pos[i] + N) break;
         it->pos[i] = it->block_pos[i];
     }
-    if (i == 3) {
-        it->block = it->block->hh.next;
-        if (!it->block) return false;
-        vec3_copy(it->block->pos, it->block_pos);
-        vec3_copy(it->block->pos, it->pos);
-    }
+    if (i < 3) goto end;
+
+next_block:
+    it->block = it->block->hh.next;
+    if (!it->block) return false;
+    vec3_copy(it->block->pos, it->block_pos);
+    vec3_copy(it->block->pos, it->pos);
+
 end:
     vec3_copy(it->pos, pos);
     return true;

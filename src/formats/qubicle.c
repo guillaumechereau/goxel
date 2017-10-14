@@ -132,8 +132,8 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     mesh = m;
 
     count = 0;
-    iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, NULL)) count++;
+    iter = mesh_get_blocks_iterator(mesh);
+    while (mesh_iter(&iter, NULL)) count++;
 
     file = fopen(path, "wb");
     WRITE(uint32_t, 257, file); // version
@@ -144,8 +144,8 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, count, file);
 
     i = 0;
-    iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, bpos)) {
+    iter = mesh_get_blocks_iterator(mesh);
+    while (mesh_iter(&iter, bpos)) {
         sprintf(buff, "%d", i);
         WRITE(uint8_t, strlen(buff), file);
         fwrite(buff, strlen(buff), 1, file);

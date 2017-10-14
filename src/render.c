@@ -547,8 +547,8 @@ static void compute_shadow_map_box(
 
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
-        iter = mesh_get_iterator(item->mesh);
-        while (mesh_iter_blocks(item->mesh, &iter, bpos)) {
+        iter = mesh_get_blocks_iterator(item->mesh);
+        while (mesh_iter(&iter, bpos)) {
             for (i = 0; i < 8; i++) {
                 p = vec3(bpos[0], bpos[1], bpos[2]);
                 p = vec3_addk(p, POS[i], N);
@@ -639,9 +639,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    iter = mesh_get_iterator(mesh);
     block_id = 1;
-    while (mesh_iter_blocks(mesh, &iter, block_pos)) {
+    iter = mesh_get_blocks_iterator(mesh);
+    while (mesh_iter(&iter, block_pos)) {
         mesh_get_block_data(mesh, &iter, block_pos, &block_data_id);
         render_block_(rend, mesh, block_pos, block_data_id,
                       block_id++, effects, prog, &model);

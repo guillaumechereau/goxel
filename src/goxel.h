@@ -568,6 +568,7 @@ typedef struct block block_t;
 
 // Fast iterator of all the mesh voxel.
 typedef struct {
+    const mesh_t *mesh;
     // Current cached block and its position.
     // the block can be NULL if there is no block at this position.
     block_t *block;
@@ -600,6 +601,7 @@ void mesh_remove_empty_blocks(mesh_t *mesh);
 bool mesh_is_empty(const mesh_t *mesh);
 
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh);
+mesh_iterator_t mesh_get_blocks_iterator(const mesh_t *mesh);
 
 // Return an iterator that follow a given box shape.
 // if skip_empty is set to false, we get values even for the empty blocks.
@@ -610,10 +612,8 @@ mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4]);
 
-// New version of mesh_iter_voxels that only return the position.
-bool mesh_iter_voxels2(const mesh_t *mesh, mesh_iterator_t *it, int pos[3]);
+bool mesh_iter(mesh_iterator_t *it, int pos[3]);
 
-bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it, int pos[3]);
 uint64_t mesh_get_id(const mesh_t *mesh);
 void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *accessor,
                           const int bpos[3], uint64_t *id);

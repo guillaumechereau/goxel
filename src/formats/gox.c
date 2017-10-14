@@ -238,9 +238,9 @@ void save_to_file(goxel_t *goxel, const char *path)
     // Add all the blocks data into the hash table.
     index = 0;
     DL_FOREACH(goxel->image->layers, layer) {
-        iter = mesh_get_iterator(layer->mesh);
         bid = 1;
-        while (mesh_iter_blocks(layer->mesh, &iter, bpos)) {
+        iter = mesh_get_blocks_iterator(layer->mesh);
+        while (mesh_iter(&iter, bpos)) {
             HASH_FIND(hh, blocks_table, &bid, sizeof(bid), data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
@@ -265,16 +265,16 @@ void save_to_file(goxel_t *goxel, const char *path)
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
         if (!layer->base_id) {
-            iter = mesh_get_iterator(layer->mesh);
-            while (mesh_iter_blocks(layer->mesh, &iter, NULL)) {
+            iter = mesh_get_blocks_iterator(layer->mesh);
+            while (mesh_iter(&iter, NULL)) {
                 nb_blocks++;
             }
         }
         chunk_write_int32(&c, out, nb_blocks);
         if (!layer->base_id) {
-            iter = mesh_get_iterator(layer->mesh);
             bid = 1;
-            while (mesh_iter_blocks(layer->mesh, &iter, bpos)) {
+            iter = mesh_get_blocks_iterator(layer->mesh);
+            while (mesh_iter(&iter, bpos)) {
                 HASH_FIND(hh, blocks_table, &bid, sizeof(bid), data);
                 assert(data);
                 chunk_write_int32(&c, out, data->index);

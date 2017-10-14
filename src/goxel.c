@@ -156,9 +156,9 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
 
     unpack_pos_data(pixel, voxel_pos, &face, &block_id);
     if (!block_id) return false;
-    iter = mesh_get_iterator(mesh);
+    iter = mesh_get_blocks_iterator(mesh);
     bid = 1;
-    while (mesh_iter_blocks(mesh, &iter, block_pos)) {
+    while (mesh_iter(&iter, block_pos)) {
         if (bid++ == block_id) break;
     }
     *out = vec3(block_pos[0] + voxel_pos[0] + 0.5,

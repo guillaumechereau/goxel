@@ -51,7 +51,7 @@ int mesh_select(const mesh_t *mesh,
     while (keep) {
         keep = false;
         iter = mesh_get_iterator(selection);
-        while (mesh_iter_voxels2(selection, &iter, pos)) {
+        while (mesh_iter(&iter, pos)) {
             for (i = 0; i < 6; i++) {
                 p[0] = pos[0] + FACES_NORMALS[i][0];
                 p[1] = pos[1] + FACES_NORMALS[i][1];
@@ -113,7 +113,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 
     // XXX: use an accessor to speed up access.
     iter = mesh_get_box_iterator(mesh, *box, false);
-    while (mesh_iter_voxels2(mesh, &iter, vpos)) {
+    while (mesh_iter(&iter, vpos)) {
         vec3_t p = vec3(vpos[0], vpos[1], vpos[2]);
         if (!bbox_contains_vec(*box, p)) {
             memset(value, 0, 4);
@@ -141,7 +141,7 @@ static void mesh_fill(
     mesh_clear(mesh);
     accessor = mesh_get_accessor(mesh);
     iter = mesh_get_box_iterator(mesh, *box, false);
-    while (mesh_iter_voxels2(mesh, &iter, pos)) {
+    while (mesh_iter(&iter, pos)) {
         get_color(pos, color, user_data);
         mesh_set_at(mesh, pos, color, &accessor);
     }
@@ -193,7 +193,7 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
     uint8_t value[4];
 
     iter = mesh_get_iterator(mesh);
-    while (mesh_iter_voxels2(mesh, &iter, pos)) {
+    while (mesh_iter(&iter, pos)) {
         mesh_get_at(mesh, pos, &iter, value);
         value[3] = clamp(value[3] + v, 0, 255);
         mesh_set_at(mesh, pos, value, NULL);
@@ -300,15 +300,16 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     int ymin = INT_MAX, ymax = INT_MIN;
     int zmin = INT_MAX, zmax = INT_MIN;
 
-    iter = mesh_get_iterator(mesh);
     if (!exact) {
-        while (mesh_iter_blocks(mesh, &iter, vpos)) {
+        iter = mesh_get_blocks_iterator(mesh);
+        while (mesh_iter(&iter, vpos)) {
             pos = vec3(vpos[0] + N / 2, vpos[1] + N / 2, vpos[2] + N / 2);
             box = bbox_from_extents(pos, N / 2, N / 2, N / 2);
             ret = bbox_merge(ret, box);
         }
     } else {
-        while (mesh_iter_voxels2(mesh, &iter, vpos)) {
+        iter = mesh_get_iterator(mesh);
+        while (mesh_iter(&iter, vpos)) {
             mesh_get_at(mesh, vpos, &iter, value);
             if (!value[3]) continue;
             xmin = min(xmin, vpos[0]);

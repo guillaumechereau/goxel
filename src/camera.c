@@ -60,8 +60,8 @@ static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
         }
     }
 
-    iter = mesh_get_iterator(mesh);
-    while (mesh_iter_blocks(mesh, &iter, bpos)) {
+    iter = mesh_get_blocks_iterator(mesh);
+    while (mesh_iter(&iter, bpos)) {
         p = vec3(bpos[0], bpos[1], bpos[2]);
         p = mat4_mul_vec3(*view_mat, p);
         if (p.z < 0) {
