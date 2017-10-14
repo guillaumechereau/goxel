@@ -24,7 +24,6 @@ enum {
     MESH_FOUND                          = 1 << 0,
     MESH_ITER_FINISHED                  = 1 << 1,
     MESH_ITER_BOX                       = 1 << 2,
-    MESH_ITER_SKIP_EMPTY                = 1 << 3,
     MESH_ITER_BLOCKS                    = 1 << 4,
 };
 
@@ -340,14 +339,14 @@ mesh_iterator_t mesh_get_blocks_iterator(const mesh_t *mesh)
     };
 }
 
-mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
-            const box_t box, bool skip_empty)
+mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh, const box_t box)
 {
     int i, j;
     vec3_t vertices[8];
     mesh_iterator_t iter = {
+        .mesh = mesh,
         .box = box,
-        .flags = MESH_ITER_BOX | (skip_empty ? MESH_ITER_SKIP_EMPTY : 0),
+        .flags = MESH_ITER_BOX,
         .bbox = {{INT_MAX, INT_MAX, INT_MAX}, {INT_MIN, INT_MIN, INT_MIN}},
     };
     // Compute the bbox from the box.
@@ -358,12 +357,6 @@ mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
             iter.bbox[1][j] = max(iter.bbox[1][j], vertices[i].v[j]);
         }
     }
-    // Initial block position:
-    iter.bpos[0] = iter.bbox[0][0] - mod(iter.bbox[0][0], N);
-    iter.bpos[1] = iter.bbox[0][1] - mod(iter.bbox[0][1], N);
-    iter.bpos[2] = iter.bbox[0][2] - mod(iter.bbox[0][2], N);
-    // Initial block.
-    HASH_FIND(hh, mesh->blocks, iter.bpos, 3 * sizeof(int), iter.block);
     return iter;
 }
 
@@ -533,16 +526,48 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
     return block_set_at(block, pos, v);
 }
 
+
+static bool mesh_iter_next_block_box(mesh_iterator_t *it)
+{
+    int i;
+    const mesh_t *mesh = it->mesh;
+    if (!it->block_found) {
+        it->block_pos[0] = it->bbox[0][0] - mod(it->bbox[0][0], N);
+        it->block_pos[1] = it->bbox[0][1] - mod(it->bbox[0][1], N);
+        it->block_pos[2] = it->bbox[0][2] - mod(it->bbox[0][2], N);
+        goto end;
+    }
+
+    for (i = 0; i < 3; i++) {
+        it->block_pos[i] += N;
+        if (it->block_pos[i] < it->bbox[1][i]) break;
+        it->block_pos[i] = it->bbox[0][i] - mod(it->bbox[0][i], N);
+    }
+    if (i == 3) return false;
+
+end:
+    it->block_found = true;
+    HASH_FIND(hh, mesh->blocks, it->block_pos, 3 * sizeof(int), it->block);
+    vec3_copy(it->block_pos, it->pos);
+    return true;
+}
+
+static bool mesh_iter_next_block(mesh_iterator_t *it)
+{
+    if (it->flags & MESH_ITER_BOX) return mesh_iter_next_block_box(it);
+    it->block = it->block ? it->block->hh.next : it->mesh->blocks;
+    if (!it->block) return false;
+    it->block_found = true;
+    vec3_copy(it->block->pos, it->block_pos);
+    vec3_copy(it->block->pos, it->pos);
+    return true;
+}
+
 bool mesh_iter(mesh_iterator_t *it, int pos[3])
 {
-    const mesh_t *mesh = it->mesh;
     int i;
-    if (!it->block_found) {
-        if (!mesh->blocks) return false;
-        it->block_found = true;
-        it->block = mesh->blocks;
-        vec3_copy(it->block->pos, it->block_pos);
-        vec3_copy(it->block->pos, it->pos);
+    if (!it->block_found) { // First call.
+        if (!mesh_iter_next_block(it)) return false;
         goto end;
     }
     if (it->flags & MESH_ITER_BLOCKS) goto next_block;
@@ -554,76 +579,10 @@ bool mesh_iter(mesh_iterator_t *it, int pos[3])
     if (i < 3) goto end;
 
 next_block:
-    it->block = it->block->hh.next;
-    if (!it->block) return false;
-    vec3_copy(it->block->pos, it->block_pos);
-    vec3_copy(it->block->pos, it->pos);
+    if (!mesh_iter_next_block(it)) return false;
 
 end:
     vec3_copy(it->pos, pos);
-    return true;
-}
-
-// XXX: to remove.
-bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
-                      int pos[3], uint8_t value[4])
-{
-    int i;
-    if (it->flags & MESH_ITER_FINISHED) return false;
-    assert(it->flags & MESH_ITER_BOX);
-    if (!(it->flags & MESH_ITER_BOX)) {
-        if (!mesh->blocks) return false;
-        if (!it->block) it->block = mesh->blocks;
-        pos[0] = it->pos[0] + it->block->pos[0];
-        pos[1] = it->pos[1] + it->block->pos[1];
-        pos[2] = it->pos[2] + it->block->pos[2];
-        memcpy(value, it->block->data->voxels[
-                it->pos[0] + it->pos[1] * N + it->pos[2] * N * N], 4);
-        for (i = 0; i < 3; i++) {
-            if (++it->pos[i] < N) break;
-            it->pos[i] = 0;
-        }
-        if (i == 3) {
-            it->block = it->block->hh.next;
-            if (!it->block) it->flags |= MESH_ITER_FINISHED;
-        }
-    } else {
-        assert(!(it->flags & MESH_ITER_SKIP_EMPTY)); // TODO later?
-        pos[0] = it->bpos[0] + it->pos[0];
-        pos[1] = it->bpos[1] + it->pos[1];
-        pos[2] = it->bpos[2] + it->pos[2];
-        block_get_at(it->block, pos, value);
-        // Increase position in the block.
-        for (i = 0; i < 3; i++) {
-            if (++it->pos[i] < N) break;
-            it->pos[i] = 0;
-        }
-        if (i < 3) return true; // Still in the same block.
-
-        // If not then we look for the next block pos in the box.
-        for (i = 0; i < 3; i++) {
-            it->bpos[i] += N;
-            if (it->bpos[i] < it->bbox[1][i]) break;
-            it->bpos[i] = it->bbox[0][i] - mod(it->bbox[0][i], N);
-        }
-        if (i == 3) {
-            it->flags |= MESH_ITER_FINISHED;
-            return true;
-        }
-        HASH_FIND(hh, mesh->blocks, it->bpos, 3 * sizeof(int), it->block);
-        // Test if the new block intersect the box. and skip it if not!
-        // Need to implement a good box/box collision algo.
-    }
-    return true;
-}
-
-bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it, int pos[3])
-{
-    if ((it->flags & MESH_ITER_FINISHED) || !mesh->blocks) return false;
-    if (!it->block) it->block = mesh->blocks;
-    if (pos) memcpy(pos, it->block->pos, sizeof(it->block->pos));
-    it->block = it->block->hh.next;
-    if (!it->block) it->flags |= MESH_ITER_FINISHED;
     return true;
 }
 
