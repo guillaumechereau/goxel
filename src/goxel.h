@@ -566,6 +566,11 @@ typedef struct voxel_vertex
 typedef struct mesh mesh_t;
 typedef struct block block_t;
 
+enum {
+    MESH_ITER_VOXELS                = 1 << 0,
+    MESH_ITER_BLOCKS                = 1 << 1,
+};
+
 // Fast iterator of all the mesh voxel.
 typedef struct {
     const mesh_t *mesh;
@@ -599,13 +604,12 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
 void mesh_remove_empty_blocks(mesh_t *mesh);
 bool mesh_is_empty(const mesh_t *mesh);
 
-mesh_iterator_t mesh_get_iterator(const mesh_t *mesh);
-mesh_iterator_t mesh_get_blocks_iterator(const mesh_t *mesh);
+mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags);
 // Return an iterator that follow a given box shape.
 // if skip_empty is set to false, we get values even for the empty blocks.
 mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh, const box_t box);
 
-bool mesh_iter(mesh_iterator_t *it, int pos[3]);
+int mesh_iter(mesh_iterator_t *it, int pos[3]);
 
 uint64_t mesh_get_id(const mesh_t *mesh);
 void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *accessor,

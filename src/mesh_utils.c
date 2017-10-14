@@ -50,7 +50,7 @@ int mesh_select(const mesh_t *mesh,
     // no more possible changes.
     while (keep) {
         keep = false;
-        iter = mesh_get_iterator(selection);
+        iter = mesh_get_iterator(selection, MESH_ITER_VOXELS);
         while (mesh_iter(&iter, pos)) {
             for (i = 0; i < 6; i++) {
                 p[0] = pos[0] + FACES_NORMALS[i][0];
@@ -192,7 +192,7 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
     int pos[3];
     uint8_t value[4];
 
-    iter = mesh_get_iterator(mesh);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, pos)) {
         mesh_get_at(mesh, pos, &iter, value);
         value[3] = clamp(value[3] + v, 0, 255);
@@ -301,14 +301,14 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     int zmin = INT_MAX, zmax = INT_MIN;
 
     if (!exact) {
-        iter = mesh_get_blocks_iterator(mesh);
+        iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
         while (mesh_iter(&iter, vpos)) {
             pos = vec3(vpos[0] + N / 2, vpos[1] + N / 2, vpos[2] + N / 2);
             box = bbox_from_extents(pos, N / 2, N / 2, N / 2);
             ret = bbox_merge(ret, box);
         }
     } else {
-        iter = mesh_get_iterator(mesh);
+        iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
         while (mesh_iter(&iter, vpos)) {
             mesh_get_at(mesh, vpos, &iter, value);
             if (!value[3]) continue;

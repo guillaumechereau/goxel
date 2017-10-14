@@ -231,7 +231,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
         hexcolor(VOX_DEFAULT_PALETTE[i], palette[i]);
 
     // Iter all the voxels to get the count and the size.
-    iter = mesh_get_iterator(mesh);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, pos)) {
         mesh_get_at(mesh, pos, &iter, v);
         if (v[3] < 127) continue;
@@ -274,7 +274,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
 
     voxels = calloc(nb_vox, 4);
     i = 0;
-    iter = mesh_get_iterator(mesh);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, pos)) {
         mesh_get_at(mesh, pos, &iter, v);
         if (v[3] < 127) continue;

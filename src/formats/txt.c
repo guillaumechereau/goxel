@@ -35,7 +35,7 @@ static void export_as_txt(const char *path)
     fprintf(out, "# One line per voxel\n");
     fprintf(out, "# X Y Z RRGGBB\n");
 
-    iter = mesh_get_iterator(mesh);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, p)) {
         mesh_get_at(mesh, p, &iter, v);
         if (v[3] < 127) continue;

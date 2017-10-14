@@ -140,7 +140,7 @@ void quantization_gen_palette(const mesh_t *mesh, int nb,
 
     // Fill the initial bucket.
     utarray_new(buckets[0].values, &value_icd);
-    iter = mesh_get_iterator(mesh);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, pos)) {
         mesh_get_at(mesh, pos, &iter, v);
         if (v[3] < 127) continue;

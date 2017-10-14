@@ -21,10 +21,9 @@
 
 // Flags for the iterator/accessor status.
 enum {
-    MESH_FOUND                          = 1 << 0,
-    MESH_ITER_FINISHED                  = 1 << 1,
-    MESH_ITER_BOX                       = 1 << 2,
-    MESH_ITER_BLOCKS                    = 1 << 4,
+    MESH_FOUND                          = 1 << 8,
+    MESH_ITER_FINISHED                  = 1 << 9,
+    MESH_ITER_BOX                       = 1 << 10,
 };
 
 typedef struct block_data block_data_t;
@@ -324,18 +323,11 @@ mesh_t *mesh_new(void)
     return mesh;
 }
 
-mesh_iterator_t mesh_get_iterator(const mesh_t *mesh)
+mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags)
 {
     return (mesh_iterator_t){
         .mesh = mesh,
-    };
-}
-
-mesh_iterator_t mesh_get_blocks_iterator(const mesh_t *mesh)
-{
-    return (mesh_iterator_t){
-        .mesh = mesh,
-        .flags = MESH_ITER_BLOCKS,
+        .flags = flags,
     };
 }
 
@@ -346,7 +338,7 @@ mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh, const box_t box)
     mesh_iterator_t iter = {
         .mesh = mesh,
         .box = box,
-        .flags = MESH_ITER_BOX,
+        .flags = MESH_ITER_BOX | MESH_ITER_VOXELS,
         .bbox = {{INT_MAX, INT_MAX, INT_MAX}, {INT_MIN, INT_MIN, INT_MIN}},
     };
     // Compute the bbox from the box.
@@ -469,7 +461,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
-        iter = mesh_get_blocks_iterator(other);
+        iter = mesh_get_iterator(other, MESH_ITER_BLOCKS);
         while (mesh_iter(&iter, bpos)) {
             if (!mesh_get_block_at(mesh, bpos, NULL)) {
                 mesh_add_block(mesh, bpos);
@@ -563,11 +555,11 @@ static bool mesh_iter_next_block(mesh_iterator_t *it)
     return true;
 }
 
-bool mesh_iter(mesh_iterator_t *it, int pos[3])
+int mesh_iter(mesh_iterator_t *it, int pos[3])
 {
     int i;
     if (!it->block_found) { // First call.
-        if (!mesh_iter_next_block(it)) return false;
+        if (!mesh_iter_next_block(it)) return 0;
         goto end;
     }
     if (it->flags & MESH_ITER_BLOCKS) goto next_block;
@@ -579,11 +571,11 @@ bool mesh_iter(mesh_iterator_t *it, int pos[3])
     if (i < 3) goto end;
 
 next_block:
-    if (!mesh_iter_next_block(it)) return false;
+    if (!mesh_iter_next_block(it)) return 0;
 
 end:
     vec3_copy(it->pos, pos);
-    return true;
+    return 1;
 }
 
 uint64_t mesh_get_id(const mesh_t *mesh)
