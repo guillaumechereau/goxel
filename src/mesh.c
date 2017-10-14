@@ -564,11 +564,13 @@ end:
     return true;
 }
 
+// XXX: to remove.
 bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
                       int pos[3], uint8_t value[4])
 {
     int i;
     if (it->flags & MESH_ITER_FINISHED) return false;
+    assert(it->flags & MESH_ITER_BOX);
     if (!(it->flags & MESH_ITER_BOX)) {
         if (!mesh->blocks) return false;
         if (!it->block) it->block = mesh->blocks;
