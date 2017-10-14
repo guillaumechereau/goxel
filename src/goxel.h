@@ -578,7 +578,6 @@ typedef struct {
     int pos[3];
     box_t box;
     int bbox[2][3];
-    int bpos[3];
 
     int flags;
 } mesh_iterator_t;
