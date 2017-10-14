@@ -613,11 +613,10 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
 // New version of mesh_iter_voxels that only return the position.
 bool mesh_iter_voxels2(const mesh_t *mesh, mesh_iterator_t *it, int pos[3]);
 
-bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
-                      int pos[3], uint64_t *data_id);
+bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it, int pos[3]);
 uint64_t mesh_get_id(const mesh_t *mesh);
-void *mesh_get_block_data(const mesh_t *mesh, const int bpos[3],
-                          mesh_accessor_t *accessor);
+void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *accessor,
+                          const int bpos[3], uint64_t *id);
 
 
 // #### Mesh util functions ############################

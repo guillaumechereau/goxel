@@ -466,7 +466,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     // Add empty blocks if needed.
     if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
         iter = mesh_get_iterator(other);
-        while (mesh_iter_blocks(other, &iter, bpos, NULL)) {
+        while (mesh_iter_blocks(other, &iter, bpos)) {
             if (!mesh_get_block_at(mesh, bpos, NULL)) {
                 mesh_add_block(mesh, bpos);
             }
@@ -599,13 +599,11 @@ bool mesh_iter_voxels(const mesh_t *mesh, mesh_iterator_t *it,
     return true;
 }
 
-bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it,
-                      int pos[3], uint64_t *data_id)
+bool mesh_iter_blocks(const mesh_t *mesh, mesh_iterator_t *it, int pos[3])
 {
     if ((it->flags & MESH_ITER_FINISHED) || !mesh->blocks) return false;
     if (!it->block) it->block = mesh->blocks;
     if (pos) memcpy(pos, it->block->pos, sizeof(it->block->pos));
-    if (data_id) *data_id = it->block->data->id;
     it->block = it->block->hh.next;
     if (!it->block) it->flags |= MESH_ITER_FINISHED;
     return true;
@@ -616,8 +614,8 @@ uint64_t mesh_get_id(const mesh_t *mesh)
     return mesh->id;
 }
 
-void *mesh_get_block_data(const mesh_t *mesh, const int bpos[3],
-                          mesh_accessor_t *iter)
+void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *iter,
+                          const int bpos[3], uint64_t *id)
 {
     block_t *block = NULL;
     if (iter && (iter->flags & MESH_FOUND) &&
@@ -626,6 +624,7 @@ void *mesh_get_block_data(const mesh_t *mesh, const int bpos[3],
     } else {
         HASH_FIND(hh, mesh->blocks, bpos, sizeof(iter->pos), block);
     }
+    if (id) *id = block ? block->data->id : 0;
     return block ? block->data->voxels : NULL;
 }
 
