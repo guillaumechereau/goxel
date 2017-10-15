@@ -49,6 +49,8 @@ struct mesh
     uint64_t id;     // global uniq id, change each time a mesh changes.
 };
 
+static uint64_t g_uid = 1; // Global id counter.
+
 #define N BLOCK_SIZE
 
 #define vec3_copy(a, b) do {b[0] = a[0]; b[1] = a[1]; b[2] = a[2];} while (0)
@@ -136,7 +138,7 @@ static void block_set_data(block_t *block, block_data_t *data)
 static void block_prepare_write(block_t *block)
 {
     if (block->data->ref == 1) {
-        block->data->id = ++goxel->next_uid;
+        block->data->id = ++g_uid;
         return;
     }
     block->data->ref--;
@@ -145,7 +147,7 @@ static void block_prepare_write(block_t *block)
     memcpy(data->voxels, block->data->voxels, N * N * N * 4);
     data->ref = 1;
     block->data = data;
-    block->data->id = ++goxel->next_uid;
+    block->data->id = ++g_uid;
     goxel->block_count++;
 }
 
@@ -183,7 +185,7 @@ static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
     assert(*mesh->ref > 0);
-    mesh->id = goxel->next_uid++;
+    mesh->id = g_uid++;
     if (*mesh->ref == 1)
         return;
     (*mesh->ref)--;
@@ -219,7 +221,7 @@ mesh_t *mesh_new(void)
     mesh_t *mesh;
     mesh = calloc(1, sizeof(*mesh));
     mesh->ref = calloc(1, sizeof(*mesh->ref));
-    mesh->id = goxel->next_uid++;
+    mesh->id = g_uid++;
     *mesh->ref = 1;
     return mesh;
 }
