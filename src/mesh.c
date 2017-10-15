@@ -196,27 +196,42 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 
 
 // Used for the cache.
-static int block_del(void *data_)
+static int mesh_del(void *data_)
 {
-    block_data_t *data = data_;
-    data->ref--;
-    if (data->ref == 0) {
-        free(data);
-        goxel->block_count--;
-    }
+    mesh_t *mesh = data_;
+    mesh_delete(mesh);
     return 0;
 }
 
-// XXX: can we remove that?
-static void block_merge(block_t *block, const block_t *other, int mode)
-{
-    int x, y, z;
-    block_data_t *data;
-    static cache_t *cache = NULL;
+static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
+                                  mesh_accessor_t *it);
 
-    if (!other || other->data == get_empty_data()) return;
-    if (IS_IN(mode, MODE_OVER, MODE_MAX) && block->data == get_empty_data()) {
-        block_set_data(block, other->data);
+void mesh_copy_block(const mesh_t *src, const int src_pos[3],
+                     mesh_t *dst, const int dst_pos[3])
+{
+    block_t *b1, *b2;
+    b1 = mesh_get_block_at(src, src_pos, NULL);
+    b2 = mesh_get_block_at(dst, dst_pos, NULL);
+    block_set_data(b2, b1->data);
+}
+
+static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
+                        int mode)
+{
+    int p[3];
+    int x, y, z;
+    uint64_t id1, id2;
+    mesh_t *block;
+    uint8_t v1[4], v2[4];
+    static cache_t *cache = NULL;
+    mesh_accessor_t a1, a2, a3;
+
+    mesh_get_block_data(mesh,  NULL, pos, &id1);
+    mesh_get_block_data(other, NULL, pos, &id2);
+
+    if (id2 == 0) return;
+    if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0) {
+        mesh_copy_block(other, pos, mesh, pos);
         return;
     }
 
@@ -227,25 +242,32 @@ static void block_merge(block_t *block, const block_t *other, int mode)
         uint64_t id2;
         int      mode;
         int      _pad;
-    } key = {
-        block->data->id, other->data->id, mode
-    };
+    } key = { id1, id2, mode };
     _Static_assert(sizeof(key) == 24, "");
-    data = cache_get(cache, &key, sizeof(key));
-    if (data) {
-        block_set_data(block, data);
-        return;
-    }
+    block = cache_get(cache, &key, sizeof(key));
+    if (block) goto end;
 
-    block_prepare_write(block);
-    BLOCK_ITER(x, y, z) {
-        combine(DATA_AT(block->data, x, y, z),
-                DATA_AT(other->data, x, y, z),
-                mode,
-                BLOCK_AT(block, x, y, z));
+    block = mesh_new();
+    a1 = mesh_get_accessor(mesh);
+    a2 = mesh_get_accessor(other);
+    a3 = mesh_get_accessor(block);
+
+    for (z = 0; z < N; z++)
+    for (y = 0; y < N; y++)
+    for (x = 0; x < N; x++) {
+        p[0] = pos[0] + x;
+        p[1] = pos[1] + y;
+        p[2] = pos[2] + z;
+        mesh_get_at(mesh,  p, &a1, v1);
+        mesh_get_at(other, p, &a2, v2);
+        combine(v1, v2, mode, v1);
+        mesh_set_at(block, (int[]){x, y, z}, v1, &a3);
     }
-    block->data->ref++;
-    cache_add(cache, &key, sizeof(key), block->data, 1, block_del);
+    cache_add(cache, &key, sizeof(key), block, 1, mesh_del);
+
+end:
+    mesh_copy_block(block, (int[]){0, 0, 0}, mesh, pos);
+    return;
 }
 
 static void block_get_at(const block_t *block, const int pos[3],
@@ -453,7 +475,6 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 {
     assert(mesh && other);
-    block_t *block, *other_block;
     mesh_prepare_write(mesh);
     mesh_iterator_t iter;
     int bpos[3];
@@ -470,9 +491,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 
     iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
-        block = mesh_get_block_at(mesh, bpos, &iter);
-        other_block = mesh_get_block_at(other, bpos, NULL);
-        block_merge(block, other_block, mode);
+        block_merge(mesh, other, bpos, mode);
     }
 }
 
