@@ -582,7 +582,7 @@ typedef struct {
     bool block_found;
 
     int pos[3];
-    box_t box;
+    float box[4][4];
     int bbox[2][3];
 
     int flags;
@@ -607,7 +607,8 @@ bool mesh_is_empty(const mesh_t *mesh);
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags);
 // Return an iterator that follow a given box shape.
 // if skip_empty is set to false, we get values even for the empty blocks.
-mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh, const box_t box);
+mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
+                                      const float box[4][4]);
 
 mesh_iterator_t mesh_get_union_iterator(
         const mesh_t *m1, const mesh_t *m2, int flags);

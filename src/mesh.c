@@ -70,6 +70,46 @@ static int mod(int a, int b)
 #define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
 #define BLOCK_AT(c, x, y, z) (DATA_AT(c->data, x, y, z))
 
+static void mat4_mul_vec4(const float mat[4][4], const float v[4],
+                          float out[4])
+{
+    float ret[4] = {0};
+    int i, j;
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 4; j++) {
+            ret[i] += mat[j][i] * v[j];
+        }
+    }
+    memcpy(out, ret, sizeof(ret));
+}
+
+static void box_get_bbox_(const float box[4][4], int bbox[2][3])
+{
+    const float vertices[8][4] = {
+        {-1, -1, +1, 1},
+        {+1, -1, +1, 1},
+        {+1, +1, +1, 1},
+        {-1, +1, +1, 1},
+        {-1, -1, -1, 1},
+        {+1, -1, -1, 1},
+        {+1, +1, -1, 1},
+        {-1, +1, -1, 1}};
+    int i;
+    int ret[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
+                     {INT_MIN, INT_MIN, INT_MIN}};
+    float p[4];
+    for (i = 0; i < 8; i++) {
+        mat4_mul_vec4(box, vertices[i], p);
+        ret[0][0] = min(ret[0][0], (int)floor(p[0]));
+        ret[0][1] = min(ret[0][1], (int)floor(p[1]));
+        ret[0][2] = min(ret[0][2], (int)floor(p[2]));
+        ret[1][0] = max(ret[1][0], (int)ceil(p[0]));
+        ret[1][1] = max(ret[1][1], (int)ceil(p[1]));
+        ret[1][2] = max(ret[1][2], (int)ceil(p[2]));
+    }
+    memcpy(bbox, ret, sizeof(ret));
+}
+
 static block_data_t *get_empty_data(void)
 {
     static block_data_t *data = NULL;
@@ -244,24 +284,16 @@ mesh_iterator_t mesh_get_union_iterator(
     };
 }
 
-mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh, const box_t box)
+mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
+                                      const float box[4][4])
 {
-    int i, j;
-    vec3_t vertices[8];
     mesh_iterator_t iter = {
         .mesh = mesh,
-        .box = box,
         .flags = MESH_ITER_BOX | MESH_ITER_VOXELS,
         .bbox = {{INT_MAX, INT_MAX, INT_MAX}, {INT_MIN, INT_MIN, INT_MIN}},
     };
-    // Compute the bbox from the box.
-    box_get_vertices(box, vertices);
-    for (i = 0; i < 8; i++) {
-        for (j = 0; j < 3; j++) {
-            iter.bbox[0][j] = min(iter.bbox[0][j], vertices[i].v[j]);
-            iter.bbox[1][j] = max(iter.bbox[1][j], vertices[i].v[j]);
-        }
-    }
+    memcpy(iter.box, box, sizeof(iter.box));
+    box_get_bbox_(iter.box, iter.bbox);
     return iter;
 }
 

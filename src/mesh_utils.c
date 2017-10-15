@@ -112,7 +112,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
     }
 
     // XXX: use an accessor to speed up access.
-    iter = mesh_get_box_iterator(mesh, *box);
+    iter = mesh_get_box_iterator(mesh, box->v);
     while (mesh_iter(&iter, vpos)) {
         vec3_t p = vec3(vpos[0], vpos[1], vpos[2]);
         if (!bbox_contains_vec(*box, p)) {
@@ -140,7 +140,7 @@ static void mesh_fill(
 
     mesh_clear(mesh);
     accessor = mesh_get_accessor(mesh);
-    iter = mesh_get_box_iterator(mesh, *box);
+    iter = mesh_get_box_iterator(mesh, box->v);
     while (mesh_iter(&iter, pos)) {
         get_color(pos, color, user_data);
         mesh_set_at(mesh, pos, color, &accessor);
@@ -274,7 +274,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     // XXX: for the moment we cannot use the same accessor for both
     // setting and getting!  Need to fix that!!
     accessor = mesh_get_accessor(mesh);
-    iter = mesh_get_box_iterator(mesh, *box);
+    iter = mesh_get_box_iterator(mesh, box->v);
     while (mesh_iter(&iter, vp)) {
         p = mat4_mul_vec3(mat, vec3(vp[0], vp[1], vp[2]));
         k = shape_func(&p, &size, painter->smoothness);
