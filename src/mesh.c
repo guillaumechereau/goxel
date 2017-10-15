@@ -453,9 +453,8 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 {
     assert(mesh && other);
-    block_t *block, *other_block, *tmp;
+    block_t *block, *other_block;
     mesh_prepare_write(mesh);
-    bool is_empty;
     mesh_iterator_t iter;
     int bpos[3];
 
@@ -469,24 +468,10 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
         }
     }
 
-    HASH_ITER(hh, mesh->blocks, block, tmp) {
-        other_block = mesh_get_block_at(other, block->pos, NULL);
-
-        // XXX: instead of testing here, we should do it in block_merge
-        // directly.
-        is_empty = false;
-        if (    block_is_empty(block, true) &&
-                block_is_empty(other_block, true))
-            is_empty = true;
-        if (mode == MODE_MULT_ALPHA && block_is_empty(other_block, true))
-            is_empty = true;
-
-        if (is_empty) {
-            HASH_DEL(mesh->blocks, block);
-            block_delete(block);
-            continue;
-        }
-
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, bpos)) {
+        block = mesh_get_block_at(mesh, bpos, &iter);
+        other_block = mesh_get_block_at(other, bpos, NULL);
         block_merge(block, other_block, mode);
     }
 }
