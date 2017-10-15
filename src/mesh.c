@@ -16,8 +16,23 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+#include "mesh.h"
+#include "uthash.h"
+#include <assert.h>
 #include <limits.h>
+#include <math.h>
+
+#define min(a, b) ({ \
+      __typeof__ (a) _a = (a); \
+      __typeof__ (b) _b = (b); \
+      _a < _b ? _a : _b; \
+      })
+
+#define max(a, b) ({ \
+      __typeof__ (a) _a = (a); \
+      __typeof__ (b) _b = (b); \
+      _a > _b ? _a : _b; \
+      })
 
 // Flags for the iterator/accessor status.
 enum {
@@ -117,7 +132,6 @@ static block_data_t *get_empty_data(void)
         data = calloc(1, sizeof(*data));
         data->ref = 1;
         data->id = 0;
-        goxel->block_count++;
     }
     return data;
 }
@@ -149,7 +163,6 @@ static void block_delete(block_t *block)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
-        goxel->block_count--;
     }
     free(block);
 }
@@ -168,7 +181,6 @@ static void block_set_data(block_t *block, block_data_t *data)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
-        goxel->block_count--;
     }
     block->data = data;
     data->ref++;
@@ -188,7 +200,6 @@ static void block_prepare_write(block_t *block)
     data->ref = 1;
     block->data = data;
     block->data->id = ++g_uid;
-    goxel->block_count++;
 }
 
 static void block_get_at(const block_t *block, const int pos[3],
