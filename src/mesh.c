@@ -488,7 +488,6 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
 {
     assert(mesh && other);
-    mesh_prepare_write(mesh);
     mesh_iterator_t iter;
     int bpos[3];
     iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
