@@ -149,130 +149,6 @@ static void block_prepare_write(block_t *block)
     goxel->block_count++;
 }
 
-// XXX: cleanup, or even better: remove totally and do that at the mesh
-// level.
-static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
-                    uint8_t out[4])
-{
-    int i, aa = a[3], ba = b[3];
-    uint8_t ret[4];
-    memcpy(ret, a, 4);
-    if (mode == MODE_PAINT) {
-        ret[0] = mix(a[0], b[0], ba / 255.);
-        ret[1] = mix(a[1], b[1], ba / 255.);
-        ret[2] = mix(a[2], b[2], ba / 255.);
-    }
-    else if (mode == MODE_OVER) {
-        if (255 * ba + aa * (255 - ba)) {
-            for (i = 0; i < 3; i++) {
-                ret[i] = (255 * b[i] * ba + a[i] * aa * (255 - ba)) /
-                         (255 * ba + aa * (255 - ba));
-            }
-        }
-        ret[3] = ba + aa * (255 - ba) / 255;
-    }
-    else if (mode == MODE_SUB) {
-        ret[3] = max(0, aa - ba);
-    }
-    else if (mode == MODE_MAX) {
-        ret[0] = b[0];
-        ret[1] = b[1];
-        ret[2] = b[2];
-        ret[3] = max(a[3], b[3]);
-    } else if (mode == MODE_SUB_CLAMP) {
-        ret[0] = a[0];
-        ret[1] = a[1];
-        ret[2] = a[2];
-        ret[3] = min(aa, 255 - ba);
-    } else if (mode == MODE_MULT_ALPHA) {
-        ret[0] = ret[0] * ba / 255;
-        ret[1] = ret[1] * ba / 255;
-        ret[2] = ret[2] * ba / 255;
-        ret[3] = ret[3] * ba / 255;
-    } else {
-        assert(false);
-    }
-    memcpy(out, ret, 4);
-}
-
-
-// Used for the cache.
-static int mesh_del(void *data_)
-{
-    mesh_t *mesh = data_;
-    mesh_delete(mesh);
-    return 0;
-}
-
-static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
-                                  mesh_accessor_t *it);
-static block_t *mesh_add_block(mesh_t *mesh, const int pos[3]);
-
-void mesh_copy_block(const mesh_t *src, const int src_pos[3],
-                     mesh_t *dst, const int dst_pos[3])
-{
-    block_t *b1, *b2;
-    b1 = mesh_get_block_at(src, src_pos, NULL);
-    b2 = mesh_get_block_at(dst, dst_pos, NULL);
-    if (!b2) b2 = mesh_add_block(dst, dst_pos);
-    block_set_data(b2, b1->data);
-}
-
-static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
-                        int mode)
-{
-    int p[3];
-    int x, y, z;
-    uint64_t id1, id2;
-    mesh_t *block;
-    uint8_t v1[4], v2[4];
-    static cache_t *cache = NULL;
-    mesh_accessor_t a1, a2, a3;
-
-    mesh_get_block_data(mesh,  NULL, pos, &id1);
-    mesh_get_block_data(other, NULL, pos, &id2);
-
-    if (id2 == 0) return;
-    if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0) {
-        mesh_copy_block(other, pos, mesh, pos);
-        return;
-    }
-
-    // Check if the merge op has been cached.
-    if (!cache) cache = cache_create(512);
-    struct {
-        uint64_t id1;
-        uint64_t id2;
-        int      mode;
-        int      _pad;
-    } key = { id1, id2, mode };
-    _Static_assert(sizeof(key) == 24, "");
-    block = cache_get(cache, &key, sizeof(key));
-    if (block) goto end;
-
-    block = mesh_new();
-    a1 = mesh_get_accessor(mesh);
-    a2 = mesh_get_accessor(other);
-    a3 = mesh_get_accessor(block);
-
-    for (z = 0; z < N; z++)
-    for (y = 0; y < N; y++)
-    for (x = 0; x < N; x++) {
-        p[0] = pos[0] + x;
-        p[1] = pos[1] + y;
-        p[2] = pos[2] + z;
-        mesh_get_at(mesh,  p, &a1, v1);
-        mesh_get_at(other, p, &a2, v2);
-        combine(v1, v2, mode, v1);
-        mesh_set_at(block, (int[]){x, y, z}, v1, &a3);
-    }
-    cache_add(cache, &key, sizeof(key), block, 1, mesh_del);
-
-end:
-    mesh_copy_block(block, (int[]){0, 0, 0}, mesh, pos);
-    return;
-}
-
 static void block_get_at(const block_t *block, const int pos[3],
                          uint8_t out[4])
 {
@@ -485,17 +361,6 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
     return block;
 }
 
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
-{
-    assert(mesh && other);
-    mesh_iterator_t iter;
-    int bpos[3];
-    iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
-    while (mesh_iter(&iter, bpos)) {
-        block_merge(mesh, other, bpos, mode);
-    }
-}
-
 void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4])
 {
@@ -630,4 +495,14 @@ uint8_t mesh_get_alpha_at(const mesh_t *mesh, const int pos[3],
     uint8_t v[4];
     mesh_get_at(mesh, pos, iter, v);
     return v[3];
+}
+
+void mesh_copy_block(const mesh_t *src, const int src_pos[3],
+                     mesh_t *dst, const int dst_pos[3])
+{
+    block_t *b1, *b2;
+    b1 = mesh_get_block_at(src, src_pos, NULL);
+    b2 = mesh_get_block_at(dst, dst_pos, NULL);
+    if (!b2) b2 = mesh_add_block(dst, dst_pos);
+    block_set_data(b2, b1->data);
 }

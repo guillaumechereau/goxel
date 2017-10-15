@@ -326,3 +326,76 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     return ret;
 }
 
+// Used for the cache.
+static int mesh_del(void *data_)
+{
+    mesh_t *mesh = data_;
+    mesh_delete(mesh);
+    return 0;
+}
+
+static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
+                        int mode)
+{
+    int p[3];
+    int x, y, z;
+    uint64_t id1, id2;
+    mesh_t *block;
+    uint8_t v1[4], v2[4];
+    static cache_t *cache = NULL;
+    mesh_accessor_t a1, a2, a3;
+
+    mesh_get_block_data(mesh,  NULL, pos, &id1);
+    mesh_get_block_data(other, NULL, pos, &id2);
+
+    if (id2 == 0) return;
+    if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0) {
+        mesh_copy_block(other, pos, mesh, pos);
+        return;
+    }
+
+    // Check if the merge op has been cached.
+    if (!cache) cache = cache_create(512);
+    struct {
+        uint64_t id1;
+        uint64_t id2;
+        int      mode;
+        int      _pad;
+    } key = { id1, id2, mode };
+    _Static_assert(sizeof(key) == 24, "");
+    block = cache_get(cache, &key, sizeof(key));
+    if (block) goto end;
+
+    block = mesh_new();
+    a1 = mesh_get_accessor(mesh);
+    a2 = mesh_get_accessor(other);
+    a3 = mesh_get_accessor(block);
+
+    for (z = 0; z < N; z++)
+    for (y = 0; y < N; y++)
+    for (x = 0; x < N; x++) {
+        p[0] = pos[0] + x;
+        p[1] = pos[1] + y;
+        p[2] = pos[2] + z;
+        mesh_get_at(mesh,  p, &a1, v1);
+        mesh_get_at(other, p, &a2, v2);
+        combine(v1, v2, mode, v1);
+        mesh_set_at(block, (int[]){x, y, z}, v1, &a3);
+    }
+    cache_add(cache, &key, sizeof(key), block, 1, mesh_del);
+
+end:
+    mesh_copy_block(block, (int[]){0, 0, 0}, mesh, pos);
+    return;
+}
+
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
+{
+    assert(mesh && other);
+    mesh_iterator_t iter;
+    int bpos[3];
+    iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, bpos)) {
+        block_merge(mesh, other, bpos, mode);
+    }
+}

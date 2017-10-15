@@ -594,7 +594,6 @@ void mesh_clear(mesh_t *mesh);
 void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
 void mesh_set(mesh_t *mesh, const mesh_t *other);
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 mesh_accessor_t mesh_get_accessor(const mesh_t *mesh);
 void mesh_get_at(const mesh_t *mesh, const int pos[3],
                  mesh_iterator_t *iter, uint8_t out[4]);
@@ -619,6 +618,10 @@ uint64_t mesh_get_id(const mesh_t *mesh);
 void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *accessor,
                           const int bpos[3], uint64_t *id);
 
+// Maybe replace this with a generic mesh_copy_part function?
+void mesh_copy_block(const mesh_t *src, const int src_pos[3],
+                     mesh_t *dst, const int dst_pos[3]);
+
 
 // #### Mesh util functions ############################
 
@@ -642,6 +645,7 @@ int mesh_select(const mesh_t *mesh,
                             void *user),
                 void *user, mesh_t *selection);
 
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                            int effects, voxel_vertex_t *out);
