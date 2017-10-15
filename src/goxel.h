@@ -574,6 +574,7 @@ enum {
 // Fast iterator of all the mesh voxel.
 typedef struct {
     const mesh_t *mesh;
+    const mesh_t *mesh2;
     // Current cached block and its position.
     // the block can be NULL if there is no block at this position.
     block_t *block;
@@ -608,6 +609,9 @@ mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags);
 // Return an iterator that follow a given box shape.
 // if skip_empty is set to false, we get values even for the empty blocks.
 mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh, const box_t box);
+
+mesh_iterator_t mesh_get_union_iterator(
+        const mesh_t *m1, const mesh_t *m2, int flags);
 
 int mesh_iter(mesh_iterator_t *it, int pos[3]);
 

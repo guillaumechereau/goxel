@@ -24,6 +24,7 @@ enum {
     MESH_FOUND                          = 1 << 8,
     MESH_ITER_FINISHED                  = 1 << 9,
     MESH_ITER_BOX                       = 1 << 10,
+    MESH_ITER_MESH2                     = 1 << 11,
 };
 
 typedef struct block_data block_data_t;
@@ -205,6 +206,7 @@ static int mesh_del(void *data_)
 
 static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
                                   mesh_accessor_t *it);
+static block_t *mesh_add_block(mesh_t *mesh, const int pos[3]);
 
 void mesh_copy_block(const mesh_t *src, const int src_pos[3],
                      mesh_t *dst, const int dst_pos[3])
@@ -212,6 +214,7 @@ void mesh_copy_block(const mesh_t *src, const int src_pos[3],
     block_t *b1, *b2;
     b1 = mesh_get_block_at(src, src_pos, NULL);
     b2 = mesh_get_block_at(dst, dst_pos, NULL);
+    if (!b2) b2 = mesh_add_block(dst, dst_pos);
     block_set_data(b2, b1->data);
 }
 
@@ -353,6 +356,16 @@ mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags)
     };
 }
 
+mesh_iterator_t mesh_get_union_iterator(
+        const mesh_t *m1, const mesh_t *m2, int flags)
+{
+    return (mesh_iterator_t){
+        .mesh = m1,
+        .mesh2 = m2,
+        .flags = flags,
+    };
+}
+
 mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh, const box_t box)
 {
     int i, j;
@@ -478,18 +491,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     mesh_prepare_write(mesh);
     mesh_iterator_t iter;
     int bpos[3];
-
-    // Add empty blocks if needed.
-    if (IS_IN(mode, MODE_OVER, MODE_MAX)) {
-        iter = mesh_get_iterator(other, MESH_ITER_BLOCKS);
-        while (mesh_iter(&iter, bpos)) {
-            if (!mesh_get_block_at(mesh, bpos, NULL)) {
-                mesh_add_block(mesh, bpos);
-            }
-        }
-    }
-
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
         block_merge(mesh, other, bpos, mode);
     }
@@ -548,9 +550,31 @@ end:
     return true;
 }
 
+static bool mesh_iter_next_block_union(mesh_iterator_t *it)
+{
+    it->block = it->block ? it->block->hh.next : it->mesh->blocks;
+    if (!it->block && !(it->flags & MESH_ITER_MESH2)) {
+        it->block = it->mesh2->blocks;
+        it->flags |= MESH_ITER_MESH2;
+    }
+    if (!it->block) return false;
+    it->block_found = true;
+    vec3_copy(it->block->pos, it->block_pos);
+    vec3_copy(it->block->pos, it->pos);
+
+    // Discard blocks that we already did from the first mesh.
+    if (it->flags & MESH_ITER_MESH2) {
+        if (mesh_get_block_at(it->mesh, it->block_pos, NULL))
+            return mesh_iter_next_block_union(it);
+    }
+    return true;
+}
+
 static bool mesh_iter_next_block(mesh_iterator_t *it)
 {
     if (it->flags & MESH_ITER_BOX) return mesh_iter_next_block_box(it);
+    if (it->mesh2) return mesh_iter_next_block_union(it);
+
     it->block = it->block ? it->block->hh.next : it->mesh->blocks;
     if (!it->block) return false;
     it->block_found = true;
