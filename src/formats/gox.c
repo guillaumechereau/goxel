@@ -19,6 +19,8 @@
 
 #include "goxel.h"
 
+#define VERSION 2 // Current version of the file format.
+
 #ifndef NO_ZLIB
 #   include <zlib.h>
 #else
@@ -41,13 +43,13 @@ static int gzeof(gzFile file) {return feof(file);}
 #endif
 
 /*
- * File format, version 1:
+ * File format, version 2:
  *
  * This is inspired by the png format, where the file consists of a list of
  * chunks with different types.
  *
  *  4 bytes magic string        : "GOX "
- *  4 bytes version             : 1
+ *  4 bytes version             : 2
  *  List of chunks:
  *      4 bytes: data length
  *      4 bytes: type
@@ -227,7 +229,7 @@ void save_to_file(goxel_t *goxel, const char *path)
 
     out = gzopen(path, str_endswith(path, ".gz") ? "wb" : "wbT");
     gzwrite(out, "GOX ", 4);
-    write_int32(out, 1);
+    write_int32(out, VERSION);
 
     // Write image info.
     chunk_write_start(&c, out, "IMG ");
@@ -334,7 +336,7 @@ static block_hash_t *hash_find_at(block_hash_t *hash, int index)
     return hash;
 }
 
-void load_from_file(goxel_t *goxel, const char *path)
+int load_from_file(goxel_t *goxel, const char *path)
 {
     layer_t *layer, *layer_tmp;
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
@@ -345,7 +347,7 @@ void load_from_file(goxel_t *goxel, const char *path)
     int w, h, bpp;
     uint8_t *png;
     chunk_t c;
-    int i, index, x, y, z;
+    int i, index, version, x, y, z;
     int  dict_value_size;
     char dict_key[256];
     char dict_value[256];
@@ -356,7 +358,11 @@ void load_from_file(goxel_t *goxel, const char *path)
 
     gzread(in, magic, 4);
     assert(strncmp(magic, "GOX ", 4) == 0);
-    read_int32(in);
+    version = read_int32(in);
+    if (version > VERSION) {
+        LOG_W("Cannot open gox file version %d", version);
+        return -1;
+    }
 
     // Remove all layers.
     // XXX: we should load the image fully before deleting the current one.
@@ -394,11 +400,13 @@ void load_from_file(goxel_t *goxel, const char *path)
                 x = chunk_read_int32(&c, in);
                 y = chunk_read_int32(&c, in);
                 z = chunk_read_int32(&c, in);
+                if (version == 1) { // Previous version blocks pos.
+                    x -= 8; y -= 8; z -= 8;
+                }
                 chunk_read_int32(&c, in);
                 data = hash_find_at(blocks_table, index);
                 assert(data);
-                mesh_blit(layer->mesh, data->v,
-                          x - 8, y - 8, z - 8, 16, 16, 16, NULL);
+                mesh_blit(layer->mesh, data->v, x, y, z, 16, 16, 16, NULL);
             }
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size))) {
@@ -456,6 +464,7 @@ void load_from_file(goxel_t *goxel, const char *path)
     goxel->image->path = strdup(path);
     goxel_update_meshes(goxel, -1);
     gzclose(in);
+    return 0;
 }
 
 static void action_open(const char *path)

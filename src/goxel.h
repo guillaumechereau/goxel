@@ -1130,7 +1130,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h);
 // #############################
 
 void save_to_file(goxel_t *goxel, const char *path);
-void load_from_file(goxel_t *goxel, const char *path);
+int load_from_file(goxel_t *goxel, const char *path);
 
 
 // #### Colors functions #######
