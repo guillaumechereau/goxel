@@ -36,7 +36,6 @@
 
 // Flags for the iterator/accessor status.
 enum {
-    MESH_FOUND                          = 1 << 8,
     MESH_ITER_FINISHED                  = 1 << 9,
     MESH_ITER_BOX                       = 1 << 10,
     MESH_ITER_MESH2                     = 1 << 11,
@@ -55,6 +54,7 @@ struct block
     UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
     block_data_t    *data;
     int             pos[3];
+    uint64_t        id;
 };
 
 struct mesh
@@ -64,7 +64,7 @@ struct mesh
     uint64_t id;     // global uniq id, change each time a mesh changes.
 };
 
-static uint64_t g_uid = 1; // Global id counter.
+static uint64_t g_uid = 2; // Global id counter.
 
 #define N BLOCK_SIZE
 
@@ -155,6 +155,7 @@ static block_t *block_new(const int pos[3])
     memcpy(block->pos, pos, sizeof(block->pos));
     block->data = get_empty_data();
     block->data->ref++;
+    block->id = g_uid++;
     return block;
 }
 
@@ -173,6 +174,7 @@ static block_t *block_copy(const block_t *other)
     *block = *other;
     memset(&block->hh, 0, sizeof(block->hh));
     block->data->ref++;
+    block->id = g_uid++;
     return block;
 }
 
@@ -245,6 +247,7 @@ static void mesh_prepare_write(mesh_t *mesh)
     blocks = mesh->blocks;
     mesh->blocks = NULL;
     for (block = blocks; block; block = block->hh.next) {
+        block->id = g_uid++; // Invalidate all accessors.
         new_block = block_copy(block);
         HASH_ADD(hh, mesh->blocks, pos, sizeof(new_block->pos), new_block);
     }
@@ -369,6 +372,11 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     (*mesh->ref)++;
 }
 
+static uint64_t get_block_id(const block_t *block)
+{
+    return block ? block->id : 1;
+}
+
 static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
                                   mesh_accessor_t *it)
 {
@@ -382,14 +390,14 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
         return block;
     }
 
-    if ((it->flags & MESH_FOUND) &&
+    if (    it->block_id && it->block_id == get_block_id(it->block) &&
             memcmp(&it->block_pos, p, sizeof(p)) == 0) {
         return it->block;
     }
     HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
     it->block = block;
+    it->block_id = get_block_id(block);
     vec3_copy(p, it->block_pos);
-    it->flags |= MESH_FOUND;
     return block;
 }
 
@@ -420,15 +428,16 @@ void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
                 pos[1] - mod(pos[1], N),
                 pos[2] - mod(pos[2], N)};
     mesh_prepare_write(mesh);
-    // XXX: it would be better to avoid this.  Instead all the blocks could
-    // be stored in an array each with a uniq id (!= hash or mesh id), and
-    // we could check that a block hasn't changed somehow.
-    if (iter && iter->block && iter->block->data->ref > 1)
-        iter->flags &= ~MESH_FOUND;
+
     block_t *block = mesh_get_block_at(mesh, p, iter);
+
     if (!block) {
         block = mesh_add_block(mesh, p);
-        if (iter) iter->flags &= ~MESH_FOUND;
+        if (iter) {
+            iter->block = block;
+            iter->block_id = get_block_id(block);
+            vec3_copy(p, iter->block_pos);
+        }
     }
     return block_set_at(block, pos, v);
 }
@@ -438,7 +447,7 @@ static bool mesh_iter_next_block_box(mesh_iterator_t *it)
 {
     int i;
     const mesh_t *mesh = it->mesh;
-    if (!it->block_found) {
+    if (!it->block_id) {
         it->block_pos[0] = it->bbox[0][0] - mod(it->bbox[0][0], N);
         it->block_pos[1] = it->bbox[0][1] - mod(it->bbox[0][1], N);
         it->block_pos[2] = it->bbox[0][2] - mod(it->bbox[0][2], N);
@@ -453,8 +462,8 @@ static bool mesh_iter_next_block_box(mesh_iterator_t *it)
     if (i == 3) return false;
 
 end:
-    it->block_found = true;
     HASH_FIND(hh, mesh->blocks, it->block_pos, 3 * sizeof(int), it->block);
+    it->block_id = get_block_id(it->block);
     vec3_copy(it->block_pos, it->pos);
     return true;
 }
@@ -467,7 +476,7 @@ static bool mesh_iter_next_block_union(mesh_iterator_t *it)
         it->flags |= MESH_ITER_MESH2;
     }
     if (!it->block) return false;
-    it->block_found = true;
+    it->block_id = it->block->id;
     vec3_copy(it->block->pos, it->block_pos);
     vec3_copy(it->block->pos, it->pos);
 
@@ -481,12 +490,19 @@ static bool mesh_iter_next_block_union(mesh_iterator_t *it)
 
 static bool mesh_iter_next_block(mesh_iterator_t *it)
 {
+    if (it->block_id && it->block_id != get_block_id(it->block)) {
+        it->block = mesh_get_block_at(
+            (it->flags & MESH_ITER_MESH2) ? it->mesh2 : it->mesh,
+            it->block_pos,
+            it);
+    }
+
     if (it->flags & MESH_ITER_BOX) return mesh_iter_next_block_box(it);
     if (it->mesh2) return mesh_iter_next_block_union(it);
 
     it->block = it->block ? it->block->hh.next : it->mesh->blocks;
     if (!it->block) return false;
-    it->block_found = true;
+    it->block_id = it->block->id;
     vec3_copy(it->block->pos, it->block_pos);
     vec3_copy(it->block->pos, it->pos);
     return true;
@@ -495,7 +511,7 @@ static bool mesh_iter_next_block(mesh_iterator_t *it)
 int mesh_iter(mesh_iterator_t *it, int pos[3])
 {
     int i;
-    if (!it->block_found) { // First call.
+    if (!it->block_id) { // First call.
         if (!mesh_iter_next_block(it)) return 0;
         goto end;
     }
@@ -524,7 +540,9 @@ void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *iter,
                           const int bpos[3], uint64_t *id)
 {
     block_t *block = NULL;
-    if (iter && (iter->flags & MESH_FOUND) &&
+    if (    iter &&
+            iter->block_id &&
+            iter->block_id == get_block_id(iter->block) &&
             memcmp(&iter->pos, bpos, sizeof(iter->pos)) == 0) {
         block = iter->block;
     } else {
@@ -546,6 +564,7 @@ void mesh_copy_block(const mesh_t *src, const int src_pos[3],
                      mesh_t *dst, const int dst_pos[3])
 {
     block_t *b1, *b2;
+    mesh_prepare_write(dst);
     b1 = mesh_get_block_at(src, src_pos, NULL);
     b2 = mesh_get_block_at(dst, dst_pos, NULL);
     if (!b2) b2 = mesh_add_block(dst, dst_pos);

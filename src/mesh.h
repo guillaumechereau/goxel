@@ -22,7 +22,7 @@ typedef struct {
     // the block can be NULL if there is no block at this position.
     block_t *block;
     int block_pos[3];
-    bool block_found;
+    uint64_t block_id;
 
     int pos[3];
     float box[4][4];
