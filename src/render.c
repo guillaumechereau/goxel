@@ -41,7 +41,7 @@ enum {
 };
 
 typedef struct {
-    int id;
+    uint64_t id;
     int effects;
 } block_item_key_t;
 
@@ -406,14 +406,18 @@ static int item_delete(void *item_)
 
 static render_item_t *get_item_for_block(
         const mesh_t *mesh,
+        mesh_iterator_t *iter,
         const int block_pos[3],
-        uint64_t block_data_id,
         int effects)
 {
     render_item_t *item;
     const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
                              EFFECT_MARCHING_CUBES | EFFECT_SMOOTH |
                              EFFECT_FLAT;
+    uint64_t block_data_id;
+
+    mesh_get_block_data(mesh, iter, block_pos, &block_data_id);
+
     // For the moment we always compute the smooth normal no mater what.
     effects |= EFFECT_SMOOTH;
     block_item_key_t key = {
@@ -452,8 +456,8 @@ static render_item_t *get_item_for_block(
 }
 
 static void render_block_(renderer_t *rend, mesh_t *mesh,
+                          mesh_iterator_t *iter,
                           const int block_pos[3],
-                          uint64_t block_data_id,
                           int block_id,
                           int effects, prog_t *prog, mat4_t *model)
 {
@@ -462,7 +466,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     int attr;
     float block_id_f[2];
 
-    item = get_item_for_block(mesh, block_pos, block_data_id, effects);
+    item = get_item_for_block(mesh, iter, block_pos, effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
     if (prog->u_block_id_l != -1) {
@@ -570,7 +574,6 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     prog_t *prog;
     mat4_t model = mat4_identity;
     int attr, block_pos[3], block_id;
-    uint64_t block_data_id;
     float pos_scale = 1.0f;
     vec3_t light_dir = get_light_dir(rend, true);
     bool shadow = false;
@@ -642,8 +645,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     block_id = 1;
     iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, block_pos)) {
-        mesh_get_block_data(mesh, &iter, block_pos, &block_data_id);
-        render_block_(rend, mesh, block_pos, block_data_id,
+        render_block_(rend, mesh, &iter, block_pos,
                       block_id++, effects, prog, &model);
     }
 
