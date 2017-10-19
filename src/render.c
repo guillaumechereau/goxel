@@ -41,7 +41,7 @@ enum {
 };
 
 typedef struct {
-    uint64_t id;
+    uint64_t ids[27];
     int effects;
 } block_item_key_t;
 
@@ -415,15 +415,24 @@ static render_item_t *get_item_for_block(
                              EFFECT_MARCHING_CUBES | EFFECT_SMOOTH |
                              EFFECT_FLAT;
     uint64_t block_data_id;
-
-    mesh_get_block_data(mesh, iter, block_pos, &block_data_id);
+    int p[3], i, x, y, z;
+    block_item_key_t key = {0};
 
     // For the moment we always compute the smooth normal no mater what.
     effects |= EFFECT_SMOOTH;
-    block_item_key_t key = {
-        .id = block_data_id,
-        .effects = effects & effects_mask,
-    };
+
+    key.effects = effects & effects_mask;
+    // The hash key take into consideration all the blocks adjacent to
+    // the current block!
+    for (i = 0, z = -1; z <= 1; z++)
+    for (y = -1; y <= 1; y++)
+    for (x = -1; x <= 1; x++, i++) {
+        p[0] = block_pos[0] + x * BLOCK_SIZE;
+        p[1] = block_pos[1] + y * BLOCK_SIZE;
+        p[2] = block_pos[2] + z * BLOCK_SIZE;
+        mesh_get_block_data(mesh, NULL, p, &block_data_id);
+        key.ids[i] = block_data_id;
+    }
 
     item = cache_get(g_items_cache, &key, sizeof(key));
     if (item) return item;
