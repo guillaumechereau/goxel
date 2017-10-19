@@ -348,10 +348,13 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
     mesh_get_block_data(mesh,  NULL, pos, &id1);
     mesh_get_block_data(other, NULL, pos, &id2);
 
-    if (id2 == 0) return;
     if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0) {
         mesh_copy_block(other, pos, mesh, pos);
         return;
+    }
+    if (IS_IN(mode, MODE_MULT_ALPHA) && id1 == 0) return;
+    if (IS_IN(mode, MODE_MULT_ALPHA) && id2 == 0) {
+        // XXX: could just delete the block.
     }
 
     // Check if the merge op has been cached.
@@ -396,6 +399,8 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     int bpos[3];
     iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
+        // box_t box = bbox_from_extents(vec3(bpos[0], bpos[1], bpos[2]), 8, 8, 8);
+        // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
         block_merge(mesh, other, bpos, mode);
     }
 }
