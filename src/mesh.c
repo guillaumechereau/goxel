@@ -98,7 +98,7 @@ static void mat4_mul_vec4(const float mat[4][4], const float v[4],
     memcpy(out, ret, sizeof(ret));
 }
 
-static void box_get_bbox_(const float box[4][4], int bbox[2][3])
+static void box_get_bbox(float box[4][4], int bbox[2][3])
 {
     const float vertices[8][4] = {
         {-1, -1, +1, 1},
@@ -307,7 +307,7 @@ mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
         .bbox = {{INT_MAX, INT_MAX, INT_MAX}, {INT_MIN, INT_MIN, INT_MIN}},
     };
     memcpy(iter.box, box, sizeof(iter.box));
-    box_get_bbox_(iter.box, iter.bbox);
+    box_get_bbox(iter.box, iter.bbox);
     return iter;
 }
 
