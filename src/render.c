@@ -416,11 +416,12 @@ static render_item_t *get_item_for_block(
                              EFFECT_FLAT;
     uint64_t block_data_id;
     int p[3], i, x, y, z;
-    block_item_key_t key = {0};
+    block_item_key_t key = {};
 
     // For the moment we always compute the smooth normal no mater what.
     effects |= EFFECT_SMOOTH;
 
+    memset(&key, 0, sizeof(key)); // Just to be sure!
     key.effects = effects & effects_mask;
     // The hash key take into consideration all the blocks adjacent to
     // the current block!
