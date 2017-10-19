@@ -36,7 +36,7 @@ class GoxNSOpenGLView: NSOpenGLView {
     
     func appDelegate () -> AppDelegate
     {
-        return NSApplication.shared().delegate as! AppDelegate
+        return NSApplication.shared.delegate as! AppDelegate
     }
     
     override var acceptsFirstResponder: Bool {
@@ -109,8 +109,8 @@ class GoxNSOpenGLView: NSOpenGLView {
     }
     
     override func flagsChanged(with event: NSEvent) {
-        appDelegate().inputs.keys.340 = event.modifierFlags.contains(.shift)
-        appDelegate().inputs.keys.341 = event.modifierFlags.contains(.control)
+        appDelegate().inputs.keys.340 = event.modifierFlags.contains(NSEvent.ModifierFlags.shift)
+        appDelegate().inputs.keys.341 = event.modifierFlags.contains(NSEvent.ModifierFlags.control)
     }
 }
 
@@ -144,7 +144,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
     
-    func onTimer(_ sender: Timer!) {
+    @objc func onTimer(_ sender: Timer!) {
         if (!window.isVisible) {
             return
         }
@@ -159,7 +159,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         glFlush()
         view.openGLContext?.flushBuffer()
         if self.goxel.quit {
-            NSApplication.shared().terminate(nil)
+            NSApplication.shared.terminate(nil)
         }
     }
 }
