@@ -68,7 +68,8 @@ int mesh_select(const mesh_t *mesh,
                     mask[j] = mesh_get_alpha_at(selection, p2,
                                                 &selection_accessor);
                 }
-                a = cond(v2, neighboors, mask, user);
+                // XXX: the (void*) are only here for gcc <= 4.8.4
+                a = cond((void*)v2, (void*)neighboors, (void*)mask, user);
                 if (a) {
                     mesh_set_at(selection, p, (uint8_t[]){255, 255, 255, a},
                                 &selection_accessor);
