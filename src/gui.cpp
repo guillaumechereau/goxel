@@ -57,8 +57,6 @@ namespace ImGui {
 
 static texture_t *g_tex_icons = NULL;
 
-static const int MiB = 1 << 20;
-
 static const char *VSHADER =
     "                                                               \n"
     "attribute vec3 a_pos;                                          \n"
