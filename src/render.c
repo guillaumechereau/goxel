@@ -1186,7 +1186,7 @@ static const char *POS_DATA_FSHADER =
     "precision highp float;                                           \n"
     "#endif                                                           \n"
     "                                                                 \n"
-    "varying lowp vec4 v_pos_data;                                    \n"
+    "varying lowp vec2 v_pos_data;                                    \n"
     "uniform lowp vec2 u_block_id;                                    \n"
     "                                                                 \n"
     "void main()                                                      \n"
