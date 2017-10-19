@@ -1396,15 +1396,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::Text("%s", goxel->help_text ?: "");
 
     ImGui::EndChild();
-
-    if (DEBUG) {
-        ImGui::SetCursorPos(ImVec2(400, 30));
-        ImGui::BeginChild("debug", ImVec2(0, 0), false,
-                          ImGuiWindowFlags_NoInputs);
-        ImGui::Text("uid: %lu", (unsigned long)goxel->next_uid);
-        ImGui::EndChild();
-    }
-
     ImGui::End();
 
     // Handle the shortcuts.  XXX: this should be done with actions.

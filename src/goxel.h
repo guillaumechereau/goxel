@@ -1073,10 +1073,6 @@ typedef struct goxel
 
     int        frame_count;       // Global frames counter.
     double     frame_time;        // Clock time at beginning of the frame.
-
-    // Global uid counter.
-    uint64_t   next_uid;
-
     bool       quit;        // Set to true to quit the application.
 
     struct {

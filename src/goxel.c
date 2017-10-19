@@ -262,7 +262,6 @@ void goxel_init(goxel_t *gox)
 {
     goxel = gox;
     memset(goxel, 0, sizeof(*goxel));
-    goxel->next_uid = 1; // 0 should never be used.
 
     render_init();
     shapes_init();

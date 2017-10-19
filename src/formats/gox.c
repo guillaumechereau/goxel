@@ -351,6 +351,7 @@ int load_from_file(goxel_t *goxel, const char *path)
     int  dict_value_size;
     char dict_key[256];
     char dict_value[256];
+    uint64_t uid = 1;
     camera_t *camera;
 
     LOG_I("Load from file %s", path);
@@ -382,7 +383,7 @@ int load_from_file(goxel_t *goxel, const char *path)
             data = calloc(1, sizeof(*data));
             data->v = calloc(1, 64 * 64 * 4);
             memcpy(data->v, voxel_data, 64 * 64 * 4);
-            data->uid = ++goxel->next_uid;
+            data->uid = ++uid;
             HASH_ADD(hh, blocks_table, uid, sizeof(data->uid), data);
             free(voxel_data);
             free(png);
