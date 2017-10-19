@@ -85,8 +85,7 @@ static int mod(int a, int b)
 #define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
 #define BLOCK_AT(c, x, y, z) (DATA_AT(c->data, x, y, z))
 
-static void mat4_mul_vec4(const float mat[4][4], const float v[4],
-                          float out[4])
+static void mat4_mul_vec4(float mat[4][4], const float v[4], float out[4])
 {
     float ret[4] = {0};
     int i, j;
