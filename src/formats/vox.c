@@ -184,8 +184,7 @@ static void vox_import(const char *path)
     goxel_update_meshes(goxel, -1);
 }
 
-static int get_color_index(const uint8_t v[4], const uint8_t (*palette)[4],
-                           bool exact)
+static int get_color_index(uint8_t v[4], uint8_t (*palette)[4], bool exact)
 {
     const uint8_t *c;
     int i, dist, best = -1, best_dist = 1024;
