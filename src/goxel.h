@@ -53,16 +53,6 @@
 #endif
 // #############################
 
-// Do not issue warnings when passing const values to non const functions.
-// This is too annoying with the 'const int v[4][4]' arguments.
-#ifndef __cplusplus
-#   if __clang__
-#       pragma clang diagnostic ignored "-Wincompatible-pointer-types-discards-qualifiers"
-#   else
-#       pragma GCC diagnostic ignored "-Wdiscarded-array-qualifiers"
-#       pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-#   endif
-#endif
 
 
 // #### DEFINED macro ##########
