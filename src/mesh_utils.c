@@ -42,8 +42,8 @@ int mesh_select(const mesh_t *mesh,
     mesh_accessor = mesh_get_accessor(mesh);
     selection_accessor = mesh_get_accessor(selection);
 
-    mesh_set_at(selection, start_pos, (uint8_t[]){255, 255, 255, 255},
-                &selection_accessor);
+    mesh_set_at(selection, &selection_accessor, start_pos,
+                (uint8_t[]){255, 255, 255, 255});
 
     // XXX: Very inefficient algorithm!
     // Iter and test all the neighbors of the selection until there is
@@ -56,23 +56,23 @@ int mesh_select(const mesh_t *mesh,
                 p[0] = pos[0] + FACES_NORMALS[i][0];
                 p[1] = pos[1] + FACES_NORMALS[i][1];
                 p[2] = pos[2] + FACES_NORMALS[i][2];
-                mesh_get_at(selection, p, &selection_accessor, v2);
+                mesh_get_at(selection, &selection_accessor, p, v2);
                 if (v2[3]) continue; // Already done.
-                mesh_get_at(mesh, p, &mesh_accessor, v2);
+                mesh_get_at(mesh, &mesh_accessor, p, v2);
                 // Compute neighboors and mask.
                 for (j = 0; j < 6; j++) {
                     p2[0] = p[0] + FACES_NORMALS[j][0];
                     p2[1] = p[1] + FACES_NORMALS[j][1];
                     p2[2] = p[2] + FACES_NORMALS[j][2];
-                    mesh_get_at(mesh, p2, &mesh_accessor, neighboors[j]);
-                    mask[j] = mesh_get_alpha_at(selection, p2,
-                                                &selection_accessor);
+                    mesh_get_at(mesh, &mesh_accessor, p2, neighboors[j]);
+                    mask[j] = mesh_get_alpha_at(selection,
+                                                &selection_accessor, p2);
                 }
                 // XXX: the (void*) are only here for gcc <= 4.8.4
                 a = cond((void*)v2, (void*)neighboors, (void*)mask, user);
                 if (a) {
-                    mesh_set_at(selection, p, (uint8_t[]){255, 255, 255, a},
-                                &selection_accessor);
+                    mesh_set_at(selection, &selection_accessor, p,
+                                (uint8_t[]){255, 255, 255, a});
                     keep = true;
                 }
             }
@@ -121,9 +121,9 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
         } else {
             p = mat4_mul_vec3(proj, p);
             int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
-            mesh_get_at(mesh, pi, NULL, value);
+            mesh_get_at(mesh, NULL, pi, value);
         }
-        mesh_set_at(mesh, vpos, value, NULL);
+        mesh_set_at(mesh, NULL, vpos, value);
     }
 
 }
@@ -144,7 +144,7 @@ static void mesh_fill(
     iter = mesh_get_box_iterator(mesh, box->v);
     while (mesh_iter(&iter, pos)) {
         get_color(pos, color, user_data);
-        mesh_set_at(mesh, pos, color, &accessor);
+        mesh_set_at(mesh, &accessor, pos, color);
     }
 }
 
@@ -155,7 +155,7 @@ static void mesh_move_get_color(const int pos[3], uint8_t c[4], void *user)
     mat4_t *mat = USER_GET(user, 1);
     p = mat4_mul_vec3(*mat, p);
     int pi[3] = {round(p.x), round(p.y), round(p.z)};
-    mesh_get_at(mesh, pi, NULL, c);
+    mesh_get_at(mesh, NULL, pi, c);
 }
 
 void mesh_move(mesh_t *mesh, const mat4_t *mat)
@@ -181,7 +181,7 @@ void mesh_blit(mesh_t *mesh, const uint8_t *data,
     for (pos[2] = z; pos[2] < z + d; pos[2]++)
     for (pos[1] = y; pos[1] < y + h; pos[1]++)
     for (pos[0] = x; pos[0] < x + w; pos[0]++) {
-        mesh_set_at(mesh, pos, data, iter);
+        mesh_set_at(mesh, iter, pos, data);
         data += 4;
     }
     mesh_remove_empty_blocks(mesh);
@@ -195,9 +195,9 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
 
     iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, pos)) {
-        mesh_get_at(mesh, pos, &iter, value);
+        mesh_get_at(mesh, &iter, pos, value);
         value[3] = clamp(value[3] + v, 0, 255);
-        mesh_set_at(mesh, pos, value, NULL);
+        mesh_set_at(mesh, NULL, pos, value);
     }
 }
 
@@ -283,9 +283,9 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         v = k / 2.0f + 0.5f;
         if (invert) v = 1.0f - v;
         if (v) {
-            mesh_get_at(mesh, vp, &accessor, value);
+            mesh_get_at(mesh, &accessor, vp, value);
             combine(value, painter->color, mode, value);
-            mesh_set_at(mesh, vp, value, &accessor);
+            mesh_set_at(mesh, &accessor, vp, value);
         }
     }
 }
@@ -311,7 +311,7 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact)
     } else {
         iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
         while (mesh_iter(&iter, vpos)) {
-            mesh_get_at(mesh, vpos, &iter, value);
+            mesh_get_at(mesh, &iter, vpos, value);
             if (!value[3]) continue;
             xmin = min(xmin, vpos[0]);
             ymin = min(ymin, vpos[1]);
@@ -381,10 +381,10 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
         p[0] = pos[0] + x;
         p[1] = pos[1] + y;
         p[2] = pos[2] + z;
-        mesh_get_at(mesh,  p, &a1, v1);
-        mesh_get_at(other, p, &a2, v2);
+        mesh_get_at(mesh, &a1, p, v1);
+        mesh_get_at(other, &a2, p, v2);
         combine(v1, v2, mode, v1);
-        mesh_set_at(block, (int[]){x, y, z}, v1, &a3);
+        mesh_set_at(block, &a3, (int[]){x, y, z}, v1);
     }
     cache_add(cache, &key, sizeof(key), block, 1, mesh_del);
 

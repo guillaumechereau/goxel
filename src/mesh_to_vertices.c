@@ -174,7 +174,7 @@ static uint32_t mesh_get_neighboors(const mesh_t *mesh,
         npos[0] = pos[0] + xx;
         npos[1] = pos[1] + yy;
         npos[2] = pos[2] + zz;
-        neighboors[i] = mesh_get_alpha_at(mesh, npos, iter);
+        neighboors[i] = mesh_get_alpha_at(mesh, iter, npos);
         if (neighboors[i] >= 127) ret |= 1 << i;
         i++;
     }
@@ -220,7 +220,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
         pos[0] = x + block_pos[0];
         pos[1] = y + block_pos[1];
         pos[2] = z + block_pos[2];
-        mesh_get_at(mesh, pos, &iter, v);
+        mesh_get_at(mesh, &iter, pos, v);
         if (v[3] < 127) continue;    // Non visible
         neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);
         for (f = 0; f < 6; f++) {

@@ -35,7 +35,7 @@ int tool_color_picker_iter(tool_t *tool, const vec4_t *view)
 
     goxel_set_help_text(goxel, "Click on a voxel to pick the color");
     if (!curs->snaped) return 0;
-    mesh_get_at(mesh, pi, NULL, color);
+    mesh_get_at(mesh, NULL, pi, color);
     color[3] = 255;
     goxel_set_help_text(goxel, "%d %d %d", color[0], color[1], color[2]);
     if (curs->flags & CURSOR_PRESSED) vec4_copy(color, goxel->painter.color);

@@ -46,7 +46,7 @@ static void export_as_png_slices(const char *path)
         pos[0] = x + start_pos[0];
         pos[1] = y + start_pos[1];
         pos[2] = z + start_pos[2];
-        mesh_get_at(mesh, pos, &iter, c);
+        mesh_get_at(mesh, &iter, pos, c);
         img[(y * w * d + z * w + x) * 4 + 0] = c[0];
         img[(y * w * d + z * w + x) * 4 + 1] = c[1];
         img[(y * w * d + z * w + x) * 4 + 2] = c[2];

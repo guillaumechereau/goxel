@@ -114,7 +114,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
-        mesh_get_at(mesh, pos, &iter, color);
+        mesh_get_at(mesh, &iter, pos, color);
         use_max_color = (color[3] == 0);
         colorbest = 8;
         sum_a = 0;
@@ -131,12 +131,12 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                 pos[0] = wx + block_pos[0];
                 pos[1] = wy + block_pos[1];
                 pos[2] = wz + block_pos[2];
-                a = mesh_get_alpha_at(mesh, pos, &iter);
+                a = mesh_get_alpha_at(mesh, &iter, pos);
 
                 if (use_max_color && a) {
                     d = abs(x - wx) + abs(y - wy) + abs(z - wz);
                     if (d < colorbest) {
-                        mesh_get_at(mesh, pos, &iter, color);
+                        mesh_get_at(mesh, &iter, pos, color);
                         colorbest = d;
                     }
                 }

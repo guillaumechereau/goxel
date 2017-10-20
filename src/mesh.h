@@ -38,12 +38,12 @@ void mesh_delete(mesh_t *mesh);
 mesh_t *mesh_copy(const mesh_t *mesh);
 void mesh_set(mesh_t *mesh, const mesh_t *other);
 mesh_accessor_t mesh_get_accessor(const mesh_t *mesh);
-void mesh_get_at(const mesh_t *mesh, const int pos[3],
-                 mesh_iterator_t *iter, uint8_t out[4]);
-uint8_t mesh_get_alpha_at(const mesh_t *mesh, const int pos[3],
-                          mesh_iterator_t *iter);
-void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
-                 mesh_iterator_t *iter);
+void mesh_get_at(const mesh_t *mesh, mesh_iterator_t *it,
+                 const int pos[3], uint8_t out[4]);
+uint8_t mesh_get_alpha_at(const mesh_t *mesh, mesh_iterator_t *it,
+                          const int pos[3]);
+void mesh_set_at(mesh_t *mesh, mesh_iterator_t *it,
+                 const int pos[3], const uint8_t v[4]);
 void mesh_remove_empty_blocks(mesh_t *mesh);
 bool mesh_is_empty(const mesh_t *mesh);
 

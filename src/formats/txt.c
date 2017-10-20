@@ -37,7 +37,7 @@ static void export_as_txt(const char *path)
 
     iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, p)) {
-        mesh_get_at(mesh, p, &iter, v);
+        mesh_get_at(mesh, &iter, p, v);
         if (v[3] < 127) continue;
         fprintf(out, "%d %d %d %2x%2x%2x\n",
                 p[0], p[1], p[2], v[0], v[1], v[2]);

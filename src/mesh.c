@@ -413,15 +413,15 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
     return block;
 }
 
-void mesh_get_at(const mesh_t *mesh, const int pos[3],
-                 mesh_iterator_t *iter, uint8_t out[4])
+void mesh_get_at(const mesh_t *mesh, mesh_iterator_t *iter,
+                 const int pos[3], uint8_t out[4])
 {
     block_t *block = mesh_get_block_at(mesh, pos, iter);
     return block_get_at(block, pos, out);
 }
 
-void mesh_set_at(mesh_t *mesh, const int pos[3], const uint8_t v[4],
-                 mesh_iterator_t *iter)
+void mesh_set_at(mesh_t *mesh, mesh_iterator_t *iter,
+                 const int pos[3], const uint8_t v[4])
 {
     int p[3] = {pos[0] - mod(pos[0], N),
                 pos[1] - mod(pos[1], N),
@@ -551,11 +551,11 @@ void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *iter,
     return block ? block->data->voxels : NULL;
 }
 
-uint8_t mesh_get_alpha_at(const mesh_t *mesh, const int pos[3],
-                          mesh_iterator_t *iter)
+uint8_t mesh_get_alpha_at(const mesh_t *mesh, mesh_iterator_t *iter,
+                          const int pos[3])
 {
     uint8_t v[4];
-    mesh_get_at(mesh, pos, iter, v);
+    mesh_get_at(mesh, iter, pos, v);
     return v[3];
 }
 

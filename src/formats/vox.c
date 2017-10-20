@@ -176,7 +176,7 @@ static void vox_import(const char *path)
             memcpy(color, ctx.palette[c], 4);
         else
             hexcolor(VOX_DEFAULT_PALETTE[c], color);
-        mesh_set_at(mesh, pos, color, &iter);
+        mesh_set_at(mesh, &iter, pos, color);
     }
     free(ctx.voxels);
     free(ctx.palette);
@@ -232,7 +232,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
     // Iter all the voxels to get the count and the size.
     iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, pos)) {
-        mesh_get_at(mesh, pos, &iter, v);
+        mesh_get_at(mesh, &iter, pos, v);
         if (v[3] < 127) continue;
         v[3] = 255;
         use_default_palette = use_default_palette &&
@@ -275,7 +275,7 @@ static void vox_export(const mesh_t *mesh, const char *path)
     i = 0;
     iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
     while (mesh_iter(&iter, pos)) {
-        mesh_get_at(mesh, pos, &iter, v);
+        mesh_get_at(mesh, &iter, pos, v);
         if (v[3] < 127) continue;
         pos[0] -= xmin;
         pos[1] -= ymin;

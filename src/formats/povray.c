@@ -73,7 +73,7 @@ static void export_as_pov(const char *path, int w, int h)
     DL_FOREACH(goxel->image->layers, layer) {
         iter = mesh_get_iterator(layer->mesh, MESH_ITER_VOXELS);
         while (mesh_iter(&iter, p)) {
-            mesh_get_at(layer->mesh, p, &iter, v);
+            mesh_get_at(layer->mesh, &iter, p, v);
             if (v[3] < 127) continue;
             m_voxel = mustache_add_dict(m_voxels, NULL);
             mustache_add_str(m_voxel, "pos", "<%d, %d, %d>",
