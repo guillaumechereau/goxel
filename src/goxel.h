@@ -443,8 +443,8 @@ void actions_iter(int (*f)(const action_t *action, void *user), void *user);
 // Convenience macro to register an action from anywere in a c file.
 #define ACTION_REGISTER(id_, ...) \
     static const action_t GOX_action_##id_ = {.id = #id_, __VA_ARGS__}; \
-    static void GOX_register_action_##id_() __attribute__((constructor)); \
-    static void GOX_register_action_##id_() { \
+    static void GOX_register_action_##id_(void) __attribute__((constructor)); \
+    static void GOX_register_action_##id_(void) { \
         action_register(&GOX_action_##id_); \
     }
 
@@ -993,8 +993,8 @@ struct tool {
                 .id = id_, .action_id = "tool_set_" #name_, __VA_ARGS__ \
             } \
         }; \
-    static void GOX_register_tool_##tool_() __attribute__((constructor)); \
-    static void GOX_register_tool_##tool_() { \
+    static void GOX_register_tool_##tool_(void) __attribute__((constructor)); \
+    static void GOX_register_tool_##tool_(void) { \
         tool_register_(&GOX_tool_##id_.tool); \
     }
 
