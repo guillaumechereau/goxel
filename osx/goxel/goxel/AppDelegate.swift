@@ -36,7 +36,7 @@ class GoxNSOpenGLView: NSOpenGLView {
     
     func appDelegate () -> AppDelegate
     {
-        return NSApplication.shared.delegate as! AppDelegate
+        return NSApplication.shared().delegate as! AppDelegate
     }
     
     override var acceptsFirstResponder: Bool {
@@ -159,7 +159,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         glFlush()
         view.openGLContext?.flushBuffer()
         if self.goxel.quit {
-            NSApplication.shared.terminate(nil)
+            NSApplication.shared().terminate(nil)
         }
     }
 }
