@@ -109,8 +109,8 @@ class GoxNSOpenGLView: NSOpenGLView {
     }
     
     override func flagsChanged(with event: NSEvent) {
-        appDelegate().inputs.keys.340 = event.modifierFlags.contains(NSEvent.ModifierFlags.shift)
-        appDelegate().inputs.keys.341 = event.modifierFlags.contains(NSEvent.ModifierFlags.control)
+        appDelegate().inputs.keys.340 = event.modifierFlags.contains(.shift)
+        appDelegate().inputs.keys.341 = event.modifierFlags.contains(.control)
     }
 }
 
