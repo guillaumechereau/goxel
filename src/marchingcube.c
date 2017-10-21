@@ -95,7 +95,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
     uint8_t color[4];
     int colorbest;
     bool use_max_color;
-    mesh_iterator_t iter = {0};
+    mesh_accessor_t accessor;
 
     int densities[8];
     int normals[8][3];
@@ -104,6 +104,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
     mc_vert_t tri[5][3];
     if (!(effects & EFFECT_FLAT)) k = 8;
 
+    accessor = mesh_get_accessor(mesh);
     // Add up the contribution of each voxel to the vertices values.
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
@@ -114,7 +115,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
-        mesh_get_at(mesh, &iter, pos, color);
+        mesh_get_at(mesh, &accessor, pos, color);
         use_max_color = (color[3] == 0);
         colorbest = 8;
         sum_a = 0;
@@ -131,12 +132,12 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                 pos[0] = wx + block_pos[0];
                 pos[1] = wy + block_pos[1];
                 pos[2] = wz + block_pos[2];
-                a = mesh_get_alpha_at(mesh, &iter, pos);
+                a = mesh_get_alpha_at(mesh, &accessor, pos);
 
                 if (use_max_color && a) {
                     d = abs(x - wx) + abs(y - wy) + abs(z - wz);
                     if (d < colorbest) {
-                        mesh_get_at(mesh, &iter, pos, color);
+                        mesh_get_at(mesh, &accessor, pos, color);
                         colorbest = d;
                     }
                 }
