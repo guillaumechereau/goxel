@@ -70,13 +70,6 @@ static uint64_t g_uid = 2; // Global id counter.
 
 #define vec3_copy(a, b) do {b[0] = a[0]; b[1] = a[1]; b[2] = a[2];} while (0)
 
-// XXX: move this in goxel.h?
-static int mod(int a, int b)
-{
-    int r = a % b;
-    return r < 0 ? r + b : r;
-}
-
 #define BLOCK_ITER(x, y, z) \
     for (z = 0; z < N; z++) \
         for (y = 0; y < N; y++) \
@@ -380,9 +373,9 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
                                   mesh_accessor_t *it)
 {
     block_t *block;
-    int p[3] = {pos[0] - mod(pos[0], N),
-                pos[1] - mod(pos[1], N),
-                pos[2] - mod(pos[2], N)};
+    int p[3] = {pos[0] & ~(int)(N - 1),
+                pos[1] & ~(int)(N - 1),
+                pos[2] & ~(int)(N - 1)};
 
     if (!it) {
         HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
@@ -423,9 +416,9 @@ void mesh_get_at(const mesh_t *mesh, mesh_iterator_t *iter,
 void mesh_set_at(mesh_t *mesh, mesh_iterator_t *iter,
                  const int pos[3], const uint8_t v[4])
 {
-    int p[3] = {pos[0] - mod(pos[0], N),
-                pos[1] - mod(pos[1], N),
-                pos[2] - mod(pos[2], N)};
+    int p[3] = {pos[0] & ~(int)(N - 1),
+                pos[1] & ~(int)(N - 1),
+                pos[2] & ~(int)(N - 1)};
     mesh_prepare_write(mesh);
 
     block_t *block = mesh_get_block_at(mesh, p, iter);
@@ -447,16 +440,16 @@ static bool mesh_iter_next_block_box(mesh_iterator_t *it)
     int i;
     const mesh_t *mesh = it->mesh;
     if (!it->block_id) {
-        it->block_pos[0] = it->bbox[0][0] - mod(it->bbox[0][0], N);
-        it->block_pos[1] = it->bbox[0][1] - mod(it->bbox[0][1], N);
-        it->block_pos[2] = it->bbox[0][2] - mod(it->bbox[0][2], N);
+        it->block_pos[0] = it->bbox[0][0] & ~(int)(N - 1);
+        it->block_pos[1] = it->bbox[0][1] & ~(int)(N - 1);
+        it->block_pos[2] = it->bbox[0][2] & ~(int)(N - 1);
         goto end;
     }
 
     for (i = 0; i < 3; i++) {
         it->block_pos[i] += N;
         if (it->block_pos[i] < it->bbox[1][i]) break;
-        it->block_pos[i] = it->bbox[0][i] - mod(it->bbox[0][i], N);
+        it->block_pos[i] = it->bbox[0][i] & ~(int)(N - 1);
     }
     if (i == 3) return false;
 
