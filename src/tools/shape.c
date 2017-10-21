@@ -74,12 +74,12 @@ static int on_hover(gesture3d_t *gest, void *user)
 {
     box_t box;
     cursor_t *curs = gest->cursor;
-    uvec4b_t box_color = HEXCOLOR(0xffff00ff);
+    uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text(goxel, "Click and drag to draw.");
     box = get_box(&curs->pos, &curs->pos, &curs->normal, 0,
                   &goxel->plane);
-    render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
+    render_box(&goxel->rend, &box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
 

@@ -41,7 +41,7 @@ enum {
 };
 
 typedef struct {
-    int id;
+    uint64_t ids[27];
     int effects;
 } block_item_key_t;
 
@@ -56,7 +56,7 @@ struct render_item_t
         mat4_t          mat;
     };
     vec3_t          grid;
-    uvec4b_t        color;
+    uint8_t         color[4];
     bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
     texture_t       *tex;
@@ -115,6 +115,7 @@ typedef struct {
     GLint u_shadow_mvp_l;
     GLint u_shadow_k_l;
     GLint u_shadow_tex_l;
+    GLint u_block_id_l;
 } prog_t;
 
 // Static list of programs.  Need to be big enough for all the possible
@@ -142,7 +143,7 @@ static const struct {
     {"a_pos",           3, GL_BYTE,            false, OFFSET(pos)},
     {"a_normal",        3, GL_BYTE,            false, OFFSET(normal)},
     {"a_color",         4, GL_UNSIGNED_BYTE,   true,  OFFSET(color)},
-    {"a_pos_data",      4, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
+    {"a_pos_data",      2, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
     {"a_uv",            2, GL_UNSIGNED_BYTE,   true,  OFFSET(uv)},
     {"a_bump_uv",       2, GL_UNSIGNED_BYTE,   false, OFFSET(bump_uv)},
     {"a_bshadow_uv",    2, GL_UNSIGNED_BYTE,   false, OFFSET(bshadow_uv)},
@@ -168,6 +169,18 @@ static const struct {
  *  the 4 corners and the 4 edges => 8bit => 256 blocks.
  *
  */
+
+static void copy_color(const uint8_t in[4], uint8_t out[4])
+{
+    if (in == NULL) {
+        out[0] = 255;
+        out[1] = 255;
+        out[2] = 255;
+        out[3] = 255;
+    } else {
+        memcpy(out, in, 4);
+    }
+}
 
 static float get_border_dist(float x, float y, int mask)
 {
@@ -209,49 +222,57 @@ static void init_border_texture(void)
                     0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data));
 }
 
-static void bump_img_fill(uvec3b_t *data, int x, int y, int w, int h,
-                          uvec3b_t v)
+static void bump_img_fill(uint8_t (*data)[3], int x, int y, int w, int h,
+                          const uint8_t v[3])
 {
     int i, j;
-    for (j = y; j < y + h; j++)
-    for (i = x; i < x + w; i++) {
-        data[j * 256 + i] = v;
+    for (j = y; j < y + h; j++) {
+        for (i = x; i < x + w; i++) {
+            memcpy(data[j * 256 + i], v, 3);
+        }
     }
 }
 
-static uvec3b_t bump_neighbor_value(int f, int e)
+static void bump_neighbor_value(int f, int e, uint8_t out[3])
 {
     assert(e >= 0 && e < 4);
     assert(f >= 0 && f < 6);
-    vec3b_t n0, n1;
+    const int *n0, *n1;
     n0 = FACES_NORMALS[f];
     n1 = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
-    return uvec3b(
-        (int)(n0.x + n1.x) * 127 / 2 + 127,
-        (int)(n0.y + n1.y) * 127 / 2 + 127,
-        (int)(n0.z + n1.z) * 127 / 2 + 127
-    );
+    out[0] = (int)(n0[0] + n1[0]) * 127 / 2 + 127;
+    out[1] = (int)(n0[1] + n1[1]) * 127 / 2 + 127;
+    out[2] = (int)(n0[2] + n1[2]) * 127 / 2 + 127;
 }
 
-static void set_bump_block(uvec3b_t *data, int bx, int by, int f, int mask)
+static void set_bump_block(uint8_t (*data)[3], int bx, int by, int f, int mask)
 {
-    uvec3b_t v = uvec3b(127 + FACES_NORMALS[f].x * 127,
-                        127 + FACES_NORMALS[f].y * 127,
-                        127 + FACES_NORMALS[f].z * 127);
+    const uint8_t v[3] = {127 + FACES_NORMALS[f][0] * 127,
+                          127 + FACES_NORMALS[f][1] * 127,
+                          127 + FACES_NORMALS[f][2] * 127};
+    uint8_t nv[3];
     bump_img_fill(data, bx * 16, by * 16, 16, 16, v);
-    if (mask & 1) bump_img_fill(data, bx * 16, by * 16, 16, 1,
-                                bump_neighbor_value(f, 0));
-    if (mask & 2) bump_img_fill(data, bx * 16 + 15, by * 16, 1, 16,
-                                bump_neighbor_value(f, 1));
-    if (mask & 4) bump_img_fill(data, bx * 16, by * 16 + 15, 16, 1,
-                                bump_neighbor_value(f, 2));
-    if (mask & 8) bump_img_fill(data, bx * 16, by * 16, 1, 16,
-                                bump_neighbor_value(f, 3));
+    if (mask & 1) {
+        bump_neighbor_value(f, 0, nv);
+        bump_img_fill(data, bx * 16, by * 16, 16, 1, nv);
+    }
+    if (mask & 2) {
+        bump_neighbor_value(f, 1, nv);
+        bump_img_fill(data, bx * 16 + 15, by * 16, 1, 16, nv);
+    }
+    if (mask & 4) {
+        bump_neighbor_value(f, 2, nv);
+        bump_img_fill(data, bx * 16, by * 16 + 15, 16, 1, nv);
+    }
+    if (mask & 8) {
+        bump_neighbor_value(f, 3, nv);
+        bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
+    }
 }
 
 static void init_bump_texture(void)
 {
-    uvec3b_t *data;
+    uint8_t (*data)[3];
     int i, f, mask;
     data = calloc(1, 256 * 256 * 3);
     for (i = 0; i < 256; i++) {
@@ -303,6 +324,7 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader,
     UNIFORM(u_shadow_mvp);
     UNIFORM(u_shadow_k);
     UNIFORM(u_shadow_tex);
+    UNIFORM(u_block_id);
 #undef UNIFORM
     GL(glUniform1i(prog->u_bshadow_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
@@ -382,18 +404,36 @@ static int item_delete(void *item_)
     return 0;
 }
 
-static render_item_t *get_item_for_block(const block_t *block, int effects)
+static render_item_t *get_item_for_block(
+        const mesh_t *mesh,
+        mesh_iterator_t *iter,
+        const int block_pos[3],
+        int effects)
 {
     render_item_t *item;
     const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
                              EFFECT_MARCHING_CUBES | EFFECT_SMOOTH |
                              EFFECT_FLAT;
+    uint64_t block_data_id;
+    int p[3], i, x, y, z;
+    block_item_key_t key = {};
+
     // For the moment we always compute the smooth normal no mater what.
     effects |= EFFECT_SMOOTH;
-    block_item_key_t key = {
-        .id = block->data->id,
-        .effects = effects & effects_mask,
-    };
+
+    memset(&key, 0, sizeof(key)); // Just to be sure!
+    key.effects = effects & effects_mask;
+    // The hash key take into consideration all the blocks adjacent to
+    // the current block!
+    for (i = 0, z = -1; z <= 1; z++)
+    for (y = -1; y <= 1; y++)
+    for (x = -1; x <= 1; x++, i++) {
+        p[0] = block_pos[0] + x * BLOCK_SIZE;
+        p[1] = block_pos[1] + y * BLOCK_SIZE;
+        p[2] = block_pos[2] + z * BLOCK_SIZE;
+        mesh_get_block_data(mesh, NULL, p, &block_data_id);
+        key.ids[i] = block_data_id;
+    }
 
     item = cache_get(g_items_cache, &key, sizeof(key));
     if (item) return item;
@@ -406,8 +446,8 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
         g_vertices_buffer = calloc(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
-    item->nb_elements = block_generate_vertices(block->data, effects,
-                                                block->id, g_vertices_buffer);
+    item->nb_elements = mesh_generate_vertices(
+            mesh, block_pos, effects, g_vertices_buffer);
     item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
     if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
@@ -425,16 +465,25 @@ static render_item_t *get_item_for_block(const block_t *block, int effects)
     return item;
 }
 
-static void render_block_(renderer_t *rend, block_t *block, int effects,
-                          prog_t *prog, mat4_t *model)
+static void render_block_(renderer_t *rend, mesh_t *mesh,
+                          mesh_iterator_t *iter,
+                          const int block_pos[3],
+                          int block_id,
+                          int effects, prog_t *prog, mat4_t *model)
 {
     render_item_t *item;
     mat4_t block_model;
     int attr;
+    float block_id_f[2];
 
-    item = get_item_for_block(block, effects);
+    item = get_item_for_block(mesh, iter, block_pos, effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
+    if (prog->u_block_id_l != -1) {
+        block_id_f[1] = ((block_id >> 8) & 0xff) / 255.0;
+        block_id_f[0] = ((block_id >> 0) & 0xff) / 255.0;
+        GL(glUniform2fv(prog->u_block_id_l, 1, block_id_f));
+    }
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glVertexAttribPointer(attr,
@@ -446,10 +495,7 @@ static void render_block_(renderer_t *rend, block_t *block, int effects,
     }
 
     block_model = *model;
-    mat4_itranslate(&block_model, block->pos.x, block->pos.y, block->pos.z);
-    mat4_itranslate(&block_model, -BLOCK_SIZE / 2,
-                                  -BLOCK_SIZE / 2,
-                                  -BLOCK_SIZE / 2);
+    mat4_itranslate(&block_model, block_pos[0], block_pos[1], block_pos[2]);
     GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, block_model.v));
     if (item->size == 4) {
         // Use indexed triangles.
@@ -505,9 +551,9 @@ static void compute_shadow_map_box(
     const int N = BLOCK_SIZE;
 
     render_item_t *item;
-    block_t *block;
     vec3_t p;
-    int i;
+    int i, bpos[3];
+    mesh_iterator_t iter;
     mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
                                   vec3(0, 0, 0), vec3(0, 1, 0));
     for (i = 0; i < 6; i++)
@@ -515,9 +561,10 @@ static void compute_shadow_map_box(
 
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
-        MESH_ITER_BLOCKS(item->mesh, block) {
+        iter = mesh_get_iterator(item->mesh, MESH_ITER_BLOCKS);
+        while (mesh_iter(&iter, bpos)) {
             for (i = 0; i < 8; i++) {
-                p = vec3(block->pos.x, block->pos.y, block->pos.z);
+                p = vec3(bpos[0], bpos[1], bpos[2]);
                 p = vec3_addk(p, POS[i], N);
                 p = mat4_mul_vec3(view_mat, p);
                 rect[0] = min(rect[0], p.x);
@@ -535,12 +582,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
                          const mat4_t *shadow_mvp)
 {
     prog_t *prog;
-    block_t *block;
     mat4_t model = mat4_identity;
-    int attr;
+    int attr, block_pos[3], block_id;
     float pos_scale = 1.0f;
     vec3_t light_dir = get_light_dir(rend, true);
     bool shadow = false;
+    mesh_iterator_t iter;
 
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
@@ -605,8 +652,11 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    MESH_ITER_BLOCKS(mesh, block) {
-        render_block_(rend, block, effects, prog, &model);
+    block_id = 1;
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, block_pos)) {
+        render_block_(rend, mesh, &iter, block_pos,
+                      block_id++, effects, prog, &model);
     }
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
@@ -651,7 +701,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     if (!(item->effects & EFFECT_WIREFRAME))
         light = get_light_dir(rend, false);
 
-    model3d_render(item->model3d, &view, proj_mat, &item->color,
+    model3d_render(item->model3d, &view, proj_mat, item->color,
                    item->tex, &light, item->effects);
 }
 
@@ -666,20 +716,20 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
         view3 = mat4_translate(view2, x + 0.5, y + 0.5, 0);
-        model3d_render(item->model3d, &view3, &rend->proj_mat, &item->color,
+        model3d_render(item->model3d, &view3, &rend->proj_mat, item->color,
                        NULL, NULL, 0);
     }
 }
 
 void render_plane(renderer_t *rend, const plane_t *plane,
-                  const uvec4b_t *color)
+                  const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
     item->mat = plane->mat;
     mat4_iscale(&item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
-    item->color = *color;
+    copy_color(color, item->color);
     DL_APPEND(rend->items, item);
 }
 
@@ -692,7 +742,7 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
     item->proj_screen = !mat;
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
-    item->color = uvec4b(255, 255, 255, 255);
+    copy_color(NULL, item->color);
     item->effects = effects;
     DL_APPEND(rend->items, item);
 }
@@ -704,7 +754,7 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects)
     item->type = ITEM_MODEL3D;
     item->mat = plane->mat;
     item->model3d = g_wire_rect_model;
-    item->color = uvec4b(255, 255, 255, 255);
+    copy_color(NULL, item->color);
     item->proj_screen = true;
     item->effects = effects;
     DL_APPEND(rend->items, item);
@@ -721,26 +771,26 @@ static plane_t line_create_plane(const vec3_t *a, const vec3_t *b)
 }
 
 void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
-                 const uvec4b_t *color)
+                 const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
     item->model3d = g_line_model;
     item->mat = line_create_plane(a, b).mat;
-    item->color = color ? *color : HEXCOLOR(0xffffffff);
+    copy_color(color, item->color);
     mat4_itranslate(&item->mat, 0.5, 0, 0);
     DL_APPEND(rend->items, item);
 }
 
 void render_box(renderer_t *rend, const box_t *box,
-                const uvec4b_t *color, int effects)
+                const uint8_t color[4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
             == effects);
     item->type = ITEM_MODEL3D;
     item->mat = box->mat;
-    item->color = color ? *color : HEXCOLOR(0xffffffff);
+    copy_color(color, item->color);
     item->effects = effects;
     item->model3d = (effects & EFFECT_WIREFRAME) ? g_wire_cube_model :
                                                    g_cube_model;
@@ -830,32 +880,32 @@ static mat4_t render_shadow_map(renderer_t *rend)
     return ret;
 }
 
-static void render_background(renderer_t *rend, const uvec4b_t *col)
+static void render_background(renderer_t *rend, const uint8_t col[4])
 {
     prog_t *prog;
     typedef struct {
-        vec3b_t  pos       __attribute__((aligned(4)));
-        vec4_t   color     __attribute__((aligned(4)));
+        int8_t  pos[3]       __attribute__((aligned(4)));
+        vec4_t  color        __attribute__((aligned(4)));
     } vertex_t;
     vertex_t vertices[4];
     vec4_t c1, c2;
 
-    if (col->a == 0) {
+    if (col[3] == 0) {
         GL(glClearColor(0, 0, 0, 0));
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         return;
     }
 
     // Add a small gradient to the color.
-    c1 = vec4(col->r / 255., col->g / 255., col->b / 255., col->a / 255.);
-    c2 = vec4(col->r / 255., col->g / 255., col->b / 255., col->a / 255.);
+    c1 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
+    c2 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
     vec3_iadd(&c1.rgb, vec3(+0.2, +0.2, +0.2));
     vec3_iadd(&c2.rgb, vec3(-0.2, -0.2, -0.2));
 
-    vertices[0] = (vertex_t){vec3b(-1, -1, 0), c1};
-    vertices[1] = (vertex_t){vec3b(+1, -1, 0), c1};
-    vertices[2] = (vertex_t){vec3b(+1, +1, 0), c2};
-    vertices[3] = (vertex_t){vec3b(-1, +1, 0), c2};
+    vertices[0] = (vertex_t){{-1, -1, 0}, c1};
+    vertices[1] = (vertex_t){{+1, -1, 0}, c1};
+    vertices[2] = (vertex_t){{+1, +1, 0}, c2};
+    vertices[3] = (vertex_t){{-1, +1, 0}, c2};
 
     prog = get_prog(BACKGROUND_VSHADER, BACKGROUND_FSHADER, NULL);
     GL(glUseProgram(prog->prog));
@@ -877,7 +927,7 @@ static void render_background(renderer_t *rend, const uvec4b_t *col)
 }
 
 void render_render(renderer_t *rend, const int rect[4],
-                   const uvec4b_t *clear_color)
+                   const uint8_t clear_color[4])
 {
     render_item_t *item, *tmp;
     mat4_t shadow_mvp;
@@ -1118,11 +1168,11 @@ static const char *FSHADER =
 static const char *POS_DATA_VSHADER =
     "                                                                   \n"
     "attribute vec3 a_pos;                                              \n"
-    "attribute vec4 a_pos_data;                                         \n"
+    "attribute vec2 a_pos_data;                                         \n"
     "uniform   mat4 u_model;                                            \n"
     "uniform   mat4 u_view;                                             \n"
     "uniform   mat4 u_proj;                                             \n"
-    "varying   vec4 v_pos_data;                                         \n"
+    "varying   vec2 v_pos_data;                                         \n"
     "void main()                                                        \n"
     "{                                                                  \n"
     "    vec3 pos = a_pos;                                              \n"
@@ -1137,11 +1187,13 @@ static const char *POS_DATA_FSHADER =
     "precision highp float;                                           \n"
     "#endif                                                           \n"
     "                                                                 \n"
-    "varying lowp vec4 v_pos_data;                                    \n"
+    "varying lowp vec2 v_pos_data;                                    \n"
+    "uniform lowp vec2 u_block_id;                                    \n"
     "                                                                 \n"
     "void main()                                                      \n"
     "{                                                                \n"
-    "    gl_FragColor = v_pos_data;                                   \n"
+    "    gl_FragColor.rg = u_block_id;                                \n"
+    "    gl_FragColor.ba = v_pos_data;                                \n"
     "}                                                                \n"
 ;
 

@@ -79,11 +79,14 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
 
 
 // Get the face index from the normal.
+// XXX: used in a few other places!
 static int get_face(vec3_t n)
 {
     int f;
+    const int *n2;
     for (f = 0; f < 6; f++) {
-        if (vec3_dot(n, vec3(VEC3_SPLIT(FACES_NORMALS[f]))) > 0.5)
+        n2 = FACES_NORMALS[f];
+        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2])) > 0.5)
             return f;
     }
     return -1;
@@ -93,11 +96,11 @@ static int on_hover(gesture3d_t *gest, void *user)
 {
     box_t box;
     cursor_t *curs = gest->cursor;
-    uvec4b_t box_color = HEXCOLOR(0xffff00ff);
+    uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text(goxel, "Click and drag to set selection.");
     box = get_box(&curs->pos, &curs->pos, &curs->normal, 0, &goxel->plane);
-    render_box(&goxel->rend, &box, &box_color, EFFECT_WIREFRAME);
+    render_box(&goxel->rend, &box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
 

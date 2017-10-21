@@ -19,7 +19,7 @@
 #ifndef BOX_H
 #define BOX_H
 
-#include "goxel.h"
+#include "vec.h"
 
 // A Box is represented as the 4x4 matrix that transforms the unit cube into
 // the box.
@@ -31,6 +31,7 @@ typedef union {
         vec3_t d; float d_;
         vec3_t p; float p_;
     };
+    float v[4][4];
 } box_t;
 
 static inline bool box_is_bbox(box_t b)

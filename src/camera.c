@@ -40,12 +40,15 @@ void camera_set(camera_t *cam, const camera_t *other)
 
 static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
 {
-    block_t *block;
+    int bpos[3];
     vec3_t p;
     float n = FLT_MAX, f = 256;
     int i;
     const int margin = 8 * BLOCK_SIZE;
     vec3_t vertices[8];
+    const mesh_t *mesh = goxel->layers_mesh;
+    mesh_iterator_t iter;
+
     if (!box_is_null(goxel->image->box)) {
         box_get_vertices(goxel->image->box, vertices);
         for (i = 0; i < 8; i++) {
@@ -56,8 +59,10 @@ static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
             }
         }
     }
-    MESH_ITER_BLOCKS(goxel->layers_mesh, block) {
-        p = vec3(block->pos.x, block->pos.y, block->pos.z);
+
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, bpos)) {
+        p = vec3(bpos[0], bpos[1], bpos[2]);
         p = mat4_mul_vec3(*view_mat, p);
         if (p.z < 0) {
             n = min(n, -p.z - margin);

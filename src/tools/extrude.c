@@ -29,15 +29,15 @@ typedef struct {
     } gestures;
 } tool_extrude_t;
 
-static int select_cond(uvec4b_t value,
-                       const uvec4b_t neighboors[6],
+static int select_cond(const uint8_t value[4],
+                       const uint8_t neighboors[6][4],
                        const uint8_t mask[6],
                        void *user)
 {
     int i, snap_face = *((int*)user);
     int opp_face = ((int[6]){1, 0, 3, 2, 5, 4})[snap_face];
-    if (value.a == 0) return 0;
-    if (neighboors[snap_face].a) return 0;
+    if (value[3] == 0) return 0;
+    if (neighboors[snap_face][3]) return 0;
     for (i = 0; i < 6; i++) {
         if (i == snap_face || i == opp_face) continue;
         if (mask[i]) return 255;
@@ -46,11 +46,14 @@ static int select_cond(uvec4b_t value,
 }
 
 // Get the face index from the normal.
+// XXX: used in a few other places!
 static int get_face(vec3_t n)
 {
     int f;
+    const int *n2;
     for (f = 0; f < 6; f++) {
-        if (vec3_dot(n, vec3(VEC3_SPLIT(FACES_NORMALS[f]))) > 0.5)
+        n2 = FACES_NORMALS[f];
+        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2])) > 0.5)
             return f;
     }
     return -1;
@@ -68,6 +71,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     box_t box;
     plane_t face_plane;
     vec3_t n, pos;
+    int pi[3];
     float delta;
 
     if (gest->state == GESTURE_BEGIN) {
@@ -75,7 +79,10 @@ static int on_drag(gesture3d_t *gest, void *user)
 
         tmp_mesh = mesh_new();
         tool->mesh = mesh_copy(mesh);
-        mesh_select(mesh, &curs->pos, select_cond, &tool->snap_face,
+        pi[0] = floor(curs->pos.x);
+        pi[1] = floor(curs->pos.y);
+        pi[2] = floor(curs->pos.z);
+        mesh_select(mesh, pi, select_cond, &tool->snap_face,
                     tmp_mesh);
         mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA);
         mesh_delete(tmp_mesh);

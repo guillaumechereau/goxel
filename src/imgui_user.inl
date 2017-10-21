@@ -20,9 +20,9 @@ extern "C" {
 #include "goxel.h"
 }
 
-static ImVec4 uvec4b_to_imvec4(uvec4b_t v)
+static ImVec4 imvec4(const uint8_t v[4])
 {
-    return ImVec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255);
+    return ImVec4(v[0] / 255., v[1] / 255., v[2] / 255., v[3] / 255.);
 }
 
 static inline ImVec4 color_lighten(ImVec4 c, float k)
@@ -174,20 +174,20 @@ namespace ImGui {
         int button_flags =
             ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         float speed = step / 20;
-        uvec4b_t color;
-        color = theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_INNER, 0);
+        uint8_t color[4];
 
         ImGui::PushID(label);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
 
-        ImGui::PushStyleColor(ImGuiCol_Text, uvec4b_to_imvec4(
-                theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_TEXT, 0)));
-        ImGui::PushStyleColor(ImGuiCol_Button, uvec4b_to_imvec4(color));
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, uvec4b_to_imvec4(color));
+        theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_TEXT, 0, color);
+        ImGui::PushStyleColor(ImGuiCol_Text, imvec4(color));
+        theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_INNER, 0, color);
+        ImGui::PushStyleColor(ImGuiCol_Button, imvec4(color));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, imvec4(color));
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
-            color_lighten(uvec4b_to_imvec4(color), 1.2));
+            color_lighten(imvec4(color), 1.2));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            color_lighten(uvec4b_to_imvec4(color), 1.2));
+            color_lighten(imvec4(color), 1.2));
 
 
         ImGui::SetWindowFontScale(0.75);

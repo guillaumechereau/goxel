@@ -21,7 +21,7 @@
 typedef struct item item_t;
 struct item {
     UT_hash_handle  hh;
-    char            key[32];
+    char            key[256];
     void            *data;
     int             cost;
     uint64_t        last_used;

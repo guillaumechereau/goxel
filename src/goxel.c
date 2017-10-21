@@ -21,7 +21,7 @@
 
 goxel_t *goxel = NULL;
 
-static void unpack_pos_data(uint32_t v, vec3b_t *pos, int *face,
+static void unpack_pos_data(uint32_t v, int pos[3], int *face,
                             int *cube_id)
 {
     assert(BLOCK_SIZE == 16);
@@ -32,7 +32,9 @@ static void unpack_pos_data(uint32_t v, vec3b_t *pos, int *face,
     f = (v >> 16) & 0x0f;
     i = v & 0xffff;
     assert(f < 6);
-    *pos = vec3b(x, y, z);
+    pos[0] = x;
+    pos[1] = y;
+    pos[2] = z;
     *face = f;
     *cube_id = i;
 }
@@ -131,18 +133,19 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
         .settings = goxel->rend.settings,
     };
     uint32_t pixel;
-    vec3b_t voxel_pos;
-    block_t *block;
-    int face, block_id;
+    int voxel_pos[3];
+    int face, block_id, bid, block_pos[3];
     int x, y;
     int rect[4] = {0, 0, view_size.x, view_size.y};
+    uint8_t clear_color[4] = {0, 0, 0, 0};
+    mesh_iterator_t iter;
 
     rend.settings.shadow = 0;
     rend.fbo = goxel->pick_fbo->framebuffer;
     rend.scale = 1;
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
 
-    render_render(&rend, rect, &uvec4b_zero);
+    render_render(&rend, rect, clear_color);
 
     x = round(pos->x - view->x);
     y = round(pos->y - view->y);
@@ -151,16 +154,19 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
         y < 0 || y >= view_size.y) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
 
-    unpack_pos_data(pixel, &voxel_pos, &face, &block_id);
+    unpack_pos_data(pixel, voxel_pos, &face, &block_id);
     if (!block_id) return false;
-    MESH_ITER_BLOCKS(mesh, block) {
-        if (block->id == block_id) break;
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    bid = 1;
+    while (mesh_iter(&iter, block_pos)) {
+        if (bid++ == block_id) break;
     }
-    assert(block);
-    *out = vec3(block->pos.x + voxel_pos.x - BLOCK_SIZE / 2 + 0.5,
-                block->pos.y + voxel_pos.y - BLOCK_SIZE / 2 + 0.5,
-                block->pos.z + voxel_pos.z - BLOCK_SIZE / 2 + 0.5);
-    *normal = vec3(VEC3_SPLIT(FACES_NORMALS[face]));
+    *out = vec3(block_pos[0] + voxel_pos[0] + 0.5,
+                block_pos[1] + voxel_pos[1] + 0.5,
+                block_pos[2] + voxel_pos[2] + 0.5);
+    normal->x = FACES_NORMALS[face][0];
+    normal->y = FACES_NORMALS[face][1];
+    normal->z = FACES_NORMALS[face][2];
     vec3_iaddk(out, *normal, 0.5);
     return true;
 }
@@ -256,7 +262,6 @@ void goxel_init(goxel_t *gox)
 {
     goxel = gox;
     memset(goxel, 0, sizeof(*goxel));
-    goxel->next_uid = 1; // 0 should never be used.
 
     render_init();
     shapes_init();
@@ -276,9 +281,9 @@ void goxel_init(goxel_t *gox)
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
 
-    goxel->back_color = HEXCOLOR(0x464646ff);
-    goxel->grid_color = HEXCOLOR(0x191919ff);
-    goxel->image_box_color = HEXCOLOR(0xccccffff);
+    vec4_set(goxel->back_color, 70, 70, 70, 255);
+    vec4_set(goxel->grid_color, 19, 19, 19, 255);
+    vec4_set(goxel->image_box_color, 204, 204, 255, 255);
 
     // Load and set default palette.
     palette_load_all(&goxel->palettes);
@@ -294,7 +299,7 @@ void goxel_init(goxel_t *gox)
         .shape = &shape_cube,
         .mode = MODE_OVER,
         .smoothness = 0,
-        .color = HEXCOLOR(0xFFFFFFFF),
+        .color = {255, 255, 255, 255},
     };
     goxel->rend = (renderer_t) {
         .light = {
@@ -344,7 +349,8 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->frame_time = sys_get_time();
     goxel_set_help_text(goxel, NULL);
     goxel_set_hint_text(goxel, NULL);
-    goxel->screen_size = vec2i(inputs->window_size[0], inputs->window_size[1]);
+    goxel->screen_size[0] = inputs->window_size[0];
+    goxel->screen_size[1] = inputs->window_size[1];
     goxel->screen_scale = inputs->scale;
     goxel->rend.fbo = inputs->framebuffer;
     goxel->rend.scale = inputs->scale;
@@ -521,8 +527,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
 
 void goxel_render(goxel_t *goxel)
 {
-    GL(glViewport(0, 0, goxel->screen_size.x * goxel->screen_scale,
-                        goxel->screen_size.y * goxel->screen_scale));
+    GL(glViewport(0, 0, goxel->screen_size[0] * goxel->screen_scale,
+                        goxel->screen_size[1] * goxel->screen_scale));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel->rend.fbo));
     GL(glClearColor(0, 0, 0, 1));
     GL(glStencilMask(0xFF));
@@ -570,18 +576,18 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
     // XXX: make a toggle for debug informations.
     if ((0)) {
         box_t b;
-        uvec4b_t c;
-        c = HEXCOLOR(0x00FF0050);
+        uint8_t c[4];
+        vec4_set(c, 0, 255, 0, 80);
         b = mesh_get_box(goxel->layers_mesh, true);
-        render_box(rend, &b, &c, EFFECT_WIREFRAME);
-        c = HEXCOLOR(0x00FFFF50);
+        render_box(rend, &b, c, EFFECT_WIREFRAME);
+        vec4_set(c, 0, 255, 255, 80);
         b = mesh_get_box(goxel->layers_mesh, false);
-        render_box(rend, &b, &c, EFFECT_WIREFRAME);
+        render_box(rend, &b, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)
-        render_plane(rend, &goxel->plane, &goxel->grid_color);
+        render_plane(rend, &goxel->plane, goxel->grid_color);
     if (!box_is_null(goxel->image->box))
-        render_box(rend, &goxel->image->box, &goxel->image_box_color,
+        render_box(rend, &goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, rect);
@@ -629,6 +635,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h)
     renderer_t rend = goxel->rend;
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *tmp_buf;
+    uint8_t clear_color[4] = {0, 0, 0, 0};
 
     camera.aspect = (float)w / h;
     mesh = goxel->layers_mesh;
@@ -640,7 +647,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h)
     rend.fbo = fbo->framebuffer;
 
     render_mesh(&rend, mesh, 0);
-    render_render(&rend, rect, &uvec4b_zero);
+    render_render(&rend, rect, clear_color);
     tmp_buf = calloc(w * h * 4 , 4);
     texture_get_data(fbo, w * 2, h * 2, 4, tmp_buf);
     img_downsample(tmp_buf, w * 2, h * 2, 4, buf);
@@ -768,7 +775,7 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_INTERSECT,
-        .color = uvec4b(255, 255, 255, 255),
+        .color = {255, 255, 255, 255},
     };
     mesh_op(new_layer->mesh, &painter, box);
     painter.mode = MODE_SUB;
@@ -834,7 +841,7 @@ static void copy_action(void)
         painter = (painter_t) {
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
-            .color = uvec4b(255, 255, 255, 255),
+            .color = {255, 255, 255, 255},
         };
         mesh_op(goxel->clipboard.mesh, &painter, &goxel->selection);
     }

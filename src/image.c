@@ -108,7 +108,7 @@ static layer_t *layer_clone(layer_t *other)
     layer->mesh = mesh_copy(other->mesh);
     layer->mat = mat4_identity;
     layer->base_id = other->id;
-    layer->base_mesh_id = other->mesh->id;
+    layer->base_mesh_id = mesh_get_id(other->mesh);
     return layer;
 }
 
@@ -118,10 +118,10 @@ void image_update(image_t *img)
     layer_t *layer, *base;
     DL_FOREACH(img->layers, layer) {
         base = img_get_layer(img, layer->base_id);
-        if (base && layer->base_mesh_id != base->mesh->id) {
+        if (base && layer->base_mesh_id != mesh_get_id(base->mesh)) {
             mesh_set(layer->mesh, base->mesh);
             mesh_move(layer->mesh, &layer->mat);
-            layer->base_mesh_id = base->mesh->id;
+            layer->base_mesh_id = mesh_get_id(base->mesh);
         }
     }
 }
@@ -452,7 +452,7 @@ void image_clear_layer(layer_t *layer, const box_t *box)
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_SUB,
-        .color = uvec4b(255, 255, 255, 255),
+        .color = {255, 255, 255, 255},
     };
     mesh_op(layer->mesh, &painter, box);
 }

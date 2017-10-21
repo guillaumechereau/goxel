@@ -23,6 +23,14 @@
 
 static const uint32_t VOX_DEFAULT_PALETTE[256];
 
+static inline void hexcolor(uint32_t v, uint8_t out[4])
+{
+    out[0] = (v >> 24) & 0xff;
+    out[1] = (v >> 16) & 0xff;
+    out[2] = (v >>  8) & 0xff;
+    out[3] = (v >>  0) & 0xff;
+}
+
 #define READ(type, file) \
     ({ type v; size_t r = fread(&v, sizeof(v), 1, file); (void)r; v;})
 #define WRITE(type, v, file) \
@@ -36,9 +44,8 @@ static void vox_import_old(const char *path)
     FILE *file;
     int w, h, d, i;
     uint8_t *voxels;
-    uvec4b_t *palette;
-    uvec4b_t *cube;
-    uvec4b_t color;
+    uint8_t (*palette)[4];
+    uint8_t (*cube)[4];
 
     file = fopen(path, "rb");
     d = READ(uint32_t, file);
@@ -52,21 +59,20 @@ static void vox_import_old(const char *path)
         voxels[i] = READ(uint8_t, file);
     }
     for (i = 0; i < 256; i++) {
-        palette[i].r = READ(uint8_t, file);
-        palette[i].g = READ(uint8_t, file);
-        palette[i].b = READ(uint8_t, file);
-        palette[i].a = 255;
+        palette[i][0] = READ(uint8_t, file);
+        palette[i][1] = READ(uint8_t, file);
+        palette[i][2] = READ(uint8_t, file);
+        palette[i][3] = 255;
     }
-    palette[255] = uvec4b(0, 0, 0, 0);
+    memset(palette[255], 0, 4);
 
     for (i = 0; i < w * h * d; i++) {
         if (voxels[i] == 255) continue;
-        color = palette[voxels[i]];
-        cube[i] = color;
+        memcpy(cube[i], palette[voxels[i]], 4);
     }
 
-    mesh_blit(goxel->image->active_layer->mesh, cube,
-              -w / 2, -h / 2, -d / 2, w, h, d);
+    mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
+              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     free(palette);
     free(voxels);
     free(cube);
@@ -76,7 +82,7 @@ static void vox_import_old(const char *path)
 
 typedef struct {
     int         w, h, d;
-    uvec4b_t    *palette;
+    uint8_t     (*palette)[4];
     int         nb;
     uint8_t     *voxels;
 } context_t;
@@ -100,10 +106,10 @@ static void read_chunk(FILE *file, context_t *ctx)
     } else if (strncmp(id, "RGBA", 4) == 0) {
         ctx->palette = malloc(4 * 256);
         for (i = 1; i < 256; i++) {
-            ctx->palette[i].r = READ(uint8_t, file);
-            ctx->palette[i].g = READ(uint8_t, file);
-            ctx->palette[i].b = READ(uint8_t, file);
-            ctx->palette[i].a = READ(uint8_t, file);
+            ctx->palette[i][0] = READ(uint8_t, file);
+            ctx->palette[i][1] = READ(uint8_t, file);
+            ctx->palette[i][2] = READ(uint8_t, file);
+            ctx->palette[i][3] = READ(uint8_t, file);
         }
         // Skip the last value!
         for (i = 0; i < 4; i++) READ(uint8_t, file);
@@ -131,10 +137,10 @@ static void vox_import(const char *path)
 {
     FILE *file;
     char magic[4];
-    vec3_t pos;
-    int version, r, i, x, y, z, c;
+    int version, r, i, x, y, z, c, pos[3];
     mesh_t      *mesh;
-    uvec4b_t color;
+    mesh_iterator_t iter = {0};
+    uint8_t color[4];
     context_t ctx = {};
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
@@ -162,11 +168,15 @@ static void vox_import(const char *path)
         y = ctx.voxels[i * 4 + 1];
         z = ctx.voxels[i * 4 + 2];
         c = ctx.voxels[i * 4 + 3];
-        pos = vec3(x + 0.5 - ctx.w / 2, y + 0.5 - ctx.h / 2, z + 0.5);
+        pos[0] = x - ctx.w / 2;
+        pos[1] = y - ctx.h / 2;
+        pos[2] = z;
         if (!c) continue; // Not sure what c == 0 means.
-        color = ctx.palette ? ctx.palette[c] :
-                              HEXCOLOR(VOX_DEFAULT_PALETTE[c]);
-        mesh_set_at(mesh, &pos, color);
+        if (ctx.palette)
+            memcpy(color, ctx.palette[c], 4);
+        else
+            hexcolor(VOX_DEFAULT_PALETTE[c], color);
+        mesh_set_at(mesh, &iter, pos, color);
     }
     free(ctx.voxels);
     free(ctx.palette);
@@ -174,15 +184,15 @@ static void vox_import(const char *path)
     goxel_update_meshes(goxel, -1);
 }
 
-static int get_color_index(uvec4b_t v, const uvec4b_t *palette, bool exact)
+static int get_color_index(uint8_t v[4], uint8_t (*palette)[4], bool exact)
 {
-    uvec4b_t c;
+    const uint8_t *c;
     int i, dist, best = -1, best_dist = 1024;
     for (i = 1; i < 255; i++) {
         c = palette[i];
-        dist = abs((int)c.r - (int)v.r) +
-               abs((int)c.g - (int)v.g) +
-               abs((int)c.b - (int)v.b);
+        dist = abs((int)c[0] - (int)v[0]) +
+               abs((int)c[1] - (int)v[1]) +
+               abs((int)c[2] - (int)v[2]);
         if (dist == 0) return i;
         if (exact) continue;
         if (dist < best_dist) {
@@ -206,34 +216,37 @@ static int voxel_cmp(const void *a_, const void *b_)
 static void vox_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
-    int children_size, nb_vox = 0, i, x, y, z;
+    int children_size, nb_vox = 0, i, pos[3];
     int xmin = INT_MAX, ymin = INT_MAX, zmin = INT_MAX;
     int xmax = INT_MIN, ymax = INT_MIN, zmax = INT_MIN;
-    uvec4b_t *palette;
+    uint8_t (*palette)[4];
     bool use_default_palette = true;
     uint8_t *voxels;
-    uvec4b_t v;
+    uint8_t v[4];
+    mesh_iterator_t iter;
 
     palette = calloc(256, sizeof(*palette));
     for (i = 0; i < 256; i++)
-        palette[i] = HEXCOLOR(VOX_DEFAULT_PALETTE[i]);
+        hexcolor(VOX_DEFAULT_PALETTE[i], palette[i]);
 
     // Iter all the voxels to get the count and the size.
-    MESH_ITER_VOXELS(mesh, x, y, z, v) {
-        if (v.a < 127) continue;
-        v.a = 255;
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
+    while (mesh_iter(&iter, pos)) {
+        mesh_get_at(mesh, &iter, pos, v);
+        if (v[3] < 127) continue;
+        v[3] = 255;
         use_default_palette = use_default_palette &&
                             get_color_index(v, palette, true) != -1;
         nb_vox++;
-        xmin = min(xmin, x);
-        ymin = min(ymin, y);
-        zmin = min(zmin, z);
-        xmax = max(xmax, x + 1);
-        ymax = max(ymax, y + 1);
-        zmax = max(zmax, z + 1);
+        xmin = min(xmin, pos[0]);
+        ymin = min(ymin, pos[1]);
+        zmin = min(zmin, pos[2]);
+        xmax = max(xmax, pos[0] + 1);
+        ymax = max(ymax, pos[1] + 1);
+        zmax = max(zmax, pos[2] + 1);
     }
     if (!use_default_palette)
-        quantization_gen_palette(mesh, 255, palette + 1);
+        quantization_gen_palette(mesh, 255, (void*)(palette + 1));
 
     children_size = 12 + 4 * 3 +      // SIZE chunk
                     12 + 4 + 4 * nb_vox + // XYZI chunk
@@ -260,18 +273,20 @@ static void vox_export(const mesh_t *mesh, const char *path)
 
     voxels = calloc(nb_vox, 4);
     i = 0;
-    MESH_ITER_VOXELS(mesh, x, y, z, v) {
-        if (v.a < 127) continue;
-        x -= xmin;
-        y -= ymin;
-        z -= zmin;
-        assert(x >= 0 && x < 255);
-        assert(y >= 0 && y < 255);
-        assert(z >= 0 && z < 255);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
+    while (mesh_iter(&iter, pos)) {
+        mesh_get_at(mesh, &iter, pos, v);
+        if (v[3] < 127) continue;
+        pos[0] -= xmin;
+        pos[1] -= ymin;
+        pos[2] -= zmin;
+        assert(pos[0] >= 0 && pos[0] < 255);
+        assert(pos[1] >= 0 && pos[1] < 255);
+        assert(pos[2] >= 0 && pos[2] < 255);
 
-        voxels[i * 4 + 0] = x;
-        voxels[i * 4 + 1] = y;
-        voxels[i * 4 + 2] = z;
+        voxels[i * 4 + 0] = pos[0];
+        voxels[i * 4 + 1] = pos[1];
+        voxels[i * 4 + 2] = pos[2];
         voxels[i * 4 + 3] = get_color_index(v, palette, false);
         i++;
     }
@@ -284,8 +299,12 @@ static void vox_export(const mesh_t *mesh, const char *path)
         fprintf(file, "RGBA");
         WRITE(uint32_t, 4 * 256, file);
         WRITE(uint32_t, 0, file);
-        for (i = 1; i < 256; i++)
-            WRITE(uint32_t, palette[i].uint32, file);
+        for (i = 1; i < 256; i++) {
+            WRITE(uint8_t, palette[i][0], file);
+            WRITE(uint8_t, palette[i][1], file);
+            WRITE(uint8_t, palette[i][2], file);
+            WRITE(uint8_t, palette[i][3], file);
+        }
         WRITE(uint32_t, 0, file);
     }
 

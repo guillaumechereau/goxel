@@ -33,12 +33,14 @@ static inline int AT(int x, int y, int z, int w, int h, int d) {
     return x + y * w + z * w * h;
 }
 
-static uvec4b_t swap_color(uint32_t v)
+static void swap_color(uint32_t v, uint8_t ret[4])
 {
-    uvec4b_t ret;
-    ret.uint32 = v;
-    SWAP(ret.r, ret.b);
-    return ret;
+    uint8_t o[4];
+    memcpy(o, &v, 4);
+    ret[0] = o[2];
+    ret[1] = o[1];
+    ret[2] = o[0];
+    ret[3] = o[3];
 }
 
 static int kv6_import(const char *path)
@@ -48,7 +50,8 @@ static int kv6_import(const char *path)
     int i, r, ret = 0, w, h, d, blklen, x, y, z = 0, nb, p = 0;
     uint32_t *xoffsets = NULL;
     uint16_t *xyoffsets = NULL;
-    uvec4b_t *cube = NULL, color = uvec4b_zero;
+    uint8_t (*cube)[4] = NULL;
+    uint8_t color[4] = {0};
     (void)r;
     struct {
         uint32_t color;
@@ -89,7 +92,7 @@ static int kv6_import(const char *path)
         nb = xyoffsets[x * h + y];
         for (i = 0; i < nb; i++, p++) {
             z = blocks[p].zpos;
-            cube[AT(x, y, z, w, h, d)] = swap_color(blocks[p].color);
+            swap_color(blocks[p].color, cube[AT(x, y, z, w, h, d)]);
         }
     }
 
@@ -101,19 +104,19 @@ static int kv6_import(const char *path)
         for (i = 0; i < nb; i++, p++) {
             if (blocks[p].visface & 0x10) {
                 z = blocks[p].zpos;
-                color = swap_color(blocks[p].color);
-                color.a = 255;
+                swap_color(blocks[p].color, color);
+                color[3] = 255;
             }
             if (blocks[p].visface & 0x20) {
                 for (; z < blocks[p].zpos; z++)
-                    if (cube[AT(x, y, z, w, h, d)].a == 0)
-                        cube[AT(x, y, z, w, h, d)] = color;
+                    if (cube[AT(x, y, z, w, h, d)][3] == 0)
+                        memcpy(cube[AT(x, y, z, w, h, d)], color, 4);
             }
         }
     }
 
-    mesh_blit(goxel->image->active_layer->mesh, cube,
-              -w / 2, -h / 2, -d / 2, w, h, d);
+    mesh_blit(goxel->image->active_layer->mesh, (const uint8_t*)cube,
+              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     goxel_update_meshes(goxel, -1);
 end:
     free(cube);
@@ -129,10 +132,10 @@ static int kvx_import(const char *path)
     FILE *file;
     int i, r, ret = 0, nb, w, h, d, x, y, z, lastz = 0, len, visface;
     uint8_t color = 0;
-    uvec4b_t *palette = NULL;
+    uint8_t (*palette)[4] = NULL;
     uint32_t *xoffsets = NULL;
     uint16_t *xyoffsets = NULL;
-    uvec4b_t *cube = NULL;
+    uint8_t (*cube)[4] = NULL;
     long datpos;
     (void)r;
 
@@ -162,10 +165,10 @@ static int kvx_import(const char *path)
     fseek(file, -256 * 3, SEEK_END);
     palette = calloc(256, sizeof(*palette));
     for (i = 0; i < 256; i++) {
-        palette[i].r = clamp(round(READ(uint8_t, file) * 255 / 63.f), 0, 255);
-        palette[i].g = clamp(round(READ(uint8_t, file) * 255 / 63.f), 0, 255);
-        palette[i].b = clamp(round(READ(uint8_t, file) * 255 / 63.f), 0, 255);
-        palette[i].a = 255;
+        palette[i][0] = clamp(round(READ(uint8_t, file) * 255 / 63.f), 0, 255);
+        palette[i][1] = clamp(round(READ(uint8_t, file) * 255 / 63.f), 0, 255);
+        palette[i][2] = clamp(round(READ(uint8_t, file) * 255 / 63.f), 0, 255);
+        palette[i][3] = 255;
     }
     fseek(file, datpos, SEEK_SET);
 
@@ -181,21 +184,21 @@ static int kvx_import(const char *path)
             assert(z + len - 1  < d);
             for (i = 0; i < len; i++) {
                 color = READ(uint8_t, file);
-                cube[AT(x, y, z + i, w, h, d)] = palette[color];
+                memcpy(cube[AT(x, y, z + i, w, h, d)], palette[color], 4);
             }
             nb -= len + 3;
             // Fill
             if (visface & 0x10) lastz = z + len;
             if (visface & 0x20) {
                 for (i = lastz; i < z; i++)
-                    if (cube[AT(x, y, i, w, h, d)].a == 0)
-                        cube[AT(x, y, i, w, h, d)] = palette[color];
+                    if (cube[AT(x, y, i, w, h, d)][3] == 0)
+                        memcpy(cube[AT(x, y, i, w, h, d)], palette[color], 4);
             }
         }
     }
 
-    mesh_blit(goxel->image->active_layer->mesh, cube,
-              -w / 2, -h / 2, -d / 2, w, h, d);
+    mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
+              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     goxel_update_meshes(goxel, -1);
 
 end:

@@ -40,7 +40,6 @@
  *
  */
 
-#include "ivec.h"
 #include "vec.h"
 
 // face index -> [vertex0, vertex1, vertex2, vertex3]
@@ -68,31 +67,31 @@ static const int FACES_NEIGHBORS[6][4] = {
 };
 
 // vertex index -> vertex position
-static const vec3b_t VERTICES_POSITIONS[8] = {
-    IVEC(0, 0, 0),
-    IVEC(1, 0, 0),
-    IVEC(1, 0, 1),
-    IVEC(0, 0, 1),
-    IVEC(0, 1, 0),
-    IVEC(1, 1, 0),
-    IVEC(1, 1, 1),
-    IVEC(0, 1, 1)
+static const int VERTICES_POSITIONS[8][3] = {
+    {0, 0, 0},
+    {1, 0, 0},
+    {1, 0, 1},
+    {0, 0, 1},
+    {0, 1, 0},
+    {1, 1, 0},
+    {1, 1, 1},
+    {0, 1, 1}
 };
 
-static const uvec2b_t VERTICE_UV[4] = {
-    IVEC(0, 0),
-    IVEC(1, 0),
-    IVEC(1, 1),
-    IVEC(0, 1),
+static const int VERTICE_UV[4][2] = {
+    {0, 0},
+    {1, 0},
+    {1, 1},
+    {0, 1},
 };
 
-static const vec3b_t FACES_NORMALS[6] = {
-    IVEC( 0, -1,  0),
-    IVEC( 0, +1,  0),
-    IVEC( 0,  0, -1),
-    IVEC( 0,  0, +1),
-    IVEC( 1,  0,  0),
-    IVEC(-1,  0,  0),
+static const int FACES_NORMALS[6][3] = {
+    { 0, -1,  0},
+    { 0, +1,  0},
+    { 0,  0, -1},
+    { 0,  0, +1},
+    { 1,  0,  0},
+    {-1,  0,  0},
 };
 
 // Matrices of transformation: unity plane => cube face plane.
@@ -103,16 +102,6 @@ static const mat4_t FACES_MATS[6] = {
     MAT(0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1),
     MAT(0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1),
     MAT(0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, 0, -1, 0, 0, 1),
-};
-
-// XXX: Keep orientation.
-static const vec4b_t FACES_ROTATIONS[6] = {
-    IVEC( 1,  1,  0,  0),
-    IVEC(-1,  1,  0,  0),
-    IVEC( 2,  1,  0,  0),
-    IVEC( 0,  1,  0,  0),
-    IVEC( 1,  0,  1,  0),
-    IVEC(-1,  0,  1,  0),
 };
 
 static const int EDGES_VERTICES[12][2] = {

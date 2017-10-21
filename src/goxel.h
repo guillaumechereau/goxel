@@ -31,9 +31,9 @@
 #include "utlist.h"
 #include "uthash.h"
 #include "utarray.h"
-#include "ivec.h"
 #include "noc_file_dialog.h"
 #include "block_def.h"
+#include "mesh.h"
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -178,18 +178,19 @@ enum {
         _ret; \
     })
 
-static inline uvec4b_t HEXCOLOR(uint32_t v)
-{
-    return uvec4b((v >> 24) & 0xff,
-                  (v >> 16) & 0xff,
-                  (v >>  8) & 0xff,
-                  (v >>  0) & 0xff);
-}
+// Some useful vector macros.
+#define vec4_set(v, x, y, z, w) do { \
+    (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
 
-static inline vec4_t uvec4b_to_vec4(uvec4b_t v)
-{
-    return vec4(v.x / 255., v.y / 255., v.z / 255., v.w / 255.);
-}
+#define vec4_copy(a, b) do { \
+        (b)[0] = (a)[0]; (b)[1] = (a)[1]; (b)[2] = (a)[2]; (b)[3] = (a)[3]; \
+    } while (0)
+
+#define vec4_equal(a, b) ({ \
+        (a)[0] == (b)[0] && \
+        (a)[1] == (b)[1] && \
+        (a)[2] == (b)[2] && \
+        (a)[3] == (b)[3]; })
 
 // Convertion between radian and degree.
 #define DR2D (180 / M_PI)
@@ -442,8 +443,8 @@ void actions_iter(int (*f)(const action_t *action, void *user), void *user);
 // Convenience macro to register an action from anywere in a c file.
 #define ACTION_REGISTER(id_, ...) \
     static const action_t GOX_action_##id_ = {.id = #id_, __VA_ARGS__}; \
-    static void GOX_register_action_##id_() __attribute__((constructor)); \
-    static void GOX_register_action_##id_() { \
+    static void GOX_register_action_##id_(void) __attribute__((constructor)); \
+    static void GOX_register_action_##id_(void) { \
         action_register(&GOX_action_##id_); \
     }
 
@@ -533,7 +534,7 @@ extern shape_t shape_cylinder;
 typedef struct painter {
     int             mode;
     const shape_t   *shape;
-    uvec4b_t        color;
+    uint8_t         color[4];
     float           smoothness;
     int             symmetry; // bitfield X Y Z
     box_t           *box;     // Clipping box (can be null)
@@ -545,124 +546,47 @@ typedef struct painter {
 #define VOXEL_TEXTURE_SIZE 8
 // Number of sub position per voxel in the marching
 // cube rendering.
-#define MC_VOXEL_SUB_POS 8
+#define MC_VOXEL_SUB_POS 4 // XXX: try to make it higher (up to 16!)
 
 // Structure used for the OpenGL array data of blocks.
 // XXX: we can probably make it smaller.
 typedef struct voxel_vertex
 {
-    vec3b_t  pos        __attribute__((aligned(4)));
-    vec3b_t  normal     __attribute__((aligned(4)));
-    uvec4b_t color      __attribute__((aligned(4)));
-    uint32_t pos_data   __attribute__((aligned(4)));
-    uvec2b_t uv         __attribute__((aligned(4)));
-    uvec2b_t bshadow_uv __attribute__((aligned(4)));
-    uvec2b_t bump_uv    __attribute__((aligned(4)));
+    int8_t   pos[3]                     __attribute__((aligned(4)));
+    int8_t   normal[3]                  __attribute__((aligned(4)));
+    uint8_t  color[4]                   __attribute__((aligned(4)));
+    uint16_t pos_data                   __attribute__((aligned(4)));
+    uint8_t  uv[2]                      __attribute__((aligned(4)));
+    uint8_t  bshadow_uv[2]              __attribute__((aligned(4)));
+    uint8_t  bump_uv[2]                 __attribute__((aligned(4)));
 } voxel_vertex_t;
 
-// We use copy on write for the block data, so that it is cheap to copy
-// blocks.
-typedef struct block_data block_data_t;
-struct block_data
-{
-    int         ref;
-    uint64_t    id;
-    uvec4b_t    voxels[BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE]; // RGBA voxels.
-};
+// #### Mesh util functions ############################
 
-typedef struct block block_t;
-struct block
-{
-    UT_hash_handle  hh;     // The hash table of pos -> blocks in a mesh.
-    block_data_t    *data;
-    vec3i_t         pos;
-    int             id;     // id of the block in the mesh it belongs.
-};
-block_t *block_new(const vec3i_t *pos, block_data_t *data);
-void block_delete(block_t *block);
-block_t *block_copy(const block_t *other);
-box_t block_get_box(const block_t *block, bool exact);
-void block_fill(block_t *block,
-                uvec4b_t (*get_color)(const vec3_t *pos, void *user_data),
-                void *user_data);
-int block_generate_vertices(const block_data_t *data, int effects,
-                            int block_id, voxel_vertex_t *out);
-void block_op(block_t *block, painter_t *painter, const box_t *box);
-bool block_is_empty(const block_t *block, bool fast);
-void block_merge(block_t *block, const block_t *other, int op);
-uvec4b_t block_get_at(const block_t *block, const vec3_t *pos);
-void block_set_at(block_t *block, const vec3_t *pos, uvec4b_t v);
-
-// XXX: I think we should clean up this one.
-void block_blit(block_t *block, uvec4b_t *data,
-                int x, int y, int z, int w, int h, int d);
-void block_shift_alpha(block_t *block, int v);
-// #############################
-
-
-
-// #### Mesh ###################
-typedef struct mesh mesh_t;
-struct mesh
-{
-    block_t *blocks;
-    int next_block_id;
-    int *ref;   // Used to implement copy on write of the blocks.
-    uint64_t id;     // global uniq id, change each time a mesh changes.
-};
-mesh_t *mesh_new(void);
-void mesh_clear(mesh_t *mesh);
-void mesh_delete(mesh_t *mesh);
-mesh_t *mesh_copy(const mesh_t *mesh);
-void mesh_set(mesh_t *mesh, const mesh_t *other);
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
-block_t *mesh_add_block(mesh_t *mesh, block_data_t *data, const vec3i_t *pos);
-void mesh_move(mesh_t *mesh, const mat4_t *mat);
-uvec4b_t mesh_get_at(const mesh_t *mesh, const vec3_t *pos);
-void mesh_set_at(mesh_t *mesh, const vec3_t *pos, uvec4b_t v);
-void mesh_remove_empty_blocks(mesh_t *mesh);
-bool mesh_is_empty(const mesh_t *mesh);
 // XXX: to cleanup.
 void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
 
-// XXX: clean up this.  We should use a struct to represent a data cube.
-void mesh_blit(mesh_t *mesh, uvec4b_t *data,
-               int x, int y, int z,
-               int w, int h, int d);
+void mesh_blit(mesh_t *mesh, const uint8_t *data,
+               int x, int y, int z, int w, int h, int d,
+               mesh_iterator_t *iter);
+void mesh_move(mesh_t *mesh, const mat4_t *mat);
 void mesh_shift_alpha(mesh_t *mesh, int v);
 
 // Compute the selection mask for a given condition.
 int mesh_select(const mesh_t *mesh,
-                const vec3_t *start_pos,
-                int (*cond)(uvec4b_t value,
-                            const uvec4b_t neighboors[6],
+                const int start_pos[3],
+                int (*cond)(const uint8_t value[4],
+                            const uint8_t neighboors[6][4],
                             const uint8_t mask[6],
                             void *user),
                 void *user, mesh_t *selection);
 
-#define MESH_ITER_BLOCKS(m, b) for (b = m->blocks; b; b = b->hh.next)
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
 
-// Convenience macro to iter all the voxels of a mesh.
-// Given:
-//    m         The mesh pointer.
-//    x, y, z   integer, set to the position of the voxel.
-//    v         uvec4b_t, set to the color of the voxel.
-#define MESH_ITER_VOXELS(m, x, y, z, v) \
-    for (block_t *b_ = m->blocks; b_; b_ = b_->hh.next) \
-    for (int z_ = 1; z_ < BLOCK_SIZE - 1; z_++) \
-    for (int y_ = 1; y_ < BLOCK_SIZE - 1; y_++) \
-    for (int x_ = 1; x_ < BLOCK_SIZE - 1; x_++) \
-    if ((v = b_->data->voxels[ \
-            x_ + y_ * BLOCK_SIZE + z_ * BLOCK_SIZE * BLOCK_SIZE]).a) \
-    if (x = x_ + b_->pos.x - BLOCK_SIZE / 2, \
-        y = y_ + b_->pos.y - BLOCK_SIZE / 2, \
-        z = z_ + b_->pos.z - BLOCK_SIZE / 2, true)
-
-// #############################
-
-
+int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
+                           int effects, voxel_vertex_t *out);
 
 // #### Renderer ###############
 
@@ -719,11 +643,11 @@ void render_init(void);
 void render_deinit(void);
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
 void render_plane(renderer_t *rend, const plane_t *plane,
-                  const uvec4b_t *color);
+                  const uint8_t color[4]);
 void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
-                 const uvec4b_t *color);
+                 const uint8_t color[4]);
 void render_box(renderer_t *rend, const box_t *box,
-                const uvec4b_t *color, int effects);
+                const uint8_t color[4], int effects);
 void render_sphere(renderer_t *rend, const mat4_t *mat);
 void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
                 int efffects);
@@ -732,7 +656,7 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects);
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
 void render_render(renderer_t *rend, const int rect[4],
-                   const uvec4b_t *clear_color);
+                   const uint8_t clear_color[4]);
 int render_get_default_settings(int i, char **name, render_settings_t *out);
 // Compute the light direction in the model coordinates (toward the light)
 vec3_t render_get_light_dir(const renderer_t *rend);
@@ -747,7 +671,7 @@ vec3_t render_get_light_dir(const renderer_t *rend);
 typedef struct {
      vec3_t   pos       __attribute__((aligned(4)));
      vec3_t   normal    __attribute__((aligned(4)));
-     uvec4b_t color     __attribute__((aligned(4)));
+     uint8_t  color[4]  __attribute__((aligned(4)));
      vec2_t   uv        __attribute__((aligned(4)));
 } model_vertex_t;
 
@@ -774,7 +698,7 @@ model3d_t *model3d_rect(void);
 model3d_t *model3d_wire_rect(void);
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
-                    const uvec4b_t *color,
+                    const uint8_t color[4],
                     const texture_t *tex,
                     const vec3_t *light,
                     int   effects);
@@ -782,7 +706,7 @@ void model3d_render(model3d_t *model3d,
 // #### Palette ################
 
 typedef struct {
-    uvec4b_t color;
+    uint8_t  color[4];
     char     name[32];
 } palette_entry_t;
 
@@ -799,7 +723,8 @@ struct palette {
 void palette_load_all(palette_t **list);
 
 // Generate an optimal palette whith a fixed number of colors from a mesh.
-void quantization_gen_palette(const mesh_t *mesh, int nb, uvec4b_t *palette);
+void quantization_gen_palette(const mesh_t *mesh, int nb,
+                              uint8_t (*palette)[4]);
 
 // #############################
 
@@ -1068,8 +993,8 @@ struct tool {
                 .id = id_, .action_id = "tool_set_" #name_, __VA_ARGS__ \
             } \
         }; \
-    static void GOX_register_tool_##tool_() __attribute__((constructor)); \
-    static void GOX_register_tool_##tool_() { \
+    static void GOX_register_tool_##tool_(void) __attribute__((constructor)); \
+    static void GOX_register_tool_##tool_(void) { \
         tool_register_(&GOX_tool_##id_.tool); \
     }
 
@@ -1090,7 +1015,7 @@ int tool_gui_symmetry(void);
 
 typedef struct goxel
 {
-    vec2i_t    screen_size;
+    int        screen_size[2];
     float      screen_scale;
     image_t    *image;
 
@@ -1114,9 +1039,9 @@ typedef struct goxel
 
     camera_t   camera;
 
-    uvec4b_t   back_color;
-    uvec4b_t   grid_color;
-    uvec4b_t   image_box_color;
+    uint8_t    back_color[4];
+    uint8_t    grid_color[4];
+    uint8_t    image_box_color[4];
 
     texture_t  *pick_fbo;
     painter_t  painter;
@@ -1148,11 +1073,6 @@ typedef struct goxel
 
     int        frame_count;       // Global frames counter.
     double     frame_time;        // Clock time at beginning of the frame.
-
-    // Global uid counter.
-    uint64_t   next_uid;
-
-    int        block_count; // Counter for the number of block data.
     bool       quit;        // Set to true to quit the application.
 
     struct {
@@ -1206,12 +1126,12 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h);
 // #############################
 
 void save_to_file(goxel_t *goxel, const char *path);
-void load_from_file(goxel_t *goxel, const char *path);
+int load_from_file(goxel_t *goxel, const char *path);
 
 
 // #### Colors functions #######
-uvec3b_t hsl_to_rgb(uvec3b_t hsl);
-uvec3b_t rgb_to_hsl(uvec3b_t rgb);
+void hsl_to_rgb(const uint8_t hsl[3], uint8_t rgb[3]);
+void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
 
 // #### Gui ####################
 
@@ -1256,7 +1176,7 @@ typedef struct {
 extern theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT];
 
 typedef struct {
-    uvec4b_t colors[THEME_COLOR_COUNT];
+    uint8_t colors[THEME_COLOR_COUNT][4];
 } theme_group_t;
 
 typedef struct theme theme_t;
@@ -1283,7 +1203,7 @@ theme_t *theme_get(void);
 theme_t *theme_get_list(void);
 void theme_revert_default(void);
 void theme_save(void);
-uvec4b_t theme_get_color(int group, int color, bool selected);
+void theme_get_color(int group, int color, bool selected, uint8_t out[4]);
 void theme_set(const char *name);
 
 void gui_release(void);
@@ -1306,7 +1226,7 @@ bool gui_action_button(const char *id, const char *label, float size,
 bool gui_action_checkbox(const char *id, const char *label);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_icon(const char *name, bool *v, int icon);
-bool gui_color(const char *label, uvec4b_t *color);
+bool gui_color(const char *label, uint8_t color[4]);
 bool gui_input_text(const char *label, char *buf, int size);
 bool gui_input_text_multiline(const char *label, char *buf, int size,
                               float width, float height);

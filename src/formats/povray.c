@@ -24,14 +24,16 @@ static void export_as_pov(const char *path, int w, int h)
 {
     FILE *file;
     layer_t *layer;
-    int size, x, y, z;
+    int size, p[3];
     char *buf;
     const char *template;
-    uvec4b_t v;
+    uint8_t v[4];
     mat4_t modelview;
     vec3_t light_dir;
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = goxel->camera;
+    mesh_iterator_t iter;
+
     w = w ?: goxel->image->export_width;
     h = h ?: goxel->image->export_height;
 
@@ -69,11 +71,15 @@ static void export_as_pov(const char *path, int w, int h)
 
     m_voxels = mustache_add_list(m, "voxels");
     DL_FOREACH(goxel->image->layers, layer) {
-        MESH_ITER_VOXELS(layer->mesh, x, y, z, v) {
-            if (v.a < 127) continue;
+        iter = mesh_get_iterator(layer->mesh, MESH_ITER_VOXELS);
+        while (mesh_iter(&iter, p)) {
+            mesh_get_at(layer->mesh, &iter, p, v);
+            if (v[3] < 127) continue;
             m_voxel = mustache_add_dict(m_voxels, NULL);
-            mustache_add_str(m_voxel, "pos", "<%d, %d, %d>", x, y, z);
-            mustache_add_str(m_voxel, "color", "<%d, %d, %d>", v.r, v.g, v.b);
+            mustache_add_str(m_voxel, "pos", "<%d, %d, %d>",
+                             p[0], p[1], p[2]);
+            mustache_add_str(m_voxel, "color", "<%d, %d, %d>",
+                             v[0], v[1], v[2]);
         }
     }
 

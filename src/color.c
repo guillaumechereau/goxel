@@ -58,24 +58,24 @@ static void rgb_to_hsl_f(const float rgb[3], float hsl[3])
     hsl[2] = l;
 }
 
-uvec3b_t hsl_to_rgb(uvec3b_t hsl)
+void hsl_to_rgb(const uint8_t hsl[3], uint8_t rgb[3])
 {
     // XXX: use an optimized function that use int operations.
-    float hsl_f[3] = {hsl.x / 255. * 360, hsl.y / 255., hsl.z / 255.};
+    float hsl_f[3] = {hsl[0] / 255. * 360, hsl[1] / 255., hsl[2] / 255.};
     float rgb_f[3];
     hsl_to_rgb_f(hsl_f, rgb_f);
-    return uvec3b(round(rgb_f[0] * 255),
-                  round(rgb_f[1] * 255),
-                  round(rgb_f[2] * 255));
+    rgb[0] = round(rgb_f[0] * 255);
+    rgb[1] = round(rgb_f[1] * 255);
+    rgb[2] = round(rgb_f[2] * 255);
 }
 
-uvec3b_t rgb_to_hsl(uvec3b_t rgb)
+void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3])
 {
     // XXX: use an optimized function that use int operations.
-    float rgb_f[3] = {rgb.x / 255., rgb.y / 255., rgb.z / 255.};
+    float rgb_f[3] = {rgb[0] / 255., rgb[1] / 255., rgb[2] / 255.};
     float hsl_f[3];
     rgb_to_hsl_f(rgb_f, hsl_f);
-    return uvec3b(round(hsl_f[0] * 255 / 360),
-                  round(hsl_f[1] * 255),
-                  round(hsl_f[2] * 255));
+    hsl[0] = round(hsl_f[0] * 255 / 360);
+    hsl[1] = round(hsl_f[1] * 255);
+    hsl[2] = round(hsl_f[2] * 255);
 }

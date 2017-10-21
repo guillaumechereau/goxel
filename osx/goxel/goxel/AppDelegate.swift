@@ -144,7 +144,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
     
-    func onTimer(_ sender: Timer!) {
+    @objc func onTimer(_ sender: Timer!) {
         if (!window.isVisible) {
             return
         }

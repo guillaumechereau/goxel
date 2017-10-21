@@ -29,13 +29,20 @@ static void qubicle_import(const char *path)
 {
     FILE *file;
     int version, color_format, orientation, compression, vmask, mat_count;
-    int i, j, r, index, len, w, h, d, pos[3], x, y, z;
+    int i, j, r, index, len, w, h, d, pos[3], vpos[3], x, y, z;
     char buff[256];
-    uvec4b_t v;
-    uvec4b_t *cube;
+    union {
+        uint8_t v[4];
+        uint32_t uint32;
+        struct {
+            uint8_t r, g, b, a;
+        };
+    } v;
     mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
+    mesh_t *mesh = goxel->image->active_layer->mesh;
+    mesh_iterator_t iter = {0};
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
                                         NULL, NULL, NULL);
@@ -49,7 +56,6 @@ static void qubicle_import(const char *path)
     orientation = READ(uint32_t, file);
     (void)orientation;
     compression = READ(uint32_t, file);
-    (void)compression;
     vmask = READ(uint32_t, file);
     (void)vmask;
     mat_count = READ(uint32_t, file);
@@ -65,12 +71,15 @@ static void qubicle_import(const char *path)
         pos[1] = READ(int32_t, file);
         pos[2] = READ(int32_t, file);
         (void)pos;
-        cube = calloc(w * h * d, sizeof(*cube));
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {
                 v.uint32 = READ(uint32_t, file);
+                if (!v.a) continue;
                 v.a = v.a ? 255 : 0;
-                cube[index] = v;
+                vpos[0] = pos[0] + index % w;
+                vpos[1] = pos[1] + (index % (w * h)) / w;
+                vpos[2] = pos[2] + index / (w * h);
+                mesh_set_at(mesh, &iter, vpos, v.v);
             }
         } else {
             for (z = 0; z < d; z++) {
@@ -90,15 +99,15 @@ static void qubicle_import(const char *path)
                         x = index % w;
                         y = index / w;
                         v.a = v.a ? 255 : 0;
-                        cube[x + y * w + z * w * h] = v;
+                        vpos[0] = pos[0] + x;
+                        vpos[1] = pos[1] + y;
+                        vpos[2] = pos[2] + z;
+                        mesh_set_at(mesh, &iter, vpos, v.v);
                         index++;
                     }
                 }
             }
         }
-        mesh_blit(goxel->image->active_layer->mesh, cube,
-                  pos[0], pos[1], pos[2], w, h, d);
-        free(cube);
     }
 
     // Apply a 90 deg X rotation to fix axis.
@@ -110,18 +119,21 @@ static void qubicle_import(const char *path)
 void qubicle_export(const mesh_t *mesh, const char *path)
 {
     FILE *file;
-    block_t *block;
-    int i, count, x, y, z;
+    int i, count, x, y, z, bpos[3], vpos[3];
+    uint8_t v[4];
     char buff[16];
     mesh_t *m = mesh_copy(mesh);
     mat4_t mat = mat4_identity;
+    mesh_iterator_t iter;
 
     // Apply a -90 deg X rotation to fix axis.
     mat4_irotate(&mat, -M_PI / 2, 1, 0, 0);
     mesh_move(m, &mat);
     mesh = m;
 
-    count = HASH_COUNT(mesh->blocks);
+    count = 0;
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, NULL)) count++;
 
     file = fopen(path, "wb");
     WRITE(uint32_t, 257, file); // version
@@ -132,24 +144,26 @@ void qubicle_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, count, file);
 
     i = 0;
-    MESH_ITER_BLOCKS(mesh, block) {
-
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, bpos)) {
         sprintf(buff, "%d", i);
         WRITE(uint8_t, strlen(buff), file);
         fwrite(buff, strlen(buff), 1, file);
 
-        WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(uint32_t, BLOCK_SIZE - 2, file);
-        WRITE(int32_t, block->pos.x - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, block->pos.y - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, block->pos.z - BLOCK_SIZE / 2, file);
-        for (z = 1; z < BLOCK_SIZE - 1; z++)
-        for (y = 1; y < BLOCK_SIZE - 1; y++)
-        for (x = 1; x < BLOCK_SIZE - 1; x++) {
-            WRITE(uint32_t, block->data->voxels[
-                  x + y * BLOCK_SIZE + z * BLOCK_SIZE * BLOCK_SIZE].uint32,
-                  file);
+        WRITE(uint32_t, BLOCK_SIZE, file);
+        WRITE(uint32_t, BLOCK_SIZE, file);
+        WRITE(uint32_t, BLOCK_SIZE, file);
+        WRITE(int32_t, bpos[0] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[1] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[2] - BLOCK_SIZE / 2, file);
+        for (z = 0; z < BLOCK_SIZE; z++)
+        for (y = 0; y < BLOCK_SIZE; y++)
+        for (x = 0; x < BLOCK_SIZE; x++) {
+            vpos[0] = bpos[0] - BLOCK_SIZE / 2 + x;
+            vpos[1] = bpos[1] - BLOCK_SIZE / 2 + y;
+            vpos[2] = bpos[2] - BLOCK_SIZE / 2 + z;
+            mesh_get_at(mesh, &iter, vpos, v);
+            fwrite(v, 4, 1, file);
         }
         i++;
     }

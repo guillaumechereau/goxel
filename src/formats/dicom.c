@@ -315,7 +315,7 @@ static void dicom_import(const char *dirpath)
     int w, h, d;    // Dimensions of the full data cube.
     int i;
     uint16_t *data;
-    uvec4b_t *cube;
+    uint8_t (*cube)[4];
 
     dirpath = dirpath ?: noc_file_dialog_open(
             NOC_FILE_DIALOG_OPEN | NOC_FILE_DIALOG_DIR, NULL, NULL, NULL);
@@ -354,13 +354,13 @@ static void dicom_import(const char *dirpath)
     // XXX: we should maybe support voxel data in 2 bytes monochrome.
     cube = malloc(w * h * d * sizeof(*cube));
     for (i = 0; i < w * h * d; i++) {
-        cube[i] = uvec4b(255, 255, 255, clamp(data[i], 0, 255));
+        vec4_set(cube[i], 255, 255, 255, clamp(data[i], 0, 255));
     }
     free(data);
 
     // This could belong to the caller function.
-    mesh_blit(goxel->image->active_layer->mesh, cube,
-              -w / 2, -h / 2, -d / 2, w, h, d);
+    mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
+              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
 
     free(cube);
 }

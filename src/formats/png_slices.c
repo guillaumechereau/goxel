@@ -22,10 +22,10 @@ static void export_as_png_slices(const char *path)
 {
     box_t box;
     mesh_t *mesh;
-    int x, y, z, w, h, d;
-    uvec4b_t c;
+    int x, y, z, w, h, d, pos[3], start_pos[3];
+    uint8_t c[4];
     uint8_t *img;
-    vec3_t pos, start_pos;
+    mesh_iterator_t iter = {0};
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                    "png\0*.png\0", NULL, "untitled.png");
@@ -36,18 +36,21 @@ static void export_as_png_slices(const char *path)
     w = box.w.x * 2;
     h = box.h.y * 2;
     d = box.d.z * 2;
-    start_pos = vec3(box.p.x - box.w.x, box.p.y - box.h.y, box.p.z - box.d.z);
-
+    start_pos[0] = box.p.x - box.w.x;
+    start_pos[1] = box.p.y - box.h.y;
+    start_pos[2] = box.p.z - box.d.z;
     img = calloc(w * h * d, 4);
     for (z = 0; z < d; z++)
     for (y = 0; y < h; y++)
     for (x = 0; x < w; x++) {
-        pos = vec3_add(vec3(x, y, z), start_pos);
-        c = mesh_get_at(mesh, &pos);
-        img[(y * w * d + z * w + x) * 4 + 0] = c.r;
-        img[(y * w * d + z * w + x) * 4 + 1] = c.g;
-        img[(y * w * d + z * w + x) * 4 + 2] = c.b;
-        img[(y * w * d + z * w + x) * 4 + 3] = c.a;
+        pos[0] = x + start_pos[0];
+        pos[1] = y + start_pos[1];
+        pos[2] = z + start_pos[2];
+        mesh_get_at(mesh, &iter, pos, c);
+        img[(y * w * d + z * w + x) * 4 + 0] = c[0];
+        img[(y * w * d + z * w + x) * 4 + 1] = c[1];
+        img[(y * w * d + z * w + x) * 4 + 2] = c[2];
+        img[(y * w * d + z * w + x) * 4 + 3] = c[3];
     }
     img_write(img, w * d, h, 4, path);
 

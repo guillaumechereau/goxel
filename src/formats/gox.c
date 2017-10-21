@@ -19,6 +19,8 @@
 
 #include "goxel.h"
 
+#define VERSION 2 // Current version of the file format.
+
 #ifndef NO_ZLIB
 #   include <zlib.h>
 #else
@@ -41,13 +43,13 @@ static int gzeof(gzFile file) {return feof(file);}
 #endif
 
 /*
- * File format, version 1:
+ * File format, version 2:
  *
  * This is inspired by the png format, where the file consists of a list of
  * chunks with different types.
  *
  *  4 bytes magic string        : "GOX "
- *  4 bytes version             : 1
+ *  4 bytes version             : 2
  *  List of chunks:
  *      4 bytes: data length
  *      4 bytes: type
@@ -84,10 +86,12 @@ static int gzeof(gzFile file) {return feof(file);}
  *
  */
 
-// We create a hash table of all the blocks data.
+// We create a hash table of all the blocks, so that blocks with the same
+// ids get written only once.
 typedef struct {
     UT_hash_handle  hh;
-    block_data_t    *v;
+    void            *v;
+    uint64_t        uid;
     int             index;
 } block_hash_t;
 
@@ -215,16 +219,17 @@ void save_to_file(goxel_t *goxel, const char *path)
     LOG_I("Save to %s", path);
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
     layer_t *layer;
-    block_t *block;
     chunk_t c;
-    int nb_blocks, index, size;
+    int nb_blocks, index, size, bpos[3];
+    uint64_t uid;
     gzFile out;
     uint8_t *png;
     camera_t *camera;
+    mesh_iterator_t iter;
 
     out = gzopen(path, str_endswith(path, ".gz") ? "wb" : "wbT");
     gzwrite(out, "GOX ", 4);
-    write_int32(out, 1);
+    write_int32(out, VERSION);
 
     // Write image info.
     chunk_write_start(&c, out, "IMG ");
@@ -236,19 +241,23 @@ void save_to_file(goxel_t *goxel, const char *path)
     // Add all the blocks data into the hash table.
     index = 0;
     DL_FOREACH(goxel->image->layers, layer) {
-        MESH_ITER_BLOCKS(layer->mesh, block) {
-            HASH_FIND_PTR(blocks_table, &block->data, data);
+        iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
+        while (mesh_iter(&iter, bpos)) {
+            mesh_get_block_data(layer->mesh, &iter, bpos, &uid);
+            HASH_FIND(hh, blocks_table, &uid, sizeof(uid), data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
-            data->v = block->data;
+            data->v = mesh_get_block_data(layer->mesh, &iter, bpos, NULL);
+            assert(data->v);
+            data->uid = uid;
             data->index = index++;
-            HASH_ADD_PTR(blocks_table, v, data);
+            HASH_ADD(hh, blocks_table, uid, sizeof(data->uid), data);
         }
     }
 
     // Write all the blocks chunks.
     HASH_ITER(hh, blocks_table, data, data_tmp) {
-        png = img_write_to_mem((uint8_t*)data->v->voxels, 64, 64, 4, &size);
+        png = img_write_to_mem((uint8_t*)data->v, 64, 64, 4, &size);
         chunk_write_all(out, "BL16", (char*)png, size);
         free(png);
     }
@@ -257,16 +266,23 @@ void save_to_file(goxel_t *goxel, const char *path)
     DL_FOREACH(goxel->image->layers, layer) {
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
-        if (!layer->base_id)
-            nb_blocks = HASH_COUNT(layer->mesh->blocks);
+        if (!layer->base_id) {
+            iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
+            while (mesh_iter(&iter, bpos)) {
+                nb_blocks++;
+            }
+        }
         chunk_write_int32(&c, out, nb_blocks);
         if (!layer->base_id) {
-            MESH_ITER_BLOCKS(layer->mesh, block) {
-                HASH_FIND_PTR(blocks_table, &block->data, data);
+            iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
+            while (mesh_iter(&iter, bpos)) {
+                mesh_get_block_data(layer->mesh, &iter, bpos, &uid);
+                HASH_FIND(hh, blocks_table, &uid, sizeof(uid), data);
+                assert(data);
                 chunk_write_int32(&c, out, data->index);
-                chunk_write_int32(&c, out, block->pos.x);
-                chunk_write_int32(&c, out, block->pos.y);
-                chunk_write_int32(&c, out, block->pos.z);
+                chunk_write_int32(&c, out, bpos[0]);
+                chunk_write_int32(&c, out, bpos[1]);
+                chunk_write_int32(&c, out, bpos[2]);
                 chunk_write_int32(&c, out, 0);
             }
         }
@@ -320,7 +336,7 @@ static block_hash_t *hash_find_at(block_hash_t *hash, int index)
     return hash;
 }
 
-void load_from_file(goxel_t *goxel, const char *path)
+int load_from_file(goxel_t *goxel, const char *path)
 {
     layer_t *layer, *layer_tmp;
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
@@ -331,11 +347,11 @@ void load_from_file(goxel_t *goxel, const char *path)
     int w, h, bpp;
     uint8_t *png;
     chunk_t c;
-    int i, index, x, y, z;
-    vec3i_t pos;
+    int i, index, version, x, y, z;
     int  dict_value_size;
     char dict_key[256];
     char dict_value[256];
+    uint64_t uid = 1;
     camera_t *camera;
 
     LOG_I("Load from file %s", path);
@@ -343,7 +359,11 @@ void load_from_file(goxel_t *goxel, const char *path)
 
     gzread(in, magic, 4);
     assert(strncmp(magic, "GOX ", 4) == 0);
-    read_int32(in);
+    version = read_int32(in);
+    if (version > VERSION) {
+        LOG_W("Cannot open gox file version %d", version);
+        return -1;
+    }
 
     // Remove all layers.
     // XXX: we should load the image fully before deleting the current one.
@@ -361,10 +381,10 @@ void load_from_file(goxel_t *goxel, const char *path)
             voxel_data = img_read_from_mem((void*)png, c.length, &w, &h, &bpp);
             assert(w == 64 && h == 64 && bpp == 4);
             data = calloc(1, sizeof(*data));
-            data->v = calloc(1, sizeof(*data->v));
-            memcpy(data->v->voxels, voxel_data, sizeof(data->v->voxels));
-            data->v->id = ++goxel->next_uid;
-            HASH_ADD_PTR(blocks_table, v, data);
+            data->v = calloc(1, 64 * 64 * 4);
+            memcpy(data->v, voxel_data, 64 * 64 * 4);
+            data->uid = ++uid;
+            HASH_ADD(hh, blocks_table, uid, sizeof(data->uid), data);
             free(voxel_data);
             free(png);
 
@@ -381,11 +401,13 @@ void load_from_file(goxel_t *goxel, const char *path)
                 x = chunk_read_int32(&c, in);
                 y = chunk_read_int32(&c, in);
                 z = chunk_read_int32(&c, in);
+                if (version == 1) { // Previous version blocks pos.
+                    x -= 8; y -= 8; z -= 8;
+                }
                 chunk_read_int32(&c, in);
                 data = hash_find_at(blocks_table, index);
                 assert(data);
-                pos = vec3i(x, y, z);
-                mesh_add_block(layer->mesh, data->v, &pos);
+                mesh_blit(layer->mesh, data->v, x, y, z, 16, 16, 16, NULL);
             }
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size))) {
@@ -436,12 +458,14 @@ void load_from_file(goxel_t *goxel, const char *path)
     // they have been used by the meshes.
     HASH_ITER(hh, blocks_table, data, data_tmp) {
         HASH_DEL(blocks_table, data);
+        free(data->v);
         free(data);
     }
 
     goxel->image->path = strdup(path);
     goxel_update_meshes(goxel, -1);
     gzclose(in);
+    return 0;
 }
 
 static void action_open(const char *path)

@@ -37,7 +37,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     painter_t painter = goxel->painter;
     painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
-    painter.color = uvec4b(255, 255, 255, 255);
+    vec4_set(painter.color, 255, 255, 255, 255);
 
     if (gest->state == GESTURE_BEGIN)
         image_history_push(goxel->image);

@@ -26,7 +26,6 @@
 		F07DE9D51BD0F03900BAA1AD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F07DE9D41BD0F03900BAA1AD /* Assets.xcassets */; };
 		F07DE9D81BD0F03900BAA1AD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F07DE9D61BD0F03900BAA1AD /* MainMenu.xib */; };
 		F07DE9E01BD0F16300BAA1AD /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F07DE9DF1BD0F16300BAA1AD /* OpenGL.framework */; };
-		F07DE9FF1BD0F31500BAA1AD /* block.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9E41BD0F31500BAA1AD /* block.c */; };
 		F07DEA001BD0F31500BAA1AD /* color.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9E61BD0F31500BAA1AD /* color.c */; };
 		F07DEA041BD0F31500BAA1AD /* goxel.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9EA1BD0F31500BAA1AD /* goxel.c */; };
 		F07DEA051BD0F31500BAA1AD /* gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9EC1BD0F31500BAA1AD /* gui.cpp */; };
@@ -67,6 +66,8 @@
 		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
 		F0E71BB01F1DA7A100D20C7C /* ini.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAE1F1DA7A100D20C7C /* ini.c */; };
 		F0E71BB21F1DAD2E00D20C7C /* system_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BB11F1DAD2E00D20C7C /* system_osx.m */; };
+		F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C611F98B03200FB50DE /* mesh_utils.c */; };
+		F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */; };
 		F0EEB7DE1C8EC25D004AB676 /* procedural.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7D91C8EC25D004AB676 /* procedural.c */; };
 		F0EEB7E01C8EC25D004AB676 /* procedural.leg in Resources */ = {isa = PBXBuildFile; fileRef = F0EEB7DB1C8EC25D004AB676 /* procedural.leg */; };
 		F0EEB7E41C8EC27C004AB676 /* action.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7E31C8EC27C004AB676 /* action.c */; };
@@ -96,7 +97,6 @@
 		F07DE9D71BD0F03900BAA1AD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		F07DE9D91BD0F03900BAA1AD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F07DE9DF1BD0F16300BAA1AD /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
-		F07DE9E41BD0F31500BAA1AD /* block.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = block.c; sourceTree = "<group>"; };
 		F07DE9E51BD0F31500BAA1AD /* box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = box.h; sourceTree = "<group>"; };
 		F07DE9E61BD0F31500BAA1AD /* color.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = color.c; sourceTree = "<group>"; };
 		F07DE9EA1BD0F31500BAA1AD /* goxel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = goxel.c; sourceTree = "<group>"; };
@@ -104,7 +104,6 @@
 		F07DE9EC1BD0F31500BAA1AD /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
 		F07DE9ED1BD0F31500BAA1AD /* image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = image.c; sourceTree = "<group>"; };
 		F07DE9EE1BD0F31500BAA1AD /* imgui_user.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = imgui_user.inl; sourceTree = "<group>"; };
-		F07DE9EF1BD0F31500BAA1AD /* ivec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ivec.h; sourceTree = "<group>"; };
 		F07DE9F11BD0F31500BAA1AD /* mesh.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh.c; sourceTree = "<group>"; };
 		F07DE9F21BD0F31500BAA1AD /* model3d.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = model3d.c; sourceTree = "<group>"; };
 		F07DE9F31BD0F31500BAA1AD /* palette.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = palette.c; sourceTree = "<group>"; };
@@ -157,6 +156,9 @@
 		F0E71BAE1F1DA7A100D20C7C /* ini.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ini.c; sourceTree = "<group>"; };
 		F0E71BAF1F1DA7A100D20C7C /* ini.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ini.h; sourceTree = "<group>"; };
 		F0E71BB11F1DAD2E00D20C7C /* system_osx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = system_osx.m; sourceTree = "<group>"; };
+		F0ED3C611F98B03200FB50DE /* mesh_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_utils.c; sourceTree = "<group>"; };
+		F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_to_vertices.c; sourceTree = "<group>"; };
+		F0ED3C631F98B03300FB50DE /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
 		F0EEB7D91C8EC25D004AB676 /* procedural.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = procedural.c; sourceTree = "<group>"; };
 		F0EEB7DB1C8EC25D004AB676 /* procedural.leg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = procedural.leg; sourceTree = "<group>"; };
 		F0EEB7E31C8EC27C004AB676 /* action.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = action.c; sourceTree = "<group>"; };
@@ -231,6 +233,9 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */,
+				F0ED3C611F98B03200FB50DE /* mesh_utils.c */,
+				F0ED3C631F98B03300FB50DE /* mesh.h */,
 				F0C4F1411F308976002E73C5 /* gui_settings.c */,
 				F0E71BB11F1DAD2E00D20C7C /* system_osx.m */,
 				F0E71BAB1F1DA30D00D20C7C /* theme.c */,
@@ -254,7 +259,6 @@
 				F0EEB7E31C8EC27C004AB676 /* action.c */,
 				F0EEB7D91C8EC25D004AB676 /* procedural.c */,
 				F0EEB7DB1C8EC25D004AB676 /* procedural.leg */,
-				F07DE9E41BD0F31500BAA1AD /* block.c */,
 				F07DE9E51BD0F31500BAA1AD /* box.h */,
 				F07DE9E61BD0F31500BAA1AD /* color.c */,
 				F07DE9EA1BD0F31500BAA1AD /* goxel.c */,
@@ -262,7 +266,6 @@
 				F07DE9EC1BD0F31500BAA1AD /* gui.cpp */,
 				F07DE9ED1BD0F31500BAA1AD /* image.c */,
 				F07DE9EE1BD0F31500BAA1AD /* imgui_user.inl */,
-				F07DE9EF1BD0F31500BAA1AD /* ivec.h */,
 				F07DE9F11BD0F31500BAA1AD /* mesh.c */,
 				F07DE9F21BD0F31500BAA1AD /* model3d.c */,
 				F07DE9F31BD0F31500BAA1AD /* palette.c */,
@@ -387,13 +390,13 @@
 		F07DE9C71BD0F03900BAA1AD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0800;
+				LastUpgradeCheck = 0900;
 				ORGANIZATIONNAME = "Noctua Software Limited";
 				TargetAttributes = {
 					F07DE9CE1BD0F03900BAA1AD = {
 						CreatedOnToolsVersion = 7.0.1;
 						DevelopmentTeam = VH4XTANA7R;
-						LastSwiftMigration = 0800;
+						LastSwiftMigration = 0900;
 					};
 				};
 			};
@@ -473,7 +476,9 @@
 				F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */,
 				F0A160021E962F1300C6EF33 /* vox.c in Sources */,
 				F07DEA121BD0F31500BAA1AD /* tools.c in Sources */,
+				F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */,
 				F07DEA2D1BD0F33A00BAA1AD /* imgui_draw.cpp in Sources */,
+				F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */,
 				F0158ECD1F17289B008893E6 /* sound.c in Sources */,
 				F037D5C51EA6066300C96D10 /* vec.c in Sources */,
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
@@ -491,7 +496,6 @@
 				F07DEA0D1BD0F31500BAA1AD /* render.c in Sources */,
 				F037D5C31EA6061F00C96D10 /* gox.c in Sources */,
 				F0A15FFE1E962F1300C6EF33 /* povray.c in Sources */,
-				F07DE9FF1BD0F31500BAA1AD /* block.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -517,14 +521,20 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -563,14 +573,20 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -609,6 +625,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.noctuasoftware.goxel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/goxel/goxel-Bridging-Header.h";
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -628,6 +645,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.noctuasoftware.goxel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/goxel/goxel-Bridging-Header.h";
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;

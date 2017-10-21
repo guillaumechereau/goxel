@@ -95,7 +95,7 @@ model3d_t *model3d_cube(void)
     model3d_t *model = calloc(1, sizeof(*model));
     model->solid = true;
     model->cull = true;
-    vec3b_t p;
+    const int *p;
     model->nb_vertices = 6 * 6;
     model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
     for (f = 0; f < 6; f++) {
@@ -103,10 +103,11 @@ model3d_t *model3d_cube(void)
             v = (int[]){0, 1, 2, 2, 3, 0}[i];
             p = VERTICES_POSITIONS[FACES_VERTICES[f][v]];
             model->vertices[f * 6 + i].pos =
-                vec3((p.x - 0.5) * 2, (p.y - 0.5) * 2, (p.z - 0.5) * 2);
-            model->vertices[f * 6 + i].normal =
-                vec3(VEC3_SPLIT(FACES_NORMALS[f]));
-            model->vertices[f * 6 + i].color = uvec4b(255, 255, 255, 255);
+                vec3((p[0] - 0.5) * 2, (p[1] - 0.5) * 2, (p[2] - 0.5) * 2);
+            model->vertices[f * 6 + i].normal = vec3(FACES_NORMALS[f][0],
+                                                     FACES_NORMALS[f][1],
+                                                     FACES_NORMALS[f][2]);
+            vec4_set(model->vertices[f * 6 + i].color, 255, 255, 255, 255);
         }
     }
     model->dirty = true;
@@ -116,7 +117,7 @@ model3d_t *model3d_cube(void)
 model3d_t *model3d_wire_cube(void)
 {
     int f, i, v;
-    vec3b_t p;
+    const int *p;
     model3d_t *model = calloc(1, sizeof(*model));
     model->nb_vertices = 6 * 8;
     model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
@@ -125,8 +126,8 @@ model3d_t *model3d_wire_cube(void)
             v = (int[]){0, 1, 1, 2, 2, 3, 3, 0}[i];
             p = VERTICES_POSITIONS[FACES_VERTICES[f][v]];
             model->vertices[f * 8 + i].pos =
-                vec3((p.x - 0.5) * 2, (p.y - 0.5) * 2, (p.z - 0.5) * 2);
-            model->vertices[f * 8 + i].color = uvec4b(255, 255, 255, 255);
+                vec3((p[0] - 0.5) * 2, (p[1] - 0.5) * 2, (p[2] - 0.5) * 2);
+            vec4_set(model->vertices[f * 8 + i].color, 255, 255, 255, 255);
             model->vertices[f * 8 + i].uv = vec2(0.5, 0.5);
         }
     }
@@ -175,8 +176,8 @@ model3d_t *model3d_grid(int nx, int ny)
     int i;
     float x, y;
     bool side;
-    const uvec4b_t c  = uvec4b(255, 255, 255, 160);
-    const uvec4b_t cb = uvec4b(255, 255, 255, 255);
+    const uint8_t c[4]  = {255, 255, 255, 160};
+    const uint8_t cb[4] = {255, 255, 255, 255};
 
     model->nb_vertices = (nx + ny + 2) * 2;
     model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
@@ -186,8 +187,8 @@ model3d_t *model3d_grid(int nx, int ny)
         x = (float)i / nx - 0.5;
         v[i * 2 + 0].pos = vec3(x, -0.5, 0);
         v[i * 2 + 1].pos = vec3(x, +0.5, 0);
-        v[i * 2 + 0].color = side ? cb : c;
-        v[i * 2 + 1].color = side ? cb : c;
+        vec4_copy(side ? cb : c, v[i * 2 + 0].color);
+        vec4_copy(side ? cb : c, v[i * 2 + 1].color);
     }
     v = model->vertices + 2 * nx + 2;
     for (i = 0; i < ny + 1; i++) {
@@ -195,8 +196,8 @@ model3d_t *model3d_grid(int nx, int ny)
         y = (float)i / ny - 0.5;
         v[i * 2 + 0].pos = vec3(-0.5, y, 0);
         v[i * 2 + 1].pos = vec3(+0.5, y, 0);
-        v[i * 2 + 0].color = side ? cb : c;
-        v[i * 2 + 1].color = side ? cb : c;
+        vec4_copy(side ? cb : c, v[i * 2 + 0].color);
+        vec4_copy(side ? cb : c, v[i * 2 + 1].color);
     }
     model->dirty = true;
     return model;
@@ -209,8 +210,8 @@ model3d_t *model3d_line(void)
     model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
     model->vertices[0].pos = vec3(-0.5, 0, 0);
     model->vertices[1].pos = vec3(+0.5, 0, 0);
-    model->vertices[0].color = uvec4b(255, 255, 255, 255);
-    model->vertices[1].color = uvec4b(255, 255, 255, 255);
+    vec4_set(model->vertices[0].color, 255, 255, 255, 255);
+    vec4_set(model->vertices[1].color, 255, 255, 255, 255);
     model->dirty = true;
     return model;
 }
@@ -232,7 +233,7 @@ model3d_t *model3d_rect(void)
         v = (int[]){0, 1, 2, 2, 3, 0}[i];
         model->vertices[i].pos.xy = POS_UV[v][0];
         model->vertices[i].uv = POS_UV[v][1];
-        model->vertices[i].color = uvec4b(255, 255, 255, 255);
+        vec4_set(model->vertices[i].color, 255, 255, 255, 255);
         model->vertices[i].normal = vec3(0, 1, 0);
     }
     model->solid = true;
@@ -257,23 +258,36 @@ model3d_t *model3d_wire_rect(void)
         v = ((i + 1) / 2) % 4;
         model->vertices[i].pos.xy = POS_UV[v][0];
         model->vertices[i].uv = POS_UV[v][1];
-        model->vertices[i].color = uvec4b(255, 255, 255, 255);
+        vec4_set(model->vertices[i].color, 255, 255, 255, 255);
     }
     model->dirty = true;
     return model;
 }
 
+static void copy_color(const uint8_t in[4], uint8_t out[4])
+{
+    if (in == NULL) {
+        out[0] = 255;
+        out[1] = 255;
+        out[2] = 255;
+        out[3] = 255;
+    } else {
+        memcpy(out, in, 4);
+    }
+}
+
 void model3d_render(model3d_t *model3d,
                     const mat4_t *model, const mat4_t *proj,
-                    const uvec4b_t *color,
+                    const uint8_t color[4],
                     const texture_t *tex,
                     const vec3_t *light,
                     int   effects)
 {
-    uvec4b_t c = color ? *color : HEXCOLOR(0xffffffff);
+    uint8_t c[4];
     vec4_t cf;
     vec3_t light_dir;
 
+    copy_color(color, c);
     GL(glUseProgram(prog.prog));
     GL(glUniformMatrix4fv(prog.u_model_l, 1, 0, model->v));
     GL(glUniformMatrix4fv(prog.u_proj_l, 1, 0, proj->v));
@@ -287,7 +301,7 @@ void model3d_render(model3d_t *model3d,
                     GL(glDisable(GL_CULL_FACE));
     GL(glCullFace(effects & EFFECT_SEE_BACK ? GL_FRONT : GL_BACK));
 
-    cf = vec4(c.r / 255.0, c.g / 255.0, c.b / 255.0, c.a / 255.0);
+    cf = vec4(c[0] / 255.0, c[1] / 255.0, c[2] / 255.0, c[3] / 255.0);
     GL(glUniform4fv(prog.u_color_l, 1, cf.v));
     GL(glUniform1f(prog.u_strip_l, effects & EFFECT_STRIP ? 1.0 : 0.0));
     GL(glUniform1f(prog.u_time_l, 0)); // No moving strip effects.

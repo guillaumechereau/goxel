@@ -23,7 +23,7 @@ typedef struct {
     union {
         struct {
             vec3_t   v;
-            uvec3b_t c;
+            uint8_t  c[3];
         };
         vec3_t vn;
         struct {
@@ -74,42 +74,43 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     // XXX: Merge faces that can be merged into bigger ones.
     //      Allow to chose between quads or triangles.
     //      Also export mlt file for the colors.
-    block_t *block;
     voxel_vertex_t* verts;
     vec3_t v;
-    uvec3b_t c;
-    int nb_quads, i, j;
+    uint8_t c[3];
+    int nb_quads, i, j, bpos[3];
     mat4_t mat;
     FILE *out;
     const int N = BLOCK_SIZE;
     UT_array *lines;
     line_t line, face, *line_ptr;
+    mesh_iterator_t iter;
 
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
-    MESH_ITER_BLOCKS(mesh, block) {
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, bpos)) {
         mat = mat4_identity;
-        mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
+        mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
-        nb_quads = block_generate_vertices(block->data, 0, 0, verts);
+        nb_quads = mesh_generate_vertices(mesh, bpos, 0, verts);
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].pos.x,
-                         verts[i * 4 + j].pos.y,
-                         verts[i * 4 + j].pos.z);
+                v = vec3(verts[i * 4 + j].pos[0],
+                         verts[i * 4 + j].pos[1],
+                         verts[i * 4 + j].pos[2]);
                 v = mat4_mul_vec3(mat, v);
-                c = verts[i * 4 + j].color.rgb;
-                line = (line_t){"v ", .v = v, .c = c};
+                memcpy(c, verts[i * 4 + j].color, 3);
+                line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);
             }
             // Put the normals
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].normal.x,
-                         verts[i * 4 + j].normal.y,
-                         verts[i * 4 + j].normal.z);
+                v = vec3(verts[i * 4 + j].normal[0],
+                         verts[i * 4 + j].normal[1],
+                         verts[i * 4 + j].normal[2]);
                 line = (line_t){"vn", .vn = v};
                 face.vns[j] = lines_add(lines, &line);
             }
@@ -123,9 +124,9 @@ void wavefront_export(const mesh_t *mesh, const char *path)
         if (strncmp(line_ptr->type, "v ", 2) == 0)
             fprintf(out, "v %g %g %g %f %f %f\n",
                     VEC3_SPLIT(line_ptr->v),
-                    line_ptr->c.r / 255.,
-                    line_ptr->c.g / 255.,
-                    line_ptr->c.b / 255.);
+                    line_ptr->c[0] / 255.,
+                    line_ptr->c[1] / 255.,
+                    line_ptr->c[2] / 255.);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "vn", 2) == 0)
@@ -146,42 +147,43 @@ void wavefront_export(const mesh_t *mesh, const char *path)
 
 void ply_export(const mesh_t *mesh, const char *path)
 {
-    block_t *block;
     voxel_vertex_t* verts;
     vec3_t v;
-    uvec3b_t c;
-    int nb_quads, i, j;
+    uint8_t c[3];
+    int nb_quads, i, j, bpos[3];
     mat4_t mat;
     FILE *out;
     const int N = BLOCK_SIZE;
     UT_array *lines;
     line_t line, face, *line_ptr;
+    mesh_iterator_t iter;
 
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
-    MESH_ITER_BLOCKS(mesh, block) {
+    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    while (mesh_iter(&iter, bpos)) {
         mat = mat4_identity;
-        mat4_itranslate(&mat, block->pos.x, block->pos.y, block->pos.z);
+        mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         mat4_itranslate(&mat, -N / 2 + 0.5, -N / 2 + 0.5, -N / 2 + 0.5);
 
-        nb_quads = block_generate_vertices(block->data, 0, 0, verts);
+        nb_quads = mesh_generate_vertices(mesh, bpos, 0, verts);
         for (i = 0; i < nb_quads; i++) {
             // Put the vertices.
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].pos.x,
-                         verts[i * 4 + j].pos.y,
-                         verts[i * 4 + j].pos.z);
+                v = vec3(verts[i * 4 + j].pos[0],
+                         verts[i * 4 + j].pos[1],
+                         verts[i * 4 + j].pos[2]);
                 v = mat4_mul_vec3(mat, v);
-                c = verts[i * 4 + j].color.rgb;
-                line = (line_t){"v ", .v = v, .c = c};
+                memcpy(c, verts[i * 4 + j].color, 3);
+                line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);
             }
             // Put the normals
             for (j = 0; j < 4; j++) {
-                v = vec3(verts[i * 4 + j].normal.x,
-                         verts[i * 4 + j].normal.y,
-                         verts[i * 4 + j].normal.z);
+                v = vec3(verts[i * 4 + j].normal[0],
+                         verts[i * 4 + j].normal[1],
+                         verts[i * 4 + j].normal[2]);
                 line = (line_t){"vn", .vn = v};
                 face.vns[j] = lines_add(lines, &line);
             }
@@ -207,7 +209,7 @@ void ply_export(const mesh_t *mesh, const char *path)
         if (strncmp(line_ptr->type, "v ", 2) == 0)
             fprintf(out, "%g %g %g %d %d %d\n",
                     VEC3_SPLIT(line_ptr->v),
-                    VEC3_SPLIT(line_ptr->c));
+                    line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "f ", 2) == 0)
