@@ -62,7 +62,7 @@ static int mc_compute(const int neighboors[8],
     return nb_tri;
 }
 
-static void mc_interp_pos(const mc_vert_t *vert, int8_t out[3])
+static void mc_interp_pos(const mc_vert_t *vert, uint8_t out[3])
 {
     int i;
     const int *p0 = VERTICES_POSITIONS[vert->v0];

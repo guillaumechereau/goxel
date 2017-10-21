@@ -140,7 +140,7 @@ static const struct {
     int norm;
     int offset;
 } ATTRIBUTES[] = {
-    {"a_pos",           3, GL_BYTE,            false, OFFSET(pos)},
+    {"a_pos",           3, GL_UNSIGNED_BYTE,   false, OFFSET(pos)},
     {"a_normal",        3, GL_BYTE,            false, OFFSET(normal)},
     {"a_color",         4, GL_UNSIGNED_BYTE,   true,  OFFSET(color)},
     {"a_pos_data",      2, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},

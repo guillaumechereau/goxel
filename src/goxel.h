@@ -546,13 +546,13 @@ typedef struct painter {
 #define VOXEL_TEXTURE_SIZE 8
 // Number of sub position per voxel in the marching
 // cube rendering.
-#define MC_VOXEL_SUB_POS 4 // XXX: try to make it higher (up to 16!)
+#define MC_VOXEL_SUB_POS 8 // XXX: try to make it higher (up to 16!)
 
 // Structure used for the OpenGL array data of blocks.
 // XXX: we can probably make it smaller.
 typedef struct voxel_vertex
 {
-    int8_t   pos[3]                     __attribute__((aligned(4)));
+    uint8_t  pos[3]                     __attribute__((aligned(4)));
     int8_t   normal[3]                  __attribute__((aligned(4)));
     uint8_t  color[4]                   __attribute__((aligned(4)));
     uint16_t pos_data                   __attribute__((aligned(4)));
