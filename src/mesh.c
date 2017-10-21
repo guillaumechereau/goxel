@@ -69,6 +69,7 @@ static uint64_t g_uid = 2; // Global id counter.
 #define N BLOCK_SIZE
 
 #define vec3_copy(a, b) do {b[0] = a[0]; b[1] = a[1]; b[2] = a[2];} while (0)
+#define vec3_equal(a, b) (b[0] == a[0] && b[1] == a[1] && b[2] == a[2])
 
 #define BLOCK_ITER(x, y, z) \
     for (z = 0; z < N; z++) \
@@ -383,7 +384,7 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
     }
 
     if (    it->block_id && it->block_id == get_block_id(it->block) &&
-            memcmp(&it->block_pos, p, sizeof(p)) == 0) {
+            vec3_equal(it->block_pos, p)) {
         return it->block;
     }
     HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
