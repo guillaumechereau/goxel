@@ -563,3 +563,52 @@ void mesh_copy_block(const mesh_t *src, const int src_pos[3],
     if (!b2) b2 = mesh_add_block(dst, dst_pos);
     block_set_data(b2, b1->data);
 }
+
+void mesh_read(const mesh_t *mesh,
+               const int pos[3], const int size[3],
+               uint8_t *data)
+{
+    // For the moment we only support the case where we get the rectangle
+    // of a block plus a one voxel border around it!
+    assert(pos[0] - (pos[0] & ~(int)(N - 1)) == N - 1);
+    assert(pos[1] - (pos[1] & ~(int)(N - 1)) == N - 1);
+    assert(pos[2] - (pos[2] & ~(int)(N - 1)) == N - 1);
+    assert(size[0] == N + 2);
+    assert(size[1] == N + 2);
+    assert(size[2] == N + 2);
+
+    block_t *block;
+    int block_pos[3] = {pos[0] + 1, pos[1] + 1, pos[2] + 1};
+    int z, y, x, dx, dy, dz, p[3];
+    uint8_t v[4];
+    mesh_accessor_t accessor;
+
+    block = mesh_get_block_at(mesh, block_pos, NULL);
+    assert(block);
+    memset(data, 0, size[0] * size[1] * size[2] * 4);
+    for (z = 0; z < N; z++)
+    for (y = 0; y < N; y++)
+    for (x = 0; x < N; x++) {
+        dx = x + 1;
+        dy = y + 1;
+        dz = z + 1;
+        memcpy(&data[(dz * size[1] * size[0] + dy * size[0] + dx) * 4],
+               &block->data->voxels[z * N * N + y * N + x],
+               4);
+    }
+
+    // Fill the rest.
+    accessor = mesh_get_accessor(mesh);
+    for (z = 0; z < N + 2; z++)
+    for (y = 0; y < N + 2; y++)
+    for (x = 0; x < N + 2; x++) {
+        if ((z > 1 && z < N + 1) &&
+            (y > 1 && y < N + 1) &&
+            (x > 1 && x < N + 1)) continue;
+        p[0] = pos[0] + x;
+        p[1] = pos[1] + y;
+        p[2] = pos[2] + z;
+        mesh_get_at(mesh, &accessor, p, v);
+        memcpy(&data[(z * size[1] * size[0] + y * size[0] + x) * 4], v, 4);
+    }
+}

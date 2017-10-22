@@ -91,31 +91,44 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
     int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
     int a, sum_a;
     vec3_t n;
-    int pos[3];
-    uint8_t color[4];
+    uint8_t color[4], tmp[4];
     int colorbest;
     bool use_max_color;
-    mesh_accessor_t accessor;
+    uint8_t *data;
 
     int densities[8];
     int normals[8][3];
     int d, k = 2;
+    int p[3], s[3];
 
     mc_vert_t tri[5][3];
     if (!(effects & EFFECT_FLAT)) k = 8;
 
-    accessor = mesh_get_accessor(mesh);
+    // To speed things up we first get the voxel cube around the block.
+    data = malloc((N + 2) * (N + 2) * (N + 2) * 4);
+    p[0] = block_pos[0] - 1;
+    p[1] = block_pos[1] - 1;
+    p[2] = block_pos[2] - 1;
+    s[0] = N + 2;
+    s[1] = N + 2;
+    s[2] = N + 2;
+    mesh_read(mesh, p, s, data);
+
+#define get_at(d, x, y, z, out) do { \
+    memcpy(out, &data[( \
+                (x + 1) + \
+                (y + 1) * (N + 2) + \
+                (z + 1) * (N + 2) * (N + 2)) * 4], 4); \
+} while (0)
+
     // Add up the contribution of each voxel to the vertices values.
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
     for (x = 0; x < N; x++) {
-        pos[0] = x + block_pos[0];
-        pos[1] = y + block_pos[1];
-        pos[2] = z + block_pos[2];
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
-        mesh_get_at(mesh, &accessor, pos, color);
+        get_at(data, x, y, z, color);
         use_max_color = (color[3] == 0);
         colorbest = 8;
         sum_a = 0;
@@ -129,15 +142,14 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                 wx = vx + VERTICES_POSITIONS[w][0] - 1;
                 wy = vy + VERTICES_POSITIONS[w][1] - 1;
                 wz = vz + VERTICES_POSITIONS[w][2] - 1;
-                pos[0] = wx + block_pos[0];
-                pos[1] = wy + block_pos[1];
-                pos[2] = wz + block_pos[2];
-                a = mesh_get_alpha_at(mesh, &accessor, pos);
+
+                get_at(data, wx, wy, wz, tmp);
+                a = tmp[3];
 
                 if (use_max_color && a) {
                     d = abs(x - wx) + abs(y - wy) + abs(z - wz);
                     if (d < colorbest) {
-                        mesh_get_at(mesh, &accessor, pos, color);
+                        get_at(data, wx, wy, wz, color);
                         colorbest = d;
                     }
                 }
@@ -183,6 +195,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
         }
         nb_tri_tot += nb_tri;
     }
+    free(data);
     return nb_tri_tot;
 }
 

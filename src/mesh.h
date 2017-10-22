@@ -66,4 +66,8 @@ void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *accessor,
 void mesh_copy_block(const mesh_t *src, const int src_pos[3],
                      mesh_t *dst, const int dst_pos[3]);
 
+void mesh_read(const mesh_t *mesh,
+               const int pos[3], const int size[3],
+               uint8_t *data);
+
 #endif // MESH_H
