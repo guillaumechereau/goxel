@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include <limits.h>
 
 static const int N = BLOCK_SIZE;
 
@@ -100,6 +101,8 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
     int normals[8][3];
     int d, k = 2;
     int p[3], s[3];
+    int rect[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
+                      {INT_MIN, INT_MIN, INT_MIN}};
 
     mc_vert_t tri[5][3];
     if (!(effects & EFFECT_FLAT)) k = 8;
@@ -121,10 +124,32 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                 (z + 1) * (N + 2) * (N + 2)) * 4], 4); \
 } while (0)
 
-    // Add up the contribution of each voxel to the vertices values.
+    // Get the smallest rect we need to consider.
+    // XXX: can we measure how much we gain with that?
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
     for (x = 0; x < N; x++) {
+        get_at(data, x, y, z, tmp);
+        if (tmp[3]) {
+            rect[0][0] = min(rect[0][0], x - 2);
+            rect[0][1] = min(rect[0][1], y - 2);
+            rect[0][2] = min(rect[0][2], z - 2);
+            rect[1][0] = max(rect[1][0], x + 2);
+            rect[1][1] = max(rect[1][1], y + 2);
+            rect[1][2] = max(rect[1][2], z + 2);
+        }
+    }
+    rect[0][0] = max(rect[0][0], 0);
+    rect[0][1] = max(rect[0][1], 0);
+    rect[0][2] = max(rect[0][2], 0);
+    rect[1][0] = min(rect[1][0], N);
+    rect[1][1] = min(rect[1][1], N);
+    rect[1][2] = min(rect[1][2], N);
+
+    // Add up the contribution of each voxel to the vertices values.
+    for (z = rect[0][2]; z < rect[1][2]; z++)
+    for (y = rect[0][1]; y < rect[1][1]; y++)
+    for (x = rect[0][0]; x < rect[1][0]; x++) {
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
         n = vec3_zero;
