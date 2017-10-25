@@ -9,6 +9,7 @@ By Guillaume Chereau <guillaume@noctua-software.com>
 [![Build Status](
     https://travis-ci.org/guillaumechereau/goxel.svg?branch=master)](
     https://travis-ci.org/guillaumechereau/goxel)
+[![Snap Status](https://build.snapcraft.io/badge/guillaumechereau/goxel.svg)](https://build.snapcraft.io/user/guillaumechereau/goxel)
 
 Webpage: https://guillaumechereau.github.io/goxel
 
