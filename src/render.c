@@ -926,7 +926,7 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     GL(glDepthMask(true));
 }
 
-void render_render(renderer_t *rend, const int rect[4],
+void render_submit(renderer_t *rend, const int rect[4],
                    const uint8_t clear_color[4])
 {
     render_item_t *item, *tmp;
