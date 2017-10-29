@@ -583,9 +583,10 @@ void mesh_read(const mesh_t *mesh,
     uint8_t v[4];
     mesh_accessor_t accessor;
 
-    block = mesh_get_block_at(mesh, block_pos, NULL);
-    assert(block);
     memset(data, 0, size[0] * size[1] * size[2] * 4);
+    block = mesh_get_block_at(mesh, block_pos, NULL);
+    if (!block) goto rest;
+
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
     for (x = 0; x < N; x++) {
@@ -597,6 +598,7 @@ void mesh_read(const mesh_t *mesh,
                4);
     }
 
+rest:
     // Fill the rest.
     accessor = mesh_get_accessor(mesh);
     for (z = 0; z < N + 2; z++)

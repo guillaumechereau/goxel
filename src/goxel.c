@@ -134,17 +134,15 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     };
     uint32_t pixel;
     int voxel_pos[3];
-    int face, block_id, bid, block_pos[3];
+    int face, block_id, block_pos[3];
     int x, y;
     int rect[4] = {0, 0, view_size.x, view_size.y};
     uint8_t clear_color[4] = {0, 0, 0, 0};
-    mesh_iterator_t iter;
 
     rend.settings.shadow = 0;
     rend.fbo = goxel->pick_fbo->framebuffer;
     rend.scale = 1;
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
-
     render_submit(&rend, rect, clear_color);
 
     x = round(pos->x - view->x);
@@ -156,11 +154,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
 
     unpack_pos_data(pixel, voxel_pos, &face, &block_id);
     if (!block_id) return false;
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
-    bid = 1;
-    while (mesh_iter(&iter, block_pos)) {
-        if (bid++ == block_id) break;
-    }
+    render_get_block_pos(&rend, mesh, block_id, block_pos);
     *out = vec3(block_pos[0] + voxel_pos[0] + 0.5,
                 block_pos[1] + voxel_pos[1] + 0.5,
                 block_pos[2] + voxel_pos[2] + 0.5);

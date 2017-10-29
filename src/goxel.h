@@ -661,6 +661,11 @@ int render_get_default_settings(int i, char **name, render_settings_t *out);
 // Compute the light direction in the model coordinates (toward the light)
 vec3_t render_get_light_dir(const renderer_t *rend);
 
+// Ugly function that return the position of the block at a given id
+// when the mesh is rendered with render_mesh.
+void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
+                          int id, int pos[3]);
+
 // #############################
 
 

@@ -126,9 +126,9 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
 
     // Get the smallest rect we need to consider.
     // XXX: can we measure how much we gain with that?
-    for (z = 0; z < N; z++)
-    for (y = 0; y < N; y++)
-    for (x = 0; x < N; x++) {
+    for (z = -1; z < N + 1; z++)
+    for (y = -1; y < N + 1; y++)
+    for (x = -1; x < N + 1; x++) {
         get_at(data, x, y, z, tmp);
         if (tmp[3]) {
             rect[0][0] = min(rect[0][0], x - 2);
