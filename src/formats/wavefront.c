@@ -91,12 +91,13 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    iter = mesh_get_iterator(mesh,
+            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
         mat = mat4_identity;
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
-                mc ? EFFECT_MARCHING_CUBES : 0, verts);
+                mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
@@ -174,12 +175,13 @@ void ply_export(const mesh_t *mesh, const char *path)
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    iter = mesh_get_iterator(mesh,
+            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
         mat = mat4_identity;
         mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
-                mc ? EFFECT_MARCHING_CUBES : 0, verts);
+                mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
