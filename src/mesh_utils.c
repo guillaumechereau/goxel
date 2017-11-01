@@ -168,7 +168,7 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat)
     box.mat = mat4_mul(*mat, box.mat);
     mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
     mesh_delete(src_mesh);
-    mesh_remove_empty_blocks(mesh);
+    mesh_remove_empty_blocks(mesh, false);
 }
 
 void mesh_blit(mesh_t *mesh, const uint8_t *data,
@@ -184,7 +184,7 @@ void mesh_blit(mesh_t *mesh, const uint8_t *data,
         mesh_set_at(mesh, iter, pos, data);
         data += 4;
     }
-    mesh_remove_empty_blocks(mesh);
+    mesh_remove_empty_blocks(mesh, false);
 }
 
 void mesh_shift_alpha(mesh_t *mesh, int v)

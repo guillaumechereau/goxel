@@ -583,26 +583,11 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 {
     prog_t *prog;
     mat4_t model = mat4_identity;
-    int attr, block_pos[3], p[3], block_id, i;
+    int attr, block_pos[3], block_id;
     float pos_scale = 1.0f;
     vec3_t light_dir = get_light_dir(rend, true);
     bool shadow = false;
     mesh_iterator_t iter;
-    const int POS[][3] = {
-        {0, 0, 0},
-        {0, 0, -1}, {0, 0, +1},
-        {0, -1, 0}, {0, +1, 0},
-        {-1, 0, 0}, {+1, 0, 0},
-    };
-
-    // Hashtable of the blocks to render:
-    // all the non empty mesh blocks and there neighboors.
-    typedef struct {
-        UT_hash_handle  hh;
-        int pos[3];
-        int id;
-    } block_t;
-    block_t *block, *block_tmp, *blocks = NULL;
 
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
@@ -668,29 +653,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
     block_id = 1;
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    iter = mesh_get_iterator(mesh,
+            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, block_pos)) {
-        for (i = 0; i < ARRAY_SIZE(POS); i++) {
-            p[0] = block_pos[0] + POS[i][0] * BLOCK_SIZE;
-            p[1] = block_pos[1] + POS[i][1] * BLOCK_SIZE;
-            p[2] = block_pos[2] + POS[i][2] * BLOCK_SIZE;
-            HASH_FIND(hh, blocks, p, sizeof(p), block);
-            if (!block) {
-                block = calloc(1, sizeof(*block));
-                block->id = block_id++;
-                memcpy(block->pos, p, sizeof(block_pos));
-                HASH_ADD(hh, blocks, pos, sizeof(block->pos), block);
-            }
-        }
+        render_block_(rend, mesh, &iter, block_pos,
+                      block_id++, effects, prog, &model);
     }
-
-    HASH_ITER(hh, blocks, block, block_tmp) {
-        render_block_(rend, mesh, &iter, block->pos,
-                      block->id, effects, prog, &model);
-        HASH_DEL(blocks, block);
-        free(block);
-    }
-
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glDisableVertexAttribArray(attr));
 
@@ -708,46 +676,17 @@ void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
 {
     // Basically we simulate the algo of render_mesh_ but without rendering
     // anything.
-    typedef struct {
-        UT_hash_handle  hh;
-        int pos[3];
-        int id;
-    } block_t;
-    block_t *block, *block_tmp, *blocks = NULL;
-    int i, block_id, block_pos[3], p[3];
+    int block_id, block_pos[3];
     mesh_iterator_t iter;
-    const int POS[][3] = {
-        {0, 0, 0},
-        {0, 0, -1}, {0, 0, +1},
-        {0, -1, 0}, {0, +1, 0},
-        {-1, 0, 0}, {+1, 0, 0},
-    };
-
     block_id = 1;
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+    iter = mesh_get_iterator(mesh,
+            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, block_pos)) {
-        for (i = 0; i < ARRAY_SIZE(POS); i++) {
-            p[0] = block_pos[0] + POS[i][0] * BLOCK_SIZE;
-            p[1] = block_pos[1] + POS[i][1] * BLOCK_SIZE;
-            p[2] = block_pos[2] + POS[i][2] * BLOCK_SIZE;
-            HASH_FIND(hh, blocks, p, sizeof(p), block);
-            if (!block) {
-                block = calloc(1, sizeof(*block));
-                block->id = block_id++;
-                memcpy(block->pos, p, sizeof(p));
-                HASH_ADD(hh, blocks, pos, sizeof(block->pos), block);
-                if (block->id == id) {
-                    memcpy(pos, p, sizeof(p));
-                    goto end;
-                }
-            }
+        if (block_id == id) {
+            memcpy(pos, block_pos, sizeof(block_pos));
+            return;
         }
-    }
-
-end:
-    HASH_ITER(hh, blocks, block, block_tmp) {
-        HASH_DEL(blocks, block);
-        free(block);
+        block_id++;
     }
 }
 

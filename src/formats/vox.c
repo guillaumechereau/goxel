@@ -180,7 +180,7 @@ static void vox_import(const char *path)
     }
     free(ctx.voxels);
     free(ctx.palette);
-    mesh_remove_empty_blocks(mesh);
+    mesh_remove_empty_blocks(mesh, false);
     goxel_update_meshes(goxel, -1);
 }
 

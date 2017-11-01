@@ -12,6 +12,7 @@ typedef struct block block_t;
 enum {
     MESH_ITER_VOXELS                = 1 << 0,
     MESH_ITER_BLOCKS                = 1 << 1,
+    MESH_ITER_INCLUDES_NEIGHBORS    = 1 << 2,
 };
 
 // Fast iterator of all the mesh voxel.
@@ -44,7 +45,8 @@ uint8_t mesh_get_alpha_at(const mesh_t *mesh, mesh_iterator_t *it,
                           const int pos[3]);
 void mesh_set_at(mesh_t *mesh, mesh_iterator_t *it,
                  const int pos[3], const uint8_t v[4]);
-void mesh_remove_empty_blocks(mesh_t *mesh);
+// XXX: we should remove this one I guess.
+void mesh_remove_empty_blocks(mesh_t *mesh, bool fast);
 bool mesh_is_empty(const mesh_t *mesh);
 
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags);

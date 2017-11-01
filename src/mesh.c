@@ -246,7 +246,32 @@ static void mesh_prepare_write(mesh_t *mesh)
     }
 }
 
-void mesh_remove_empty_blocks(mesh_t *mesh)
+static block_t *mesh_add_block(mesh_t *mesh, const int pos[3]);
+
+static void mesh_add_neighbors_blocks(mesh_t *mesh)
+{
+    const int POS[6][3] = {
+        {0, 0, -1}, {0, 0, +1},
+        {0, -1, 0}, {0, +1, 0},
+        {-1, 0, 0}, {+1, 0, 0},
+    };
+    int i, p[3];
+    block_t *block, *tmp, *other;
+
+    mesh_prepare_write(mesh);
+    HASH_ITER(hh, mesh->blocks, block, tmp) {
+        if (block_is_empty(block, true)) continue;
+        for (i = 0; i < 6; i++) {
+            p[0] = block->pos[0] + POS[i][0] * N;
+            p[1] = block->pos[1] + POS[i][1] * N;
+            p[2] = block->pos[2] + POS[i][2] * N;
+            HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), other);
+            if (!other) mesh_add_block(mesh, p);
+        }
+    }
+}
+
+void mesh_remove_empty_blocks(mesh_t *mesh, bool fast)
 {
     block_t *block, *tmp;
     mesh_prepare_write(mesh);
@@ -505,6 +530,8 @@ int mesh_iter(mesh_iterator_t *it, int pos[3])
 {
     int i;
     if (!it->block_id) { // First call.
+        if (it->flags & MESH_ITER_INCLUDES_NEIGHBORS)
+            mesh_add_neighbors_blocks((mesh_t*)it->mesh);
         if (!mesh_iter_next_block(it)) return 0;
         goto end;
     }
@@ -517,7 +544,10 @@ int mesh_iter(mesh_iterator_t *it, int pos[3])
     if (i < 3) goto end;
 
 next_block:
-    if (!mesh_iter_next_block(it)) return 0;
+    if (!mesh_iter_next_block(it)) {
+        mesh_remove_empty_blocks((mesh_t*)it->mesh, true);
+        return 0;
+    }
 
 end:
     vec3_copy(it->pos, pos);
