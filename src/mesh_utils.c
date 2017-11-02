@@ -249,7 +249,7 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
-    int vp[3];
+    int i, vp[3];
     uint8_t value[4], c[4];
     mesh_iterator_t iter;
     mesh_accessor_t accessor;
@@ -259,7 +259,23 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     float k, v;
     int mode = painter->mode;
     bool invert = false, use_box;
+    painter_t painter2;
+    box_t box2;
 
+    if (painter->symmetry) {
+        painter2 = *painter;
+        for (i = 0; i < 3; i++) {
+            if (!(painter->symmetry & (1 << i))) continue;
+            painter2.symmetry &= ~(1 << i);
+            box2 = *box;
+            box2.mat = mat4_identity;
+            if (i == 0) mat4_iscale(&box2.mat, -1,  1,  1);
+            if (i == 1) mat4_iscale(&box2.mat,  1, -1,  1);
+            if (i == 2) mat4_iscale(&box2.mat,  1,  1, -1);
+            mat4_imul(&box2.mat, box->mat);
+            mesh_op(mesh, &painter2, &box2);
+        }
+    }
 
     // XXX: don't do that anymore.
     if (mode == MODE_INTERSECT) {
