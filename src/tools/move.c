@@ -30,11 +30,19 @@ typedef struct {
 
 static void do_move(layer_t *layer, mat4_t mat)
 {
+    mat4_t m = mat4_identity;
+
+    // Change referential to the mesh origin.
+    // XXX: maybe this should be done in mesh_move directy??
+    mat4_itranslate(&m, -0.5, -0.5, -0.5);
+    mat4_imul(&m, mat);
+    mat4_itranslate(&m, +0.5, +0.5, +0.5);
+
     if (layer->base_id || layer->image) {
         layer->mat = mat4_mul(mat, layer->mat);
         layer->base_mesh_id = 0;
     } else {
-        mesh_move(layer->mesh, &mat);
+        mesh_move(layer->mesh, &m);
         if (!box_is_null(layer->box)) {
             layer->box.mat = mat4_mul(mat, layer->box.mat);
             layer->box = bbox_from_box(layer->box);
