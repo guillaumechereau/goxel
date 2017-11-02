@@ -118,6 +118,15 @@ static void box_get_bbox(float box[4][4], int bbox[2][3])
     memcpy(bbox, ret, sizeof(ret));
 }
 
+static void bbox_intersection(int a[2][3], int b[2][3], int out[2][3])
+{
+    int i;
+    for (i = 0; i < 3; i++) {
+        out[0][i] = max(a[0][i], b[0][i]);
+        out[1][i] = min(a[1][i], b[1][i]);
+    }
+}
+
 static block_data_t *get_empty_data(void)
 {
     static block_data_t *data = NULL;
@@ -227,6 +236,23 @@ static void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
 
+static void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3])
+{
+    block_t *block;
+    int ret[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
+                     {INT_MIN, INT_MIN, INT_MIN}};
+    for (block = mesh->blocks; block; block = block->hh.next) {
+        if (block_is_empty(block, true)) continue;
+        ret[0][0] = min(ret[0][0], block->pos[0]);
+        ret[0][1] = min(ret[0][1], block->pos[1]);
+        ret[0][2] = min(ret[0][2], block->pos[2]);
+        ret[1][0] = max(ret[1][0], block->pos[0] + N);
+        ret[1][1] = max(ret[1][1], block->pos[1] + N);
+        ret[1][2] = max(ret[1][2], block->pos[1] + N);
+    }
+    memcpy(bbox, ret, sizeof(ret));
+}
+
 static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
@@ -317,15 +343,21 @@ mesh_iterator_t mesh_get_union_iterator(
 }
 
 mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
-                                      const float box[4][4])
+                                      const float box[4][4], int flags)
 {
+    int mesh_bbox[2][3];
     mesh_iterator_t iter = {
         .mesh = mesh,
-        .flags = MESH_ITER_BOX | MESH_ITER_VOXELS,
-        .bbox = {{INT_MAX, INT_MAX, INT_MAX}, {INT_MIN, INT_MIN, INT_MIN}},
+        .flags = MESH_ITER_BOX | MESH_ITER_VOXELS | flags,
     };
     memcpy(iter.box, box, sizeof(iter.box));
     box_get_bbox(iter.box, iter.bbox);
+
+    if (flags & MESH_ITER_SKIP_EMPTY) {
+        mesh_get_bbox(mesh, mesh_bbox);
+        bbox_intersection(mesh_bbox, iter.bbox, iter.bbox);
+    }
+
     return iter;
 }
 

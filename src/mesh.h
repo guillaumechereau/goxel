@@ -13,6 +13,7 @@ enum {
     MESH_ITER_VOXELS                = 1 << 0,
     MESH_ITER_BLOCKS                = 1 << 1,
     MESH_ITER_INCLUDES_NEIGHBORS    = 1 << 2,
+    MESH_ITER_SKIP_EMPTY            = 1 << 3,
 };
 
 // Fast iterator of all the mesh voxel.
@@ -51,9 +52,9 @@ bool mesh_is_empty(const mesh_t *mesh);
 
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags);
 // Return an iterator that follow a given box shape.
-// if skip_empty is set to false, we get values even for the empty blocks.
 mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
-                                      const float box[4][4]);
+                                      const float box[4][4],
+                                      int flags);
 
 mesh_iterator_t mesh_get_union_iterator(
         const mesh_t *m1, const mesh_t *m2, int flags);
