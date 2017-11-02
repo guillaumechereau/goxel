@@ -732,7 +732,7 @@ static void layers_panel(goxel_t *goxel)
     bounded = !box_is_null(layer->box);
     if (ImGui::Checkbox("Bounded", &bounded)) {
         if (bounded) {
-            mesh_get_bbox(layer->mesh, bbox, false);
+            mesh_get_bbox(layer->mesh, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
             layer->box = bbox_from_aabb(bbox);
         } else {
