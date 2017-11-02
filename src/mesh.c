@@ -236,7 +236,7 @@ static void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
 
-void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool fast)
+void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
 {
     block_t *block;
     int ret[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
@@ -244,7 +244,7 @@ void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool fast)
     int pos[3];
     mesh_iterator_t iter;
 
-    if (fast) {
+    if (!exact) {
         for (block = mesh->blocks; block; block = block->hh.next) {
             if (block_is_empty(block, true)) continue;
             ret[0][0] = min(ret[0][0], block->pos[0]);
@@ -370,7 +370,7 @@ mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
     box_get_bbox(iter.box, iter.bbox);
 
     if (flags & MESH_ITER_SKIP_EMPTY) {
-        mesh_get_bbox(mesh, mesh_bbox, true);
+        mesh_get_bbox(mesh, mesh_bbox, false);
         bbox_intersection(mesh_bbox, iter.bbox, iter.bbox);
     }
 

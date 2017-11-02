@@ -49,7 +49,7 @@ void mesh_set_at(mesh_t *mesh, mesh_iterator_t *it,
 // XXX: we should remove this one I guess.
 void mesh_remove_empty_blocks(mesh_t *mesh, bool fast);
 bool mesh_is_empty(const mesh_t *mesh);
-void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool fast);
+void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact);
 
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags);
 // Return an iterator that follow a given box shape.

@@ -295,39 +295,9 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 
 box_t mesh_get_box(const mesh_t *mesh, bool exact)
 {
-    box_t ret = box_null, box;
-    mesh_iterator_t iter;
-    vec3_t pos;
-    int vpos[3];
-    uint8_t value[4];
-    int xmin = INT_MAX, xmax = INT_MIN;
-    int ymin = INT_MAX, ymax = INT_MIN;
-    int zmin = INT_MAX, zmax = INT_MIN;
-
-    if (!exact) {
-        iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
-        while (mesh_iter(&iter, vpos)) {
-            pos = vec3(vpos[0] + N / 2, vpos[1] + N / 2, vpos[2] + N / 2);
-            box = bbox_from_extents(pos, N / 2, N / 2, N / 2);
-            ret = bbox_merge(ret, box);
-        }
-    } else {
-        iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
-        while (mesh_iter(&iter, vpos)) {
-            mesh_get_at(mesh, &iter, vpos, value);
-            if (!value[3]) continue;
-            xmin = min(xmin, vpos[0]);
-            ymin = min(ymin, vpos[1]);
-            zmin = min(zmin, vpos[2]);
-            xmax = max(xmax, vpos[0]);
-            ymax = max(ymax, vpos[1]);
-            zmax = max(zmax, vpos[2]);
-        }
-        if (xmin > xmax) return box_null;
-        ret = bbox_from_points(vec3(xmin, ymin, zmin),
-                               vec3(xmax + 1, ymax + 1, zmax + 1));
-    }
-    return ret;
+    int bbox[2][3];
+    mesh_get_bbox(mesh, bbox, exact);
+    return bbox_from_aabb(bbox);
 }
 
 // Used for the cache.
