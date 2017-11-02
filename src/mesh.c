@@ -522,7 +522,7 @@ static bool mesh_iter_next_block_box(mesh_iterator_t *it)
 
     for (i = 0; i < 3; i++) {
         it->block_pos[i] += N;
-        if (it->block_pos[i] < it->bbox[1][i]) break;
+        if (it->block_pos[i] <= it->bbox[1][i]) break;
         it->block_pos[i] = it->bbox[0][i] & ~(int)(N - 1);
     }
     if (i == 3) return false;
