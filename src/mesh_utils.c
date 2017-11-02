@@ -250,7 +250,7 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
 {
     int vp[3];
-    uint8_t value[4];
+    uint8_t value[4], c[4];
     mesh_iterator_t iter;
     mesh_accessor_t accessor;
     vec3_t size, p;
@@ -289,8 +289,10 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         v = k / 2.0f + 0.5f;
         if (invert) v = 1.0f - v;
         if (v) {
+            memcpy(c, painter->color, 4);
+            c[3] *= v;
             mesh_get_at(mesh, &accessor, vp, value);
-            combine(value, painter->color, mode, value);
+            combine(value, c, mode, value);
             mesh_set_at(mesh, &accessor, vp, value);
         }
     }
