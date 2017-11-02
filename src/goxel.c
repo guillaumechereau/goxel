@@ -478,8 +478,10 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     gesture_update(4, gests, inputs, view, NULL);
     set_flag(&goxel->cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel->cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
-    goxel->painter.box = box_is_null(goxel->image->box) ?
-                                     NULL : &goxel->image->box;
+    goxel->painter.box = !box_is_null(goxel->image->active_layer->box) ?
+                         &goxel->image->active_layer->box :
+                         !box_is_null(goxel->image->box) ?
+                         &goxel->image->box : NULL;
 
     tool_iter(goxel->tool, view);
 
