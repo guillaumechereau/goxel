@@ -390,8 +390,9 @@ static void set_cursor_hint(cursor_t *curs)
     if (IS_IN(curs->snaped, SNAP_SELECTION_IN, SNAP_SELECTION_OUT))
         snap_str = "selection";
 
-    goxel_set_hint_text(goxel, "[%.1f %.1f %.1f] (%s)",
-            curs->pos.x, curs->pos.y, curs->pos.z, snap_str);
+    goxel_set_hint_text(goxel, "[%.0f %.0f %.0f] (%s)",
+            curs->pos.x - 0.5, curs->pos.y - 0.5, curs->pos.z - 0.5,
+            snap_str);
 }
 
 static int on_drag(const gesture_t *gest, void *user)
