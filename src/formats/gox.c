@@ -298,6 +298,9 @@ void save_to_file(goxel_t *goxel, const char *path)
             chunk_write_dict_value(&c, out, "img-path", layer->image->path,
                                strlen(layer->image->path));
         }
+        if (!box_is_null(layer->box))
+            chunk_write_dict_value(&c, out, "box", &layer->box,
+                                   sizeof(layer->box));
 
         chunk_write_finish(&c, out);
     }
@@ -424,6 +427,8 @@ int load_from_file(goxel_t *goxel, const char *path)
                     memcpy(&layer->id, dict_value, dict_value_size);
                 if (strcmp(dict_key, "base_id") == 0)
                     memcpy(&layer->base_id, dict_value, dict_value_size);
+                if (strcmp(dict_key, "box") == 0)
+                    memcpy(&layer->box, dict_value, dict_value_size);
             }
         } else if (strncmp(c.type, "CAMR", 4) == 0) {
             camera = camera_new("unnamed");

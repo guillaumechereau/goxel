@@ -552,11 +552,15 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
 {
     layer_t *layer;
     renderer_t *rend = &goxel->rend;
+    const uint8_t layer_box_color[4] = {128, 128, 255, 255};
 
     goxel->camera.aspect = rect->z / rect->w;
     camera_update(&goxel->camera);
 
     render_mesh(rend, goxel->render_mesh, 0);
+    if (!box_is_null(goxel->image->active_layer->box))
+        render_box(rend, &goxel->image->active_layer->box,
+                   layer_box_color, EFFECT_WIREFRAME);
 
     // Render all the image layers.
     DL_FOREACH(goxel->image->layers, layer) {

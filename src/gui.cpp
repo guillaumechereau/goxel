@@ -685,8 +685,8 @@ static bool layer_item(int i, int icon, bool *visible, bool *edit,
 static void layers_panel(goxel_t *goxel)
 {
     layer_t *layer;
-    int i = 0, icon;
-    bool current, visible;
+    int i = 0, icon, bbox[2][3];
+    bool current, visible, bounded;
     gui_group_begin(NULL);
     DL_FOREACH(goxel->image->layers, layer) {
         current = goxel->image->active_layer == layer;
@@ -722,12 +722,24 @@ static void layers_panel(goxel_t *goxel)
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
     gui_group_end();
 
-    if (goxel->image->active_layer->base_id) {
+    layer = goxel->image->active_layer;
+    if (layer->base_id) {
         gui_group_begin(NULL);
         gui_action_button("img_unclone_layer", "Unclone", 1, "");
         gui_action_button("img_select_parent_layer", "Select parent", 1, "");
         gui_group_end();
     }
+    bounded = !box_is_null(layer->box);
+    if (ImGui::Checkbox("Bounded", &bounded)) {
+        if (bounded) {
+            mesh_get_bbox(layer->mesh, bbox, false);
+            if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
+            layer->box = bbox_from_aabb(bbox);
+        } else {
+            layer->box = box_null;
+        }
+    }
+    if (bounded) gui_bbox(&layer->box);
 }
 
 
