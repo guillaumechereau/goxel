@@ -914,7 +914,6 @@ static void export_panel(goxel_t *goxel)
 static void image_panel(goxel_t *goxel)
 {
     bool bounded;
-    int x, y, z, w, h, d;
     image_t *image = goxel->image;
     box_t *box = &image->box;
 
@@ -922,30 +921,7 @@ static void image_panel(goxel_t *goxel)
     if (ImGui::Checkbox("Bounded", &bounded)) {
         *box = bounded ? bbox_from_extents(vec3_zero, 16, 16, 16) : box_null;
     }
-    if (bounded) {
-        w = box->w.x * 2;
-        h = box->h.y * 2;
-        d = box->d.z * 2;
-        x = round(box->p.x - box->w.x);
-        y = round(box->p.y - box->h.y);
-        z = round(box->p.z - box->d.z);
-
-        gui_group_begin("Origin");
-        gui_input_int("x", &x, 0, 0);
-        gui_input_int("y", &y, 0, 0);
-        gui_input_int("z", &z, 0, 0);
-        gui_group_end();
-
-        gui_group_begin("Size");
-        gui_input_int("w", &w, 1, 2048);
-        gui_input_int("h", &h, 1, 2048);
-        gui_input_int("d", &d, 1, 2048);
-        gui_group_end();
-
-        *box = bbox_from_extents(
-                vec3(x + w / 2., y + h / 2., z + d / 2.),
-                w / 2., h / 2., d / 2.);
-    }
+    if (bounded) gui_bbox(box);
 }
 
 static void cameras_panel(goxel_t *goxel)
@@ -1478,6 +1454,7 @@ void gui_group_begin(const char *label)
 void gui_group_end(void)
 {
     gui->group--;
+    ImGui::PopID();
     ImGui::PopStyleVar(2);
     ImGui::Dummy(ImVec2(0, 0));
     ImGui::EndGroup();
@@ -1497,7 +1474,6 @@ void gui_group_end(void)
     // Stencil reset.
     draw_list->AddCallback(stencil_callback, (void*)(intptr_t)0);
     GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), false);
-    ImGui::PopID();
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -1534,6 +1510,36 @@ bool gui_input_float(const char *label, float *v, float step,
     ret = ImGui::GoxInputFloat(label, v, step, minv, maxv, format);
     if (ret) on_click();
     if (self_group) gui_group_end();
+    return ret;
+}
+
+bool gui_bbox(box_t *box)
+{
+    int x, y, z, w, h, d;
+    bool ret = false;
+    w = box->w.x * 2;
+    h = box->h.y * 2;
+    d = box->d.z * 2;
+    x = round(box->p.x - box->w.x);
+    y = round(box->p.y - box->h.y);
+    z = round(box->p.z - box->d.z);
+
+    gui_group_begin("Origin");
+    ret |= gui_input_int("x", &x, 0, 0);
+    ret |= gui_input_int("y", &y, 0, 0);
+    ret |= gui_input_int("z", &z, 0, 0);
+    gui_group_end();
+    gui_group_begin("Size");
+    ret |= gui_input_int("w", &w, 1, 2048);
+    ret |= gui_input_int("h", &h, 1, 2048);
+    ret |= gui_input_int("d", &d, 1, 2048);
+    gui_group_end();
+
+    if (ret) {
+        *box = bbox_from_extents(
+                vec3(x + w / 2., y + h / 2., z + d / 2.),
+                w / 2., h / 2., d / 2.);
+    }
     return ret;
 }
 
