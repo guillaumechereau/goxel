@@ -17,6 +17,7 @@ clang = int(ARGUMENTS.get("clang", 0))
 argp_standalone = int(ARGUMENTS.get("argp_standalone", 0))
 sound = False
 
+if os.environ.get('CC') == 'clang': clang = 1
 if profile: debug = 0
 if emscripten: target_os = 'js'
 
