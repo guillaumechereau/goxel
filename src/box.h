@@ -333,4 +333,11 @@ static inline void box_get_vertices(box_t box, vec3_t vertices[8])
     }
 }
 
+static inline box_t bbox_from_box(box_t b)
+{
+    vec3_t vertices[8];
+    box_get_vertices(b, vertices);
+    return bbox_from_npoints(8, vertices);
+}
+
 #endif // BOX_H
