@@ -258,7 +258,8 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
     float k, v;
     int mode = painter->mode;
-    bool invert = false;
+    bool invert = false, use_box;
+
 
     // XXX: don't do that anymore.
     if (mode == MODE_INTERSECT) {
@@ -271,7 +272,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     mat4_imul(&mat, box->mat);
     mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
     mat4_invert(&mat);
-
+    use_box = painter->box && !box_is_null(*painter->box);
     // XXX: for the moment we cannot use the same accessor for both
     // setting and getting!  Need to fix that!!
     accessor = mesh_get_accessor(mesh);
@@ -280,7 +281,9 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
                 MESH_ITER_SKIP_EMPTY : 0);
 
     while (mesh_iter(&iter, vp)) {
-        p = mat4_mul_vec3(mat, vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5));
+        p = vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
+        if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
+        p = mat4_mul_vec3(mat, p);
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
         v = k / 2.0f + 0.5f;
