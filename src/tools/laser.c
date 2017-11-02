@@ -79,7 +79,6 @@ static int iter(tool_t *tool, const vec4_t *view)
     mat4_itranslate(&laser->box.mat, 0, 0, -1024);
     mat4_iscale(&laser->box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
     render_box(&goxel->rend, &laser->box, NULL, EFFECT_WIREFRAME);
-    vec3_isub(&laser->box.p, vec3(0.5, 0.5, 0.5));
 
     gesture3d(&laser->gestures.drag, curs, laser);
 

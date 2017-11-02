@@ -280,7 +280,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
                 MESH_ITER_SKIP_EMPTY : 0);
 
     while (mesh_iter(&iter, vp)) {
-        p = mat4_mul_vec3(mat, vec3(vp[0], vp[1], vp[2]));
+        p = mat4_mul_vec3(mat, vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5));
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
         v = k / 2.0f + 0.5f;
