@@ -65,8 +65,20 @@ static const box_t box_null = {
 
 static inline bool box_is_null(box_t b)
 {
-    return memcmp(&b, &box_null, sizeof(b)) == 0;
+    return b.v[3][3] == 0;
 }
+
+static inline box_t bbox_from_aabb(const int aabb[2][3])
+{
+    vec3_t pos = vec3((aabb[1][0] + aabb[0][0]) / 2.0,
+                      (aabb[1][1] + aabb[0][1]) / 2.0,
+                      (aabb[1][2] + aabb[0][2]) / 2.0);
+    vec3_t size = vec3(aabb[1][0] - aabb[0][0],
+                       aabb[1][1] - aabb[0][1],
+                       aabb[1][2] - aabb[0][2]);
+    return bbox_from_extents(pos, size.x / 2, size.y / 2, size.z / 2);
+}
+
 
 // XXX: remove?
 static inline box_t bbox_from_points(vec3_t a, vec3_t b)

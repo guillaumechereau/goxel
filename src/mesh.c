@@ -236,19 +236,35 @@ static void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
 
-static void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3])
+void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool fast)
 {
     block_t *block;
     int ret[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
                      {INT_MIN, INT_MIN, INT_MIN}};
-    for (block = mesh->blocks; block; block = block->hh.next) {
-        if (block_is_empty(block, true)) continue;
-        ret[0][0] = min(ret[0][0], block->pos[0]);
-        ret[0][1] = min(ret[0][1], block->pos[1]);
-        ret[0][2] = min(ret[0][2], block->pos[2]);
-        ret[1][0] = max(ret[1][0], block->pos[0] + N);
-        ret[1][1] = max(ret[1][1], block->pos[1] + N);
-        ret[1][2] = max(ret[1][2], block->pos[1] + N);
+    int pos[3];
+    mesh_iterator_t iter;
+
+    if (fast) {
+        for (block = mesh->blocks; block; block = block->hh.next) {
+            if (block_is_empty(block, true)) continue;
+            ret[0][0] = min(ret[0][0], block->pos[0]);
+            ret[0][1] = min(ret[0][1], block->pos[1]);
+            ret[0][2] = min(ret[0][2], block->pos[2]);
+            ret[1][0] = max(ret[1][0], block->pos[0] + N);
+            ret[1][1] = max(ret[1][1], block->pos[1] + N);
+            ret[1][2] = max(ret[1][2], block->pos[1] + N);
+        }
+    } else {
+        iter = mesh_get_iterator(mesh, MESH_ITER_SKIP_EMPTY);
+        while (mesh_iter(&iter, pos)) {
+            if (!mesh_get_alpha_at(mesh, &iter, pos)) continue;
+            ret[0][0] = min(ret[0][0], pos[0]);
+            ret[0][1] = min(ret[0][1], pos[1]);
+            ret[0][2] = min(ret[0][2], pos[2]);
+            ret[1][0] = max(ret[1][0], pos[0] + 1);
+            ret[1][1] = max(ret[1][1], pos[1] + 1);
+            ret[1][2] = max(ret[1][2], pos[2] + 1);
+        }
     }
     memcpy(bbox, ret, sizeof(ret));
 }
@@ -354,7 +370,7 @@ mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
     box_get_bbox(iter.box, iter.bbox);
 
     if (flags & MESH_ITER_SKIP_EMPTY) {
-        mesh_get_bbox(mesh, mesh_bbox);
+        mesh_get_bbox(mesh, mesh_bbox, true);
         bbox_intersection(mesh_bbox, iter.bbox, iter.bbox);
     }
 
