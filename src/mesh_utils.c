@@ -240,6 +240,8 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
         ret[1] = ret[1] * ba / 255;
         ret[2] = ret[2] * ba / 255;
         ret[3] = ret[3] * ba / 255;
+    } else if (mode == MODE_INTERSECT) {
+        ret[3] = min(aa, ba);
     } else {
         assert(false);
     }
@@ -258,7 +260,7 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
     float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
     float k, v;
     int mode = painter->mode;
-    bool invert = false, use_box;
+    bool use_box, skip_src_empty, skip_dst_empty;
     painter_t painter2;
     box_t box2;
 
@@ -277,25 +279,27 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         }
     }
 
-    // XXX: don't do that anymore.
-    if (mode == MODE_INTERSECT) {
-        mode = MODE_SUB;
-        invert = true;
-    }
-
     shape_func = painter->shape->func;
     size = box_get_size(*box);
     mat4_imul(&mat, box->mat);
     mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
     mat4_invert(&mat);
     use_box = painter->box && !box_is_null(*painter->box);
+    // XXX: cleanup.
+    skip_src_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA);
+    skip_dst_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA,
+                                 MODE_INTERSECT);
+    if (mode != MODE_INTERSECT) {
+        iter = mesh_get_box_iterator(mesh, box->v,
+                skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
+    } else {
+        iter = mesh_get_iterator(mesh,
+                skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
+    }
+
     // XXX: for the moment we cannot use the same accessor for both
     // setting and getting!  Need to fix that!!
     accessor = mesh_get_accessor(mesh);
-    iter = mesh_get_box_iterator(mesh, box->v,
-                IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA)?
-                MESH_ITER_SKIP_EMPTY : 0);
-
     while (mesh_iter(&iter, vp)) {
         p = vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
         if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
@@ -303,14 +307,14 @@ void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
         v = k / 2.0f + 0.5f;
-        if (invert) v = 1.0f - v;
-        if (v) {
-            memcpy(c, painter->color, 4);
-            c[3] *= v;
-            mesh_get_at(mesh, &accessor, vp, value);
-            combine(value, c, mode, value);
-            mesh_set_at(mesh, &accessor, vp, value);
-        }
+        if (!v && skip_src_empty) continue;
+        memcpy(c, painter->color, 4);
+        c[3] *= v;
+        if (!c[3] && skip_src_empty) continue;
+        mesh_get_at(mesh, &accessor, vp, value);
+        if (!value[3] && skip_dst_empty) continue;
+        combine(value, c, mode, value);
+        mesh_set_at(mesh, &accessor, vp, value);
     }
 }
 
@@ -396,4 +400,14 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
     while (mesh_iter(&iter, bpos)) {
         block_merge(mesh, other, bpos, mode);
     }
+}
+
+void mesh_crop(mesh_t *mesh, box_t *box)
+{
+    painter_t painter = {
+        .mode = MODE_INTERSECT,
+        .color = {255, 255, 255, 255},
+        .shape = &shape_cube,
+    };
+    mesh_op(mesh, &painter, box);
 }

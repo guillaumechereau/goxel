@@ -716,20 +716,25 @@ static void layers_panel(goxel_t *goxel)
     ImGui::SameLine();
     gui_action_button("img_move_layer_down", NULL, 0, "");
 
+    layer = goxel->image->active_layer;
+    bounded = !box_is_null(layer->box);
+
     gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
     gui_action_button("img_clone_layer", "Clone", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
+    if (bounded && gui_button("Crop to box", 1, 0)) {
+        mesh_crop(layer->mesh, &layer->box);
+        goxel_update_meshes(goxel, -1);
+    }
     gui_group_end();
 
-    layer = goxel->image->active_layer;
     if (layer->base_id) {
         gui_group_begin(NULL);
         gui_action_button("img_unclone_layer", "Unclone", 1, "");
         gui_action_button("img_select_parent_layer", "Select parent", 1, "");
         gui_group_end();
     }
-    bounded = !box_is_null(layer->box);
     if (ImGui::Checkbox("Bounded", &bounded)) {
         if (bounded) {
             mesh_get_bbox(layer->mesh, bbox, true);
