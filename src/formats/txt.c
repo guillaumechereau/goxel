@@ -18,6 +18,15 @@
 
 #include "goxel.h"
 
+static void print_colour_component(FILE *out, const uint8_t cpt)
+{
+    if (cpt < 0x10) {
+        fprintf(out, "0%1x", cpt);
+    } else {
+        fprintf(out, "%2x", cpt);
+    }
+}
+
 static void export_as_txt(const char *path)
 {
     FILE *out;
@@ -39,8 +48,11 @@ static void export_as_txt(const char *path)
     while (mesh_iter(&iter, p)) {
         mesh_get_at(mesh, &iter, p, v);
         if (v[3] < 127) continue;
-        fprintf(out, "%d %d %d %2x%2x%2x\n",
-                p[0], p[1], p[2], v[0], v[1], v[2]);
+        fprintf(out, "%d %d %d ", p[0], p[1], p[2]);
+        print_colour_component(out, v[0]);
+        print_colour_component(out, v[1]);
+        print_colour_component(out, v[2]);
+        fprintf(out, "\n");
     }
     fclose(out);
 }
@@ -54,4 +66,3 @@ ACTION_REGISTER(export_as_txt,
         .ext = "*.txt\0",
     },
 )
-
