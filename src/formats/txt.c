@@ -39,7 +39,7 @@ static void export_as_txt(const char *path)
     while (mesh_iter(&iter, p)) {
         mesh_get_at(mesh, &iter, p, v);
         if (v[3] < 127) continue;
-        fprintf(out, "%d %d %d %2x%2x%2x\n",
+        fprintf(out, "%d %d %d %02x%02x%02x\n",
                 p[0], p[1], p[2], v[0], v[1], v[2]);
     }
     fclose(out);
