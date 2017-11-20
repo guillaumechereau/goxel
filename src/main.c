@@ -32,6 +32,7 @@
 static goxel_t      *g_goxel = NULL;
 static inputs_t     *g_inputs = NULL;
 static GLFWwindow   *g_window = NULL;
+static float        g_scale = 1;
 
 void on_scroll(GLFWwindow *win, double x, double y)
 {
@@ -55,6 +56,7 @@ typedef struct
 {
     char *input;
     char *export;
+    float scale;
 } args_t;
 
 #ifndef NO_ARGP
@@ -66,6 +68,7 @@ static char doc[] = "A 3D voxels editor";
 static char args_doc[] = "[INPUT]";
 static struct argp_option options[] = {
     {"export",   'e', "FILENAME", 0, "Export the model to a file" },
+    {"scale",    's', "FLOAT", 0, "Set UI scale (for retina display)"},
     {},
 };
 
@@ -78,6 +81,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
     {
     case 'e':
         args->export = arg;
+        break;
+    case 's':
+        args->scale = atof(arg);
         break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
@@ -101,6 +107,7 @@ static void loop_function(void) {
     int fb_size[2], win_size[2];
     int i;
     double xpos, ypos;
+    float scale = g_scale;
 
     if (    !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
              glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
@@ -112,9 +119,9 @@ static void loop_function(void) {
     // size.
     glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
-    g_inputs->window_size[0] = win_size[0];
-    g_inputs->window_size[1] = win_size[1];
-    g_inputs->scale = fb_size[0] / win_size[0];
+    g_inputs->window_size[0] = win_size[0] / scale;
+    g_inputs->window_size[1] = win_size[1] / scale;
+    g_inputs->scale = fb_size[0] / win_size[0] * scale;
 
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -122,7 +129,7 @@ static void loop_function(void) {
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    g_inputs->touches[0].pos = vec2(xpos, ypos);
+    g_inputs->touches[0].pos = vec2(xpos / scale, ypos / scale);
     g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
@@ -185,7 +192,7 @@ static void set_window_icon(GLFWwindow *window) {}
 
 int main(int argc, char **argv)
 {
-    args_t args = {};
+    args_t args = {.scale = 1};
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
@@ -198,6 +205,7 @@ int main(int argc, char **argv)
 #ifndef NO_ARGP
     argp_parse (&argp, argc, argv, 0, 0, &args);
 #endif
+    g_scale = args.scale;
 
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 2);
