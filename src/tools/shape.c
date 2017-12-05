@@ -86,14 +86,14 @@ static int on_hover(gesture3d_t *gest, void *user)
 static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
-    mesh_t *mesh = goxel->image->active_layer->mesh;
+    mesh_t *layer_mesh = goxel->image->active_layer->mesh;
     box_t box;
     cursor_t *curs = gest->cursor;
 
     if (shape->adjust) return GESTURE_FAILED;
 
     if (gest->state == GESTURE_BEGIN) {
-        mesh_set(shape->mesh_orig, mesh);
+        mesh_set(shape->mesh_orig, layer_mesh);
         shape->start_pos = curs->pos;
         image_history_push(goxel->image);
     }
@@ -101,11 +101,15 @@ static int on_drag(gesture3d_t *gest, void *user)
     goxel_set_help_text(goxel, "Drag.");
     box = get_box(&shape->start_pos, &curs->pos, &curs->normal,
                   0, &goxel->plane);
-    mesh_set(mesh, shape->mesh_orig);
-    mesh_op(mesh, &goxel->painter, &box);
+    if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
+    mesh_set(goxel->tool_mesh, shape->mesh_orig);
+    mesh_op(goxel->tool_mesh, &goxel->painter, &box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
+        mesh_set(layer_mesh, goxel->tool_mesh);
+        mesh_delete(goxel->tool_mesh);
+        goxel->tool_mesh = NULL;
         goxel_update_meshes(goxel, -1);
         shape->adjust = goxel->tool_shape_two_steps;
     }

@@ -1027,8 +1027,9 @@ typedef struct goxel
     image_t    *image;
 
     mesh_t     *layers_mesh; // All the layers combined.
-    mesh_t     *pick_mesh;   // Used for picking (always layers_mesh?)
-    mesh_t     *tool_mesh;   // Preview of the tool action.
+    // Tools can set this mesh and it will replace the current layer mesh
+    // during render.
+    mesh_t     *tool_mesh;
     mesh_t     *render_mesh; // All the layers + tool mesh.
 
     struct     {

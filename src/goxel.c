@@ -187,7 +187,7 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(goxel, view, pos,
-                                        goxel->pick_mesh, &p, &n);
+                                        goxel->layers_mesh, &p, &n);
         }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, view, pos,
@@ -270,7 +270,6 @@ void goxel_init(goxel_t *gox)
     goxel->image = image_new();
 
     goxel->layers_mesh = mesh_new();
-    goxel->pick_mesh = mesh_new();
     goxel->render_mesh = mesh_new();
     goxel_update_meshes(goxel, -1);
     goxel->selection = box_null;
@@ -491,7 +490,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
         // Auto adjust the camera rotation position.
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
-                                    goxel->pick_mesh, &p, &n)) {
+                                    goxel->layers_mesh, &p, &n)) {
             camera_set_target(&goxel->camera, &p);
         }
         return;
@@ -516,7 +515,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     if (inputs->keys['C']) {
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
-                                    goxel->pick_mesh, &p, &n)) {
+                                    goxel->layers_mesh, &p, &n)) {
             camera_set_target(&goxel->camera, &p);
         }
     }
@@ -623,8 +622,6 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
     }
     if ((mask & MESH_RENDER) && !goxel->tool_mesh)
         mesh_set(goxel->render_mesh, goxel->layers_mesh);
-    if (mask & MESH_PICK)
-        mesh_set(goxel->pick_mesh, goxel->layers_mesh);
 }
 
 // Render the view into an RGBA buffer.

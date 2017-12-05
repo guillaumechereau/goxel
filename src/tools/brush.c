@@ -100,7 +100,6 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
 static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_brush_t *brush = (tool_brush_t*)user;
-    mesh_t *mesh = goxel->image->active_layer->mesh;
     painter_t painter2;
     box_t box;
     cursor_t *curs = gest->cursor;
@@ -110,7 +109,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     vec3_t pos;
 
     if (gest->state == GESTURE_BEGIN) {
-        mesh_set(brush->mesh_orig, mesh);
+        mesh_set(brush->mesh_orig, goxel->image->active_layer->mesh);
         brush->last_op.mode = 0; // Discard last op.
         brush->last_pos = curs->pos;
         image_history_push(goxel->image);
@@ -143,15 +142,18 @@ static int on_drag(gesture3d_t *gest, void *user)
         mesh_op(brush->mesh, &painter2, &box);
     }
 
-    mesh_set(mesh, brush->mesh_orig);
-    mesh_merge(mesh, brush->mesh, goxel->painter.mode);
+    if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
+    mesh_set(goxel->tool_mesh, brush->mesh_orig);
+    mesh_merge(goxel->tool_mesh, brush->mesh, goxel->painter.mode);
     goxel_update_meshes(goxel, MESH_RENDER);
     brush->start_pos = curs->pos;
-    brush->last_op.mesh_id = mesh_get_id(mesh);
+    brush->last_op.mesh_id = mesh_get_id(goxel->tool_mesh);
 
     if (gest->state == GESTURE_END) {
-        mesh_set(goxel->pick_mesh, goxel->layers_mesh);
-        mesh_set(brush->mesh_orig, mesh);
+        mesh_set(goxel->image->active_layer->mesh, goxel->tool_mesh);
+        mesh_set(brush->mesh_orig, goxel->tool_mesh);
+        mesh_delete(goxel->tool_mesh);
+        goxel->tool_mesh = NULL;
         goxel_update_meshes(goxel, -1);
     }
     brush->last_pos = curs->pos;
