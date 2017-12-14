@@ -988,6 +988,11 @@ static void cameras_panel(goxel_t *goxel)
     gui_group_end();
 }
 
+static void debug_panel(goxel_t *goxel)
+{
+    ImGui::Text("FPS: %d", (int)round(goxel->fps));
+}
+
 static void import_image_plane(goxel_t *goxel)
 {
     const char *path;
@@ -1213,6 +1218,7 @@ static void render_left_panel(void)
         {"Cameras", cameras_panel},
         {"Image", image_panel},
         {"Export", export_panel},
+        {"Debug", debug_panel},
     };
     ImDrawList* draw_list;
 

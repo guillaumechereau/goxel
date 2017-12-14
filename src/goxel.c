@@ -339,7 +339,9 @@ void goxel_release(goxel_t *goxel)
 
 void goxel_iter(goxel_t *goxel, inputs_t *inputs)
 {
-    goxel->frame_time = sys_get_time();
+    double time = sys_get_time();
+    goxel->fps = mix(goxel->fps, 1.0 / (time - goxel->frame_time), 0.1);
+    goxel->frame_time = time;
     goxel_set_help_text(goxel, NULL);
     goxel_set_hint_text(goxel, NULL);
     goxel->screen_size[0] = inputs->window_size[0];

@@ -1079,8 +1079,9 @@ typedef struct goxel
     char       *help_text;  // Seen in the bottom of the screen.
     char       *hint_text;  // Seen in the bottom of the screen.
 
-    int        frame_count;       // Global frames counter.
-    double     frame_time;        // Clock time at beginning of the frame.
+    int        frame_count; // Global frames counter.
+    double     frame_time;  // Clock time at beginning of the frame (sec)
+    double     fps;         // Average fps.
     bool       quit;        // Set to true to quit the application.
 
     struct {
