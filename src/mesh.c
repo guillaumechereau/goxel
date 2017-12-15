@@ -450,7 +450,6 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
     int p[3] = {pos[0] & ~(int)(N - 1),
                 pos[1] & ~(int)(N - 1),
                 pos[2] & ~(int)(N - 1)};
-
     if (!it) {
         HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
         return block;
@@ -480,10 +479,28 @@ static block_t *mesh_add_block(mesh_t *mesh, const int pos[3])
     return block;
 }
 
-void mesh_get_at(const mesh_t *mesh, mesh_iterator_t *iter,
+void mesh_get_at(const mesh_t *mesh, mesh_iterator_t *it,
                  const int pos[3], uint8_t out[4])
 {
-    block_t *block = mesh_get_block_at(mesh, pos, iter);
+    block_t *block;
+    int p[3];
+
+    if (it && it->block_id && it->block_id == get_block_id(it->block)) {
+        p[0] = pos[0] - it->block_pos[0];
+        p[1] = pos[1] - it->block_pos[1];
+        p[2] = pos[2] - it->block_pos[2];
+        if (    p[0] >= 0 && p[0] < N &&
+                p[1] >= 0 && p[1] < N &&
+                p[2] >= 0 && p[2] < N) {
+            if (!it->block)
+                memset(out, 0, 4);
+            else
+                memcpy(out, BLOCK_AT(it->block, p[0], p[1], p[2]), 4);
+            return;
+        }
+    }
+
+    block = mesh_get_block_at(mesh, pos, it);
     return block_get_at(block, pos, out);
 }
 

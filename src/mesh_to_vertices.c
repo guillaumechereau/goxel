@@ -160,21 +160,25 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
 #undef M
 }
 
-static uint32_t mesh_get_neighboors(const mesh_t *mesh,
-                                    const int pos[3],
-                                    mesh_iterator_t *iter,
-                                    uint8_t neighboors[27])
+#define data_get_at(d, x, y, z, out) do { \
+    memcpy(out, &data[( \
+                ((x) + 1) + \
+                ((y) + 1) * (N + 2) + \
+                ((z) + 1) * (N + 2) * (N + 2)) * 4], 4); \
+} while (0)
+
+static uint32_t get_neighboors(const uint8_t *data,
+                               const int pos[3],
+                               uint8_t neighboors[27])
 {
     int xx, yy, zz, i = 0;
-    int npos[3];
+    uint8_t v[4];
     uint32_t ret = 0;
     for (zz = -1; zz <= 1; zz++)
     for (yy = -1; yy <= 1; yy++)
     for (xx = -1; xx <= 1; xx++) {
-        npos[0] = pos[0] + xx;
-        npos[1] = pos[1] + yy;
-        npos[2] = pos[2] + zz;
-        neighboors[i] = mesh_get_alpha_at(mesh, iter, npos);
+        data_get_at(data, pos[0] + xx, pos[1] + yy, pos[2] + zz, v);
+        neighboors[i] = v[3];
         if (neighboors[i] >= 127) ret |= 1 << i;
         i++;
     }
@@ -206,23 +210,31 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
     uint32_t neighboors_mask;
     uint8_t shadow_mask, borders_mask;
     const int ts = VOXEL_TEXTURE_SIZE;
-    uint8_t neighboors[27], v[4];
+    uint8_t *data, neighboors[27], v[4];
     int8_t normal[3];
     int pos[3];
     const int *vpos;
-    mesh_iterator_t iter = {0};
 
     if (effects & EFFECT_MARCHING_CUBES)
         return mesh_generate_vertices_mc(mesh, block_pos, effects, out);
+
+    // To speed things up we first get the voxel cube around the block.
+    // XXX: can we do this while still using mesh iterators somehow?
+#define IVEC(...) ((int[]){__VA_ARGS__})
+    data = malloc((N + 2) * (N + 2) * (N + 2) * 4);
+    mesh_read(mesh,
+              IVEC(block_pos[0] - 1, block_pos[1] - 1, block_pos[2] - 1),
+              IVEC(N + 2, N + 2, N + 2), data);
+
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
     for (x = 0; x < N; x++) {
-        pos[0] = x + block_pos[0];
-        pos[1] = y + block_pos[1];
-        pos[2] = z + block_pos[2];
-        mesh_get_at(mesh, &iter, pos, v);
+        pos[0] = x;
+        pos[1] = y;
+        pos[2] = z;
+        data_get_at(data, x, y, z, v);
         if (v[3] < 127) continue;    // Non visible
-        neighboors_mask = mesh_get_neighboors(mesh, pos, &iter, neighboors);
+        neighboors_mask = get_neighboors(data, pos, neighboors);
         for (f = 0; f < 6; f++) {
             if (!block_is_face_visible(neighboors_mask, f)) continue;
             block_get_normal(neighboors_mask, neighboors, f,
@@ -252,6 +264,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
             nb++;
         }
     }
+    free(data);
     return nb;
 }
 
