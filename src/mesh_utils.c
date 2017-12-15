@@ -347,10 +347,18 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
     mesh_get_block_data(mesh,  NULL, pos, &id1);
     mesh_get_block_data(other, NULL, pos, &id2);
 
+    // XXX: cleanup this code!
+
+    if (IS_IN(mode, MODE_OVER, MODE_MAX, MODE_SUB, MODE_SUB_CLAMP)
+            && id2 == 0) {
+        return;
+    }
+
     if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0) {
         mesh_copy_block(other, pos, mesh, pos);
         return;
     }
+
     if (IS_IN(mode, MODE_MULT_ALPHA) && id1 == 0) return;
     if (IS_IN(mode, MODE_MULT_ALPHA) && id2 == 0) {
         // XXX: could just delete the block.
