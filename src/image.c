@@ -90,6 +90,7 @@ static layer_t *layer_copy(layer_t *other)
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
     layer->image = texture_copy(other->image);
+    layer->box = other->box;
     layer->mat = other->mat;
     layer->id = other->id;
     layer->base_id = other->base_id;
@@ -407,10 +408,15 @@ void image_history_push(image_t *img)
     debug_print_history(img);
 }
 
+// XXX: not clear what this is doing.  We should try to remove it.
+// It swap the content of two images without touching their pointer or
+// history.
 static void swap(image_t *a, image_t *b)
 {
-    SWAP(a->layers, b->layers);
-    SWAP(a->active_layer, b->active_layer);
+    SWAP(*a, *b);
+    SWAP(a->history, b->history);
+    SWAP(a->history_next, b->history_next);
+    SWAP(a->history_prev, b->history_prev);
 }
 
 void image_undo(image_t *img)
