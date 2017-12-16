@@ -62,7 +62,12 @@ mesh_iterator_t mesh_get_union_iterator(
 
 int mesh_iter(mesh_iterator_t *it, int pos[3]);
 
-uint64_t mesh_get_id(const mesh_t *mesh);
+// Return a key value that has the condition that if two meshes have the
+// same key then they have the same content.
+// Note that two meshes with different key could still have the same content,
+// this is not a hash!
+uint64_t mesh_get_key(const mesh_t *mesh);
+
 void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *accessor,
                           const int bpos[3], uint64_t *id);
 

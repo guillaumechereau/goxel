@@ -61,7 +61,7 @@ struct mesh
 {
     block_t *blocks;
     int *ref;   // Used to implement copy on write of the blocks.
-    uint64_t id;     // global uniq id, change each time a mesh changes.
+    uint64_t key; // Two meshes with the same key have the same value.
 };
 
 static uint64_t g_uid = 2; // Global id counter.
@@ -273,7 +273,7 @@ static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
     assert(*mesh->ref > 0);
-    mesh->id = g_uid++;
+    mesh->key = g_uid++;
     if (*mesh->ref == 1)
         return;
     (*mesh->ref)--;
@@ -335,7 +335,7 @@ mesh_t *mesh_new(void)
     mesh_t *mesh;
     mesh = calloc(1, sizeof(*mesh));
     mesh->ref = calloc(1, sizeof(*mesh->ref));
-    mesh->id = g_uid++;
+    mesh->key = g_uid++; // XXX: could be set to 1 I guess.
     *mesh->ref = 1;
     return mesh;
 }
@@ -415,7 +415,7 @@ mesh_t *mesh_copy(const mesh_t *other)
     mesh_t *mesh = calloc(1, sizeof(*mesh));
     mesh->blocks = other->blocks;
     mesh->ref = other->ref;
-    mesh->id = other->id;
+    mesh->key = other->key;
     (*mesh->ref)++;
     return mesh;
 }
@@ -435,7 +435,7 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     }
     mesh->blocks = other->blocks;
     mesh->ref = other->ref;
-    mesh->id = other->id;
+    mesh->key = other->key;
     (*mesh->ref)++;
 }
 
@@ -620,9 +620,9 @@ end:
     return 1;
 }
 
-uint64_t mesh_get_id(const mesh_t *mesh)
+uint64_t mesh_get_key(const mesh_t *mesh)
 {
-    return mesh->id;
+    return mesh->key;
 }
 
 void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *iter,

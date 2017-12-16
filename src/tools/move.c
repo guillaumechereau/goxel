@@ -40,7 +40,7 @@ static void do_move(layer_t *layer, mat4_t mat)
 
     if (layer->base_id || layer->image) {
         layer->mat = mat4_mul(mat, layer->mat);
-        layer->base_mesh_id = 0;
+        layer->base_mesh_key = 0;
     } else {
         mesh_move(layer->mesh, &m);
         if (!box_is_null(layer->box)) {

@@ -878,7 +878,7 @@ struct layer {
     texture_t   *image;
     // For clone layers:
     int         base_id;
-    uint64_t    base_mesh_id;
+    uint64_t    base_mesh_key;
 };
 
 typedef struct image image_t;

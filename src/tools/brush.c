@@ -34,7 +34,7 @@ typedef struct {
         vec3_t     pos;
         bool       pressed;
         int        mode;
-        uint64_t   mesh_id;
+        uint64_t   mesh_key;
     } last_op;
 
     struct {
@@ -51,7 +51,7 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     const bool pressed = curs->flags & CURSOR_PRESSED;
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
-            brush->last_op.mesh_id == mesh_get_id(mesh) &&
+            brush->last_op.mesh_key == mesh_get_key(mesh) &&
             vec3_equal(curs->pos, brush->last_op.pos)) {
         return true;
     }
@@ -147,7 +147,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_merge(goxel->tool_mesh, brush->mesh, goxel->painter.mode);
     goxel_update_meshes(goxel, MESH_RENDER);
     brush->start_pos = curs->pos;
-    brush->last_op.mesh_id = mesh_get_id(goxel->tool_mesh);
+    brush->last_op.mesh_key = mesh_get_key(goxel->tool_mesh);
 
     if (gest->state == GESTURE_END) {
         mesh_set(goxel->image->active_layer->mesh, goxel->tool_mesh);
@@ -186,7 +186,7 @@ static int on_hover(gesture3d_t *gest, void *user)
         mesh_delete(goxel->tool_mesh);
         goxel->tool_mesh = NULL;
     }
-    brush->last_op.mesh_id = mesh_get_id(mesh);
+    brush->last_op.mesh_key = mesh_get_key(mesh);
 
     return 0;
 }
