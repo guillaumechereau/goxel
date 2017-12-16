@@ -435,6 +435,7 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     }
     mesh->blocks = other->blocks;
     mesh->ref = other->ref;
+    mesh->id = other->id;
     (*mesh->ref)++;
 }
 
