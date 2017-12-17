@@ -955,6 +955,8 @@ enum {
     CURSOR_CTRL         = 1 << 2,
 };
 
+typedef struct gesture3d gesture3d_t;
+
 typedef struct cursor {
     vec3_t pos;
     vec3_t normal;
@@ -965,11 +967,11 @@ typedef struct cursor {
 } cursor_t;
 
 // #### 3d gestures
-typedef struct gesture3d gesture3d_t;
 struct gesture3d
 {
     int         type;
     int         state;
+    int         buttons; // CURSOR_SHIFT | CURSOR_CTRL
     cursor_t    *cursor;
     int         (*callback)(gesture3d_t *gest, void *user);
 };
@@ -980,6 +982,7 @@ enum {
     // Tools flags.
     TOOL_REQUIRE_CAN_EDIT = 1 << 0, // Set to tools that can edit the layer.
     TOOL_REQUIRE_CAN_MOVE = 1 << 1, // Set to tools that can move the layer.
+    TOOL_ALLOW_PICK_COLOR = 1 << 2, // Ctrl switches to pick color tool.
 };
 
 // Tools
@@ -1006,7 +1009,6 @@ struct tool {
     }
 
 void tool_register_(const tool_t *tool);
-tool_t *tool_get(int id);
 int tool_iter(tool_t *tool, const vec4_t *view);
 int tool_gui(tool_t *tool);
 

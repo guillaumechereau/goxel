@@ -168,6 +168,13 @@ static int on_hover(gesture3d_t *gest, void *user)
     box_t box;
     bool shift = curs->flags & CURSOR_SHIFT;
 
+    if (gest->state == GESTURE_END) {
+        mesh_delete(goxel->tool_mesh);
+        goxel->tool_mesh = NULL;
+        goxel_update_meshes(goxel, MESH_RENDER);
+        return 0;
+    }
+
     if (shift)
         render_line(&goxel->rend, &brush->start_pos, &curs->pos, NULL);
 
@@ -182,10 +189,6 @@ static int on_hover(gesture3d_t *gest, void *user)
     mesh_op(goxel->tool_mesh, &goxel->painter, &box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
-    if (gest->state == GESTURE_END) {
-        mesh_delete(goxel->tool_mesh);
-        goxel->tool_mesh = NULL;
-    }
     brush->last_op.mesh_key = mesh_get_key(mesh);
 
     return 0;
@@ -238,6 +241,6 @@ static int gui(tool_t *tool)
 TOOL_REGISTER(TOOL_BRUSH, brush, tool_brush_t,
               .iter_fn = iter,
               .gui_fn = gui,
-              .flags = TOOL_REQUIRE_CAN_EDIT,
+              .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_ALLOW_PICK_COLOR,
               .shortcut = "B"
 )

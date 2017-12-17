@@ -22,6 +22,8 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     bool pressed = curs->flags & CURSOR_PRESSED;
     int r, ret = 0;
+    const int btns_mask = CURSOR_SHIFT | CURSOR_CTRL;
+
     gest->cursor = curs;
 
     if (gest->state == GESTURE_FAILED && !pressed)
@@ -30,6 +32,8 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
     if (gest->type == GESTURE_DRAG) {
         switch (gest->state) {
         case GESTURE_POSSIBLE:
+            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
+                break;
             if (curs->snaped && pressed) gest->state = GESTURE_BEGIN;
             break;
         case GESTURE_BEGIN:
@@ -43,11 +47,15 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
     if (gest->type == GESTURE_HOVER) {
         switch (gest->state) {
         case GESTURE_POSSIBLE:
+            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
+                break;
             if (curs->snaped && !pressed) gest->state = GESTURE_BEGIN;
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
             gest->state = GESTURE_UPDATE;
+            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
+                gest->state = GESTURE_END;
             if (pressed) gest->state = GESTURE_END;
             break;
         }
@@ -63,5 +71,6 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
         }
     }
     if (gest->state == GESTURE_END) gest->state = GESTURE_POSSIBLE;
+
     return ret;
 }
