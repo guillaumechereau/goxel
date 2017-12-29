@@ -1290,10 +1290,21 @@ void mustache_free(mustache_t *m);
 // ####### Cache manager #########################
 // Allow to cache blocks merge operations.
 typedef struct cache cache_t;
-
+// Create a new cache with a given max size (in byte).
 cache_t *cache_create(int size);
+// Add an item into the cache.
+// Inputs:
+//  key, keylen     Define the unique key for the cache item.
+//  data            Pointer to the item data.  The cache takes ownership.
+//  cost            Cost of the data used to compute the cache usage.
+//                  It doesn't have to be the size.
+//  delfunc         Function that the cache can use to free the data.
 void cache_add(cache_t *cache, const void *key, int keylen, void *data,
                int cost, int (*delfunc)(void *data));
+// Return an item from the cache.
+// Returns
+//  The data owned by the cache, or NULL if no item with this key is in
+//  the cache.
 void *cache_get(cache_t *cache, const void *key, int keylen);
 
 // ####### Sound #################################
