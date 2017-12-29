@@ -70,7 +70,6 @@ static void qubicle_import(const char *path)
         pos[0] = READ(int32_t, file);
         pos[1] = READ(int32_t, file);
         pos[2] = READ(int32_t, file);
-        (void)pos;
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {
                 v.uint32 = READ(uint32_t, file);
@@ -153,15 +152,15 @@ void qubicle_export(const mesh_t *mesh, const char *path)
         WRITE(uint32_t, BLOCK_SIZE, file);
         WRITE(uint32_t, BLOCK_SIZE, file);
         WRITE(uint32_t, BLOCK_SIZE, file);
-        WRITE(int32_t, bpos[0] - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, bpos[1] - BLOCK_SIZE / 2, file);
-        WRITE(int32_t, bpos[2] - BLOCK_SIZE / 2, file);
+        WRITE(int32_t, bpos[0], file);
+        WRITE(int32_t, bpos[1], file);
+        WRITE(int32_t, bpos[2], file);
         for (z = 0; z < BLOCK_SIZE; z++)
         for (y = 0; y < BLOCK_SIZE; y++)
         for (x = 0; x < BLOCK_SIZE; x++) {
-            vpos[0] = bpos[0] - BLOCK_SIZE / 2 + x;
-            vpos[1] = bpos[1] - BLOCK_SIZE / 2 + y;
-            vpos[2] = bpos[2] - BLOCK_SIZE / 2 + z;
+            vpos[0] = bpos[0] + x;
+            vpos[1] = bpos[1] + y;
+            vpos[2] = bpos[2] + z;
             mesh_get_at(mesh, &iter, vpos, v);
             fwrite(v, 4, 1, file);
         }
