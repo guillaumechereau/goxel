@@ -99,7 +99,7 @@ static void read_chunk(FILE *file, context_t *ctx)
     children_size = READ(uint32_t, file);
 
     if (strncmp(id, "SIZE", 4) == 0) {
-        assert(size = 4 * 3);
+        assert(size == 4 * 3);
         ctx->w = READ(uint32_t, file);
         ctx->h = READ(uint32_t, file);
         ctx->d = READ(uint32_t, file);
