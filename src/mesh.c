@@ -616,7 +616,7 @@ next_block:
     }
 
 end:
-    vec3_copy(it->pos, pos);
+    if (pos) vec3_copy(it->pos, pos);
     return 1;
 }
 
