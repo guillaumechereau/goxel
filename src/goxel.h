@@ -162,7 +162,7 @@ enum {
 // ### Some useful inline functions / macros.
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-#define SWAP(x0, x) {typeof(x0) tmp = x0; x0 = x; x = tmp;}
+#define SWAP(x0, x) do {typeof(x0) tmp = x0; x0 = x; x = tmp;} while (0)
 
 // Used to pass and get values to callback 'void *user' arguments.
 #define USER_PASS(...) ((const void*[]){__VA_ARGS__})
