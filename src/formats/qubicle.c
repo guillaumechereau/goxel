@@ -25,6 +25,16 @@
 #define WRITE(type, v, file) \
     ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
+static void apply_orientation(int orientation, int pos[3])
+{
+    if (orientation == 1) {// Right
+        SWAP(pos[1], pos[2]);
+    } else {               // Left
+        SWAP(pos[1], pos[2]);
+        pos[1] = -pos[1];
+    }
+}
+
 static void qubicle_import(const char *path)
 {
     FILE *file;
@@ -38,7 +48,6 @@ static void qubicle_import(const char *path)
             uint8_t r, g, b, a;
         };
     } v;
-    mat4_t mat = mat4_identity;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
     mesh_t *mesh = goxel->image->active_layer->mesh;
@@ -54,7 +63,6 @@ static void qubicle_import(const char *path)
     color_format = READ(uint32_t, file);
     (void)color_format;
     orientation = READ(uint32_t, file);
-    (void)orientation;
     compression = READ(uint32_t, file);
     vmask = READ(uint32_t, file);
     (void)vmask;
@@ -78,6 +86,7 @@ static void qubicle_import(const char *path)
                 vpos[0] = pos[0] + index % w;
                 vpos[1] = pos[1] + (index % (w * h)) / w;
                 vpos[2] = pos[2] + index / (w * h);
+                apply_orientation(orientation, vpos);
                 mesh_set_at(mesh, &iter, vpos, v.v);
             }
         } else {
@@ -101,6 +110,7 @@ static void qubicle_import(const char *path)
                         vpos[0] = pos[0] + x;
                         vpos[1] = pos[1] + y;
                         vpos[2] = pos[2] + z;
+                        apply_orientation(orientation, vpos);
                         mesh_set_at(mesh, &iter, vpos, v.v);
                         index++;
                     }
@@ -108,10 +118,6 @@ static void qubicle_import(const char *path)
             }
         }
     }
-
-    // Apply a 90 deg X rotation to fix axis.
-    mat4_irotate(&mat, M_PI / 2, 1, 0, 0);
-    mesh_move(goxel->image->active_layer->mesh, &mat);
     goxel_update_meshes(goxel, -1);
 }
 
