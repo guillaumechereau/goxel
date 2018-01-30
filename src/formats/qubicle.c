@@ -40,7 +40,6 @@ static void qubicle_import(const char *path)
     FILE *file;
     int version, color_format, orientation, compression, vmask, mat_count;
     int i, j, r, index, len, w, h, d, pos[3], vpos[3], x, y, z;
-    char buff[256];
     union {
         uint8_t v[4];
         uint32_t uint32;
@@ -50,7 +49,7 @@ static void qubicle_import(const char *path)
     } v;
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
-    mesh_t *mesh = goxel->image->active_layer->mesh;
+    layer_t *layer;
     mesh_iterator_t iter = {0};
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
@@ -69,8 +68,11 @@ static void qubicle_import(const char *path)
     mat_count = READ(uint32_t, file);
 
     for (i = 0; i < mat_count; i++) {
+        layer = image_add_layer(goxel->image);
+        iter = mesh_get_accessor(layer->mesh);
+        memset(layer->name, 0, sizeof(layer->name));
         len = READ(uint8_t, file);
-        r = (int)fread(buff, len, 1, file);
+        r = (int)fread(layer->name, len, 1, file);
         (void)r;
         w = READ(uint32_t, file);
         h = READ(uint32_t, file);
@@ -87,7 +89,7 @@ static void qubicle_import(const char *path)
                 vpos[1] = pos[1] + (index % (w * h)) / w;
                 vpos[2] = pos[2] + index / (w * h);
                 apply_orientation(orientation, vpos);
-                mesh_set_at(mesh, &iter, vpos, v.v);
+                mesh_set_at(layer->mesh, &iter, vpos, v.v);
             }
         } else {
             for (z = 0; z < d; z++) {
@@ -111,7 +113,7 @@ static void qubicle_import(const char *path)
                         vpos[1] = pos[1] + y;
                         vpos[2] = pos[2] + z;
                         apply_orientation(orientation, vpos);
-                        mesh_set_at(mesh, &iter, vpos, v.v);
+                        mesh_set_at(layer->mesh, &iter, vpos, v.v);
                         index++;
                     }
                 }
@@ -126,7 +128,6 @@ static void qubicle_export(const image_t *img, const char *path)
     FILE *file;
     int i, count, x, y, z, pos[3], bbox[2][3];
     uint8_t v[4];
-    char buff[16];
     layer_t *layer;
     mesh_iterator_t iter;
     mesh_t *mesh;
@@ -144,12 +145,10 @@ static void qubicle_export(const image_t *img, const char *path)
 
     i = 0;
     DL_FOREACH(img->layers, layer) {
-        sprintf(buff, "%d", i);
-        WRITE(uint8_t, strlen(buff), file);
-        fwrite(buff, strlen(buff), 1, file);
-
         mesh = layer->mesh;
-        mesh_get_bbox(mesh, bbox, true);
+        if (!mesh_get_bbox(mesh, bbox, true)) continue;
+        WRITE(uint8_t, strlen(layer->name), file);
+        fwrite(layer->name, strlen(layer->name), 1, file);
         WRITE(uint32_t, bbox[1][0] - bbox[0][0], file);
         WRITE(uint32_t, bbox[1][2] - bbox[0][2], file);
         WRITE(uint32_t, bbox[1][1] - bbox[0][1], file);

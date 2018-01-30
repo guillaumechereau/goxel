@@ -871,7 +871,7 @@ struct layer {
     mesh_t      *mesh;
     int         id;         // Uniq id in the image (for clones).
     bool        visible;
-    char        name[128];  // 127 chars max.
+    char        name[256];  // 256 chars max.
     box_t       box;
     mat4_t      mat;
     // For 2d image layers.
