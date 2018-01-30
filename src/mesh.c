@@ -236,7 +236,8 @@ static void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
 
-void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
+// Return false if the box is empty.
+bool mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
 {
     block_t *block;
     int ret[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
@@ -267,6 +268,7 @@ void mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
         }
     }
     memcpy(bbox, ret, sizeof(ret));
+    return ret[0][0] < ret[1][0];
 }
 
 static void mesh_prepare_write(mesh_t *mesh)
