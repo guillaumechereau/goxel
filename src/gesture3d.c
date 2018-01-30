@@ -22,7 +22,7 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     bool pressed = curs->flags & CURSOR_PRESSED;
     int r, ret = 0;
-    const int btns_mask = CURSOR_SHIFT | CURSOR_CTRL;
+    const int btns_mask = CURSOR_CTRL;
 
     gest->cursor = curs;
 
