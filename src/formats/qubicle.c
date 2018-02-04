@@ -39,7 +39,7 @@ static void qubicle_import(const char *path)
 {
     FILE *file;
     int version, color_format, orientation, compression, vmask, mat_count;
-    int i, j, r, index, len, w, h, d, pos[3], vpos[3], x, y, z;
+    int i, j, r, index, len, w, h, d, pos[3], vpos[3], x, y, z, bbox[2][3];
     union {
         uint8_t v[4];
         uint32_t uint32;
@@ -80,6 +80,14 @@ static void qubicle_import(const char *path)
         pos[0] = READ(int32_t, file);
         pos[1] = READ(int32_t, file);
         pos[2] = READ(int32_t, file);
+
+        // Set the layer bounding box.
+        vec3_set(bbox[0], pos[0], pos[1], pos[2]);
+        vec3_set(bbox[1], pos[0] + w, pos[1] + h, pos[2] + d);
+        apply_orientation(orientation, bbox[0]);
+        apply_orientation(orientation, bbox[1]);
+        layer->box = bbox_from_aabb(bbox);
+
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {
                 v.uint32 = READ(uint32_t, file);
