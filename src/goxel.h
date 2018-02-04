@@ -184,6 +184,9 @@ enum {
     })
 
 // Some useful vector macros.
+#define vec3_set(v, x, y, z) do { \
+    (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); } while(0)
+
 #define vec4_set(v, x, y, z, w) do { \
     (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
 
