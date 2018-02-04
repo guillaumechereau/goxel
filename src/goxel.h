@@ -228,6 +228,16 @@ enum {
     (_a > _b) ? +1 : (_a < _b) ? -1 : 0; \
 })
 
+/* Function: smoothstep
+ * Perform Hermite interpolation between two values.
+ *
+ * This is similar to the smoothstep function in OpenGL shader language.
+ *
+ * Parameters:
+ *   edge0 - Lower edge of the Hermite function.
+ *   edge1 - Upper edge of the Hermite function.
+ *   x     - Source value for interpolation.
+ */
 static inline float smoothstep(float edge0, float edge1, float x)
 {
     x = clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
@@ -239,6 +249,14 @@ static inline float mix(float x, float y, float t)
     return (1.0 - t) * x + t * y;
 }
 
+/* Function: set_flag
+ * Set some int bits to 0 or 1.
+ *
+ * Parameters:
+ *   x    - The int value to change.
+ *   flag - Bitmask of the bits we want to set.
+ *   v    - Value to set.
+ */
 static inline void set_flag(int *x, int flag, bool v)
 {
     v ? (*x |= flag) : (*x &= ~flag);
