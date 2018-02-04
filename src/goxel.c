@@ -608,7 +608,7 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         mesh_clear(goxel->layers_mesh);
         DL_FOREACH(goxel->image->layers, layer) {
             if (!layer->visible) continue;
-            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_OVER);
+            mesh_merge(goxel->layers_mesh, layer->mesh, MODE_OVER, NULL);
         }
     }
 
@@ -619,7 +619,7 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
             mesh = layer->mesh;
             if (mesh == goxel->image->active_layer->mesh)
                 mesh = goxel->tool_mesh;
-            mesh_merge(goxel->render_mesh, mesh, MODE_OVER);
+            mesh_merge(goxel->render_mesh, mesh, MODE_OVER, NULL);
         }
     }
     if ((mask & MESH_RENDER) && !goxel->tool_mesh)
@@ -864,7 +864,7 @@ static void past_action(void)
         mat4_itranslate(&mat, -p2.x, -p2.y, -p2.z);
         mesh_move(tmp, &mat);
     }
-    mesh_merge(mesh, tmp, MODE_OVER);
+    mesh_merge(mesh, tmp, MODE_OVER, NULL);
     mesh_delete(tmp);
 }
 

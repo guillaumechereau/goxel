@@ -583,7 +583,8 @@ int mesh_select(const mesh_t *mesh,
                             void *user),
                 void *user, mesh_t *selection);
 
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int op);
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int op,
+                const uint8_t color[4]);
 
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                            int effects, voxel_vertex_t *out);

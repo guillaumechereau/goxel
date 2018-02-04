@@ -131,6 +131,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     painter2 = goxel->painter;
     painter2.mode = MODE_MAX;
+    vec4_set(painter2.color, 255, 255, 255, 255);
 
     // Render several times if the space between the current pos
     // and the last pos is larger than the size of the tool shape.
@@ -144,7 +145,8 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, brush->mesh_orig);
-    mesh_merge(goxel->tool_mesh, brush->mesh, goxel->painter.mode);
+    mesh_merge(goxel->tool_mesh, brush->mesh, goxel->painter.mode,
+               goxel->painter.color);
     goxel_update_meshes(goxel, MESH_RENDER);
     brush->start_pos = curs->pos;
     brush->last_op.mesh_key = mesh_get_key(goxel->tool_mesh);

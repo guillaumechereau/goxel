@@ -201,6 +201,16 @@ void mesh_shift_alpha(mesh_t *mesh, int v)
     }
 }
 
+// Multiply two colors together.
+static void color_mul(const uint8_t a[4], const uint8_t b[4],
+                      uint8_t out[4])
+{
+    out[0] = (int)a[0] * b[0] / 255;
+    out[1] = (int)a[1] * b[1] / 255;
+    out[2] = (int)a[2] * b[2] / 255;
+    out[3] = (int)a[3] * b[3] / 255;
+}
+
 // XXX: cleanup this: in fact we might not need that many modes!
 static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
                     uint8_t out[4])
@@ -334,7 +344,7 @@ static int mesh_del(void *data_)
 }
 
 static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
-                        int mode)
+                        int mode, const uint8_t color[4])
 {
     int p[3];
     int x, y, z;
@@ -370,8 +380,8 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
         uint64_t id1;
         uint64_t id2;
         int      mode;
-        int      _pad;
-    } key = { id1, id2, mode };
+        uint8_t  color[4];
+    } key = { id1, id2, mode, {color[0], color[1], color[2], color[3]} };
     _Static_assert(sizeof(key) == 24, "");
     block = cache_get(cache, &key, sizeof(key));
     if (block) goto end;
@@ -389,6 +399,7 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
         p[2] = pos[2] + z;
         mesh_get_at(mesh, &a1, p, v1);
         mesh_get_at(other, &a2, p, v2);
+        if (color) color_mul(v2, color, v2);
         combine(v1, v2, mode, v1);
         mesh_set_at(block, &a3, (int[]){x, y, z}, v1);
     }
@@ -399,14 +410,15 @@ end:
     return;
 }
 
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode)
+void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
+                const uint8_t color[4])
 {
     assert(mesh && other);
     mesh_iterator_t iter;
     int bpos[3];
     iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
-        block_merge(mesh, other, bpos, mode);
+        block_merge(mesh, other, bpos, mode, color);
     }
 }
 

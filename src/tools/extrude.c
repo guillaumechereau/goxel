@@ -84,7 +84,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         pi[2] = floor(curs->pos.z);
         mesh_select(mesh, pi, select_cond, &tool->snap_face,
                     tmp_mesh);
-        mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA);
+        mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA, NULL);
         mesh_delete(tmp_mesh);
 
         mesh_set(tool->mesh_orig, mesh);
@@ -127,14 +127,14 @@ static int on_drag(gesture3d_t *gest, void *user)
         vec3_iaddk(&face_plane.p, n, -0.5);
         box = box_move_face(box, tool->snap_face, pos);
         mesh_extrude(tmp_mesh, &face_plane, &box);
-        mesh_merge(mesh, tmp_mesh, MODE_OVER);
+        mesh_merge(mesh, tmp_mesh, MODE_OVER, NULL);
     }
     if (delta < 0.5) {
         box = box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos);
         vec3_imul(&face_plane.n, -1.0);
         vec3_iaddk(&face_plane.p, n, -0.5);
         mesh_extrude(tmp_mesh, &face_plane, &box);
-        mesh_merge(mesh, tmp_mesh, MODE_SUB);
+        mesh_merge(mesh, tmp_mesh, MODE_SUB, NULL);
     }
     mesh_delete(tmp_mesh);
     goxel_update_meshes(goxel, MESH_RENDER);
