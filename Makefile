@@ -17,3 +17,8 @@ js:
 
 clean:
 	scons -c
+
+.PHONY: doc
+doc:
+	mkdir -p doc ndconfig
+	naturaldocs -i src -o html doc -p ndconfig

@@ -16,6 +16,8 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// File: goxel.h
+
 #ifndef GOXEL_H
 #define GOXEL_H
 
@@ -159,7 +161,10 @@ enum {
 
 
 
-// ### Some useful inline functions / macros.
+
+// ####### Section: Utils ################################################
+
+// Some useful inline functions / macros
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define SWAP(x0, x) do {typeof(x0) tmp = x0; x0 = x; x = tmp;} while (0)
@@ -350,7 +355,7 @@ enum {
     DIALOG_FLAG_DIR     = 1 << 2,
 };
 
-// #### Texture ################
+// #### Section: Texture ################
 enum {
     TF_DEPTH    = 1 << 0,
     TF_STENCIL  = 1 << 1,
@@ -363,6 +368,8 @@ enum {
     TF_NEAREST  = 1 << 8,
 };
 
+// Type: texture_t
+// Reresent a 2d texture.
 typedef struct texture texture_t;
 struct texture {
     texture_t   *next;      // All the textures are in a global list.
@@ -503,16 +510,6 @@ enum {
 
 
 // #### Tool/Operation/Painter #
-enum {
-    MODE_NULL,
-    MODE_OVER,
-    MODE_SUB,
-    MODE_SUB_CLAMP,
-    MODE_PAINT,
-    MODE_MAX,
-    MODE_INTERSECT,
-    MODE_MULT_ALPHA,
-};
 
 enum {
     TOOL_NONE = 0,
@@ -547,17 +544,6 @@ extern shape_t shape_cube;
 extern shape_t shape_cylinder;
 
 
-// The painting context, including the tool, brush, mode, radius,
-// color, etc...
-typedef struct painter {
-    int             mode;
-    const shape_t   *shape;
-    uint8_t         color[4];
-    float           smoothness;
-    int             symmetry; // bitfield X Y Z
-    box_t           *box;     // Clipping box (can be null)
-} painter_t;
-
 // #### Block ##################
 // The block size can only be 16.
 #define BLOCK_SIZE 16
@@ -579,17 +565,94 @@ typedef struct voxel_vertex
     uint8_t  bump_uv[2]                 __attribute__((aligned(4)));
 } voxel_vertex_t;
 
-// #### Mesh util functions ############################
 
+// ######## Section: Mesh util ############################################
+
+/*
+ * Enum: MODE
+ * Define how layers/brush are merged.  Each mode defines how to apply a
+ * source voxel into a destination voxel.
+ *
+ * MODE_OVER        - New values replace old one.
+ * MODE_SUB         - Substract source alpha from destination
+ * MODE_SUB_CLAMP   - Set alpha to the minimum between the destination value
+ *                    and one minus the source value.
+ * MODE_PAINT       - Set the color of the destination using the source.
+ * MODE_MAX         - Set alpha to the max of the source and destination.
+ * MODE_INTERSECT   - Set alpha to the min of the source and destination.
+ * MODE_MULT_ALPHA  - Multiply the source and dest using source alpha.
+ */
+enum {
+    MODE_NULL,
+    MODE_OVER,
+    MODE_SUB,
+    MODE_SUB_CLAMP,
+    MODE_PAINT,
+    MODE_MAX,
+    MODE_INTERSECT,
+    MODE_MULT_ALPHA,
+};
+
+// Type: painter_t
+// The painting context, including the tool, brush, mode, radius,
+// color, etc...
+//
+// Attributes:
+//   mode - Define how colors are applied.  One of the <MODE> enum value.
+typedef struct painter {
+    int             mode;
+    const shape_t   *shape;
+    uint8_t         color[4];
+    float           smoothness;
+    int             symmetry; // bitfield X Y Z
+    box_t           *box;     // Clipping box (can be null)
+} painter_t;
+
+
+/* Function: mesh_get_box
+ * Compute the bounding box of a mesh.  */
 box_t mesh_get_box(const mesh_t *mesh, bool exact);
-void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box);
+
+/* Function: mesh_op
+ * Apply a paint operation to a mesh.
+ * This function render geometrical 3d shapes into a mesh.
+ * The shape, mode and color are defined in the painter argument.
+ *
+ * Parameters:
+ *   mesh    - The mesh we paint into.
+ *   painter - Defines the paint operation to apply.
+ *   box_t   - Defines the position and size of the shape.
+ *
+ * See Also:
+ *   <painter_t>
+ */
+void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box);
+
 // XXX: to cleanup.
 void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
 
+/* Function: mesh_blit
+ *
+ * Blit voxel data into a mesh.
+ * This is the fastest way to quickly put data into a mesh.
+ *
+ * Parameters:
+ *   mesh - The mesh we blit into.
+ *   data - Pointer to voxel data (RGBA values, in xyz order).
+ *   x    - X pos.
+ *   y    - Y pos.
+ *   z    - Z pos.
+ *   w    - Width of the data.
+ *   h    - Height of the data.
+ *   d    - Depth of the data.
+ *   iter - Optional iterator for optimized access.
+ */
 void mesh_blit(mesh_t *mesh, const uint8_t *data,
                int x, int y, int z, int w, int h, int d,
                mesh_iterator_t *iter);
+
 void mesh_move(mesh_t *mesh, const mat4_t *mat);
+
 void mesh_shift_alpha(mesh_t *mesh, int v);
 
 // Compute the selection mask for a given condition.

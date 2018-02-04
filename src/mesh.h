@@ -6,9 +6,24 @@
 
 #define BLOCK_SIZE 16
 
+/* Type: mesh_t
+ * Opaque type that represents a mesh.
+ */
 typedef struct mesh mesh_t;
+
 typedef struct block block_t;
 
+/* Enum: MESH_ITER
+ * Some flags that can be used to modify the behavior of the iteration
+ * function.
+ *
+ * MESH_ITER_VOXELS - Iter on the voxels (default if zero).
+ * MESH_ITER_BLOCKS - Iter on the blocks: the iterator return successive
+ *                    blocks positions.
+ * MESH_ITER_INCLUDES_NEIGHBORS - Also yield one position for each
+ *                                neighbor of the voxels.
+ * MESH_ITER_SKIP_EMPTY - Don't yield empty voxels/blocks.
+ */
 enum {
     MESH_ITER_VOXELS                = 1 << 0,
     MESH_ITER_BLOCKS                = 1 << 1,
@@ -16,7 +31,18 @@ enum {
     MESH_ITER_SKIP_EMPTY            = 1 << 3,
 };
 
-// Fast iterator of all the mesh voxel.
+/* Type mesh_iterator_t
+ * Fast iterator of all the mesh voxels.
+ *
+ * This struct can be used when we want to make a lot of successive accesses
+ * to the same mesh.
+ *
+ * It's also the struct used as an iterator into the mesh voxels.
+ *
+ * You don't need to care about the attributes, just create them with
+ * <mesh_get_accessor>, <mesh_get_iterator>, <mesh_get_box_iterator> or
+ * <mesh_get_union_iterator>.
+ */
 typedef struct {
     const mesh_t *mesh;
     const mesh_t *mesh2;
@@ -111,7 +137,16 @@ bool mesh_is_empty(const mesh_t *mesh);
  */
 bool mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact);
 
+/*
+ * Function: mesh_get_iterator
+ * Return an iterator that yield all the voxels of the mesh.
+ *
+ * Parameters:
+ *   mesh  - The mesh we want to iterate.
+ *   flags - Any of the <MESH_ITER> enum.
+ */
 mesh_iterator_t mesh_get_iterator(const mesh_t *mesh, int flags);
+
 // Return an iterator that follow a given box shape.
 mesh_iterator_t mesh_get_box_iterator(const mesh_t *mesh,
                                       const float box[4][4],

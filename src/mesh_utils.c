@@ -259,7 +259,7 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 }
 
 
-void mesh_op(mesh_t *mesh, painter_t *painter, const box_t *box)
+void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
 {
     int i, vp[3];
     uint8_t value[4], c[4];
