@@ -381,7 +381,8 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
         uint64_t id2;
         int      mode;
         uint8_t  color[4];
-    } key = { id1, id2, mode, {color[0], color[1], color[2], color[3]} };
+    } key = { id1, id2, mode };
+    if (color) memcpy(key.color, color, 4);
     _Static_assert(sizeof(key) == 24, "");
     block = cache_get(cache, &key, sizeof(key));
     if (block) goto end;
