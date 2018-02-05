@@ -680,7 +680,7 @@ void mesh_crop(mesh_t *mesh, box_t *box);
  * This is only used in the tests, to make sure that we can still open
  * old file formats.
  */
-uint64_t mesh_crc32(const mesh_t *mesh);
+uint32_t mesh_crc32(const mesh_t *mesh);
 
 // #### Renderer ###############
 
