@@ -223,6 +223,8 @@ int main(int argc, char **argv)
     glewInit();
 #endif
     goxel_init(g_goxel);
+    // Run the unit tests in debug.
+    if (DEBUG) tests_run();
 
     if (args.input)
         action_exec2("import", "p", args.input);

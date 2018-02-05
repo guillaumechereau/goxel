@@ -1418,5 +1418,11 @@ void sound_init(void);
 void sound_play(const char *sound);
 void sound_iter(void);
 
+// Section: tests
+
+/* Function: tests_run
+ * Run all the unit tests */
+void tests_run(void);
+
 
 #endif // GOXEL_H
