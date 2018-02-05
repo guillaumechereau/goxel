@@ -18,6 +18,7 @@
 
 #include "goxel.h"
 #include <limits.h>
+#include <zlib.h> // For crc32.
 
 #define N BLOCK_SIZE
 
@@ -431,4 +432,26 @@ void mesh_crop(mesh_t *mesh, box_t *box)
         .shape = &shape_cube,
     };
     mesh_op(mesh, &painter, box);
+}
+
+/* Function: mesh_crc32
+ * Compute the crc32 of the mesh data as an array of xyz rgba values.
+ *
+ * This is only used in the tests, to make sure that we can still open
+ * old file formats.
+ */
+uint64_t mesh_crc32(const mesh_t *mesh)
+{
+    mesh_iterator_t iter;
+    int pos[3];
+    uint8_t v[4];
+    uint64_t ret = 0;
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
+    while (mesh_iter(&iter, pos)) {
+        mesh_get_at(mesh, &iter, pos, v);
+        assert(v[3]);
+        ret = crc32(ret, (void*)pos, sizeof(pos));
+        ret = crc32(ret, (void*)v, sizeof(v));
+    }
+    return ret;
 }

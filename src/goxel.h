@@ -674,6 +674,14 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                            int effects, voxel_vertex_t *out);
 void mesh_crop(mesh_t *mesh, box_t *box);
 
+/* Function: mesh_crc32
+ * Compute the crc32 of the mesh data as an array of xyz rgba values.
+ *
+ * This is only used in the tests, to make sure that we can still open
+ * old file formats.
+ */
+uint64_t mesh_crc32(const mesh_t *mesh);
+
 // #### Renderer ###############
 
 enum {
