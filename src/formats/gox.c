@@ -131,7 +131,10 @@ static void chunk_read(chunk_t *c, gzFile in, char *buff, int size)
 {
     c->pos += size;
     assert(c->pos <= c->length);
-    gzread(in, buff, size);
+    if (buff)
+        gzread(in, buff, size);
+    else
+        gzseek(in, size, SEEK_CUR);
 }
 
 static int32_t chunk_read_int32(chunk_t *c, gzFile in)
@@ -455,7 +458,10 @@ int load_from_file(goxel_t *goxel, const char *path)
                 if (strcmp(dict_key, "box") == 0)
                     memcpy(&goxel->image->box, dict_value, dict_value_size);
             }
-        } else assert(false);
+        } else {
+            // Ignore other blocks.
+            chunk_read(&c, in, NULL, c.length);
+        }
         chunk_read_finish(&c, in);
     }
 
