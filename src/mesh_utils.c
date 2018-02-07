@@ -282,9 +282,9 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
             painter2.symmetry &= ~(1 << i);
             box2 = *box;
             box2.mat = mat4_identity;
-            if (i == 0) mat4_iscale(&box2.mat, -1,  1,  1);
-            if (i == 1) mat4_iscale(&box2.mat,  1, -1,  1);
-            if (i == 2) mat4_iscale(&box2.mat,  1,  1, -1);
+            if (i == 0) mat4_iscale(box2.mat.v2, -1,  1,  1);
+            if (i == 1) mat4_iscale(box2.mat.v2,  1, -1,  1);
+            if (i == 2) mat4_iscale(box2.mat.v2,  1,  1, -1);
             mat4_imul(box2.mat.v2, box->mat.v2);
             mesh_op(mesh, &painter2, &box2);
         }
@@ -293,7 +293,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     shape_func = painter->shape->func;
     size = box_get_size(*box);
     mat4_imul(mat.v2, box->mat.v2);
-    mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
+    mat4_iscale(mat.v2, 1 / size.x, 1 / size.y, 1 / size.z);
     mat4_invert(&mat);
     use_box = painter->box && !box_is_null(*painter->box);
     // XXX: cleanup.

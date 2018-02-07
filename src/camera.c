@@ -83,9 +83,9 @@ void camera_update(camera_t *camera)
     camera->fovy = 20.;
     // Update the camera mats
     camera->view_mat = mat4_identity;
-    mat4_itranslate(&camera->view_mat, 0, 0, -camera->dist);
+    mat4_itranslate(camera->view_mat.v2, 0, 0, -camera->dist);
     mat4_imul_quat(&camera->view_mat, camera->rot);
-    mat4_itranslate(&camera->view_mat,
+    mat4_itranslate(camera->view_mat.v2,
            camera->ofs.x, camera->ofs.y, camera->ofs.z);
 
     compute_clip(&camera->view_mat, &clip_near, &clip_far);

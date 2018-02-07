@@ -80,8 +80,8 @@ static int iter(tool_t *tool, const vec4_t *view)
     vec3_neg(curs->normal.v, laser->box.d.v);
     laser->box.p = curs->pos;
     // Just a large value for the size of the laser box.
-    mat4_itranslate(&laser->box.mat, 0, 0, -1024);
-    mat4_iscale(&laser->box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
+    mat4_itranslate(laser->box.mat.v2, 0, 0, -1024);
+    mat4_iscale(laser->box.mat.v2, goxel->tool_radius, goxel->tool_radius, 1024);
     render_box(&goxel->rend, &laser->box, NULL, EFFECT_WIREFRAME);
 
     gesture3d(&laser->gestures.drag, curs, laser);

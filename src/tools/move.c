@@ -34,9 +34,9 @@ static void do_move(layer_t *layer, mat4_t mat)
 
     // Change referential to the mesh origin.
     // XXX: maybe this should be done in mesh_move directy??
-    mat4_itranslate(&m, -0.5, -0.5, -0.5);
+    mat4_itranslate(m.v2, -0.5, -0.5, -0.5);
     mat4_imul(m.v2, mat.v2);
-    mat4_itranslate(&m, +0.5, +0.5, +0.5);
+    mat4_itranslate(m.v2, +0.5, +0.5, +0.5);
 
     if (layer->base_id || layer->image) {
         mat4_mul(mat.v2, layer->mat.v2, layer->mat.v2);
@@ -112,7 +112,7 @@ static int on_move(gesture3d_t *gest, void *user)
         vec3_project(ofs.v, n.v, ofs.v);
 
         mat = mat4_identity;
-        mat4_itranslate(&mat, ofs.x, ofs.y, ofs.z);
+        mat4_itranslate(mat.v2, ofs.x, ofs.y, ofs.z);
         do_move(layer, mat);
 
         if (gest->state == GESTURE_END) {
@@ -155,34 +155,34 @@ static int gui(tool_t *tool)
     gui_group_begin(NULL);
     i = 0;
     if (gui_input_int("Move X", &i, 0, 0))
-        mat4_itranslate(&mat, i, 0, 0);
+        mat4_itranslate(mat.v2, i, 0, 0);
     i = 0;
     if (gui_input_int("Move Y", &i, 0, 0))
-        mat4_itranslate(&mat, 0, i, 0);
+        mat4_itranslate(mat.v2, 0, i, 0);
     i = 0;
     if (gui_input_int("Move Z", &i, 0, 0))
-        mat4_itranslate(&mat, 0, 0, i);
+        mat4_itranslate(mat.v2, 0, 0, i);
     gui_group_end();
     gui_group_begin(NULL);
     i = 0;
     if (gui_input_int("Rot X", &i, 0, 0))
-        mat4_irotate(&mat, i * M_PI / 2, 1, 0, 0);
+        mat4_irotate(mat.v2, i * M_PI / 2, 1, 0, 0);
     i = 0;
     if (gui_input_int("Rot Y", &i, 0, 0))
-        mat4_irotate(&mat, i * M_PI / 2, 0, 1, 0);
+        mat4_irotate(mat.v2, i * M_PI / 2, 0, 1, 0);
     i = 0;
     if (gui_input_int("Rot Z", &i, 0, 0))
-        mat4_irotate(&mat, i * M_PI / 2, 0, 0, 1);
+        mat4_irotate(mat.v2, i * M_PI / 2, 0, 0, 1);
     gui_group_end();
     if (layer->image && gui_input_int("Scale", &i, 0, 0)) {
         v = pow(2, i);
-        mat4_iscale(&mat, v, v, v);
+        mat4_iscale(mat.v2, v, v, v);
     }
 
     gui_group_begin(NULL);
-    if (gui_button("flip X", -1, 0)) mat4_iscale(&mat, -1,  1,  1);
-    if (gui_button("flip Y", -1, 0)) mat4_iscale(&mat,  1, -1,  1);
-    if (gui_button("flip Z", -1, 0)) mat4_iscale(&mat,  1,  1, -1);
+    if (gui_button("flip X", -1, 0)) mat4_iscale(mat.v2, -1,  1,  1);
+    if (gui_button("flip Y", -1, 0)) mat4_iscale(mat.v2,  1, -1,  1);
+    if (gui_button("flip Z", -1, 0)) mat4_iscale(mat.v2,  1,  1, -1);
     gui_group_end();
 
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {

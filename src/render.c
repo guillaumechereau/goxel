@@ -498,7 +498,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     }
 
     block_model = *model;
-    mat4_itranslate(&block_model, block_pos[0], block_pos[1], block_pos[2]);
+    mat4_itranslate(block_model.v2, block_pos[0], block_pos[1], block_pos[2]);
     GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, block_model.v));
     if (item->size == 4) {
         // Use indexed triangles.
@@ -512,19 +512,19 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
 static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
 {
     vec4_t light_dir;
-    mat4_t m;
+    float m[4][4];
 
-    m = mat4_identity;
-    mat4_irotate(&m, rend->light.yaw, 0, 0, 1);
-    mat4_irotate(&m, rend->light.pitch, 1, 0, 0);
-    mat4_mul_vec4(m.v2, vec4(0, 0, 1, 0).v, light_dir.v);
+    mat4_set_identity(m);
+    mat4_irotate(m, rend->light.yaw, 0, 0, 1);
+    mat4_irotate(m, rend->light.pitch, 1, 0, 0);
+    mat4_mul_vec4(m, vec4(0, 0, 1, 0).v, light_dir.v);
 
     if (rend->light.fixed) {
-        m = mat4_identity;
-        mat4_imul(m.v2, mat4_inverted(rend->view_mat).v2);
-        mat4_irotate(&m, -M_PI / 4, 1, 0, 0);
-        mat4_irotate(&m, -M_PI / 4, 0, 0, 1);
-        mat4_mul_vec4(m.v2, light_dir.v, light_dir.v);
+        mat4_set_identity(m);
+        mat4_imul(m, mat4_inverted(rend->view_mat).v2);
+        mat4_irotate(m, -M_PI / 4, 1, 0, 0);
+        mat4_irotate(m, -M_PI / 4, 0, 0, 1);
+        mat4_mul_vec4(m, light_dir.v, light_dir.v);
     }
     if (model_view)
         mat4_mul_vec4(rend->view_mat.v2, light_dir.v, light_dir.v);
@@ -739,7 +739,7 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     n = 3;
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
-        view3 = mat4_translate(view2, x + 0.5, y + 0.5, 0);
+        mat4_translate(view2.v2, x + 0.5, y + 0.5, 0, view3.v2);
         model3d_render(item->model3d, &view3, &rend->proj_mat, item->color,
                        NULL, NULL, 0);
     }
@@ -751,7 +751,7 @@ void render_plane(renderer_t *rend, const plane_t *plane,
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
     item->mat = plane->mat;
-    mat4_iscale(&item->mat, 8, 8, 1);
+    mat4_iscale(item->mat.v2, 8, 8, 1);
     item->model3d = g_grid_model;
     copy_color(color, item->color);
     DL_APPEND(rend->items, item);
@@ -802,7 +802,7 @@ void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
     item->model3d = g_line_model;
     item->mat = line_create_plane(a, b).mat;
     copy_color(color, item->color);
-    mat4_itranslate(&item->mat, 0.5, 0, 0);
+    mat4_itranslate(item->mat.v2, 0.5, 0, 0);
     DL_APPEND(rend->items, item);
 }
 

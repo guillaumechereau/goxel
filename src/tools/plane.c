@@ -45,13 +45,13 @@ static int gui(tool_t *tool)
     gui_group_begin(NULL);
     i = 0;
     if (gui_input_int("Move", &i, 0, 0))
-        mat4_itranslate(&goxel->plane.mat, 0, 0, -i);
+        mat4_itranslate(goxel->plane.mat.v2, 0, 0, -i);
     i = 0;
     if (gui_input_int("Rot X", &i, 0, 0))
-        mat4_irotate(&goxel->plane.mat, i * M_PI / 2, 1, 0, 0);
+        mat4_irotate(goxel->plane.mat.v2, i * M_PI / 2, 1, 0, 0);
     i = 0;
     if (gui_input_int("Rot Y", &i, 0, 0))
-        mat4_irotate(&goxel->plane.mat, i * M_PI / 2, 0, 1, 0);
+        mat4_irotate(goxel->plane.mat.v2, i * M_PI / 2, 0, 1, 0);
     gui_group_end();
     return 0;
 }

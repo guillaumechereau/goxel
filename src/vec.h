@@ -397,36 +397,42 @@ DECL void mat4_mul_vec3(const float m[4][4], const float v[3], float out[3])
     vec3_copy(v4, out);
 }
 
-DECL mat4_t mat4_translate(mat4_t m, real_t x, real_t y, real_t z)
+DECL void mat4_translate(const float m[4][4], float x, float y, float z,
+                         float out[4][4])
 {
-#define M(row,col)  m.v[(row) * 4 + (col)]
+    float tmp[4][4];
     int i;
+    mat4_copy(m, tmp);
+#define M(row,col)  tmp[(row)][(col)]
     for (i = 0; i < 4; i++) {
        M(4 - 1, i) += M(0, i) * x + M(1, i) * y + M(2, i) * z;
     }
 #undef M
-    return m;
+    mat4_copy(tmp, out);
 }
 
-DECL void mat4_itranslate(mat4_t *m, real_t x, real_t y, real_t z)
+DECL void mat4_itranslate(float m[4][4], float x, float y, float z)
 {
-    *m = mat4_translate(*m, x, y, z);
+    mat4_translate(m, x, y, z, m);
 }
 
-DECL mat4_t mat4_scale(mat4_t m, real_t x, real_t y, real_t z)
+DECL void mat4_scale(const float m[4][4], float x, float y, float z,
+                     float out[4][4])
 {
     int i;
+    float tmp[4][4];
+    mat4_copy(m, tmp);
     for (i = 0; i < 4; i++) {
-        m.v[i] *= x;
-        m.v[i + 4] *= y;
-        m.v[i + 2 * 4] *= z;
+        tmp[0][i] *= x;
+        tmp[1][i] *= y;
+        tmp[2][i] *= z;
     }
-    return m;
+    mat4_copy(tmp, out);
 }
 
-DECL void mat4_iscale(mat4_t *m, real_t x, real_t y, real_t z)
+DECL void mat4_iscale(float m[4][4], float x, float y, float z)
 {
-    *m = mat4_scale(*m, x, y, z);
+    mat4_scale(m, x, y, z, m);
 }
 
 DECL bool mat4_invert(mat4_t *mat)
@@ -506,7 +512,7 @@ DECL void mat4_igrow(mat4_t *m, float x, float y, float z)
     s[0] = (2 * x + s[0]) / s[0];
     s[1] = (2 * y + s[1]) / s[1];
     s[2] = (2 * z + s[2]) / s[2];
-    mat4_iscale(m, s[0], s[1], s[2]);
+    mat4_iscale(m->v2, s[0], s[1], s[2]);
 }
 
 DECL void mat4_mul(const float a[4][4], const float b[4][4], float out[4][4])
@@ -584,20 +590,32 @@ DECL mat4_t mat4_lookat(const float eye[3], const float center[3],
     vec3_copy(u, m.vecs[1].v);
     vec3_neg(f, m.vecs[2].v);
     m = mat4_transposed(m);
-    return mat4_translate(m, -eye[0], -eye[1], -eye[2]);
+    mat4_translate(m.v2, -eye[0], -eye[1], -eye[2], m.v2);
+    return m;
 }
 
 DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
-DECL mat4_t quat_to_mat4(quat_t q);
+DECL void quat_to_mat4(quat_t q, float out[4][4]);
 DECL mat3_t quat_to_mat3(quat_t q);
-DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)
+
+DECL void mat4_set_identity(float m[4][4])
 {
-    if (a == 0.0)
-        return m;
-    mat4_t tmp = mat4_identity;
-    real_t s = sin(a);
-    real_t c = cos(a);
-#define M(row,col)  tmp.v[col * 4 + row]
+    mat4_copy(mat4_identity.v2, m);
+}
+
+DECL void mat4_rotate(const float m[4][4], float a, float x, float y, float z,
+                      float out[4][4])
+{
+    if (a == 0.0) {
+        mat4_copy(m, out);
+        return;
+    }
+    float tmp[4][4];
+    float s = sin(a);
+    float c = cos(a);
+    mat4_set_identity(tmp);
+
+#define M(row,col)  tmp[col][row]
     if (x == 1.0 && y == 0.0 && z == 0.0) {
         M(1,1) = c;
         M(2,2) = c;
@@ -615,16 +633,15 @@ DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)
         M(1, 0) = s;
     } else {
         quat_t quat = quat_from_axis(a, x, y, z);
-        tmp = quat_to_mat4(quat);
+        quat_to_mat4(quat, tmp);
     }
 #undef M
-    mat4_mul(m.v2, tmp.v2, tmp.v2);
-    return tmp;
+    mat4_mul(m, tmp, out);
 }
 
-DECL void mat4_irotate(mat4_t *m, real_t a, real_t x, real_t y, real_t z)
+DECL void mat4_irotate(float m[4][4], float a, float x, float y, float z)
 {
-    *m = mat4_rotate(*m, a, x, y, z);
+    mat4_rotate(m, a, x, y, z, m);
 }
 
 DECL quat_t quat(real_t w, real_t x, real_t y, real_t z) {
@@ -648,18 +665,19 @@ DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z)
                 vn.z * sin_angle);
 }
 
-DECL mat4_t quat_to_mat4(quat_t q)
+DECL void quat_to_mat4(quat_t q, float out[4][4])
 {
     real_t w, x, y, z;
     w = q.w;
     x = q.x;
     y = q.y;
     z = q.z;
-    return mat4(
-            1-2*y*y-2*z*z,     2*x*y+2*z*w,     2*x*z-2*y*w,     0,
-              2*x*y-2*z*w,   1-2*x*x-2*z*z,     2*y*z+2*x*w,     0,
-              2*x*z+2*y*w,     2*y*z-2*x*w,   1-2*x*x-2*y*y,     0,
-              0,               0,               0,               1);
+    float ret[4][4] = {
+            {1-2*y*y-2*z*z,     2*x*y+2*z*w,     2*x*z-2*y*w,  0},
+            { 2*x*y-2*z*w,   1-2*x*x-2*z*z,     2*y*z+2*x*w,   0},
+            { 2*x*z+2*y*w,     2*y*z-2*x*w,   1-2*x*x-2*y*y,   0},
+            { 0,               0,               0,             1}};
+    mat4_copy(ret, out);
 }
 
 DECL quat_t quat_conjugate(quat_t q) {
@@ -692,15 +710,17 @@ DECL void quat_irotate(quat_t *q, real_t a, real_t x, real_t y, real_t z)
 
 DECL void quat_mul_vec4(quat_t q, const float v[4], float out[4])
 {
-    mat4_t m = quat_to_mat4(q);
-    mat4_mul_vec4(m.v2, v, out);
+    float m[4][4];
+    quat_to_mat4(q, m);
+    mat4_mul_vec4(m, v, out);
 }
 
 DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)
 {
     mat4_t ret;
-    mat4_t qm = quat_to_mat4(q);
-    mat4_mul(mat.v2, qm.v2, ret.v2);
+    float qm[4][4];
+    quat_to_mat4(q, qm);
+    mat4_mul(mat.v2, qm, ret.v2);
     return ret;
 }
 

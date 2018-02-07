@@ -551,9 +551,9 @@ static void render_export_viewport(goxel_t *goxel, const vec4_t *view)
     plane_t plane;
     plane.mat = mat4_identity;
     if (aspect < goxel->camera.aspect) {
-        mat4_iscale(&plane.mat, aspect / goxel->camera.aspect, 1, 1);
+        mat4_iscale(plane.mat.v2, aspect / goxel->camera.aspect, 1, 1);
     } else {
-        mat4_iscale(&plane.mat, 1, goxel->camera.aspect / aspect, 1);
+        mat4_iscale(plane.mat.v2, 1, goxel->camera.aspect / aspect, 1);
     }
     render_rect(&goxel->rend, &plane, EFFECT_STRIP);
 }
@@ -720,7 +720,7 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     layer = image_add_layer(goxel->image);
     sprintf(layer->name, "img");
     layer->image = tex;
-    mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
+    mat4_iscale(layer->mat.v2, layer->image->w, layer->image->h, 1);
 }
 
 static int search_action_for_format_cb(const action_t *a, void *user)
@@ -867,8 +867,8 @@ static void past_action(void)
             !box_is_null(goxel->clipboard.box)) {
         p1 = goxel->selection.p;
         p2 = goxel->clipboard.box.p;
-        mat4_itranslate(&mat, +p1.x, +p1.y, +p1.z);
-        mat4_itranslate(&mat, -p2.x, -p2.y, -p2.z);
+        mat4_itranslate(mat.v2, +p1.x, +p1.y, +p1.z);
+        mat4_itranslate(mat.v2, -p2.x, -p2.y, -p2.z);
         mesh_move(tmp, &mat);
     }
     mesh_merge(mesh, tmp, MODE_OVER, NULL);
