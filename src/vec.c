@@ -53,7 +53,7 @@ void mat3_to_eul_(const mat3_t *m, int order, vec3_t *e)
     mat3_to_eul2_(&n, order, &e1, &e2);
 
     // Pick best.
-    if (    fabs(e1.x) + fabs(e1.y) + fabs(e1.y) >
+    if (    fabs(e1.x) + fabs(e1.y) + fabs(e1.z) >
             fabs(e2.x) + fabs(e2.y) + fabs(e2.z)) {
         *e = e1;
     } else {
