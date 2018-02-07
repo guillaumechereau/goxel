@@ -489,20 +489,20 @@ DECL bool mat4_invert(const float mat[4][4], float out[4][4])
     return true;
 }
 
-DECL void mat4_igrow(mat4_t *m, float x, float y, float z)
+DECL void mat4_igrow(float m[4][4], float x, float y, float z)
 {
     // XXX: need to optimize this.
     float s[3];
     float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
     int i;
     for (i = 0; i < 3; i++) {
-        mat4_mul_vec4(m->v2, v[i], v[i]);
+        mat4_mul_vec4(m, v[i], v[i]);
         s[i] = vec3_norm(v[i]);
     }
     s[0] = (2 * x + s[0]) / s[0];
     s[1] = (2 * y + s[1]) / s[1];
     s[2] = (2 * z + s[2]) / s[2];
-    mat4_iscale(m->v2, s[0], s[1], s[2]);
+    mat4_iscale(m, s[0], s[1], s[2]);
 }
 
 DECL void mat4_mul(const float a[4][4], const float b[4][4], float out[4][4])
