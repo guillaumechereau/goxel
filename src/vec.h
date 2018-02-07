@@ -333,16 +333,14 @@ DECL bool vec3_ilerp_const(float a[3], const float b[3], float d)
     return vec3_lerp_const(a, b, d, a);
 }
 
-DECL vec3_t vec3_project(vec3_t a, vec3_t b)
+DECL void vec3_project(const float a[3], const float b[3], float out[3])
 {
-    vec3_t ret;
-    vec3_mul(b.v, vec3_dot(a.v, b.v) / vec3_dot(b.v, b.v), ret.v);
-    return ret;
+    vec3_mul(b, vec3_dot(a, b) / vec3_dot(b, b), out);
 }
 
-DECL real_t vec2_cross(vec2_t a, vec2_t b)
+DECL float vec2_cross(const float a[2], const float b[2])
 {
-    return a.x * b.y - a.y * b.x;
+    return a[0] * b[1] - a[1] * b[0];
 }
 
 DECL void vec3_cross(const float a[3], const float b[3], float out[3])

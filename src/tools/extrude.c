@@ -107,7 +107,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     vec3_normalize(face_plane.n.v, n.v);
     // XXX: Is there a better way to compute the delta??
     vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
-    delta = vec3_dot(n.v, vec3_project(v, n).v);
+    vec3_project(v.v, n.v, v.v);
+    delta = vec3_dot(n.v, v.v);
     // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     // Skip if we didn't move.
@@ -115,7 +116,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     tool->last_delta = round(delta);
 
     vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
-    vec3_add(goxel->tool_plane.p.v, vec3_project(v, n).v, pos.v);
+    vec3_project(v.v, n.v, v.v);
+    vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
     pos.x = round(pos.x);
     pos.y = round(pos.y);
     pos.z = round(pos.z);

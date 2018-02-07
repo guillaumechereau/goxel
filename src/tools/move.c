@@ -102,13 +102,14 @@ static int on_move(gesture3d_t *gest, void *user)
 
         vec3_normalize(face_plane.n.v, n.v);
         vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
-        vec3_add(goxel->tool_plane.p.v, vec3_project(v, n).v, pos.v);
+        vec3_project(v.v, n.v, v.v);
+        vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
         pos.x = round(pos.x);
         pos.y = round(pos.y);
         pos.z = round(pos.z);
         vec3_add(tool->box.p.v, face_plane.n.v, d.v);
         vec3_sub(pos.v, d.v, ofs.v);
-        ofs = vec3_project(ofs, n);
+        vec3_project(ofs.v, n.v, ofs.v);
 
         mat = mat4_identity;
         mat4_itranslate(&mat, ofs.x, ofs.y, ofs.z);

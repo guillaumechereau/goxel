@@ -137,8 +137,8 @@ static int on_adjust(gesture3d_t *gest, void *user)
     }
 
     vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
-    vec3_add(goxel->tool_plane.p.v,
-             vec3_project(v, goxel->plane.n).v, pos.v);
+    vec3_project(v.v, goxel->plane.n.v, v.v);
+    vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
     pos.x = round(pos.x - 0.5) + 0.5;
     pos.y = round(pos.y - 0.5) + 0.5;
     pos.z = round(pos.z - 0.5) + 0.5;

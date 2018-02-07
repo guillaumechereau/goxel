@@ -142,7 +142,8 @@ static int on_resize(gesture3d_t *gest, void *user)
 
         vec3_normalize(face_plane.n.v, n.v);
         vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
-        vec3_add(goxel->tool_plane.p.v, vec3_project(v, n).v, pos.v);
+        vec3_project(v.v, n.v, v.v);
+        vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
         pos.x = round(pos.x);
         pos.y = round(pos.y);
         pos.z = round(pos.z);
@@ -153,8 +154,9 @@ static int on_resize(gesture3d_t *gest, void *user)
             vec3_t d;
             vec3_add(goxel->selection.p.v, face_plane.n.v, d.v);
             vec3_sub(pos.v, d.v, d.v);
-            vec3_t ofs = vec3_project(d, n);
-            vec3_iadd(goxel->selection.p.v, ofs.v);
+            float ofs[3];
+            vec3_project(d.v, n.v, ofs);
+            vec3_iadd(goxel->selection.p.v, ofs);
         }
 
         if (gest->state == GESTURE_END) {
@@ -187,8 +189,8 @@ static int on_drag(gesture3d_t *gest, void *user)
         if (gest->state == GESTURE_BEGIN)
             goxel->tool_plane = plane_from_normal(curs->pos, goxel->plane.u);
         vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
-        vec3_add(goxel->tool_plane.p.v,
-                 vec3_project(v, goxel->plane.n).v, pos.v);
+        vec3_project(v.v, goxel->plane.n.v, v.v);
+        vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
         pos.x = round(pos.x - 0.5) + 0.5;
         pos.y = round(pos.y - 0.5) + 0.5;
         pos.z = round(pos.z - 0.5) + 0.5;

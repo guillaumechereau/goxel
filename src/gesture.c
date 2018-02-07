@@ -31,16 +31,13 @@ static bool rect_contains(vec4_t rect, vec2_t pos)
 
 static float get_angle(vec2_t a0, vec2_t a1, vec2_t b0, vec2_t b1)
 {
-    vec2_t u;
-    vec2_t v;
-
-    vec2_sub(a1.v, a0.v, u.v);
-    vec2_normalize(u.v, u.v);
-    vec2_sub(b1.v, b0.v, v.v);
-    vec2_normalize(v.v, v.v);
-
-    float dot = vec2_dot(u.v, v.v);
-    float det = vec2_cross(u, v);
+    float u[2], v[2], dot, det;
+    vec2_sub(a1.v, a0.v, u);
+    vec2_normalize(u, u);
+    vec2_sub(b1.v, b0.v, v);
+    vec2_normalize(v, v);
+    dot = vec2_dot(u, v);
+    det = vec2_cross(u, v);
     return atan2(det, dot);
 }
 
