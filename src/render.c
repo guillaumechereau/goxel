@@ -520,8 +520,7 @@ static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
     mat4_mul_vec4(m, vec4(0, 0, 1, 0).v, light_dir.v);
 
     if (rend->light.fixed) {
-        mat4_set_identity(m);
-        mat4_imul(m, mat4_inverted(rend->view_mat).v2);
+        mat4_invert(rend->view_mat.v2, m);
         mat4_irotate(m, -M_PI / 4, 1, 0, 0);
         mat4_irotate(m, -M_PI / 4, 0, 0, 1);
         mat4_mul_vec4(m, light_dir.v, light_dir.v);

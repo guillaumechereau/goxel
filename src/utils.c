@@ -394,15 +394,15 @@ void img_downsample(const uint8_t *img, int w, int h, int bpp,
 vec3_t unproject(const vec3_t *win, const mat4_t *model,
                  const mat4_t *proj, const vec4_t *view)
 {
-    mat4_t inv;
+    float inv[4][4];
     vec4_t p;
 
-    mat4_mul(proj->v2, model->v2, inv.v2);
-    inv = mat4_inverted(inv);
+    mat4_mul(proj->v2, model->v2, inv);
+    mat4_invert(inv, inv);
     p = vec4((win->x - view->v[0]) / view->v[2] * 2 - 1,
              (win->y - view->v[1]) / view->v[3] * 2 - 1,
              2 * win->z - 1, 1);
-    mat4_mul_vec4(inv.v2, p.v, p.v);
+    mat4_mul_vec4(inv, p.v, p.v);
     if (p.w != 0) vec3_imul(p.xyz.v, 1 / p.w);
     return p.xyz;
 }

@@ -435,12 +435,12 @@ DECL void mat4_iscale(float m[4][4], float x, float y, float z)
     mat4_scale(m, x, y, z, m);
 }
 
-DECL bool mat4_invert(mat4_t *mat)
+DECL bool mat4_invert(const float mat[4][4], float out[4][4])
 {
     real_t det;
     int i;
-    const real_t *m = mat->v;
-    real_t inv[16];
+    const float *m = (const float*)mat;
+    float inv[16];
 
 #define M(i, j, k) m[i] * m[j] * m[k]
     inv[0] =   M(5, 10, 15) - M(5, 11, 14)  - M(9, 6, 15) +
@@ -479,24 +479,14 @@ DECL bool mat4_invert(mat4_t *mat)
 
     det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
 
-    if (det == 0) {
+    if (det == 0)
         return false;
-    }
 
     det = 1.0 / det;
 
     for (i = 0; i < 16; i++)
-        mat->v[i] = inv[i] * det;
+        out[i / 4][i % 4] = inv[i] * det;
     return true;
-}
-
-DECL mat4_t mat4_inverted(mat4_t mat)
-{
-    mat4_t ret = mat;
-    if (mat4_invert(&ret))
-        return ret;
-    else
-        return mat4_zero;
 }
 
 DECL void mat4_igrow(mat4_t *m, float x, float y, float z)

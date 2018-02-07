@@ -43,14 +43,14 @@ static void unpack_pos_data(uint32_t v, int pos[3], int *face,
 static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
                               const mat4_t *proj, const vec4_t *view)
 {
-    mat4_t inv;
-    mat4_mul(proj->v2, model->v2, inv.v2);
-    mat4_invert(&inv); // XXX: check for return value.
+    float inv[4][4];
+    mat4_mul(proj->v2, model->v2, inv);
+    mat4_invert(inv, inv); // XXX: check for return value.
     vec4_t norm_pos = vec4(
             win->x / view->v[2],
             win->y / view->v[3],
              0, 0);
-    mat4_mul_vec4(inv.v2, norm_pos.v, norm_pos.v);
+    mat4_mul_vec4(inv, norm_pos.v, norm_pos.v);
     return norm_pos.xyz;
 }
 

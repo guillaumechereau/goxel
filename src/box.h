@@ -183,10 +183,12 @@ static inline bool box_contains(box_t a, box_t b) {
     };
     vec3_t p;
     int i;
-    mat4_t imat = mat4_inverted(a.mat);
+    float imat[4][4];
+
+    mat4_invert(a.mat.v2, imat);
     for (i = 0; i < 8; i++) {
         mat4_mul_vec3(b.mat.v2, PS[i].v, p.v);
-        mat4_mul_vec3(imat.v2, p.v, p.v);
+        mat4_mul_vec3(imat, p.v, p.v);
         if (p.x < -1 || p.x > 1 || p.y < -1 || p.y > 1 || p.z < -1 || p.z > 1)
             return false;
     }
