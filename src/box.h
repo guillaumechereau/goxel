@@ -79,6 +79,16 @@ static inline box_t bbox_from_aabb(const int aabb[2][3])
     return bbox_from_extents(pos, size.x / 2, size.y / 2, size.z / 2);
 }
 
+static inline void bbox_to_aabb(box_t b, int aabb[2][3])
+{
+    aabb[0][0] = round(b.p.x - b.w.x);
+    aabb[0][1] = round(b.p.y - b.h.y);
+    aabb[0][2] = round(b.p.z - b.d.z);
+    aabb[1][0] = round(b.p.x + b.w.x);
+    aabb[1][1] = round(b.p.y + b.h.y);
+    aabb[1][2] = round(b.p.z + b.d.z);
+}
+
 
 // XXX: remove?
 static inline box_t bbox_from_points(vec3_t a, vec3_t b)

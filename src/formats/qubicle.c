@@ -154,7 +154,12 @@ static void qubicle_export(const image_t *img, const char *path)
     i = 0;
     DL_FOREACH(img->layers, layer) {
         mesh = layer->mesh;
-        if (!mesh_get_bbox(mesh, bbox, true)) continue;
+
+        if (!box_is_null(layer->box))
+            bbox_to_aabb(layer->box, bbox);
+        else
+            if (!mesh_get_bbox(mesh, bbox, true)) continue;
+
         WRITE(uint8_t, strlen(layer->name), file);
         fwrite(layer->name, strlen(layer->name), 1, file);
         WRITE(uint32_t, bbox[1][0] - bbox[0][0], file);
