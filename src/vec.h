@@ -559,21 +559,22 @@ DECL mat4_t mat4_transposed(mat4_t m)
 }
 
 // Similar to gluLookAt
-DECL mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up)
+DECL mat4_t mat4_lookat(const float eye[3], const float center[3],
+                        const float up[3])
 {
-    vec3_t f, s, u;
+    float f[3], s[3], u[3];
     mat4_t m = mat4_identity;
-    vec3_sub(center.v, eye.v, f.v);
-    vec3_normalize(f.v, f.v);
-    vec3_normalize(up.v, up.v);
-    vec3_cross(f.v, up.v, s.v);
-    vec3_cross(s.v, f.v, u.v);
-    vec3_normalize(u.v, u.v);
-    m.vecs[0].xyz = s;
-    m.vecs[1].xyz = u;
-    vec3_neg(f.v, m.vecs[2].xyz.v);
+    vec3_sub(center, eye, f);
+    vec3_normalize(f, f);
+    vec3_cross(f, up, s);
+    vec3_normalize(s, s);
+    vec3_cross(s, f, u);
+    vec3_normalize(u, u);
+    vec3_copy(s, m.vecs[0].v);
+    vec3_copy(u, m.vecs[1].v);
+    vec3_neg(f, m.vecs[2].v);
     m = mat4_transposed(m);
-    return mat4_translate(m, -eye.x, -eye.y, -eye.z);
+    return mat4_translate(m, -eye[0], -eye[1], -eye[2]);
 }
 
 DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
