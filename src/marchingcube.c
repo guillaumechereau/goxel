@@ -82,7 +82,7 @@ static vec3_t mc_interp_normal(const mc_vert_t *vert, int normals[8][3])
     const float mu = vert->mu;
     for (i = 0; i < 3; i++)
         ret.v[i] = (p0[i] * (1 - mu) + p1[i] * mu);
-    vec3_normalize(&ret);
+    vec3_normalize(ret.v, ret.v);
     return ret;
 }
 
@@ -197,7 +197,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
         }
         if (sum_a == 0) continue;
         nb_tri = mc_compute(densities, tri);
-        if (effects & EFFECT_FLAT) vec3_normalize(&n);
+        if (effects & EFFECT_FLAT) vec3_normalize(n.v, n.v);
 
         for (i = 0; i < nb_tri; i++) {
             for (v = 0; v < 3; v++) {

@@ -66,7 +66,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
     vec3_t onorm;
 
     camera_get_ray(&goxel->camera, &wpos.xy, view, &opos, &onorm);
-    if (fabs(vec3_dot(onorm, plane->n)) <= min_angle_cos)
+    if (fabs(vec3_dot(onorm.v, plane->n.v)) <= min_angle_cos)
         return false;
 
     if (!plane_line_intersection(*plane, opos, onorm, out))
@@ -93,9 +93,9 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
         plane.mat = box->mat;
         mat4_imul(&plane.mat, FACES_MATS[f]);
 
-        if (!inside && vec3_dot(plane.n, onorm) >= 0)
+        if (!inside && vec3_dot(plane.n.v, onorm.v) >= 0)
             continue;
-        if (inside && vec3_dot(plane.n, onorm) <= 0)
+        if (inside && vec3_dot(plane.n.v, onorm.v) <= 0)
             continue;
         if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
@@ -103,8 +103,8 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
             continue;
         if (face) *face = f;
         *out = mat4_mul_vec3(plane.mat, *out);
-        *normal = vec3_normalized(plane.n);
-        if (inside) vec3_imul(normal, -1);
+        vec3_normalize(plane.n.v, normal->v);
+        if (inside) vec3_imul(normal->v, -1);
         return true;
     }
     return false;
@@ -117,7 +117,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     vec2_t view_size = view->zw;
     // XXX: No need to render the fbo if it is not dirty.
     if (goxel->pick_fbo && !vec2_equal(
-                vec2(goxel->pick_fbo->w, goxel->pick_fbo->h), view_size)) {
+                vec2(goxel->pick_fbo->w, goxel->pick_fbo->h).v, view_size.v)) {
         texture_delete(goxel->pick_fbo);
         goxel->pick_fbo = NULL;
     }
@@ -161,7 +161,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     normal->x = FACES_NORMALS[face][0];
     normal->y = FACES_NORMALS[face][1];
     normal->z = FACES_NORMALS[face][2];
-    vec3_iaddk(out, *normal, 0.5);
+    vec3_iaddk(out->v, normal->v, 0.5);
     return true;
 }
 
@@ -238,7 +238,7 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
     }
 end:
     if (ret && offset)
-        vec3_iaddk(out, *normal, offset);
+        vec3_iaddk(out->v, normal->v, offset);
     if (ret && (snap_mask & SNAP_ROUNDED)) {
         out->x = round(out->x - 0.5) + 0.5;
         out->y = round(out->y - 0.5) + 0.5;
@@ -425,13 +425,14 @@ static int on_pan(const gesture_t *gest, void *user)
     vec3_t wpos = vec3(gest->pos.x, gest->pos.y, 0);
     vec3_t worigin_pos = vec3(goxel->move_origin.pos.x,
                               goxel->move_origin.pos.y, 0);
-    vec3_t wdelta = vec3_sub(wpos, worigin_pos);
+    vec3_t wdelta;
+    vec3_sub(wpos.v, worigin_pos.v, wdelta.v);
     vec3_t odelta = unproject_delta(&wdelta, &goxel->camera.view_mat,
                                     &goxel->camera.proj_mat, &gest->view);
-    vec3_imul(&odelta, 2); // XXX: why do I need that?
+    vec3_imul(odelta.v, 2); // XXX: why do I need that?
     if (!goxel->camera.ortho)
-        vec3_imul(&odelta, goxel->camera.dist);
-    goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs, odelta);
+        vec3_imul(odelta.v, goxel->camera.dist);
+    vec3_add(goxel->move_origin.camera_ofs.v, odelta.v, goxel->camera.ofs.v);
     return 0;
 }
 

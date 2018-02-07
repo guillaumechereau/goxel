@@ -93,24 +93,24 @@ static inline void bbox_to_aabb(box_t b, int aabb[2][3])
 // XXX: remove?
 static inline box_t bbox_from_points(vec3_t a, vec3_t b)
 {
-    vec3_t v0, v1;
+    vec3_t v0, v1, mid;
     v0.x = min(a.x, b.x);
     v0.y = min(a.y, b.y);
     v0.z = min(a.z, b.z);
     v1.x = max(a.x, b.x);
     v1.y = max(a.y, b.y);
     v1.z = max(a.z, b.z);
-    return bbox_from_extents(vec3_mix(v0, v1, 0.5),
-                            (v1.x - v0.x) / 2,
-                            (v1.y - v0.y) / 2,
-                            (v1.z - v0.z) / 2);
+    vec3_mix(v0.v, v1.v, 0.5, mid.v);
+    return bbox_from_extents(mid, (v1.x - v0.x) / 2,
+                                  (v1.y - v0.y) / 2,
+                                  (v1.z - v0.z) / 2);
 }
 
 static inline box_t bbox_from_npoints(int n, const vec3_t *points)
 {
     assert(n >= 1);
     int i;
-    vec3_t v0, v1;
+    vec3_t v0, v1, mid;
     v0 = v1 = points[0];
     for (i = 1; i < n; i++) {
         v0.x = min(v0.x, points[i].x);
@@ -120,16 +120,16 @@ static inline box_t bbox_from_npoints(int n, const vec3_t *points)
         v1.y = max(v1.y, points[i].y);
         v1.z = max(v1.z, points[i].z);
     }
-    return bbox_from_extents(vec3_mix(v0, v1, 0.5),
-                            (v1.x - v0.x) / 2,
-                            (v1.y - v0.y) / 2,
-                            (v1.z - v0.z) / 2);
+    vec3_mix(v0.v, v1.v, 0.5, mid.v);
+    return bbox_from_extents(mid, (v1.x - v0.x) / 2,
+                                  (v1.y - v0.y) / 2,
+                                  (v1.z - v0.z) / 2);
 }
 
 static inline box_t bbox_intersection(box_t a, box_t b) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
-    vec3_t a0, a1, b0, b1, c0, c1;
+    vec3_t a0, a1, b0, b1, c0, c1, mid;
     a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
     a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
     b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
@@ -138,10 +138,10 @@ static inline box_t bbox_intersection(box_t a, box_t b) {
     c1 = vec3(min(a1.x, b1.x), min(a1.y, b1.y), min(a1.z, b1.z));
     if (c0.x >= c1.x || c0.y > c1.y || c0.z > c1.z)
         return box_null;
-    return bbox_from_extents(vec3_mix(c0, c1, 0.5),
-                             (c1.x - c0.x) / 2,
-                             (c1.y - c0.y) / 2,
-                             (c1.z - c0.z) / 2);
+    vec3_mix(c0.v, c1.v, 0.5, mid.v);
+    return bbox_from_extents(mid, (c1.x - c0.x) / 2,
+                                  (c1.y - c0.y) / 2,
+                                  (c1.z - c0.z) / 2);
 }
 
 static inline bool bbox_intersect(box_t a, box_t b) {
@@ -198,7 +198,7 @@ static inline box_t bbox_merge(box_t a, box_t b)
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
 
-    vec3_t a0, a1, b0, b1, r0, r1;
+    vec3_t a0, a1, b0, b1, r0, r1, mid;
     a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
     a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
     b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
@@ -211,10 +211,10 @@ static inline box_t bbox_merge(box_t a, box_t b)
     r1.y = max(a1.y, b1.y);
     r1.z = max(a1.z, b1.z);
 
-    return bbox_from_extents(vec3_mix(r0, r1, 0.5),
-                            (r1.x - r0.x) / 2,
-                            (r1.y - r0.y) / 2,
-                            (r1.z - r0.z) / 2);
+    vec3_mix(r0.v, r1.v, 0.5, mid.v);
+    return bbox_from_extents(mid, (r1.x - r0.x) / 2,
+                                  (r1.y - r0.y) / 2,
+                                  (r1.z - r0.z) / 2);
 }
 
 static inline bool bbox_contains_vec(box_t b, vec3_t v)
@@ -259,9 +259,9 @@ static inline box_t bbox_grow(box_t b, float x, float y, float z)
 static inline vec3_t box_get_size(box_t b)
 {
     return vec3(
-        vec3_norm(mat4_mul_vec(b.mat, vec4(1, 0, 0, 0)).xyz),
-        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 1, 0, 0)).xyz),
-        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 0, 1, 0)).xyz)
+        vec3_norm(mat4_mul_vec(b.mat, vec4(1, 0, 0, 0)).xyz.v),
+        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 1, 0, 0)).xyz.v),
+        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 0, 1, 0)).xyz.v)
     );
 }
 

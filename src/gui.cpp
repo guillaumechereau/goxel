@@ -517,10 +517,10 @@ void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
     if (goxel->camera.ortho)
         s = goxel->camera.dist / 32;
     else
-        vec3_iaddk(&pos, normal, 100);
+        vec3_iaddk(pos.v, normal.v, 100);
 
     for (i = 0; i < 3; i++) {
-        b = vec3_addk(pos, AXIS[i], 2.0 * s);
+        vec3_addk(pos.v, AXIS[i].v, 2.0 * s, b.v);
         vec4_set(c, AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
         render_line(&goxel->rend, &pos, &b, c);
     }

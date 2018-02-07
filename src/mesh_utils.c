@@ -93,7 +93,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
     int vpos[3];
     uint8_t value[4];
 
-    vec3_normalize(&n);
+    vec3_normalize(n.v, n.v);
     pos = plane->p;
 
     // Generate the projection into the plane.

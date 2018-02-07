@@ -341,7 +341,7 @@ void model3d_render(model3d_t *model3d,
     if (model3d->solid) {
         if (light && (!(effects & EFFECT_NO_SHADING))) {
             light_dir = *light;
-            if (effects & EFFECT_SEE_BACK) vec3_imul(&light_dir, -1);
+            if (effects & EFFECT_SEE_BACK) vec3_imul(light_dir.v, -1);
             GL(glUniform3fv(prog.u_l_dir_l, 1, light_dir.v));
             GL(glUniform1f(prog.u_l_emit_l, 0.2f));
             GL(glUniform1f(prog.u_l_diff_l, 0.8f));

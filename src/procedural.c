@@ -302,9 +302,9 @@ static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
 static void scale_normalize(mat4_t *mat, float v)
 {
     float x, y, z, m;
-    x = vec3_norm(mat4_mul_vec(*mat, vec4(1, 0, 0, 0)).xyz);
-    y = vec3_norm(mat4_mul_vec(*mat, vec4(0, 1, 0, 0)).xyz);
-    z = vec3_norm(mat4_mul_vec(*mat, vec4(0, 0, 1, 0)).xyz);
+    x = vec3_norm(mat4_mul_vec(*mat, vec4(1, 0, 0, 0)).xyz.v);
+    y = vec3_norm(mat4_mul_vec(*mat, vec4(0, 1, 0, 0)).xyz.v);
+    z = vec3_norm(mat4_mul_vec(*mat, vec4(0, 0, 1, 0)).xyz.v);
     m = min3(x, y, z);
     if (v) m = v / 2;
     mat4_iscale(mat, m / x, m / y, m / z);
@@ -459,9 +459,9 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
     }
 
     // XXX: find a better stopping condition.
-    if (vec3_norm2(ctx->box.w) < 0.2 ||
-        vec3_norm2(ctx->box.h) < 0.2 ||
-        vec3_norm2(ctx->box.d) < 0.2) goto end;
+    if (vec3_norm2(ctx->box.w.v) < 0.2 ||
+        vec3_norm2(ctx->box.h.v) < 0.2 ||
+        vec3_norm2(ctx->box.d.v) < 0.2) goto end;
 
     DL_FOREACH(ctx->prog->children, expr) {
         if (expr->type == NODE_LOOP) {

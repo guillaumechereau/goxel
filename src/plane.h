@@ -73,7 +73,7 @@ static inline plane_t plane(vec3_t pos, vec3_t u, vec3_t v)
     ret.mat = mat4_identity;
     ret.u = u;
     ret.v = v;
-    ret.n = vec3_cross(u, v);
+    vec3_cross(u.v, v.v, ret.n.v);
     ret.p = pos;
     return ret;
 }
@@ -89,13 +89,15 @@ static inline bool plane_is_null(plane_t p) {
 static inline bool plane_line_intersection(plane_t plane, vec3_t p, vec3_t n,
                                            vec3_t *out)
 {
+    vec3_t v;
     mat4_t m = mat4_identity;
     m.vecs[0].xyz = plane.u;
     m.vecs[1].xyz = plane.v;
     m.vecs[2].xyz = n;
     if (!mat4_invert(&m)) return false;
     if (out) {
-        *out = mat4_mul_vec3(m, vec3_sub(p, plane.p));
+        vec3_sub(p.v, plane.p.v, v.v);
+        *out = mat4_mul_vec3(m, v);
         out->z = 0;
     }
     return true;
@@ -108,11 +110,11 @@ static inline plane_t plane_from_normal(vec3_t pos, vec3_t n)
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
     ret.mat = mat4_identity;
     ret.p = pos;
-    ret.n = vec3_normalized(n);
+    vec3_normalize(n.v, ret.n.v);
     for (i = 0; i < 3; i++) {
-        ret.u = vec3_cross(ret.n, AXES[i]);
-        if (vec3_norm2(ret.u) > 0) break;
+        vec3_cross(ret.n.v, AXES[i].v, ret.u.v);
+        if (vec3_norm2(ret.u.v) > 0) break;
     }
-    ret.v = vec3_cross(ret.n, ret.u);
+    vec3_cross(ret.n.v, ret.u.v, ret.v.v);
     return ret;
 }

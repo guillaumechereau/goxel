@@ -15,7 +15,7 @@ void mat3_normalize_(mat3_t *m)
 {
     int i;
     for (i = 0; i < 3; i++)
-        vec3_normalize(&m->vecs[i]);
+        vec3_normalize(m->vecs[i].v, m->vecs[i].v);
 }
 
 static void mat3_to_eul2_(const mat3_t *m, int order, vec3_t *e1, vec3_t *e2)
@@ -39,8 +39,8 @@ static void mat3_to_eul2_(const mat3_t *m, int order, vec3_t *e1, vec3_t *e2)
         *e2 = *e1;
     }
     if (parity) {
-        vec3_imul(e1, -1);
-        vec3_imul(e2, -1);
+        vec3_imul(e1->v, -1);
+        vec3_imul(e2->v, -1);
     }
 }
 

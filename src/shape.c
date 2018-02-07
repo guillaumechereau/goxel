@@ -24,12 +24,12 @@ shape_t shape_cylinder;
 
 static float sphere_func(const vec3_t *p, const vec3_t *s, float smoothness)
 {
-    float d = vec3_norm(*p);
+    float d = vec3_norm(p->v);
     float r;
     if (p->x == 0 && p->y == 0 && p->z == 0) return max3(s->x, s->y, s->z);
     r = s->x * s->y * s->z / vec3_norm(vec3(s->y * s->z * p->x / d,
                                             s->x * s->z * p->y / d,
-                                            s->x * s->y * p->z / d));
+                                            s->x * s->y * p->z / d).v);
     return r - d;
 }
 
@@ -63,13 +63,13 @@ static float cube_func(const vec3_t *p, const vec3_t *s, float sm)
 
 static float cylinder_func(const vec3_t *p, const vec3_t *s, float smoothness)
 {
-    float d = vec2_norm(p->xy);
+    float d = vec2_norm(p->xy.v);
     float rz, r;
     rz = s->z - fabs(p->z);
     if (p->x == 0 && p->y == 0) return min(rz, max3(s->x, s->y, s->z));
     // Ellipse polar form relative to center:
     // r(θ) = a b / √((b cosΘ)² + (a sinΘ)²)
-    r = s->x * s->y / vec2_norm(vec2(s->y * p->x / d, s->x * p->y / d));
+    r = s->x * s->y / vec2_norm(vec2(s->y * p->x / d, s->x * p->y / d).v);
     return min(rz, r - d);
 }
 

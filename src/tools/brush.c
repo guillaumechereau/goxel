@@ -52,7 +52,7 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
             brush->last_op.mesh_key == mesh_get_key(mesh) &&
-            vec3_equal(curs->pos, brush->last_op.pos)) {
+            vec3_equal(curs->pos.v, brush->last_op.pos.v)) {
         return true;
     }
     brush->last_op.pressed = pressed;
@@ -66,6 +66,8 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
 {
     mat4_t rot;
     box_t box;
+    float v[3];
+
     if (p1 == NULL) {
         box = bbox_from_extents(*p0, r, r, r);
         box = box_swap_axis(box, 2, 0, 1);
@@ -85,15 +87,18 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
     box.mat = mat4_identity;
-    box.p = vec3_mix(*p0, *p1, 0.5);
-    box.d = vec3_sub(*p1, box.p);
+    vec3_mix(p0->v, p1->v, 0.5, box.p.v);
+    vec3_sub(p1->v, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
-        box.w = vec3_cross(box.d, AXES[i]);
-        if (vec3_norm2(box.w) > 0) break;
+        vec3_cross(box.d.v, AXES[i].v, box.w.v);
+        if (vec3_norm2(box.w.v) > 0) break;
     }
     if (i == 3) return box;
-    box.w = vec3_mul(vec3_normalized(box.w), r);
-    box.h = vec3_mul(vec3_normalized(vec3_cross(box.d, box.w)), r);
+    vec3_normalize(box.w.v, v);
+    vec3_mul(v, r, box.w.v);
+    vec3_cross(box.d.v, box.w.v, v);
+    vec3_normalize(v, v);
+    vec3_mul(v, r, box.h.v);
     return box;
 }
 
@@ -135,10 +140,10 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     // Render several times if the space between the current pos
     // and the last pos is larger than the size of the tool shape.
-    nb = ceil(vec3_dist(curs->pos, brush->last_pos) / (2 * r));
+    nb = ceil(vec3_dist(curs->pos.v, brush->last_pos.v) / (2 * r));
     nb = max(nb, 1);
     for (i = 0; i < nb; i++) {
-        pos = vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb);
+        vec3_mix(brush->last_pos.v, curs->pos.v, (i + 1.0) / nb, pos.v);
         box = get_box(&pos, NULL, &curs->normal, r, NULL);
         mesh_op(brush->mesh, &painter2, &box);
     }

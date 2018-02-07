@@ -73,7 +73,7 @@ static int iter(tool_t *tool, const vec4_t *view)
                                 vec4(0, 1, 0, 0)).xyz;
     laser->box.d = mat4_mul_vec(mat4_inverted(goxel->camera.view_mat),
                                 vec4(0, 0, 1, 0)).xyz;
-    laser->box.d = vec3_neg(curs->normal);
+    vec3_neg(curs->normal.v, laser->box.d.v);
     laser->box.p = curs->pos;
     // Just a large value for the size of the laser box.
     mat4_itranslate(&laser->box.mat, 0, 0, -1024);

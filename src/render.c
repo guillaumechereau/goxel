@@ -190,12 +190,15 @@ static float get_border_dist(float x, float y, int mask)
         vec2(0, 1), vec2(-1, 0), vec2(0, -1), vec2(1, 0)};
     float ret = 1;
     int i;
+    float u[2];
     vec2_t p = vec2(x, y);
     for (i = 0; i < 4; i++) {
         if (mask & (1 << i))        // Corners.
-            ret = min(ret, vec2_dist(p, corners[i]));
-        if (mask & (0x10 << i))  // Edges.
-            ret = min(ret, vec2_dot(normals[i], vec2_sub(p, corners[i])));
+            ret = min(ret, vec2_dist(p.v, corners[i].v));
+        if (mask & (0x10 << i)) {  // Edges.
+            vec2_sub(p.v, corners[i].v, u);
+            ret = min(ret, vec2_dot(normals[i].v, u));
+        }
     }
     return ret;
 }
@@ -565,7 +568,7 @@ static void compute_shadow_map_box(
         while (mesh_iter(&iter, bpos)) {
             for (i = 0; i < 8; i++) {
                 p = vec3(bpos[0], bpos[1], bpos[2]);
-                p = vec3_addk(p, POS[i], N);
+                vec3_addk(p.v, POS[i].v, N, p.v);
                 p = mat4_mul_vec3(view_mat, p);
                 rect[0] = min(rect[0], p.x);
                 rect[1] = max(rect[1], p.x);
@@ -614,7 +617,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     if (effects & EFFECT_SEE_BACK) {
         GL(glCullFace(GL_FRONT));
-        vec3_imul(&light_dir, -0.5);
+        vec3_imul(light_dir.v, -0.5);
     }
     if (effects & EFFECT_SEMI_TRANSPARENT) {
         GL(glEnable(GL_BLEND));
@@ -787,7 +790,7 @@ static plane_t line_create_plane(const vec3_t *a, const vec3_t *b)
     plane_t ret;
     ret.mat = mat4_identity;
     ret.p = *a;
-    ret.u = vec3_sub(*b, *a);
+    vec3_sub(b->v, a->v, ret.u.v);
     return ret;
 }
 
@@ -920,8 +923,8 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     // Add a small gradient to the color.
     c1 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
     c2 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
-    vec3_iadd(&c1.rgb, vec3(+0.2, +0.2, +0.2));
-    vec3_iadd(&c2.rgb, vec3(-0.2, -0.2, -0.2));
+    vec3_iadd(c1.rgb.v, vec3(+0.2, +0.2, +0.2).v);
+    vec3_iadd(c2.rgb.v, vec3(-0.2, -0.2, -0.2).v);
 
     vertices[0] = (vertex_t){{-1, -1, 0}, c1};
     vertices[1] = (vertex_t){{+1, -1, 0}, c1};

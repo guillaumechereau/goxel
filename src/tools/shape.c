@@ -39,6 +39,8 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
 {
     mat4_t rot;
     box_t box;
+    float v[3];
+
     if (p1 == NULL) {
         box = bbox_from_extents(*p0, r, r, r);
         box = box_swap_axis(box, 2, 0, 1);
@@ -58,15 +60,18 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
     box.mat = mat4_identity;
-    box.p = vec3_mix(*p0, *p1, 0.5);
-    box.d = vec3_sub(*p1, box.p);
+    vec3_mix(p0->v, p1->v, 0.5, box.p.v);
+    vec3_sub(p1->v, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
-        box.w = vec3_cross(box.d, AXES[i]);
-        if (vec3_norm2(box.w) > 0) break;
+        vec3_cross(box.d.v, AXES[i].v, box.w.v);
+        if (vec3_norm2(box.w.v) > 0) break;
     }
     if (i == 3) return box;
-    box.w = vec3_mul(vec3_normalized(box.w), r);
-    box.h = vec3_mul(vec3_normalized(vec3_cross(box.d, box.w)), r);
+    vec3_normalize(box.w.v, v);
+    vec3_mul(v, r, box.w.v);
+    vec3_cross(box.d.v, box.w.v, v);
+    vec3_normalize(v, v);
+    vec3_mul(v, r, box.h.v);
     return box;
 }
 
@@ -120,7 +125,7 @@ static int on_adjust(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
     cursor_t *curs = gest->cursor;
-    vec3_t pos;
+    vec3_t pos, v;
     box_t box;
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
@@ -131,9 +136,9 @@ static int on_adjust(gesture3d_t *gest, void *user)
                                               goxel->plane.u);
     }
 
-    pos = vec3_add(goxel->tool_plane.p,
-                   vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
-                                goxel->plane.n));
+    vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
+    vec3_add(goxel->tool_plane.p.v,
+             vec3_project(v, goxel->plane.n).v, pos.v);
     pos.x = round(pos.x - 0.5) + 0.5;
     pos.y = round(pos.y - 0.5) + 0.5;
     pos.z = round(pos.z - 0.5) + 0.5;

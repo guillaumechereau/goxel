@@ -53,7 +53,7 @@ static int get_face(vec3_t n)
     const int *n2;
     for (f = 0; f < 6; f++) {
         n2 = FACES_NORMALS[f];
-        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2])) > 0.5)
+        if (vec3_dot(n.v, vec3(n2[0], n2[1], n2[2]).v) > 0.5)
             return f;
     }
     return -1;
@@ -70,7 +70,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     cursor_t *curs = gest->cursor;
     box_t box;
     plane_t face_plane;
-    vec3_t n, pos;
+    vec3_t n, pos, v;
     int pi[3];
     float delta;
 
@@ -94,8 +94,8 @@ static int on_drag(gesture3d_t *gest, void *user)
         box = mesh_get_box(tool->mesh, true);
         face_plane.mat = mat4_mul(box.mat,
                                   FACES_MATS[tool->snap_face]);
-        goxel->tool_plane = plane(curs->pos, curs->normal,
-                                  vec3_normalized(face_plane.u));
+        vec3_normalize(face_plane.u.v, v.v);
+        goxel->tool_plane = plane(curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
 
@@ -104,18 +104,18 @@ static int on_drag(gesture3d_t *gest, void *user)
     // XXX: have some generic way to resize boxes, since we use it all the
     // time!
     face_plane.mat = mat4_mul(box.mat, FACES_MATS[tool->snap_face]);
-    n = vec3_normalized(face_plane.n);
+    vec3_normalize(face_plane.n.v, n.v);
     // XXX: Is there a better way to compute the delta??
-    delta = vec3_dot(n,
-                vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
+    vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
+    delta = vec3_dot(n.v, vec3_project(v, n).v);
     // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     // Skip if we didn't move.
     if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
-    pos = vec3_add(goxel->tool_plane.p,
-                   vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
+    vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
+    vec3_add(goxel->tool_plane.p.v, vec3_project(v, n).v, pos.v);
     pos.x = round(pos.x);
     pos.y = round(pos.y);
     pos.z = round(pos.z);
@@ -124,15 +124,15 @@ static int on_drag(gesture3d_t *gest, void *user)
     tmp_mesh = mesh_copy(tool->mesh);
 
     if (delta >= 1) {
-        vec3_iaddk(&face_plane.p, n, -0.5);
+        vec3_iaddk(face_plane.p.v, n.v, -0.5);
         box = box_move_face(box, tool->snap_face, pos);
         mesh_extrude(tmp_mesh, &face_plane, &box);
         mesh_merge(mesh, tmp_mesh, MODE_OVER, NULL);
     }
     if (delta < 0.5) {
         box = box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos);
-        vec3_imul(&face_plane.n, -1.0);
-        vec3_iaddk(&face_plane.p, n, -0.5);
+        vec3_imul(face_plane.n.v, -1.0);
+        vec3_iaddk(face_plane.p.v, n.v, -0.5);
         mesh_extrude(tmp_mesh, &face_plane, &box);
         mesh_merge(mesh, tmp_mesh, MODE_SUB, NULL);
     }

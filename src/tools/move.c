@@ -59,7 +59,7 @@ static int get_face(vec3_t n)
     const int *n2;
     for (f = 0; f < 6; f++) {
         n2 = FACES_NORMALS[f];
-        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2])) > 0.5)
+        if (vec3_dot(n.v, vec3(n2[0], n2[1], n2[2]).v) > 0.5)
             return f;
     }
     return -1;
@@ -70,7 +70,7 @@ static int on_move(gesture3d_t *gest, void *user)
     plane_t face_plane;
     cursor_t *curs = gest->cursor;
     tool_move_t *tool = user;
-    vec3_t n, pos, d, ofs;
+    vec3_t n, pos, d, ofs, v;
     layer_t *layer = goxel->image->active_layer;
     mat4_t mat;
 
@@ -87,8 +87,8 @@ static int on_move(gesture3d_t *gest, void *user)
         render_img(&goxel->rend, NULL, &face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
-            goxel->tool_plane = plane(curs->pos, curs->normal,
-                                      vec3_normalized(face_plane.u));
+            vec3_normalize(face_plane.u.v, v.v);
+            goxel->tool_plane = plane(curs->pos, curs->normal, v);
             image_history_push(goxel->image);
         }
         return 0;
@@ -100,14 +100,15 @@ static int on_move(gesture3d_t *gest, void *user)
         face_plane.mat = mat4_mul(tool->box.mat,
                                   FACES_MATS[tool->snap_face]);
 
-        n = vec3_normalized(face_plane.n);
-        pos = vec3_add(goxel->tool_plane.p,
-                vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
+        vec3_normalize(face_plane.n.v, n.v);
+        vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
+        vec3_add(goxel->tool_plane.p.v, vec3_project(v, n).v, pos.v);
         pos.x = round(pos.x);
         pos.y = round(pos.y);
         pos.z = round(pos.z);
-        d = vec3_add(tool->box.p, face_plane.n);
-        ofs = vec3_project(vec3_sub(pos, d), n);
+        vec3_add(tool->box.p.v, face_plane.n.v, d.v);
+        vec3_sub(pos.v, d.v, ofs.v);
+        ofs = vec3_project(ofs, n);
 
         mat = mat4_identity;
         mat4_itranslate(&mat, ofs.x, ofs.y, ofs.z);

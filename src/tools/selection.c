@@ -46,6 +46,7 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
 {
     mat4_t rot;
     box_t box;
+    float v[3];
     if (p1 == NULL) {
         box = bbox_from_extents(*p0, r, r, r);
         box = box_swap_axis(box, 2, 0, 1);
@@ -65,15 +66,18 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
     box.mat = mat4_identity;
-    box.p = vec3_mix(*p0, *p1, 0.5);
-    box.d = vec3_sub(*p1, box.p);
+    vec3_mix(p0->v, p1->v, 0.5, box.p.v);
+    vec3_sub(p1->v, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
-        box.w = vec3_cross(box.d, AXES[i]);
-        if (vec3_norm2(box.w) > 0) break;
+        vec3_cross(box.d.v, AXES[i].v, box.w.v);
+        if (vec3_norm2(box.w.v) > 0) break;
     }
     if (i == 3) return box;
-    box.w = vec3_mul(vec3_normalized(box.w), r);
-    box.h = vec3_mul(vec3_normalized(vec3_cross(box.d, box.w)), r);
+    vec3_normalize(box.w.v, v);
+    vec3_mul(v, r, box.w.v);
+    vec3_cross(box.d.v, box.w.v, v);
+    vec3_normalize(v, v);
+    vec3_mul(v, r, box.h.v);
     return box;
 }
 
@@ -86,7 +90,7 @@ static int get_face(vec3_t n)
     const int *n2;
     for (f = 0; f < 6; f++) {
         n2 = FACES_NORMALS[f];
-        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2])) > 0.5)
+        if (vec3_dot(n.v, vec3(n2[0], n2[1], n2[2]).v) > 0.5)
             return f;
     }
     return -1;
@@ -109,7 +113,7 @@ static int on_resize(gesture3d_t *gest, void *user)
     plane_t face_plane;
     cursor_t *curs = gest->cursor;
     tool_selection_t *tool = user;
-    vec3_t n, pos;
+    vec3_t n, pos, v;
 
     if (box_is_null(goxel->selection)) return GESTURE_FAILED;
 
@@ -124,8 +128,8 @@ static int on_resize(gesture3d_t *gest, void *user)
         render_img(&goxel->rend, NULL, &face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
-            goxel->tool_plane = plane(curs->pos, curs->normal,
-                                      vec3_normalized(face_plane.u));
+            vec3_normalize(face_plane.u.v, v.v);
+            goxel->tool_plane = plane(curs->pos, curs->normal, v);
         }
         return 0;
     }
@@ -136,9 +140,9 @@ static int on_resize(gesture3d_t *gest, void *user)
         face_plane.mat = mat4_mul(goxel->selection.mat,
                                   FACES_MATS[tool->snap_face]);
 
-        n = vec3_normalized(face_plane.n);
-        pos = vec3_add(goxel->tool_plane.p,
-                vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
+        vec3_normalize(face_plane.n.v, n.v);
+        vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
+        vec3_add(goxel->tool_plane.p.v, vec3_project(v, n).v, pos.v);
         pos.x = round(pos.x);
         pos.y = round(pos.y);
         pos.z = round(pos.z);
@@ -146,9 +150,11 @@ static int on_resize(gesture3d_t *gest, void *user)
             goxel->selection = box_move_face(goxel->selection,
                                              tool->snap_face, pos);
         } else {
-            vec3_t d = vec3_add(goxel->selection.p, face_plane.n);
-            vec3_t ofs = vec3_project(vec3_sub(pos, d), n);
-            vec3_iadd(&goxel->selection.p, ofs);
+            vec3_t d;
+            vec3_add(goxel->selection.p.v, face_plane.n.v, d.v);
+            vec3_sub(pos.v, d.v, d.v);
+            vec3_t ofs = vec3_project(d, n);
+            vec3_iadd(goxel->selection.p.v, ofs.v);
         }
 
         if (gest->state == GESTURE_END) {
@@ -164,7 +170,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_selection_t *tool = user;
     cursor_t *curs = gest->cursor;
-    vec3_t pos;
+    vec3_t pos, v;
 
     if (!tool->adjust) {
         if (gest->state == GESTURE_BEGIN)
@@ -180,9 +186,9 @@ static int on_drag(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Adjust height.");
         if (gest->state == GESTURE_BEGIN)
             goxel->tool_plane = plane_from_normal(curs->pos, goxel->plane.u);
-        pos = vec3_add(goxel->tool_plane.p,
-                       vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p),
-                           goxel->plane.n));
+        vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
+        vec3_add(goxel->tool_plane.p.v,
+                 vec3_project(v, goxel->plane.n).v, pos.v);
         pos.x = round(pos.x - 0.5) + 0.5;
         pos.y = round(pos.y - 0.5) + 0.5;
         pos.z = round(pos.z - 0.5) + 0.5;

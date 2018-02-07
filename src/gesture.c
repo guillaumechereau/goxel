@@ -31,9 +31,15 @@ static bool rect_contains(vec4_t rect, vec2_t pos)
 
 static float get_angle(vec2_t a0, vec2_t a1, vec2_t b0, vec2_t b1)
 {
-    vec2_t u = vec2_normalized(vec2_sub(a1, a0));
-    vec2_t v = vec2_normalized(vec2_sub(b1, b0));
-    float dot = vec2_dot(u, v);
+    vec2_t u;
+    vec2_t v;
+
+    vec2_sub(a1.v, a0.v, u.v);
+    vec2_normalize(u.v, u.v);
+    vec2_sub(b1.v, b0.v, v.v);
+    vec2_normalize(v.v, v.v);
+
+    float dot = vec2_dot(u.v, v.v);
     float det = vec2_cross(u, v);
     return atan2(det, dot);
 }
@@ -68,7 +74,7 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
             }
             break;
         case GESTURE_RECOGNISED:
-            if (vec2_dist(gest->start_pos[0], ts[0].pos) >= g_start_dist)
+            if (vec2_dist(gest->start_pos[0].v, ts[0].pos.v) >= g_start_dist)
                 gest->state = GESTURE_BEGIN;
             if (nb_ts == 0) {
                 gest->state = (!(mask & GESTURE_CLICK)) ?
@@ -111,17 +117,17 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
                 gest->start_pos[1] = ts[1].pos;
                 gest->pinch = 1;
                 gest->rotation = 0;
-                gest->pos = vec2_mix(ts[0].pos, ts[1].pos, 0.5);
+                vec2_mix(ts[0].pos.v, ts[1].pos.v, 0.5, gest->pos.v);
             }
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
             gest->state = GESTURE_UPDATE;
-            gest->pinch = vec2_dist(ts[0].pos, ts[1].pos) /
-                          vec2_dist(gest->start_pos[0], gest->start_pos[1]);
+            gest->pinch = vec2_dist(ts[0].pos.v, ts[1].pos.v) /
+                          vec2_dist(gest->start_pos[0].v, gest->start_pos[1].v);
             gest->rotation = get_angle(gest->start_pos[0], gest->start_pos[1],
                                        ts[0].pos, ts[1].pos);
-            gest->pos = vec2_mix(ts[0].pos, ts[1].pos, 0.5);
+            vec2_mix(ts[0].pos.v, ts[1].pos.v, 0.5, gest->pos.v);
             if (!ts[0].down[0] || !ts[1].down[0])
                 gest->state = GESTURE_END;
             break;

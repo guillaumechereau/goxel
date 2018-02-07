@@ -111,7 +111,8 @@ void camera_get_ray(const camera_t *camera, const vec2_t *win,
     p = vec3(win->x, win->y, 1);
     o2 = unproject(&p, &camera->view_mat, &camera->proj_mat, view);
     *o = o1;
-    *d = vec3_normalized(vec3_sub(o2, o1));
+    vec3_sub(o2.v, o1.v, d->v);
+    vec3_normalize(d->v, d->v);
 }
 
 // Adjust the camera settings so that the rotation works for a given
@@ -125,8 +126,8 @@ void camera_set_target(camera_t *cam, const vec3_t *pos)
     float d;
     quat_t roti = quat(cam->rot.w, -cam->rot.x, -cam->rot.y, -cam->rot.z);
     u = quat_mul_vec4(roti, vec4(0, 0, 1, 0)).xyz;
-    v = vec3_sub(*pos, vec3_neg(cam->ofs));
-    d = vec3_dot(v, u);
-    vec3_iaddk(&cam->ofs, u, -d);
+    vec3_add(pos->v, cam->ofs.v, v.v);
+    d = vec3_dot(v.v, u.v);
+    vec3_iaddk(cam->ofs.v, u.v, -d);
     cam->dist -= d;
 }
