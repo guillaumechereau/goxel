@@ -18,7 +18,8 @@ void mat3_normalize_(mat3_t *m)
         vec3_normalize(m->vecs[i].v, m->vecs[i].v);
 }
 
-static void mat3_to_eul2_(const mat3_t *m, int order, vec3_t *e1, vec3_t *e2)
+static void mat3_to_eul2_(const mat3_t *m, int order,
+                          float e1[3], float e2[3])
 {
 
     const int *r = EUL_ORDERS[order];
@@ -26,38 +27,38 @@ static void mat3_to_eul2_(const mat3_t *m, int order, vec3_t *e1, vec3_t *e2)
     int parity = r[3];
     real_t cy = hypot(m->v2[i][i], m->v2[i][j]);
     if (cy > 16.0f * FLT_EPSILON) {
-        e1->v[i] = atan2(m->v2[j][k], m->v2[k][k]);
-        e1->v[j] = atan2(-m->v2[i][k], cy);
-        e1->v[k] = atan2(m->v2[i][j], m->v2[i][i]);
-        e2->v[i] = atan2(-m->v2[j][k], -m->v2[k][k]);
-        e2->v[j] = atan2(-m->v2[i][k], -cy);
-        e2->v[k] = atan2(-m->v2[i][j], -m->v2[i][i]);
+        e1[i] = atan2(m->v2[j][k], m->v2[k][k]);
+        e1[j] = atan2(-m->v2[i][k], cy);
+        e1[k] = atan2(m->v2[i][j], m->v2[i][i]);
+        e2[i] = atan2(-m->v2[j][k], -m->v2[k][k]);
+        e2[j] = atan2(-m->v2[i][k], -cy);
+        e2[k] = atan2(-m->v2[i][j], -m->v2[i][i]);
     } else {
-        e1->v[i] = atan2(-m->v2[k][j], m->v2[j][j]);
-        e1->v[j] = atan2(-m->v2[i][k], cy);
-        e1->v[k] = 0.0;
+        e1[i] = atan2(-m->v2[k][j], m->v2[j][j]);
+        e1[j] = atan2(-m->v2[i][k], cy);
+        e1[k] = 0.0;
         *e2 = *e1;
     }
     if (parity) {
-        vec3_imul(e1->v, -1);
-        vec3_imul(e2->v, -1);
+        vec3_imul(e1, -1);
+        vec3_imul(e2, -1);
     }
 }
 
-void mat3_to_eul_(const mat3_t *m, int order, vec3_t *e)
+void mat3_to_eul(mat3_t m, int order, float e[3])
 {
-    vec3_t e1, e2;
-    mat3_t n = *m;
+    float e1[3], e2[3];
+    mat3_t n = m;
     mat3_normalize_(&n);
 
-    mat3_to_eul2_(&n, order, &e1, &e2);
+    mat3_to_eul2_(&n, order, e1, e2);
 
     // Pick best.
-    if (    fabs(e1.x) + fabs(e1.y) + fabs(e1.z) >
-            fabs(e2.x) + fabs(e2.y) + fabs(e2.z)) {
-        *e = e1;
+    if (    fabs(e1[0]) + fabs(e1[1]) + fabs(e1[2]) >
+            fabs(e2[0]) + fabs(e2[1]) + fabs(e2[2])) {
+        vec3_copy(e1, e);
     } else {
-        *e = e2;
+        vec3_copy(e2, e);
     }
 }
 
@@ -93,7 +94,7 @@ void quat_to_mat3_(const quat_t *q, mat3_t *m)
     m->v2[2][2] = (1.0 - qaa - qbb);
 }
 
-void eul_to_quat_(const vec3_t *e, int order, quat_t *q)
+void eul_to_quat_(const float e[3], int order, quat_t *q)
 {
     const int *r = EUL_ORDERS[order];
     int i = r[0], j = r[1], k = r[2];
@@ -101,9 +102,9 @@ void eul_to_quat_(const vec3_t *e, int order, quat_t *q)
     double a[3];
     double ti, tj, th, ci, cj, ch, si, sj, sh, cc, cs, sc, ss;
 
-    ti = e->v[i] * 0.5f;
-    tj = e->v[j] * (parity ? -0.5f : 0.5f);
-    th = e->v[k] * 0.5f;
+    ti = e[i] * 0.5f;
+    tj = e[j] * (parity ? -0.5f : 0.5f);
+    th = e[k] * 0.5f;
     ci = cos(ti);
     cj = cos(tj);
     ch = cos(th);

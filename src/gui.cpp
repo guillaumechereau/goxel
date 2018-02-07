@@ -1838,7 +1838,7 @@ bool gui_quat(const char *label, quat_t *q)
     if (memcmp(q, &last.quat, sizeof(*q)) == 0)
         eul = last.eul;
     else
-        eul = quat_to_eul(*q, EULER_ORDER_DEFAULT);
+        quat_to_eul(*q, EULER_ORDER_DEFAULT, eul.v);
     gui_group_begin(label);
     if (gui_angle("x", &eul.x, -180, +180)) ret = true;
     if (gui_angle("y", &eul.y, -180, +180)) ret = true;
@@ -1846,7 +1846,7 @@ bool gui_quat(const char *label, quat_t *q)
     gui_group_end();
 
     if (ret) {
-        *q = eul_to_quat(eul, EULER_ORDER_DEFAULT);
+        *q = eul_to_quat(eul.v, EULER_ORDER_DEFAULT);
         last.quat = *q;
         last.eul = eul;
     }
