@@ -166,7 +166,7 @@ void mesh_move(mesh_t *mesh, const mat4_t *mat)
     mat4_t imat = mat4_inverted(*mat);
     box = mesh_get_box(mesh, true);
     if (box_is_null(box)) return;
-    box.mat = mat4_mul(*mat, box.mat);
+    mat4_mul(mat->v2, box.mat.v2, box.mat.v2);
     mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
     mesh_delete(src_mesh);
     mesh_remove_empty_blocks(mesh, false);
@@ -285,14 +285,14 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
             if (i == 0) mat4_iscale(&box2.mat, -1,  1,  1);
             if (i == 1) mat4_iscale(&box2.mat,  1, -1,  1);
             if (i == 2) mat4_iscale(&box2.mat,  1,  1, -1);
-            mat4_imul(&box2.mat, box->mat);
+            mat4_imul(box2.mat.v2, box->mat.v2);
             mesh_op(mesh, &painter2, &box2);
         }
     }
 
     shape_func = painter->shape->func;
     size = box_get_size(*box);
-    mat4_imul(&mat, box->mat);
+    mat4_imul(mat.v2, box->mat.v2);
     mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
     mat4_invert(&mat);
     use_box = painter->box && !box_is_null(*painter->box);

@@ -51,7 +51,7 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
         // Apply the plane rotation.
         rot = plane->mat;
         rot.vecs[3] = vec4(0, 0, 0, 1);
-        mat4_imul(&box.mat, rot);
+        mat4_imul(box.mat.v2, rot.v2);
         return box;
     }
 

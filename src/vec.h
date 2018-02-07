@@ -370,6 +370,14 @@ DECL mat4_t mat4(real_t x1, real_t x2, real_t x3, real_t x4,
                        w1, w2, w3, w4);
 }
 
+DECL void mat4_copy(const float m[4][4], float out[4][4])
+{
+    int i, j;
+    for (i = 0; i < 4; i++)
+        for (j = 0; j < 4; j++)
+            out[i][j] = m[i][j];
+}
+
 DECL void mat4_mul_vec4(const float m[4][4], const float v[4], float out[4])
 {
     float ret[4] = {};
@@ -501,23 +509,24 @@ DECL void mat4_igrow(mat4_t *m, float x, float y, float z)
     mat4_iscale(m, s[0], s[1], s[2]);
 }
 
-DECL mat4_t mat4_mul(mat4_t a, mat4_t b)
+DECL void mat4_mul(const float a[4][4], const float b[4][4], float out[4][4])
 {
     int i, j, k;
-    mat4_t ret = {};
+    float ret[4][4] = {};
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            ret.v[j * 4 + i] = 0.0;
+            ret[j][i] = 0.0;
             for (k = 0; k < 4; ++k) {
-                ret.v[j * 4 + i] += a.v[k * 4 + i] * b.v[j * 4 + k];
+                ret[j][i] += a[k][i] * b[j][k];
             }
         }
     }
-    return ret;
+    mat4_copy(ret, out);
 }
-DECL void mat4_imul(mat4_t *a, mat4_t b)
+
+DECL void mat4_imul(float a[4][4], const float b[4][4])
 {
-    *a = mat4_mul(*a, b);
+    mat4_mul(a, b, a);
 }
 
 DECL mat4_t mat4_ortho(real_t left, real_t right, real_t bottom,
@@ -609,8 +618,10 @@ DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)
         tmp = quat_to_mat4(quat);
     }
 #undef M
-    return mat4_mul(m, tmp);
+    mat4_mul(m.v2, tmp.v2, tmp.v2);
+    return tmp;
 }
+
 DECL void mat4_irotate(mat4_t *m, real_t a, real_t x, real_t y, real_t z)
 {
     *m = mat4_rotate(*m, a, x, y, z);
@@ -687,8 +698,10 @@ DECL void quat_mul_vec4(quat_t q, const float v[4], float out[4])
 
 DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)
 {
+    mat4_t ret;
     mat4_t qm = quat_to_mat4(q);
-    return mat4_mul(mat, qm);
+    mat4_mul(mat.v2, qm.v2, ret.v2);
+    return ret;
 }
 
 DECL void mat4_imul_quat(mat4_t *mat, quat_t q)

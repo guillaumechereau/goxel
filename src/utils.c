@@ -396,7 +396,9 @@ vec3_t unproject(const vec3_t *win, const mat4_t *model,
 {
     mat4_t inv;
     vec4_t p;
-    inv = mat4_inverted(mat4_mul(*proj, *model));
+
+    mat4_mul(proj->v2, model->v2, inv.v2);
+    inv = mat4_inverted(inv);
     p = vec4((win->x - view->v[0]) / view->v[2] * 2 - 1,
              (win->y - view->v[1]) / view->v[3] * 2 - 1,
              2 * win->z - 1, 1);

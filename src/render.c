@@ -521,7 +521,7 @@ static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
 
     if (rend->light.fixed) {
         m = mat4_identity;
-        mat4_imul(&m, mat4_inverted(rend->view_mat));
+        mat4_imul(m.v2, mat4_inverted(rend->view_mat).v2);
         mat4_irotate(&m, -M_PI / 4, 1, 0, 0);
         mat4_irotate(&m, -M_PI / 4, 0, 0, 1);
         mat4_mul_vec4(m.v2, light_dir.v, light_dir.v);
@@ -709,7 +709,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
     mat4_t view = rend->view_mat;
-    mat4_imul(&view, item->mat);
+    mat4_imul(view.v2, item->mat.v2);
     mat4_t proj;
     mat4_t *proj_mat;
     vec3_t light;
@@ -735,7 +735,7 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     mat4_t view2, view3;
     view2 = rend->view_mat;
 
-    mat4_imul(&view2, item->mat);
+    mat4_imul(view2.v2, item->mat.v2);
     n = 3;
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
@@ -899,8 +899,8 @@ static mat4_t render_shadow_map(renderer_t *rend)
     }
 
     mat4_t ret = bias_mat;
-    mat4_imul(&ret, proj_mat);
-    mat4_imul(&ret, view_mat);
+    mat4_imul(ret.v2, proj_mat.v2);
+    mat4_imul(ret.v2, view_mat.v2);
     return ret;
 }
 

@@ -57,7 +57,7 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
         // Apply the plane rotation.
         rot = plane->mat;
         rot.vecs[3] = vec4(0, 0, 0, 1);
-        mat4_imul(&box.mat, rot);
+        mat4_imul(box.mat.v2, rot.v2);
         return box;
     }
 
@@ -123,8 +123,8 @@ static int on_resize(gesture3d_t *gest, void *user)
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        face_plane.mat = mat4_mul(goxel->selection.mat,
-                                  FACES_MATS[tool->snap_face]);
+        mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face].v2,
+                 face_plane.mat.v2);
         render_img(&goxel->rend, NULL, &face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
@@ -137,8 +137,8 @@ static int on_resize(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        face_plane.mat = mat4_mul(goxel->selection.mat,
-                                  FACES_MATS[tool->snap_face]);
+        mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face].v2,
+                 face_plane.mat.v2);
 
         vec3_normalize(face_plane.n.v, n.v);
         vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);

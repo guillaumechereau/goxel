@@ -35,16 +35,16 @@ static void do_move(layer_t *layer, mat4_t mat)
     // Change referential to the mesh origin.
     // XXX: maybe this should be done in mesh_move directy??
     mat4_itranslate(&m, -0.5, -0.5, -0.5);
-    mat4_imul(&m, mat);
+    mat4_imul(m.v2, mat.v2);
     mat4_itranslate(&m, +0.5, +0.5, +0.5);
 
     if (layer->base_id || layer->image) {
-        layer->mat = mat4_mul(mat, layer->mat);
+        mat4_mul(mat.v2, layer->mat.v2, layer->mat.v2);
         layer->base_mesh_key = 0;
     } else {
         mesh_move(layer->mesh, &m);
         if (!box_is_null(layer->box)) {
-            layer->box.mat = mat4_mul(mat, layer->box.mat);
+            mat4_mul(mat.v2, layer->box.mat.v2, layer->box.mat.v2);
             layer->box = bbox_from_box(layer->box);
         }
     }
@@ -82,8 +82,8 @@ static int on_move(gesture3d_t *gest, void *user)
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        face_plane.mat = mat4_mul(tool->box.mat,
-                                  FACES_MATS[tool->snap_face]);
+        mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face].v2,
+                 face_plane.mat.v2);
         render_img(&goxel->rend, NULL, &face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
@@ -97,8 +97,8 @@ static int on_move(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        face_plane.mat = mat4_mul(tool->box.mat,
-                                  FACES_MATS[tool->snap_face]);
+        mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face].v2,
+                 face_plane.mat.v2);
 
         vec3_normalize(face_plane.n.v, n.v);
         vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);

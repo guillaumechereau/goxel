@@ -43,7 +43,8 @@ static void unpack_pos_data(uint32_t v, int pos[3], int *face,
 static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
                               const mat4_t *proj, const vec4_t *view)
 {
-    mat4_t inv = mat4_mul(*proj, *model);
+    mat4_t inv;
+    mat4_mul(proj->v2, model->v2, inv.v2);
     mat4_invert(&inv); // XXX: check for return value.
     vec4_t norm_pos = vec4(
             win->x / view->v[2],
@@ -92,7 +93,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
     camera_get_ray(&goxel->camera, &wpos.xy, view, &opos, &onorm);
     for (f = 0; f < 6; f++) {
         plane.mat = box->mat;
-        mat4_imul(&plane.mat, FACES_MATS[f]);
+        mat4_imul(plane.mat.v2, FACES_MATS[f].v2);
 
         if (!inside && vec3_dot(plane.n.v, onorm.v) >= 0)
             continue;
