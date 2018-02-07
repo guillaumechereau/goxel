@@ -678,12 +678,10 @@ DECL void quat_irotate(quat_t *q, real_t a, real_t x, real_t y, real_t z)
     *q = quat_rotate(*q, a, x, y, z);
 }
 
-DECL vec4_t quat_mul_vec4(quat_t q, vec4_t v)
+DECL void quat_mul_vec4(quat_t q, const float v[4], float out[4])
 {
-    vec4_t ret;
     mat4_t m = quat_to_mat4(q);
-    mat4_mul_vec4(m, v.v, ret.v);
-    return ret;
+    mat4_mul_vec4(m, v, out);
 }
 
 DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)
