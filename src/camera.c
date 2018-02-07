@@ -52,7 +52,7 @@ static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
     if (!box_is_null(goxel->image->box)) {
         box_get_vertices(goxel->image->box, vertices);
         for (i = 0; i < 8; i++) {
-            mat4_mul_vec3(*view_mat, vertices[i].v, p.v);
+            mat4_mul_vec3(view_mat->v2, vertices[i].v, p.v);
             if (p.z < 0) {
                 n = min(n, -p.z - margin);
                 f = max(f, -p.z + margin);
@@ -63,7 +63,7 @@ static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
     iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
         p = vec3(bpos[0], bpos[1], bpos[2]);
-        mat4_mul_vec3(*view_mat, p.v, p.v);
+        mat4_mul_vec3(view_mat->v2, p.v, p.v);
         if (p.z < 0) {
             n = min(n, -p.z - margin);
             f = max(f, -p.z + margin);

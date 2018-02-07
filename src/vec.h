@@ -80,6 +80,7 @@ typedef union {
 
 typedef union {
     real_t v[16];
+    real_t v2[4][4];
     vec4_t vecs[4];
 } mat4_t;
 
@@ -369,19 +370,19 @@ DECL mat4_t mat4(real_t x1, real_t x2, real_t x3, real_t x4,
                        w1, w2, w3, w4);
 }
 
-DECL void mat4_mul_vec4(mat4_t m, const float v[4], float out[4])
+DECL void mat4_mul_vec4(const float m[4][4], const float v[4], float out[4])
 {
     float ret[4] = {};
     int i, j;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            ret[i] += m.v[j * 4 + i] * v[j];
+            ret[i] += m[j][i] * v[j];
         }
     }
     vec4_copy(ret, out);
 }
 
-DECL void mat4_mul_vec3(mat4_t m, const float v[3], float out[3])
+DECL void mat4_mul_vec3(const float m[4][4], const float v[3], float out[3])
 {
     float v4[4] = {v[0], v[1], v[2], 1.0f};
     mat4_mul_vec4(m, v4, v4);
@@ -491,7 +492,7 @@ DECL void mat4_igrow(mat4_t *m, float x, float y, float z)
     float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
     int i;
     for (i = 0; i < 3; i++) {
-        mat4_mul_vec4(*m, v[i], v[i]);
+        mat4_mul_vec4(m->v2, v[i], v[i]);
         s[i] = vec3_norm(v[i]);
     }
     s[0] = (2 * x + s[0]) / s[0];
@@ -681,7 +682,7 @@ DECL void quat_irotate(quat_t *q, real_t a, real_t x, real_t y, real_t z)
 DECL void quat_mul_vec4(quat_t q, const float v[4], float out[4])
 {
     mat4_t m = quat_to_mat4(q);
-    mat4_mul_vec4(m, v, out);
+    mat4_mul_vec4(m.v2, v, out);
 }
 
 DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)

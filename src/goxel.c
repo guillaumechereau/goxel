@@ -49,7 +49,7 @@ static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
             win->x / view->v[2],
             win->y / view->v[3],
              0, 0);
-    mat4_mul_vec4(inv, norm_pos.v, norm_pos.v);
+    mat4_mul_vec4(inv.v2, norm_pos.v, norm_pos.v);
     return norm_pos.xyz;
 }
 
@@ -72,7 +72,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
 
     if (!plane_line_intersection(*plane, opos, onorm, out))
         return false;
-    mat4_mul_vec3(plane->mat, out->v, out->v);
+    mat4_mul_vec3(plane->mat.v2, out->v, out->v);
     *normal = plane->n;
     return true;
 }
@@ -103,7 +103,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
         if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
             continue;
         if (face) *face = f;
-        mat4_mul_vec3(plane.mat, out->v, out->v);
+        mat4_mul_vec3(plane.mat.v2, out->v, out->v);
         vec3_normalize(plane.n.v, normal->v);
         if (inside) vec3_imul(normal->v, -1);
         return true;
@@ -224,7 +224,7 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
         if (!r)
             continue;
 
-        mat4_mul_vec3(goxel->camera.view_mat, p.v, v);
+        mat4_mul_vec3(goxel->camera.view_mat.v2, p.v, v);
         dist = -v[2];
         if (dist < 0 || dist > best) continue;
 

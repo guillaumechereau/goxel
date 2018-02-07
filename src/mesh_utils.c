@@ -120,7 +120,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
         if (!bbox_contains_vec(*box, p)) {
             memset(value, 0, 4);
         } else {
-            mat4_mul_vec3(proj, p.v, p.v);
+            mat4_mul_vec3(proj.v2, p.v, p.v);
             int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
             mesh_get_at(mesh, NULL, pi, value);
         }
@@ -154,7 +154,7 @@ static void mesh_move_get_color(const int pos[3], uint8_t c[4], void *user)
     float p[3] = {pos[0], pos[1], pos[2]};
     mesh_t *mesh = USER_GET(user, 0);
     mat4_t *mat = USER_GET(user, 1);
-    mat4_mul_vec3(*mat, p, p);
+    mat4_mul_vec3(mat->v2, p, p);
     int pi[3] = {round(p[0]), round(p[1]), round(p[2])};
     mesh_get_at(mesh, NULL, pi, c);
 }
@@ -314,7 +314,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     while (mesh_iter(&iter, vp)) {
         p = vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
         if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
-        mat4_mul_vec3(mat, p.v, p.v);
+        mat4_mul_vec3(mat.v2, p.v, p.v);
         k = shape_func(&p, &size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
         v = k / 2.0f + 0.5f;

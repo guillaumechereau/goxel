@@ -400,7 +400,7 @@ vec3_t unproject(const vec3_t *win, const mat4_t *model,
     p = vec4((win->x - view->v[0]) / view->v[2] * 2 - 1,
              (win->y - view->v[1]) / view->v[3] * 2 - 1,
              2 * win->z - 1, 1);
-    mat4_mul_vec4(inv, p.v, p.v);
+    mat4_mul_vec4(inv.v2, p.v, p.v);
     if (p.w != 0) vec3_imul(p.xyz.v, 1 / p.w);
     return p.xyz;
 }

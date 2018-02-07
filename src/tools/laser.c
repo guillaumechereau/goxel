@@ -71,11 +71,11 @@ static int iter(tool_t *tool, const vec4_t *view)
     laser->box.mat = mat4_identity;
 
     view_mat_inv = mat4_inverted(goxel->camera.view_mat);
-    mat4_mul_vec4(view_mat_inv, vec4(1, 0, 0, 0).v, v.v);
+    mat4_mul_vec4(view_mat_inv.v2, vec4(1, 0, 0, 0).v, v.v);
     laser->box.w = v.xyz;
-    mat4_mul_vec4(view_mat_inv, vec4(0, 1, 0, 0).v, v.v);
+    mat4_mul_vec4(view_mat_inv.v2, vec4(0, 1, 0, 0).v, v.v);
     laser->box.h = v.xyz;
-    mat4_mul_vec4(view_mat_inv, vec4(0, 0, 1, 0).v, v.v);
+    mat4_mul_vec4(view_mat_inv.v2, vec4(0, 0, 1, 0).v, v.v);
     laser->box.d = v.xyz;
     vec3_neg(curs->normal.v, laser->box.d.v);
     laser->box.p = curs->pos;
