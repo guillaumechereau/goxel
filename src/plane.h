@@ -97,7 +97,7 @@ static inline bool plane_line_intersection(plane_t plane, vec3_t p, vec3_t n,
     if (!mat4_invert(&m)) return false;
     if (out) {
         vec3_sub(p.v, plane.p.v, v.v);
-        *out = mat4_mul_vec3(m, v);
+        mat4_mul_vec3(m, v.v, out->v);
         out->z = 0;
     }
     return true;

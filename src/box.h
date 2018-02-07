@@ -185,8 +185,8 @@ static inline bool box_contains(box_t a, box_t b) {
     int i;
     mat4_t imat = mat4_inverted(a.mat);
     for (i = 0; i < 8; i++) {
-        p = mat4_mul_vec3(b.mat, PS[i]);
-        p = mat4_mul_vec3(imat, p);
+        mat4_mul_vec3(b.mat, PS[i].v, p.v);
+        mat4_mul_vec3(imat, p.v, p.v);
         if (p.x < -1 || p.x > 1 || p.y < -1 || p.y > 1 || p.z < -1 || p.z > 1)
             return false;
     }
@@ -243,7 +243,7 @@ static inline box_t box_get_bbox(box_t b)
     };
     int i;
     for (i = 0; i < 8; i++) {
-        p[i] = mat4_mul_vec3(b.mat, p[i]);
+        mat4_mul_vec3(b.mat, p[i].v, p[i].v);
     }
     return bbox_from_npoints(8, p);
 }
@@ -258,11 +258,14 @@ static inline box_t bbox_grow(box_t b, float x, float y, float z)
 
 static inline vec3_t box_get_size(box_t b)
 {
-    return vec3(
-        vec3_norm(mat4_mul_vec(b.mat, vec4(1, 0, 0, 0)).xyz.v),
-        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 1, 0, 0)).xyz.v),
-        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 0, 1, 0)).xyz.v)
-    );
+    vec3_t ret;
+    float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
+    int i;
+    for (i = 0; i < 3; i++) {
+        mat4_mul_vec4(b.mat, v[i], v[i]);
+        ret.v[i] = vec3_norm(v[i]);
+    }
+    return ret;
 }
 
 static inline box_t box_swap_axis(box_t b, int x, int y, int z)
@@ -308,7 +311,7 @@ static inline box_t box_move_face(box_t b, int f, vec3_t p)
     assert(box_is_bbox(b));
     f = FO[f];
     for (i = 0; i < 4; i++)
-        ps[i] = mat4_mul_vec3(b.mat, PS[FS[f][i]]);
+        mat4_mul_vec3(b.mat, PS[FS[f][i]].v, ps[i].v);
     ps[4] = p;
     return bbox_from_npoints(5, ps);
 }
@@ -339,7 +342,7 @@ static inline void box_get_vertices(box_t box, vec3_t vertices[8])
         vec3(-1, +1, -1),
     };
     for (i = 0; i < 8; i++) {
-        vertices[i] = mat4_mul_vec3(box.mat, P[i]);
+        mat4_mul_vec3(box.mat, P[i].v, vertices[i].v);
     }
 }
 

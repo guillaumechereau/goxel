@@ -49,7 +49,8 @@ static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
             win->x / view->v[2],
             win->y / view->v[3],
              0, 0);
-    return mat4_mul_vec(inv, norm_pos).xyz;
+    mat4_mul_vec4(inv, norm_pos.v, norm_pos.v);
+    return norm_pos.xyz;
 }
 
 // XXX: lot of cleanup to do here.
@@ -71,7 +72,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
 
     if (!plane_line_intersection(*plane, opos, onorm, out))
         return false;
-    *out = mat4_mul_vec3(plane->mat, *out);
+    mat4_mul_vec3(plane->mat, out->v, out->v);
     *normal = plane->n;
     return true;
 }
@@ -102,7 +103,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
         if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
             continue;
         if (face) *face = f;
-        *out = mat4_mul_vec3(plane.mat, *out);
+        mat4_mul_vec3(plane.mat, out->v, out->v);
         vec3_normalize(plane.n.v, normal->v);
         if (inside) vec3_imul(normal->v, -1);
         return true;
@@ -174,6 +175,7 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
     vec3_t p = vec3_zero, n = vec3_zero;
     bool r = false;
     float dist, best = INFINITY;
+    float v[3];
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
@@ -222,7 +224,8 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
         if (!r)
             continue;
 
-        dist = -mat4_mul_vec3(goxel->camera.view_mat, p).z;
+        mat4_mul_vec3(goxel->camera.view_mat, p.v, v);
+        dist = -v[2];
         if (dist < 0 || dist > best) continue;
 
         *out = p;

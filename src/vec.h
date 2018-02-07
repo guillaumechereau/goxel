@@ -155,6 +155,14 @@ DECL void vec3_copy(const float a[3], float out[3])
     out[2] = a[2];
 }
 
+DECL void vec4_copy(const float a[4], float out[4])
+{
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+}
+
 DECL bool vec2_equal(const float a[2], const float b[2])
 {
     return a[0] == b[0] && a[1] == b[1];
@@ -361,22 +369,23 @@ DECL mat4_t mat4(real_t x1, real_t x2, real_t x3, real_t x4,
                        w1, w2, w3, w4);
 }
 
-DECL vec4_t mat4_mul_vec(mat4_t m, vec4_t v)
+DECL void mat4_mul_vec4(mat4_t m, const float v[4], float out[4])
 {
-    vec4_t ret = vec4_zero;
+    float ret[4] = {};
     int i, j;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            ret.v[i] += m.v[j * 4 + i] * v.v[j];
+            ret[i] += m.v[j * 4 + i] * v[j];
         }
     }
-    return ret;
+    vec4_copy(ret, out);
 }
 
-DECL vec3_t mat4_mul_vec3(mat4_t m, vec3_t v)
+DECL void mat4_mul_vec3(mat4_t m, const float v[3], float out[3])
 {
-    vec4_t v4 = vec4(v.x, v.y, v.z, 1);
-    return mat4_mul_vec(m, v4).xyz;
+    float v4[4] = {v[0], v[1], v[2], 1.0f};
+    mat4_mul_vec4(m, v4, v4);
+    vec3_copy(v4, out);
 }
 
 DECL mat4_t mat4_translate(mat4_t m, real_t x, real_t y, real_t z)
@@ -475,17 +484,20 @@ DECL mat4_t mat4_inverted(mat4_t mat)
         return mat4_zero;
 }
 
-DECL void mat4_igrow(mat4_t *m, real_t x, real_t y, real_t z)
+DECL void mat4_igrow(mat4_t *m, float x, float y, float z)
 {
     // XXX: need to optimize this.
-    real_t sx, sy, sz;
-    sx = vec3_norm(mat4_mul_vec(*m, vec4(1, 0, 0, 0)).xyz.v);
-    sy = vec3_norm(mat4_mul_vec(*m, vec4(0, 1, 0, 0)).xyz.v);
-    sz = vec3_norm(mat4_mul_vec(*m, vec4(0, 0, 1, 0)).xyz.v);
-    sx = (2 * x + sx) / sx;
-    sy = (2 * y + sy) / sy;
-    sz = (2 * z + sz) / sz;
-    mat4_iscale(m, sx, sy, sz);
+    float s[3];
+    float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
+    int i;
+    for (i = 0; i < 3; i++) {
+        mat4_mul_vec4(*m, v[i], v[i]);
+        s[i] = vec3_norm(v[i]);
+    }
+    s[0] = (2 * x + s[0]) / s[0];
+    s[1] = (2 * y + s[1]) / s[1];
+    s[2] = (2 * z + s[2]) / s[2];
+    mat4_iscale(m, s[0], s[1], s[2]);
 }
 
 DECL mat4_t mat4_mul(mat4_t a, mat4_t b)
@@ -667,8 +679,10 @@ DECL void quat_irotate(quat_t *q, real_t a, real_t x, real_t y, real_t z)
 
 DECL vec4_t quat_mul_vec4(quat_t q, vec4_t v)
 {
+    vec4_t ret;
     mat4_t m = quat_to_mat4(q);
-    return mat4_mul_vec(m, v);
+    mat4_mul_vec4(m, v.v, ret.v);
+    return ret;
 }
 
 DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)

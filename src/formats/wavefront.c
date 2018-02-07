@@ -104,7 +104,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
                 v = vec3(verts[i * size + j].pos[0] * scale,
                          verts[i * size + j].pos[1] * scale,
                          verts[i * size + j].pos[2] * scale);
-                v = mat4_mul_vec3(mat, v);
+                mat4_mul_vec3(mat, v.v, v.v);
                 memcpy(c, verts[i * size + j].color, 3);
                 line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);
@@ -188,7 +188,7 @@ void ply_export(const mesh_t *mesh, const char *path)
                 v = vec3(verts[i * size + j].pos[0] * scale,
                          verts[i * size + j].pos[1] * scale,
                          verts[i * size + j].pos[2] * scale);
-                v = mat4_mul_vec3(mat, v);
+                mat4_mul_vec3(mat, v.v, v.v);
                 memcpy(c, verts[i * size + j].color, 3);
                 line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);

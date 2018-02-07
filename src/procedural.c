@@ -301,13 +301,16 @@ static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
 
 static void scale_normalize(mat4_t *mat, float v)
 {
-    float x, y, z, m;
-    x = vec3_norm(mat4_mul_vec(*mat, vec4(1, 0, 0, 0)).xyz.v);
-    y = vec3_norm(mat4_mul_vec(*mat, vec4(0, 1, 0, 0)).xyz.v);
-    z = vec3_norm(mat4_mul_vec(*mat, vec4(0, 0, 1, 0)).xyz.v);
-    m = min3(x, y, z);
+    float s[3], m;
+    float u[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
+    int i;
+    for (i = 0; i < 3; i++) {
+        mat4_mul_vec4(*mat, u[i], u[i]);
+        s[i] = vec2_norm(u[i]);
+    }
+    m = min3(s[0], s[1], s[2]);
     if (v) m = v / 2;
-    mat4_iscale(mat, m / x, m / y, m / z);
+    mat4_iscale(mat, m / s[0], m / s[1], m / s[2]);
 }
 
 static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
