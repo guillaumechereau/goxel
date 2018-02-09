@@ -962,13 +962,16 @@ void camera_update(camera_t *camera);
 // position.
 void camera_set_target(camera_t *camera, const vec3_t *pos);
 
+// Function: camera_get_ray
 // Get the raytracing ray of the camera at a given screen position.
-// win:     pixel position in screen coordinates.
-// view:    viewport rect: [min_x, min_y, max_x, max_y].
-// o:       output ray origin.
-// d:       output ray direction.
-void camera_get_ray(const camera_t *camera, const vec2_t *win,
-                    const vec4_t *view, vec3_t *o, vec3_t *d);
+//
+// Parameters:
+//   win   - Pixel position in screen coordinates.
+//   view  - Viewport rect: [min_x, min_y, max_x, max_y].
+//   o     - Output ray origin.
+//   d     - Output ray direction.
+void camera_get_ray(const camera_t *camera, const float win[2],
+                    const float viewport[4], float o[3], float d[3]);
 
 typedef struct history history_t;
 

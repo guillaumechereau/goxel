@@ -67,7 +67,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
     vec3_t opos;
     vec3_t onorm;
 
-    camera_get_ray(&goxel->camera, &wpos.xy, view, &opos, &onorm);
+    camera_get_ray(&goxel->camera, wpos.v, view->v, opos.v, onorm.v);
     if (fabs(vec3_dot(onorm.v, plane->n.v)) <= min_angle_cos)
         return false;
 
@@ -90,7 +90,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
     plane_t plane;
 
     if (box_is_null(*box)) return false;
-    camera_get_ray(&goxel->camera, &wpos.xy, view, &opos, &onorm);
+    camera_get_ray(&goxel->camera, wpos.v, view->v, opos.v, onorm.v);
     for (f = 0; f < 6; f++) {
         plane.mat = box->mat;
         mat4_imul(plane.mat.v2, FACES_MATS[f].v2);
@@ -218,7 +218,7 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
                                        &goxel->image->box, true,
                                        &p, &n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
-            camera_get_ray(&goxel->camera, pos, view, &p, &n);
+            camera_get_ray(&goxel->camera, pos->v, view->v, p.v, n.v);
             r = true;
         }
 

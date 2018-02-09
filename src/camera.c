@@ -102,17 +102,17 @@ void camera_update(camera_t *camera)
 }
 
 // Get the raytracing ray of the camera at a given screen position.
-void camera_get_ray(const camera_t *camera, const vec2_t *win,
-                    const vec4_t *view, vec3_t *o, vec3_t *d)
+void camera_get_ray(const camera_t *camera, const float win[2],
+                    const float viewport[4], float o[3], float d[3])
 {
-    vec3_t o1, o2, p;
-    p = vec3(win->x, win->y, 0);
-    unproject(p.v, camera->view_mat.v2, camera->proj_mat.v2, view->v, o1.v);
-    p = vec3(win->x, win->y, 1);
-    unproject(p.v, camera->view_mat.v2, camera->proj_mat.v2, view->v, o2.v);
-    *o = o1;
-    vec3_sub(o2.v, o1.v, d->v);
-    vec3_normalize(d->v, d->v);
+    float o1[3], o2[3], p[3];
+    vec3_set(p, win[0], win[1], 0);
+    unproject(p, camera->view_mat.v2, camera->proj_mat.v2, viewport, o1);
+    vec3_set(p, win[0], win[1], 1);
+    unproject(p, camera->view_mat.v2, camera->proj_mat.v2, viewport, o2);
+    vec3_copy(o1, o);
+    vec3_sub(o2, o1, d);
+    vec3_normalize(d, d);
 }
 
 // Adjust the camera settings so that the rotation works for a given
