@@ -124,7 +124,7 @@ static int vxl_import(const char *path)
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     goxel_update_meshes(goxel, -1);
     if (box_is_null(goxel->image->box))
-        goxel->image->box = bbox_from_extents(vec3_zero, w / 2, h / 2, d / 2);
+        goxel->image->box = bbox_from_extents(vec3_zero.v, w / 2, h / 2, d / 2);
     free(cube);
     free(data);
     return ret;

@@ -48,12 +48,12 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     box_t box;
     float v[3];
     if (p1 == NULL) {
-        box = bbox_from_extents(*p0, r, r, r);
+        box = bbox_from_extents(p0->v, r, r, r);
         box = box_swap_axis(box, 2, 0, 1);
         return box;
     }
     if (r == 0) {
-        box = bbox_grow(bbox_from_points(*p0, *p1), 0.5, 0.5, 0.5);
+        box = bbox_grow(bbox_from_points(p0->v, p1->v), 0.5, 0.5, 0.5);
         // Apply the plane rotation.
         rot = plane->mat;
         rot.vecs[3] = vec4(0, 0, 0, 1);
@@ -281,7 +281,7 @@ static int gui(tool_t *tool)
     gui_input_int("d", &d, 1, 2048);
     gui_group_end();
     *box = bbox_from_extents(
-            vec3(x + w / 2., y + h / 2., z + d / 2.),
+            vec3(x + w / 2., y + h / 2., z + d / 2.).v,
             w / 2., h / 2., d / 2.);
     return 0;
 }

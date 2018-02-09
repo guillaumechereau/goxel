@@ -936,7 +936,7 @@ static void image_panel(goxel_t *goxel)
 
     bounded = !box_is_null(*box);
     if (ImGui::Checkbox("Bounded", &bounded)) {
-        *box = bounded ? bbox_from_extents(vec3_zero, 16, 16, 16) : box_null;
+        *box = bounded ? bbox_from_extents(vec3_zero.v, 16, 16, 16) : box_null;
     }
     if (bounded) gui_bbox(box);
 }
@@ -1560,7 +1560,7 @@ bool gui_bbox(box_t *box)
 
     if (ret) {
         *box = bbox_from_extents(
-                vec3(x + w / 2., y + h / 2., z + d / 2.),
+                vec3(x + w / 2., y + h / 2., z + d / 2.).v,
                 w / 2., h / 2., d / 2.);
     }
     return ret;
