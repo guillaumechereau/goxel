@@ -126,11 +126,10 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const float view[4],
                 view_size[0], view_size[1], TF_DEPTH);
     }
 
-    renderer_t rend = {
-        .view_mat = goxel->rend.view_mat,
-        .proj_mat = goxel->rend.proj_mat,
-        .settings = goxel->rend.settings,
-    };
+    renderer_t rend = {.settings = goxel->rend.settings};
+    mat4_copy(goxel->rend.view_mat, rend.view_mat);
+    mat4_copy(goxel->rend.proj_mat, rend.proj_mat);
+
     uint32_t pixel;
     int voxel_pos[3];
     int face, block_id, block_pos[3];
@@ -351,8 +350,8 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     camera_update(&goxel->camera);
     if (goxel->image->active_camera)
         camera_set(goxel->image->active_camera, &goxel->camera);
-    mat4_copy(goxel->camera.view_mat, goxel->rend.view_mat.v2);
-    mat4_copy(goxel->camera.proj_mat, goxel->rend.proj_mat.v2);
+    mat4_copy(goxel->camera.view_mat, goxel->rend.view_mat);
+    mat4_copy(goxel->camera.proj_mat, goxel->rend.proj_mat);
     gui_iter(goxel, inputs);
     sound_iter();
     goxel->frame_count++;
@@ -646,8 +645,8 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h)
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
     camera_update(&camera);
-    mat4_copy(camera.view_mat, rend.view_mat.v2);
-    mat4_copy(camera.proj_mat, rend.proj_mat.v2);
+    mat4_copy(camera.view_mat, rend.view_mat);
+    mat4_copy(camera.proj_mat, rend.proj_mat);
     rend.fbo = fbo->framebuffer;
 
     render_mesh(&rend, mesh, 0);

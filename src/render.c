@@ -520,13 +520,13 @@ static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
     mat4_mul_vec4(m, vec4(0, 0, 1, 0).v, light_dir.v);
 
     if (rend->light.fixed) {
-        mat4_invert(rend->view_mat.v2, m);
+        mat4_invert(rend->view_mat, m);
         mat4_irotate(m, -M_PI / 4, 1, 0, 0);
         mat4_irotate(m, -M_PI / 4, 0, 0, 1);
         mat4_mul_vec4(m, light_dir.v, light_dir.v);
     }
     if (model_view)
-        mat4_mul_vec4(rend->view_mat.v2, light_dir.v, light_dir.v);
+        mat4_mul_vec4(rend->view_mat, light_dir.v, light_dir.v);
     return light_dir.xyz;
 }
 
@@ -637,8 +637,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         GL(glUniform1f(prog->u_shadow_k_l, rend->settings.shadow));
     }
 
-    GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, rend->proj_mat.v));
-    GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, rend->view_mat.v));
+    GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, (float*)rend->proj_mat));
+    GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, (float*)rend->view_mat));
     GL(glUniform1i(prog->u_bshadow_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
     GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir.v));
@@ -709,16 +709,18 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 
 static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
-    mat4_t view = rend->view_mat;
-    mat4_imul(view.v2, item->mat.v2);
-    mat4_t proj;
-    mat4_t *proj_mat;
+    float view[4][4];
+    float proj[4][4];
+    float (*proj_mat)[4][4];
     vec3_t light;
 
+    mat4_copy(rend->view_mat, view);
+    mat4_imul(view, item->mat.v2);
+
     if (item->proj_screen) {
-        mat4_ortho(proj.v2, -0.5, +0.5, -0.5, +0.5, -10, +10);
+        mat4_ortho(proj, -0.5, +0.5, -0.5, +0.5, -10, +10);
         proj_mat = &proj;
-        view = item->mat;
+        mat4_copy(item->mat.v2, view);
     } else {
         proj_mat = &rend->proj_mat;
     }
@@ -726,22 +728,22 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     if (!(item->effects & EFFECT_WIREFRAME))
         light = get_light_dir(rend, false);
 
-    model3d_render(item->model3d, view.v2, proj_mat->v2, item->color,
+    model3d_render(item->model3d, view, *proj_mat, item->color,
                    item->tex, light.v, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
 {
     int x, y, n;
-    mat4_t view2, view3;
-    view2 = rend->view_mat;
+    float view2[4][4], view3[4][4];
 
-    mat4_imul(view2.v2, item->mat.v2);
+    mat4_copy(rend->view_mat, view2);
+    mat4_imul(view2, item->mat.v2);
     n = 3;
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
-        mat4_translate(view2.v2, x + 0.5, y + 0.5, 0, view3.v2);
-        model3d_render(item->model3d, view3.v2, rend->proj_mat.v2,
+        mat4_translate(view2, x + 0.5, y + 0.5, 0, view3);
+        model3d_render(item->model3d, view3, rend->proj_mat,
                        item->color, NULL, NULL, 0);
     }
 }
@@ -859,17 +861,11 @@ static mat4_t render_shadow_map(renderer_t *rend)
                            0.0, 0.5, 0.0, 0.0,
                            0.0, 0.0, 0.5, 0.0,
                            0.5, 0.5, 0.5, 1.0);
-    mat4_t proj_mat;
-    mat4_ortho(proj_mat.v2, rect[0], rect[1],
-                            rect[2], rect[3],
-                            rect[4], rect[5]);
-    mat4_t view_mat;
-    mat4_lookat(view_mat.v2, get_light_dir(rend, false).v,
+    renderer_t srend = {};
+    mat4_lookat(srend.view_mat, get_light_dir(rend, false).v,
                 vec3(0, 0, 0).v, vec3(0, 1, 0).v);
-    renderer_t srend = {
-        .view_mat = view_mat,
-        .proj_mat = proj_mat,
-    };
+    mat4_ortho(srend.proj_mat,
+               rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
 
     // Generate the depth buffer.
     if (!g_shadow_map_fbo) {
@@ -902,8 +898,8 @@ static mat4_t render_shadow_map(renderer_t *rend)
     }
 
     mat4_t ret = bias_mat;
-    mat4_imul(ret.v2, proj_mat.v2);
-    mat4_imul(ret.v2, view_mat.v2);
+    mat4_imul(ret.v2, srend.proj_mat);
+    mat4_imul(ret.v2, srend.view_mat);
     return ret;
 }
 

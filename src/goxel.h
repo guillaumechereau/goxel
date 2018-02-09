@@ -730,8 +730,8 @@ typedef struct renderer renderer_t;
 typedef struct render_item_t render_item_t;
 struct renderer
 {
-    mat4_t view_mat;
-    mat4_t proj_mat;
+    float view_mat[4][4];
+    float proj_mat[4][4];
     int    fbo;     // The renderer target framebuffer.
     float  scale;   // For retina display.
 
