@@ -730,12 +730,6 @@ DECL void quat_to_eul(const float q[4], int order, float e[3])
     mat3_to_eul(m, order, e);
 }
 
-void eul_to_quat_(const float e[3], int order, quat_t *q);
-DECL quat_t eul_to_quat(const float e[3], int order)
-{
-    quat_t q;
-    eul_to_quat_(e, order, &q);
-    return q;
-}
+void eul_to_quat(const float e[3], int order, float out[4]);
 
 #endif // VEC_H_

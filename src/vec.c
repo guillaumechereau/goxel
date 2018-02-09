@@ -92,7 +92,7 @@ void quat_to_mat3(const float q[4], float m[3][3])
     m[2][2] = (1.0 - qaa - qbb);
 }
 
-void eul_to_quat_(const float e[3], int order, quat_t *q)
+void eul_to_quat(const float e[3], int order, float q[4])
 {
     const int *r = EUL_ORDERS[order];
     int i = r[0], j = r[1], k = r[2];
@@ -118,10 +118,10 @@ void eul_to_quat_(const float e[3], int order, quat_t *q)
     a[j] = cj * ss + sj * cc;
     a[k] = cj * cs - sj * sc;
 
-    q->w = cj * cc + sj * ss;
-    q->x = a[0];
-    q->y = a[1];
-    q->z = a[2];
+    q[0] = cj * cc + sj * ss;
+    q[1] = a[0];
+    q[2] = a[1];
+    q[3] = a[2];
 
-    if (parity) q->v[j + 1] = -q->v[j + 1];
+    if (parity) q[j + 1] = -q[j + 1];
 }

@@ -1846,7 +1846,7 @@ bool gui_quat(const char *label, quat_t *q)
     gui_group_end();
 
     if (ret) {
-        *q = eul_to_quat(eul.v, EULER_ORDER_DEFAULT);
+        eul_to_quat(eul.v, EULER_ORDER_DEFAULT, q->v);
         last.quat = *q;
         last.eul = eul;
     }
