@@ -500,7 +500,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
                                     goxel->layers_mesh, &p, &n)) {
-            camera_set_target(&goxel->camera, &p);
+            camera_set_target(&goxel->camera, p.v);
         }
         return;
     }
@@ -527,7 +527,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
         vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
                                     goxel->layers_mesh, &p, &n)) {
-            camera_set_target(&goxel->camera, &p);
+            camera_set_target(&goxel->camera, p.v);
         }
     }
 }
