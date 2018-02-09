@@ -117,6 +117,11 @@ enum  {
 
 #define QUAT(...) ((quat_t){{__VA_ARGS__}})
 
+#define MAT4_IDENTITY {{1, 0, 0, 0}, \
+                       {0, 1, 0, 0}, \
+                       {0, 0, 1, 0}, \
+                       {0, 0, 0, 1}}
+
 #define DECL static inline
 
 static const vec3_t vec3_zero = VEC3(0, 0, 0);
