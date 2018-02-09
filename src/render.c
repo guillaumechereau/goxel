@@ -508,30 +508,31 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     }
 }
 
-static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
+static void get_light_dir(const renderer_t *rend, bool model_view,
+                          float out[3])
 {
-    vec4_t light_dir;
+    float light_dir[4];
     float m[4][4];
 
     mat4_set_identity(m);
     mat4_irotate(m, rend->light.yaw, 0, 0, 1);
     mat4_irotate(m, rend->light.pitch, 1, 0, 0);
-    mat4_mul_vec4(m, vec4(0, 0, 1, 0).v, light_dir.v);
+    mat4_mul_vec4(m, vec4(0, 0, 1, 0).v, light_dir);
 
     if (rend->light.fixed) {
         mat4_invert(rend->view_mat, m);
         mat4_irotate(m, -M_PI / 4, 1, 0, 0);
         mat4_irotate(m, -M_PI / 4, 0, 0, 1);
-        mat4_mul_vec4(m, light_dir.v, light_dir.v);
+        mat4_mul_vec4(m, light_dir, light_dir);
     }
     if (model_view)
-        mat4_mul_vec4(rend->view_mat, light_dir.v, light_dir.v);
-    return light_dir.xyz;
+        mat4_mul_vec4(rend->view_mat, light_dir, light_dir);
+    vec3_copy(light_dir, out);
 }
 
-vec3_t render_get_light_dir(const renderer_t *rend)
+void render_get_light_dir(const renderer_t *rend, float out[3])
 {
-    return get_light_dir(rend, false);
+    get_light_dir(rend, false, out);
 }
 
 // Compute the minimum projection box to use for the shadow map.
@@ -555,10 +556,10 @@ static void compute_shadow_map_box(
     vec3_t p;
     int i, bpos[3];
     mesh_iterator_t iter;
-    float view_mat[4][4];
+    float view_mat[4][4], light_dir[3];
 
-    mat4_lookat(view_mat, get_light_dir(rend, false).v,
-                          vec3(0, 0, 0).v, vec3(0, 1, 0).v);
+    get_light_dir(rend, false, light_dir);
+    mat4_lookat(view_mat, light_dir, vec3(0, 0, 0).v, vec3(0, 1, 0).v);
     for (i = 0; i < 6; i++)
         rect[i] = NAN;
 
@@ -588,9 +589,11 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     mat4_t model = mat4_identity;
     int attr, block_pos[3], block_id;
     float pos_scale = 1.0f;
-    vec3_t light_dir = get_light_dir(rend, true);
+    float light_dir[3];
     bool shadow = false;
     mesh_iterator_t iter;
+
+    get_light_dir(rend, true, light_dir);
 
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
@@ -617,7 +620,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     if (effects & EFFECT_SEE_BACK) {
         GL(glCullFace(GL_FRONT));
-        vec3_imul(light_dir.v, -0.5);
+        vec3_imul(light_dir, -0.5);
     }
     if (effects & EFFECT_SEMI_TRANSPARENT) {
         GL(glEnable(GL_BLEND));
@@ -640,7 +643,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, (float*)rend->view_mat));
     GL(glUniform1i(prog->u_bshadow_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
-    GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir.v));
+    GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir));
     GL(glUniform1f(prog->u_l_int_l, rend->light.intensity));
     GL(glUniform1f(prog->u_m_amb_l, rend->settings.ambient));
     GL(glUniform1f(prog->u_m_dif_l, rend->settings.diffuse));
@@ -711,7 +714,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     float view[4][4];
     float proj[4][4];
     float (*proj_mat)[4][4];
-    vec3_t light;
+    float light[3];
 
     mat4_copy(rend->view_mat, view);
     mat4_imul(view, item->mat);
@@ -725,10 +728,10 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     }
 
     if (!(item->effects & EFFECT_WIREFRAME))
-        light = get_light_dir(rend, false);
+        get_light_dir(rend, false, light);
 
     model3d_render(item->model3d, view, *proj_mat, item->color,
-                   item->tex, light.v, item->effects);
+                   item->tex, light, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -851,7 +854,7 @@ static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
 static mat4_t render_shadow_map(renderer_t *rend)
 {
     render_item_t *item;
-    float rect[6];
+    float rect[6], light_dir[3];
     int effects;
     // Create a renderer looking at the scene from the light.
     compute_shadow_map_box(rend, rect);
@@ -860,8 +863,8 @@ static mat4_t render_shadow_map(renderer_t *rend)
                            0.0, 0.0, 0.5, 0.0,
                            0.5, 0.5, 0.5, 1.0);
     renderer_t srend = {};
-    mat4_lookat(srend.view_mat, get_light_dir(rend, false).v,
-                vec3(0, 0, 0).v, vec3(0, 1, 0).v);
+    get_light_dir(rend, false, light_dir);
+    mat4_lookat(srend.view_mat, light_dir, vec3(0, 0, 0).v, vec3(0, 1, 0).v);
     mat4_ortho(srend.proj_mat,
                rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
 

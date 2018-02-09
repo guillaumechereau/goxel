@@ -28,8 +28,7 @@ static void export_as_pov(const char *path, int w, int h)
     char *buf;
     const char *template;
     uint8_t v[4];
-    float modelview[4][4];
-    vec3_t light_dir;
+    float modelview[4][4], light_dir[3];
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = goxel->camera;
     mesh_iterator_t iter;
@@ -49,7 +48,7 @@ static void export_as_pov(const char *path, int w, int h)
     mat4_copy(camera.view_mat, modelview);
     // cam_to_view = mat4_inverted(camera.view_mat);
     // cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
-    light_dir = render_get_light_dir(&goxel->rend);
+    render_get_light_dir(&goxel->rend, light_dir);
 
     m = mustache_root();
     mustache_add_str(m, "version", GOXEL_VERSION_STR);
@@ -67,7 +66,7 @@ static void export_as_pov(const char *path, int w, int h)
     mustache_add_str(m_light, "ambient", "%.2f",
                      goxel->rend.settings.ambient);
     mustache_add_str(m_light, "point_at", "<%.1f, %.1f, %.1f + 1024>",
-                     -light_dir.x, -light_dir.y, -light_dir.z);
+                     -light_dir[0], -light_dir[1], -light_dir[2]);
 
     m_voxels = mustache_add_list(m, "voxels");
     DL_FOREACH(goxel->image->layers, layer) {
