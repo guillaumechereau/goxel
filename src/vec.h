@@ -558,13 +558,13 @@ DECL void mat4_ortho(float m[4][4], float left, float right, float bottom,
 DECL void mat4_perspective(float m[4][4], float fovy, float aspect,
                            float nearval, float farval)
 {
-    float radian = fovy * M_PI / 180;
-    float f = 1. / tan(radian / 2.);
+    float radian = fovy * M_PI / 180.f;
+    float f = 1.f / tan(radian / 2.f);
     const float ret[4][4] = {
-        {f / aspect, 0., 0., 0.},
-        {0., f, 0., 0.},
-        {0., 0., (farval + nearval) / (nearval - farval), -1},
-        {0., 0., 2. * farval * nearval / (nearval - farval), 0},
+        {f / aspect, 0.f, 0.f, 0.f},
+        {0.f, f, 0.f, 0.f},
+        {0.f, 0.f, (farval + nearval) / (nearval - farval), -1.f},
+        {0.f, 0.f, 2.f * farval * nearval / (nearval - farval), 0.f},
     };
     mat4_copy(ret, m);
 }
