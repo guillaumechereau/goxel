@@ -1381,8 +1381,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             !gui->capture_mouse) {
         inputs_t inputs2 = *inputs;
         for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
-            inputs2.touches[i].pos.y =
-                io.DisplaySize.y - inputs2.touches[i].pos.y;
+            inputs2.touches[i].pos[1] =
+                io.DisplaySize.y - inputs2.touches[i].pos[1];
         }
         goxel_mouse_in_view(goxel, view_rect, &inputs2);
     }

@@ -494,7 +494,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
 
         // Auto adjust the camera rotation position.
         vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos.v,
+        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
                                     goxel->layers_mesh, p.v, n.v)) {
             camera_set_target(&goxel->camera, p.v);
         }
@@ -521,7 +521,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
     // C: recenter the view:
     if (inputs->keys['C']) {
         vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos.v,
+        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
                                     goxel->layers_mesh, p.v, n.v)) {
             camera_set_target(&goxel->camera, p.v);
         }

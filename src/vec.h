@@ -149,6 +149,12 @@ DECL vec4_t vec4(real_t x, real_t y, real_t z, real_t w)
     return (vec4_t)VEC4(x, y, z, w);
 }
 
+DECL void vec2_set(float v[2], float x, float y)
+{
+    v[0] = x;
+    v[1] = y;
+}
+
 DECL void vec3_set(float v[3], float x, float y, float z)
 {
     v[0] = x;

@@ -881,7 +881,7 @@ enum {
 // `down` represent each button in the mouse.  For touch events only the
 // first element is set.
 typedef struct {
-    vec2_t  pos;
+    float   pos[2];
     bool    down[3];
 } touch_t;
 
