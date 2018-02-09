@@ -84,7 +84,7 @@ static int on_move(gesture3d_t *gest, void *user)
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face].v2,
                  face_plane.mat.v2);
-        render_img(&goxel->rend, NULL, &face_plane.mat, EFFECT_NO_SHADING);
+        render_img(&goxel->rend, NULL, face_plane.mat.v2, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane.u.v, v.v);

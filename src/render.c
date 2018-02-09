@@ -758,12 +758,12 @@ void render_plane(renderer_t *rend, const plane_t *plane,
     DL_APPEND(rend->items, item);
 }
 
-void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
+void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
                 int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    item->mat = mat ? *mat : mat4_identity;
+    mat4_copy(mat ?: mat4_identity.v2, item->mat.v2);
     item->proj_screen = !mat;
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
@@ -822,11 +822,11 @@ void render_box(renderer_t *rend, const box_t *box,
     DL_APPEND(rend->items, item);
 }
 
-void render_sphere(renderer_t *rend, const mat4_t *mat)
+void render_sphere(renderer_t *rend, const float mat[4][4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    item->mat = *mat;
+    mat4_copy(mat, item->mat.v2);
     item->model3d = g_sphere_model;
     DL_APPEND(rend->items, item);
 }

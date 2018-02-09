@@ -756,8 +756,8 @@ void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
                  const uint8_t color[4]);
 void render_box(renderer_t *rend, const box_t *box,
                 const uint8_t color[4], int effects);
-void render_sphere(renderer_t *rend, const mat4_t *mat);
-void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
+void render_sphere(renderer_t *rend, const float mat[4][4]);
+void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
                 int efffects);
 void render_rect(renderer_t *rend, const plane_t *plane, int effects);
 // Flushes all the queued render items.  Actually calls opengl.
