@@ -714,7 +714,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     vec3_t light;
 
     if (item->proj_screen) {
-        proj = mat4_ortho(-0.5, +0.5, -0.5, +0.5, -10, +10);
+        mat4_ortho(proj.v2, -0.5, +0.5, -0.5, +0.5, -10, +10);
         proj_mat = &proj;
         view = item->mat;
     } else {
@@ -857,9 +857,10 @@ static mat4_t render_shadow_map(renderer_t *rend)
                            0.0, 0.5, 0.0, 0.0,
                            0.0, 0.0, 0.5, 0.0,
                            0.5, 0.5, 0.5, 1.0);
-    mat4_t proj_mat = mat4_ortho(rect[0], rect[1],
-                                 rect[2], rect[3],
-                                 rect[4], rect[5]);
+    mat4_t proj_mat;
+    mat4_ortho(proj_mat.v2, rect[0], rect[1],
+                            rect[2], rect[3],
+                            rect[4], rect[5]);
     mat4_t view_mat = mat4_lookat(get_light_dir(rend, false).v,
                                   vec3(0, 0, 0).v, vec3(0, 1, 0).v);
     renderer_t srend = {

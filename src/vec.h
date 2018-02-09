@@ -525,33 +525,33 @@ DECL void mat4_imul(float a[4][4], const float b[4][4])
     mat4_mul(a, b, a);
 }
 
-DECL mat4_t mat4_ortho(real_t left, real_t right, real_t bottom,
-                       real_t top, real_t nearval, real_t farval)
+DECL void mat4_ortho(float m[4][4], float left, float right, float bottom,
+                     float top, float nearval, float farval)
 {
-    real_t tx = -(right + left) / (right - left);
-    real_t ty = -(top + bottom) / (top - bottom);
-    real_t tz = -(farval + nearval) / (farval - nearval);
-    const mat4_t ret = mat4(
-        2 / (right - left), 0, 0, 0,
-        0, 2 / (top - bottom), 0, 0,
-        0, 0, -2 / (farval - nearval), 0,
-        tx, ty, tz, 1
-    );
-    return ret;
+    float tx = -(right + left) / (right - left);
+    float ty = -(top + bottom) / (top - bottom);
+    float tz = -(farval + nearval) / (farval - nearval);
+    const float ret[4][4] = {
+        {2 / (right - left), 0, 0, 0},
+        {0, 2 / (top - bottom), 0, 0},
+        {0, 0, -2 / (farval - nearval), 0},
+        {tx, ty, tz, 1},
+    };
+    mat4_copy(ret, m);
 }
 
-DECL mat4_t mat4_perspective(real_t fovy, real_t aspect,
-                             real_t nearval, real_t farval)
+DECL void mat4_perspective(float m[4][4], float fovy, float aspect,
+                           float nearval, float farval)
 {
-    real_t radian = fovy * M_PI / 180;
-    real_t f = 1. / tan(radian / 2.);
-    const mat4_t ret = mat4(
-        f / aspect, 0., 0., 0.,
-        0., f, 0., 0.,
-        0., 0., (farval + nearval) / (nearval - farval), -1,
-        0., 0., 2. * farval * nearval / (nearval - farval), 0.
-    );
-    return ret;
+    float radian = fovy * M_PI / 180;
+    float f = 1. / tan(radian / 2.);
+    const float ret[4][4] = {
+        {f / aspect, 0., 0., 0.},
+        {0., f, 0., 0.},
+        {0., 0., (farval + nearval) / (nearval - farval), -1},
+        {0., 0., 2. * farval * nearval / (nearval - farval), 0},
+    };
+    mat4_copy(ret, m);
 }
 
 DECL mat4_t mat4_transposed(mat4_t m)

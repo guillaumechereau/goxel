@@ -91,12 +91,12 @@ void camera_update(camera_t *camera)
     compute_clip(&camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
         size = camera->dist;
-        camera->proj_mat = mat4_ortho(
+        mat4_ortho(camera->proj_mat.v2,
                 -size, +size,
                 -size / camera->aspect, +size / camera->aspect,
                 clip_near, clip_far);
     } else {
-        camera->proj_mat = mat4_perspective(
+        mat4_perspective(camera->proj_mat.v2,
                 camera->fovy, camera->aspect, clip_near, clip_far);
     }
 }
