@@ -183,7 +183,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     }
 
     if (shift)
-        render_line(&goxel->rend, &brush->start_pos, &curs->pos, NULL);
+        render_line(&goxel->rend, brush->start_pos.v, curs->pos.v, NULL);
 
     if (goxel->tool_mesh && check_can_skip(brush, curs, goxel->painter.mode))
         return 0;

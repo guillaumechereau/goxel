@@ -752,7 +752,7 @@ void render_deinit(void);
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
 void render_plane(renderer_t *rend, const plane_t *plane,
                   const uint8_t color[4]);
-void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
+void render_line(renderer_t *rend, const float a[3], const float b[3],
                  const uint8_t color[4]);
 void render_box(renderer_t *rend, const box_t *box,
                 const uint8_t color[4], int effects);

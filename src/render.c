@@ -786,16 +786,16 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects)
 }
 
 // Return a plane whose u vector is the line ab.
-static plane_t line_create_plane(const vec3_t *a, const vec3_t *b)
+static plane_t line_create_plane(const float a[3], const float b[3])
 {
     plane_t ret;
     ret.mat = mat4_identity;
-    ret.p = *a;
-    vec3_sub(b->v, a->v, ret.u.v);
+    vec3_copy(a, ret.p.v);
+    vec3_sub(b, a, ret.u.v);
     return ret;
 }
 
-void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
+void render_line(renderer_t *rend, const float a[3], const float b[3],
                  const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
