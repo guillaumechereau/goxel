@@ -277,7 +277,7 @@ static void copy_color(const uint8_t in[4], uint8_t out[4])
 }
 
 void model3d_render(model3d_t *model3d,
-                    const mat4_t *model, const mat4_t *proj,
+                    const float model[4][4], const float proj[4][4],
                     const uint8_t color[4],
                     const texture_t *tex,
                     const vec3_t *light,
@@ -289,8 +289,8 @@ void model3d_render(model3d_t *model3d,
 
     copy_color(color, c);
     GL(glUseProgram(prog.prog));
-    GL(glUniformMatrix4fv(prog.u_model_l, 1, 0, model->v));
-    GL(glUniformMatrix4fv(prog.u_proj_l, 1, 0, proj->v));
+    GL(glUniformMatrix4fv(prog.u_model_l, 1, 0, (float*)model));
+    GL(glUniformMatrix4fv(prog.u_proj_l, 1, 0, (float*)proj));
     GL(glEnableVertexAttribArray(prog.a_pos_l));
     GL(glEnable(GL_BLEND));
     GL(glEnable(GL_DEPTH_TEST));

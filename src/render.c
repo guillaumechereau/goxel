@@ -726,7 +726,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     if (!(item->effects & EFFECT_WIREFRAME))
         light = get_light_dir(rend, false);
 
-    model3d_render(item->model3d, &view, proj_mat, item->color,
+    model3d_render(item->model3d, view.v2, proj_mat->v2, item->color,
                    item->tex, &light, item->effects);
 }
 
@@ -741,8 +741,8 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
         mat4_translate(view2.v2, x + 0.5, y + 0.5, 0, view3.v2);
-        model3d_render(item->model3d, &view3, &rend->proj_mat, item->color,
-                       NULL, NULL, 0);
+        model3d_render(item->model3d, view3.v2, rend->proj_mat.v2,
+                       item->color, NULL, NULL, 0);
     }
 }
 

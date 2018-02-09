@@ -810,7 +810,7 @@ model3d_t *model3d_line(void);
 model3d_t *model3d_rect(void);
 model3d_t *model3d_wire_rect(void);
 void model3d_render(model3d_t *model3d,
-                    const mat4_t *model, const mat4_t *proj,
+                    const float model[4][4], const float proj[4][4],
                     const uint8_t color[4],
                     const texture_t *tex,
                     const vec3_t *light,
