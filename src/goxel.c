@@ -470,7 +470,7 @@ static int on_hover(const gesture_t *gest, void *user)
 
 
 // XXX: Cleanup this.
-void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
+void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
                          const inputs_t *inputs)
 {
     float x_axis[4], q[4];
@@ -479,7 +479,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                           &goxel->gestures.rotate,
                           &goxel->gestures.hover};
 
-    gesture_update(4, gests, inputs, view->v, NULL);
+    gesture_update(4, gests, inputs, viewport, NULL);
     set_flag(&goxel->cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel->cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
     goxel->painter.box = !box_is_null(goxel->image->active_layer->box) ?
@@ -487,14 +487,14 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                          !box_is_null(goxel->image->box) ?
                          &goxel->image->box : NULL;
 
-    tool_iter(goxel->tool, view->v);
+    tool_iter(goxel->tool, viewport);
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
 
         // Auto adjust the camera rotation position.
         vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, view->v, inputs->touches[0].pos.v,
+        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos.v,
                                     goxel->layers_mesh, p.v, n.v)) {
             camera_set_target(&goxel->camera, p.v);
         }
@@ -521,7 +521,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     // C: recenter the view:
     if (inputs->keys['C']) {
         vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, view->v, inputs->touches[0].pos.v,
+        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos.v,
                                     goxel->layers_mesh, p.v, n.v)) {
             camera_set_target(&goxel->camera, p.v);
         }

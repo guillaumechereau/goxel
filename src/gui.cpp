@@ -1373,9 +1373,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::InvisibleButton("canvas", canvas_size);
     gui->mouse_in_view = ImGui::IsItemHovered();
     vec2_t view_size = vec2(gui->view.rect.z, gui->view.rect.w);
-    vec4_t view_rect = vec4(canvas_pos.x,
-                            io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
-                            canvas_size.x, canvas_size.y);
+    float view_rect[4] = {canvas_pos.x,
+                          io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
+                          canvas_size.x, canvas_size.y};
     // Call mouse_in_view with inputs in the view referential.
     if (!(!gui->mouse_in_view && inputs->mouse_wheel) &&
             !gui->capture_mouse) {
@@ -1384,7 +1384,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             inputs2.touches[i].pos.y =
                 io.DisplaySize.y - inputs2.touches[i].pos.y;
         }
-        goxel_mouse_in_view(goxel, &view_rect, &inputs2);
+        goxel_mouse_in_view(goxel, view_rect, &inputs2);
     }
 
     render_axis_arrows(goxel, &view_size);
