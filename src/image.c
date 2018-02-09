@@ -77,7 +77,7 @@ static layer_t *layer_new(const image_t *img, const char *name)
     // XXX: potential bug here.
     strncpy(layer->name, name, sizeof(layer->name));
     layer->mesh = mesh_new();
-    layer->mat = mat4_identity;
+    mat4_set_identity(layer->mat);
     layer->id = img_get_new_id(img);
     return layer;
 }
@@ -91,7 +91,7 @@ static layer_t *layer_copy(layer_t *other)
     layer->mesh = mesh_copy(other->mesh);
     layer->image = texture_copy(other->image);
     layer->box = other->box;
-    layer->mat = other->mat;
+    mat4_copy(other->mat, layer->mat);
     layer->id = other->id;
     layer->base_id = other->base_id;
     layer->base_mesh_key = other->base_mesh_key;
@@ -107,7 +107,7 @@ static layer_t *layer_clone(layer_t *other)
     snprintf(layer->name, sizeof(layer->name), "%.*s clone", len, other->name);
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
-    layer->mat = mat4_identity;
+    mat4_set_identity(layer->mat);
     layer->base_id = other->id;
     layer->base_mesh_key = mesh_get_key(other->mesh);
     return layer;
@@ -121,7 +121,7 @@ void image_update(image_t *img)
         base = img_get_layer(img, layer->base_id);
         if (base && layer->base_mesh_key != mesh_get_key(base->mesh)) {
             mesh_set(layer->mesh, base->mesh);
-            mesh_move(layer->mesh, layer->mat.v2);
+            mesh_move(layer->mesh, layer->mat);
             layer->base_mesh_key = mesh_get_key(base->mesh);
         }
     }

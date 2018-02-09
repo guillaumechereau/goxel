@@ -571,7 +571,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
     // Render all the image layers.
     DL_FOREACH(goxel->image->layers, layer) {
         if (layer->visible && layer->image)
-            render_img(rend, layer->image, layer->mat.v2, EFFECT_NO_SHADING);
+            render_img(rend, layer->image, layer->mat, EFFECT_NO_SHADING);
     }
 
     if (goxel->tool->id == TOOL_SELECTION)
@@ -716,7 +716,7 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     layer = image_add_layer(goxel->image);
     sprintf(layer->name, "img");
     layer->image = tex;
-    mat4_iscale(layer->mat.v2, layer->image->w, layer->image->h, 1);
+    mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);
 }
 
 static int search_action_for_format_cb(const action_t *a, void *user)

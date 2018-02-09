@@ -984,7 +984,7 @@ struct layer {
     bool        visible;
     char        name[256];  // 256 chars max.
     box_t       box;
-    mat4_t      mat;
+    float       mat[4][4];
     // For 2d image layers.
     texture_t   *image;
     // For clone layers:

@@ -39,7 +39,7 @@ static void do_move(layer_t *layer, mat4_t mat)
     mat4_itranslate(m.v2, +0.5, +0.5, +0.5);
 
     if (layer->base_id || layer->image) {
-        mat4_mul(mat.v2, layer->mat.v2, layer->mat.v2);
+        mat4_mul(mat.v2, layer->mat, layer->mat);
         layer->base_mesh_key = 0;
     } else {
         mesh_move(layer->mesh, m.v2);
