@@ -782,10 +782,10 @@ void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
 // #### Model3d ################
 
 typedef struct {
-     vec3_t   pos       __attribute__((aligned(4)));
-     vec3_t   normal    __attribute__((aligned(4)));
+     float    pos[3]    __attribute__((aligned(4)));
+     float    normal[3] __attribute__((aligned(4)));
      uint8_t  color[4]  __attribute__((aligned(4)));
-     vec2_t   uv        __attribute__((aligned(4)));
+     float    uv[2]     __attribute__((aligned(4)));
 } model_vertex_t;
 
 typedef struct {
