@@ -70,12 +70,12 @@ static inline bool box_is_null(box_t b)
 
 static inline box_t bbox_from_aabb(const int aabb[2][3])
 {
-    const float pos[3] = {(aabb[1][0] + aabb[0][0]) / 2.0,
-                          (aabb[1][1] + aabb[0][1]) / 2.0,
-                          (aabb[1][2] + aabb[0][2]) / 2.0};
-    const float size[3] = {aabb[1][0] - aabb[0][0],
-                           aabb[1][1] - aabb[0][1],
-                           aabb[1][2] - aabb[0][2]};
+    const float pos[3] = {(aabb[1][0] + aabb[0][0]) / 2.f,
+                          (aabb[1][1] + aabb[0][1]) / 2.f,
+                          (aabb[1][2] + aabb[0][2]) / 2.f};
+    const float size[3] = {(float)(aabb[1][0] - aabb[0][0]),
+                           (float)(aabb[1][1] - aabb[0][1]),
+                           (float)(aabb[1][2] - aabb[0][2])};
     return bbox_from_extents(pos, size[0] / 2, size[1] / 2, size[2] / 2);
 }
 
