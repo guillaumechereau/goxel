@@ -951,8 +951,8 @@ struct camera
     float  aspect;
 
     // Auto computed from other values:
-    mat4_t view_mat;    // Model to view transformation.
-    mat4_t proj_mat;    // Proj transform from camera coordinates.
+    float view_mat[4][4];    // Model to view transformation.
+    float proj_mat[4][4];    // Proj transform from camera coordinates.
 };
 
 camera_t *camera_new(const char *name);

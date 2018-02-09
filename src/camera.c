@@ -38,7 +38,7 @@ void camera_set(camera_t *cam, const camera_t *other)
     vec3_copy(other->ofs, cam->ofs);
 }
 
-static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
+static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
 {
     int bpos[3];
     vec3_t p;
@@ -52,7 +52,7 @@ static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
     if (!box_is_null(goxel->image->box)) {
         box_get_vertices(goxel->image->box, vertices);
         for (i = 0; i < 8; i++) {
-            mat4_mul_vec3(view_mat->v2, vertices[i].v, p.v);
+            mat4_mul_vec3(view_mat, vertices[i].v, p.v);
             if (p.z < 0) {
                 n = min(n, -p.z - margin);
                 f = max(f, -p.z + margin);
@@ -63,7 +63,7 @@ static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
     iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
         p = vec3(bpos[0], bpos[1], bpos[2]);
-        mat4_mul_vec3(view_mat->v2, p.v, p.v);
+        mat4_mul_vec3(view_mat, p.v, p.v);
         if (p.z < 0) {
             n = min(n, -p.z - margin);
             f = max(f, -p.z + margin);
@@ -82,21 +82,21 @@ void camera_update(camera_t *camera)
 
     camera->fovy = 20.;
     // Update the camera mats
-    camera->view_mat = mat4_identity;
-    mat4_itranslate(camera->view_mat.v2, 0, 0, -camera->dist);
-    mat4_imul_quat(camera->view_mat.v2, camera->rot);
-    mat4_itranslate(camera->view_mat.v2,
+    mat4_set_identity(camera->view_mat);
+    mat4_itranslate(camera->view_mat, 0, 0, -camera->dist);
+    mat4_imul_quat(camera->view_mat, camera->rot);
+    mat4_itranslate(camera->view_mat,
            camera->ofs[0], camera->ofs[1], camera->ofs[2]);
 
-    compute_clip(&camera->view_mat, &clip_near, &clip_far);
+    compute_clip(camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
         size = camera->dist;
-        mat4_ortho(camera->proj_mat.v2,
+        mat4_ortho(camera->proj_mat,
                 -size, +size,
                 -size / camera->aspect, +size / camera->aspect,
                 clip_near, clip_far);
     } else {
-        mat4_perspective(camera->proj_mat.v2,
+        mat4_perspective(camera->proj_mat,
                 camera->fovy, camera->aspect, clip_near, clip_far);
     }
 }
@@ -107,9 +107,9 @@ void camera_get_ray(const camera_t *camera, const float win[2],
 {
     float o1[3], o2[3], p[3];
     vec3_set(p, win[0], win[1], 0);
-    unproject(p, camera->view_mat.v2, camera->proj_mat.v2, viewport, o1);
+    unproject(p, camera->view_mat, camera->proj_mat, viewport, o1);
     vec3_set(p, win[0], win[1], 1);
-    unproject(p, camera->view_mat.v2, camera->proj_mat.v2, viewport, o2);
+    unproject(p, camera->view_mat, camera->proj_mat, viewport, o2);
     vec3_copy(o1, o);
     vec3_sub(o2, o1, d);
     vec3_normalize(d, d);

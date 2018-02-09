@@ -70,7 +70,7 @@ static int iter(tool_t *tool, const float viewport[4])
     // Create the tool box from the camera along the visible ray.
     laser->box.mat = mat4_identity;
 
-    mat4_invert(goxel->camera.view_mat.v2, view_mat_inv);
+    mat4_invert(goxel->camera.view_mat, view_mat_inv);
     mat4_mul_vec4(view_mat_inv, vec4(1, 0, 0, 0).v, v.v);
     laser->box.w = v.xyz;
     mat4_mul_vec4(view_mat_inv, vec4(0, 1, 0, 0).v, v.v);

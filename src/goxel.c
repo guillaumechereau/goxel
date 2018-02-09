@@ -40,11 +40,11 @@ static void unpack_pos_data(uint32_t v, int pos[3], int *face,
 }
 
 // XXX: can we merge this with unproject?
-static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
-                              const mat4_t *proj, const float viewport[4])
+static vec3_t unproject_delta(const vec3_t *win, const float model[4][4],
+                              const float proj[4][4], const float viewport[4])
 {
     float inv[4][4];
-    mat4_mul(proj->v2, model->v2, inv);
+    mat4_mul(proj, model, inv);
     mat4_invert(inv, inv); // XXX: check for return value.
     vec4_t norm_pos = vec4(
             win->x / viewport[2],
@@ -221,7 +221,7 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
         if (!r)
             continue;
 
-        mat4_mul_vec3(goxel->camera.view_mat.v2, p, v);
+        mat4_mul_vec3(goxel->camera.view_mat, p, v);
         dist = -v[2];
         if (dist < 0 || dist > best) continue;
 
@@ -351,8 +351,8 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     camera_update(&goxel->camera);
     if (goxel->image->active_camera)
         camera_set(goxel->image->active_camera, &goxel->camera);
-    goxel->rend.view_mat = goxel->camera.view_mat;
-    goxel->rend.proj_mat = goxel->camera.proj_mat;
+    mat4_copy(goxel->camera.view_mat, goxel->rend.view_mat.v2);
+    mat4_copy(goxel->camera.proj_mat, goxel->rend.proj_mat.v2);
     gui_iter(goxel, inputs);
     sound_iter();
     goxel->frame_count++;
@@ -427,8 +427,8 @@ static int on_pan(const gesture_t *gest, void *user)
                               goxel->move_origin.pos.y, 0);
     vec3_t wdelta;
     vec3_sub(wpos, worigin_pos.v, wdelta.v);
-    vec3_t odelta = unproject_delta(&wdelta, &goxel->camera.view_mat,
-                                    &goxel->camera.proj_mat, gest->viewport);
+    vec3_t odelta = unproject_delta(&wdelta, goxel->camera.view_mat,
+                                    goxel->camera.proj_mat, gest->viewport);
     vec3_imul(odelta.v, 2); // XXX: why do I need that?
     if (!goxel->camera.ortho)
         vec3_imul(odelta.v, goxel->camera.dist);
@@ -646,8 +646,8 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h)
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
     camera_update(&camera);
-    rend.view_mat = camera.view_mat;
-    rend.proj_mat = camera.proj_mat;
+    mat4_copy(camera.view_mat, rend.view_mat.v2);
+    mat4_copy(camera.proj_mat, rend.proj_mat.v2);
     rend.fbo = fbo->framebuffer;
 
     render_mesh(&rend, mesh, 0);
