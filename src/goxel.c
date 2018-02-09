@@ -41,14 +41,14 @@ static void unpack_pos_data(uint32_t v, int pos[3], int *face,
 
 // XXX: can we merge this with unproject?
 static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
-                              const mat4_t *proj, const vec4_t *view)
+                              const mat4_t *proj, const float viewport[4])
 {
     float inv[4][4];
     mat4_mul(proj->v2, model->v2, inv);
     mat4_invert(inv, inv); // XXX: check for return value.
     vec4_t norm_pos = vec4(
-            win->x / view->v[2],
-            win->y / view->v[3],
+            win->x / viewport[2],
+            win->y / viewport[3],
              0, 0);
     mat4_mul_vec4(inv, norm_pos.v, norm_pos.v);
     return norm_pos.xyz;
@@ -360,14 +360,14 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
 }
 
 static quat_t compute_view_rotation(const quat_t *rot,
-        const vec2_t *start_pos, const vec2_t *end_pos,
-        const vec4_t *view)
+        const float start_pos[2], const float end_pos[2],
+        const float viewport[4])
 {
     float x1, y1, x2, y2, x_rot, z_rot, q1[4], q2[4], q[4], x_axis[4];
-    x1 = start_pos->x / view->z;
-    y1 = start_pos->y / view->w;
-    x2 =   end_pos->x / view->z;
-    y2 =   end_pos->y / view->w;
+    x1 = start_pos[0] / viewport[2];
+    y1 = start_pos[1] / viewport[3];
+    x2 =   end_pos[0] / viewport[2];
+    y2 =   end_pos[1] / viewport[3];
     z_rot = (x2 - x1) * 2 * M_PI;
     x_rot = -(y2 - y1) * 2 * M_PI;
     quat_from_axis(q1, z_rot, 0, 0, 1);
@@ -406,7 +406,7 @@ static int on_drag(const gesture_t *gest, void *user)
         c->flags &= ~CURSOR_PRESSED;
 
     c->snaped = goxel_unproject(
-            goxel, gest->view.v, gest->pos.v, c->snap_mask,
+            goxel, gest->viewport, gest->pos, c->snap_mask,
             c->snap_offset, c->pos.v, c->normal.v);
 
     // Set some default values.  The tools can override them.
@@ -421,15 +421,15 @@ static int on_pan(const gesture_t *gest, void *user)
 {
     if (gest->state == GESTURE_BEGIN) {
         goxel->move_origin.camera_ofs = goxel->camera.ofs;
-        goxel->move_origin.pos = gest->pos;
+        vec2_copy(gest->pos, goxel->move_origin.pos.v);
     }
-    vec3_t wpos = vec3(gest->pos.x, gest->pos.y, 0);
+    float wpos[3] = {gest->pos[0], gest->pos[1], 0};
     vec3_t worigin_pos = vec3(goxel->move_origin.pos.x,
                               goxel->move_origin.pos.y, 0);
     vec3_t wdelta;
-    vec3_sub(wpos.v, worigin_pos.v, wdelta.v);
+    vec3_sub(wpos, worigin_pos.v, wdelta.v);
     vec3_t odelta = unproject_delta(&wdelta, &goxel->camera.view_mat,
-                                    &goxel->camera.proj_mat, &gest->view);
+                                    &goxel->camera.proj_mat, gest->viewport);
     vec3_imul(odelta.v, 2); // XXX: why do I need that?
     if (!goxel->camera.ortho)
         vec3_imul(odelta.v, goxel->camera.dist);
@@ -441,12 +441,12 @@ static int on_rotate(const gesture_t *gest, void *user)
 {
     if (gest->state == GESTURE_BEGIN) {
         goxel->move_origin.rotation = goxel->camera.rot;
-        goxel->move_origin.pos = gest->pos;
+        vec2_copy(gest->pos, goxel->move_origin.pos.v);
     }
     quat_mul(goxel->move_origin.rotation.v,
              compute_view_rotation(&goxel->move_origin.rotation,
-                    &goxel->move_origin.pos, &gest->pos,
-                    &gest->view).v,
+                    goxel->move_origin.pos.v, gest->pos,
+                    gest->viewport).v,
              goxel->camera.rot.v);
 
     return 0;
@@ -456,7 +456,7 @@ static int on_hover(const gesture_t *gest, void *user)
 {
     cursor_t *c = &goxel->cursor;
     c->snaped = goxel_unproject(
-                    goxel, gest->view.v, gest->pos.v, c->snap_mask,
+                    goxel, gest->viewport, gest->pos, c->snap_mask,
                     c->snap_offset, c->pos.v, c->normal.v);
     set_cursor_hint(c);
     c->flags &= ~CURSOR_PRESSED;

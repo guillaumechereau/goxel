@@ -164,6 +164,12 @@ DECL void vec4_set(float v[4], float x, float y, float z, float w)
     v[3] = w;
 }
 
+DECL void vec2_copy(const float a[2], float out[2])
+{
+    out[0] = a[0];
+    out[1] = a[1];
+}
+
 DECL void vec3_copy(const float a[3], float out[3])
 {
     out[0] = a[0];

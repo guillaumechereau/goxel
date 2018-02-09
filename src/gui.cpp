@@ -470,7 +470,7 @@ static int on_gesture(const gesture_t *gest, void *user)
 {
     gui_t *gui = (gui_t*)user;
     ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2(gest->pos.x, gest->pos.y);
+    io.MousePos = ImVec2(gest->pos[0], gest->pos[1]);
     io.MouseDown[0] = (gest->type == GESTURE_DRAG) &&
                       (gest->state != GESTURE_END);
     if (gest->state == GESTURE_BEGIN && !gui->mouse_in_view)
