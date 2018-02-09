@@ -1180,9 +1180,9 @@ typedef struct goxel
     box_t      selection;   // The selection box.
 
     struct {
-        quat_t rotation;
-        vec2_t pos;
-        vec3_t camera_ofs;
+        float  rotation[4];
+        float  pos[2];
+        float  camera_ofs[3];
     } move_origin;
 
     gox_proc_t proc;        // The current procedural rendering (if any).

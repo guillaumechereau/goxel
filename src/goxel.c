@@ -357,9 +357,9 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     goxel->frame_count++;
 }
 
-static quat_t compute_view_rotation(const quat_t *rot,
+static void compute_view_rotation(const float rot[4],
         const float start_pos[2], const float end_pos[2],
-        const float viewport[4])
+        const float viewport[4], float out[4])
 {
     float x1, y1, x2, y2, x_rot, z_rot, q1[4], q2[4], q[4], x_axis[4];
     x1 = start_pos[0] / viewport[2];
@@ -369,13 +369,11 @@ static quat_t compute_view_rotation(const quat_t *rot,
     z_rot = (x2 - x1) * 2 * M_PI;
     x_rot = -(y2 - y1) * 2 * M_PI;
     quat_from_axis(q1, z_rot, 0, 0, 1);
-    quat_mul(rot->v, q1, q);
+    quat_mul(rot, q1, q);
     quat_conjugate(q, q);
     quat_mul_vec4(q, vec4(1, 0, 0, 0).v, x_axis);
     quat_from_axis(q2, x_rot, x_axis[0], x_axis[1], x_axis[2]);
-    quat_t ret;
-    quat_mul(q1, q2, ret.v);
-    return ret;
+    quat_mul(q1, q2, out);
 }
 
 static void set_cursor_hint(cursor_t *curs)
@@ -418,12 +416,12 @@ static int on_drag(const gesture_t *gest, void *user)
 static int on_pan(const gesture_t *gest, void *user)
 {
     if (gest->state == GESTURE_BEGIN) {
-        quat_copy(goxel->camera.ofs, goxel->move_origin.camera_ofs.v);
-        vec2_copy(gest->pos, goxel->move_origin.pos.v);
+        quat_copy(goxel->camera.ofs, goxel->move_origin.camera_ofs);
+        vec2_copy(gest->pos, goxel->move_origin.pos);
     }
     float wpos[3] = {gest->pos[0], gest->pos[1], 0};
-    vec3_t worigin_pos = vec3(goxel->move_origin.pos.x,
-                              goxel->move_origin.pos.y, 0);
+    vec3_t worigin_pos = vec3(goxel->move_origin.pos[0],
+                              goxel->move_origin.pos[1], 0);
     vec3_t wdelta;
     vec3_sub(wpos, worigin_pos.v, wdelta.v);
     vec3_t odelta = unproject_delta(&wdelta, goxel->camera.view_mat,
@@ -431,22 +429,22 @@ static int on_pan(const gesture_t *gest, void *user)
     vec3_imul(odelta.v, 2); // XXX: why do I need that?
     if (!goxel->camera.ortho)
         vec3_imul(odelta.v, goxel->camera.dist);
-    vec3_add(goxel->move_origin.camera_ofs.v, odelta.v, goxel->camera.ofs);
+    vec3_add(goxel->move_origin.camera_ofs, odelta.v, goxel->camera.ofs);
     return 0;
 }
 
 static int on_rotate(const gesture_t *gest, void *user)
 {
+    float view_rot[4];
     if (gest->state == GESTURE_BEGIN) {
-        quat_copy(goxel->camera.rot, goxel->move_origin.rotation.v);
-        vec2_copy(gest->pos, goxel->move_origin.pos.v);
+        quat_copy(goxel->camera.rot, goxel->move_origin.rotation);
+        vec2_copy(gest->pos, goxel->move_origin.pos);
     }
-    quat_mul(goxel->move_origin.rotation.v,
-             compute_view_rotation(&goxel->move_origin.rotation,
-                    goxel->move_origin.pos.v, gest->pos,
-                    gest->viewport).v,
-             goxel->camera.rot);
 
+    compute_view_rotation(goxel->move_origin.rotation,
+                          goxel->move_origin.pos, gest->pos,
+                          gest->viewport, view_rot);
+    quat_mul(goxel->move_origin.rotation, view_rot, goxel->camera.rot);
     return 0;
 }
 
