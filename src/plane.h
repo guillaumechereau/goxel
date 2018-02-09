@@ -86,19 +86,19 @@ static inline bool plane_is_null(plane_t p) {
 // if out is set, it receive the position of the intersection in the
 // plane local coordinates.  Apply the plane matrix on it to get the
 // object coordinate position.
-static inline bool plane_line_intersection(plane_t plane, vec3_t p, vec3_t n,
-                                           vec3_t *out)
+static inline bool plane_line_intersection(
+        plane_t plane, const float p[3], const float n[3], float out[3])
 {
-    vec3_t v;
-    mat4_t m = mat4_identity;
-    m.vecs[0].xyz = plane.u;
-    m.vecs[1].xyz = plane.v;
-    m.vecs[2].xyz = n;
-    if (!mat4_invert(m.v2, m.v2)) return false;
+    float v[3], m[4][4];
+    mat4_set_identity(m);
+    vec3_copy(plane.u.v, m[0]);
+    vec3_copy(plane.v.v, m[1]);
+    vec3_copy(n, m[2]);
+    if (!mat4_invert(m, m)) return false;
     if (out) {
-        vec3_sub(p.v, plane.p.v, v.v);
-        mat4_mul_vec3(m.v2, v.v, out->v);
-        out->z = 0;
+        vec3_sub(p, plane.p.v, v);
+        mat4_mul_vec3(m, v, out);
+        out[2] = 0;
     }
     return true;
 }

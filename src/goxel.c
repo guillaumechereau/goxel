@@ -71,7 +71,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
     if (fabs(vec3_dot(onorm.v, plane->n.v)) <= min_angle_cos)
         return false;
 
-    if (!plane_line_intersection(*plane, opos, onorm, out))
+    if (!plane_line_intersection(*plane, opos.v, onorm.v, out->v))
         return false;
     mat4_mul_vec3(plane->mat.v2, out->v, out->v);
     *normal = plane->n;
@@ -99,7 +99,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
             continue;
         if (inside && vec3_dot(plane.n.v, onorm.v) <= 0)
             continue;
-        if (!plane_line_intersection(plane, opos, onorm, out))
+        if (!plane_line_intersection(plane, opos.v, onorm.v, out->v))
             continue;
         if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
             continue;
