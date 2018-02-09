@@ -270,7 +270,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     mesh_accessor_t accessor;
     vec3_t size, p;
     float mat[4][4];
-    float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
+    float (*shape_func)(const float[3], const float[3], float smoothness);
     float k, v;
     int mode = painter->mode;
     bool use_box, skip_src_empty, skip_dst_empty;
@@ -317,7 +317,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
         p = vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
         if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
         mat4_mul_vec3(mat, p.v, p.v);
-        k = shape_func(&p, &size, painter->smoothness);
+        k = shape_func(p.v, size.v, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
         v = k / 2.0f + 0.5f;
         if (!v && skip_src_empty) continue;

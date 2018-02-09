@@ -22,54 +22,55 @@ shape_t shape_sphere;
 shape_t shape_cube;
 shape_t shape_cylinder;
 
-static float sphere_func(const vec3_t *p, const vec3_t *s, float smoothness)
+static float sphere_func(const float p[3], const float s[3], float smoothness)
 {
-    float d = vec3_norm(p->v);
+    float d = vec3_norm(p);
     float r;
-    if (p->x == 0 && p->y == 0 && p->z == 0) return max3(s->x, s->y, s->z);
-    r = s->x * s->y * s->z / vec3_norm(vec3(s->y * s->z * p->x / d,
-                                            s->x * s->z * p->y / d,
-                                            s->x * s->y * p->z / d).v);
+    if (p[0] == 0 && p[1] == 0 && p[2] == 0) return max3(s[0], s[1], s[2]);
+    r = s[0] * s[1] * s[2] / vec3_norm(VEC(s[1] * s[2] * p[0] / d,
+                                           s[0] * s[2] * p[1] / d,
+                                           s[0] * s[1] * p[2] / d));
     return r - d;
 }
 
-static float cube_func(const vec3_t *p, const vec3_t *s, float sm)
+static float cube_func(const float p[3], const float s[3], float sm)
 {
     int i;
     float min_v = INFINITY;
     float ret = INFINITY, v;
 
     // Check if we are outside the max cube:
-    if  (p->x < -s->x - sm || p->x >= +s->x + sm ||
-         p->y < -s->y - sm || p->y >= +s->y + sm ||
-         p->z < -s->z - sm || p->z >= +s->z + sm) return -INFINITY;
+    if  (p[0] < -s[0] - sm || p[0] >= +s[0] + sm ||
+         p[1] < -s[1] - sm || p[1] >= +s[1] + sm ||
+         p[2] < -s[2] - sm || p[2] >= +s[2] + sm) return -INFINITY;
 
     // Or inside the min cube:
-    if  (p->x >= -s->x + sm && p->x < +s->x - sm &&
-         p->y >= -s->y + sm && p->y < +s->y - sm &&
-         p->z >= -s->z + sm && p->z < +s->z - sm) return +INFINITY;
+    if  (p[0] >= -s[0] + sm && p[0] < +s[0] - sm &&
+         p[1] >= -s[1] + sm && p[1] < +s[1] - sm &&
+         p[2] >= -s[2] + sm && p[2] < +s[2] - sm) return +INFINITY;
 
     for (i = 0; i < 3; i++) {
-        if (p->v[i]) {
-            v = s->v[i] / fabs(p->v[i]);
+        if (p[i]) {
+            v = s[i] / fabs(p[i]);
             if (v < min_v) {
                 min_v = v;
-                ret = s->v[i] - fabs(p->v[i]);
+                ret = s[i] - fabs(p[i]);
             }
         }
     }
     return ret;
 }
 
-static float cylinder_func(const vec3_t *p, const vec3_t *s, float smoothness)
+static float cylinder_func(const float p[3], const float s[3],
+                           float smoothness)
 {
-    float d = vec2_norm(p->v);
+    float d = vec2_norm(p);
     float rz, r;
-    rz = s->z - fabs(p->z);
-    if (p->x == 0 && p->y == 0) return min(rz, max3(s->x, s->y, s->z));
+    rz = s[2] - fabs(p[2]);
+    if (p[0] == 0 && p[1] == 0) return min(rz, max3(s[0], s[1], s[2]));
     // Ellipse polar form relative to center:
     // r(θ) = a b / √((b cosΘ)² + (a sinΘ)²)
-    r = s->x * s->y / vec2_norm(VEC(s->y * p->x / d, s->x * p->y / d));
+    r = s[0] * s[1] / vec2_norm(VEC(s[1] * p[0] / d, s[0] * p[1] / d));
     return min(rz, r - d);
 }
 

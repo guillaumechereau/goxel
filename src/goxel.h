@@ -552,7 +552,7 @@ enum {
 
 typedef struct shape {
     const char *id;
-    float (*func)(const vec3_t *p, const vec3_t *s, float smoothness);
+    float (*func)(const float p[3], const float s[3], float smoothness);
 } shape_t;
 
 void shapes_init(void);
