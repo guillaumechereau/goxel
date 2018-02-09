@@ -590,9 +590,8 @@ DECL void mat4_lookat(float m[4][4],
     mat4_copy(ret, m);
 }
 
-DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
-DECL void quat_to_mat4(quat_t q, float out[4][4]);
-DECL mat3_t quat_to_mat3(quat_t q);
+DECL void quat_from_axis(float quat[4], float a, float x, float y, float z);
+DECL void quat_to_mat4(const float q[4], float out[4][4]);
 
 DECL void mat4_rotate(const float m[4][4], float a, float x, float y, float z,
                       float out[4][4])
@@ -623,7 +622,8 @@ DECL void mat4_rotate(const float m[4][4], float a, float x, float y, float z,
         M(0, 1) = -s;
         M(1, 0) = s;
     } else {
-        quat_t quat = quat_from_axis(a, x, y, z);
+        float quat[4];
+        quat_from_axis(quat, a, x, y, z);
         quat_to_mat4(quat, tmp);
     }
 #undef M
@@ -639,31 +639,27 @@ DECL quat_t quat(real_t w, real_t x, real_t y, real_t z) {
    return (quat_t){{w, x, y, z}};
 }
 
-DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z)
+DECL void quat_from_axis(float quat[4], float a, float x, float y, float z)
 {
-    real_t sin_angle;
-    vec3_t vn;
+    float sin_angle;
+    float vn[3] = {x, y, z};
     a *= 0.5f;
-
-    vn = vec3(x, y, z);
-    vec3_normalize(vn.v, vn.v);
-
+    vec3_normalize(vn, vn);
     sin_angle = sin(a);
-
-    return quat(cos(a),
-                vn.x * sin_angle,
-                vn.y * sin_angle,
-                vn.z * sin_angle);
+    quat[0] = cos(a);
+    quat[1] = vn[0] * sin_angle;
+    quat[2] = vn[1] * sin_angle;
+    quat[3] = vn[2] * sin_angle;
 }
 
-DECL void quat_to_mat4(quat_t q, float out[4][4])
+DECL void quat_to_mat4(const float q[4], float out[4][4])
 {
-    real_t w, x, y, z;
-    w = q.w;
-    x = q.x;
-    y = q.y;
-    z = q.z;
-    float ret[4][4] = {
+    float w, x, y, z;
+    w = q[0];
+    x = q[1];
+    y = q[2];
+    z = q[3];
+    const float ret[4][4] = {
             {1-2*y*y-2*z*z,     2*x*y+2*z*w,     2*x*z-2*y*w,  0},
             { 2*x*y-2*z*w,   1-2*x*x-2*z*z,     2*y*z+2*x*w,   0},
             { 2*x*z+2*y*w,     2*y*z-2*x*w,   1-2*x*x-2*y*y,   0},
@@ -671,69 +667,66 @@ DECL void quat_to_mat4(quat_t q, float out[4][4])
     mat4_copy(ret, out);
 }
 
-DECL quat_t quat_conjugate(quat_t q) {
-    return quat(q.w, -q.x, -q.y, -q.z);
+DECL void quat_conjugate(const float q[4], float out[4]) {
+    out[0] =  q[0];
+    out[1] = -q[1];
+    out[2] = -q[2];
+    out[3] = -q[3];
 }
 
-DECL quat_t quat_mul(quat_t a, quat_t b)
+DECL void quat_mul(const float a[4], const float b[4], float out[4])
 {
-    return quat(a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-                a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
-                a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
-                a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x);
+    out[0] = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
+    out[1] = a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2];
+    out[2] = a[0] * b[2] + a[2] * b[0] + a[3] * b[1] - a[1] * b[3];
+    out[3] = a[0] * b[3] + a[3] * b[0] + a[1] * b[2] - a[2] * b[1];
 }
 
-DECL void quat_imul(quat_t *a, quat_t b)
+DECL void quat_imul(float a[4], const float b[4])
 {
-    *a = quat_mul(*a, b);
+    quat_mul(a, b, a);
 }
 
-DECL quat_t quat_rotate(quat_t q, real_t a, real_t x, real_t y, real_t z)
+DECL void quat_rotate(const float q[4], float a, float x, float y, float z,
+                      float out[4])
 {
-    quat_t other = quat_from_axis(a, x, y, z);
-    return quat_mul(q, other);
+    float other[4];
+    quat_from_axis(other, a, x, y, z);
+    quat_mul(q, other, out);
 }
 
-DECL void quat_irotate(quat_t *q, real_t a, real_t x, real_t y, real_t z)
+DECL void quat_irotate(float q[4], float a, float x, float y, float z)
 {
-    *q = quat_rotate(*q, a, x, y, z);
+    quat_rotate(q, a, x, y, z, q);
 }
 
-DECL void quat_mul_vec4(quat_t q, const float v[4], float out[4])
+DECL void quat_mul_vec4(const float q[4], const float v[4], float out[4])
 {
     float m[4][4];
     quat_to_mat4(q, m);
     mat4_mul_vec4(m, v, out);
 }
 
-DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)
+DECL void mat4_mul_quat(const float mat[4][4], const float q[4],
+                        float out[4][4])
 {
-    mat4_t ret;
     float qm[4][4];
     quat_to_mat4(q, qm);
-    mat4_mul(mat.v2, qm, ret.v2);
-    return ret;
+    mat4_mul(mat, qm, out);
 }
 
-DECL void mat4_imul_quat(mat4_t *mat, quat_t q)
+DECL void mat4_imul_quat(float mat[4][4], const float q[4])
 {
-    *mat = mat4_mul_quat(*mat, q);
+    mat4_mul_quat(mat, q, mat);
 }
 
-void mat3_to_eul(mat3_t m, int order, float e[3]);
+void mat3_to_eul(const float m[3][3], int order, float e[3]);
+void quat_to_mat3(const float q[4], float out[3][3]);
 
-void quat_to_mat3_(const quat_t *q, mat3_t *m);
-DECL mat3_t quat_to_mat3(quat_t q)
+DECL void quat_to_eul(const float q[4], int order, float e[3])
 {
-    mat3_t m;
-    quat_to_mat3_(&q, &m);
-    return m;
-}
-
-DECL void quat_to_eul(quat_t q, int order, float e[3])
-{
-    mat3_t m;
-    m = quat_to_mat3(q);
+    float m[3][3];
+    quat_to_mat3(q, m);
     mat3_to_eul(m, order, e);
 }
 

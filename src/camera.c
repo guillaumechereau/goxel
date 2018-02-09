@@ -84,7 +84,7 @@ void camera_update(camera_t *camera)
     // Update the camera mats
     camera->view_mat = mat4_identity;
     mat4_itranslate(camera->view_mat.v2, 0, 0, -camera->dist);
-    mat4_imul_quat(&camera->view_mat, camera->rot);
+    mat4_imul_quat(camera->view_mat.v2, camera->rot.v);
     mat4_itranslate(camera->view_mat.v2,
            camera->ofs.x, camera->ofs.y, camera->ofs.z);
 
@@ -125,7 +125,7 @@ void camera_set_target(camera_t *cam, const vec3_t *pos)
     float u[4], v[4];
     float d;
     quat_t roti = quat(cam->rot.w, -cam->rot.x, -cam->rot.y, -cam->rot.z);
-    quat_mul_vec4(roti, vec4(0, 0, 1, 0).v, u);
+    quat_mul_vec4(roti.v, vec4(0, 0, 1, 0).v, u);
     vec3_add(pos->v, cam->ofs.v, v);
     d = vec3_dot(v, u);
     vec3_iaddk(cam->ofs.v, u, -d);

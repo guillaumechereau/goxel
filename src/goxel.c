@@ -268,8 +268,8 @@ void goxel_init(goxel_t *gox)
     goxel->camera.rot = quat_identity;
     goxel->camera.dist = 128;
     goxel->camera.aspect = 1;
-    quat_irotate(&goxel->camera.rot, -M_PI / 4, 1, 0, 0);
-    quat_irotate(&goxel->camera.rot, -M_PI / 4, 0, 0, 1);
+    quat_irotate(goxel->camera.rot.v, -M_PI / 4, 1, 0, 0);
+    quat_irotate(goxel->camera.rot.v, -M_PI / 4, 0, 0, 1);
 
     goxel->image = image_new();
 
@@ -367,20 +367,21 @@ static quat_t compute_view_rotation(const quat_t *rot,
         const vec2_t *start_pos, const vec2_t *end_pos,
         const vec4_t *view)
 {
-    quat_t q1, q2;
-    float x1, y1, x2, y2, x_rot, z_rot;
-    float x_axis[4];
+    float x1, y1, x2, y2, x_rot, z_rot, q1[4], q2[4], q[4], x_axis[4];
     x1 = start_pos->x / view->z;
     y1 = start_pos->y / view->w;
     x2 =   end_pos->x / view->z;
     y2 =   end_pos->y / view->w;
     z_rot = (x2 - x1) * 2 * M_PI;
     x_rot = -(y2 - y1) * 2 * M_PI;
-    q1 = quat_from_axis(z_rot, 0, 0, 1);
-    quat_mul_vec4(quat_conjugate(quat_mul(*rot, q1)),
-                  vec4(1, 0, 0, 0).v, x_axis);
-    q2 = quat_from_axis(x_rot, x_axis[0], x_axis[1], x_axis[2]);
-    return quat_mul(q1, q2);
+    quat_from_axis(q1, z_rot, 0, 0, 1);
+    quat_mul(rot->v, q1, q);
+    quat_conjugate(q, q);
+    quat_mul_vec4(q, vec4(1, 0, 0, 0).v, x_axis);
+    quat_from_axis(q2, x_rot, x_axis[0], x_axis[1], x_axis[2]);
+    quat_t ret;
+    quat_mul(q1, q2, ret.v);
+    return ret;
 }
 
 static void set_cursor_hint(cursor_t *curs)
@@ -446,10 +447,11 @@ static int on_rotate(const gesture_t *gest, void *user)
         goxel->move_origin.rotation = goxel->camera.rot;
         goxel->move_origin.pos = gest->pos;
     }
-    goxel->camera.rot = quat_mul(goxel->move_origin.rotation,
-            compute_view_rotation(&goxel->move_origin.rotation,
-                &goxel->move_origin.pos, &gest->pos,
-                &gest->view));
+    quat_mul(goxel->move_origin.rotation.v,
+             compute_view_rotation(&goxel->move_origin.rotation,
+                    &goxel->move_origin.pos, &gest->pos,
+                    &gest->view).v,
+             goxel->camera.rot.v);
 
     return 0;
 }
@@ -475,7 +477,7 @@ static int on_hover(const gesture_t *gest, void *user)
 void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                          const inputs_t *inputs)
 {
-    float x_axis[4];
+    float x_axis[4], q[4];
     gesture_t *gests[] = {&goxel->gestures.drag,
                           &goxel->gestures.pan,
                           &goxel->gestures.rotate,
@@ -505,19 +507,19 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
 
     // handle keyboard rotations
     if (inputs->keys[KEY_LEFT])
-        quat_irotate(&goxel->camera.rot, 0.05, 0, 0, +1);
+        quat_irotate(goxel->camera.rot.v, 0.05, 0, 0, +1);
     if (inputs->keys[KEY_RIGHT])
-        quat_irotate(&goxel->camera.rot, 0.05, 0, 0, -1);
+        quat_irotate(goxel->camera.rot.v, 0.05, 0, 0, -1);
     if (inputs->keys[KEY_UP]) {
-        quat_mul_vec4(quat_conjugate(goxel->camera.rot),
-                      vec4(1, 0, 0, 0).v, x_axis);
-        quat_irotate(&goxel->camera.rot, -0.05,
+        quat_conjugate(goxel->camera.rot.v, q);
+        quat_mul_vec4(q, vec4(1, 0, 0, 0).v, x_axis);
+        quat_irotate(goxel->camera.rot.v, -0.05,
                      x_axis[0], x_axis[1], x_axis[2]);
     }
     if (inputs->keys[KEY_DOWN]) {
-        quat_mul_vec4(quat_conjugate(goxel->camera.rot),
-                      vec4(1, 0, 0, 0).v, x_axis);
-        quat_irotate(&goxel->camera.rot, +0.05,
+        quat_conjugate(goxel->camera.rot.v, q);
+        quat_mul_vec4(q, vec4(1, 0, 0, 0).v, x_axis);
+        quat_irotate(goxel->camera.rot.v, +0.05,
                      x_axis[0], x_axis[1], x_axis[2]);
     }
     // C: recenter the view:
@@ -897,10 +899,9 @@ ACTION_REGISTER(past,
 static int view_default(const action_t *a, astack_t *s)
 {
 	goxel->camera.rot = quat_identity;
-	quat_irotate(&goxel->camera.rot, -M_PI / 4, 1, 0, 0);
-	quat_irotate(&goxel->camera.rot, -M_PI / 4, 0, 0, 1);
+	quat_irotate(goxel->camera.rot.v, -M_PI / 4, 1, 0, 0);
+	quat_irotate(goxel->camera.rot.v, -M_PI / 4, 0, 0, 1);
 	goxel_update_meshes(goxel, -1);
-	
 	return 0;
 }
 
