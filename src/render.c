@@ -183,20 +183,18 @@ static void copy_color(const uint8_t in[4], uint8_t out[4])
 
 static float get_border_dist(float x, float y, int mask)
 {
-    const vec2_t corners[4] = {
-        vec2(0, 0), vec2(1, 0), vec2(1, 1), vec2(0, 1)};
-    const vec2_t normals[4] = {
-        vec2(0, 1), vec2(-1, 0), vec2(0, -1), vec2(1, 0)};
+    const float corners[4][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+    const float normals[4][2] = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
     float ret = 1;
     int i;
     float u[2];
-    vec2_t p = vec2(x, y);
+    float p[2] = {x, y};
     for (i = 0; i < 4; i++) {
         if (mask & (1 << i))        // Corners.
-            ret = min(ret, vec2_dist(p.v, corners[i].v));
+            ret = min(ret, vec2_dist(p, corners[i]));
         if (mask & (0x10 << i)) {  // Edges.
-            vec2_sub(p.v, corners[i].v, u);
-            ret = min(ret, vec2_dot(normals[i].v, u));
+            vec2_sub(p, corners[i], u);
+            ret = min(ret, vec2_dot(normals[i], u));
         }
     }
     return ret;
@@ -540,20 +538,20 @@ static void compute_shadow_map_box(
                 const renderer_t *rend,
                 float rect[6])
 {
-    const vec3_t POS[8] = {
-        VEC3(-0.5, -0.5, -0.5),
-        VEC3(+0.5, -0.5, -0.5),
-        VEC3(+0.5, -0.5, +0.5),
-        VEC3(-0.5, -0.5, +0.5),
-        VEC3(-0.5, +0.5, -0.5),
-        VEC3(+0.5, +0.5, -0.5),
-        VEC3(+0.5, +0.5, +0.5),
-        VEC3(-0.5, +0.5, +0.5)
+    const float POS[8][3] = {
+        {-0.5, -0.5, -0.5},
+        {+0.5, -0.5, -0.5},
+        {+0.5, -0.5, +0.5},
+        {-0.5, -0.5, +0.5},
+        {-0.5, +0.5, -0.5},
+        {+0.5, +0.5, -0.5},
+        {+0.5, +0.5, +0.5},
+        {-0.5, +0.5, +0.5}
     };
     const int N = BLOCK_SIZE;
 
     render_item_t *item;
-    vec3_t p;
+    float p[3];
     int i, bpos[3];
     mesh_iterator_t iter;
     float view_mat[4][4], light_dir[3];
@@ -568,15 +566,15 @@ static void compute_shadow_map_box(
         iter = mesh_get_iterator(item->mesh, MESH_ITER_BLOCKS);
         while (mesh_iter(&iter, bpos)) {
             for (i = 0; i < 8; i++) {
-                p = vec3(bpos[0], bpos[1], bpos[2]);
-                vec3_addk(p.v, POS[i].v, N, p.v);
-                mat4_mul_vec3(view_mat, p.v, p.v);
-                rect[0] = min(rect[0], p.x);
-                rect[1] = max(rect[1], p.x);
-                rect[2] = min(rect[2], p.y);
-                rect[3] = max(rect[3], p.y);
-                rect[4] = min(rect[4], -p.z);
-                rect[5] = max(rect[5], -p.z);
+                vec3_set(p, bpos[0], bpos[1], bpos[2]);
+                vec3_addk(p, POS[i], N, p);
+                mat4_mul_vec3(view_mat, p, p);
+                rect[0] = min(rect[0], p[0]);
+                rect[1] = max(rect[1], p[0]);
+                rect[2] = min(rect[2], p[1]);
+                rect[3] = max(rect[3], p[1]);
+                rect[4] = min(rect[4], -p[2]);
+                rect[5] = max(rect[5], -p[2]);
             }
         }
     }
@@ -909,10 +907,10 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     prog_t *prog;
     typedef struct {
         int8_t  pos[3]       __attribute__((aligned(4)));
-        vec4_t  color        __attribute__((aligned(4)));
+        float   color[4]     __attribute__((aligned(4)));
     } vertex_t;
     vertex_t vertices[4];
-    vec4_t c1, c2;
+    float c1[4], c2[4];
 
     if (col[3] == 0) {
         GL(glClearColor(0, 0, 0, 0));
@@ -921,15 +919,15 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     }
 
     // Add a small gradient to the color.
-    c1 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
-    c2 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
-    vec3_iadd(c1.rgb.v, vec3(+0.2, +0.2, +0.2).v);
-    vec3_iadd(c2.rgb.v, vec3(-0.2, -0.2, -0.2).v);
+    vec4_set(c1, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
+    vec4_set(c2, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
+    vec3_iadd(c1, vec3(+0.2, +0.2, +0.2).v);
+    vec3_iadd(c2, vec3(-0.2, -0.2, -0.2).v);
 
-    vertices[0] = (vertex_t){{-1, -1, 0}, c1};
-    vertices[1] = (vertex_t){{+1, -1, 0}, c1};
-    vertices[2] = (vertex_t){{+1, +1, 0}, c2};
-    vertices[3] = (vertex_t){{-1, +1, 0}, c2};
+    vertices[0] = (vertex_t){{-1, -1, 0}, {c1[0], c1[1], c1[2], c1[3]}};
+    vertices[1] = (vertex_t){{+1, -1, 0}, {c1[0], c1[1], c1[2], c1[3]}};
+    vertices[2] = (vertex_t){{+1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
+    vertices[3] = (vertex_t){{-1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
 
     prog = get_prog(BACKGROUND_VSHADER, BACKGROUND_FSHADER, NULL);
     GL(glUseProgram(prog->prog));
