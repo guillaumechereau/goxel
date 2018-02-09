@@ -1219,20 +1219,20 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
 void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
                          const inputs_t *inputs);
 
-int goxel_unproject(goxel_t *goxel, const vec4_t *view,
-                    const vec2_t *pos, int snap_mask, float offset,
-                    vec3_t *out, vec3_t *normal);
+int goxel_unproject(goxel_t *goxel, const float viewport[4],
+                    const float pos[2], int snap_mask, float offset,
+                    float out[3], float normal[3]);
 
-bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, mesh_t *mesh,
-                     vec3_t *out, vec3_t *normal);
+bool goxel_unproject_on_mesh(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], mesh_t *mesh,
+                     float out[3], float normal[3]);
 
-bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, const plane_t *plane,
-                     vec3_t *out, vec3_t *normal);
-bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, const box_t *box, bool inside,
-                     vec3_t *out, vec3_t *normal, int *face);
+bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], const plane_t *plane,
+                     float out[3], float normal[3]);
+bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], const box_t *box, bool inside,
+                     float out[3], float normal[3], int *face);
 // Recompute the meshes.  mask from MESH_ enum.
 void goxel_update_meshes(goxel_t *goxel, int mask);
 

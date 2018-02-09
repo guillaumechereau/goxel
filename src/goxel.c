@@ -55,78 +55,75 @@ static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
 }
 
 // XXX: lot of cleanup to do here.
-bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
-                              const vec2_t *pos, const plane_t *plane,
-                              vec3_t *out, vec3_t *normal)
+bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
+                              const float pos[2], const plane_t *plane,
+                              float out[3], float normal[3])
 {
     // If the angle between the screen and the plane is close to 90 deg,
     // the projection fails.  This prevents projecting too far away.
     const float min_angle_cos = 0.1;
     // XXX: pos should already be in windows coordinates.
-    vec3_t wpos = vec3(pos->x, pos->y, 0);
-    vec3_t opos;
-    vec3_t onorm;
+    float wpos[3] = {pos[0], pos[1], 0};
+    float opos[3], onorm[3];
 
-    camera_get_ray(&goxel->camera, wpos.v, view->v, opos.v, onorm.v);
-    if (fabs(vec3_dot(onorm.v, plane->n.v)) <= min_angle_cos)
+    camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
+    if (fabs(vec3_dot(onorm, plane->n.v)) <= min_angle_cos)
         return false;
 
-    if (!plane_line_intersection(*plane, opos.v, onorm.v, out->v))
+    if (!plane_line_intersection(*plane, opos, onorm, out))
         return false;
-    mat4_mul_vec3(plane->mat.v2, out->v, out->v);
-    *normal = plane->n;
+    mat4_mul_vec3(plane->mat.v2, out, out);
+    vec3_copy(plane->n.v, normal);
     return true;
 }
 
-bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, const box_t *box, bool inside,
-                     vec3_t *out, vec3_t *normal,
-                     int *face)
+bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], const box_t *box, bool inside,
+                     float out[3], float normal[3], int *face)
 {
     int f;
-    vec3_t wpos = vec3(pos->x, pos->y, 0);
-    vec3_t opos;
-    vec3_t onorm;
+    float wpos[3] = {pos[0], pos[1], 0};
+    float opos[3], onorm[3];
     plane_t plane;
 
     if (box_is_null(*box)) return false;
-    camera_get_ray(&goxel->camera, wpos.v, view->v, opos.v, onorm.v);
+    camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
         plane.mat = box->mat;
         mat4_imul(plane.mat.v2, FACES_MATS[f].v2);
 
-        if (!inside && vec3_dot(plane.n.v, onorm.v) >= 0)
+        if (!inside && vec3_dot(plane.n.v, onorm) >= 0)
             continue;
-        if (inside && vec3_dot(plane.n.v, onorm.v) <= 0)
+        if (inside && vec3_dot(plane.n.v, onorm) <= 0)
             continue;
-        if (!plane_line_intersection(plane, opos.v, onorm.v, out->v))
+        if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
-        if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
+        if (!(out[0] >= -1 && out[0] < 1 && out[1] >= -1 && out[1] < 1))
             continue;
         if (face) *face = f;
-        mat4_mul_vec3(plane.mat.v2, out->v, out->v);
-        vec3_normalize(plane.n.v, normal->v);
-        if (inside) vec3_imul(normal->v, -1);
+        mat4_mul_vec3(plane.mat.v2, out, out);
+        vec3_normalize(plane.n.v, normal);
+        if (inside) vec3_imul(normal, -1);
         return true;
     }
     return false;
 }
 
-bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
-                             const vec2_t *pos, mesh_t *mesh,
-                             vec3_t *out, vec3_t *normal)
+bool goxel_unproject_on_mesh(goxel_t *goxel, const float view[4],
+                             const float pos[2], mesh_t *mesh,
+                             float out[3], float normal[3])
 {
-    vec2_t view_size = view->zw;
+    float view_size[2] = {view[2], view[3]};
     // XXX: No need to render the fbo if it is not dirty.
     if (goxel->pick_fbo && !vec2_equal(
-                vec2(goxel->pick_fbo->w, goxel->pick_fbo->h).v, view_size.v)) {
+                vec2(goxel->pick_fbo->w, goxel->pick_fbo->h).v, view_size)) {
         texture_delete(goxel->pick_fbo);
         goxel->pick_fbo = NULL;
     }
 
     if (!goxel->pick_fbo) {
         goxel->pick_fbo = texture_new_buffer(
-                view_size.x, view_size.y, TF_DEPTH);
+                view_size[0], view_size[1], TF_DEPTH);
     }
 
     renderer_t rend = {
@@ -138,7 +135,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     int voxel_pos[3];
     int face, block_id, block_pos[3];
     int x, y;
-    int rect[4] = {0, 0, view_size.x, view_size.y};
+    int rect[4] = {0, 0, view_size[0], view_size[1]};
     uint8_t clear_color[4] = {0, 0, 0, 0};
 
     rend.settings.shadow = 0;
@@ -147,40 +144,39 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
     render_submit(&rend, rect, clear_color);
 
-    x = round(pos->x - view->x);
-    y = round(pos->y - view->y);
+    x = round(pos[0] - view[0]);
+    y = round(pos[1] - view[1]);
     GL(glViewport(0, 0, goxel->pick_fbo->w, goxel->pick_fbo->h));
-    if (x < 0 || x >= view_size.x ||
-        y < 0 || y >= view_size.y) return false;
+    if (x < 0 || x >= view_size[0] ||
+        y < 0 || y >= view_size[1]) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
 
     unpack_pos_data(pixel, voxel_pos, &face, &block_id);
     if (!block_id) return false;
     render_get_block_pos(&rend, mesh, block_id, block_pos);
-    *out = vec3(block_pos[0] + voxel_pos[0] + 0.5,
-                block_pos[1] + voxel_pos[1] + 0.5,
-                block_pos[2] + voxel_pos[2] + 0.5);
-    normal->x = FACES_NORMALS[face][0];
-    normal->y = FACES_NORMALS[face][1];
-    normal->z = FACES_NORMALS[face][2];
-    vec3_iaddk(out->v, normal->v, 0.5);
+    out[0] = block_pos[0] + voxel_pos[0] + 0.5;
+    out[1] = block_pos[1] + voxel_pos[1] + 0.5;
+    out[2] = block_pos[2] + voxel_pos[2] + 0.5;
+    normal[0] = FACES_NORMALS[face][0];
+    normal[1] = FACES_NORMALS[face][1];
+    normal[2] = FACES_NORMALS[face][2];
+    vec3_iaddk(out, normal, 0.5);
     return true;
 }
 
 
-int goxel_unproject(goxel_t *goxel, const vec4_t *view,
-                    const vec2_t *pos, int snap_mask, float offset,
-                    vec3_t *out, vec3_t *normal)
+int goxel_unproject(goxel_t *goxel, const float viewport[4],
+                    const float pos[2], int snap_mask, float offset,
+                    float out[3], float normal[3])
 {
     int i, ret = 0;
-    vec3_t p = vec3_zero, n = vec3_zero;
     bool r = false;
     float dist, best = INFINITY;
-    float v[3];
+    float v[3], p[3] = {}, n[3] = {};
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
-        r = goxel_unproject_on_plane(goxel, view, pos,
+        r = goxel_unproject_on_plane(goxel, viewport, pos,
                                      &goxel->tool_plane, out, normal);
         ret = r ? SNAP_PLANE : 0;
         goto end;
@@ -189,48 +185,48 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
     for (i = 0; i < 7; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
-            r = goxel_unproject_on_mesh(goxel, view, pos,
-                                        goxel->layers_mesh, &p, &n);
+            r = goxel_unproject_on_mesh(goxel, viewport, pos,
+                                        goxel->layers_mesh, p, n);
         }
         if ((1 << i) == SNAP_PLANE)
-            r = goxel_unproject_on_plane(goxel, view, pos,
-                                         &goxel->plane, &p, &n);
+            r = goxel_unproject_on_plane(goxel, viewport, pos,
+                                         &goxel->plane, p, n);
         if ((1 << i) == SNAP_SELECTION_IN)
-            r = goxel_unproject_on_box(goxel, view, pos,
+            r = goxel_unproject_on_box(goxel, viewport, pos,
                                        &goxel->selection, true,
-                                       &p, &n, NULL);
+                                       p, n, NULL);
         if ((1 << i) == SNAP_SELECTION_OUT)
-            r = goxel_unproject_on_box(goxel, view, pos,
+            r = goxel_unproject_on_box(goxel, viewport, pos,
                                        &goxel->selection, false,
-                                       &p, &n, NULL);
+                                       p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
             box_t box = mesh_get_box(goxel->image->active_layer->mesh, true);
-            r = goxel_unproject_on_box(goxel, view, pos,
+            r = goxel_unproject_on_box(goxel, viewport, pos,
                                        &box, false,
-                                       &p, &n, NULL);
+                                       p, n, NULL);
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(goxel, view, pos,
+            r = goxel_unproject_on_box(goxel, viewport, pos,
                                        &goxel->image->box, true,
-                                       &p, &n, NULL);
+                                       p, n, NULL);
         if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(goxel, view, pos,
+            r = goxel_unproject_on_box(goxel, viewport, pos,
                                        &goxel->image->box, true,
-                                       &p, &n, NULL);
+                                       p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
-            camera_get_ray(&goxel->camera, pos->v, view->v, p.v, n.v);
+            camera_get_ray(&goxel->camera, pos, viewport, p, n);
             r = true;
         }
 
         if (!r)
             continue;
 
-        mat4_mul_vec3(goxel->camera.view_mat.v2, p.v, v);
+        mat4_mul_vec3(goxel->camera.view_mat.v2, p, v);
         dist = -v[2];
         if (dist < 0 || dist > best) continue;
 
-        *out = p;
-        *normal = n;
+        vec3_copy(p, out);
+        vec3_copy(n, normal);
         ret = 1 << i;
 
         if ((1 << i) == SNAP_IMAGE_BOX) {
@@ -242,11 +238,11 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
     }
 end:
     if (ret && offset)
-        vec3_iaddk(out->v, normal->v, offset);
+        vec3_iaddk(out, normal, offset);
     if (ret && (snap_mask & SNAP_ROUNDED)) {
-        out->x = round(out->x - 0.5) + 0.5;
-        out->y = round(out->y - 0.5) + 0.5;
-        out->z = round(out->z - 0.5) + 0.5;
+        out[0] = round(out[0] - 0.5) + 0.5;
+        out[1] = round(out[1] - 0.5) + 0.5;
+        out[2] = round(out[2] - 0.5) + 0.5;
     }
     return ret;
 }
@@ -410,8 +406,8 @@ static int on_drag(const gesture_t *gest, void *user)
         c->flags &= ~CURSOR_PRESSED;
 
     c->snaped = goxel_unproject(
-            goxel, &gest->view, &gest->pos, c->snap_mask,
-            c->snap_offset, &c->pos, &c->normal);
+            goxel, gest->view.v, gest->pos.v, c->snap_mask,
+            c->snap_offset, c->pos.v, c->normal.v);
 
     // Set some default values.  The tools can override them.
     // XXX: would be better to reset the cursor when we change tool!
@@ -460,8 +456,8 @@ static int on_hover(const gesture_t *gest, void *user)
 {
     cursor_t *c = &goxel->cursor;
     c->snaped = goxel_unproject(
-                    goxel, &gest->view, &gest->pos, c->snap_mask,
-                    c->snap_offset, &c->pos, &c->normal);
+                    goxel, gest->view.v, gest->pos.v, c->snap_mask,
+                    c->snap_offset, c->pos.v, c->normal.v);
     set_cursor_hint(c);
     c->flags &= ~CURSOR_PRESSED;
     // Set some default values.  The tools can override them.
@@ -498,8 +494,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
 
         // Auto adjust the camera rotation position.
         vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
-                                    goxel->layers_mesh, &p, &n)) {
+        if (goxel_unproject_on_mesh(goxel, view->v, inputs->touches[0].pos.v,
+                                    goxel->layers_mesh, p.v, n.v)) {
             camera_set_target(&goxel->camera, p.v);
         }
         return;
@@ -525,8 +521,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
     // C: recenter the view:
     if (inputs->keys['C']) {
         vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
-                                    goxel->layers_mesh, &p, &n)) {
+        if (goxel_unproject_on_mesh(goxel, view->v, inputs->touches[0].pos.v,
+                                    goxel->layers_mesh, p.v, n.v)) {
             camera_set_target(&goxel->camera, p.v);
         }
     }
