@@ -972,12 +972,12 @@ static void cameras_panel(goxel_t *goxel)
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 
     gui_group_begin("Offset");
-    gui_input_float("x", &cam->ofs.x, 1.0, 0, 0, NULL);
-    gui_input_float("y", &cam->ofs.y, 1.0, 0, 0, NULL);
-    gui_input_float("z", &cam->ofs.z, 1.0, 0, 0, NULL);
+    gui_input_float("x", &cam->ofs[0], 1.0, 0, 0, NULL);
+    gui_input_float("y", &cam->ofs[1], 1.0, 0, 0, NULL);
+    gui_input_float("z", &cam->ofs[2], 1.0, 0, 0, NULL);
     gui_group_end();
 
-    gui_quat("Rotation", cam->rot.v);
+    gui_quat("Rotation", cam->rot);
 
     gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();

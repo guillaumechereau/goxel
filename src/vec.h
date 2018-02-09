@@ -617,6 +617,14 @@ DECL void mat4_lookat(float m[4][4],
     mat4_copy(ret, m);
 }
 
+DECL void quat_set_identity(float q[4])
+{
+    q[0] = 1;
+    q[1] = 0;
+    q[2] = 0;
+    q[3] = 0;
+}
+
 DECL void quat_copy(const float q[4], float out[4])
 {
     out[0] = q[0];

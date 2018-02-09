@@ -945,8 +945,8 @@ struct camera
     char   name[128];  // 127 chars max.
     bool   ortho; // Set to true for orthographic projection.
     float  dist;
-    quat_t rot;
-    vec3_t ofs;
+    float  rot[4]; // Quaternion.
+    float  ofs[3];
     float  fovy;
     float  aspect;
 

@@ -34,8 +34,8 @@ void camera_set(camera_t *cam, const camera_t *other)
 {
     cam->ortho = other->ortho;
     cam->dist = other->dist;
-    cam->rot = other->rot;
-    cam->ofs = other->ofs;
+    quat_copy(other->rot, cam->rot);
+    vec3_copy(other->ofs, cam->ofs);
 }
 
 static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
@@ -84,9 +84,9 @@ void camera_update(camera_t *camera)
     // Update the camera mats
     camera->view_mat = mat4_identity;
     mat4_itranslate(camera->view_mat.v2, 0, 0, -camera->dist);
-    mat4_imul_quat(camera->view_mat.v2, camera->rot.v);
+    mat4_imul_quat(camera->view_mat.v2, camera->rot);
     mat4_itranslate(camera->view_mat.v2,
-           camera->ofs.x, camera->ofs.y, camera->ofs.z);
+           camera->ofs[0], camera->ofs[1], camera->ofs[2]);
 
     compute_clip(&camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
@@ -124,10 +124,10 @@ void camera_set_target(camera_t *cam, const float pos[3])
     // distance so that the final view matrix stays the same.
     float u[4], v[4];
     float d;
-    quat_t roti = quat(cam->rot.w, -cam->rot.x, -cam->rot.y, -cam->rot.z);
-    quat_mul_vec4(roti.v, vec4(0, 0, 1, 0).v, u);
-    vec3_add(pos, cam->ofs.v, v);
+    float roti[4] = {cam->rot[0], -cam->rot[1], -cam->rot[2], -cam->rot[3]};
+    quat_mul_vec4(roti, vec4(0, 0, 1, 0).v, u);
+    vec3_add(pos, cam->ofs, v);
     d = vec3_dot(v, u);
-    vec3_iaddk(cam->ofs.v, u, -d);
+    vec3_iaddk(cam->ofs, u, -d);
     cam->dist -= d;
 }
