@@ -503,7 +503,7 @@ void gui_release(void)
 }
 
 // XXX: Move this somewhere else.
-void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
+void render_axis_arrows(goxel_t *goxel, const float view_size[2])
 {
     const vec3_t AXIS[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
     int i;
@@ -512,7 +512,7 @@ void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
     float pos[3], normal[3], b[3];
     uint8_t c[4];
     float s = 1;
-    float view[4] = {0, 0, view_size->x, view_size->y};
+    float view[4] = {0, 0, view_size[0], view_size[1]};
     camera_get_ray(&goxel->camera, spos, view, pos, normal);
     if (goxel->camera.ortho)
         s = goxel->camera.dist / 32;
@@ -1372,7 +1372,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
     gui->mouse_in_view = ImGui::IsItemHovered();
-    vec2_t view_size = vec2(gui->view.rect.z, gui->view.rect.w);
+    float view_size[2] = {gui->view.rect.z, gui->view.rect.w};
     float view_rect[4] = {canvas_pos.x,
                           io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
                           canvas_size.x, canvas_size.y};
@@ -1387,7 +1387,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         goxel_mouse_in_view(goxel, view_rect, &inputs2);
     }
 
-    render_axis_arrows(goxel, &view_size);
+    render_axis_arrows(goxel, view_size);
     ImGui::Text("%s", goxel->hint_text ?: "");
     ImGui::SameLine(180);
     ImGui::Text("%s", goxel->help_text ?: "");
