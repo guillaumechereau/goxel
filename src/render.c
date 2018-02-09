@@ -55,7 +55,6 @@ struct render_item_t
         mesh_t          *mesh;
         float           mat[4][4];
     };
-    vec3_t          grid;
     uint8_t         color[4];
     bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
