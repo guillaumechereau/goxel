@@ -293,7 +293,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     }
 
     shape_func = painter->shape->func;
-    size = box_get_size(*box);
+    box_get_size(*box, size.v);
     mat4_copy(box->mat.v2, mat);
     mat4_iscale(mat, 1 / size.x, 1 / size.y, 1 / size.z);
     mat4_invert(mat, mat);

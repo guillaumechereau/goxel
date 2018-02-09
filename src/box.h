@@ -258,16 +258,14 @@ static inline box_t bbox_grow(box_t b, float x, float y, float z)
     return b;
 }
 
-static inline vec3_t box_get_size(box_t b)
+static inline void box_get_size(box_t b, float out[3])
 {
-    vec3_t ret;
     float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
     int i;
     for (i = 0; i < 3; i++) {
         mat4_mul_vec4(b.mat.v2, v[i], v[i]);
-        ret.v[i] = vec3_norm(v[i]);
+        out[i] = vec3_norm(v[i]);
     }
-    return ret;
 }
 
 static inline box_t box_swap_axis(box_t b, int x, int y, int z)
