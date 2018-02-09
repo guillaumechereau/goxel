@@ -124,7 +124,7 @@ static int on_move(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int iter(tool_t *tool, const vec4_t *view)
+static int iter(tool_t *tool, const float viewport[4])
 {
     tool_move_t *move = (tool_move_t*)tool;
     layer_t *layer = goxel->image->active_layer;

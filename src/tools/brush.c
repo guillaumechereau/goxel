@@ -202,7 +202,7 @@ static int on_hover(gesture3d_t *gest, void *user)
 }
 
 
-static int iter(tool_t *tool, const vec4_t *view)
+static int iter(tool_t *tool, const float viewport[4])
 {
     tool_brush_t *brush = (tool_brush_t*)tool;
     cursor_t *curs = &goxel->cursor;

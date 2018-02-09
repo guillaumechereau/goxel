@@ -150,7 +150,7 @@ end:
     return 0;
 }
 
-static int iter(tool_t *tool_, const vec4_t *view)
+static int iter(tool_t *tool_, const float viewport[4])
 {
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
     cursor_t *curs = &goxel->cursor;

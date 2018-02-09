@@ -51,7 +51,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int iter(tool_t *tool, const vec4_t *view)
+static int iter(tool_t *tool, const float viewport[4])
 {
     tool_laser_t *laser = (tool_laser_t*)tool;
     cursor_t *curs = &goxel->cursor;
