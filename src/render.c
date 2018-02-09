@@ -53,7 +53,7 @@ struct render_item_t
 
     union {
         mesh_t          *mesh;
-        mat4_t          mat;
+        float           mat[4][4];
     };
     vec3_t          grid;
     uint8_t         color[4];
@@ -715,12 +715,12 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     vec3_t light;
 
     mat4_copy(rend->view_mat, view);
-    mat4_imul(view, item->mat.v2);
+    mat4_imul(view, item->mat);
 
     if (item->proj_screen) {
         mat4_ortho(proj, -0.5, +0.5, -0.5, +0.5, -10, +10);
         proj_mat = &proj;
-        mat4_copy(item->mat.v2, view);
+        mat4_copy(item->mat, view);
     } else {
         proj_mat = &rend->proj_mat;
     }
@@ -738,7 +738,7 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     float view2[4][4], view3[4][4];
 
     mat4_copy(rend->view_mat, view2);
-    mat4_imul(view2, item->mat.v2);
+    mat4_imul(view2, item->mat);
     n = 3;
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
@@ -753,8 +753,8 @@ void render_plane(renderer_t *rend, const plane_t *plane,
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
-    item->mat = plane->mat;
-    mat4_iscale(item->mat.v2, 8, 8, 1);
+    mat4_copy(plane->mat.v2, item->mat);
+    mat4_iscale(item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
     copy_color(color, item->color);
     DL_APPEND(rend->items, item);
@@ -765,7 +765,7 @@ void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    mat4_copy(mat ?: mat4_identity.v2, item->mat.v2);
+    mat ? mat4_copy(mat, item->mat) : mat4_set_identity(item->mat);
     item->proj_screen = !mat;
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
@@ -779,7 +779,7 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects)
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & EFFECT_STRIP) == effects);
     item->type = ITEM_MODEL3D;
-    item->mat = plane->mat;
+    mat4_copy(plane->mat.v2, item->mat);
     item->model3d = g_wire_rect_model;
     copy_color(NULL, item->color);
     item->proj_screen = true;
@@ -788,13 +788,12 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects)
 }
 
 // Return a plane whose u vector is the line ab.
-static plane_t line_create_plane(const float a[3], const float b[3])
+static void line_create_plane(const float a[3], const float b[3],
+                              float out[4][4])
 {
-    plane_t ret;
-    ret.mat = mat4_identity;
-    vec3_copy(a, ret.p.v);
-    vec3_sub(b, a, ret.u.v);
-    return ret;
+    mat4_set_identity(out);
+    vec3_copy(a, out[3]);
+    vec3_sub(b, a, out[0]);
 }
 
 void render_line(renderer_t *rend, const float a[3], const float b[3],
@@ -803,9 +802,9 @@ void render_line(renderer_t *rend, const float a[3], const float b[3],
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
     item->model3d = g_line_model;
-    item->mat = line_create_plane(a, b).mat;
+    line_create_plane(a, b, item->mat);
     copy_color(color, item->color);
-    mat4_itranslate(item->mat.v2, 0.5, 0, 0);
+    mat4_itranslate(item->mat, 0.5, 0, 0);
     DL_APPEND(rend->items, item);
 }
 
@@ -816,7 +815,7 @@ void render_box(renderer_t *rend, const box_t *box,
     assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
             == effects);
     item->type = ITEM_MODEL3D;
-    item->mat = box->mat;
+    mat4_copy(box->mat.v2, item->mat);
     copy_color(color, item->color);
     item->effects = effects;
     item->model3d = (effects & EFFECT_WIREFRAME) ? g_wire_cube_model :
@@ -828,7 +827,7 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    mat4_copy(mat, item->mat.v2);
+    mat4_copy(mat, item->mat);
     item->model3d = g_sphere_model;
     DL_APPEND(rend->items, item);
 }
