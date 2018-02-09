@@ -556,8 +556,10 @@ static void compute_shadow_map_box(
     vec3_t p;
     int i, bpos[3];
     mesh_iterator_t iter;
-    mat4_t view_mat = mat4_lookat(get_light_dir(rend, false).v,
-                                  vec3(0, 0, 0).v, vec3(0, 1, 0).v);
+    float view_mat[4][4];
+
+    mat4_lookat(view_mat, get_light_dir(rend, false).v,
+                          vec3(0, 0, 0).v, vec3(0, 1, 0).v);
     for (i = 0; i < 6; i++)
         rect[i] = NAN;
 
@@ -568,7 +570,7 @@ static void compute_shadow_map_box(
             for (i = 0; i < 8; i++) {
                 p = vec3(bpos[0], bpos[1], bpos[2]);
                 vec3_addk(p.v, POS[i].v, N, p.v);
-                mat4_mul_vec3(view_mat.v2, p.v, p.v);
+                mat4_mul_vec3(view_mat, p.v, p.v);
                 rect[0] = min(rect[0], p.x);
                 rect[1] = max(rect[1], p.x);
                 rect[2] = min(rect[2], p.y);
@@ -861,8 +863,9 @@ static mat4_t render_shadow_map(renderer_t *rend)
     mat4_ortho(proj_mat.v2, rect[0], rect[1],
                             rect[2], rect[3],
                             rect[4], rect[5]);
-    mat4_t view_mat = mat4_lookat(get_light_dir(rend, false).v,
-                                  vec3(0, 0, 0).v, vec3(0, 1, 0).v);
+    mat4_t view_mat;
+    mat4_lookat(view_mat.v2, get_light_dir(rend, false).v,
+                vec3(0, 0, 0).v, vec3(0, 1, 0).v);
     renderer_t srend = {
         .view_mat = view_mat,
         .proj_mat = proj_mat,

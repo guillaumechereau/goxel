@@ -554,44 +554,45 @@ DECL void mat4_perspective(float m[4][4], float fovy, float aspect,
     mat4_copy(ret, m);
 }
 
-DECL mat4_t mat4_transposed(mat4_t m)
+DECL void mat4_transpose(const float m[4][4], float out[4][4])
 {
     int i, j;
-    mat4_t ret = {};
+    float ret[4][4] = {};
     for (i = 0; i < 4; i++)
         for (j = 0; j < 4; j++)
-            ret.v[i * 4 + j] = m.v[j * 4 + i];
-    return ret;
+            ret[i][j] = m[j][i];
+    mat4_copy(ret, out);
+}
+
+DECL void mat4_set_identity(float m[4][4])
+{
+    mat4_copy(mat4_identity.v2, m);
 }
 
 // Similar to gluLookAt
-DECL mat4_t mat4_lookat(const float eye[3], const float center[3],
-                        const float up[3])
+DECL void mat4_lookat(float m[4][4],
+                      const float eye[3], const float center[3],
+                      const float up[3])
 {
-    float f[3], s[3], u[3];
-    mat4_t m = mat4_identity;
+    float f[3], s[3], u[3], ret[4][4];
+    mat4_set_identity(ret);
     vec3_sub(center, eye, f);
     vec3_normalize(f, f);
     vec3_cross(f, up, s);
     vec3_normalize(s, s);
     vec3_cross(s, f, u);
     vec3_normalize(u, u);
-    vec3_copy(s, m.vecs[0].v);
-    vec3_copy(u, m.vecs[1].v);
-    vec3_neg(f, m.vecs[2].v);
-    m = mat4_transposed(m);
-    mat4_translate(m.v2, -eye[0], -eye[1], -eye[2], m.v2);
-    return m;
+    vec3_copy(s, ret[0]);
+    vec3_copy(u, ret[1]);
+    vec3_neg(f, ret[2]);
+    mat4_transpose(ret, ret);
+    mat4_translate(ret, -eye[0], -eye[1], -eye[2], ret);
+    mat4_copy(ret, m);
 }
 
 DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
 DECL void quat_to_mat4(quat_t q, float out[4][4]);
 DECL mat3_t quat_to_mat3(quat_t q);
-
-DECL void mat4_set_identity(float m[4][4])
-{
-    mat4_copy(mat4_identity.v2, m);
-}
 
 DECL void mat4_rotate(const float m[4][4], float a, float x, float y, float z,
                       float out[4][4])
