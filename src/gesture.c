@@ -136,7 +136,8 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
 
 
 int gesture_update(int nb, gesture_t *gestures[],
-                   const inputs_t *inputs, const vec4_t *view, void *user)
+                   const inputs_t *inputs, const float viewport[4],
+                   void *user)
 {
     int i, j, mask = 0;
     bool allup = true;
@@ -158,7 +159,7 @@ int gesture_update(int nb, gesture_t *gestures[],
 
     for (i = 0; i < nb; i++) {
         gest = gestures[i];
-        gest->view = *view;
+        vec4_copy(viewport, gest->view.v);
         if ((gest->state == GESTURE_FAILED) && allup) {
             gest->state = GESTURE_POSSIBLE;
         }

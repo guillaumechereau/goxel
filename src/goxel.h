@@ -932,7 +932,8 @@ struct gesture
 };
 
 int gesture_update(int nb, gesture_t *gestures[],
-                   const inputs_t *inputs, const vec4_t *view, void *user);
+                   const inputs_t *inputs, const float viewport[4],
+                   void *user);
 
 
 // #############################

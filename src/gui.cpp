@@ -1277,7 +1277,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     io.DisplayFramebufferScale = ImVec2(goxel->screen_scale,
                                         goxel->screen_scale);
     io.DeltaTime = 1.0 / 60;
-    gesture_update(2, gestures, inputs, &display_rect, gui);
+    gesture_update(2, gestures, inputs, display_rect.v, gui);
     io.MouseWheel = inputs->mouse_wheel;
 
     for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
