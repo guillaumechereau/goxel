@@ -280,12 +280,12 @@ void model3d_render(model3d_t *model3d,
                     const float model[4][4], const float proj[4][4],
                     const uint8_t color[4],
                     const texture_t *tex,
-                    const vec3_t *light,
+                    const float light[3],
                     int   effects)
 {
     uint8_t c[4];
     vec4_t cf;
-    vec3_t light_dir;
+    float light_dir[3];
 
     copy_color(color, c);
     GL(glUseProgram(prog.prog));
@@ -340,9 +340,9 @@ void model3d_render(model3d_t *model3d,
 
     if (model3d->solid) {
         if (light && (!(effects & EFFECT_NO_SHADING))) {
-            light_dir = *light;
-            if (effects & EFFECT_SEE_BACK) vec3_imul(light_dir.v, -1);
-            GL(glUniform3fv(prog.u_l_dir_l, 1, light_dir.v));
+            vec3_copy(light, light_dir);
+            if (effects & EFFECT_SEE_BACK) vec3_imul(light_dir, -1);
+            GL(glUniform3fv(prog.u_l_dir_l, 1, light_dir));
             GL(glUniform1f(prog.u_l_emit_l, 0.2f));
             GL(glUniform1f(prog.u_l_diff_l, 0.8f));
         }

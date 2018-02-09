@@ -813,7 +813,7 @@ void model3d_render(model3d_t *model3d,
                     const float model[4][4], const float proj[4][4],
                     const uint8_t color[4],
                     const texture_t *tex,
-                    const vec3_t *light,
+                    const float light[3],
                     int   effects);
 
 // #### Palette ################

@@ -727,7 +727,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
         light = get_light_dir(rend, false);
 
     model3d_render(item->model3d, view.v2, proj_mat->v2, item->color,
-                   item->tex, &light, item->effects);
+                   item->tex, light.v, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
