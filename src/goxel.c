@@ -540,7 +540,7 @@ void goxel_render(goxel_t *goxel)
     gui_render();
 }
 
-static void render_export_viewport(goxel_t *goxel, const vec4_t *view)
+static void render_export_viewport(goxel_t *goxel, const float viewport[4])
 {
     // Render the export viewport.
     int w = goxel->image->export_width;
@@ -556,13 +556,13 @@ static void render_export_viewport(goxel_t *goxel, const vec4_t *view)
     render_rect(&goxel->rend, &plane, EFFECT_STRIP);
 }
 
-void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
+void goxel_render_view(goxel_t *goxel, const float viewport[4])
 {
     layer_t *layer;
     renderer_t *rend = &goxel->rend;
     const uint8_t layer_box_color[4] = {128, 128, 255, 255};
 
-    goxel->camera.aspect = rect->z / rect->w;
+    goxel->camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel->camera);
 
     render_mesh(rend, goxel->render_mesh, 0);
@@ -597,7 +597,7 @@ void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
         render_box(rend, &goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
-        render_export_viewport(goxel, rect);
+        render_export_viewport(goxel, viewport);
 }
 
 void image_update(image_t *img);

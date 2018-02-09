@@ -536,7 +536,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
                    (int)(height - view->rect.y - view->rect.w),
                    (int)view->rect.z,
                    (int)view->rect.w};
-    goxel_render_view(goxel, &view->rect);
+    goxel_render_view(goxel, view->rect.v);
     render_submit(&goxel->rend, rect, goxel->back_color);
     GL(glViewport(0, 0, width * scale, height * scale));
 }

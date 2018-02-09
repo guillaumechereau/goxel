@@ -1213,7 +1213,7 @@ void goxel_init(goxel_t *goxel);
 void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);
 void goxel_render(goxel_t *goxel);
-void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
+void goxel_render_view(goxel_t *goxel, const float viewport[4]);
 // Called by the gui when the mouse hover a 3D view.
 // XXX: change the name since we also call it when the mouse get out of
 // the view.
