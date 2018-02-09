@@ -327,8 +327,9 @@ int list_dir(const char *url, int flags, void *user,
 
 // Convert from screen coordinate to world coordinates.
 // Similar to gluUnproject.
-vec3_t unproject(const vec3_t *win, const mat4_t *model,
-                 const mat4_t *proj, const vec4_t *view);
+void unproject(const float win[3], const float model[4][4],
+               const float proj[4][4], const float viewport[4],
+               float out[3]);
 
 /* Function: b64_decode
  * Decode a base64 string
@@ -667,7 +668,7 @@ void mesh_blit(mesh_t *mesh, const uint8_t *data,
                int x, int y, int z, int w, int h, int d,
                mesh_iterator_t *iter);
 
-void mesh_move(mesh_t *mesh, const mat4_t *mat);
+void mesh_move(mesh_t *mesh, const float mat[4][4]);
 
 void mesh_shift_alpha(mesh_t *mesh, int v);
 

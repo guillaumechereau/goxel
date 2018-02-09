@@ -107,9 +107,9 @@ void camera_get_ray(const camera_t *camera, const vec2_t *win,
 {
     vec3_t o1, o2, p;
     p = vec3(win->x, win->y, 0);
-    o1 = unproject(&p, &camera->view_mat, &camera->proj_mat, view);
+    unproject(p.v, camera->view_mat.v2, camera->proj_mat.v2, view->v, o1.v);
     p = vec3(win->x, win->y, 1);
-    o2 = unproject(&p, &camera->view_mat, &camera->proj_mat, view);
+    unproject(p.v, camera->view_mat.v2, camera->proj_mat.v2, view->v, o2.v);
     *o = o1;
     vec3_sub(o2.v, o1.v, d->v);
     vec3_normalize(d->v, d->v);

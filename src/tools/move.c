@@ -42,7 +42,7 @@ static void do_move(layer_t *layer, mat4_t mat)
         mat4_mul(mat.v2, layer->mat.v2, layer->mat.v2);
         layer->base_mesh_key = 0;
     } else {
-        mesh_move(layer->mesh, &m);
+        mesh_move(layer->mesh, m.v2);
         if (!box_is_null(layer->box)) {
             mat4_mul(mat.v2, layer->box.mat.v2, layer->box.mat.v2);
             layer->box = bbox_from_box(layer->box);

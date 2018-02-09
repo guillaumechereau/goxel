@@ -871,7 +871,7 @@ static void past_action(void)
         p2 = goxel->clipboard.box.p;
         mat4_itranslate(mat.v2, +p1.x, +p1.y, +p1.z);
         mat4_itranslate(mat.v2, -p2.x, -p2.y, -p2.z);
-        mesh_move(tmp, &mat);
+        mesh_move(tmp, mat.v2);
     }
     mesh_merge(mesh, tmp, MODE_OVER, NULL);
     mesh_delete(tmp);

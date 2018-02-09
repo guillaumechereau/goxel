@@ -153,22 +153,22 @@ static void mesh_move_get_color(const int pos[3], uint8_t c[4], void *user)
 {
     float p[3] = {pos[0], pos[1], pos[2]};
     mesh_t *mesh = USER_GET(user, 0);
-    mat4_t *mat = USER_GET(user, 1);
-    mat4_mul_vec3(mat->v2, p, p);
+    float (*mat)[4][4] = USER_GET(user, 1);
+    mat4_mul_vec3(*mat, p, p);
     int pi[3] = {round(p[0]), round(p[1]), round(p[2])};
     mesh_get_at(mesh, NULL, pi, c);
 }
 
-void mesh_move(mesh_t *mesh, const mat4_t *mat)
+void mesh_move(mesh_t *mesh, const float mat[4][4])
 {
     box_t box;
     mesh_t *src_mesh = mesh_copy(mesh);
-    mat4_t imat;
+    float imat[4][4];
 
-    mat4_invert(mat->v2, imat.v2);
+    mat4_invert(mat, imat);
     box = mesh_get_box(mesh, true);
     if (box_is_null(box)) return;
-    mat4_mul(mat->v2, box.mat.v2, box.mat.v2);
+    mat4_mul(mat, box.mat.v2, box.mat.v2);
     mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
     mesh_delete(src_mesh);
     mesh_remove_empty_blocks(mesh, false);

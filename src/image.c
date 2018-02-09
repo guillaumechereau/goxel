@@ -121,7 +121,7 @@ void image_update(image_t *img)
         base = img_get_layer(img, layer->base_id);
         if (base && layer->base_mesh_key != mesh_get_key(base->mesh)) {
             mesh_set(layer->mesh, base->mesh);
-            mesh_move(layer->mesh, &layer->mat);
+            mesh_move(layer->mesh, layer->mat.v2);
             layer->base_mesh_key = mesh_get_key(base->mesh);
         }
     }
