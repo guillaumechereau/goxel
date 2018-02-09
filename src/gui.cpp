@@ -977,7 +977,7 @@ static void cameras_panel(goxel_t *goxel)
     gui_input_float("z", &cam->ofs.z, 1.0, 0, 0, NULL);
     gui_group_end();
 
-    gui_quat("Rotation", &cam->rot);
+    gui_quat("Rotation", cam->rot.v);
 
     gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();
@@ -1822,33 +1822,32 @@ void gui_enabled_end(void)
     ImGui::PopStyleColor();
 }
 
-bool gui_quat(const char *label, quat_t *q)
+bool gui_quat(const char *label, float q[4])
 {
     // Hack to prevent weird behavior when we change the euler angles.
     // We keep track of the last used euler angles value and reuse them if
     // the quaternion is the same.
     static struct {
-        quat_t quat;
-        vec3_t eul;
+        float quat[4];
+        float eul[3];
     } last = {};
-
-    vec3_t eul;
+    float eul[3];
     bool ret = false;
 
-    if (memcmp(q, &last.quat, sizeof(*q)) == 0)
-        eul = last.eul;
+    if (memcmp(q, &last.quat, sizeof(last.quat)) == 0)
+        vec3_copy(last.eul, eul);
     else
-        quat_to_eul(q->v, EULER_ORDER_DEFAULT, eul.v);
+        quat_to_eul(q, EULER_ORDER_DEFAULT, eul);
     gui_group_begin(label);
-    if (gui_angle("x", &eul.x, -180, +180)) ret = true;
-    if (gui_angle("y", &eul.y, -180, +180)) ret = true;
-    if (gui_angle("z", &eul.z, -180, +180)) ret = true;
+    if (gui_angle("x", &eul[0], -180, +180)) ret = true;
+    if (gui_angle("y", &eul[1], -180, +180)) ret = true;
+    if (gui_angle("z", &eul[2], -180, +180)) ret = true;
     gui_group_end();
 
     if (ret) {
-        eul_to_quat(eul.v, EULER_ORDER_DEFAULT, q->v);
-        last.quat = *q;
-        last.eul = eul;
+        eul_to_quat(eul, EULER_ORDER_DEFAULT, q);
+        quat_copy(q, last.quat);
+        vec3_copy(eul, last.eul);
     }
     return ret;
 }

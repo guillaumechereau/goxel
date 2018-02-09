@@ -590,6 +590,14 @@ DECL void mat4_lookat(float m[4][4],
     mat4_copy(ret, m);
 }
 
+DECL void quat_copy(const float q[4], float out[4])
+{
+    out[0] = q[0];
+    out[1] = q[1];
+    out[2] = q[2];
+    out[3] = q[3];
+}
+
 DECL void quat_from_axis(float quat[4], float a, float x, float y, float z);
 DECL void quat_to_mat4(const float q[4], float out[4][4]);
 
