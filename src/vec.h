@@ -31,14 +31,6 @@ typedef union {
     struct {
         real_t x;
         real_t y;
-    };
-    real_t v[2];
-} vec2_t;
-
-typedef union {
-    struct {
-        real_t x;
-        real_t y;
         real_t z;
     };
     struct {
@@ -46,7 +38,6 @@ typedef union {
         real_t g;
         real_t b;
     };
-    vec2_t xy;
     real_t v[3];
 } vec3_t;
 
@@ -62,10 +53,6 @@ typedef union {
         real_t g;
         real_t b;
         real_t a;
-    };
-    struct {
-        vec2_t xy;
-        vec2_t zw;
     };
     vec3_t xyz;
     vec3_t rgb;
@@ -106,7 +93,6 @@ enum  {
     EULER_ORDER_ZYX
 };
 
-#define VEC2(x, y) {{x, y}}
 #define VEC3(x, y, z) {{x, y, z}}
 #define VEC4(x, y, z, d) {{x, y, z, d}}
 
@@ -124,6 +110,8 @@ enum  {
 
 #define DECL static inline
 
+#define VEC(...) ((float[]){__VA_ARGS__})
+
 static const vec3_t vec3_zero = VEC3(0, 0, 0);
 static const vec4_t vec4_zero = VEC4(0, 0, 0, 0);
 
@@ -138,11 +126,6 @@ static const mat4_t mat4_zero = MAT(0, 0, 0, 0,
                                     0, 0, 0, 0);
 
 static const quat_t quat_identity = {{1, 0, 0, 0}};
-
-DECL vec2_t vec2(real_t x, real_t y)
-{
-    return (vec2_t)VEC2(x, y);
-}
 
 DECL vec3_t vec3(real_t x, real_t y, real_t z)
 {

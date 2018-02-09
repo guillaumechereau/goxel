@@ -116,7 +116,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const float view[4],
     float view_size[2] = {view[2], view[3]};
     // XXX: No need to render the fbo if it is not dirty.
     if (goxel->pick_fbo && !vec2_equal(
-                vec2(goxel->pick_fbo->w, goxel->pick_fbo->h).v, view_size)) {
+                VEC(goxel->pick_fbo->w, goxel->pick_fbo->h), view_size)) {
         texture_delete(goxel->pick_fbo);
         goxel->pick_fbo = NULL;
     }
