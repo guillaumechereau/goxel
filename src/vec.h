@@ -28,22 +28,6 @@
 typedef float real_t;
 
 typedef union {
-    struct {
-        real_t x;
-        real_t y;
-        real_t z;
-        real_t w;
-    };
-    struct {
-        real_t r;
-        real_t g;
-        real_t b;
-        real_t a;
-    };
-    real_t v[4];
-} vec4_t;
-
-typedef union {
     real_t v[9];
     real_t v2[3][3];
 } mat3_t;
