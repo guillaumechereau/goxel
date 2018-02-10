@@ -30,7 +30,7 @@ typedef struct {
     tool_t  tool;
 
     int     snap_face;
-    vec3_t  start_pos;
+    float   start_pos[3];
     bool    adjust;
 
     struct {
@@ -63,13 +63,13 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
 
     // Create a box for a line:
     int i;
-    const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
     box.mat = mat4_identity;
     vec3_mix(p0, p1, 0.5, box.p.v);
     vec3_sub(p1, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
-        vec3_cross(box.d.v, AXES[i].v, box.w.v);
+        vec3_cross(box.d.v, AXES[i], box.w.v);
         if (vec3_norm2(box.w.v) > 0) break;
     }
     if (i == 3) return box;
@@ -113,7 +113,7 @@ static int on_resize(gesture3d_t *gest, void *user)
     plane_t face_plane;
     cursor_t *curs = gest->cursor;
     tool_selection_t *tool = user;
-    vec3_t n, pos, v;
+    float n[3], pos[3], v[3];
 
     if (box_is_null(goxel->selection)) return GESTURE_FAILED;
 
@@ -128,8 +128,8 @@ static int on_resize(gesture3d_t *gest, void *user)
         render_img(&goxel->rend, NULL, face_plane.mat.v2, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
-            vec3_normalize(face_plane.u.v, v.v);
-            goxel->tool_plane = plane(curs->pos, curs->normal, v.v);
+            vec3_normalize(face_plane.u.v, v);
+            goxel->tool_plane = plane(curs->pos, curs->normal, v);
         }
         return 0;
     }
@@ -140,22 +140,21 @@ static int on_resize(gesture3d_t *gest, void *user)
         mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face].v2,
                  face_plane.mat.v2);
 
-        vec3_normalize(face_plane.n.v, n.v);
-        vec3_sub(curs->pos, goxel->tool_plane.p.v, v.v);
-        vec3_project(v.v, n.v, v.v);
-        vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
-        pos.x = round(pos.x);
-        pos.y = round(pos.y);
-        pos.z = round(pos.z);
+        vec3_normalize(face_plane.n.v, n);
+        vec3_sub(curs->pos, goxel->tool_plane.p.v, v);
+        vec3_project(v, n, v);
+        vec3_add(goxel->tool_plane.p.v, v, pos);
+        pos[0] = round(pos[0]);
+        pos[1] = round(pos[1]);
+        pos[2] = round(pos[2]);
         if (g_drag_mode == DRAG_RESIZE) {
             goxel->selection = box_move_face(goxel->selection,
-                                             tool->snap_face, pos.v);
+                                             tool->snap_face, pos);
         } else {
-            vec3_t d;
-            vec3_add(goxel->selection.p.v, face_plane.n.v, d.v);
-            vec3_sub(pos.v, d.v, d.v);
-            float ofs[3];
-            vec3_project(d.v, n.v, ofs);
+            float d[3], ofs[3];
+            vec3_add(goxel->selection.p.v, face_plane.n.v, d);
+            vec3_sub(pos, d, d);
+            vec3_project(d, n, ofs);
             vec3_iadd(goxel->selection.p.v, ofs);
         }
 
@@ -172,15 +171,15 @@ static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_selection_t *tool = user;
     cursor_t *curs = gest->cursor;
-    vec3_t pos, v;
+    float pos[3], v[3];
 
     if (!tool->adjust) {
         if (gest->state == GESTURE_BEGIN)
-            vec3_copy(curs->pos, tool->start_pos.v);
+            vec3_copy(curs->pos, tool->start_pos);
         curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
         goxel_set_help_text(goxel, "Drag.");
-        goxel->selection = get_box(tool->start_pos.v,
+        goxel->selection = get_box(tool->start_pos,
                                    curs->pos, curs->normal,
                                    0, &goxel->plane);
         if (gest->state == GESTURE_END) tool->adjust = true;
@@ -188,13 +187,13 @@ static int on_drag(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Adjust height.");
         if (gest->state == GESTURE_BEGIN)
             goxel->tool_plane = plane_from_normal(curs->pos, goxel->plane.u.v);
-        vec3_sub(curs->pos, goxel->tool_plane.p.v, v.v);
-        vec3_project(v.v, goxel->plane.n.v, v.v);
-        vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
-        pos.x = round(pos.x - 0.5) + 0.5;
-        pos.y = round(pos.y - 0.5) + 0.5;
-        pos.z = round(pos.z - 0.5) + 0.5;
-        goxel->selection = get_box(tool->start_pos.v, pos.v, curs->normal, 0,
+        vec3_sub(curs->pos, goxel->tool_plane.p.v, v);
+        vec3_project(v, goxel->plane.n.v, v);
+        vec3_add(goxel->tool_plane.p.v, v, pos);
+        pos[0] = round(pos[0] - 0.5) + 0.5;
+        pos[1] = round(pos[1] - 0.5) + 0.5;
+        pos[2] = round(pos[2] - 0.5) + 0.5;
+        goxel->selection = get_box(tool->start_pos, pos, curs->normal, 0,
                                    &goxel->plane);
         if (gest->state == GESTURE_END) {
             tool->adjust = false;
