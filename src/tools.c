@@ -48,7 +48,9 @@ static int pick_color_gesture(gesture3d_t *gest, void *user)
 {
     cursor_t *curs = &goxel->cursor;
     mesh_t *mesh = goxel->layers_mesh;
-    int pi[3] = {floor(curs->pos.x), floor(curs->pos.y), floor(curs->pos.z)};
+    int pi[3] = {floor(curs->pos[0]),
+                 floor(curs->pos[1]),
+                 floor(curs->pos[2])};
     uint8_t color[4];
     curs->snap_mask = SNAP_MESH;
     curs->snap_offset = -0.5;

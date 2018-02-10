@@ -52,12 +52,12 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
             brush->last_op.mesh_key == mesh_get_key(mesh) &&
-            vec3_equal(curs->pos.v, brush->last_op.pos.v)) {
+            vec3_equal(curs->pos, brush->last_op.pos.v)) {
         return true;
     }
     brush->last_op.pressed = pressed;
     brush->last_op.mode = mode;
-    brush->last_op.pos = curs->pos;
+    vec3_copy(curs->pos, brush->last_op.pos.v);
     return false;
 }
 
@@ -116,7 +116,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN) {
         mesh_set(brush->mesh_orig, goxel->image->active_layer->mesh);
         brush->last_op.mode = 0; // Discard last op.
-        brush->last_pos = curs->pos;
+        vec3_copy(curs->pos, brush->last_pos.v);
         image_history_push(goxel->image);
         mesh_clear(brush->mesh);
 
@@ -124,7 +124,7 @@ static int on_drag(gesture3d_t *gest, void *user)
             painter2 = goxel->painter;
             painter2.shape = &shape_cylinder;
             painter2.mode = MODE_MAX;
-            box = get_box(brush->start_pos.v, curs->pos.v, curs->normal.v,
+            box = get_box(brush->start_pos.v, curs->pos, curs->normal,
                           r, NULL);
             mesh_op(brush->mesh, &painter2, &box);
         }
@@ -140,11 +140,11 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     // Render several times if the space between the current pos
     // and the last pos is larger than the size of the tool shape.
-    nb = ceil(vec3_dist(curs->pos.v, brush->last_pos.v) / (2 * r));
+    nb = ceil(vec3_dist(curs->pos, brush->last_pos.v) / (2 * r));
     nb = max(nb, 1);
     for (i = 0; i < nb; i++) {
-        vec3_mix(brush->last_pos.v, curs->pos.v, (i + 1.0) / nb, pos.v);
-        box = get_box(pos.v, NULL, curs->normal.v, r, NULL);
+        vec3_mix(brush->last_pos.v, curs->pos, (i + 1.0) / nb, pos.v);
+        box = get_box(pos.v, NULL, curs->normal, r, NULL);
         mesh_op(brush->mesh, &painter2, &box);
     }
 
@@ -153,7 +153,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_merge(goxel->tool_mesh, brush->mesh, goxel->painter.mode,
                goxel->painter.color);
     goxel_update_meshes(goxel, MESH_RENDER);
-    brush->start_pos = curs->pos;
+    vec3_copy(curs->pos, brush->start_pos.v);
     brush->last_op.mesh_key = mesh_get_key(goxel->tool_mesh);
 
     if (gest->state == GESTURE_END) {
@@ -163,7 +163,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         goxel->tool_mesh = NULL;
         goxel_update_meshes(goxel, -1);
     }
-    brush->last_pos = curs->pos;
+    vec3_copy(curs->pos, brush->last_pos.v);
     return 0;
 }
 
@@ -183,13 +183,12 @@ static int on_hover(gesture3d_t *gest, void *user)
     }
 
     if (shift)
-        render_line(&goxel->rend, brush->start_pos.v, curs->pos.v, NULL);
+        render_line(&goxel->rend, brush->start_pos.v, curs->pos, NULL);
 
     if (goxel->tool_mesh && check_can_skip(brush, curs, goxel->painter.mode))
         return 0;
 
-    box = get_box(curs->pos.v, NULL, curs->normal.v,
-                  goxel->tool_radius, NULL);
+    box = get_box(curs->pos, NULL, curs->normal, goxel->tool_radius, NULL);
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, mesh);

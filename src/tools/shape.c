@@ -82,8 +82,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text(goxel, "Click and drag to draw.");
-    box = get_box(curs->pos.v, curs->pos.v, curs->normal.v, 0,
-                  &goxel->plane);
+    box = get_box(curs->pos, curs->pos, curs->normal, 0, &goxel->plane);
     render_box(&goxel->rend, &box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
@@ -99,12 +98,12 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     if (gest->state == GESTURE_BEGIN) {
         mesh_set(shape->mesh_orig, layer_mesh);
-        shape->start_pos = curs->pos;
+        vec3_copy(curs->pos, shape->start_pos.v);
         image_history_push(goxel->image);
     }
 
     goxel_set_help_text(goxel, "Drag.");
-    box = get_box(shape->start_pos.v, curs->pos.v, curs->normal.v,
+    box = get_box(shape->start_pos.v, curs->pos, curs->normal,
                   0, &goxel->plane);
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, shape->mesh_orig);
@@ -132,17 +131,17 @@ static int on_adjust(gesture3d_t *gest, void *user)
     goxel_set_help_text(goxel, "Adjust height.");
 
     if (gest->state == GESTURE_BEGIN) {
-        goxel->tool_plane = plane_from_normal(curs->pos.v, goxel->plane.u.v);
+        goxel->tool_plane = plane_from_normal(curs->pos, goxel->plane.u.v);
     }
 
-    vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
+    vec3_sub(curs->pos, goxel->tool_plane.p.v, v.v);
     vec3_project(v.v, goxel->plane.n.v, v.v);
     vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
     pos.x = round(pos.x - 0.5) + 0.5;
     pos.y = round(pos.y - 0.5) + 0.5;
     pos.z = round(pos.z - 0.5) + 0.5;
 
-    box = get_box(shape->start_pos.v, pos.v, curs->normal.v, 0,
+    box = get_box(shape->start_pos.v, pos.v, curs->normal, 0,
                   &goxel->plane);
 
     mesh_set(mesh, shape->mesh_orig);

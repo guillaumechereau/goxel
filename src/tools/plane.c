@@ -31,10 +31,10 @@ static int iter(tool_t *tool, const float viewport[4])
     goxel_set_help_text(goxel, "Click on the mesh to set plane.");
 
     if (curs->snaped && (curs->flags & CURSOR_PRESSED)) {
-        curs->pos.x = round(curs->pos.x);
-        curs->pos.y = round(curs->pos.y);
-        curs->pos.z = round(curs->pos.z);
-        goxel->plane = plane_from_normal(curs->pos.v, curs->normal.v);
+        curs->pos[0] = round(curs->pos[0]);
+        curs->pos[1] = round(curs->pos[1]);
+        curs->pos[2] = round(curs->pos[2]);
+        goxel->plane = plane_from_normal(curs->pos, curs->normal);
     }
     return 0;
 }

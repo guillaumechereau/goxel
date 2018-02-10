@@ -1069,8 +1069,8 @@ enum {
 typedef struct gesture3d gesture3d_t;
 
 typedef struct cursor {
-    vec3_t pos;
-    vec3_t normal;
+    float  pos[3];
+    float  normal[3];
     int    snap_mask;
     int    snaped;
     int    flags; // Union of CURSOR_* values.

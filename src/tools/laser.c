@@ -77,8 +77,8 @@ static int iter(tool_t *tool, const float viewport[4])
     laser->box.h = v.xyz;
     mat4_mul_vec4(view_mat_inv, vec4(0, 0, 1, 0).v, v.v);
     laser->box.d = v.xyz;
-    vec3_neg(curs->normal.v, laser->box.d.v);
-    laser->box.p = curs->pos;
+    vec3_neg(curs->normal, laser->box.d.v);
+    vec3_copy(curs->pos, laser->box.p.v);
     // Just a large value for the size of the laser box.
     mat4_itranslate(laser->box.mat.v2, 0, 0, -1024);
     mat4_iscale(laser->box.mat.v2, goxel->tool_radius, goxel->tool_radius, 1024);

@@ -389,7 +389,7 @@ static void set_cursor_hint(cursor_t *curs)
         snap_str = "selection";
 
     goxel_set_hint_text(goxel, "[%.0f %.0f %.0f] (%s)",
-            curs->pos.x - 0.5, curs->pos.y - 0.5, curs->pos.z - 0.5,
+            curs->pos[0] - 0.5, curs->pos[1] - 0.5, curs->pos[2] - 0.5,
             snap_str);
 }
 
@@ -403,7 +403,7 @@ static int on_drag(const gesture_t *gest, void *user)
 
     c->snaped = goxel_unproject(
             goxel, gest->viewport, gest->pos, c->snap_mask,
-            c->snap_offset, c->pos.v, c->normal.v);
+            c->snap_offset, c->pos, c->normal);
 
     // Set some default values.  The tools can override them.
     // XXX: would be better to reset the cursor when we change tool!
@@ -453,7 +453,7 @@ static int on_hover(const gesture_t *gest, void *user)
     cursor_t *c = &goxel->cursor;
     c->snaped = goxel_unproject(
                     goxel, gest->viewport, gest->pos, c->snap_mask,
-                    c->snap_offset, c->pos.v, c->normal.v);
+                    c->snap_offset, c->pos, c->normal);
     set_cursor_hint(c);
     c->flags &= ~CURSOR_PRESSED;
     // Set some default values.  The tools can override them.
