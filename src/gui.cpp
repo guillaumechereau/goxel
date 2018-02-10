@@ -505,7 +505,7 @@ void gui_release(void)
 // XXX: Move this somewhere else.
 void render_axis_arrows(goxel_t *goxel, const float view_size[2])
 {
-    const vec3_t AXIS[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    const float AXIS[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     int i;
     const int d = 40;  // Distance to corner of the view.
     float spos[2] = {d, d};
@@ -520,8 +520,10 @@ void render_axis_arrows(goxel_t *goxel, const float view_size[2])
         vec3_iaddk(pos, normal, 100);
 
     for (i = 0; i < 3; i++) {
-        vec3_addk(pos, AXIS[i].v, 2.0 * s, b);
-        vec4_set(c, AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
+        vec3_addk(pos, AXIS[i], 2.0 * s, b);
+        vec4_set(c, AXIS[i][0] * 255,
+                    AXIS[i][1] * 255,
+                    AXIS[i][2] * 255, 255);
         render_line(&goxel->rend, pos, b, c);
     }
 }
