@@ -21,7 +21,7 @@
 
 typedef struct {
     tool_t tool;
-    vec3_t start_pos;
+    float  start_pos[3];
     mesh_t *mesh_orig;
     bool   adjust;
 
@@ -57,13 +57,13 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
 
     // Create a box for a line:
     int i;
-    const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
     box.mat = mat4_identity;
     vec3_mix(p0, p1, 0.5, box.p.v);
     vec3_sub(p1, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
-        vec3_cross(box.d.v, AXES[i].v, box.w.v);
+        vec3_cross(box.d.v, AXES[i], box.w.v);
         if (vec3_norm2(box.w.v) > 0) break;
     }
     if (i == 3) return box;
@@ -98,12 +98,12 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     if (gest->state == GESTURE_BEGIN) {
         mesh_set(shape->mesh_orig, layer_mesh);
-        vec3_copy(curs->pos, shape->start_pos.v);
+        vec3_copy(curs->pos, shape->start_pos);
         image_history_push(goxel->image);
     }
 
     goxel_set_help_text(goxel, "Drag.");
-    box = get_box(shape->start_pos.v, curs->pos, curs->normal,
+    box = get_box(shape->start_pos, curs->pos, curs->normal,
                   0, &goxel->plane);
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, shape->mesh_orig);
@@ -124,7 +124,7 @@ static int on_adjust(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
     cursor_t *curs = gest->cursor;
-    vec3_t pos, v;
+    float pos[3], v[3];
     box_t box;
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
@@ -134,15 +134,14 @@ static int on_adjust(gesture3d_t *gest, void *user)
         goxel->tool_plane = plane_from_normal(curs->pos, goxel->plane.u.v);
     }
 
-    vec3_sub(curs->pos, goxel->tool_plane.p.v, v.v);
-    vec3_project(v.v, goxel->plane.n.v, v.v);
-    vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
-    pos.x = round(pos.x - 0.5) + 0.5;
-    pos.y = round(pos.y - 0.5) + 0.5;
-    pos.z = round(pos.z - 0.5) + 0.5;
+    vec3_sub(curs->pos, goxel->tool_plane.p.v, v);
+    vec3_project(v, goxel->plane.n.v, v);
+    vec3_add(goxel->tool_plane.p.v, v, pos);
+    pos[0] = round(pos[0] - 0.5) + 0.5;
+    pos[1] = round(pos[1] - 0.5) + 0.5;
+    pos[2] = round(pos[2] - 0.5) + 0.5;
 
-    box = get_box(shape->start_pos.v, pos.v, curs->normal, 0,
-                  &goxel->plane);
+    box = get_box(shape->start_pos, pos, curs->normal, 0, &goxel->plane);
 
     mesh_set(mesh, shape->mesh_orig);
     mesh_op(mesh, &goxel->painter, &box);
