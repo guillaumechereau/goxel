@@ -102,12 +102,12 @@ static inline plane_t plane_from_normal(const float pos[3], const float n[3])
 {
     plane_t ret;
     int i;
-    const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     ret.mat = mat4_identity;
     vec3_copy(pos, ret.p);
     vec3_normalize(n, ret.n);
     for (i = 0; i < 3; i++) {
-        vec3_cross(ret.n, AXES[i].v, ret.u);
+        vec3_cross(ret.n, AXES[i], ret.u);
         if (vec3_norm2(ret.u) > 0) break;
     }
     vec3_cross(ret.n, ret.u, ret.v);
