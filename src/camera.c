@@ -45,14 +45,14 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     float n = FLT_MAX, f = 256;
     int i;
     const int margin = 8 * BLOCK_SIZE;
-    vec3_t vertices[8];
+    float vertices[8][3];
     const mesh_t *mesh = goxel->layers_mesh;
     mesh_iterator_t iter;
 
     if (!box_is_null(goxel->image->box)) {
         box_get_vertices(goxel->image->box, vertices);
         for (i = 0; i < 8; i++) {
-            mat4_mul_vec3(view_mat, vertices[i].v, p.v);
+            mat4_mul_vec3(view_mat, vertices[i], p.v);
             if (p.z < 0) {
                 n = min(n, -p.z - margin);
                 f = max(f, -p.z + margin);

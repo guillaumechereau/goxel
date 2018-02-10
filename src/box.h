@@ -106,20 +106,20 @@ static inline box_t bbox_from_points(const float a[3], const float b[3])
                                   (v1[2] - v0[2]) / 2);
 }
 
-static inline box_t bbox_from_npoints(int n, const vec3_t *points)
+static inline box_t bbox_from_npoints(int n, const float (*points)[3])
 {
     assert(n >= 1);
     int i;
     float v0[3], v1[3], mid[3];
-    vec3_copy(points[0].v, v0);
-    vec3_copy(points[0].v, v1);
+    vec3_copy(points[0], v0);
+    vec3_copy(points[0], v1);
     for (i = 1; i < n; i++) {
-        v0[0] = min(v0[0], points[i].v[0]);
-        v0[1] = min(v0[1], points[i].v[1]);
-        v0[2] = min(v0[2], points[i].v[2]);
-        v1[0] = max(v1[0], points[i].v[0]);
-        v1[1] = max(v1[1], points[i].v[1]);
-        v1[2] = max(v1[2], points[i].v[2]);
+        v0[0] = min(v0[0], points[i][0]);
+        v0[1] = min(v0[1], points[i][1]);
+        v0[2] = min(v0[2], points[i][2]);
+        v1[0] = max(v1[0], points[i][0]);
+        v1[1] = max(v1[1], points[i][1]);
+        v1[2] = max(v1[2], points[i][2]);
     }
     vec3_mix(v0, v1, 0.5, mid);
     return bbox_from_extents(mid, (v1[0] - v0[0]) / 2,
@@ -234,19 +234,19 @@ static inline bool bbox_contains_vec(box_t b, const float v[3])
 
 static inline box_t box_get_bbox(box_t b)
 {
-    vec3_t p[8] = {
-        vec3(-1, -1, +1),
-        vec3(+1, -1, +1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, +1, -1),
-        vec3(-1, +1, -1),
+    float p[8][3] = {
+        {-1, -1, +1},
+        {+1, -1, +1},
+        {+1, +1, +1},
+        {-1, +1, +1},
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, +1, -1},
+        {-1, +1, -1},
     };
     int i;
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(b.mat.v2, p[i].v, p[i].v);
+        mat4_mul_vec3(b.mat.v2, p[i], p[i]);
     }
     return bbox_from_npoints(8, p);
 }
@@ -304,7 +304,7 @@ static inline box_t box_move_face(box_t b, int f, const float p[3])
         {0, 3, 7, 4}
     };
     const int FO[6] = {1, 0, 3, 2, 5, 4};
-    vec3_t ps[5];
+    float ps[5][3];
     int i;
 
     // XXX: for the moment we only support bbox, but we could make the
@@ -312,8 +312,8 @@ static inline box_t box_move_face(box_t b, int f, const float p[3])
     assert(box_is_bbox(b));
     f = FO[f];
     for (i = 0; i < 4; i++)
-        mat4_mul_vec3(b.mat.v2, PS[FS[f][i]].v, ps[i].v);
-    vec3_copy(p, ps[4].v);
+        mat4_mul_vec3(b.mat.v2, PS[FS[f][i]].v, ps[i]);
+    vec3_copy(p, ps[4]);
     return bbox_from_npoints(5, ps);
 }
 
@@ -329,27 +329,27 @@ static inline float box_get_volume(box_t box)
     return 8 * fabs(a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h);
 }
 
-static inline void box_get_vertices(box_t box, vec3_t vertices[8])
+static inline void box_get_vertices(box_t box, float vertices[8][3])
 {
     int i;
-    const vec3_t P[8] = {
-        vec3(-1, -1, +1),
-        vec3(+1, -1, +1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, +1, -1),
-        vec3(-1, +1, -1),
+    const float P[8][3] = {
+        {-1, -1, +1},
+        {+1, -1, +1},
+        {+1, +1, +1},
+        {-1, +1, +1},
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, +1, -1},
+        {-1, +1, -1},
     };
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(box.mat.v2, P[i].v, vertices[i].v);
+        mat4_mul_vec3(box.mat.v2, P[i], vertices[i]);
     }
 }
 
 static inline box_t bbox_from_box(box_t b)
 {
-    vec3_t vertices[8];
+    float vertices[8][3];
     box_get_vertices(b, vertices);
     return bbox_from_npoints(8, vertices);
 }
