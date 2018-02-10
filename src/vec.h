@@ -75,9 +75,6 @@ enum  {
     EULER_ORDER_ZYX
 };
 
-#define VEC4(x, y, z, d) {{x, y, z, d}}
-#define VEC4_SPLIT(v) (v).x, (v).y, (v).z, (v).w
-
 #define MAT(...) {{__VA_ARGS__}}
 
 #define QUAT(...) ((quat_t){{__VA_ARGS__}})
@@ -92,8 +89,7 @@ enum  {
 #define VEC(...) ((float[]){__VA_ARGS__})
 
 static const float vec3_zero[] = {0, 0, 0};
-
-static const vec4_t vec4_zero = VEC4(0, 0, 0, 0);
+static const float vec4_zero[] = {0, 0, 0, 0};
 
 static const mat4_t mat4_identity = MAT(1, 0, 0, 0,
                                         0, 1, 0, 0,
