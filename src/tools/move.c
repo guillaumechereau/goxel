@@ -71,7 +71,7 @@ static int on_move(gesture3d_t *gest, void *user)
     plane_t face_plane;
     cursor_t *curs = gest->cursor;
     tool_move_t *tool = user;
-    vec3_t n, pos, d, ofs, v;
+    float n[3], pos[3], d[3], ofs[3], v[3];
     layer_t *layer = goxel->image->active_layer;
     float mat[4][4];
 
@@ -88,8 +88,8 @@ static int on_move(gesture3d_t *gest, void *user)
         render_img(&goxel->rend, NULL, face_plane.mat.v2, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
-            vec3_normalize(face_plane.u.v, v.v);
-            goxel->tool_plane = plane(curs->pos, curs->normal, v.v);
+            vec3_normalize(face_plane.u.v, v);
+            goxel->tool_plane = plane(curs->pos, curs->normal, v);
             image_history_push(goxel->image);
         }
         return 0;
@@ -101,19 +101,19 @@ static int on_move(gesture3d_t *gest, void *user)
         mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face].v2,
                  face_plane.mat.v2);
 
-        vec3_normalize(face_plane.n.v, n.v);
-        vec3_sub(curs->pos, goxel->tool_plane.p.v, v.v);
-        vec3_project(v.v, n.v, v.v);
-        vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
-        pos.x = round(pos.x);
-        pos.y = round(pos.y);
-        pos.z = round(pos.z);
-        vec3_add(tool->box.p.v, face_plane.n.v, d.v);
-        vec3_sub(pos.v, d.v, ofs.v);
-        vec3_project(ofs.v, n.v, ofs.v);
+        vec3_normalize(face_plane.n.v, n);
+        vec3_sub(curs->pos, goxel->tool_plane.p.v, v);
+        vec3_project(v, n, v);
+        vec3_add(goxel->tool_plane.p.v, v, pos);
+        pos[0] = round(pos[0]);
+        pos[1] = round(pos[1]);
+        pos[2] = round(pos[2]);
+        vec3_add(tool->box.p.v, face_plane.n.v, d);
+        vec3_sub(pos, d, ofs);
+        vec3_project(ofs, n, ofs);
 
         mat4_set_identity(mat);
-        mat4_itranslate(mat, ofs.x, ofs.y, ofs.z);
+        mat4_itranslate(mat, ofs[0], ofs[1], ofs[2]);
         do_move(layer, mat);
 
         if (gest->state == GESTURE_END) {
