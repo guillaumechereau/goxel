@@ -70,7 +70,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     cursor_t *curs = gest->cursor;
     box_t box;
     plane_t face_plane;
-    vec3_t n, pos, v;
+    float n[3], pos[3], v[3];
     int pi[3];
     float delta;
 
@@ -94,8 +94,8 @@ static int on_drag(gesture3d_t *gest, void *user)
         box = mesh_get_box(tool->mesh, true);
         mat4_mul(box.mat.v2, FACES_MATS[tool->snap_face].v2,
                  face_plane.mat.v2);
-        vec3_normalize(face_plane.u.v, v.v);
-        goxel->tool_plane = plane(curs->pos, curs->normal, v.v);
+        vec3_normalize(face_plane.u.v, v);
+        goxel->tool_plane = plane(curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
 
@@ -104,29 +104,29 @@ static int on_drag(gesture3d_t *gest, void *user)
     // XXX: have some generic way to resize boxes, since we use it all the
     // time!
     mat4_mul(box.mat.v2, FACES_MATS[tool->snap_face].v2, face_plane.mat.v2);
-    vec3_normalize(face_plane.n.v, n.v);
+    vec3_normalize(face_plane.n.v, n);
     // XXX: Is there a better way to compute the delta??
-    vec3_sub(curs->pos, goxel->tool_plane.p.v, v.v);
-    vec3_project(v.v, n.v, v.v);
-    delta = vec3_dot(n.v, v.v);
+    vec3_sub(curs->pos, goxel->tool_plane.p.v, v);
+    vec3_project(v, n, v);
+    delta = vec3_dot(n, v);
     // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     // Skip if we didn't move.
     if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
-    vec3_sub(curs->pos, goxel->tool_plane.p.v, v.v);
-    vec3_project(v.v, n.v, v.v);
-    vec3_add(goxel->tool_plane.p.v, v.v, pos.v);
-    pos.x = round(pos.x);
-    pos.y = round(pos.y);
-    pos.z = round(pos.z);
+    vec3_sub(curs->pos, goxel->tool_plane.p.v, v);
+    vec3_project(v, n, v);
+    vec3_add(goxel->tool_plane.p.v, v, pos);
+    pos[0] = round(pos[0]);
+    pos[1] = round(pos[1]);
+    pos[2] = round(pos[2]);
 
     mesh_set(mesh, tool->mesh_orig);
     tmp_mesh = mesh_copy(tool->mesh);
 
     if (delta >= 1) {
-        vec3_iaddk(face_plane.p.v, n.v, -0.5);
+        vec3_iaddk(face_plane.p.v, n, -0.5);
         box = box_move_face(box, tool->snap_face, pos);
         mesh_extrude(tmp_mesh, &face_plane, &box);
         mesh_merge(mesh, tmp_mesh, MODE_OVER, NULL);
@@ -134,7 +134,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (delta < 0.5) {
         box = box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos);
         vec3_imul(face_plane.n.v, -1.0);
-        vec3_iaddk(face_plane.p.v, n.v, -0.5);
+        vec3_iaddk(face_plane.p.v, n, -0.5);
         mesh_extrude(tmp_mesh, &face_plane, &box);
         mesh_merge(mesh, tmp_mesh, MODE_SUB, NULL);
     }
