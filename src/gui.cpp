@@ -94,7 +94,7 @@ static const char *FSHADER =
 ;
 
 typedef struct {
-    vec4_t  rect;
+    float  rect[4];
 } view_t;
 
 typedef struct {
@@ -534,11 +534,11 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    int rect[4] = {(int)view->rect.x,
-                   (int)(height - view->rect.y - view->rect.w),
-                   (int)view->rect.z,
-                   (int)view->rect.w};
-    goxel_render_view(goxel, view->rect.v);
+    int rect[4] = {(int)view->rect[0],
+                   (int)(height - view->rect[1] - view->rect[3]),
+                   (int)view->rect[2],
+                   (int)view->rect[3]};
+    goxel_render_view(goxel, view->rect);
     render_submit(&goxel->rend, rect, goxel->back_color);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
@@ -1367,14 +1367,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
     canvas_size.y -= 20; // Leave space for the help label.
-    gui->view.rect = vec4(canvas_pos.x, canvas_pos.y,
-                          canvas_size.x, canvas_size.y);
+    vec4_set(gui->view.rect, canvas_pos.x, canvas_pos.y,
+                             canvas_size.x, canvas_size.y);
     draw_list = ImGui::GetWindowDrawList();
     draw_list->AddCallback(render_view, &gui->view);
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
     gui->mouse_in_view = ImGui::IsItemHovered();
-    float view_size[2] = {gui->view.rect.z, gui->view.rect.w};
+    float view_size[2] = {gui->view.rect[2], gui->view.rect[3]};
     float view_rect[4] = {canvas_pos.x,
                           io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
                           canvas_size.x, canvas_size.y};

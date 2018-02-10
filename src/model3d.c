@@ -285,7 +285,7 @@ void model3d_render(model3d_t *model3d,
                     int   effects)
 {
     uint8_t c[4];
-    vec4_t cf;
+    float cf[4];
     float light_dir[3];
 
     copy_color(color, c);
@@ -302,8 +302,8 @@ void model3d_render(model3d_t *model3d,
                     GL(glDisable(GL_CULL_FACE));
     GL(glCullFace(effects & EFFECT_SEE_BACK ? GL_FRONT : GL_BACK));
 
-    cf = vec4(c[0] / 255.0, c[1] / 255.0, c[2] / 255.0, c[3] / 255.0);
-    GL(glUniform4fv(prog.u_color_l, 1, cf.v));
+    vec4_set(cf, c[0] / 255.0, c[1] / 255.0, c[2] / 255.0, c[3] / 255.0);
+    GL(glUniform4fv(prog.u_color_l, 1, cf));
     GL(glUniform1f(prog.u_strip_l, effects & EFFECT_STRIP ? 1.0 : 0.0));
     GL(glUniform1f(prog.u_time_l, 0)); // No moving strip effects.
 
