@@ -123,7 +123,7 @@ static int on_resize(gesture3d_t *gest, void *user)
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face].v2,
+        mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face],
                  face_plane.mat.v2);
         render_img(&goxel->rend, NULL, face_plane.mat.v2, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
@@ -137,7 +137,7 @@ static int on_resize(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face].v2,
+        mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face],
                  face_plane.mat.v2);
 
         vec3_normalize(face_plane.n, n);
