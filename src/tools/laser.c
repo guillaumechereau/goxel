@@ -57,7 +57,7 @@ static int iter(tool_t *tool, const float viewport[4])
     cursor_t *curs = &goxel->cursor;
     curs->snap_mask = SNAP_CAMERA;
     curs->snap_offset = 0;
-    vec4_t v;
+    float v[4];
     float view_mat_inv[4][4];
 
     if (!laser->gestures.drag.type) {
@@ -71,12 +71,12 @@ static int iter(tool_t *tool, const float viewport[4])
     laser->box.mat = mat4_identity;
 
     mat4_invert(goxel->camera.view_mat, view_mat_inv);
-    mat4_mul_vec4(view_mat_inv, vec4(1, 0, 0, 0).v, v.v);
-    laser->box.w = v.xyz;
-    mat4_mul_vec4(view_mat_inv, vec4(0, 1, 0, 0).v, v.v);
-    laser->box.h = v.xyz;
-    mat4_mul_vec4(view_mat_inv, vec4(0, 0, 1, 0).v, v.v);
-    laser->box.d = v.xyz;
+    mat4_mul_vec4(view_mat_inv, vec4(1, 0, 0, 0).v, v);
+    vec3_copy(v, laser->box.w.v);
+    mat4_mul_vec4(view_mat_inv, vec4(0, 1, 0, 0).v, v);
+    vec3_copy(v, laser->box.h.v);
+    mat4_mul_vec4(view_mat_inv, vec4(0, 0, 1, 0).v, v);
+    vec3_copy(v, laser->box.d.v);
     vec3_neg(curs->normal, laser->box.d.v);
     vec3_copy(curs->pos, laser->box.p.v);
     // Just a large value for the size of the laser box.
