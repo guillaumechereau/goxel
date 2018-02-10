@@ -88,13 +88,13 @@ int mesh_select(const mesh_t *mesh,
 void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 {
     mat4_t proj;
-    vec3_t n = plane->n, pos;
+    float n[3], pos[3], p[3];
     mesh_iterator_t iter;
     int vpos[3];
     uint8_t value[4];
 
-    vec3_normalize(n.v, n.v);
-    pos = plane->p;
+    vec3_normalize(plane->n.v, n);
+    vec3_copy(plane->p.v, pos);
 
     // Generate the projection into the plane.
     // XXX: *very* ugly code, fix this!
@@ -102,26 +102,26 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 
     if (fabs(plane->n.x) > 0.1) {
         proj.v[0] = 0;
-        proj.v[12] = pos.x;
+        proj.v[12] = pos[0];
     }
     if (fabs(plane->n.y) > 0.1) {
         proj.v[5] = 0;
-        proj.v[13] = pos.y;
+        proj.v[13] = pos[1];
     }
     if (fabs(plane->n.z) > 0.1) {
         proj.v[10] = 0;
-        proj.v[14] = pos.z;
+        proj.v[14] = pos[2];
     }
 
     // XXX: use an accessor to speed up access.
     iter = mesh_get_box_iterator(mesh, box->v, 0);
     while (mesh_iter(&iter, vpos)) {
-        vec3_t p = vec3(vpos[0], vpos[1], vpos[2]);
-        if (!bbox_contains_vec(*box, p.v)) {
+        vec3_set(p, vpos[0], vpos[1], vpos[2]);
+        if (!bbox_contains_vec(*box, p)) {
             memset(value, 0, 4);
         } else {
-            mat4_mul_vec3(proj.v2, p.v, p.v);
-            int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
+            mat4_mul_vec3(proj.v2, p, p);
+            int pi[3] = {floor(p[0]), floor(p[1]), floor(p[2])};
             mesh_get_at(mesh, NULL, pi, value);
         }
         mesh_set_at(mesh, NULL, vpos, value);
@@ -268,7 +268,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     uint8_t value[4], c[4];
     mesh_iterator_t iter;
     mesh_accessor_t accessor;
-    vec3_t size, p;
+    float size[3], p[3];
     float mat[4][4];
     float (*shape_func)(const float[3], const float[3], float smoothness);
     float k, v;
@@ -293,9 +293,9 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     }
 
     shape_func = painter->shape->func;
-    box_get_size(*box, size.v);
+    box_get_size(*box, size);
     mat4_copy(box->mat.v2, mat);
-    mat4_iscale(mat, 1 / size.x, 1 / size.y, 1 / size.z);
+    mat4_iscale(mat, 1 / size[0], 1 / size[1], 1 / size[2]);
     mat4_invert(mat, mat);
     use_box = painter->box && !box_is_null(*painter->box);
     // XXX: cleanup.
@@ -314,10 +314,10 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     // setting and getting!  Need to fix that!!
     accessor = mesh_get_accessor(mesh);
     while (mesh_iter(&iter, vp)) {
-        p = vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
-        if (use_box && !bbox_contains_vec(*painter->box, p.v)) continue;
-        mat4_mul_vec3(mat, p.v, p.v);
-        k = shape_func(p.v, size.v, painter->smoothness);
+        vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
+        if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
+        mat4_mul_vec3(mat, p, p);
+        k = shape_func(p, size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
         v = k / 2.0f + 0.5f;
         if (!v && skip_src_empty) continue;
