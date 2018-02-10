@@ -1269,8 +1269,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGuiStyle& style = ImGui::GetStyle();
     const theme_t *theme = theme_get();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
-    vec4_t display_rect = vec4(0, 0,
-                               goxel->screen_size[0], goxel->screen_size[1]);
+    float display_rect[4] = {
+        0, 0, goxel->screen_size[0], goxel->screen_size[1]};
     float font_size = ImGui::GetFontSize();
 
     io.DisplaySize = ImVec2((float)goxel->screen_size[0],
@@ -1279,7 +1279,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     io.DisplayFramebufferScale = ImVec2(goxel->screen_scale,
                                         goxel->screen_scale);
     io.DeltaTime = 1.0 / 60;
-    gesture_update(2, gestures, inputs, display_rect.v, gui);
+    gesture_update(2, gestures, inputs, display_rect, gui);
     io.MouseWheel = inputs->mouse_wheel;
 
     for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
