@@ -89,7 +89,7 @@ static int on_move(gesture3d_t *gest, void *user)
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane.u.v, v.v);
-            goxel->tool_plane = plane(curs->pos, curs->normal, v);
+            goxel->tool_plane = plane(curs->pos.v, curs->normal.v, v.v);
             image_history_push(goxel->image);
         }
         return 0;

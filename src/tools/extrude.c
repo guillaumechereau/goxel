@@ -95,7 +95,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         mat4_mul(box.mat.v2, FACES_MATS[tool->snap_face].v2,
                  face_plane.mat.v2);
         vec3_normalize(face_plane.u.v, v.v);
-        goxel->tool_plane = plane(curs->pos, curs->normal, v);
+        goxel->tool_plane = plane(curs->pos.v, curs->normal.v, v.v);
         tool->last_delta = 0;
     }
 

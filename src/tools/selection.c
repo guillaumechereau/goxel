@@ -129,7 +129,7 @@ static int on_resize(gesture3d_t *gest, void *user)
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane.u.v, v.v);
-            goxel->tool_plane = plane(curs->pos, curs->normal, v);
+            goxel->tool_plane = plane(curs->pos.v, curs->normal.v, v.v);
         }
         return 0;
     }
@@ -187,7 +187,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     } else {
         goxel_set_help_text(goxel, "Adjust height.");
         if (gest->state == GESTURE_BEGIN)
-            goxel->tool_plane = plane_from_normal(curs->pos, goxel->plane.u);
+            goxel->tool_plane = plane_from_normal(curs->pos.v, goxel->plane.u.v);
         vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
         vec3_project(v.v, goxel->plane.n.v, v.v);
         vec3_add(goxel->tool_plane.p.v, v.v, pos.v);

@@ -67,14 +67,15 @@ typedef union {
 
 static const plane_t plane_null = {};
 
-static inline plane_t plane(vec3_t pos, vec3_t u, vec3_t v)
+static inline plane_t plane(
+        const float pos[3], const float u[3], const float v[3])
 {
     plane_t ret;
     ret.mat = mat4_identity;
-    ret.u = u;
-    ret.v = v;
-    vec3_cross(u.v, v.v, ret.n.v);
-    ret.p = pos;
+    vec3_copy(u, ret.u.v);
+    vec3_copy(v, ret.v.v);
+    vec3_cross(u, v, ret.n.v);
+    vec3_copy(pos, ret.p.v);
     return ret;
 }
 
@@ -103,14 +104,14 @@ static inline bool plane_line_intersection(
     return true;
 }
 
-static inline plane_t plane_from_normal(vec3_t pos, vec3_t n)
+static inline plane_t plane_from_normal(const float pos[3], const float n[3])
 {
     plane_t ret;
     int i;
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
     ret.mat = mat4_identity;
-    ret.p = pos;
-    vec3_normalize(n.v, ret.n.v);
+    vec3_copy(pos, ret.p.v);
+    vec3_normalize(n, ret.n.v);
     for (i = 0; i < 3; i++) {
         vec3_cross(ret.n.v, AXES[i].v, ret.u.v);
         if (vec3_norm2(ret.u.v) > 0) break;

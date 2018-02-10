@@ -132,8 +132,7 @@ static int on_adjust(gesture3d_t *gest, void *user)
     goxel_set_help_text(goxel, "Adjust height.");
 
     if (gest->state == GESTURE_BEGIN) {
-        goxel->tool_plane = plane_from_normal(curs->pos,
-                                              goxel->plane.u);
+        goxel->tool_plane = plane_from_normal(curs->pos.v, goxel->plane.u.v);
     }
 
     vec3_sub(curs->pos.v, goxel->tool_plane.p.v, v.v);
