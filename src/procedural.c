@@ -116,7 +116,7 @@ struct proc_ctx {
     ctx_t       *next, *prev;
     box_t       box;
     int         mode;
-    vec4_t      color;
+    float       color[4];
     bool        antialiased;
     uint32_t    seed;
     node_t      *prog;
@@ -380,16 +380,16 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
         mat4_irotate(ctx->box.mat.v2, v[0] / 180 * M_PI, 0, 0, 1);
         break;
     case OP_hue:
-        if (n == 1) ctx->color.x = mod(ctx->color.x + v[0], 360);
-        else move_value(&ctx->color.x, v[0], v[1]);
+        if (n == 1) ctx->color[0] = mod(ctx->color[0] + v[0], 360);
+        else move_value(&ctx->color[0], v[0], v[1]);
         break;
     case OP_sat:
         if (n == 1) v[1] = 1;
-        move_value(&ctx->color.y, v[0], v[1]);
+        move_value(&ctx->color[1], v[0], v[1]);
         break;
     case OP_light:
         if (n == 1) v[1] = 1;
-        move_value(&ctx->color.z, v[0], v[1]);
+        move_value(&ctx->color[2], v[0], v[1]);
         break;
     case OP_sub:
         ctx->mode = MODE_SUB;
@@ -428,9 +428,9 @@ static int set_args(gox_proc_t *proc, node_t *node, ctx_t *ctx)
 static void call_shape(const ctx_t *ctx, const shape_t *shape)
 {
     mesh_t *mesh = goxel->image->active_layer->mesh;
-    uint8_t hsl[3] = {ctx->color.x / 360 * 255,
-                      ctx->color.y * 255,
-                      ctx->color.z * 255};
+    uint8_t hsl[3] = {ctx->color[0] / 360 * 255,
+                      ctx->color[1] * 255,
+                      ctx->color[2] * 255};
     hsl_to_rgb(hsl, goxel->painter.color);
     goxel->painter.shape = shape;
     goxel->painter.mode = ctx->mode;
@@ -578,7 +578,7 @@ int proc_start(gox_proc_t *proc, const box_t *box)
     proc->frame = 0;
     ctx = calloc(1, sizeof(*ctx));
     ctx->box = box ? *box : bbox_from_extents(vec3_zero.v, 0.5, 0.5, 0.5);
-    ctx->color = vec4(0, 0, 1, 1);
+    vec4_set(ctx->color, 0, 0, 1, 1);
     ctx->mode = MODE_OVER;
     ctx->prog = get_rule(proc->prog, "main", ctx);
     set_seed(rand(), &ctx->seed);
