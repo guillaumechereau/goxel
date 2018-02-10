@@ -420,17 +420,18 @@ static int on_pan(const gesture_t *gest, void *user)
         vec2_copy(gest->pos, goxel->move_origin.pos);
     }
     float wpos[3] = {gest->pos[0], gest->pos[1], 0};
-    vec3_t worigin_pos = vec3(goxel->move_origin.pos[0],
-                              goxel->move_origin.pos[1], 0);
-    vec3_t wdelta;
-    vec3_sub(wpos, worigin_pos.v, wdelta.v);
-    vec3_t odelta;
-    unproject_delta(wdelta.v, goxel->camera.view_mat,
-                    goxel->camera.proj_mat, gest->viewport, odelta.v);
-    vec3_imul(odelta.v, 2); // XXX: why do I need that?
+    float worigin_pos[3], wdelta[3], odelta[3];
+
+    vec3_set(worigin_pos, goxel->move_origin.pos[0],
+                          goxel->move_origin.pos[1], 0);
+    vec3_sub(wpos, worigin_pos, wdelta);
+
+    unproject_delta(wdelta, goxel->camera.view_mat,
+                    goxel->camera.proj_mat, gest->viewport, odelta);
+    vec3_imul(odelta, 2); // XXX: why do I need that?
     if (!goxel->camera.ortho)
-        vec3_imul(odelta.v, goxel->camera.dist);
-    vec3_add(goxel->move_origin.camera_ofs, odelta.v, goxel->camera.ofs);
+        vec3_imul(odelta, goxel->camera.dist);
+    vec3_add(goxel->move_origin.camera_ofs, odelta, goxel->camera.ofs);
     return 0;
 }
 
@@ -470,7 +471,7 @@ static int on_hover(const gesture_t *gest, void *user)
 void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
                          const inputs_t *inputs)
 {
-    float x_axis[4], q[4];
+    float x_axis[4], q[4], p[3], n[3];
     gesture_t *gests[] = {&goxel->gestures.drag,
                           &goxel->gestures.pan,
                           &goxel->gestures.rotate,
@@ -490,10 +491,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
 
         // Auto adjust the camera rotation position.
-        vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
-                                    goxel->layers_mesh, p.v, n.v)) {
-            camera_set_target(&goxel->camera, p.v);
+                                    goxel->layers_mesh, p, n)) {
+            camera_set_target(&goxel->camera, p);
         }
         return;
     }
@@ -517,10 +517,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
     }
     // C: recenter the view:
     if (inputs->keys['C']) {
-        vec3_t p, n;
         if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
-                                    goxel->layers_mesh, p.v, n.v)) {
-            camera_set_target(&goxel->camera, p.v);
+                                    goxel->layers_mesh, p, n)) {
+            camera_set_target(&goxel->camera, p);
         }
     }
 }
@@ -853,17 +852,17 @@ static void past_action(void)
 {
     mesh_t *mesh = goxel->image->active_layer->mesh;
     mesh_t *tmp;
-    vec3_t p1, p2;
+    float p1[3], p2[3];
     mat4_t mat = mat4_identity;
     if (!goxel->clipboard.mesh) return;
 
     tmp = mesh_copy(goxel->clipboard.mesh);
     if (    !box_is_null(goxel->selection) &&
             !box_is_null(goxel->clipboard.box)) {
-        p1 = goxel->selection.p;
-        p2 = goxel->clipboard.box.p;
-        mat4_itranslate(mat.v2, +p1.x, +p1.y, +p1.z);
-        mat4_itranslate(mat.v2, -p2.x, -p2.y, -p2.z);
+        vec3_copy(goxel->selection.p.v, p1);
+        vec3_copy(goxel->clipboard.box.p.v, p2);
+        mat4_itranslate(mat.v2, +p1[0], +p1[1], +p1[2]);
+        mat4_itranslate(mat.v2, -p2[0], -p2[1], -p2[2]);
         mesh_move(tmp, mat.v2);
     }
     mesh_merge(mesh, tmp, MODE_OVER, NULL);
