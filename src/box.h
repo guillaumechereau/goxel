@@ -220,16 +220,16 @@ static inline box_t bbox_merge(box_t a, box_t b)
                                   (r1[2] - r0[2]) / 2);
 }
 
-static inline bool bbox_contains_vec(box_t b, vec3_t v)
+static inline bool bbox_contains_vec(box_t b, const float v[3])
 {
     assert(box_is_bbox(b));
-    vec3_t b0, b1;
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    float b0[3], b1[3];
+    vec3_set(b0, b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
+    vec3_set(b1, b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
 
-    return (b0.x <= v.x && b1.x > v.x &&
-            b0.y <= v.y && b1.y > v.y &&
-            b0.z <= v.z && b1.z > v.z);
+    return (b0[0] <= v[0] && b1[0] > v[0] &&
+            b0[1] <= v[1] && b1[1] > v[1] &&
+            b0[2] <= v[2] && b1[2] > v[2]);
 }
 
 static inline box_t box_get_bbox(box_t b)

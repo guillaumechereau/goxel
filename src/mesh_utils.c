@@ -117,7 +117,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
     iter = mesh_get_box_iterator(mesh, box->v, 0);
     while (mesh_iter(&iter, vpos)) {
         vec3_t p = vec3(vpos[0], vpos[1], vpos[2]);
-        if (!bbox_contains_vec(*box, p)) {
+        if (!bbox_contains_vec(*box, p.v)) {
             memset(value, 0, 4);
         } else {
             mat4_mul_vec3(proj.v2, p.v, p.v);
@@ -315,7 +315,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     accessor = mesh_get_accessor(mesh);
     while (mesh_iter(&iter, vp)) {
         p = vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
-        if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
+        if (use_box && !bbox_contains_vec(*painter->box, p.v)) continue;
         mat4_mul_vec3(mat, p.v, p.v);
         k = shape_func(p.v, size.v, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
