@@ -303,7 +303,7 @@ void goxel_init(goxel_t *gox)
     render_get_default_settings(0, NULL, &goxel->rend.settings);
 
     model3d_init();
-    goxel->plane = plane(vec3_zero.v, VEC(1, 0, 0), VEC(0, 1, 0));
+    goxel->plane = plane(vec3_zero, VEC(1, 0, 0), VEC(0, 1, 0));
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
 
     goxel->gestures.drag = (gesture_t) {

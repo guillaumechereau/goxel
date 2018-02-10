@@ -577,7 +577,7 @@ int proc_start(gox_proc_t *proc, const box_t *box)
     proc->ctxs = NULL;
     proc->frame = 0;
     ctx = calloc(1, sizeof(*ctx));
-    ctx->box = box ? *box : bbox_from_extents(vec3_zero.v, 0.5, 0.5, 0.5);
+    ctx->box = box ? *box : bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
     vec4_set(ctx->color, 0, 0, 1, 1);
     ctx->mode = MODE_OVER;
     ctx->prog = get_rule(proc->prog, "main", ctx);
