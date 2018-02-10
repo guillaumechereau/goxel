@@ -51,7 +51,6 @@ typedef union {
 typedef union {
     real_t v[16];
     real_t v2[4][4];
-    vec4_t vecs[4];
 } mat4_t;
 
 

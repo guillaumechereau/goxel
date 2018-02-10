@@ -277,9 +277,9 @@ static inline box_t box_swap_axis(box_t b, int x, int y, int z)
     assert(y >= 0 && y <= 2);
     assert(z >= 0 && z <= 2);
     mat4_t m = b.mat;
-    b.mat.vecs[0] = m.vecs[x];
-    b.mat.vecs[1] = m.vecs[y];
-    b.mat.vecs[2] = m.vecs[z];
+    vec4_copy(m.v2[x], b.mat.v2[0]);
+    vec4_copy(m.v2[y], b.mat.v2[1]);
+    vec4_copy(m.v2[z], b.mat.v2[2]);
     return b;
 }
 

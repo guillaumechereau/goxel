@@ -50,7 +50,7 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
         box = bbox_grow(bbox_from_points(p0, p1), 0.5, 0.5, 0.5);
         // Apply the plane rotation.
         rot = plane->mat;
-        rot.vecs[3] = vec4(0, 0, 0, 1);
+        vec4_set(rot.v2[3], 0, 0, 0, 1);
         mat4_imul(box.mat.v2, rot.v2);
         return box;
     }
