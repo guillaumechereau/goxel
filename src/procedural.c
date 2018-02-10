@@ -306,7 +306,7 @@ static void scale_normalize(mat4_t *mat, float v)
     int i;
     for (i = 0; i < 3; i++) {
         mat4_mul_vec4(mat->v2, u[i], u[i]);
-        s[i] = vec2_norm(u[i]);
+        s[i] = vec3_norm(u[i]);
     }
     m = min3(s[0], s[1], s[2]);
     if (v) m = v / 2;
