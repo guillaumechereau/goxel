@@ -28,11 +28,6 @@
 typedef float real_t;
 
 typedef union {
-    real_t v[9];
-    real_t v2[3][3];
-} mat3_t;
-
-typedef union {
     real_t v[16];
     real_t v2[4][4];
 } mat4_t;
