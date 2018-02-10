@@ -1542,12 +1542,12 @@ bool gui_bbox(box_t *box)
 {
     int x, y, z, w, h, d;
     bool ret = false;
-    w = box->w.x * 2;
-    h = box->h.y * 2;
-    d = box->d.z * 2;
-    x = round(box->p.x - box->w.x);
-    y = round(box->p.y - box->h.y);
-    z = round(box->p.z - box->d.z);
+    w = box->w[0] * 2;
+    h = box->h[1] * 2;
+    d = box->d[2] * 2;
+    x = round(box->p[0] - box->w[0]);
+    y = round(box->p[1] - box->h[1]);
+    z = round(box->p[2] - box->d[2]);
 
     gui_group_begin("Origin");
     ret |= gui_input_int("x", &x, 0, 0);

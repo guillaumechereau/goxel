@@ -60,18 +60,18 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
     box.mat = mat4_identity;
-    vec3_mix(p0, p1, 0.5, box.p.v);
-    vec3_sub(p1, box.p.v, box.d.v);
+    vec3_mix(p0, p1, 0.5, box.p);
+    vec3_sub(p1, box.p, box.d);
     for (i = 0; i < 3; i++) {
-        vec3_cross(box.d.v, AXES[i], box.w.v);
-        if (vec3_norm2(box.w.v) > 0) break;
+        vec3_cross(box.d, AXES[i], box.w);
+        if (vec3_norm2(box.w) > 0) break;
     }
     if (i == 3) return box;
-    vec3_normalize(box.w.v, v);
-    vec3_mul(v, r, box.w.v);
-    vec3_cross(box.d.v, box.w.v, v);
+    vec3_normalize(box.w, v);
+    vec3_mul(v, r, box.w);
+    vec3_cross(box.d, box.w, v);
     vec3_normalize(v, v);
-    vec3_mul(v, r, box.h.v);
+    vec3_mul(v, r, box.h);
     return box;
 }
 

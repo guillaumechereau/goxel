@@ -859,8 +859,8 @@ static void past_action(void)
     tmp = mesh_copy(goxel->clipboard.mesh);
     if (    !box_is_null(goxel->selection) &&
             !box_is_null(goxel->clipboard.box)) {
-        vec3_copy(goxel->selection.p.v, p1);
-        vec3_copy(goxel->clipboard.box.p.v, p2);
+        vec3_copy(goxel->selection.p, p1);
+        vec3_copy(goxel->clipboard.box.p, p2);
         mat4_itranslate(mat.v2, +p1[0], +p1[1], +p1[2]);
         mat4_itranslate(mat.v2, -p2[0], -p2[1], -p2[2]);
         mesh_move(tmp, mat.v2);

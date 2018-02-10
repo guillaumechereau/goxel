@@ -462,9 +462,9 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
     }
 
     // XXX: find a better stopping condition.
-    if (vec3_norm2(ctx->box.w.v) < 0.2 ||
-        vec3_norm2(ctx->box.h.v) < 0.2 ||
-        vec3_norm2(ctx->box.d.v) < 0.2) goto end;
+    if (vec3_norm2(ctx->box.w) < 0.2 ||
+        vec3_norm2(ctx->box.h) < 0.2 ||
+        vec3_norm2(ctx->box.d) < 0.2) goto end;
 
     DL_FOREACH(ctx->prog->children, expr) {
         if (expr->type == NODE_LOOP) {

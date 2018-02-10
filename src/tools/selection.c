@@ -66,18 +66,18 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
     box.mat = mat4_identity;
-    vec3_mix(p0, p1, 0.5, box.p.v);
-    vec3_sub(p1, box.p.v, box.d.v);
+    vec3_mix(p0, p1, 0.5, box.p);
+    vec3_sub(p1, box.p, box.d);
     for (i = 0; i < 3; i++) {
-        vec3_cross(box.d.v, AXES[i], box.w.v);
-        if (vec3_norm2(box.w.v) > 0) break;
+        vec3_cross(box.d, AXES[i], box.w);
+        if (vec3_norm2(box.w) > 0) break;
     }
     if (i == 3) return box;
-    vec3_normalize(box.w.v, v);
-    vec3_mul(v, r, box.w.v);
-    vec3_cross(box.d.v, box.w.v, v);
+    vec3_normalize(box.w, v);
+    vec3_mul(v, r, box.w);
+    vec3_cross(box.d, box.w, v);
     vec3_normalize(v, v);
-    vec3_mul(v, r, box.h.v);
+    vec3_mul(v, r, box.h);
     return box;
 }
 
@@ -152,10 +152,10 @@ static int on_resize(gesture3d_t *gest, void *user)
                                              tool->snap_face, pos);
         } else {
             float d[3], ofs[3];
-            vec3_add(goxel->selection.p.v, face_plane.n, d);
+            vec3_add(goxel->selection.p, face_plane.n, d);
             vec3_sub(pos, d, d);
             vec3_project(d, n, ofs);
-            vec3_iadd(goxel->selection.p.v, ofs);
+            vec3_iadd(goxel->selection.p, ofs);
         }
 
         if (gest->state == GESTURE_END) {
@@ -261,12 +261,12 @@ static int gui(tool_t *tool)
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
     gui_group_end();
 
-    w = round(box->w.x * 2);
-    h = round(box->h.y * 2);
-    d = round(box->d.z * 2);
-    x = round(box->p.x - box->w.x);
-    y = round(box->p.y - box->h.y);
-    z = round(box->p.z - box->d.z);
+    w = round(box->w[0] * 2);
+    h = round(box->h[1] * 2);
+    d = round(box->d[2] * 2);
+    x = round(box->p[0] - box->w[0]);
+    y = round(box->p[1] - box->h[1]);
+    z = round(box->p[2] - box->d[2]);
 
     gui_group_begin("Origin");
     gui_input_int("x", &x, 0, 0);

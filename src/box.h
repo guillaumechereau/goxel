@@ -26,10 +26,10 @@
 typedef union {
     mat4_t mat;
     struct {
-        vec3_t w; float w_;
-        vec3_t h; float h_;
-        vec3_t d; float d_;
-        vec3_t p; float p_;
+        float w[3]; float w_;
+        float h[3]; float h_;
+        float d[3]; float d_;
+        float p[3]; float p_;
     };
     float v[4][4];
 } box_t;
@@ -49,10 +49,10 @@ static inline box_t bbox_from_extents(const float pos[3],
 {
     box_t ret;
     ret.mat = mat4_identity;
-    vec3_copy(pos, ret.p.v);
-    ret.w.x = hw;
-    ret.h.y = hh;
-    ret.d.z = hd;
+    vec3_copy(pos, ret.p);
+    ret.w[0] = hw;
+    ret.h[1] = hh;
+    ret.d[2] = hd;
     return ret;
 }
 
@@ -81,12 +81,12 @@ static inline box_t bbox_from_aabb(const int aabb[2][3])
 
 static inline void bbox_to_aabb(box_t b, int aabb[2][3])
 {
-    aabb[0][0] = round(b.p.x - b.w.x);
-    aabb[0][1] = round(b.p.y - b.h.y);
-    aabb[0][2] = round(b.p.z - b.d.z);
-    aabb[1][0] = round(b.p.x + b.w.x);
-    aabb[1][1] = round(b.p.y + b.h.y);
-    aabb[1][2] = round(b.p.z + b.d.z);
+    aabb[0][0] = round(b.p[0] - b.w[0]);
+    aabb[0][1] = round(b.p[1] - b.h[1]);
+    aabb[0][2] = round(b.p[2] - b.d[2]);
+    aabb[1][0] = round(b.p[0] + b.w[0]);
+    aabb[1][1] = round(b.p[1] + b.h[1]);
+    aabb[1][2] = round(b.p[2] + b.d[2]);
 }
 
 
@@ -131,10 +131,10 @@ static inline box_t bbox_intersection(box_t a, box_t b) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
     float a0[3], a1[3], b0[3], b1[3], c0[3], c1[3], mid[3];
-    vec3_set(a0, a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    vec3_set(a1, a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    vec3_set(b0, b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    vec3_set(b1, b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
+    vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
+    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
+    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
     vec3_set(c0, max(a0[0], b0[0]), max(a0[1], b0[1]), max(a0[2], b0[2]));
     vec3_set(c1, min(a1[0], b1[0]), min(a1[1], b1[1]), min(a1[2], b1[2]));
     if (c0[0] >= c1[0] || c0[1] > c1[1] || c0[2] > c1[2])
@@ -149,10 +149,10 @@ static inline bool bbox_intersect(box_t a, box_t b) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
     vec3_t a0, a1, b0, b1;
-    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    a0 = vec3(a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
+    a1 = vec3(a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
+    b0 = vec3(b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
+    b1 = vec3(b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
     return a0.x <= b1.x && b0.x <= a1.x &&
            a0.y <= b1.y && b0.y <= a1.y &&
            a0.z <= b1.z && b0.z <= a1.z;
@@ -162,10 +162,10 @@ static inline bool bbox_contains(box_t a, box_t b) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
     vec3_t a0, a1, b0, b1;
-    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    a0 = vec3(a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
+    a1 = vec3(a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
+    b0 = vec3(b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
+    b1 = vec3(b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
     return (a0.x <= b0.x && a1.x >= b1.x &&
             a0.y <= b0.y && a1.y >= b1.y &&
             a0.z <= b0.z && a1.z >= b1.z);
@@ -202,10 +202,10 @@ static inline box_t bbox_merge(box_t a, box_t b)
     assert(box_is_bbox(b));
 
     float a0[3], a1[3], b0[3], b1[3], r0[3], r1[3], mid[3];
-    vec3_set(a0, a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    vec3_set(a1, a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    vec3_set(b0, b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    vec3_set(b1, b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
+    vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
+    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
+    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
 
     r0[0] = min(a0[0], b0[0]);
     r0[1] = min(a0[1], b0[1]);
@@ -224,8 +224,8 @@ static inline bool bbox_contains_vec(box_t b, const float v[3])
 {
     assert(box_is_bbox(b));
     float b0[3], b1[3];
-    vec3_set(b0, b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    vec3_set(b1, b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
+    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
 
     return (b0[0] <= v[0] && b1[0] > v[0] &&
             b0[1] <= v[1] && b1[1] > v[1] &&
@@ -253,9 +253,9 @@ static inline box_t box_get_bbox(box_t b)
 
 static inline box_t bbox_grow(box_t b, float x, float y, float z)
 {
-    b.w.x += x;
-    b.h.y += y;
-    b.d.z += z;
+    b.w[0] += x;
+    b.h[1] += y;
+    b.d[2] += z;
     return b;
 }
 

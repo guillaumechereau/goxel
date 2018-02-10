@@ -108,7 +108,7 @@ static int on_move(gesture3d_t *gest, void *user)
         pos[0] = round(pos[0]);
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
-        vec3_add(tool->box.p.v, face_plane.n, d);
+        vec3_add(tool->box.p, face_plane.n, d);
         vec3_sub(pos, d, ofs);
         vec3_project(ofs, n, ofs);
 
