@@ -93,22 +93,22 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
     int vpos[3];
     uint8_t value[4];
 
-    vec3_normalize(plane->n.v, n);
-    vec3_copy(plane->p.v, pos);
+    vec3_normalize(plane->n, n);
+    vec3_copy(plane->p, pos);
 
     // Generate the projection into the plane.
     // XXX: *very* ugly code, fix this!
     proj = mat4_identity;
 
-    if (fabs(plane->n.x) > 0.1) {
+    if (fabs(plane->n[0]) > 0.1) {
         proj.v[0] = 0;
         proj.v[12] = pos[0];
     }
-    if (fabs(plane->n.y) > 0.1) {
+    if (fabs(plane->n[1]) > 0.1) {
         proj.v[5] = 0;
         proj.v[13] = pos[1];
     }
-    if (fabs(plane->n.z) > 0.1) {
+    if (fabs(plane->n[2]) > 0.1) {
         proj.v[10] = 0;
         proj.v[14] = pos[2];
     }

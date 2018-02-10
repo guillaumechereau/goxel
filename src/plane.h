@@ -52,16 +52,10 @@
 typedef union {
     mat4_t mat;
     struct {
-        vec3_t u; float u_;
-        vec3_t v; float v_;
-        vec3_t n; float n_;
-        vec3_t p; float p_;
-    };
-    struct {
-        vec4_t u4;
-        vec4_t v4;
-        vec4_t n4;
-        vec4_t p4;
+        float u[3]; float u_;
+        float v[3]; float v_;
+        float n[3]; float n_;
+        float p[3]; float p_;
     };
 } plane_t;
 
@@ -72,10 +66,10 @@ static inline plane_t plane(
 {
     plane_t ret;
     ret.mat = mat4_identity;
-    vec3_copy(u, ret.u.v);
-    vec3_copy(v, ret.v.v);
-    vec3_cross(u, v, ret.n.v);
-    vec3_copy(pos, ret.p.v);
+    vec3_copy(u, ret.u);
+    vec3_copy(v, ret.v);
+    vec3_cross(u, v, ret.n);
+    vec3_copy(pos, ret.p);
     return ret;
 }
 
@@ -92,12 +86,12 @@ static inline bool plane_line_intersection(
 {
     float v[3], m[4][4];
     mat4_set_identity(m);
-    vec3_copy(plane.u.v, m[0]);
-    vec3_copy(plane.v.v, m[1]);
+    vec3_copy(plane.u, m[0]);
+    vec3_copy(plane.v, m[1]);
     vec3_copy(n, m[2]);
     if (!mat4_invert(m, m)) return false;
     if (out) {
-        vec3_sub(p, plane.p.v, v);
+        vec3_sub(p, plane.p, v);
         mat4_mul_vec3(m, v, out);
         out[2] = 0;
     }
@@ -110,12 +104,12 @@ static inline plane_t plane_from_normal(const float pos[3], const float n[3])
     int i;
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
     ret.mat = mat4_identity;
-    vec3_copy(pos, ret.p.v);
-    vec3_normalize(n, ret.n.v);
+    vec3_copy(pos, ret.p);
+    vec3_normalize(n, ret.n);
     for (i = 0; i < 3; i++) {
-        vec3_cross(ret.n.v, AXES[i].v, ret.u.v);
-        if (vec3_norm2(ret.u.v) > 0) break;
+        vec3_cross(ret.n, AXES[i].v, ret.u);
+        if (vec3_norm2(ret.u) > 0) break;
     }
-    vec3_cross(ret.n.v, ret.u.v, ret.v.v);
+    vec3_cross(ret.n, ret.u, ret.v);
     return ret;
 }

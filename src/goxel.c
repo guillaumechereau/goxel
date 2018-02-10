@@ -67,13 +67,13 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
     float opos[3], onorm[3];
 
     camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
-    if (fabs(vec3_dot(onorm, plane->n.v)) <= min_angle_cos)
+    if (fabs(vec3_dot(onorm, plane->n)) <= min_angle_cos)
         return false;
 
     if (!plane_line_intersection(*plane, opos, onorm, out))
         return false;
     mat4_mul_vec3(plane->mat.v2, out, out);
-    vec3_copy(plane->n.v, normal);
+    vec3_copy(plane->n, normal);
     return true;
 }
 
@@ -92,9 +92,9 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
         plane.mat = box->mat;
         mat4_imul(plane.mat.v2, FACES_MATS[f].v2);
 
-        if (!inside && vec3_dot(plane.n.v, onorm) >= 0)
+        if (!inside && vec3_dot(plane.n, onorm) >= 0)
             continue;
-        if (inside && vec3_dot(plane.n.v, onorm) <= 0)
+        if (inside && vec3_dot(plane.n, onorm) <= 0)
             continue;
         if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
@@ -102,7 +102,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
             continue;
         if (face) *face = f;
         mat4_mul_vec3(plane.mat.v2, out, out);
-        vec3_normalize(plane.n.v, normal);
+        vec3_normalize(plane.n, normal);
         if (inside) vec3_imul(normal, -1);
         return true;
     }

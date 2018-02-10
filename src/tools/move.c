@@ -88,7 +88,7 @@ static int on_move(gesture3d_t *gest, void *user)
         render_img(&goxel->rend, NULL, face_plane.mat.v2, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
-            vec3_normalize(face_plane.u.v, v);
+            vec3_normalize(face_plane.u, v);
             goxel->tool_plane = plane(curs->pos, curs->normal, v);
             image_history_push(goxel->image);
         }
@@ -101,14 +101,14 @@ static int on_move(gesture3d_t *gest, void *user)
         mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face].v2,
                  face_plane.mat.v2);
 
-        vec3_normalize(face_plane.n.v, n);
-        vec3_sub(curs->pos, goxel->tool_plane.p.v, v);
+        vec3_normalize(face_plane.n, n);
+        vec3_sub(curs->pos, goxel->tool_plane.p, v);
         vec3_project(v, n, v);
-        vec3_add(goxel->tool_plane.p.v, v, pos);
+        vec3_add(goxel->tool_plane.p, v, pos);
         pos[0] = round(pos[0]);
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
-        vec3_add(tool->box.p.v, face_plane.n.v, d);
+        vec3_add(tool->box.p.v, face_plane.n, d);
         vec3_sub(pos, d, ofs);
         vec3_project(ofs, n, ofs);
 
