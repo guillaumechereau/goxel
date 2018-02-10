@@ -38,17 +38,6 @@ typedef union {
 } mat4_t;
 
 
-typedef union {
-    struct {
-        real_t w, x, y, z;
-    };
-    struct {
-        real_t a;
-        float  vec[3];
-    };
-    real_t v[4];
-} quat_t;
-
 enum  {
     EULER_ORDER_DEFAULT = 0, // XYZ.
     EULER_ORDER_XYZ = 0,
@@ -61,7 +50,6 @@ enum  {
 
 #define MAT(...) {{__VA_ARGS__}}
 
-#define QUAT(...) ((quat_t){{__VA_ARGS__}})
 
 #define MAT4_IDENTITY {{1, 0, 0, 0}, \
                        {0, 1, 0, 0}, \
@@ -71,6 +59,7 @@ enum  {
 #define DECL static inline
 
 #define VEC(...) ((float[]){__VA_ARGS__})
+#define QUAT(w, x, y, z) ((float[]){w, x, y, z})
 
 static const float vec3_zero[] = {0, 0, 0};
 static const float vec4_zero[] = {0, 0, 0, 0};
@@ -85,7 +74,7 @@ static const mat4_t mat4_zero = MAT(0, 0, 0, 0,
                                     0, 0, 0, 0,
                                     0, 0, 0, 0);
 
-static const quat_t quat_identity = {{1, 0, 0, 0}};
+static const float quat_identity[4] = {1, 0, 0, 0};
 
 
 DECL void vec2_set(float v[2], float x, float y)
@@ -615,10 +604,6 @@ DECL void mat4_rotate(const float m[4][4], float a, float x, float y, float z,
 DECL void mat4_irotate(float m[4][4], float a, float x, float y, float z)
 {
     mat4_rotate(m, a, x, y, z, m);
-}
-
-DECL quat_t quat(real_t w, real_t x, real_t y, real_t z) {
-   return (quat_t){{w, x, y, z}};
 }
 
 DECL void quat_from_axis(float quat[4], float a, float x, float y, float z)
