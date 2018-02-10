@@ -107,10 +107,6 @@ static const mat4_t mat4_zero = MAT(0, 0, 0, 0,
 
 static const quat_t quat_identity = {{1, 0, 0, 0}};
 
-DECL vec4_t vec4(real_t x, real_t y, real_t z, real_t w)
-{
-    return (vec4_t)VEC4(x, y, z, w);
-}
 
 DECL void vec2_set(float v[2], float x, float y)
 {

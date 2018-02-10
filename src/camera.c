@@ -125,7 +125,7 @@ void camera_set_target(camera_t *cam, const float pos[3])
     float u[4], v[4];
     float d;
     float roti[4] = {cam->rot[0], -cam->rot[1], -cam->rot[2], -cam->rot[3]};
-    quat_mul_vec4(roti, vec4(0, 0, 1, 0).v, u);
+    quat_mul_vec4(roti, VEC(0, 0, 1, 0), u);
     vec3_add(pos, cam->ofs, v);
     d = vec3_dot(v, u);
     vec3_iaddk(cam->ofs, u, -d);

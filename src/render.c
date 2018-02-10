@@ -515,7 +515,7 @@ static void get_light_dir(const renderer_t *rend, bool model_view,
     mat4_set_identity(m);
     mat4_irotate(m, rend->light.yaw, 0, 0, 1);
     mat4_irotate(m, rend->light.pitch, 1, 0, 0);
-    mat4_mul_vec4(m, vec4(0, 0, 1, 0).v, light_dir);
+    mat4_mul_vec4(m, VEC(0, 0, 1, 0), light_dir);
 
     if (rend->light.fixed) {
         mat4_invert(rend->view_mat, m);

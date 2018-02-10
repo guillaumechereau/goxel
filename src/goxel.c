@@ -371,7 +371,7 @@ static void compute_view_rotation(const float rot[4],
     quat_from_axis(q1, z_rot, 0, 0, 1);
     quat_mul(rot, q1, q);
     quat_conjugate(q, q);
-    quat_mul_vec4(q, vec4(1, 0, 0, 0).v, x_axis);
+    quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
     quat_from_axis(q2, x_rot, x_axis[0], x_axis[1], x_axis[2]);
     quat_mul(q1, q2, out);
 }
@@ -505,13 +505,13 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
         quat_irotate(goxel->camera.rot, 0.05, 0, 0, -1);
     if (inputs->keys[KEY_UP]) {
         quat_conjugate(goxel->camera.rot, q);
-        quat_mul_vec4(q, vec4(1, 0, 0, 0).v, x_axis);
+        quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
         quat_irotate(goxel->camera.rot, -0.05,
                      x_axis[0], x_axis[1], x_axis[2]);
     }
     if (inputs->keys[KEY_DOWN]) {
         quat_conjugate(goxel->camera.rot, q);
-        quat_mul_vec4(q, vec4(1, 0, 0, 0).v, x_axis);
+        quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
         quat_irotate(goxel->camera.rot, +0.05,
                      x_axis[0], x_axis[1], x_axis[2]);
     }
