@@ -65,7 +65,7 @@ static inline plane_t plane(
         const float pos[3], const float u[3], const float v[3])
 {
     plane_t ret;
-    ret.mat = mat4_identity;
+    mat4_set_identity(ret.mat.v2);
     vec3_copy(u, ret.u);
     vec3_copy(v, ret.v);
     vec3_cross(u, v, ret.n);
@@ -103,7 +103,7 @@ static inline plane_t plane_from_normal(const float pos[3], const float n[3])
     plane_t ret;
     int i;
     const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-    ret.mat = mat4_identity;
+    mat4_set_identity(ret.mat.v2);
     vec3_copy(pos, ret.p);
     vec3_normalize(n, ret.n);
     for (i = 0; i < 3; i++) {

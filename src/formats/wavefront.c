@@ -94,7 +94,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
-        mat = mat4_identity;
+        mat4_set_identity(mat.v2);
         mat4_itranslate(mat.v2, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
                 mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
@@ -180,7 +180,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
-        mat = mat4_identity;
+        mat4_set_identity(mat.v2);
         mat4_itranslate(mat.v2, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
                 mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);

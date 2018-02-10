@@ -543,7 +543,7 @@ static void render_export_viewport(goxel_t *goxel, const float viewport[4])
     int h = goxel->image->export_height;
     float aspect = (float)w/h;
     plane_t plane;
-    plane.mat = mat4_identity;
+    mat4_set_identity(plane.mat.v2);
     if (aspect < goxel->camera.aspect) {
         mat4_iscale(plane.mat.v2, aspect / goxel->camera.aspect, 1, 1);
     } else {
@@ -853,7 +853,9 @@ static void past_action(void)
     mesh_t *mesh = goxel->image->active_layer->mesh;
     mesh_t *tmp;
     float p1[3], p2[3];
-    mat4_t mat = mat4_identity;
+    mat4_t mat;
+
+    mat4_set_identity(mat.v2);
     if (!goxel->clipboard.mesh) return;
 
     tmp = mesh_copy(goxel->clipboard.mesh);

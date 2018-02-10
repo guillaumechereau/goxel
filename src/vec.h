@@ -58,16 +58,14 @@ enum  {
 
 static const float vec3_zero[] = {0, 0, 0};
 static const float vec4_zero[] = {0, 0, 0, 0};
-
-static const mat4_t mat4_identity = MAT(1, 0, 0, 0,
-                                        0, 1, 0, 0,
-                                        0, 0, 1, 0,
-                                        0, 0, 0, 1);
-
-static const mat4_t mat4_zero = MAT(0, 0, 0, 0,
-                                    0, 0, 0, 0,
-                                    0, 0, 0, 0,
-                                    0, 0, 0, 0);
+static const float mat4_identity[4][4] = {{1, 0, 0, 0},
+                                          {0, 1, 0, 0},
+                                          {0, 0, 1, 0},
+                                          {0, 0, 0, 1}};
+static const float mat4_zero[4][4] = {{0, 0, 0, 0},
+                                      {0, 0, 0, 0},
+                                      {0, 0, 0, 0},
+                                      {0, 0, 0, 0}};
 
 static const float quat_identity[4] = {1, 0, 0, 0};
 
@@ -516,7 +514,7 @@ DECL void mat4_transpose(const float m[4][4], float out[4][4])
 
 DECL void mat4_set_identity(float m[4][4])
 {
-    mat4_copy(mat4_identity.v2, m);
+    mat4_copy(mat4_identity, m);
 }
 
 // Similar to gluLookAt

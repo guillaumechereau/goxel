@@ -38,7 +38,7 @@ static inline bool box_is_bbox(box_t b)
 {
     int i;
     for (i = 0; i < 12; i++) {
-        if (mat4_identity.v[i] == 0 && b.mat.v[i] != 0)
+        if (mat4_identity[i] == 0 && b.mat.v[i] != 0)
             return false;
     }
     return true;
@@ -48,7 +48,7 @@ static inline box_t bbox_from_extents(const float pos[3],
                                       float hw, float hh, float hd)
 {
     box_t ret;
-    ret.mat = mat4_identity;
+    mat4_set_identity(ret.mat.v2);
     vec3_copy(pos, ret.p);
     ret.w[0] = hw;
     ret.h[1] = hh;

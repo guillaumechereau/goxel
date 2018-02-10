@@ -584,13 +584,14 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
                          const mat4_t *shadow_mvp)
 {
     prog_t *prog;
-    mat4_t model = mat4_identity;
+    mat4_t model;
     int attr, block_pos[3], block_id;
     float pos_scale = 1.0f;
     float light_dir[3];
     bool shadow = false;
     mesh_iterator_t iter;
 
+    mat4_set_identity(model.v2);
     get_light_dir(rend, true, light_dir);
 
     if (effects & EFFECT_MARCHING_CUBES)

@@ -98,7 +98,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 
     // Generate the projection into the plane.
     // XXX: *very* ugly code, fix this!
-    proj = mat4_identity;
+    mat4_set_identity(proj.v2);
 
     if (fabs(plane->n[0]) > 0.1) {
         proj.v[0] = 0;
@@ -283,7 +283,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
             if (!(painter->symmetry & (1 << i))) continue;
             painter2.symmetry &= ~(1 << i);
             box2 = *box;
-            box2.mat = mat4_identity;
+            mat4_set_identity(box2.mat.v2);
             if (i == 0) mat4_iscale(box2.mat.v2, -1,  1,  1);
             if (i == 1) mat4_iscale(box2.mat.v2,  1, -1,  1);
             if (i == 2) mat4_iscale(box2.mat.v2,  1,  1, -1);
