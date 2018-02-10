@@ -41,7 +41,7 @@ void camera_set(camera_t *cam, const camera_t *other)
 static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
 {
     int bpos[3];
-    vec3_t p;
+    float p[3];
     float n = FLT_MAX, f = 256;
     int i;
     const int margin = 8 * BLOCK_SIZE;
@@ -52,21 +52,21 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     if (!box_is_null(goxel->image->box)) {
         box_get_vertices(goxel->image->box, vertices);
         for (i = 0; i < 8; i++) {
-            mat4_mul_vec3(view_mat, vertices[i], p.v);
-            if (p.z < 0) {
-                n = min(n, -p.z - margin);
-                f = max(f, -p.z + margin);
+            mat4_mul_vec3(view_mat, vertices[i], p);
+            if (p[2] < 0) {
+                n = min(n, -p[2] - margin);
+                f = max(f, -p[2] + margin);
             }
         }
     }
 
     iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
-        p = vec3(bpos[0], bpos[1], bpos[2]);
-        mat4_mul_vec3(view_mat, p.v, p.v);
-        if (p.z < 0) {
-            n = min(n, -p.z - margin);
-            f = max(f, -p.z + margin);
+        vec3_set(p, bpos[0], bpos[1], bpos[2]);
+        mat4_mul_vec3(view_mat, p, p);
+        if (p[2] < 0) {
+            n = min(n, -p[2] - margin);
+            f = max(f, -p[2] + margin);
         }
     }
     if (n >= f) n = 1;
