@@ -61,7 +61,7 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     return false;
 }
 
-static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
+static box_t get_box(const float p0[3], const float p1[3], const float n[3],
                      float r, const plane_t *plane)
 {
     mat4_t rot;
@@ -69,12 +69,12 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     float v[3];
 
     if (p1 == NULL) {
-        box = bbox_from_extents(p0->v, r, r, r);
+        box = bbox_from_extents(p0, r, r, r);
         box = box_swap_axis(box, 2, 0, 1);
         return box;
     }
     if (r == 0) {
-        box = bbox_grow(bbox_from_points(p0->v, p1->v), 0.5, 0.5, 0.5);
+        box = bbox_grow(bbox_from_points(p0, p1), 0.5, 0.5, 0.5);
         // Apply the plane rotation.
         rot = plane->mat;
         rot.vecs[3] = vec4(0, 0, 0, 1);
@@ -87,8 +87,8 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
     box.mat = mat4_identity;
-    vec3_mix(p0->v, p1->v, 0.5, box.p.v);
-    vec3_sub(p1->v, box.p.v, box.d.v);
+    vec3_mix(p0, p1, 0.5, box.p.v);
+    vec3_sub(p1, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
         vec3_cross(box.d.v, AXES[i].v, box.w.v);
         if (vec3_norm2(box.w.v) > 0) break;
@@ -124,7 +124,7 @@ static int on_drag(gesture3d_t *gest, void *user)
             painter2 = goxel->painter;
             painter2.shape = &shape_cylinder;
             painter2.mode = MODE_MAX;
-            box = get_box(&brush->start_pos, &curs->pos, &curs->normal,
+            box = get_box(brush->start_pos.v, curs->pos.v, curs->normal.v,
                           r, NULL);
             mesh_op(brush->mesh, &painter2, &box);
         }
@@ -144,7 +144,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     nb = max(nb, 1);
     for (i = 0; i < nb; i++) {
         vec3_mix(brush->last_pos.v, curs->pos.v, (i + 1.0) / nb, pos.v);
-        box = get_box(&pos, NULL, &curs->normal, r, NULL);
+        box = get_box(pos.v, NULL, curs->normal.v, r, NULL);
         mesh_op(brush->mesh, &painter2, &box);
     }
 
@@ -188,7 +188,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     if (goxel->tool_mesh && check_can_skip(brush, curs, goxel->painter.mode))
         return 0;
 
-    box = get_box(&curs->pos, NULL, &curs->normal,
+    box = get_box(curs->pos.v, NULL, curs->normal.v,
                   goxel->tool_radius, NULL);
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();

@@ -41,19 +41,19 @@ typedef struct {
 
 } tool_selection_t;
 
-static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
+static box_t get_box(const float p0[3], const float p1[3], const float n[3],
                      float r, const plane_t *plane)
 {
     mat4_t rot;
     box_t box;
     float v[3];
     if (p1 == NULL) {
-        box = bbox_from_extents(p0->v, r, r, r);
+        box = bbox_from_extents(p0, r, r, r);
         box = box_swap_axis(box, 2, 0, 1);
         return box;
     }
     if (r == 0) {
-        box = bbox_grow(bbox_from_points(p0->v, p1->v), 0.5, 0.5, 0.5);
+        box = bbox_grow(bbox_from_points(p0, p1), 0.5, 0.5, 0.5);
         // Apply the plane rotation.
         rot = plane->mat;
         rot.vecs[3] = vec4(0, 0, 0, 1);
@@ -66,8 +66,8 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
     const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
 
     box.mat = mat4_identity;
-    vec3_mix(p0->v, p1->v, 0.5, box.p.v);
-    vec3_sub(p1->v, box.p.v, box.d.v);
+    vec3_mix(p0, p1, 0.5, box.p.v);
+    vec3_sub(p1, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
         vec3_cross(box.d.v, AXES[i].v, box.w.v);
         if (vec3_norm2(box.w.v) > 0) break;
@@ -84,13 +84,13 @@ static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
 
 // Get the face index from the normal.
 // XXX: used in a few other places!
-static int get_face(vec3_t n)
+static int get_face(const float n[3])
 {
     int f;
     const int *n2;
     for (f = 0; f < 6; f++) {
         n2 = FACES_NORMALS[f];
-        if (vec3_dot(n.v, vec3(n2[0], n2[1], n2[2]).v) > 0.5)
+        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2]).v) > 0.5)
             return f;
     }
     return -1;
@@ -103,7 +103,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text(goxel, "Click and drag to set selection.");
-    box = get_box(&curs->pos, &curs->pos, &curs->normal, 0, &goxel->plane);
+    box = get_box(curs->pos.v, curs->pos.v, curs->normal.v, 0, &goxel->plane);
     render_box(&goxel->rend, &box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
@@ -120,7 +120,7 @@ static int on_resize(gesture3d_t *gest, void *user)
     if (gest->type == GESTURE_HOVER) {
         goxel_set_help_text(goxel, "Drag to move face");
         if (curs->snaped != SNAP_SELECTION_OUT) return GESTURE_FAILED;
-        tool->snap_face = get_face(curs->normal);
+        tool->snap_face = get_face(curs->normal.v);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face].v2,
@@ -180,8 +180,8 @@ static int on_drag(gesture3d_t *gest, void *user)
         curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
         goxel_set_help_text(goxel, "Drag.");
-        goxel->selection = get_box(&tool->start_pos,
-                                   &curs->pos, &curs->normal,
+        goxel->selection = get_box(tool->start_pos.v,
+                                   curs->pos.v, curs->normal.v,
                                    0, &goxel->plane);
         if (gest->state == GESTURE_END) tool->adjust = true;
     } else {
@@ -194,7 +194,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         pos.x = round(pos.x - 0.5) + 0.5;
         pos.y = round(pos.y - 0.5) + 0.5;
         pos.z = round(pos.z - 0.5) + 0.5;
-        goxel->selection = get_box(&tool->start_pos, &pos, &curs->normal, 0,
+        goxel->selection = get_box(tool->start_pos.v, pos.v, curs->normal.v, 0,
                                    &goxel->plane);
         if (gest->state == GESTURE_END) {
             tool->adjust = false;
