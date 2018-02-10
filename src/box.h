@@ -148,49 +148,51 @@ static inline box_t bbox_intersection(box_t a, box_t b) {
 static inline bool bbox_intersect(box_t a, box_t b) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
-    vec3_t a0, a1, b0, b1;
-    a0 = vec3(a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
-    a1 = vec3(a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
-    b0 = vec3(b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
-    b1 = vec3(b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
-    return a0.x <= b1.x && b0.x <= a1.x &&
-           a0.y <= b1.y && b0.y <= a1.y &&
-           a0.z <= b1.z && b0.z <= a1.z;
+    float a0[3], a1[3], b0[3], b1[3];
+    vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
+    vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
+    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
+    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
+    return a0[0] <= b1[0] && b0[0] <= a1[0] &&
+           a0[1] <= b1[1] && b0[1] <= a1[1] &&
+           a0[2] <= b1[2] && b0[2] <= a1[2];
 }
 
 static inline bool bbox_contains(box_t a, box_t b) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
-    vec3_t a0, a1, b0, b1;
-    a0 = vec3(a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
-    a1 = vec3(a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
-    b0 = vec3(b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
-    b1 = vec3(b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
-    return (a0.x <= b0.x && a1.x >= b1.x &&
-            a0.y <= b0.y && a1.y >= b1.y &&
-            a0.z <= b0.z && a1.z >= b1.z);
+    float a0[3], a1[3], b0[3], b1[3];
+    vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
+    vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
+    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
+    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
+    return (a0[0] <= b0[0] && a1[0] >= b1[0] &&
+            a0[1] <= b0[1] && a1[1] >= b1[1] &&
+            a0[2] <= b0[2] && a1[2] >= b1[2]);
 }
 
 static inline bool box_contains(box_t a, box_t b) {
-    const vec3_t PS[8] = {
-        vec3(-1, -1, +1),
-        vec3(+1, -1, +1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, +1, -1),
-        vec3(-1, +1, -1),
+    const float PS[8][3] = {
+        {-1, -1, +1},
+        {+1, -1, +1},
+        {+1, +1, +1},
+        {-1, +1, +1},
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, +1, -1},
+        {-1, +1, -1},
     };
-    vec3_t p;
+    float p[3];
     int i;
     float imat[4][4];
 
     mat4_invert(a.mat.v2, imat);
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(b.mat.v2, PS[i].v, p.v);
-        mat4_mul_vec3(imat, p.v, p.v);
-        if (p.x < -1 || p.x > 1 || p.y < -1 || p.y > 1 || p.z < -1 || p.z > 1)
+        mat4_mul_vec3(b.mat.v2, PS[i], p);
+        mat4_mul_vec3(imat, p, p);
+        if (    p[0] < -1 || p[0] > 1 ||
+                p[1] < -1 || p[1] > 1 ||
+                p[2] < -1 || p[2] > 1)
             return false;
     }
     return true;
@@ -285,15 +287,15 @@ static inline box_t box_swap_axis(box_t b, int x, int y, int z)
 // new point.
 static inline box_t box_move_face(box_t b, int f, const float p[3])
 {
-    const vec3_t PS[8] = {
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, -1, +1),
-        vec3(-1, -1, +1),
-        vec3(-1, +1, -1),
-        vec3(+1, +1, -1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
+    const float PS[8][3] = {
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, -1, +1},
+        {-1, -1, +1},
+        {-1, +1, -1},
+        {+1, +1, -1},
+        {+1, +1, +1},
+        {-1, +1, +1},
     };
     const int FS[6][4] = {
         {0, 1, 2, 3},
@@ -312,7 +314,7 @@ static inline box_t box_move_face(box_t b, int f, const float p[3])
     assert(box_is_bbox(b));
     f = FO[f];
     for (i = 0; i < 4; i++)
-        mat4_mul_vec3(b.mat.v2, PS[FS[f][i]].v, ps[i]);
+        mat4_mul_vec3(b.mat.v2, PS[FS[f][i]], ps[i]);
     vec3_copy(p, ps[4]);
     return bbox_from_npoints(5, ps);
 }
