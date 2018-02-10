@@ -84,13 +84,13 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
 
     // Create a box for a line:
     int i;
-    const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
     box.mat = mat4_identity;
     vec3_mix(p0, p1, 0.5, box.p.v);
     vec3_sub(p1, box.p.v, box.d.v);
     for (i = 0; i < 3; i++) {
-        vec3_cross(box.d.v, AXES[i].v, box.w.v);
+        vec3_cross(box.d.v, AXES[i], box.w.v);
         if (vec3_norm2(box.w.v) > 0) break;
     }
     if (i == 3) return box;
@@ -111,7 +111,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     bool shift = curs->flags & CURSOR_SHIFT;
     float r = goxel->tool_radius;
     int nb, i;
-    vec3_t pos;
+    float pos[3];
 
     if (gest->state == GESTURE_BEGIN) {
         mesh_set(brush->mesh_orig, goxel->image->active_layer->mesh);
@@ -143,8 +143,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     nb = ceil(vec3_dist(curs->pos, brush->last_pos) / (2 * r));
     nb = max(nb, 1);
     for (i = 0; i < nb; i++) {
-        vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos.v);
-        box = get_box(pos.v, NULL, curs->normal, r, NULL);
+        vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos);
+        box = get_box(pos, NULL, curs->normal, r, NULL);
         mesh_op(brush->mesh, &painter2, &box);
     }
 
