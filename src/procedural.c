@@ -299,18 +299,18 @@ static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
     return NULL;
 }
 
-static void scale_normalize(mat4_t *mat, float v)
+static void scale_normalize(float mat[4][4], float v)
 {
     float s[3], m;
     float u[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
     int i;
     for (i = 0; i < 3; i++) {
-        mat4_mul_vec4(mat->v2, u[i], u[i]);
+        mat4_mul_vec4(mat, u[i], u[i]);
         s[i] = vec3_norm(u[i]);
     }
     m = min3(s[0], s[1], s[2]);
     if (v) m = v / 2;
-    mat4_iscale(mat->v2, m / s[0], m / s[1], m / s[2]);
+    mat4_iscale(mat, m / s[0], m / s[1], m / s[2]);
 }
 
 static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
@@ -359,7 +359,7 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
         mat4_iscale(ctx->box.mat.v2, v[0], v[1], v[2]);
         break;
     case OP_sn:
-        scale_normalize(&ctx->box.mat, v[0]);
+        scale_normalize(ctx->box.mat.v2, v[0]);
         break;
     case OP_x:
         mat4_itranslate(ctx->box.mat.v2, 2 * v[0], 2 * v[1], 2 * v[2]);
