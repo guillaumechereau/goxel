@@ -852,10 +852,9 @@ static void past_action(void)
 {
     mesh_t *mesh = goxel->image->active_layer->mesh;
     mesh_t *tmp;
-    float p1[3], p2[3];
-    mat4_t mat;
+    float p1[3], p2[3], mat[4][4];
 
-    mat4_set_identity(mat.v2);
+    mat4_set_identity(mat);
     if (!goxel->clipboard.mesh) return;
 
     tmp = mesh_copy(goxel->clipboard.mesh);
@@ -863,9 +862,9 @@ static void past_action(void)
             !box_is_null(goxel->clipboard.box)) {
         vec3_copy(goxel->selection.p, p1);
         vec3_copy(goxel->clipboard.box.p, p2);
-        mat4_itranslate(mat.v2, +p1[0], +p1[1], +p1[2]);
-        mat4_itranslate(mat.v2, -p2[0], -p2[1], -p2[2]);
-        mesh_move(tmp, mat.v2);
+        mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
+        mat4_itranslate(mat, -p2[0], -p2[1], -p2[2]);
+        mesh_move(tmp, mat);
     }
     mesh_merge(mesh, tmp, MODE_OVER, NULL);
     mesh_delete(tmp);
