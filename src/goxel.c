@@ -40,18 +40,18 @@ static void unpack_pos_data(uint32_t v, int pos[3], int *face,
 }
 
 // XXX: can we merge this with unproject?
-static vec3_t unproject_delta(const vec3_t *win, const float model[4][4],
-                              const float proj[4][4], const float viewport[4])
+static bool unproject_delta(const float win[3], const float model[4][4],
+                            const float proj[4][4], const float viewport[4],
+                            float out[3])
 {
-    float inv[4][4];
+    float inv[4][4], norm_pos[4];
+
     mat4_mul(proj, model, inv);
-    mat4_invert(inv, inv); // XXX: check for return value.
-    vec4_t norm_pos = vec4(
-            win->x / viewport[2],
-            win->y / viewport[3],
-             0, 0);
-    mat4_mul_vec4(inv, norm_pos.v, norm_pos.v);
-    return norm_pos.xyz;
+    if (mat4_invert(inv, inv)) return false;
+    vec4_set(norm_pos, win[0] / viewport[2], win[1] / viewport[3], 0, 0);
+    mat4_mul_vec4(inv, norm_pos, norm_pos);
+    vec3_copy(norm_pos, out);
+    return true;
 }
 
 // XXX: lot of cleanup to do here.
@@ -424,8 +424,9 @@ static int on_pan(const gesture_t *gest, void *user)
                               goxel->move_origin.pos[1], 0);
     vec3_t wdelta;
     vec3_sub(wpos, worigin_pos.v, wdelta.v);
-    vec3_t odelta = unproject_delta(&wdelta, goxel->camera.view_mat,
-                                    goxel->camera.proj_mat, gest->viewport);
+    vec3_t odelta;
+    unproject_delta(wdelta.v, goxel->camera.view_mat,
+                    goxel->camera.proj_mat, gest->viewport, odelta.v);
     vec3_imul(odelta.v, 2); // XXX: why do I need that?
     if (!goxel->camera.ortho)
         vec3_imul(odelta.v, goxel->camera.dist);
