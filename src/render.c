@@ -557,7 +557,7 @@ static void compute_shadow_map_box(
     float view_mat[4][4], light_dir[3];
 
     get_light_dir(rend, false, light_dir);
-    mat4_lookat(view_mat, light_dir, vec3(0, 0, 0).v, vec3(0, 1, 0).v);
+    mat4_lookat(view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
     for (i = 0; i < 6; i++)
         rect[i] = NAN;
 
@@ -862,7 +862,7 @@ static mat4_t render_shadow_map(renderer_t *rend)
                            0.5, 0.5, 0.5, 1.0);
     renderer_t srend = {};
     get_light_dir(rend, false, light_dir);
-    mat4_lookat(srend.view_mat, light_dir, vec3(0, 0, 0).v, vec3(0, 1, 0).v);
+    mat4_lookat(srend.view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
     mat4_ortho(srend.proj_mat,
                rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
 
@@ -921,8 +921,8 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     // Add a small gradient to the color.
     vec4_set(c1, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
     vec4_set(c2, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
-    vec3_iadd(c1, vec3(+0.2, +0.2, +0.2).v);
-    vec3_iadd(c2, vec3(-0.2, -0.2, -0.2).v);
+    vec3_iadd(c1, VEC(+0.2, +0.2, +0.2));
+    vec3_iadd(c2, VEC(-0.2, -0.2, -0.2));
 
     vertices[0] = (vertex_t){{-1, -1, 0}, {c1[0], c1[1], c1[2], c1[3]}};
     vertices[1] = (vertex_t){{+1, -1, 0}, {c1[0], c1[1], c1[2], c1[3]}};

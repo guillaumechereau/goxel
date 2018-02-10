@@ -54,15 +54,12 @@ typedef union {
         real_t b;
         real_t a;
     };
-    vec3_t xyz;
-    vec3_t rgb;
     real_t v[4];
 } vec4_t;
 
 typedef union {
     real_t v[9];
     real_t v2[3][3];
-    vec3_t vecs[3];
 } mat3_t;
 
 typedef union {
@@ -78,7 +75,7 @@ typedef union {
     };
     struct {
         real_t a;
-        vec3_t vec;
+        float  vec[3];
     };
     real_t v[4];
 } quat_t;
@@ -126,11 +123,6 @@ static const mat4_t mat4_zero = MAT(0, 0, 0, 0,
                                     0, 0, 0, 0);
 
 static const quat_t quat_identity = {{1, 0, 0, 0}};
-
-DECL vec3_t vec3(real_t x, real_t y, real_t z)
-{
-    return (vec3_t)VEC3(x, y, z);
-}
 
 DECL vec4_t vec4(real_t x, real_t y, real_t z, real_t w)
 {

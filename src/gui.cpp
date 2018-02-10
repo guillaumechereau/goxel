@@ -1542,6 +1542,7 @@ bool gui_bbox(box_t *box)
 {
     int x, y, z, w, h, d;
     bool ret = false;
+    float p[3];
     w = box->w[0] * 2;
     h = box->h[1] * 2;
     d = box->d[2] * 2;
@@ -1561,9 +1562,8 @@ bool gui_bbox(box_t *box)
     gui_group_end();
 
     if (ret) {
-        *box = bbox_from_extents(
-                vec3(x + w / 2., y + h / 2., z + d / 2.).v,
-                w / 2., h / 2., d / 2.);
+        vec3_set(p, x + w / 2., y + h / 2., z + d / 2.);
+        *box = bbox_from_extents(p, w / 2., h / 2., d / 2.);
     }
     return ret;
 }

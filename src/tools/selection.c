@@ -90,7 +90,7 @@ static int get_face(const float n[3])
     const int *n2;
     for (f = 0; f < 6; f++) {
         n2 = FACES_NORMALS[f];
-        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2]).v) > 0.5)
+        if (vec3_dot(n, VEC(n2[0], n2[1], n2[2])) > 0.5)
             return f;
     }
     return -1;
@@ -280,7 +280,7 @@ static int gui(tool_t *tool)
     gui_input_int("d", &d, 1, 2048);
     gui_group_end();
     *box = bbox_from_extents(
-            vec3(x + w / 2., y + h / 2., z + d / 2.).v,
+            VEC(x + w / 2., y + h / 2., z + d / 2.),
             w / 2., h / 2., d / 2.);
     return 0;
 }
