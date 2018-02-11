@@ -78,7 +78,7 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
         // Apply the plane rotation.
         mat4_copy(plane->mat, rot);
         vec4_set(rot[3], 0, 0, 0, 1);
-        mat4_imul(box.mat.v2, rot);
+        mat4_imul(box.mat, rot);
         return box;
     }
 
@@ -86,7 +86,7 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     int i;
     const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
-    mat4_set_identity(box.mat.v2);
+    mat4_set_identity(box.mat);
     vec3_mix(p0, p1, 0.5, box.p);
     vec3_sub(p1, box.p, box.d);
     for (i = 0; i < 3; i++) {

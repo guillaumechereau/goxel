@@ -24,7 +24,7 @@
 // A Box is represented as the 4x4 matrix that transforms the unit cube into
 // the box.
 typedef union {
-    mat4_t mat;
+    float mat[4][4];
     struct {
         float w[3]; float w_;
         float h[3]; float h_;
@@ -36,9 +36,10 @@ typedef union {
 
 static inline bool box_is_bbox(box_t b)
 {
-    int i;
-    for (i = 0; i < 12; i++) {
-        if (mat4_identity[i] == 0 && b.mat.v[i] != 0)
+    int i, j;
+    for (i = 0; i < 3; i++)
+    for (j = 0; j < 4; j++) {
+        if (mat4_identity[i][j] == 0 && b.mat[i][j] != 0)
             return false;
     }
     return true;
@@ -48,7 +49,7 @@ static inline box_t bbox_from_extents(const float pos[3],
                                       float hw, float hh, float hd)
 {
     box_t ret;
-    mat4_set_identity(ret.mat.v2);
+    mat4_set_identity(ret.mat);
     vec3_copy(pos, ret.p);
     ret.w[0] = hw;
     ret.h[1] = hh;
@@ -57,10 +58,10 @@ static inline box_t bbox_from_extents(const float pos[3],
 }
 
 static const box_t box_null = {
-    MAT(-FLT_MAX, 0, 0, 0,
-        0, -FLT_MAX, 0, 0,
-        0, 0, -FLT_MAX, 0,
-        0, 0, 0, 0)
+    {{-FLT_MAX, 0, 0, 0},
+     {0, -FLT_MAX, 0, 0},
+     {0, 0, -FLT_MAX, 0},
+     {0, 0, 0, 0}}
 };
 
 static inline bool box_is_null(box_t b)
@@ -186,9 +187,9 @@ static inline bool box_contains(box_t a, box_t b) {
     int i;
     float imat[4][4];
 
-    mat4_invert(a.mat.v2, imat);
+    mat4_invert(a.mat, imat);
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(b.mat.v2, PS[i], p);
+        mat4_mul_vec3(b.mat, PS[i], p);
         mat4_mul_vec3(imat, p, p);
         if (    p[0] < -1 || p[0] > 1 ||
                 p[1] < -1 || p[1] > 1 ||
@@ -248,7 +249,7 @@ static inline box_t box_get_bbox(box_t b)
     };
     int i;
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(b.mat.v2, p[i], p[i]);
+        mat4_mul_vec3(b.mat, p[i], p[i]);
     }
     return bbox_from_npoints(8, p);
 }
@@ -266,20 +267,21 @@ static inline void box_get_size(box_t b, float out[3])
     float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
     int i;
     for (i = 0; i < 3; i++) {
-        mat4_mul_vec4(b.mat.v2, v[i], v[i]);
+        mat4_mul_vec4(b.mat, v[i], v[i]);
         out[i] = vec3_norm(v[i]);
     }
 }
 
 static inline box_t box_swap_axis(box_t b, int x, int y, int z)
 {
+    float m[4][4];
     assert(x >= 0 && x <= 2);
     assert(y >= 0 && y <= 2);
     assert(z >= 0 && z <= 2);
-    mat4_t m = b.mat;
-    vec4_copy(m.v2[x], b.mat.v2[0]);
-    vec4_copy(m.v2[y], b.mat.v2[1]);
-    vec4_copy(m.v2[z], b.mat.v2[2]);
+    mat4_copy(b.mat, m);
+    vec4_copy(m[x], b.mat[0]);
+    vec4_copy(m[y], b.mat[1]);
+    vec4_copy(m[z], b.mat[2]);
     return b;
 }
 
@@ -314,7 +316,7 @@ static inline box_t box_move_face(box_t b, int f, const float p[3])
     assert(box_is_bbox(b));
     f = FO[f];
     for (i = 0; i < 4; i++)
-        mat4_mul_vec3(b.mat.v2, PS[FS[f][i]], ps[i]);
+        mat4_mul_vec3(b.mat, PS[FS[f][i]], ps[i]);
     vec3_copy(p, ps[4]);
     return bbox_from_npoints(5, ps);
 }
@@ -323,7 +325,7 @@ static inline float box_get_volume(box_t box)
 {
     // The volume is the determinant of the 3x3 matrix of the box
     // time 8 (because the unit cube has a volume of 8).
-    float *v = &box.mat.v[0];
+    float *v = &box.mat[0][0];
     float a, b, c, d, e, f, g, h, i;
     a = v[0]; b = v[1]; c = v[2];
     d = v[4]; e = v[5]; f = v[6];
@@ -345,7 +347,7 @@ static inline void box_get_vertices(box_t box, float vertices[8][3])
         {-1, +1, -1},
     };
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(box.mat.v2, P[i], vertices[i]);
+        mat4_mul_vec3(box.mat, P[i], vertices[i]);
     }
 }
 

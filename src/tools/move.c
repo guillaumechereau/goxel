@@ -45,7 +45,7 @@ static void do_move(layer_t *layer, const float mat[4][4])
     } else {
         mesh_move(layer->mesh, m);
         if (!box_is_null(layer->box)) {
-            mat4_mul(mat, layer->box.mat.v2, layer->box.mat.v2);
+            mat4_mul(mat, layer->box.mat, layer->box.mat);
             layer->box = bbox_from_box(layer->box);
         }
     }
@@ -83,7 +83,7 @@ static int on_move(gesture3d_t *gest, void *user)
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face],
+        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face],
                  face_plane.mat);
         render_img(&goxel->rend, NULL, face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
@@ -98,7 +98,7 @@ static int on_move(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face],
+        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face],
                  face_plane.mat);
 
         vec3_normalize(face_plane.n, n);

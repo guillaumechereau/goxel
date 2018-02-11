@@ -168,7 +168,7 @@ void mesh_move(mesh_t *mesh, const float mat[4][4])
     mat4_invert(mat, imat);
     box = mesh_get_box(mesh, true);
     if (box_is_null(box)) return;
-    mat4_mul(mat, box.mat.v2, box.mat.v2);
+    mat4_mul(mat, box.mat, box.mat);
     mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
     mesh_delete(src_mesh);
     mesh_remove_empty_blocks(mesh, false);
@@ -283,18 +283,18 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
             if (!(painter->symmetry & (1 << i))) continue;
             painter2.symmetry &= ~(1 << i);
             box2 = *box;
-            mat4_set_identity(box2.mat.v2);
-            if (i == 0) mat4_iscale(box2.mat.v2, -1,  1,  1);
-            if (i == 1) mat4_iscale(box2.mat.v2,  1, -1,  1);
-            if (i == 2) mat4_iscale(box2.mat.v2,  1,  1, -1);
-            mat4_imul(box2.mat.v2, box->mat.v2);
+            mat4_set_identity(box2.mat);
+            if (i == 0) mat4_iscale(box2.mat, -1,  1,  1);
+            if (i == 1) mat4_iscale(box2.mat,  1, -1,  1);
+            if (i == 2) mat4_iscale(box2.mat,  1,  1, -1);
+            mat4_imul(box2.mat, box->mat);
             mesh_op(mesh, &painter2, &box2);
         }
     }
 
     shape_func = painter->shape->func;
     box_get_size(*box, size);
-    mat4_copy(box->mat.v2, mat);
+    mat4_copy(box->mat, mat);
     mat4_iscale(mat, 1 / size[0], 1 / size[1], 1 / size[2]);
     mat4_invert(mat, mat);
     use_box = painter->box && !box_is_null(*painter->box);

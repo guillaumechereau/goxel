@@ -346,38 +346,38 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     switch (op) {
 
     case OP_sx:
-        mat4_iscale(ctx->box.mat.v2, v[0], 1, 1);
+        mat4_iscale(ctx->box.mat, v[0], 1, 1);
         break;
     case OP_sy:
-        mat4_iscale(ctx->box.mat.v2, 1, v[0], 1);
+        mat4_iscale(ctx->box.mat, 1, v[0], 1);
         break;
     case OP_sz:
-        mat4_iscale(ctx->box.mat.v2, 1, 1, v[0]);
+        mat4_iscale(ctx->box.mat, 1, 1, v[0]);
         break;
     case OP_s:
         if (n == 1) v[1] = v[2] = v[0];
-        mat4_iscale(ctx->box.mat.v2, v[0], v[1], v[2]);
+        mat4_iscale(ctx->box.mat, v[0], v[1], v[2]);
         break;
     case OP_sn:
-        scale_normalize(ctx->box.mat.v2, v[0]);
+        scale_normalize(ctx->box.mat, v[0]);
         break;
     case OP_x:
-        mat4_itranslate(ctx->box.mat.v2, 2 * v[0], 2 * v[1], 2 * v[2]);
+        mat4_itranslate(ctx->box.mat, 2 * v[0], 2 * v[1], 2 * v[2]);
         break;
     case OP_y:
-        mat4_itranslate(ctx->box.mat.v2, 0, 2 * v[0], 2 * v[1]);
+        mat4_itranslate(ctx->box.mat, 0, 2 * v[0], 2 * v[1]);
         break;
     case OP_z:
-        mat4_itranslate(ctx->box.mat.v2, 0, 0, 2 * v[0]);
+        mat4_itranslate(ctx->box.mat, 0, 0, 2 * v[0]);
         break;
     case OP_rx:
-        mat4_irotate(ctx->box.mat.v2, v[0] / 180 * M_PI, 1, 0, 0);
+        mat4_irotate(ctx->box.mat, v[0] / 180 * M_PI, 1, 0, 0);
         break;
     case OP_ry:
-        mat4_irotate(ctx->box.mat.v2, v[0] / 180 * M_PI, 0, 1, 0);
+        mat4_irotate(ctx->box.mat, v[0] / 180 * M_PI, 0, 1, 0);
         break;
     case OP_rz:
-        mat4_irotate(ctx->box.mat.v2, v[0] / 180 * M_PI, 0, 0, 1);
+        mat4_irotate(ctx->box.mat, v[0] / 180 * M_PI, 0, 0, 1);
         break;
     case OP_hue:
         if (n == 1) ctx->color[0] = mod(ctx->color[0] + v[0], 360);

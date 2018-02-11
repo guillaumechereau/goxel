@@ -89,7 +89,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
     if (box_is_null(*box)) return false;
     camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
-        mat4_copy(box->mat.v2, plane.mat);
+        mat4_copy(box->mat, plane.mat);
         mat4_imul(plane.mat, FACES_MATS[f]);
 
         if (!inside && vec3_dot(plane.n, onorm) >= 0)

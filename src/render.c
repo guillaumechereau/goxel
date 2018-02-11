@@ -816,7 +816,7 @@ void render_box(renderer_t *rend, const box_t *box,
     assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
             == effects);
     item->type = ITEM_MODEL3D;
-    mat4_copy(box->mat.v2, item->mat);
+    mat4_copy(box->mat, item->mat);
     copy_color(color, item->color);
     item->effects = effects;
     item->model3d = (effects & EFFECT_WIREFRAME) ? g_wire_cube_model :
