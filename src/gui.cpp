@@ -743,7 +743,7 @@ static void layers_panel(goxel_t *goxel)
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
             bbox_from_aabb(layer->box.mat, bbox);
         } else {
-            layer->box = box_null;
+            mat4_copy(mat4_zero, layer->box.mat);
         }
     }
     if (bounded) gui_bbox(&layer->box);
@@ -941,7 +941,7 @@ static void image_panel(goxel_t *goxel)
         if (bounded)
             bbox_from_extents(box->mat, vec3_zero, 16, 16, 16);
         else
-            *box = box_null;
+            mat4_copy(mat4_zero, box->mat);
     }
     if (bounded) gui_bbox(box);
 }

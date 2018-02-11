@@ -270,7 +270,6 @@ void goxel_init(goxel_t *gox)
     goxel->layers_mesh = mesh_new();
     goxel->render_mesh = mesh_new();
     goxel_update_meshes(goxel, -1);
-    goxel->selection = box_null;
 
     vec4_set(goxel->back_color, 70, 70, 70, 255);
     vec4_set(goxel->grid_color, 19, 19, 19, 255);
@@ -793,7 +792,7 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void reset_selection(void)
 {
-    goxel->selection = box_null;
+    mat4_copy(mat4_zero, goxel->selection.mat);
 }
 
 ACTION_REGISTER(reset_selection,

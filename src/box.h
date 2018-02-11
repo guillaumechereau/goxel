@@ -55,13 +55,6 @@ static inline void bbox_from_extents(float box[4][4], const float pos[3],
     box[2][2] = hd;
 }
 
-static const box_t box_null = {
-    {{0, 0, 0, 0},
-     {0, 0, 0, 0},
-     {0, 0, 0, 0},
-     {0, 0, 0, 0}}
-};
-
 static inline bool box_is_null(const float b[4][4])
 {
     return b[3][3] == 0;

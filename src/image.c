@@ -140,7 +140,6 @@ image_t *image_new(void)
     image_t *img = calloc(1, sizeof(*img));
     img->export_width = 1024;
     img->export_height = 1024;
-    img->box = box_null;
     layer = layer_new(img, "background");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
