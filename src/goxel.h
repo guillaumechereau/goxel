@@ -690,7 +690,9 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int op,
 
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                            int effects, voxel_vertex_t *out);
-void mesh_crop(mesh_t *mesh, box_t *box);
+
+// XXX: use int[2][3] for the box?
+void mesh_crop(mesh_t *mesh, const float box[4][4]);
 
 /* Function: mesh_crc32
  * Compute the crc32 of the mesh data as an array of xyz rgba values.

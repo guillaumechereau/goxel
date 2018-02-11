@@ -428,14 +428,14 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
     }
 }
 
-void mesh_crop(mesh_t *mesh, box_t *box)
+void mesh_crop(mesh_t *mesh, const float box[4][4])
 {
     painter_t painter = {
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
         .shape = &shape_cube,
     };
-    mesh_op(mesh, &painter, box->mat);
+    mesh_op(mesh, &painter, box);
 }
 
 /* Function: mesh_crc32

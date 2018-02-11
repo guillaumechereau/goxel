@@ -726,7 +726,7 @@ static void layers_panel(goxel_t *goxel)
     gui_action_button("img_clone_layer", "Clone", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
     if (bounded && gui_button("Crop to box", 1, 0)) {
-        mesh_crop(layer->mesh, &layer->box);
+        mesh_crop(layer->mesh, layer->box.mat);
         goxel_update_meshes(goxel, -1);
     }
     gui_group_end();
