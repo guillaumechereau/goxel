@@ -568,7 +568,7 @@ void proc_release(gox_proc_t *proc)
     proc->error.line = 0;
 }
 
-int proc_start(gox_proc_t *proc, const box_t *box)
+int proc_start(gox_proc_t *proc, const float box[4][4])
 {
     // Reinit the context to a single ctx_t pointing at the main shape.
     ctx_t *ctx;
@@ -577,7 +577,7 @@ int proc_start(gox_proc_t *proc, const box_t *box)
     proc->ctxs = NULL;
     proc->frame = 0;
     ctx = calloc(1, sizeof(*ctx));
-    if (box) ctx->box = *box;
+    if (box) mat4_copy(box, ctx->box.mat);
     else bbox_from_extents(ctx->box.mat, vec3_zero, 0.5, 0.5, 0.5);
     vec4_set(ctx->color, 0, 0, 1, 1);
     ctx->mode = MODE_OVER;

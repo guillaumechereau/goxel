@@ -50,7 +50,7 @@ static int iter(tool_t *tool, const float viewport[4])
         if (curs->flags & CURSOR_PRESSED) {
             image_history_push(goxel->image);
             proc_stop(proc);
-            proc_start(proc, &box);
+            proc_start(proc, box.mat);
             return STATE_PAINT;
         }
         break;
