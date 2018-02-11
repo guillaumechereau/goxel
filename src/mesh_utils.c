@@ -298,7 +298,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     mat4_copy(box, mat);
     mat4_iscale(mat, 1 / size[0], 1 / size[1], 1 / size[2]);
     mat4_invert(mat, mat);
-    use_box = painter->box && !box_is_null(painter->box->mat);
+    use_box = painter->box && !box_is_null(*painter->box);
     // XXX: cleanup.
     skip_src_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA);
     skip_dst_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA,
@@ -316,7 +316,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     accessor = mesh_get_accessor(mesh);
     while (mesh_iter(&iter, vp)) {
         vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
-        if (use_box && !bbox_contains_vec(painter->box->mat, p)) continue;
+        if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
         mat4_mul_vec3(mat, p, p);
         k = shape_func(p, size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
