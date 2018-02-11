@@ -107,7 +107,8 @@ static inline box_t bbox_from_points(const float a[3], const float b[3])
                                   (v1[2] - v0[2]) / 2);
 }
 
-static inline box_t bbox_from_npoints(int n, const float (*points)[3])
+static inline void bbox_from_npoints(
+        float box[4][4], int n, const float (*points)[3])
 {
     assert(n >= 1);
     int i;
@@ -123,9 +124,11 @@ static inline box_t bbox_from_npoints(int n, const float (*points)[3])
         v1[2] = max(v1[2], points[i][2]);
     }
     vec3_mix(v0, v1, 0.5, mid);
-    return bbox_from_extents(mid, (v1[0] - v0[0]) / 2,
-                                  (v1[1] - v0[1]) / 2,
-                                  (v1[2] - v0[2]) / 2);
+    box_t ret;
+    ret = bbox_from_extents(mid, (v1[0] - v0[0]) / 2,
+                                 (v1[1] - v0[1]) / 2,
+                                 (v1[2] - v0[2]) / 2);
+    mat4_copy(ret.mat, box);
 }
 
 static inline box_t bbox_intersection(
@@ -214,7 +217,7 @@ static inline bool bbox_contains_vec(const float b[4][4], const float v[3])
             b0[2] <= v[2] && b1[2] > v[2]);
 }
 
-static inline box_t box_get_bbox(const float b[4][4])
+static inline void box_get_bbox(const float b[4][4], float out[4][4])
 {
     float p[8][3] = {
         {-1, -1, +1},
@@ -230,17 +233,16 @@ static inline box_t box_get_bbox(const float b[4][4])
     for (i = 0; i < 8; i++) {
         mat4_mul_vec3(b, p[i], p[i]);
     }
-    return bbox_from_npoints(8, p);
+    bbox_from_npoints(out, 8, p);
 }
 
-static inline box_t bbox_grow(const float b[4][4], float x, float y, float z)
+static inline void bbox_grow(const float b[4][4], float x, float y, float z,
+                             float out[4][4])
 {
-    box_t ret;
-    mat4_copy(b, ret.mat);
-    ret.mat[0][0] += x;
-    ret.mat[1][1] += y;
-    ret.mat[2][2] += z;
-    return ret;
+    mat4_copy(b, out);
+    out[0][0] += x;
+    out[1][1] += y;
+    out[2][2] += z;
 }
 
 static inline void box_get_size(const float b[4][4], float out[3])
@@ -253,19 +255,18 @@ static inline void box_get_size(const float b[4][4], float out[3])
     }
 }
 
-static inline box_t box_swap_axis(const float b[4][4], int x, int y, int z)
+static inline void box_swap_axis(const float b[4][4], int x, int y, int z,
+                                 float out[4][4])
 {
     float m[4][4];
-    box_t ret;
     assert(x >= 0 && x <= 2);
     assert(y >= 0 && y <= 2);
     assert(z >= 0 && z <= 2);
     mat4_copy(b, m);
-    mat4_copy(m, ret.mat);
-    vec4_copy(m[x], ret.mat[0]);
-    vec4_copy(m[y], ret.mat[1]);
-    vec4_copy(m[z], ret.mat[2]);
-    return ret;
+    mat4_copy(m, out);
+    vec4_copy(m[x], out[0]);
+    vec4_copy(m[y], out[1]);
+    vec4_copy(m[z], out[2]);
 }
 
 // Create a new box with the 4 points opposit to the face f and the
@@ -302,7 +303,9 @@ static inline box_t box_move_face(
     for (i = 0; i < 4; i++)
         mat4_mul_vec3(b, PS[FS[f][i]], ps[i]);
     vec3_copy(p, ps[4]);
-    return bbox_from_npoints(5, ps);
+    box_t ret;
+    bbox_from_npoints(ret.mat, 5, ps);
+    return ret;
 }
 
 static inline float box_get_volume(const float box[4][4])
@@ -334,13 +337,6 @@ static inline void box_get_vertices(const float box[4][4],
     for (i = 0; i < 8; i++) {
         mat4_mul_vec3(box, P[i], vertices[i]);
     }
-}
-
-static inline box_t bbox_from_box(const float b[4][4])
-{
-    float vertices[8][3];
-    box_get_vertices(b, vertices);
-    return bbox_from_npoints(8, vertices);
 }
 
 #endif // BOX_H
