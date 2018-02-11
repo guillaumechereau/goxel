@@ -171,7 +171,7 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
     int i, ret = 0;
     bool r = false;
     float dist, best = INFINITY;
-    float v[3], p[3] = {}, n[3] = {};
+    float v[3], p[3] = {}, n[3] = {}, box[4][4];
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
@@ -199,10 +199,8 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
                                        goxel->selection.mat, false,
                                        p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
-            box_t box;
-            mesh_get_box(goxel->image->active_layer->mesh, true, box.mat);
-            r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       box.mat, false,
+            mesh_get_box(goxel->image->active_layer->mesh, true, box);
+            r = goxel_unproject_on_box(goxel, viewport, pos, box, false,
                                        p, n, NULL);
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
