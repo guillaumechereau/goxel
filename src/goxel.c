@@ -576,14 +576,14 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
 
     // XXX: make a toggle for debug informations.
     if ((0)) {
-        box_t b;
+        float b[4][4];
         uint8_t c[4];
         vec4_set(c, 0, 255, 0, 80);
-        mesh_get_box(goxel->layers_mesh, true, b.mat);
-        render_box(rend, b.mat, c, EFFECT_WIREFRAME);
+        mesh_get_box(goxel->layers_mesh, true, b);
+        render_box(rend, b, c, EFFECT_WIREFRAME);
         vec4_set(c, 0, 255, 255, 80);
-        mesh_get_box(goxel->layers_mesh, false, b.mat);
-        render_box(rend, b.mat, c, EFFECT_WIREFRAME);
+        mesh_get_box(goxel->layers_mesh, false, b);
+        render_box(rend, b, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)
         render_plane(rend, goxel->plane, goxel->grid_color);
@@ -761,14 +761,15 @@ ACTION_REGISTER(export,
     .csig = "vp",
 )
 
-static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
+static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
+                                 const float box[4][4])
 {
     layer_t *new_layer;
     painter_t painter;
 
     img = img ?: goxel->image;
     layer = layer ?: img->active_layer;
-    box = box ?: &goxel->selection;
+    if (!box) box = (const void*)goxel->selection.mat;
 
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
@@ -776,9 +777,9 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
     };
-    mesh_op(new_layer->mesh, &painter, box->mat);
+    mesh_op(new_layer->mesh, &painter, box);
     painter.mode = MODE_SUB;
-    mesh_op(layer->mesh, &painter, box->mat);
+    mesh_op(layer->mesh, &painter, box);
     return new_layer;
 }
 
