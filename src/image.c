@@ -459,7 +459,7 @@ void image_clear_layer(layer_t *layer, const box_t *box)
         .mode = MODE_SUB,
         .color = {255, 255, 255, 255},
     };
-    mesh_op(layer->mesh, &painter, box);
+    mesh_op(layer->mesh, &painter, box->mat);
 }
 
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)

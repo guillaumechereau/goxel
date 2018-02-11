@@ -778,9 +778,9 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
     };
-    mesh_op(new_layer->mesh, &painter, box);
+    mesh_op(new_layer->mesh, &painter, box->mat);
     painter.mode = MODE_SUB;
-    mesh_op(layer->mesh, &painter, box);
+    mesh_op(layer->mesh, &painter, box->mat);
     return new_layer;
 }
 
@@ -806,7 +806,7 @@ static void fill_selection(layer_t *layer)
 {
     if (box_is_null(goxel->selection.mat)) return;
     layer = layer ?: goxel->image->active_layer;
-    mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
+    mesh_op(layer->mesh, &goxel->painter, goxel->selection.mat);
     goxel_update_meshes(goxel, -1);
 }
 
@@ -844,7 +844,7 @@ static void copy_action(void)
             .mode = MODE_INTERSECT,
             .color = {255, 255, 255, 255},
         };
-        mesh_op(goxel->clipboard.mesh, &painter, &goxel->selection);
+        mesh_op(goxel->clipboard.mesh, &painter, goxel->selection.mat);
     }
 }
 

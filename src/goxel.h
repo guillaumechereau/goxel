@@ -639,12 +639,13 @@ void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4]);
  * Parameters:
  *   mesh    - The mesh we paint into.
  *   painter - Defines the paint operation to apply.
- *   box_t   - Defines the position and size of the shape.
+ *   box     - Defines the position and size of the shape as the
+ *             transformation matrix from the zero centered unit box.
  *
  * See Also:
  *   <painter_t>
  */
-void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box);
+void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4]);
 
 // XXX: to cleanup.
 void mesh_extrude(mesh_t *mesh, const float plane[4][4], const box_t *box);

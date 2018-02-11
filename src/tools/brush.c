@@ -127,7 +127,7 @@ static int on_drag(gesture3d_t *gest, void *user)
             painter2.mode = MODE_MAX;
             box = get_box(brush->start_pos, curs->pos, curs->normal,
                           r, NULL);
-            mesh_op(brush->mesh, &painter2, &box);
+            mesh_op(brush->mesh, &painter2, box.mat);
         }
     }
 
@@ -146,7 +146,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     for (i = 0; i < nb; i++) {
         vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos);
         box = get_box(pos, NULL, curs->normal, r, NULL);
-        mesh_op(brush->mesh, &painter2, &box);
+        mesh_op(brush->mesh, &painter2, box.mat);
     }
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
@@ -193,7 +193,7 @@ static int on_hover(gesture3d_t *gest, void *user)
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, mesh);
-    mesh_op(goxel->tool_mesh, &goxel->painter, &box);
+    mesh_op(goxel->tool_mesh, &goxel->painter, box.mat);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     brush->last_op.mesh_key = mesh_get_key(mesh);

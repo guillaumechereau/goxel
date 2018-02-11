@@ -435,7 +435,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
     goxel->painter.shape = shape;
     goxel->painter.mode = ctx->mode;
     goxel->painter.smoothness = ctx->antialiased ? 1 : 0;
-    mesh_op(mesh, &goxel->painter, &ctx->box);
+    mesh_op(mesh, &goxel->painter, ctx->box.mat);
 }
 
 // Iter the program once.

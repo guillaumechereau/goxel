@@ -262,7 +262,7 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 }
 
 
-void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
+void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
 {
     int i, vp[3];
     uint8_t value[4], c[4];
@@ -275,26 +275,25 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     int mode = painter->mode;
     bool use_box, skip_src_empty, skip_dst_empty;
     painter_t painter2;
-    box_t box2;
+    float box2[4][4];
 
     if (painter->symmetry) {
         painter2 = *painter;
         for (i = 0; i < 3; i++) {
             if (!(painter->symmetry & (1 << i))) continue;
             painter2.symmetry &= ~(1 << i);
-            box2 = *box;
-            mat4_set_identity(box2.mat);
-            if (i == 0) mat4_iscale(box2.mat, -1,  1,  1);
-            if (i == 1) mat4_iscale(box2.mat,  1, -1,  1);
-            if (i == 2) mat4_iscale(box2.mat,  1,  1, -1);
-            mat4_imul(box2.mat, box->mat);
-            mesh_op(mesh, &painter2, &box2);
+            mat4_set_identity(box2);
+            if (i == 0) mat4_iscale(box2, -1,  1,  1);
+            if (i == 1) mat4_iscale(box2,  1, -1,  1);
+            if (i == 2) mat4_iscale(box2,  1,  1, -1);
+            mat4_imul(box2, box);
+            mesh_op(mesh, &painter2, box2);
         }
     }
 
     shape_func = painter->shape->func;
-    box_get_size(box->mat, size);
-    mat4_copy(box->mat, mat);
+    box_get_size(box, size);
+    mat4_copy(box, mat);
     mat4_iscale(mat, 1 / size[0], 1 / size[1], 1 / size[2]);
     mat4_invert(mat, mat);
     use_box = painter->box && !box_is_null(painter->box->mat);
@@ -303,7 +302,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     skip_dst_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA,
                                  MODE_INTERSECT);
     if (mode != MODE_INTERSECT) {
-        iter = mesh_get_box_iterator(mesh, box->v,
+        iter = mesh_get_box_iterator(mesh, box,
                 skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
     } else {
         iter = mesh_get_iterator(mesh,
@@ -434,7 +433,7 @@ void mesh_crop(mesh_t *mesh, box_t *box)
         .color = {255, 255, 255, 255},
         .shape = &shape_cube,
     };
-    mesh_op(mesh, &painter, box);
+    mesh_op(mesh, &painter, box->mat);
 }
 
 /* Function: mesh_crc32

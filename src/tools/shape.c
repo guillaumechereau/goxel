@@ -108,7 +108,7 @@ static int on_drag(gesture3d_t *gest, void *user)
                   0, goxel->plane);
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, shape->mesh_orig);
-    mesh_op(goxel->tool_mesh, &goxel->painter, &box);
+    mesh_op(goxel->tool_mesh, &goxel->painter, box.mat);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
@@ -145,7 +145,7 @@ static int on_adjust(gesture3d_t *gest, void *user)
     box = get_box(shape->start_pos, pos, curs->normal, 0, goxel->plane);
 
     mesh_set(mesh, shape->mesh_orig);
-    mesh_op(mesh, &goxel->painter, &box);
+    mesh_op(mesh, &goxel->painter, box.mat);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
