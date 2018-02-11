@@ -156,7 +156,7 @@ static void qubicle_export(const image_t *img, const char *path)
         mesh = layer->mesh;
 
         if (!box_is_null(layer->box.mat))
-            bbox_to_aabb(layer->box, bbox);
+            bbox_to_aabb(layer->box.mat, bbox);
         else
             if (!mesh_get_bbox(mesh, bbox, true)) continue;
 

@@ -80,14 +80,14 @@ static inline box_t bbox_from_aabb(const int aabb[2][3])
     return bbox_from_extents(pos, size[0] / 2, size[1] / 2, size[2] / 2);
 }
 
-static inline void bbox_to_aabb(box_t b, int aabb[2][3])
+static inline void bbox_to_aabb(const float b[4][4], int aabb[2][3])
 {
-    aabb[0][0] = round(b.p[0] - b.w[0]);
-    aabb[0][1] = round(b.p[1] - b.h[1]);
-    aabb[0][2] = round(b.p[2] - b.d[2]);
-    aabb[1][0] = round(b.p[0] + b.w[0]);
-    aabb[1][1] = round(b.p[1] + b.h[1]);
-    aabb[1][2] = round(b.p[2] + b.d[2]);
+    aabb[0][0] = round(b[3][0] - b[0][0]);
+    aabb[0][1] = round(b[3][1] - b[1][1]);
+    aabb[0][2] = round(b[3][2] - b[2][2]);
+    aabb[1][0] = round(b[3][0] + b[0][0]);
+    aabb[1][1] = round(b[3][1] + b[1][1]);
+    aabb[1][2] = round(b[3][2] + b[2][2]);
 }
 
 
