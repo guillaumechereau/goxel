@@ -164,7 +164,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     float v[3];
     uint8_t c[3];
     int nb_elems, i, j, bpos[3];
-    mat4_t mat;
+    float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
     bool mc = goxel->rend.settings.effects & EFFECT_MARCHING_CUBES;
@@ -180,8 +180,8 @@ void ply_export(const mesh_t *mesh, const char *path)
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
-        mat4_set_identity(mat.v2);
-        mat4_itranslate(mat.v2, bpos[0], bpos[1], bpos[2]);
+        mat4_set_identity(mat);
+        mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
                 mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
         for (i = 0; i < nb_elems; i++) {
@@ -190,7 +190,7 @@ void ply_export(const mesh_t *mesh, const char *path)
                 v[0] = verts[i * size + j].pos[0] * scale;
                 v[1] = verts[i * size + j].pos[1] * scale;
                 v[2] = verts[i * size + j].pos[2] * scale;
-                mat4_mul_vec3(mat.v2, v, v);
+                mat4_mul_vec3(mat, v, v);
                 memcpy(c, verts[i * size + j].color, 3);
                 line = (line_t){
                     "v ", .v = {v[0], v[1], v[2]}, .c = {c[0], c[1], c[2]}};
