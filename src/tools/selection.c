@@ -48,7 +48,7 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     box_t box;
     float v[3];
     if (p1 == NULL) {
-        box = bbox_from_extents(p0, r, r, r);
+        bbox_from_extents(box.mat, p0, r, r, r);
         box_swap_axis(box.mat, 2, 0, 1, box.mat);
         return box;
     }
@@ -280,7 +280,7 @@ static int gui(tool_t *tool)
     gui_input_int("h", &h, 1, 2048);
     gui_input_int("d", &d, 1, 2048);
     gui_group_end();
-    *box = bbox_from_extents(
+    bbox_from_extents(box->mat,
             VEC(x + w / 2., y + h / 2., z + d / 2.),
             w / 2., h / 2., d / 2.);
     return 0;

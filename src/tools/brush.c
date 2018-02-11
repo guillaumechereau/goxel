@@ -69,7 +69,7 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     float v[3];
 
     if (p1 == NULL) {
-        box = bbox_from_extents(p0, r, r, r);
+        bbox_from_extents(box.mat, p0, r, r, r);
         box_swap_axis(box.mat, 2, 0, 1, box.mat);
         return box;
     }

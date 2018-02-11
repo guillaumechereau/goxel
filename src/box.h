@@ -45,16 +45,14 @@ static inline bool box_is_bbox(const float b[4][4])
     return true;
 }
 
-static inline box_t bbox_from_extents(const float pos[3],
-                                      float hw, float hh, float hd)
+static inline void bbox_from_extents(float box[4][4], const float pos[3],
+                                     float hw, float hh, float hd)
 {
-    box_t ret;
-    mat4_set_identity(ret.mat);
-    vec3_copy(pos, ret.p);
-    ret.w[0] = hw;
-    ret.h[1] = hh;
-    ret.d[2] = hd;
-    return ret;
+    mat4_set_identity(box);
+    vec3_copy(pos, box[3]);
+    box[0][0] = hw;
+    box[1][1] = hh;
+    box[2][2] = hd;
 }
 
 static const box_t box_null = {
@@ -77,9 +75,7 @@ static inline void bbox_from_aabb(float box[4][4], const int aabb[2][3])
     const float size[3] = {(float)(aabb[1][0] - aabb[0][0]),
                            (float)(aabb[1][1] - aabb[0][1]),
                            (float)(aabb[1][2] - aabb[0][2])};
-    box_t ret;
-    ret = bbox_from_extents(pos, size[0] / 2, size[1] / 2, size[2] / 2);
-    mat4_copy(ret.mat, box);
+    bbox_from_extents(box, pos, size[0] / 2, size[1] / 2, size[2] / 2);
 }
 
 static inline void bbox_to_aabb(const float b[4][4], int aabb[2][3])
@@ -105,11 +101,9 @@ static inline void bbox_from_points(
     v1[1] = max(a[1], b[1]);
     v1[2] = max(a[2], b[2]);
     vec3_mix(v0, v1, 0.5, mid);
-    box_t ret;
-    ret = bbox_from_extents(mid, (v1[0] - v0[0]) / 2,
-                                 (v1[1] - v0[1]) / 2,
-                                 (v1[2] - v0[2]) / 2);
-    mat4_copy(ret.mat, box);
+    bbox_from_extents(box, mid, (v1[0] - v0[0]) / 2,
+                                (v1[1] - v0[1]) / 2,
+                                (v1[2] - v0[2]) / 2);
 }
 
 static inline void bbox_from_npoints(
@@ -129,11 +123,9 @@ static inline void bbox_from_npoints(
         v1[2] = max(v1[2], points[i][2]);
     }
     vec3_mix(v0, v1, 0.5, mid);
-    box_t ret;
-    ret = bbox_from_extents(mid, (v1[0] - v0[0]) / 2,
-                                 (v1[1] - v0[1]) / 2,
-                                 (v1[2] - v0[2]) / 2);
-    mat4_copy(ret.mat, box);
+    bbox_from_extents(box, mid, (v1[0] - v0[0]) / 2,
+                                (v1[1] - v0[1]) / 2,
+                                (v1[2] - v0[2]) / 2);
 }
 
 static inline bool bbox_contains(const float a[4][4], const float b[4][4]) {
