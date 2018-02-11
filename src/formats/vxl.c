@@ -123,7 +123,7 @@ static int vxl_import(const char *path)
     mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     goxel_update_meshes(goxel, -1);
-    if (box_is_null(goxel->image->box))
+    if (box_is_null(goxel->image->box.mat))
         goxel->image->box = bbox_from_extents(vec3_zero, w / 2, h / 2, d / 2);
     free(cube);
     free(data);

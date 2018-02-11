@@ -155,7 +155,7 @@ static void qubicle_export(const image_t *img, const char *path)
     DL_FOREACH(img->layers, layer) {
         mesh = layer->mesh;
 
-        if (!box_is_null(layer->box))
+        if (!box_is_null(layer->box.mat))
             bbox_to_aabb(layer->box, bbox);
         else
             if (!mesh_get_bbox(mesh, bbox, true)) continue;

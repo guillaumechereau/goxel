@@ -64,9 +64,9 @@ static const box_t box_null = {
      {0, 0, 0, 0}}
 };
 
-static inline bool box_is_null(box_t b)
+static inline bool box_is_null(const float b[4][4])
 {
-    return b.v[3][3] == 0;
+    return b[3][3] == 0;
 }
 
 static inline box_t bbox_from_aabb(const int aabb[2][3])

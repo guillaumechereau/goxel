@@ -719,7 +719,7 @@ static void layers_panel(goxel_t *goxel)
     gui_action_button("img_move_layer_down", NULL, 0, "");
 
     layer = goxel->image->active_layer;
-    bounded = !box_is_null(layer->box);
+    bounded = !box_is_null(layer->box.mat);
 
     gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
@@ -936,7 +936,7 @@ static void image_panel(goxel_t *goxel)
     image_t *image = goxel->image;
     box_t *box = &image->box;
 
-    bounded = !box_is_null(*box);
+    bounded = !box_is_null(box->mat);
     if (ImGui::Checkbox("Bounded", &bounded)) {
         *box = bounded ? bbox_from_extents(vec3_zero, 16, 16, 16) : box_null;
     }

@@ -167,7 +167,7 @@ void mesh_move(mesh_t *mesh, const float mat[4][4])
 
     mat4_invert(mat, imat);
     box = mesh_get_box(mesh, true);
-    if (box_is_null(box)) return;
+    if (box_is_null(box.mat)) return;
     mat4_mul(mat, box.mat, box.mat);
     mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
     mesh_delete(src_mesh);
@@ -297,7 +297,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     mat4_copy(box->mat, mat);
     mat4_iscale(mat, 1 / size[0], 1 / size[1], 1 / size[2]);
     mat4_invert(mat, mat);
-    use_box = painter->box && !box_is_null(*painter->box);
+    use_box = painter->box && !box_is_null(painter->box->mat);
     // XXX: cleanup.
     skip_src_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA);
     skip_dst_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA,

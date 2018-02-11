@@ -115,7 +115,7 @@ static int on_resize(gesture3d_t *gest, void *user)
     tool_selection_t *tool = user;
     float n[3], pos[3], v[3];
 
-    if (box_is_null(goxel->selection)) return GESTURE_FAILED;
+    if (box_is_null(goxel->selection.mat)) return GESTURE_FAILED;
 
     if (gest->type == GESTURE_HOVER) {
         goxel_set_help_text(goxel, "Drag to move face");
@@ -244,7 +244,7 @@ static int gui(tool_t *tool)
 {
     int x, y, z, w, h, d;
     box_t *box = &goxel->selection;
-    if (box_is_null(*box)) return 0;
+    if (box_is_null(box->mat)) return 0;
 
     gui_text("Drag mode");
     gui_combo("##drag_mode", &g_drag_mode,

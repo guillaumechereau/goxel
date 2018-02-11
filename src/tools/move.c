@@ -44,7 +44,7 @@ static void do_move(layer_t *layer, const float mat[4][4])
         layer->base_mesh_key = 0;
     } else {
         mesh_move(layer->mesh, m);
-        if (!box_is_null(layer->box)) {
+        if (!box_is_null(layer->box.mat)) {
             mat4_mul(mat, layer->box.mat, layer->box.mat);
             layer->box = bbox_from_box(layer->box.mat);
         }
@@ -75,7 +75,7 @@ static int on_move(gesture3d_t *gest, void *user)
     layer_t *layer = goxel->image->active_layer;
     float mat[4][4];
 
-    if (box_is_null(tool->box)) return GESTURE_FAILED;
+    if (box_is_null(tool->box.mat)) return GESTURE_FAILED;
 
     if (gest->type == GESTURE_HOVER) {
         goxel_set_help_text(goxel, "Drag to move face");

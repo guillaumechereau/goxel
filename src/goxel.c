@@ -86,7 +86,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
     float opos[3], onorm[3];
     float plane[4][4];
 
-    if (box_is_null(*box)) return false;
+    if (box_is_null(box->mat)) return false;
     camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
         mat4_copy(box->mat, plane);
@@ -480,9 +480,9 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
     gesture_update(4, gests, inputs, viewport, NULL);
     set_flag(&goxel->cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel->cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
-    goxel->painter.box = !box_is_null(goxel->image->active_layer->box) ?
+    goxel->painter.box = !box_is_null(goxel->image->active_layer->box.mat) ?
                          &goxel->image->active_layer->box :
-                         !box_is_null(goxel->image->box) ?
+                         !box_is_null(goxel->image->box.mat) ?
                          &goxel->image->box : NULL;
 
     tool_iter(goxel->tool, viewport);
@@ -562,7 +562,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
     camera_update(&goxel->camera);
 
     render_mesh(rend, goxel->render_mesh, 0);
-    if (!box_is_null(goxel->image->active_layer->box))
+    if (!box_is_null(goxel->image->active_layer->box.mat))
         render_box(rend, &goxel->image->active_layer->box,
                    layer_box_color, EFFECT_WIREFRAME);
 
@@ -589,7 +589,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
     }
     if (!goxel->plane_hidden)
         render_plane(rend, goxel->plane, goxel->grid_color);
-    if (!box_is_null(goxel->image->box))
+    if (!box_is_null(goxel->image->box.mat))
         render_box(rend, &goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
@@ -804,7 +804,7 @@ ACTION_REGISTER(reset_selection,
 
 static void fill_selection(layer_t *layer)
 {
-    if (box_is_null(goxel->selection)) return;
+    if (box_is_null(goxel->selection.mat)) return;
     layer = layer ?: goxel->image->active_layer;
     mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
     goxel_update_meshes(goxel, -1);
@@ -838,7 +838,7 @@ static void copy_action(void)
     mesh_delete(goxel->clipboard.mesh);
     goxel->clipboard.box = goxel->selection;
     goxel->clipboard.mesh = mesh_copy(goxel->image->active_layer->mesh);
-    if (!box_is_null(goxel->selection)) {
+    if (!box_is_null(goxel->selection.mat)) {
         painter = (painter_t) {
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
@@ -858,8 +858,8 @@ static void past_action(void)
     if (!goxel->clipboard.mesh) return;
 
     tmp = mesh_copy(goxel->clipboard.mesh);
-    if (    !box_is_null(goxel->selection) &&
-            !box_is_null(goxel->clipboard.box)) {
+    if (    !box_is_null(goxel->selection.mat) &&
+            !box_is_null(goxel->clipboard.box.mat)) {
         vec3_copy(goxel->selection.p, p1);
         vec3_copy(goxel->clipboard.box.p, p2);
         mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
