@@ -149,8 +149,8 @@ static int on_resize(gesture3d_t *gest, void *user)
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
         if (g_drag_mode == DRAG_RESIZE) {
-            goxel->selection = box_move_face(goxel->selection.mat,
-                                             tool->snap_face, pos);
+            box_move_face(goxel->selection.mat, tool->snap_face, pos,
+                          goxel->selection.mat);
         } else {
             float d[3], ofs[3];
             vec3_add(goxel->selection.p, face_plane[2], d);

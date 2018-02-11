@@ -235,8 +235,8 @@ static inline void box_swap_axis(const float b[4][4], int x, int y, int z,
 
 // Create a new box with the 4 points opposit to the face f and the
 // new point.
-static inline box_t box_move_face(
-        const float b[4][4], int f, const float p[3])
+static inline void box_move_face(
+        const float b[4][4], int f, const float p[3], float out[4][4])
 {
     const float PS[8][3] = {
         {-1, -1, -1},
@@ -267,9 +267,7 @@ static inline box_t box_move_face(
     for (i = 0; i < 4; i++)
         mat4_mul_vec3(b, PS[FS[f][i]], ps[i]);
     vec3_copy(p, ps[4]);
-    box_t ret;
-    bbox_from_npoints(ret.mat, 5, ps);
-    return ret;
+    bbox_from_npoints(out, 5, ps);
 }
 
 static inline float box_get_volume(const float box[4][4])
