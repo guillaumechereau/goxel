@@ -934,16 +934,16 @@ static void image_panel(goxel_t *goxel)
 {
     bool bounded;
     image_t *image = goxel->image;
-    box_t *box = &image->box;
+    float (*box)[4][4] = &image->box.mat;
 
-    bounded = !box_is_null(box->mat);
+    bounded = !box_is_null(*box);
     if (ImGui::Checkbox("Bounded", &bounded)) {
         if (bounded)
-            bbox_from_extents(box->mat, vec3_zero, 16, 16, 16);
+            bbox_from_extents(*box, vec3_zero, 16, 16, 16);
         else
-            mat4_copy(mat4_zero, box->mat);
+            mat4_copy(mat4_zero, *box);
     }
-    if (bounded) gui_bbox(box->mat);
+    if (bounded) gui_bbox(*box);
 }
 
 static void cameras_panel(goxel_t *goxel)
