@@ -85,7 +85,9 @@ int mesh_select(const mesh_t *mesh,
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
 // stupid.
-void mesh_extrude(mesh_t *mesh, const float plane[4][4], const box_t *box)
+void mesh_extrude(mesh_t *mesh,
+                  const float plane[4][4],
+                  const float box[4][4])
 {
     float proj[4][4];
     float n[3], pos[3], p[3];
@@ -114,10 +116,10 @@ void mesh_extrude(mesh_t *mesh, const float plane[4][4], const box_t *box)
     }
 
     // XXX: use an accessor to speed up access.
-    iter = mesh_get_box_iterator(mesh, box->v, 0);
+    iter = mesh_get_box_iterator(mesh, box, 0);
     while (mesh_iter(&iter, vpos)) {
         vec3_set(p, vpos[0], vpos[1], vpos[2]);
-        if (!bbox_contains_vec(box->mat, p)) {
+        if (!bbox_contains_vec(box, p)) {
             memset(value, 0, 4);
         } else {
             mat4_mul_vec3(proj, p, p);

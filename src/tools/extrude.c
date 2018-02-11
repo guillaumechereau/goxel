@@ -127,14 +127,14 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (delta >= 1) {
         vec3_iaddk(face_plane[3], n, -0.5);
         box_move_face(box.mat, tool->snap_face, pos, box.mat);
-        mesh_extrude(tmp_mesh, face_plane, &box);
+        mesh_extrude(tmp_mesh, face_plane, box.mat);
         mesh_merge(mesh, tmp_mesh, MODE_OVER, NULL);
     }
     if (delta < 0.5) {
         box_move_face(box.mat, FACES_OPPOSITES[tool->snap_face], pos, box.mat);
         vec3_imul(face_plane[2], -1.0);
         vec3_iaddk(face_plane[3], n, -0.5);
-        mesh_extrude(tmp_mesh, face_plane, &box);
+        mesh_extrude(tmp_mesh, face_plane, box.mat);
         mesh_merge(mesh, tmp_mesh, MODE_SUB, NULL);
     }
     mesh_delete(tmp_mesh);

@@ -648,7 +648,9 @@ void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4]);
 void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4]);
 
 // XXX: to cleanup.
-void mesh_extrude(mesh_t *mesh, const float plane[4][4], const box_t *box);
+void mesh_extrude(mesh_t *mesh,
+                  const float plane[4][4],
+                  const float box[4][4]);
 
 /* Function: mesh_blit
  *
