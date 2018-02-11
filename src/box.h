@@ -58,9 +58,9 @@ static inline box_t bbox_from_extents(const float pos[3],
 }
 
 static const box_t box_null = {
-    {{-FLT_MAX, 0, 0, 0},
-     {0, -FLT_MAX, 0, 0},
-     {0, 0, -FLT_MAX, 0},
+    {{0, 0, 0, 0},
+     {0, 0, 0, 0},
+     {0, 0, 0, 0},
      {0, 0, 0, 0}}
 };
 
