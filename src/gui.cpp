@@ -741,7 +741,7 @@ static void layers_panel(goxel_t *goxel)
         if (bounded) {
             mesh_get_bbox(layer->mesh, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
-            layer->box = bbox_from_aabb(bbox);
+            bbox_from_aabb(layer->box.mat, bbox);
         } else {
             layer->box = box_null;
         }

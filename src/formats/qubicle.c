@@ -86,7 +86,7 @@ static void qubicle_import(const char *path)
         vec3_set(bbox[1], pos[0] + w, pos[1] + h, pos[2] + d);
         apply_orientation(orientation, bbox[0]);
         apply_orientation(orientation, bbox[1]);
-        layer->box = bbox_from_aabb(bbox);
+        bbox_from_aabb(layer->box.mat, bbox);
 
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {

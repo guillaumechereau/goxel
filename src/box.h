@@ -69,7 +69,7 @@ static inline bool box_is_null(const float b[4][4])
     return b[3][3] == 0;
 }
 
-static inline box_t bbox_from_aabb(const int aabb[2][3])
+static inline void bbox_from_aabb(float box[4][4], const int aabb[2][3])
 {
     const float pos[3] = {(aabb[1][0] + aabb[0][0]) / 2.f,
                           (aabb[1][1] + aabb[0][1]) / 2.f,
@@ -77,7 +77,9 @@ static inline box_t bbox_from_aabb(const int aabb[2][3])
     const float size[3] = {(float)(aabb[1][0] - aabb[0][0]),
                            (float)(aabb[1][1] - aabb[0][1]),
                            (float)(aabb[1][2] - aabb[0][2])};
-    return bbox_from_extents(pos, size[0] / 2, size[1] / 2, size[2] / 2);
+    box_t ret;
+    ret = bbox_from_extents(pos, size[0] / 2, size[1] / 2, size[2] / 2);
+    mat4_copy(ret.mat, box);
 }
 
 static inline void bbox_to_aabb(const float b[4][4], int aabb[2][3])

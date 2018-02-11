@@ -331,11 +331,14 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     }
 }
 
+// XXX: remove this function!
 box_t mesh_get_box(const mesh_t *mesh, bool exact)
 {
+    box_t ret;
     int bbox[2][3];
     mesh_get_bbox(mesh, bbox, exact);
-    return bbox_from_aabb(bbox);
+    bbox_from_aabb(ret.mat, bbox);
+    return ret;
 }
 
 // Used for the cache.
