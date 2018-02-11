@@ -133,7 +133,7 @@ void mesh_extrude(mesh_t *mesh,
 
 static void mesh_fill(
         mesh_t *mesh,
-        const box_t *box,
+        const float box[4][4],
         void (*get_color)(const int pos[3], uint8_t out[4], void *user_data),
         void *user_data)
 {
@@ -144,7 +144,7 @@ static void mesh_fill(
 
     mesh_clear(mesh);
     accessor = mesh_get_accessor(mesh);
-    iter = mesh_get_box_iterator(mesh, box->v, 0);
+    iter = mesh_get_box_iterator(mesh, box, 0);
     while (mesh_iter(&iter, pos)) {
         get_color(pos, color, user_data);
         mesh_set_at(mesh, &accessor, pos, color);
@@ -163,15 +163,15 @@ static void mesh_move_get_color(const int pos[3], uint8_t c[4], void *user)
 
 void mesh_move(mesh_t *mesh, const float mat[4][4])
 {
-    box_t box;
+    float box[4][4];
     mesh_t *src_mesh = mesh_copy(mesh);
     float imat[4][4];
 
     mat4_invert(mat, imat);
-    mesh_get_box(mesh, true, box.mat);
-    if (box_is_null(box.mat)) return;
-    mat4_mul(mat, box.mat, box.mat);
-    mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
+    mesh_get_box(mesh, true, box);
+    if (box_is_null(box)) return;
+    mat4_mul(mat, box, box);
+    mesh_fill(mesh, box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
     mesh_delete(src_mesh);
     mesh_remove_empty_blocks(mesh, false);
 }
