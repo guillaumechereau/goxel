@@ -72,7 +72,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
 
     if (!plane_line_intersection(*plane, opos, onorm, out))
         return false;
-    mat4_mul_vec3(plane->mat.v2, out, out);
+    mat4_mul_vec3(plane->mat, out, out);
     vec3_copy(plane->n, normal);
     return true;
 }
@@ -89,8 +89,8 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
     if (box_is_null(*box)) return false;
     camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
-        plane.mat = box->mat;
-        mat4_imul(plane.mat.v2, FACES_MATS[f]);
+        mat4_copy(box->mat.v2, plane.mat);
+        mat4_imul(plane.mat, FACES_MATS[f]);
 
         if (!inside && vec3_dot(plane.n, onorm) >= 0)
             continue;
@@ -101,7 +101,7 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
         if (!(out[0] >= -1 && out[0] < 1 && out[1] >= -1 && out[1] < 1))
             continue;
         if (face) *face = f;
-        mat4_mul_vec3(plane.mat.v2, out, out);
+        mat4_mul_vec3(plane.mat, out, out);
         vec3_normalize(plane.n, normal);
         if (inside) vec3_imul(normal, -1);
         return true;
@@ -543,11 +543,11 @@ static void render_export_viewport(goxel_t *goxel, const float viewport[4])
     int h = goxel->image->export_height;
     float aspect = (float)w/h;
     plane_t plane;
-    mat4_set_identity(plane.mat.v2);
+    mat4_set_identity(plane.mat);
     if (aspect < goxel->camera.aspect) {
-        mat4_iscale(plane.mat.v2, aspect / goxel->camera.aspect, 1, 1);
+        mat4_iscale(plane.mat, aspect / goxel->camera.aspect, 1, 1);
     } else {
-        mat4_iscale(plane.mat.v2, 1, goxel->camera.aspect / aspect, 1);
+        mat4_iscale(plane.mat, 1, goxel->camera.aspect / aspect, 1);
     }
     render_rect(&goxel->rend, &plane, EFFECT_STRIP);
 }

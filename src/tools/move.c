@@ -84,8 +84,8 @@ static int on_move(gesture3d_t *gest, void *user)
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face],
-                 face_plane.mat.v2);
-        render_img(&goxel->rend, NULL, face_plane.mat.v2, EFFECT_NO_SHADING);
+                 face_plane.mat);
+        render_img(&goxel->rend, NULL, face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane.u, v);
@@ -99,7 +99,7 @@ static int on_move(gesture3d_t *gest, void *user)
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(tool->box.mat.v2, FACES_MATS[tool->snap_face],
-                 face_plane.mat.v2);
+                 face_plane.mat);
 
         vec3_normalize(face_plane.n, n);
         vec3_sub(curs->pos, goxel->tool_plane.p, v);

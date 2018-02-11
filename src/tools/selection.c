@@ -44,7 +44,7 @@ typedef struct {
 static box_t get_box(const float p0[3], const float p1[3], const float n[3],
                      float r, const plane_t *plane)
 {
-    mat4_t rot;
+    float rot[4][4];
     box_t box;
     float v[3];
     if (p1 == NULL) {
@@ -55,9 +55,9 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     if (r == 0) {
         box = bbox_grow(bbox_from_points(p0, p1), 0.5, 0.5, 0.5);
         // Apply the plane rotation.
-        rot = plane->mat;
-        vec4_set(rot.v2[3], 0, 0, 0, 1);
-        mat4_imul(box.mat.v2, rot.v2);
+        mat4_copy(plane->mat, rot);
+        vec4_set(rot[3], 0, 0, 0, 1);
+        mat4_imul(box.mat.v2, rot);
         return box;
     }
 
@@ -124,8 +124,8 @@ static int on_resize(gesture3d_t *gest, void *user)
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face],
-                 face_plane.mat.v2);
-        render_img(&goxel->rend, NULL, face_plane.mat.v2, EFFECT_NO_SHADING);
+                 face_plane.mat);
+        render_img(&goxel->rend, NULL, face_plane.mat, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane.u, v);
@@ -138,7 +138,7 @@ static int on_resize(gesture3d_t *gest, void *user)
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(goxel->selection.mat.v2, FACES_MATS[tool->snap_face],
-                 face_plane.mat.v2);
+                 face_plane.mat);
 
         vec3_normalize(face_plane.n, n);
         vec3_sub(curs->pos, goxel->tool_plane.p, v);

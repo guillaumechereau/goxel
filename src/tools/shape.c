@@ -37,7 +37,7 @@ typedef struct {
 static box_t get_box(const float p0[3], const float p1[3], const float n[3],
                      float r, const plane_t *plane)
 {
-    mat4_t rot;
+    float rot[4][4];
     box_t box;
     float v[3];
 
@@ -49,9 +49,9 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     if (r == 0) {
         box = bbox_grow(bbox_from_points(p0, p1), 0.5, 0.5, 0.5);
         // Apply the plane rotation.
-        rot = plane->mat;
-        vec4_set(rot.v2[3], 0, 0, 0, 1);
-        mat4_imul(box.mat.v2, rot.v2);
+        mat4_copy(plane->mat, rot);
+        vec4_set(rot[3], 0, 0, 0, 1);
+        mat4_imul(box.mat.v2, rot);
         return box;
     }
 

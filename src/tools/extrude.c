@@ -92,8 +92,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 
         // XXX: to remove: this is duplicated from selection tool.
         box = mesh_get_box(tool->mesh, true);
-        mat4_mul(box.mat.v2, FACES_MATS[tool->snap_face],
-                 face_plane.mat.v2);
+        mat4_mul(box.mat.v2, FACES_MATS[tool->snap_face], face_plane.mat);
         vec3_normalize(face_plane.u, v);
         goxel->tool_plane = plane(curs->pos, curs->normal, v);
         tool->last_delta = 0;
@@ -103,7 +102,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     // XXX: have some generic way to resize boxes, since we use it all the
     // time!
-    mat4_mul(box.mat.v2, FACES_MATS[tool->snap_face], face_plane.mat.v2);
+    mat4_mul(box.mat.v2, FACES_MATS[tool->snap_face], face_plane.mat);
     vec3_normalize(face_plane.n, n);
     // XXX: Is there a better way to compute the delta??
     vec3_sub(curs->pos, goxel->tool_plane.p, v);

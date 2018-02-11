@@ -50,7 +50,7 @@
  */
 
 typedef union {
-    mat4_t mat;
+    float mat[4][4];
     struct {
         float u[3]; float u_;
         float v[3]; float v_;
@@ -65,7 +65,7 @@ static inline plane_t plane(
         const float pos[3], const float u[3], const float v[3])
 {
     plane_t ret;
-    mat4_set_identity(ret.mat.v2);
+    mat4_set_identity(ret.mat);
     vec3_copy(u, ret.u);
     vec3_copy(v, ret.v);
     vec3_cross(u, v, ret.n);
@@ -74,7 +74,7 @@ static inline plane_t plane(
 }
 
 static inline bool plane_is_null(plane_t p) {
-    return p.mat.v[15] == 0;
+    return p.mat[3][3] == 0;
 }
 
 // Check if a plane intersect a line.
@@ -103,7 +103,7 @@ static inline plane_t plane_from_normal(const float pos[3], const float n[3])
     plane_t ret;
     int i;
     const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-    mat4_set_identity(ret.mat.v2);
+    mat4_set_identity(ret.mat);
     vec3_copy(pos, ret.p);
     vec3_normalize(n, ret.n);
     for (i = 0; i < 3; i++) {
