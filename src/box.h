@@ -255,35 +255,39 @@ static inline box_t box_get_bbox(const float b[4][4])
     return bbox_from_npoints(8, p);
 }
 
-static inline box_t bbox_grow(box_t b, float x, float y, float z)
+static inline box_t bbox_grow(const float b[4][4], float x, float y, float z)
 {
-    b.w[0] += x;
-    b.h[1] += y;
-    b.d[2] += z;
-    return b;
+    box_t ret;
+    mat4_copy(b, ret.mat);
+    ret.mat[0][0] += x;
+    ret.mat[1][1] += y;
+    ret.mat[2][2] += z;
+    return ret;
 }
 
-static inline void box_get_size(box_t b, float out[3])
+static inline void box_get_size(const float b[4][4], float out[3])
 {
     float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
     int i;
     for (i = 0; i < 3; i++) {
-        mat4_mul_vec4(b.mat, v[i], v[i]);
+        mat4_mul_vec4(b, v[i], v[i]);
         out[i] = vec3_norm(v[i]);
     }
 }
 
-static inline box_t box_swap_axis(box_t b, int x, int y, int z)
+static inline box_t box_swap_axis(const float b[4][4], int x, int y, int z)
 {
     float m[4][4];
+    box_t ret;
     assert(x >= 0 && x <= 2);
     assert(y >= 0 && y <= 2);
     assert(z >= 0 && z <= 2);
-    mat4_copy(b.mat, m);
-    vec4_copy(m[x], b.mat[0]);
-    vec4_copy(m[y], b.mat[1]);
-    vec4_copy(m[z], b.mat[2]);
-    return b;
+    mat4_copy(b, m);
+    mat4_copy(m, ret.mat);
+    vec4_copy(m[x], ret.mat[0]);
+    vec4_copy(m[y], ret.mat[1]);
+    vec4_copy(m[z], ret.mat[2]);
+    return ret;
 }
 
 // Create a new box with the 4 points opposit to the face f and the

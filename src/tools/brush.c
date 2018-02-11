@@ -70,11 +70,11 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
 
     if (p1 == NULL) {
         box = bbox_from_extents(p0, r, r, r);
-        box = box_swap_axis(box, 2, 0, 1);
+        box = box_swap_axis(box.mat, 2, 0, 1);
         return box;
     }
     if (r == 0) {
-        box = bbox_grow(bbox_from_points(p0, p1), 0.5, 0.5, 0.5);
+        box = bbox_grow(bbox_from_points(p0, p1).mat, 0.5, 0.5, 0.5);
         // Apply the plane rotation.
         mat4_copy(plane, rot);
         vec4_set(rot[3], 0, 0, 0, 1);
