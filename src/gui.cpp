@@ -746,7 +746,7 @@ static void layers_panel(goxel_t *goxel)
             mat4_copy(mat4_zero, layer->box.mat);
         }
     }
-    if (bounded) gui_bbox(&layer->box);
+    if (bounded) gui_bbox(layer->box.mat);
 }
 
 
@@ -943,7 +943,7 @@ static void image_panel(goxel_t *goxel)
         else
             mat4_copy(mat4_zero, box->mat);
     }
-    if (bounded) gui_bbox(box);
+    if (bounded) gui_bbox(box->mat);
 }
 
 static void cameras_panel(goxel_t *goxel)
@@ -1541,17 +1541,17 @@ bool gui_input_float(const char *label, float *v, float step,
     return ret;
 }
 
-bool gui_bbox(box_t *box)
+bool gui_bbox(float box[4][4])
 {
     int x, y, z, w, h, d;
     bool ret = false;
     float p[3];
-    w = box->w[0] * 2;
-    h = box->h[1] * 2;
-    d = box->d[2] * 2;
-    x = round(box->p[0] - box->w[0]);
-    y = round(box->p[1] - box->h[1]);
-    z = round(box->p[2] - box->d[2]);
+    w = box[0][0] * 2;
+    h = box[1][1] * 2;
+    d = box[2][2] * 2;
+    x = round(box[3][0] - box[0][0]);
+    y = round(box[3][1] - box[1][1]);
+    z = round(box[3][2] - box[2][2]);
 
     gui_group_begin("Origin");
     ret |= gui_input_int("x", &x, 0, 0);
@@ -1566,7 +1566,7 @@ bool gui_bbox(box_t *box)
 
     if (ret) {
         vec3_set(p, x + w / 2., y + h / 2., z + d / 2.);
-        bbox_from_extents(box->mat, p, w / 2., h / 2., d / 2.);
+        bbox_from_extents(box, p, w / 2., h / 2., d / 2.);
     }
     return ret;
 }

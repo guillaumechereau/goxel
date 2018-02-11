@@ -1343,7 +1343,7 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv);
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);
 bool gui_angle(const char *id, float *v, int vmin, int vmax);
-bool gui_bbox(box_t *box);
+bool gui_bbox(float box[4][4]);
 bool gui_quat(const char *label, float q[4]);
 bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...);
