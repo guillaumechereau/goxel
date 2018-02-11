@@ -202,30 +202,6 @@ static inline bool box_contains(const float a[4][4], const float b[4][4])
     return true;
 }
 
-static inline box_t bbox_merge(const float a[4][4], const float b[4][4])
-{
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
-
-    float a0[3], a1[3], b0[3], b1[3], r0[3], r1[3], mid[3];
-    vec3_set(a0, a[3][0] - a[0][0], a[3][1] - a[1][1], a[3][2] - a[2][2]);
-    vec3_set(a1, a[3][0] + a[0][0], a[3][1] + a[1][1], a[3][2] + a[2][2]);
-    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
-    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
-
-    r0[0] = min(a0[0], b0[0]);
-    r0[1] = min(a0[1], b0[1]);
-    r0[2] = min(a0[2], b0[2]);
-    r1[0] = max(a1[0], b1[0]);
-    r1[1] = max(a1[1], b1[1]);
-    r1[2] = max(a1[2], b1[2]);
-
-    vec3_mix(r0, r1, 0.5, mid);
-    return bbox_from_extents(mid, (r1[0] - r0[0]) / 2,
-                                  (r1[1] - r0[1]) / 2,
-                                  (r1[2] - r0[2]) / 2);
-}
-
 static inline bool bbox_contains_vec(const float b[4][4], const float v[3])
 {
     assert(box_is_bbox(b));
