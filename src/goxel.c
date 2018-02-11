@@ -78,7 +78,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
 }
 
 bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
-                     const float pos[2], const box_t *box, bool inside,
+                     const float pos[2], const float box[4][4], bool inside,
                      float out[3], float normal[3], int *face)
 {
     int f;
@@ -86,10 +86,10 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
     float opos[3], onorm[3];
     float plane[4][4];
 
-    if (box_is_null(box->mat)) return false;
+    if (box_is_null(box)) return false;
     camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
-        mat4_copy(box->mat, plane);
+        mat4_copy(box, plane);
         mat4_imul(plane, FACES_MATS[f]);
 
         if (!inside && vec3_dot(plane[2], onorm) >= 0)
@@ -192,26 +192,26 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
                                          goxel->plane, p, n);
         if ((1 << i) == SNAP_SELECTION_IN)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       &goxel->selection, true,
+                                       goxel->selection.mat, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_SELECTION_OUT)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       &goxel->selection, false,
+                                       goxel->selection.mat, false,
                                        p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
             box_t box;
             mesh_get_box(goxel->image->active_layer->mesh, true, box.mat);
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       &box, false,
+                                       box.mat, false,
                                        p, n, NULL);
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       &goxel->image->box, true,
+                                       goxel->image->box.mat, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_IMAGE_BOX)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       &goxel->image->box, true,
+                                       goxel->image->box.mat, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
             camera_get_ray(&goxel->camera, pos, viewport, p, n);

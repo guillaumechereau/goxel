@@ -1238,7 +1238,7 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
                      const float pos[2], const float plane[4][4],
                      float out[3], float normal[3]);
 bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
-                     const float pos[2], const box_t *box, bool inside,
+                     const float pos[2], const float box[4][4], bool inside,
                      float out[3], float normal[3], int *face);
 // Recompute the meshes.  mask from MESH_ enum.
 void goxel_update_meshes(goxel_t *goxel, int mask);
