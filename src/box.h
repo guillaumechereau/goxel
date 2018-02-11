@@ -128,14 +128,16 @@ static inline box_t bbox_from_npoints(int n, const float (*points)[3])
                                   (v1[2] - v0[2]) / 2);
 }
 
-static inline box_t bbox_intersection(box_t a, box_t b) {
-    assert(box_is_bbox(a.mat));
-    assert(box_is_bbox(b.mat));
+static inline box_t bbox_intersection(
+        const float a[4][4], const float b[4][4])
+{
+    assert(box_is_bbox(a));
+    assert(box_is_bbox(b));
     float a0[3], a1[3], b0[3], b1[3], c0[3], c1[3], mid[3];
-    vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
-    vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
-    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
-    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
+    vec3_set(a0, a[3][0] - a[0][0], a[3][1] - a[1][1], a[3][2] - a[2][2]);
+    vec3_set(a1, a[3][0] + a[0][0], a[3][1] + a[1][1], a[3][2] + a[2][2]);
+    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
+    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
     vec3_set(c0, max(a0[0], b0[0]), max(a0[1], b0[1]), max(a0[2], b0[2]));
     vec3_set(c1, min(a1[0], b1[0]), min(a1[1], b1[1]), min(a1[2], b1[2]));
     if (c0[0] >= c1[0] || c0[1] > c1[1] || c0[2] > c1[2])
