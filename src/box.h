@@ -292,7 +292,8 @@ static inline box_t box_swap_axis(const float b[4][4], int x, int y, int z)
 
 // Create a new box with the 4 points opposit to the face f and the
 // new point.
-static inline box_t box_move_face(box_t b, int f, const float p[3])
+static inline box_t box_move_face(
+        const float b[4][4], int f, const float p[3])
 {
     const float PS[8][3] = {
         {-1, -1, -1},
@@ -318,10 +319,10 @@ static inline box_t box_move_face(box_t b, int f, const float p[3])
 
     // XXX: for the moment we only support bbox, but we could make the
     // function generic.
-    assert(box_is_bbox(b.mat));
+    assert(box_is_bbox(b));
     f = FO[f];
     for (i = 0; i < 4; i++)
-        mat4_mul_vec3(b.mat, PS[FS[f][i]], ps[i]);
+        mat4_mul_vec3(b, PS[FS[f][i]], ps[i]);
     vec3_copy(p, ps[4]);
     return bbox_from_npoints(5, ps);
 }
