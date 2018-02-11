@@ -87,7 +87,7 @@ int mesh_select(const mesh_t *mesh,
 // stupid.
 void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 {
-    mat4_t proj;
+    float proj[4][4];
     float n[3], pos[3], p[3];
     mesh_iterator_t iter;
     int vpos[3];
@@ -98,19 +98,19 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 
     // Generate the projection into the plane.
     // XXX: *very* ugly code, fix this!
-    mat4_set_identity(proj.v2);
+    mat4_set_identity(proj);
 
     if (fabs(plane->n[0]) > 0.1) {
-        proj.v[0] = 0;
-        proj.v[12] = pos[0];
+        proj[0][0] = 0;
+        proj[3][0] = pos[0];
     }
     if (fabs(plane->n[1]) > 0.1) {
-        proj.v[5] = 0;
-        proj.v[13] = pos[1];
+        proj[1][1] = 0;
+        proj[3][1] = pos[1];
     }
     if (fabs(plane->n[2]) > 0.1) {
-        proj.v[10] = 0;
-        proj.v[14] = pos[2];
+        proj[2][2] = 0;
+        proj[3][2] = pos[2];
     }
 
     // XXX: use an accessor to speed up access.
@@ -120,7 +120,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
         if (!bbox_contains_vec(*box, p)) {
             memset(value, 0, 4);
         } else {
-            mat4_mul_vec3(proj.v2, p, p);
+            mat4_mul_vec3(proj, p, p);
             int pi[3] = {floor(p[0]), floor(p[1]), floor(p[2])};
             mesh_get_at(mesh, NULL, pi, value);
         }
