@@ -469,10 +469,11 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                           mesh_iterator_t *iter,
                           const int block_pos[3],
                           int block_id,
-                          int effects, prog_t *prog, mat4_t *model)
+                          int effects, prog_t *prog,
+                          const float model[4][4])
 {
     render_item_t *item;
-    mat4_t block_model;
+    float block_model[4][4];
     int attr;
     float block_id_f[2];
 
@@ -494,9 +495,9 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                                  (void*)(intptr_t)ATTRIBUTES[attr].offset));
     }
 
-    block_model = *model;
-    mat4_itranslate(block_model.v2, block_pos[0], block_pos[1], block_pos[2]);
-    GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, block_model.v));
+    mat4_copy(model, block_model);
+    mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
+    GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, (float*)block_model));
     if (item->size == 4) {
         // Use indexed triangles.
         GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -581,17 +582,17 @@ static void compute_shadow_map_box(
 }
 
 static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
-                         const mat4_t *shadow_mvp)
+                         const float shadow_mvp[4][4])
 {
     prog_t *prog;
-    mat4_t model;
+    float model[4][4];
     int attr, block_pos[3], block_id;
     float pos_scale = 1.0f;
     float light_dir[3];
     bool shadow = false;
     mesh_iterator_t iter;
 
-    mat4_set_identity(model.v2);
+    mat4_set_identity(model);
     get_light_dir(rend, true, light_dir);
 
     if (effects & EFFECT_MARCHING_CUBES)
@@ -633,7 +634,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         assert(shadow_mvp);
         GL(glActiveTexture(GL_TEXTURE2));
         GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
-        GL(glUniformMatrix4fv(prog->u_shadow_mvp_l, 1, 0, shadow_mvp->v));
+        GL(glUniformMatrix4fv(prog->u_shadow_mvp_l, 1, 0, (float*)shadow_mvp));
         GL(glUniform1i(prog->u_shadow_tex_l, 2));
         GL(glUniform1f(prog->u_shadow_k_l, rend->settings.shadow));
     }
@@ -662,7 +663,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, block_pos)) {
         render_block_(rend, mesh, &iter, block_pos,
-                      block_id++, effects, prog, &model);
+                      block_id++, effects, prog, model);
     }
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glDisableVertexAttribArray(attr));
@@ -850,17 +851,18 @@ static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
 }
 
 
-static mat4_t render_shadow_map(renderer_t *rend)
+static void render_shadow_map(renderer_t *rend, float shadow_mvp[4][4])
 {
     render_item_t *item;
     float rect[6], light_dir[3];
     int effects;
     // Create a renderer looking at the scene from the light.
     compute_shadow_map_box(rend, rect);
-    mat4_t bias_mat = mat4(0.5, 0.0, 0.0, 0.0,
-                           0.0, 0.5, 0.0, 0.0,
-                           0.0, 0.0, 0.5, 0.0,
-                           0.5, 0.5, 0.5, 1.0);
+    float bias_mat[4][4] = {{0.5, 0.0, 0.0, 0.0},
+                            {0.0, 0.5, 0.0, 0.0},
+                            {0.0, 0.0, 0.5, 0.0},
+                            {0.5, 0.5, 0.5, 1.0}};
+    float ret[4][4];
     renderer_t srend = {};
     get_light_dir(rend, false, light_dir);
     mat4_lookat(srend.view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
@@ -896,11 +898,10 @@ static mat4_t render_shadow_map(renderer_t *rend)
             render_mesh_(&srend, item->mesh, effects, NULL);
         }
     }
-
-    mat4_t ret = bias_mat;
-    mat4_imul(ret.v2, srend.proj_mat);
-    mat4_imul(ret.v2, srend.view_mat);
-    return ret;
+    mat4_copy(bias_mat, ret);
+    mat4_imul(ret, srend.proj_mat);
+    mat4_imul(ret, srend.view_mat);
+    mat4_copy(ret, shadow_mvp);
 }
 
 static void render_background(renderer_t *rend, const uint8_t col[4])
@@ -953,14 +954,14 @@ void render_submit(renderer_t *rend, const int rect[4],
                    const uint8_t clear_color[4])
 {
     render_item_t *item, *tmp;
-    mat4_t shadow_mvp;
+    float shadow_mvp[4][4];
     const float s = rend->scale;
     bool shadow = rend->settings.shadow &&
         !(rend->settings.effects & (EFFECT_RENDER_POS | EFFECT_SHADOW_MAP));
 
     if (shadow) {
         GL(glDisable(GL_SCISSOR_TEST));
-        shadow_mvp = render_shadow_map(rend);
+        render_shadow_map(rend, shadow_mvp);
     }
 
     GL(glBindFramebuffer(GL_FRAMEBUFFER, rend->fbo));
@@ -974,7 +975,7 @@ void render_submit(renderer_t *rend, const int rect[4],
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         switch (item->type) {
         case ITEM_MESH:
-            render_mesh_(rend, item->mesh, item->effects, &shadow_mvp);
+            render_mesh_(rend, item->mesh, item->effects, shadow_mvp);
             DL_DELETE(rend->items, item);
             mesh_delete(item->mesh);
             break;
