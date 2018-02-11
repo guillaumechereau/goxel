@@ -629,7 +629,7 @@ typedef struct painter {
 /* Function: mesh_get_box
  * Compute the bounding box of a mesh.  */
 // XXX: remove this function!
-box_t mesh_get_box(const mesh_t *mesh, bool exact);
+void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4]);
 
 /* Function: mesh_op
  * Apply a paint operation to a mesh.

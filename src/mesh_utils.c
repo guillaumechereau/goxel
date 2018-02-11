@@ -166,7 +166,7 @@ void mesh_move(mesh_t *mesh, const float mat[4][4])
     float imat[4][4];
 
     mat4_invert(mat, imat);
-    box = mesh_get_box(mesh, true);
+    mesh_get_box(mesh, true, box.mat);
     if (box_is_null(box.mat)) return;
     mat4_mul(mat, box.mat, box.mat);
     mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
@@ -332,13 +332,11 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
 }
 
 // XXX: remove this function!
-box_t mesh_get_box(const mesh_t *mesh, bool exact)
+void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4])
 {
-    box_t ret;
     int bbox[2][3];
     mesh_get_bbox(mesh, bbox, exact);
-    bbox_from_aabb(ret.mat, bbox);
-    return ret;
+    bbox_from_aabb(box, bbox);
 }
 
 // Used for the cache.

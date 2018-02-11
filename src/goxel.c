@@ -199,7 +199,8 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
                                        &goxel->selection, false,
                                        p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
-            box_t box = mesh_get_box(goxel->image->active_layer->mesh, true);
+            box_t box;
+            mesh_get_box(goxel->image->active_layer->mesh, true, box.mat);
             r = goxel_unproject_on_box(goxel, viewport, pos,
                                        &box, false,
                                        p, n, NULL);
@@ -580,10 +581,10 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
         box_t b;
         uint8_t c[4];
         vec4_set(c, 0, 255, 0, 80);
-        b = mesh_get_box(goxel->layers_mesh, true);
+        mesh_get_box(goxel->layers_mesh, true, b.mat);
         render_box(rend, &b, c, EFFECT_WIREFRAME);
         vec4_set(c, 0, 255, 255, 80);
-        b = mesh_get_box(goxel->layers_mesh, false);
+        mesh_get_box(goxel->layers_mesh, false, b.mat);
         render_box(rend, &b, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)

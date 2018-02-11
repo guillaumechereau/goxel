@@ -91,14 +91,14 @@ static int on_drag(gesture3d_t *gest, void *user)
         image_history_push(goxel->image);
 
         // XXX: to remove: this is duplicated from selection tool.
-        box = mesh_get_box(tool->mesh, true);
+        mesh_get_box(tool->mesh, true, box.mat);
         mat4_mul(box.mat, FACES_MATS[tool->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
         plane_from_vectors(goxel->tool_plane, curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
 
-    box = mesh_get_box(tool->mesh, true);
+    mesh_get_box(tool->mesh, true, box.mat);
 
     // XXX: have some generic way to resize boxes, since we use it all the
     // time!

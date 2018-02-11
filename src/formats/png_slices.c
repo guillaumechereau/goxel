@@ -32,7 +32,7 @@ static void export_as_png_slices(const char *path)
     if (!path) return;
     mesh = goxel->layers_mesh;
     box = goxel->image->box;
-    if (box_is_null(box.mat)) box = mesh_get_box(mesh, true);
+    if (box_is_null(box.mat)) mesh_get_box(mesh, true, box.mat);
     w = box.w[0] * 2;
     h = box.h[1] * 2;
     d = box.d[2] * 2;
