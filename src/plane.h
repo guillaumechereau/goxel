@@ -49,67 +49,54 @@
  *
  */
 
-typedef union {
-    float mat[4][4];
-    struct {
-        float u[3]; float u_;
-        float v[3]; float v_;
-        float n[3]; float n_;
-        float p[3]; float p_;
-    };
-} plane_t;
+static const float plane_null[4][4] = {};
 
-static const plane_t plane_null = {};
-
-static inline plane_t plane(
+static inline void plane_from_vectors(float plane[4][4],
         const float pos[3], const float u[3], const float v[3])
 {
-    plane_t ret;
-    mat4_set_identity(ret.mat);
-    vec3_copy(u, ret.u);
-    vec3_copy(v, ret.v);
-    vec3_cross(u, v, ret.n);
-    vec3_copy(pos, ret.p);
-    return ret;
+    mat4_set_identity(plane);
+    vec3_copy(u, plane[0]);
+    vec3_copy(v, plane[1]);
+    vec3_cross(u, v, plane[2]);
+    vec3_copy(pos, plane[3]);
 }
 
-static inline bool plane_is_null(plane_t p) {
-    return p.mat[3][3] == 0;
+static inline bool plane_is_null(const float p[4][4]) {
+    return p[3][3] == 0;
 }
 
 // Check if a plane intersect a line.
 // if out is set, it receive the position of the intersection in the
 // plane local coordinates.  Apply the plane matrix on it to get the
 // object coordinate position.
-static inline bool plane_line_intersection(
-        plane_t plane, const float p[3], const float n[3], float out[3])
+static inline bool plane_line_intersection(const float plane[4][4],
+        const float p[3], const float n[3], float out[3])
 {
     float v[3], m[4][4];
     mat4_set_identity(m);
-    vec3_copy(plane.u, m[0]);
-    vec3_copy(plane.v, m[1]);
+    vec3_copy(plane[0], m[0]);
+    vec3_copy(plane[1], m[1]);
     vec3_copy(n, m[2]);
     if (!mat4_invert(m, m)) return false;
     if (out) {
-        vec3_sub(p, plane.p, v);
+        vec3_sub(p, plane[3], v);
         mat4_mul_vec3(m, v, out);
         out[2] = 0;
     }
     return true;
 }
 
-static inline plane_t plane_from_normal(const float pos[3], const float n[3])
+static inline void plane_from_normal(float plane[4][4],
+                                     const float pos[3], const float n[3])
 {
-    plane_t ret;
     int i;
     const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-    mat4_set_identity(ret.mat);
-    vec3_copy(pos, ret.p);
-    vec3_normalize(n, ret.n);
+    mat4_set_identity(plane);
+    vec3_copy(pos, plane[3]);
+    vec3_normalize(n, plane[2]);
     for (i = 0; i < 3; i++) {
-        vec3_cross(ret.n, AXES[i], ret.u);
-        if (vec3_norm2(ret.u) > 0) break;
+        vec3_cross(plane[2], AXES[i], plane[0]);
+        if (vec3_norm2(plane[0]) > 0) break;
     }
-    vec3_cross(ret.n, ret.u, ret.v);
-    return ret;
+    vec3_cross(plane[2], plane[0], plane[1]);
 }

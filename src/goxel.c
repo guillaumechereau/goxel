@@ -56,7 +56,7 @@ static bool unproject_delta(const float win[3], const float model[4][4],
 
 // XXX: lot of cleanup to do here.
 bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
-                              const float pos[2], const plane_t *plane,
+                              const float pos[2], const float plane[4][4],
                               float out[3], float normal[3])
 {
     // If the angle between the screen and the plane is close to 90 deg,
@@ -67,13 +67,13 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
     float opos[3], onorm[3];
 
     camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
-    if (fabs(vec3_dot(onorm, plane->n)) <= min_angle_cos)
+    if (fabs(vec3_dot(onorm, plane[2])) <= min_angle_cos)
         return false;
 
-    if (!plane_line_intersection(*plane, opos, onorm, out))
+    if (!plane_line_intersection(plane, opos, onorm, out))
         return false;
-    mat4_mul_vec3(plane->mat, out, out);
-    vec3_copy(plane->n, normal);
+    mat4_mul_vec3(plane, out, out);
+    vec3_copy(plane[2], normal);
     return true;
 }
 
@@ -84,25 +84,25 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
     int f;
     float wpos[3] = {pos[0], pos[1], 0};
     float opos[3], onorm[3];
-    plane_t plane;
+    float plane[4][4];
 
     if (box_is_null(*box)) return false;
     camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
-        mat4_copy(box->mat, plane.mat);
-        mat4_imul(plane.mat, FACES_MATS[f]);
+        mat4_copy(box->mat, plane);
+        mat4_imul(plane, FACES_MATS[f]);
 
-        if (!inside && vec3_dot(plane.n, onorm) >= 0)
+        if (!inside && vec3_dot(plane[2], onorm) >= 0)
             continue;
-        if (inside && vec3_dot(plane.n, onorm) <= 0)
+        if (inside && vec3_dot(plane[2], onorm) <= 0)
             continue;
         if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
         if (!(out[0] >= -1 && out[0] < 1 && out[1] >= -1 && out[1] < 1))
             continue;
         if (face) *face = f;
-        mat4_mul_vec3(plane.mat, out, out);
-        vec3_normalize(plane.n, normal);
+        mat4_mul_vec3(plane, out, out);
+        vec3_normalize(plane[2], normal);
         if (inside) vec3_imul(normal, -1);
         return true;
     }
@@ -176,7 +176,7 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
         r = goxel_unproject_on_plane(goxel, viewport, pos,
-                                     &goxel->tool_plane, out, normal);
+                                     goxel->tool_plane, out, normal);
         ret = r ? SNAP_PLANE : 0;
         goto end;
     }
@@ -189,7 +189,7 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
         }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(goxel, viewport, pos,
-                                         &goxel->plane, p, n);
+                                         goxel->plane, p, n);
         if ((1 << i) == SNAP_SELECTION_IN)
             r = goxel_unproject_on_box(goxel, viewport, pos,
                                        &goxel->selection, true,
@@ -303,7 +303,7 @@ void goxel_init(goxel_t *gox)
     render_get_default_settings(0, NULL, &goxel->rend.settings);
 
     model3d_init();
-    goxel->plane = plane(vec3_zero, VEC(1, 0, 0), VEC(0, 1, 0));
+    plane_from_vectors(goxel->plane, vec3_zero, VEC(1, 0, 0), VEC(0, 1, 0));
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
 
     goxel->gestures.drag = (gesture_t) {
@@ -542,14 +542,14 @@ static void render_export_viewport(goxel_t *goxel, const float viewport[4])
     int w = goxel->image->export_width;
     int h = goxel->image->export_height;
     float aspect = (float)w/h;
-    plane_t plane;
-    mat4_set_identity(plane.mat);
+    float plane[4][4];
+    mat4_set_identity(plane);
     if (aspect < goxel->camera.aspect) {
-        mat4_iscale(plane.mat, aspect / goxel->camera.aspect, 1, 1);
+        mat4_iscale(plane, aspect / goxel->camera.aspect, 1, 1);
     } else {
-        mat4_iscale(plane.mat, 1, goxel->camera.aspect / aspect, 1);
+        mat4_iscale(plane, 1, goxel->camera.aspect / aspect, 1);
     }
-    render_rect(&goxel->rend, &plane, EFFECT_STRIP);
+    render_rect(&goxel->rend, plane, EFFECT_STRIP);
 }
 
 void goxel_render_view(goxel_t *goxel, const float viewport[4])
@@ -588,7 +588,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
         render_box(rend, &b, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)
-        render_plane(rend, &goxel->plane, goxel->grid_color);
+        render_plane(rend, goxel->plane, goxel->grid_color);
     if (!box_is_null(goxel->image->box))
         render_box(rend, &goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);

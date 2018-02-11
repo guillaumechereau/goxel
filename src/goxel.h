@@ -646,7 +646,7 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact);
 void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box);
 
 // XXX: to cleanup.
-void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
+void mesh_extrude(mesh_t *mesh, const float plane[4][4], const box_t *box);
 
 /* Function: mesh_blit
  *
@@ -750,7 +750,7 @@ struct renderer
 void render_init(void);
 void render_deinit(void);
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
-void render_plane(renderer_t *rend, const plane_t *plane,
+void render_plane(renderer_t *rend, const float plane[4][4],
                   const uint8_t color[4]);
 void render_line(renderer_t *rend, const float a[3], const float b[3],
                  const uint8_t color[4]);
@@ -759,7 +759,7 @@ void render_box(renderer_t *rend, const box_t *box,
 void render_sphere(renderer_t *rend, const float mat[4][4]);
 void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
                 int efffects);
-void render_rect(renderer_t *rend, const plane_t *plane, int effects);
+void render_rect(renderer_t *rend, const float plane[4][4], int effects);
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
@@ -1154,7 +1154,7 @@ typedef struct goxel
     int        snap_mask;    // Global snap mask (can edit in the GUI).
     float      snap_offset;  // Only for brush tool, remove that?
 
-    plane_t    plane;         // The snapping plane.
+    float      plane[4][4];         // The snapping plane.
     bool       plane_hidden;  // Set to true to hide the plane.
     bool       show_export_viewport;
 
@@ -1174,7 +1174,7 @@ typedef struct goxel
     float      tool_radius;
 
     // Some state for the tool iter functions.
-    plane_t    tool_plane;
+    float      tool_plane[4][4];
     bool       tool_shape_two_steps; // Param of the shape tool.
 
     box_t      selection;   // The selection box.
@@ -1229,7 +1229,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const float viewport[4],
                      float out[3], float normal[3]);
 
 bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
-                     const float pos[2], const plane_t *plane,
+                     const float pos[2], const float plane[4][4],
                      float out[3], float normal[3]);
 bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
                      const float pos[2], const box_t *box, bool inside,

@@ -85,7 +85,7 @@ int mesh_select(const mesh_t *mesh,
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
 // stupid.
-void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
+void mesh_extrude(mesh_t *mesh, const float plane[4][4], const box_t *box)
 {
     float proj[4][4];
     float n[3], pos[3], p[3];
@@ -93,22 +93,22 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
     int vpos[3];
     uint8_t value[4];
 
-    vec3_normalize(plane->n, n);
-    vec3_copy(plane->p, pos);
+    vec3_normalize(plane[2], n);
+    vec3_copy(plane[3], pos);
 
     // Generate the projection into the plane.
     // XXX: *very* ugly code, fix this!
     mat4_set_identity(proj);
 
-    if (fabs(plane->n[0]) > 0.1) {
+    if (fabs(plane[2][0]) > 0.1) {
         proj[0][0] = 0;
         proj[3][0] = pos[0];
     }
-    if (fabs(plane->n[1]) > 0.1) {
+    if (fabs(plane[2][1]) > 0.1) {
         proj[1][1] = 0;
         proj[3][1] = pos[1];
     }
-    if (fabs(plane->n[2]) > 0.1) {
+    if (fabs(plane[2][2]) > 0.1) {
         proj[2][2] = 0;
         proj[3][2] = pos[2];
     }

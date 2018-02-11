@@ -35,7 +35,7 @@ typedef struct {
 
 
 static box_t get_box(const float p0[3], const float p1[3], const float n[3],
-                     float r, const plane_t *plane)
+                     float r, const float plane[4][4])
 {
     float rot[4][4];
     box_t box;
@@ -49,7 +49,7 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
     if (r == 0) {
         box = bbox_grow(bbox_from_points(p0, p1), 0.5, 0.5, 0.5);
         // Apply the plane rotation.
-        mat4_copy(plane->mat, rot);
+        mat4_copy(plane, rot);
         vec4_set(rot[3], 0, 0, 0, 1);
         mat4_imul(box.mat, rot);
         return box;
@@ -82,7 +82,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text(goxel, "Click and drag to draw.");
-    box = get_box(curs->pos, curs->pos, curs->normal, 0, &goxel->plane);
+    box = get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane);
     render_box(&goxel->rend, &box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
@@ -104,7 +104,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     goxel_set_help_text(goxel, "Drag.");
     box = get_box(shape->start_pos, curs->pos, curs->normal,
-                  0, &goxel->plane);
+                  0, goxel->plane);
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, shape->mesh_orig);
     mesh_op(goxel->tool_mesh, &goxel->painter, &box);
@@ -131,24 +131,24 @@ static int on_adjust(gesture3d_t *gest, void *user)
     goxel_set_help_text(goxel, "Adjust height.");
 
     if (gest->state == GESTURE_BEGIN) {
-        goxel->tool_plane = plane_from_normal(curs->pos, goxel->plane.u);
+        plane_from_normal(goxel->tool_plane, curs->pos, goxel->plane[0]);
     }
 
-    vec3_sub(curs->pos, goxel->tool_plane.p, v);
-    vec3_project(v, goxel->plane.n, v);
-    vec3_add(goxel->tool_plane.p, v, pos);
+    vec3_sub(curs->pos, goxel->tool_plane[3], v);
+    vec3_project(v, goxel->plane[2], v);
+    vec3_add(goxel->tool_plane[3], v, pos);
     pos[0] = round(pos[0] - 0.5) + 0.5;
     pos[1] = round(pos[1] - 0.5) + 0.5;
     pos[2] = round(pos[2] - 0.5) + 0.5;
 
-    box = get_box(shape->start_pos, pos, curs->normal, 0, &goxel->plane);
+    box = get_box(shape->start_pos, pos, curs->normal, 0, goxel->plane);
 
     mesh_set(mesh, shape->mesh_orig);
     mesh_op(mesh, &goxel->painter, &box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
-        goxel->tool_plane = plane_null;
+        mat4_copy(plane_null, goxel->tool_plane);
         mesh_set(shape->mesh_orig, mesh);
         shape->adjust = false;
         goxel_update_meshes(goxel, -1);

@@ -750,12 +750,12 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     }
 }
 
-void render_plane(renderer_t *rend, const plane_t *plane,
+void render_plane(renderer_t *rend, const float plane[4][4],
                   const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
-    mat4_copy(plane->mat, item->mat);
+    mat4_copy(plane, item->mat);
     mat4_iscale(item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
     copy_color(color, item->color);
@@ -776,12 +776,12 @@ void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
     DL_APPEND(rend->items, item);
 }
 
-void render_rect(renderer_t *rend, const plane_t *plane, int effects)
+void render_rect(renderer_t *rend, const float plane[4][4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & EFFECT_STRIP) == effects);
     item->type = ITEM_MODEL3D;
-    mat4_copy(plane->mat, item->mat);
+    mat4_copy(plane, item->mat);
     item->model3d = g_wire_rect_model;
     copy_color(NULL, item->color);
     item->proj_screen = true;

@@ -68,7 +68,7 @@ static int get_face(const float n[3])
 
 static int on_move(gesture3d_t *gest, void *user)
 {
-    plane_t face_plane;
+    float face_plane[4][4];
     cursor_t *curs = gest->cursor;
     tool_move_t *tool = user;
     float n[3], pos[3], d[3], ofs[3], v[3];
@@ -83,13 +83,12 @@ static int on_move(gesture3d_t *gest, void *user)
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face],
-                 face_plane.mat);
-        render_img(&goxel->rend, NULL, face_plane.mat, EFFECT_NO_SHADING);
+        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face], face_plane);
+        render_img(&goxel->rend, NULL, face_plane, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
-            vec3_normalize(face_plane.u, v);
-            goxel->tool_plane = plane(curs->pos, curs->normal, v);
+            vec3_normalize(face_plane[0], v);
+            plane_from_vectors(goxel->tool_plane, curs->pos, curs->normal, v);
             image_history_push(goxel->image);
         }
         return 0;
@@ -98,17 +97,16 @@ static int on_move(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face],
-                 face_plane.mat);
+        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face], face_plane);
 
-        vec3_normalize(face_plane.n, n);
-        vec3_sub(curs->pos, goxel->tool_plane.p, v);
+        vec3_normalize(face_plane[2], n);
+        vec3_sub(curs->pos, goxel->tool_plane[3], v);
         vec3_project(v, n, v);
-        vec3_add(goxel->tool_plane.p, v, pos);
+        vec3_add(goxel->tool_plane[3], v, pos);
         pos[0] = round(pos[0]);
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
-        vec3_add(tool->box.p, face_plane.n, d);
+        vec3_add(tool->box.p, face_plane[2], d);
         vec3_sub(pos, d, ofs);
         vec3_project(ofs, n, ofs);
 
@@ -118,7 +116,7 @@ static int on_move(gesture3d_t *gest, void *user)
 
         if (gest->state == GESTURE_END) {
             gest->type = GESTURE_HOVER;
-            goxel->tool_plane = plane_null;
+            mat4_copy(plane_null, goxel->tool_plane);
         }
         return 0;
     }
