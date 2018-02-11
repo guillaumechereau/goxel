@@ -27,12 +27,6 @@
 
 typedef float real_t;
 
-typedef union {
-    real_t v[16];
-    real_t v2[4][4];
-} mat4_t;
-
-
 enum  {
     EULER_ORDER_DEFAULT = 0, // XYZ.
     EULER_ORDER_XYZ = 0,
@@ -42,9 +36,6 @@ enum  {
     EULER_ORDER_ZXY,
     EULER_ORDER_ZYX
 };
-
-#define MAT(...) {{__VA_ARGS__}}
-
 
 #define MAT4_IDENTITY {{1, 0, 0, 0}, \
                        {0, 1, 0, 0}, \
@@ -305,17 +296,6 @@ DECL void vec3_cross(const float a[3], const float b[3], float out[3])
     out[0] = a[1] * b[2] - a[2] * b[1];
     out[1] = a[2] * b[0] - a[0] * b[2];
     out[2] = a[0] * b[1] - a[1] * b[0];
-}
-
-DECL mat4_t mat4(real_t x1, real_t x2, real_t x3, real_t x4,
-                 real_t y1, real_t y2, real_t y3, real_t y4,
-                 real_t z1, real_t z2, real_t z3, real_t z4,
-                 real_t w1, real_t w2, real_t w3, real_t w4)
-{
-    return (mat4_t)MAT(x1, x2, x3, x4,
-                       y1, y2, y3, y4,
-                       z1, z2, z3, z4,
-                       w1, w2, w3, w4);
 }
 
 DECL void mat4_copy(const float m[4][4], float out[4][4])
