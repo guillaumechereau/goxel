@@ -34,12 +34,12 @@ typedef union {
     float v[4][4];
 } box_t;
 
-static inline bool box_is_bbox(box_t b)
+static inline bool box_is_bbox(const float b[4][4])
 {
     int i, j;
     for (i = 0; i < 3; i++)
     for (j = 0; j < 4; j++) {
-        if (mat4_identity[i][j] == 0 && b.mat[i][j] != 0)
+        if (mat4_identity[i][j] == 0 && b[i][j] != 0)
             return false;
     }
     return true;
@@ -129,8 +129,8 @@ static inline box_t bbox_from_npoints(int n, const float (*points)[3])
 }
 
 static inline box_t bbox_intersection(box_t a, box_t b) {
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
+    assert(box_is_bbox(a.mat));
+    assert(box_is_bbox(b.mat));
     float a0[3], a1[3], b0[3], b1[3], c0[3], c1[3], mid[3];
     vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
     vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
@@ -146,33 +146,34 @@ static inline box_t bbox_intersection(box_t a, box_t b) {
                                   (c1[2] - c0[2]) / 2);
 }
 
-static inline bool bbox_intersect(box_t a, box_t b) {
+static inline bool bbox_intersect(const float a[4][4], const float b[4][4]) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
     float a0[3], a1[3], b0[3], b1[3];
-    vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
-    vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
-    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
-    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
+    vec3_set(a0, a[3][0] - a[0][0], a[3][1] - a[1][1], a[3][2] - a[2][2]);
+    vec3_set(a1, a[3][0] + a[0][0], a[3][1] + a[1][1], a[3][2] + a[2][2]);
+    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
+    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
     return a0[0] <= b1[0] && b0[0] <= a1[0] &&
            a0[1] <= b1[1] && b0[1] <= a1[1] &&
            a0[2] <= b1[2] && b0[2] <= a1[2];
 }
 
-static inline bool bbox_contains(box_t a, box_t b) {
+static inline bool bbox_contains(const float a[4][4], const float b[4][4]) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
     float a0[3], a1[3], b0[3], b1[3];
-    vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
-    vec3_set(a1, a.p[0] + a.w[0], a.p[1] + a.h[1], a.p[2] + a.d[2]);
-    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
-    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
+    vec3_set(a0, a[3][0] - a[0][0], a[3][1] - a[1][1], a[3][2] - a[2][2]);
+    vec3_set(a1, a[3][0] + a[0][0], a[3][1] + a[1][1], a[3][2] + a[2][2]);
+    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
+    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
     return (a0[0] <= b0[0] && a1[0] >= b1[0] &&
             a0[1] <= b0[1] && a1[1] >= b1[1] &&
             a0[2] <= b0[2] && a1[2] >= b1[2]);
 }
 
-static inline bool box_contains(box_t a, box_t b) {
+static inline bool box_contains(const float a[4][4], const float b[4][4])
+{
     const float PS[8][3] = {
         {-1, -1, +1},
         {+1, -1, +1},
@@ -187,9 +188,9 @@ static inline bool box_contains(box_t a, box_t b) {
     int i;
     float imat[4][4];
 
-    mat4_invert(a.mat, imat);
+    mat4_invert(a, imat);
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(b.mat, PS[i], p);
+        mat4_mul_vec3(b, PS[i], p);
         mat4_mul_vec3(imat, p, p);
         if (    p[0] < -1 || p[0] > 1 ||
                 p[1] < -1 || p[1] > 1 ||
@@ -201,8 +202,8 @@ static inline bool box_contains(box_t a, box_t b) {
 
 static inline box_t bbox_merge(box_t a, box_t b)
 {
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
+    assert(box_is_bbox(a.mat));
+    assert(box_is_bbox(b.mat));
 
     float a0[3], a1[3], b0[3], b1[3], r0[3], r1[3], mid[3];
     vec3_set(a0, a.p[0] - a.w[0], a.p[1] - a.h[1], a.p[2] - a.d[2]);
@@ -223,19 +224,19 @@ static inline box_t bbox_merge(box_t a, box_t b)
                                   (r1[2] - r0[2]) / 2);
 }
 
-static inline bool bbox_contains_vec(box_t b, const float v[3])
+static inline bool bbox_contains_vec(const float b[4][4], const float v[3])
 {
     assert(box_is_bbox(b));
     float b0[3], b1[3];
-    vec3_set(b0, b.p[0] - b.w[0], b.p[1] - b.h[1], b.p[2] - b.d[2]);
-    vec3_set(b1, b.p[0] + b.w[0], b.p[1] + b.h[1], b.p[2] + b.d[2]);
+    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
+    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
 
     return (b0[0] <= v[0] && b1[0] > v[0] &&
             b0[1] <= v[1] && b1[1] > v[1] &&
             b0[2] <= v[2] && b1[2] > v[2]);
 }
 
-static inline box_t box_get_bbox(box_t b)
+static inline box_t box_get_bbox(const float b[4][4])
 {
     float p[8][3] = {
         {-1, -1, +1},
@@ -249,7 +250,7 @@ static inline box_t box_get_bbox(box_t b)
     };
     int i;
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(b.mat, p[i], p[i]);
+        mat4_mul_vec3(b, p[i], p[i]);
     }
     return bbox_from_npoints(8, p);
 }
@@ -313,7 +314,7 @@ static inline box_t box_move_face(box_t b, int f, const float p[3])
 
     // XXX: for the moment we only support bbox, but we could make the
     // function generic.
-    assert(box_is_bbox(b));
+    assert(box_is_bbox(b.mat));
     f = FO[f];
     for (i = 0; i < 4; i++)
         mat4_mul_vec3(b.mat, PS[FS[f][i]], ps[i]);
