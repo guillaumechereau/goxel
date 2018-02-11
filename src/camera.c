@@ -50,7 +50,7 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     mesh_iterator_t iter;
 
     if (!box_is_null(goxel->image->box)) {
-        box_get_vertices(goxel->image->box, vertices);
+        box_get_vertices(goxel->image->box.mat, vertices);
         for (i = 0; i < 8; i++) {
             mat4_mul_vec3(view_mat, vertices[i], p);
             if (p[2] < 0) {

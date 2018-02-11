@@ -46,7 +46,7 @@ static void do_move(layer_t *layer, const float mat[4][4])
         mesh_move(layer->mesh, m);
         if (!box_is_null(layer->box)) {
             mat4_mul(mat, layer->box.mat, layer->box.mat);
-            layer->box = bbox_from_box(layer->box);
+            layer->box = bbox_from_box(layer->box.mat);
         }
     }
     goxel_update_meshes(goxel, -1);

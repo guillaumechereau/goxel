@@ -327,11 +327,11 @@ static inline box_t box_move_face(
     return bbox_from_npoints(5, ps);
 }
 
-static inline float box_get_volume(box_t box)
+static inline float box_get_volume(const float box[4][4])
 {
     // The volume is the determinant of the 3x3 matrix of the box
     // time 8 (because the unit cube has a volume of 8).
-    float *v = &box.mat[0][0];
+    const float *v = &box[0][0];
     float a, b, c, d, e, f, g, h, i;
     a = v[0]; b = v[1]; c = v[2];
     d = v[4]; e = v[5]; f = v[6];
@@ -339,7 +339,8 @@ static inline float box_get_volume(box_t box)
     return 8 * fabs(a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h);
 }
 
-static inline void box_get_vertices(box_t box, float vertices[8][3])
+static inline void box_get_vertices(const float box[4][4],
+                                    float vertices[8][3])
 {
     int i;
     const float P[8][3] = {
@@ -353,11 +354,11 @@ static inline void box_get_vertices(box_t box, float vertices[8][3])
         {-1, +1, -1},
     };
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec3(box.mat, P[i], vertices[i]);
+        mat4_mul_vec3(box, P[i], vertices[i]);
     }
 }
 
-static inline box_t bbox_from_box(box_t b)
+static inline box_t bbox_from_box(const float b[4][4])
 {
     float vertices[8][3];
     box_get_vertices(b, vertices);

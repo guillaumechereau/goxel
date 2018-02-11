@@ -514,7 +514,7 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
             // Is it a basic shape?
             for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
                 if (str_equ(expr->id, SHAPES[i]->id)) {
-                    volume = box_get_volume(ctx2.box);
+                    volume = box_get_volume(ctx2.box.mat);
                     if (volume > max_op_volume)
                         return error(proc, expr, "abort: volume too big!");
                     volume_tot += volume;
