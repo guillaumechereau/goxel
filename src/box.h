@@ -92,7 +92,8 @@ static inline void bbox_to_aabb(const float b[4][4], int aabb[2][3])
 
 
 // XXX: remove?
-static inline box_t bbox_from_points(const float a[3], const float b[3])
+static inline void bbox_from_points(
+        float box[4][4], const float a[3], const float b[3])
 {
     float v0[3], v1[3], mid[3];
     v0[0] = min(a[0], b[0]);
@@ -102,9 +103,11 @@ static inline box_t bbox_from_points(const float a[3], const float b[3])
     v1[1] = max(a[1], b[1]);
     v1[2] = max(a[2], b[2]);
     vec3_mix(v0, v1, 0.5, mid);
-    return bbox_from_extents(mid, (v1[0] - v0[0]) / 2,
-                                  (v1[1] - v0[1]) / 2,
-                                  (v1[2] - v0[2]) / 2);
+    box_t ret;
+    ret = bbox_from_extents(mid, (v1[0] - v0[0]) / 2,
+                                 (v1[1] - v0[1]) / 2,
+                                 (v1[2] - v0[2]) / 2);
+    mat4_copy(ret.mat, box);
 }
 
 static inline void bbox_from_npoints(
@@ -129,39 +132,6 @@ static inline void bbox_from_npoints(
                                  (v1[1] - v0[1]) / 2,
                                  (v1[2] - v0[2]) / 2);
     mat4_copy(ret.mat, box);
-}
-
-static inline box_t bbox_intersection(
-        const float a[4][4], const float b[4][4])
-{
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
-    float a0[3], a1[3], b0[3], b1[3], c0[3], c1[3], mid[3];
-    vec3_set(a0, a[3][0] - a[0][0], a[3][1] - a[1][1], a[3][2] - a[2][2]);
-    vec3_set(a1, a[3][0] + a[0][0], a[3][1] + a[1][1], a[3][2] + a[2][2]);
-    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
-    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
-    vec3_set(c0, max(a0[0], b0[0]), max(a0[1], b0[1]), max(a0[2], b0[2]));
-    vec3_set(c1, min(a1[0], b1[0]), min(a1[1], b1[1]), min(a1[2], b1[2]));
-    if (c0[0] >= c1[0] || c0[1] > c1[1] || c0[2] > c1[2])
-        return box_null;
-    vec3_mix(c0, c1, 0.5, mid);
-    return bbox_from_extents(mid, (c1[0] - c0[0]) / 2,
-                                  (c1[1] - c0[1]) / 2,
-                                  (c1[2] - c0[2]) / 2);
-}
-
-static inline bool bbox_intersect(const float a[4][4], const float b[4][4]) {
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
-    float a0[3], a1[3], b0[3], b1[3];
-    vec3_set(a0, a[3][0] - a[0][0], a[3][1] - a[1][1], a[3][2] - a[2][2]);
-    vec3_set(a1, a[3][0] + a[0][0], a[3][1] + a[1][1], a[3][2] + a[2][2]);
-    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
-    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
-    return a0[0] <= b1[0] && b0[0] <= a1[0] &&
-           a0[1] <= b1[1] && b0[1] <= a1[1] &&
-           a0[2] <= b1[2] && b0[2] <= a1[2];
 }
 
 static inline bool bbox_contains(const float a[4][4], const float b[4][4]) {

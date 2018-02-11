@@ -74,7 +74,8 @@ static box_t get_box(const float p0[3], const float p1[3], const float n[3],
         return box;
     }
     if (r == 0) {
-        bbox_grow(bbox_from_points(p0, p1).mat, 0.5, 0.5, 0.5, box.mat);
+        bbox_from_points(box.mat, p0, p1);
+        bbox_grow(box.mat, 0.5, 0.5, 0.5, box.mat);
         // Apply the plane rotation.
         mat4_copy(plane, rot);
         vec4_set(rot[3], 0, 0, 0, 1);
