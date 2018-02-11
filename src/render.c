@@ -810,14 +810,14 @@ void render_line(renderer_t *rend, const float a[3], const float b[3],
     DL_APPEND(rend->items, item);
 }
 
-void render_box(renderer_t *rend, const box_t *box,
+void render_box(renderer_t *rend, const float box[4][4],
                 const uint8_t color[4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
             == effects);
     item->type = ITEM_MODEL3D;
-    mat4_copy(box->mat, item->mat);
+    mat4_copy(box, item->mat);
     copy_color(color, item->color);
     item->effects = effects;
     item->model3d = (effects & EFFECT_WIREFRAME) ? g_wire_cube_model :

@@ -81,7 +81,7 @@ static int iter(tool_t *tool, const float viewport[4])
     // Just a large value for the size of the laser box.
     mat4_itranslate(laser->box.mat, 0, 0, -1024);
     mat4_iscale(laser->box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
-    render_box(&goxel->rend, &laser->box, NULL, EFFECT_WIREFRAME);
+    render_box(&goxel->rend, laser->box.mat, NULL, EFFECT_WIREFRAME);
 
     gesture3d(&laser->gestures.drag, curs, laser);
 

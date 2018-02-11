@@ -46,7 +46,7 @@ static int iter(tool_t *tool, const float viewport[4])
     case STATE_SNAPED:
         if (!curs->snaped) return STATE_IDLE;
         bbox_from_extents(box.mat, curs->pos, 0.5, 0.5, 0.5);
-        render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
+        render_box(&goxel->rend, box.mat, NULL, EFFECT_WIREFRAME);
         if (curs->flags & CURSOR_PRESSED) {
             image_history_push(goxel->image);
             proc_stop(proc);

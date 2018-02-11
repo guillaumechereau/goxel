@@ -138,7 +138,7 @@ static int iter(tool_t *tool, const float viewport[4])
     }
     gesture3d(&move->gestures.move, curs, move);
     mesh_get_box(layer->mesh, true, move->box.mat);
-    render_box(&goxel->rend, &move->box, NULL,
+    render_box(&goxel->rend, move->box.mat, NULL,
                EFFECT_STRIP | EFFECT_WIREFRAME);
     return 0;
 }

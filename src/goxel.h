@@ -755,7 +755,7 @@ void render_plane(renderer_t *rend, const float plane[4][4],
                   const uint8_t color[4]);
 void render_line(renderer_t *rend, const float a[3], const float b[3],
                  const uint8_t color[4]);
-void render_box(renderer_t *rend, const box_t *box,
+void render_box(renderer_t *rend, const float box[4][4],
                 const uint8_t color[4], int effects);
 void render_sphere(renderer_t *rend, const float mat[4][4]);
 void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],

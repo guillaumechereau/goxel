@@ -105,7 +105,7 @@ static int on_hover(gesture3d_t *gest, void *user)
 
     goxel_set_help_text(goxel, "Click and drag to set selection.");
     box = get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane);
-    render_box(&goxel->rend, &box, box_color, EFFECT_WIREFRAME);
+    render_box(&goxel->rend, box.mat, box_color, EFFECT_WIREFRAME);
     return 0;
 }
 

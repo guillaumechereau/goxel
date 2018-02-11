@@ -563,7 +563,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
 
     render_mesh(rend, goxel->render_mesh, 0);
     if (!box_is_null(goxel->image->active_layer->box.mat))
-        render_box(rend, &goxel->image->active_layer->box,
+        render_box(rend, goxel->image->active_layer->box.mat,
                    layer_box_color, EFFECT_WIREFRAME);
 
     // Render all the image layers.
@@ -573,7 +573,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
     }
 
     if (goxel->tool->id == TOOL_SELECTION)
-        render_box(rend, &goxel->selection, NULL,
+        render_box(rend, goxel->selection.mat, NULL,
                    EFFECT_STRIP | EFFECT_WIREFRAME);
 
     // XXX: make a toggle for debug informations.
@@ -582,15 +582,15 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
         uint8_t c[4];
         vec4_set(c, 0, 255, 0, 80);
         mesh_get_box(goxel->layers_mesh, true, b.mat);
-        render_box(rend, &b, c, EFFECT_WIREFRAME);
+        render_box(rend, b.mat, c, EFFECT_WIREFRAME);
         vec4_set(c, 0, 255, 255, 80);
         mesh_get_box(goxel->layers_mesh, false, b.mat);
-        render_box(rend, &b, c, EFFECT_WIREFRAME);
+        render_box(rend, b.mat, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)
         render_plane(rend, goxel->plane, goxel->grid_color);
     if (!box_is_null(goxel->image->box.mat))
-        render_box(rend, &goxel->image->box, goxel->image_box_color,
+        render_box(rend, goxel->image->box.mat, goxel->image_box_color,
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, viewport);
