@@ -21,7 +21,7 @@
 
 typedef struct {
     tool_t tool;
-    box_t box;
+    float  box[4][4];
 
     struct {
         gesture3d_t drag;
@@ -42,7 +42,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN)
         image_history_push(goxel->image);
 
-    mesh_op(mesh, &painter, laser->box.mat);
+    mesh_op(mesh, &painter, laser->box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END)
@@ -68,20 +68,20 @@ static int iter(tool_t *tool, const float viewport[4])
     }
 
     // Create the tool box from the camera along the visible ray.
-    mat4_set_identity(laser->box.mat);
+    mat4_set_identity(laser->box);
     mat4_invert(goxel->camera.view_mat, view_mat_inv);
     mat4_mul_vec4(view_mat_inv, VEC(1, 0, 0, 0), v);
-    vec3_copy(v, laser->box.w);
+    vec3_copy(v, laser->box[0]);
     mat4_mul_vec4(view_mat_inv, VEC(0, 1, 0, 0), v);
-    vec3_copy(v, laser->box.h);
+    vec3_copy(v, laser->box[1]);
     mat4_mul_vec4(view_mat_inv, VEC(0, 0, 1, 0), v);
-    vec3_copy(v, laser->box.d);
-    vec3_neg(curs->normal, laser->box.d);
-    vec3_copy(curs->pos, laser->box.p);
+    vec3_copy(v, laser->box[2]);
+    vec3_neg(curs->normal, laser->box[2]);
+    vec3_copy(curs->pos, laser->box[3]);
     // Just a large value for the size of the laser box.
-    mat4_itranslate(laser->box.mat, 0, 0, -1024);
-    mat4_iscale(laser->box.mat, goxel->tool_radius, goxel->tool_radius, 1024);
-    render_box(&goxel->rend, laser->box.mat, NULL, EFFECT_WIREFRAME);
+    mat4_itranslate(laser->box, 0, 0, -1024);
+    mat4_iscale(laser->box, goxel->tool_radius, goxel->tool_radius, 1024);
+    render_box(&goxel->rend, laser->box, NULL, EFFECT_WIREFRAME);
 
     gesture3d(&laser->gestures.drag, curs, laser);
 
