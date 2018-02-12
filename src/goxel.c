@@ -47,7 +47,10 @@ static bool unproject_delta(const float win[3], const float model[4][4],
     float inv[4][4], norm_pos[4];
 
     mat4_mul(proj, model, inv);
-    if (mat4_invert(inv, inv)) return false;
+    if (mat4_invert(inv, inv)) {
+        vec3_copy(vec3_zero, out);
+        return false;
+    }
     vec4_set(norm_pos, win[0] / viewport[2], win[1] / viewport[3], 0, 0);
     mat4_mul_vec4(inv, norm_pos, norm_pos);
     vec3_copy(norm_pos, out);
