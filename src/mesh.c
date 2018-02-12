@@ -677,7 +677,7 @@ void mesh_read(const mesh_t *mesh,
 
     block_t *block;
     int block_pos[3] = {pos[0] + 1, pos[1] + 1, pos[2] + 1};
-    int z, y, x, dx, dy, dz, p[3];
+    int i, z, y, x, dx, dy, dz, p[3];
     uint8_t v[4];
     mesh_accessor_t accessor;
 
@@ -698,13 +698,48 @@ void mesh_read(const mesh_t *mesh,
 
 rest:
     // Fill the rest.
+    // In order to optimize access, we iter in such a way to avoid changing
+    // the current block: start with the planes, then the edges, and finally
+    // the 8 corners.
     accessor = mesh_get_accessor(mesh);
-    for (z = 0; z < N + 2; z++)
-    for (y = 0; y < N + 2; y++)
-    for (x = 0; x < N + 2; x++) {
-        if ((z > 1 && z < N + 1) &&
-            (y > 1 && y < N + 1) &&
-            (x > 1 && x < N + 1)) continue;
+    const int ranges[26][3][2] = {
+        // 6 planes.
+        {{0,         1}, {1,     N + 1}, {1,     N + 1}},
+        {{N + 1, N + 2}, {1,     N + 1}, {1,     N + 1}},
+        {{1,     N + 1}, {0,         1}, {1,     N + 1}},
+        {{1,     N + 1}, {N + 1, N + 2}, {1,     N + 1}},
+        {{1,     N + 1}, {1,     N + 1}, {0,         1}},
+        {{1,     N + 1}, {1,     N + 1}, {N + 1, N + 2}},
+        // 4 edges moving along X.
+        {{1,     N + 1}, {0,         1}, {0,         1}},
+        {{1,     N + 1}, {N + 1, N + 2}, {0,         1}},
+        {{1,     N + 1}, {0,         1}, {N + 1, N + 2}},
+        {{1,     N + 1}, {N + 1, N + 2}, {N + 1, N + 2}},
+        // 4 edges moving along Y.
+        {{0,         1}, {1,     N + 1}, {0,         1}},
+        {{N + 1, N + 2}, {1,     N + 1}, {0,         1}},
+        {{0,         1}, {1,     N + 1}, {1,     N + 2}},
+        {{N + 1, N + 2}, {1,     N + 1}, {1,     N + 2}},
+        // 4 edges moving along Z.
+        {{0,         1}, {0,         1}, {1,     N + 1}},
+        {{N + 1, N + 2}, {0,         1}, {1,     N + 1}},
+        {{0,         1}, {N + 1, N + 2}, {1,     N + 1}},
+        {{N + 1, N + 2}, {N + 1, N + 2}, {1,     N + 1}},
+        // 8 Corners.
+        {{0,     1    }, {0,     1    }, {0,     1    }},
+        {{N + 1, N + 2}, {0,     1    }, {0,     1    }},
+        {{0,     1    }, {N + 1, N + 2}, {0,     1    }},
+        {{N + 1, N + 2}, {N + 1, N + 2}, {0,     1    }},
+        {{0,     1    }, {0,     1    }, {N + 1, N + 2}},
+        {{N + 1, N + 2}, {0,     1    }, {N + 1, N + 2}},
+        {{0,     1    }, {N + 1, N + 2}, {N + 1, N + 2}},
+        {{N + 1, N + 2}, {N + 1, N + 2}, {N + 1, N + 2}},
+    };
+
+    for (i = 0; i < 26; i++)
+    for (z = ranges[i][2][0]; z < ranges[i][2][1]; z++)
+    for (y = ranges[i][1][0]; y < ranges[i][1][1]; y++)
+    for (x = ranges[i][0][0]; x < ranges[i][0][1]; x++) {
         p[0] = pos[0] + x;
         p[1] = pos[1] + y;
         p[2] = pos[2] + z;
