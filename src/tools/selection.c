@@ -103,13 +103,13 @@ static int get_face(const float n[3])
 
 static int on_hover(gesture3d_t *gest, void *user)
 {
-    box_t box;
+    float box[4][4];
     cursor_t *curs = gest->cursor;
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text(goxel, "Click and drag to set selection.");
-    get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane, box.mat);
-    render_box(&goxel->rend, box.mat, box_color, EFFECT_WIREFRAME);
+    get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane, box);
+    render_box(&goxel->rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
 
