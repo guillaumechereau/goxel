@@ -1273,7 +1273,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     const theme_t *theme = theme_get();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
     float display_rect[4] = {
-        0, 0, goxel->screen_size[0], goxel->screen_size[1]};
+        0.f, 0.f, (float)goxel->screen_size[0], (float)goxel->screen_size[1]};
     float font_size = ImGui::GetFontSize();
 
     io.DisplaySize = ImVec2((float)goxel->screen_size[0],
