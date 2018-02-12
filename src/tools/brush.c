@@ -111,7 +111,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_brush_t *brush = (tool_brush_t*)user;
     painter_t painter2;
-    box_t box;
+    float box[4][4];
     cursor_t *curs = gest->cursor;
     bool shift = curs->flags & CURSOR_SHIFT;
     float r = goxel->tool_radius;
@@ -129,9 +129,8 @@ static int on_drag(gesture3d_t *gest, void *user)
             painter2 = goxel->painter;
             painter2.shape = &shape_cylinder;
             painter2.mode = MODE_MAX;
-            get_box(brush->start_pos, curs->pos, curs->normal,
-                    r, NULL, box.mat);
-            mesh_op(brush->mesh, &painter2, box.mat);
+            get_box(brush->start_pos, curs->pos, curs->normal, r, NULL, box);
+            mesh_op(brush->mesh, &painter2, box);
         }
     }
 
@@ -149,8 +148,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     nb = max(nb, 1);
     for (i = 0; i < nb; i++) {
         vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos);
-        get_box(pos, NULL, curs->normal, r, NULL, box.mat);
-        mesh_op(brush->mesh, &painter2, box.mat);
+        get_box(pos, NULL, curs->normal, r, NULL, box);
+        mesh_op(brush->mesh, &painter2, box);
     }
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
@@ -177,7 +176,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     mesh_t *mesh = goxel->image->active_layer->mesh;
     tool_brush_t *brush = (tool_brush_t*)user;
     cursor_t *curs = gest->cursor;
-    box_t box;
+    float box[4][4];
     bool shift = curs->flags & CURSOR_SHIFT;
 
     if (gest->state == GESTURE_END) {
@@ -193,11 +192,11 @@ static int on_hover(gesture3d_t *gest, void *user)
     if (goxel->tool_mesh && check_can_skip(brush, curs, goxel->painter.mode))
         return 0;
 
-    get_box(curs->pos, NULL, curs->normal, goxel->tool_radius, NULL, box.mat);
+    get_box(curs->pos, NULL, curs->normal, goxel->tool_radius, NULL, box);
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, mesh);
-    mesh_op(goxel->tool_mesh, &goxel->painter, box.mat);
+    mesh_op(goxel->tool_mesh, &goxel->painter, box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     brush->last_op.mesh_key = mesh_get_key(mesh);
