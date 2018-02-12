@@ -81,13 +81,13 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
 
 static int on_hover(gesture3d_t *gest, void *user)
 {
-    box_t box;
+    float box[4][4];
     cursor_t *curs = gest->cursor;
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text(goxel, "Click and drag to draw.");
-    get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane, box.mat);
-    render_box(&goxel->rend, box.mat, box_color, EFFECT_WIREFRAME);
+    get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane, box);
+    render_box(&goxel->rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
 
@@ -95,7 +95,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
     mesh_t *layer_mesh = goxel->image->active_layer->mesh;
-    box_t box;
+    float box[4][4];
     cursor_t *curs = gest->cursor;
 
     if (shape->adjust) return GESTURE_FAILED;
@@ -107,11 +107,10 @@ static int on_drag(gesture3d_t *gest, void *user)
     }
 
     goxel_set_help_text(goxel, "Drag.");
-    get_box(shape->start_pos, curs->pos, curs->normal,
-                  0, goxel->plane, box.mat);
+    get_box(shape->start_pos, curs->pos, curs->normal, 0, goxel->plane, box);
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, shape->mesh_orig);
-    mesh_op(goxel->tool_mesh, &goxel->painter, box.mat);
+    mesh_op(goxel->tool_mesh, &goxel->painter, box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
