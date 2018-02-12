@@ -68,9 +68,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_t *mesh = goxel->image->active_layer->mesh;
     mesh_t *tmp_mesh;
     cursor_t *curs = gest->cursor;
-    box_t box;
     float face_plane[4][4];
-    float n[3], pos[3], v[3];
+    float n[3], pos[3], v[3], box[4][4];
     int pi[3];
     float delta;
 
@@ -91,18 +90,18 @@ static int on_drag(gesture3d_t *gest, void *user)
         image_history_push(goxel->image);
 
         // XXX: to remove: this is duplicated from selection tool.
-        mesh_get_box(tool->mesh, true, box.mat);
-        mat4_mul(box.mat, FACES_MATS[tool->snap_face], face_plane);
+        mesh_get_box(tool->mesh, true, box);
+        mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
         plane_from_vectors(goxel->tool_plane, curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
 
-    mesh_get_box(tool->mesh, true, box.mat);
+    mesh_get_box(tool->mesh, true, box);
 
     // XXX: have some generic way to resize boxes, since we use it all the
     // time!
-    mat4_mul(box.mat, FACES_MATS[tool->snap_face], face_plane);
+    mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
     // XXX: Is there a better way to compute the delta??
     vec3_sub(curs->pos, goxel->tool_plane[3], v);
@@ -126,15 +125,15 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     if (delta >= 1) {
         vec3_iaddk(face_plane[3], n, -0.5);
-        box_move_face(box.mat, tool->snap_face, pos, box.mat);
-        mesh_extrude(tmp_mesh, face_plane, box.mat);
+        box_move_face(box, tool->snap_face, pos, box);
+        mesh_extrude(tmp_mesh, face_plane, box);
         mesh_merge(mesh, tmp_mesh, MODE_OVER, NULL);
     }
     if (delta < 0.5) {
-        box_move_face(box.mat, FACES_OPPOSITES[tool->snap_face], pos, box.mat);
+        box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos, box);
         vec3_imul(face_plane[2], -1.0);
         vec3_iaddk(face_plane[3], n, -0.5);
-        mesh_extrude(tmp_mesh, face_plane, box.mat);
+        mesh_extrude(tmp_mesh, face_plane, box);
         mesh_merge(mesh, tmp_mesh, MODE_SUB, NULL);
     }
     mesh_delete(tmp_mesh);
