@@ -61,46 +61,50 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     return false;
 }
 
-static box_t get_box(const float p0[3], const float p1[3], const float n[3],
-                     float r, const float plane[4][4])
+static void get_box(const float p0[3], const float p1[3], const float n[3],
+                    float r, const float plane[4][4], float out[4][4])
 {
-    float rot[4][4];
-    box_t box;
+    float rot[4][4], box[4][4];
     float v[3];
 
     if (p1 == NULL) {
-        bbox_from_extents(box.mat, p0, r, r, r);
-        box_swap_axis(box.mat, 2, 0, 1, box.mat);
-        return box;
+        bbox_from_extents(box, p0, r, r, r);
+        box_swap_axis(box, 2, 0, 1, box);
+        mat4_copy(box, out);
+        return;
     }
     if (r == 0) {
-        bbox_from_points(box.mat, p0, p1);
-        bbox_grow(box.mat, 0.5, 0.5, 0.5, box.mat);
+        bbox_from_points(box, p0, p1);
+        bbox_grow(box, 0.5, 0.5, 0.5, box);
         // Apply the plane rotation.
         mat4_copy(plane, rot);
         vec4_set(rot[3], 0, 0, 0, 1);
-        mat4_imul(box.mat, rot);
-        return box;
+        mat4_imul(box, rot);
+        mat4_copy(box, out);
+        return;
     }
 
     // Create a box for a line:
     int i;
     const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
-    mat4_set_identity(box.mat);
-    vec3_mix(p0, p1, 0.5, box.p);
-    vec3_sub(p1, box.p, box.d);
+    mat4_set_identity(box);
+    vec3_mix(p0, p1, 0.5, box[3]);
+    vec3_sub(p1, box[3], box[2]);
     for (i = 0; i < 3; i++) {
-        vec3_cross(box.d, AXES[i], box.w);
-        if (vec3_norm2(box.w) > 0) break;
+        vec3_cross(box[2], AXES[i], box[0]);
+        if (vec3_norm2(box[0]) > 0) break;
     }
-    if (i == 3) return box;
-    vec3_normalize(box.w, v);
-    vec3_mul(v, r, box.w);
-    vec3_cross(box.d, box.w, v);
+    if (i == 3) {
+        mat4_copy(box, out);
+        return;
+    }
+    vec3_normalize(box[0], v);
+    vec3_mul(v, r, box[0]);
+    vec3_cross(box[2], box[0], v);
     vec3_normalize(v, v);
-    vec3_mul(v, r, box.h);
-    return box;
+    vec3_mul(v, r, box[1]);
+    mat4_copy(box, out);
 }
 
 static int on_drag(gesture3d_t *gest, void *user)
@@ -125,8 +129,8 @@ static int on_drag(gesture3d_t *gest, void *user)
             painter2 = goxel->painter;
             painter2.shape = &shape_cylinder;
             painter2.mode = MODE_MAX;
-            box = get_box(brush->start_pos, curs->pos, curs->normal,
-                          r, NULL);
+            get_box(brush->start_pos, curs->pos, curs->normal,
+                    r, NULL, box.mat);
             mesh_op(brush->mesh, &painter2, box.mat);
         }
     }
@@ -145,7 +149,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     nb = max(nb, 1);
     for (i = 0; i < nb; i++) {
         vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos);
-        box = get_box(pos, NULL, curs->normal, r, NULL);
+        get_box(pos, NULL, curs->normal, r, NULL, box.mat);
         mesh_op(brush->mesh, &painter2, box.mat);
     }
 
@@ -189,7 +193,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     if (goxel->tool_mesh && check_can_skip(brush, curs, goxel->painter.mode))
         return 0;
 
-    box = get_box(curs->pos, NULL, curs->normal, goxel->tool_radius, NULL);
+    get_box(curs->pos, NULL, curs->normal, goxel->tool_radius, NULL, box.mat);
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, mesh);
