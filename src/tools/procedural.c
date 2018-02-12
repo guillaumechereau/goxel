@@ -32,7 +32,7 @@ typedef struct {
 
 static int iter(tool_t *tool, const float viewport[4])
 {
-    box_t box;
+    float box[4][4];
     gox_proc_t *proc = &goxel->proc;
     cursor_t *curs = &goxel->cursor;
 
@@ -45,12 +45,12 @@ static int iter(tool_t *tool, const float viewport[4])
 
     case STATE_SNAPED:
         if (!curs->snaped) return STATE_IDLE;
-        bbox_from_extents(box.mat, curs->pos, 0.5, 0.5, 0.5);
-        render_box(&goxel->rend, box.mat, NULL, EFFECT_WIREFRAME);
+        bbox_from_extents(box, curs->pos, 0.5, 0.5, 0.5);
+        render_box(&goxel->rend, box, NULL, EFFECT_WIREFRAME);
         if (curs->flags & CURSOR_PRESSED) {
             image_history_push(goxel->image);
             proc_stop(proc);
-            proc_start(proc, box.mat);
+            proc_start(proc, box);
             return STATE_PAINT;
         }
         break;
