@@ -25,7 +25,7 @@ static void mat3_to_eul2_(const float m[3][3], int order,
     const int *r = EUL_ORDERS[order];
     int i = r[0], j = r[1], k = r[2];
     int parity = r[3];
-    real_t cy = hypot(m[i][i], m[i][j]);
+    float cy = hypot(m[i][i], m[i][j]);
     if (cy > 16.0f * FLT_EPSILON) {
         e1[i] = atan2(m[j][k], m[k][k]);
         e1[j] = atan2(-m[i][k], cy);

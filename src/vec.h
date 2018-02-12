@@ -25,8 +25,6 @@
 #include <math.h>
 #include <stdbool.h>
 
-typedef float real_t;
-
 enum  {
     EULER_ORDER_DEFAULT = 0, // XYZ.
     EULER_ORDER_XYZ = 0,
@@ -365,7 +363,7 @@ DECL void mat4_iscale(float m[4][4], float x, float y, float z)
 
 DECL bool mat4_invert(const float mat[4][4], float out[4][4])
 {
-    real_t det;
+    float det;
     int i;
     const float *m = (const float*)mat;
     float inv[16];
