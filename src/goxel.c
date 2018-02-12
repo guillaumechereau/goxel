@@ -47,7 +47,7 @@ static bool unproject_delta(const float win[3], const float model[4][4],
     float inv[4][4], norm_pos[4];
 
     mat4_mul(proj, model, inv);
-    if (mat4_invert(inv, inv)) {
+    if (!mat4_invert(inv, inv)) {
         vec3_copy(vec3_zero, out);
         return false;
     }
