@@ -110,7 +110,7 @@ int tool_gui_snap(void)
     snap_button("Mesh", SNAP_MESH, w);
     gui_same_line();
     snap_button("Plane", SNAP_PLANE, w);
-    if (!box_is_null(goxel->selection.mat)) {
+    if (!box_is_null(goxel->selection)) {
         snap_button("Sel In", SNAP_SELECTION_IN, w);
         gui_same_line();
         snap_button("Sel out", SNAP_SELECTION_OUT, w);

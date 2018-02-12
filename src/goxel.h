@@ -1183,7 +1183,7 @@ typedef struct goxel
     float      tool_plane[4][4];
     bool       tool_shape_two_steps; // Param of the shape tool.
 
-    box_t      selection;   // The selection box.
+    float      selection[4][4];   // The selection box.
 
     struct {
         float  rotation[4];

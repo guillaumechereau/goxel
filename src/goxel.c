@@ -192,11 +192,11 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
                                          goxel->plane, p, n);
         if ((1 << i) == SNAP_SELECTION_IN)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       goxel->selection.mat, true,
+                                       goxel->selection, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_SELECTION_OUT)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       goxel->selection.mat, false,
+                                       goxel->selection, false,
                                        p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
             mesh_get_box(goxel->image->active_layer->mesh, true, box);
@@ -572,7 +572,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
     }
 
     if (goxel->tool->id == TOOL_SELECTION)
-        render_box(rend, goxel->selection.mat, NULL,
+        render_box(rend, goxel->selection, NULL,
                    EFFECT_STRIP | EFFECT_WIREFRAME);
 
     // XXX: make a toggle for debug informations.
@@ -770,7 +770,7 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
 
     img = img ?: goxel->image;
     layer = layer ?: img->active_layer;
-    if (!box) box = (const void*)goxel->selection.mat;
+    if (!box) box = (const void*)goxel->selection;
 
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
@@ -793,7 +793,7 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void reset_selection(void)
 {
-    mat4_copy(mat4_zero, goxel->selection.mat);
+    mat4_copy(mat4_zero, goxel->selection);
 }
 
 ACTION_REGISTER(reset_selection,
@@ -804,9 +804,9 @@ ACTION_REGISTER(reset_selection,
 
 static void fill_selection(layer_t *layer)
 {
-    if (box_is_null(goxel->selection.mat)) return;
+    if (box_is_null(goxel->selection)) return;
     layer = layer ?: goxel->image->active_layer;
-    mesh_op(layer->mesh, &goxel->painter, goxel->selection.mat);
+    mesh_op(layer->mesh, &goxel->painter, goxel->selection);
     goxel_update_meshes(goxel, -1);
 }
 
@@ -836,15 +836,15 @@ static void copy_action(void)
 {
     painter_t painter;
     mesh_delete(goxel->clipboard.mesh);
-    mat4_copy(goxel->selection.mat, goxel->clipboard.box);
+    mat4_copy(goxel->selection, goxel->clipboard.box);
     goxel->clipboard.mesh = mesh_copy(goxel->image->active_layer->mesh);
-    if (!box_is_null(goxel->selection.mat)) {
+    if (!box_is_null(goxel->selection)) {
         painter = (painter_t) {
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
             .color = {255, 255, 255, 255},
         };
-        mesh_op(goxel->clipboard.mesh, &painter, goxel->selection.mat);
+        mesh_op(goxel->clipboard.mesh, &painter, goxel->selection);
     }
 }
 
@@ -858,9 +858,9 @@ static void past_action(void)
     if (!goxel->clipboard.mesh) return;
 
     tmp = mesh_copy(goxel->clipboard.mesh);
-    if (    !box_is_null(goxel->selection.mat) &&
+    if (    !box_is_null(goxel->selection) &&
             !box_is_null(goxel->clipboard.box)) {
-        vec3_copy(goxel->selection.p, p1);
+        vec3_copy(goxel->selection[3], p1);
         vec3_copy(goxel->clipboard.box[3], p2);
         mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
         mat4_itranslate(mat, -p2[0], -p2[1], -p2[2]);
