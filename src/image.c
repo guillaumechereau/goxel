@@ -90,7 +90,7 @@ static layer_t *layer_copy(layer_t *other)
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
     layer->image = texture_copy(other->image);
-    layer->box = other->box;
+    mat4_copy(other->box, layer->box);
     mat4_copy(other->mat, layer->mat);
     layer->id = other->id;
     layer->base_id = other->base_id;

@@ -86,7 +86,7 @@ static void qubicle_import(const char *path)
         vec3_set(bbox[1], pos[0] + w, pos[1] + h, pos[2] + d);
         apply_orientation(orientation, bbox[0]);
         apply_orientation(orientation, bbox[1]);
-        bbox_from_aabb(layer->box.mat, bbox);
+        bbox_from_aabb(layer->box, bbox);
 
         if (compression == 0) {
             for (index = 0; index < w * h * d; index++) {
@@ -155,8 +155,8 @@ static void qubicle_export(const image_t *img, const char *path)
     DL_FOREACH(img->layers, layer) {
         mesh = layer->mesh;
 
-        if (!box_is_null(layer->box.mat))
-            bbox_to_aabb(layer->box.mat, bbox);
+        if (!box_is_null(layer->box))
+            bbox_to_aabb(layer->box, bbox);
         else
             if (!mesh_get_bbox(mesh, bbox, true)) continue;
 

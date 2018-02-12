@@ -301,7 +301,7 @@ void save_to_file(goxel_t *goxel, const char *path)
             chunk_write_dict_value(&c, out, "img-path", layer->image->path,
                                strlen(layer->image->path));
         }
-        if (!box_is_null(layer->box.mat))
+        if (!box_is_null(layer->box))
             chunk_write_dict_value(&c, out, "box", &layer->box,
                                    sizeof(layer->box));
 

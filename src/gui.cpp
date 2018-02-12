@@ -719,14 +719,14 @@ static void layers_panel(goxel_t *goxel)
     gui_action_button("img_move_layer_down", NULL, 0, "");
 
     layer = goxel->image->active_layer;
-    bounded = !box_is_null(layer->box.mat);
+    bounded = !box_is_null(layer->box);
 
     gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
     gui_action_button("img_clone_layer", "Clone", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
     if (bounded && gui_button("Crop to box", 1, 0)) {
-        mesh_crop(layer->mesh, layer->box.mat);
+        mesh_crop(layer->mesh, layer->box);
         goxel_update_meshes(goxel, -1);
     }
     gui_group_end();
@@ -741,12 +741,12 @@ static void layers_panel(goxel_t *goxel)
         if (bounded) {
             mesh_get_bbox(layer->mesh, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
-            bbox_from_aabb(layer->box.mat, bbox);
+            bbox_from_aabb(layer->box, bbox);
         } else {
-            mat4_copy(mat4_zero, layer->box.mat);
+            mat4_copy(mat4_zero, layer->box);
         }
     }
-    if (bounded) gui_bbox(layer->box.mat);
+    if (bounded) gui_bbox(layer->box);
 }
 
 

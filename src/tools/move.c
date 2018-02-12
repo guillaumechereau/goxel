@@ -44,9 +44,9 @@ static void do_move(layer_t *layer, const float mat[4][4])
         layer->base_mesh_key = 0;
     } else {
         mesh_move(layer->mesh, m);
-        if (!box_is_null(layer->box.mat)) {
-            mat4_mul(mat, layer->box.mat, layer->box.mat);
-            box_get_bbox(layer->box.mat, layer->box.mat);
+        if (!box_is_null(layer->box)) {
+            mat4_mul(mat, layer->box, layer->box);
+            box_get_bbox(layer->box, layer->box);
         }
     }
     goxel_update_meshes(goxel, -1);

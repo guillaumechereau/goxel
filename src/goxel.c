@@ -479,8 +479,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
     set_flag(&goxel->cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel->cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
 
-    goxel->painter.box = !box_is_null(goxel->image->active_layer->box.mat) ?
-                         &goxel->image->active_layer->box.mat :
+    goxel->painter.box = !box_is_null(goxel->image->active_layer->box) ?
+                         &goxel->image->active_layer->box :
                          !box_is_null(goxel->image->box.mat) ?
                          &goxel->image->box.mat : NULL;
 
@@ -561,8 +561,8 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
     camera_update(&goxel->camera);
 
     render_mesh(rend, goxel->render_mesh, 0);
-    if (!box_is_null(goxel->image->active_layer->box.mat))
-        render_box(rend, goxel->image->active_layer->box.mat,
+    if (!box_is_null(goxel->image->active_layer->box))
+        render_box(rend, goxel->image->active_layer->box,
                    layer_box_color, EFFECT_WIREFRAME);
 
     // Render all the image layers.
