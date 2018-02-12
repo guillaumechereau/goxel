@@ -247,8 +247,8 @@ end:
 static int gui(tool_t *tool)
 {
     int x, y, z, w, h, d;
-    box_t *box = &goxel->selection;
-    if (box_is_null(box->mat)) return 0;
+    float (*box)[4][4] = &goxel->selection.mat;
+    if (box_is_null(*box)) return 0;
 
     gui_text("Drag mode");
     gui_combo("##drag_mode", &g_drag_mode,
@@ -261,16 +261,16 @@ static int gui(tool_t *tool)
     }
     gui_action_button("fill_selection", "Fill", 1.0, "");
     gui_action_button("layer_clear", "Clear", 1.0, "pp",
-                      goxel->image->active_layer, box);
+                      goxel->image->active_layer, *box);
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
     gui_group_end();
 
-    w = round(box->w[0] * 2);
-    h = round(box->h[1] * 2);
-    d = round(box->d[2] * 2);
-    x = round(box->p[0] - box->w[0]);
-    y = round(box->p[1] - box->h[1]);
-    z = round(box->p[2] - box->d[2]);
+    w = round((*box)[0][0] * 2);
+    h = round((*box)[1][1] * 2);
+    d = round((*box)[2][2] * 2);
+    x = round((*box)[3][0] - (*box)[0][0]);
+    y = round((*box)[3][1] - (*box)[1][1]);
+    z = round((*box)[3][2] - (*box)[2][2]);
 
     gui_group_begin("Origin");
     gui_input_int("x", &x, 0, 0);
@@ -283,7 +283,7 @@ static int gui(tool_t *tool)
     gui_input_int("h", &h, 1, 2048);
     gui_input_int("d", &d, 1, 2048);
     gui_group_end();
-    bbox_from_extents(box->mat,
+    bbox_from_extents(*box,
             VEC(x + w / 2., y + h / 2., z + d / 2.),
             w / 2., h / 2., d / 2.);
     return 0;
