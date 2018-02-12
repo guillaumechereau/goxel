@@ -21,7 +21,7 @@
 
 typedef struct {
     tool_t tool;
-    box_t  box;
+    float  box[4][4];
     int    snap_face;
     struct {
         gesture3d_t move;
@@ -75,7 +75,7 @@ static int on_move(gesture3d_t *gest, void *user)
     layer_t *layer = goxel->image->active_layer;
     float mat[4][4];
 
-    if (box_is_null(tool->box.mat)) return GESTURE_FAILED;
+    if (box_is_null(tool->box)) return GESTURE_FAILED;
 
     if (gest->type == GESTURE_HOVER) {
         goxel_set_help_text(goxel, "Drag to move face");
@@ -83,7 +83,7 @@ static int on_move(gesture3d_t *gest, void *user)
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face], face_plane);
+        mat4_mul(tool->box, FACES_MATS[tool->snap_face], face_plane);
         render_img(&goxel->rend, NULL, face_plane, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
@@ -97,7 +97,7 @@ static int on_move(gesture3d_t *gest, void *user)
         goxel_set_help_text(goxel, "Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(tool->box.mat, FACES_MATS[tool->snap_face], face_plane);
+        mat4_mul(tool->box, FACES_MATS[tool->snap_face], face_plane);
 
         vec3_normalize(face_plane[2], n);
         vec3_sub(curs->pos, goxel->tool_plane[3], v);
@@ -106,7 +106,7 @@ static int on_move(gesture3d_t *gest, void *user)
         pos[0] = round(pos[0]);
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
-        vec3_add(tool->box.p, face_plane[2], d);
+        vec3_add(tool->box[3], face_plane[2], d);
         vec3_sub(pos, d, ofs);
         vec3_project(ofs, n, ofs);
 
@@ -137,8 +137,8 @@ static int iter(tool_t *tool, const float viewport[4])
         };
     }
     gesture3d(&move->gestures.move, curs, move);
-    mesh_get_box(layer->mesh, true, move->box.mat);
-    render_box(&goxel->rend, move->box.mat, NULL,
+    mesh_get_box(layer->mesh, true, move->box);
+    render_box(&goxel->rend, move->box, NULL,
                EFFECT_STRIP | EFFECT_WIREFRAME);
     return 0;
 }
