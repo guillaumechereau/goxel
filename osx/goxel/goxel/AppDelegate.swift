@@ -44,10 +44,11 @@ class GoxNSOpenGLView: NSOpenGLView {
     }
     
     func mouseEvent(_ id: Int, _ state: Int, _ event: NSEvent) {
-        appDelegate().inputs.touches.0.pos = vec2(
-            Float(event.locationInWindow.x),
-            Float(self.frame.height - event.locationInWindow.y))
-        
+        appDelegate().inputs.touches.0.pos.0 =
+            Float(event.locationInWindow.x);
+        appDelegate().inputs.touches.0.pos.1 =
+            Float(self.frame.height - event.locationInWindow.y);
+
         // XXX: find a way to make it work with unsage memory.
         switch (id) {
         case 0: appDelegate().inputs.touches.0.down.0 = (state != 0);

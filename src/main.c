@@ -129,7 +129,7 @@ static void loop_function(void) {
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    g_inputs->touches[0].pos = vec2(xpos / scale, ypos / scale);
+    vec2_set(g_inputs->touches[0].pos, xpos / scale, ypos / scale);
     g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =

@@ -73,17 +73,18 @@ static void mc_interp_pos(const mc_vert_t *vert, uint8_t out[3])
         out[i] = (p0[i] * (1 - mu) + p1[i] * mu) * MC_VOXEL_SUB_POS;
 }
 
-static vec3_t mc_interp_normal(const mc_vert_t *vert, int normals[8][3])
+static void mc_interp_normal(const mc_vert_t *vert, int normals[8][3],
+                             float out[3])
 {
     int i;
-    vec3_t ret = vec3_zero;
+    float ret[3] = {};
     const int *p0 = normals[vert->v0];
     const int *p1 = normals[vert->v1];
     const float mu = vert->mu;
     for (i = 0; i < 3; i++)
-        ret.v[i] = (p0[i] * (1 - mu) + p1[i] * mu);
-    vec3_normalize(&ret);
-    return ret;
+        ret[i] = (p0[i] * (1 - mu) + p1[i] * mu);
+    vec3_normalize(ret, ret);
+    vec3_copy(ret, out);
 }
 
 int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
@@ -91,7 +92,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
 {
     int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
     int a, sum_a;
-    vec3_t n;
+    float n[3];
     uint8_t color[4], tmp[4];
     int colorbest;
     bool use_max_color;
@@ -152,7 +153,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
     for (x = rect[0][0]; x < rect[1][0]; x++) {
         memset(densities, 0, sizeof(densities));
         memset(normals, 0, sizeof(normals));
-        n = vec3_zero;
+        vec3_set(n, 0, 0, 0);
         get_at(data, x, y, z, color);
         use_max_color = (color[3] == 0);
         colorbest = 8;
@@ -188,16 +189,16 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                     normals[v][2] -= a * (2 * VERTICES_POSITIONS[w][2] - 1);
                 }
                 else {
-                    n.x -= a * (2 * VERTICES_POSITIONS[w][0] - 1);
-                    n.y -= a * (2 * VERTICES_POSITIONS[w][1] - 1);
-                    n.z -= a * (2 * VERTICES_POSITIONS[w][2] - 1);
+                    n[0] -= a * (2 * VERTICES_POSITIONS[w][0] - 1);
+                    n[1] -= a * (2 * VERTICES_POSITIONS[w][1] - 1);
+                    n[2] -= a * (2 * VERTICES_POSITIONS[w][2] - 1);
                 }
             }
             densities[v] /= k;
         }
         if (sum_a == 0) continue;
         nb_tri = mc_compute(densities, tri);
-        if (effects & EFFECT_FLAT) vec3_normalize(&n);
+        if (effects & EFFECT_FLAT) vec3_normalize(n, n);
 
         for (i = 0; i < nb_tri; i++) {
             for (v = 0; v < 3; v++) {
@@ -206,10 +207,10 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                 out[vi].color[3] = 255;
                 mc_interp_pos(&tri[i][v], out[vi].pos);
                 if (!(effects & EFFECT_FLAT))
-                    n = mc_interp_normal(&tri[i][v], normals);
-                out[vi].normal[0] = n.x * 126;
-                out[vi].normal[1] = n.y * 126;
-                out[vi].normal[2] = n.z * 126;
+                    mc_interp_normal(&tri[i][v], normals, n);
+                out[vi].normal[0] = n[0] * 126;
+                out[vi].normal[1] = n[1] * 126;
+                out[vi].normal[2] = n[2] * 126;
                 out[vi].pos[0] += x * MC_VOXEL_SUB_POS;
                 out[vi].pos[1] += y * MC_VOXEL_SUB_POS;
                 out[vi].pos[2] += z * MC_VOXEL_SUB_POS;

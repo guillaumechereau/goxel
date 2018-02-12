@@ -85,43 +85,45 @@ int mesh_select(const mesh_t *mesh,
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
 // stupid.
-void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
+void mesh_extrude(mesh_t *mesh,
+                  const float plane[4][4],
+                  const float box[4][4])
 {
-    mat4_t proj;
-    vec3_t n = plane->n, pos;
+    float proj[4][4];
+    float n[3], pos[3], p[3];
     mesh_iterator_t iter;
     int vpos[3];
     uint8_t value[4];
 
-    vec3_normalize(&n);
-    pos = plane->p;
+    vec3_normalize(plane[2], n);
+    vec3_copy(plane[3], pos);
 
     // Generate the projection into the plane.
     // XXX: *very* ugly code, fix this!
-    proj = mat4_identity;
+    mat4_set_identity(proj);
 
-    if (fabs(plane->n.x) > 0.1) {
-        proj.v[0] = 0;
-        proj.v[12] = pos.x;
+    if (fabs(plane[2][0]) > 0.1) {
+        proj[0][0] = 0;
+        proj[3][0] = pos[0];
     }
-    if (fabs(plane->n.y) > 0.1) {
-        proj.v[5] = 0;
-        proj.v[13] = pos.y;
+    if (fabs(plane[2][1]) > 0.1) {
+        proj[1][1] = 0;
+        proj[3][1] = pos[1];
     }
-    if (fabs(plane->n.z) > 0.1) {
-        proj.v[10] = 0;
-        proj.v[14] = pos.z;
+    if (fabs(plane[2][2]) > 0.1) {
+        proj[2][2] = 0;
+        proj[3][2] = pos[2];
     }
 
     // XXX: use an accessor to speed up access.
-    iter = mesh_get_box_iterator(mesh, box->v, 0);
+    iter = mesh_get_box_iterator(mesh, box, 0);
     while (mesh_iter(&iter, vpos)) {
-        vec3_t p = vec3(vpos[0], vpos[1], vpos[2]);
-        if (!bbox_contains_vec(*box, p)) {
+        vec3_set(p, vpos[0], vpos[1], vpos[2]);
+        if (!bbox_contains_vec(box, p)) {
             memset(value, 0, 4);
         } else {
-            p = mat4_mul_vec3(proj, p);
-            int pi[3] = {floor(p.x), floor(p.y), floor(p.z)};
+            mat4_mul_vec3(proj, p, p);
+            int pi[3] = {floor(p[0]), floor(p[1]), floor(p[2])};
             mesh_get_at(mesh, NULL, pi, value);
         }
         mesh_set_at(mesh, NULL, vpos, value);
@@ -131,7 +133,7 @@ void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box)
 
 static void mesh_fill(
         mesh_t *mesh,
-        const box_t *box,
+        const float box[4][4],
         void (*get_color)(const int pos[3], uint8_t out[4], void *user_data),
         void *user_data)
 {
@@ -142,7 +144,7 @@ static void mesh_fill(
 
     mesh_clear(mesh);
     accessor = mesh_get_accessor(mesh);
-    iter = mesh_get_box_iterator(mesh, box->v, 0);
+    iter = mesh_get_box_iterator(mesh, box, 0);
     while (mesh_iter(&iter, pos)) {
         get_color(pos, color, user_data);
         mesh_set_at(mesh, &accessor, pos, color);
@@ -151,23 +153,25 @@ static void mesh_fill(
 
 static void mesh_move_get_color(const int pos[3], uint8_t c[4], void *user)
 {
-    vec3_t p = vec3(pos[0], pos[1], pos[2]);
+    float p[3] = {pos[0], pos[1], pos[2]};
     mesh_t *mesh = USER_GET(user, 0);
-    mat4_t *mat = USER_GET(user, 1);
-    p = mat4_mul_vec3(*mat, p);
-    int pi[3] = {round(p.x), round(p.y), round(p.z)};
+    float (*mat)[4][4] = USER_GET(user, 1);
+    mat4_mul_vec3(*mat, p, p);
+    int pi[3] = {round(p[0]), round(p[1]), round(p[2])};
     mesh_get_at(mesh, NULL, pi, c);
 }
 
-void mesh_move(mesh_t *mesh, const mat4_t *mat)
+void mesh_move(mesh_t *mesh, const float mat[4][4])
 {
-    box_t box;
+    float box[4][4];
     mesh_t *src_mesh = mesh_copy(mesh);
-    mat4_t imat = mat4_inverted(*mat);
-    box = mesh_get_box(mesh, true);
+    float imat[4][4];
+
+    mat4_invert(mat, imat);
+    mesh_get_box(mesh, true, box);
     if (box_is_null(box)) return;
-    box.mat = mat4_mul(*mat, box.mat);
-    mesh_fill(mesh, &box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
+    mat4_mul(mat, box, box);
+    mesh_fill(mesh, box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
     mesh_delete(src_mesh);
     mesh_remove_empty_blocks(mesh, false);
 }
@@ -260,48 +264,47 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 }
 
 
-void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
+void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
 {
     int i, vp[3];
     uint8_t value[4], c[4];
     mesh_iterator_t iter;
     mesh_accessor_t accessor;
-    vec3_t size, p;
-    mat4_t mat = mat4_identity;
-    float (*shape_func)(const vec3_t*, const vec3_t*, float smoothness);
+    float size[3], p[3];
+    float mat[4][4];
+    float (*shape_func)(const float[3], const float[3], float smoothness);
     float k, v;
     int mode = painter->mode;
     bool use_box, skip_src_empty, skip_dst_empty;
     painter_t painter2;
-    box_t box2;
+    float box2[4][4];
 
     if (painter->symmetry) {
         painter2 = *painter;
         for (i = 0; i < 3; i++) {
             if (!(painter->symmetry & (1 << i))) continue;
             painter2.symmetry &= ~(1 << i);
-            box2 = *box;
-            box2.mat = mat4_identity;
-            if (i == 0) mat4_iscale(&box2.mat, -1,  1,  1);
-            if (i == 1) mat4_iscale(&box2.mat,  1, -1,  1);
-            if (i == 2) mat4_iscale(&box2.mat,  1,  1, -1);
-            mat4_imul(&box2.mat, box->mat);
-            mesh_op(mesh, &painter2, &box2);
+            mat4_set_identity(box2);
+            if (i == 0) mat4_iscale(box2, -1,  1,  1);
+            if (i == 1) mat4_iscale(box2,  1, -1,  1);
+            if (i == 2) mat4_iscale(box2,  1,  1, -1);
+            mat4_imul(box2, box);
+            mesh_op(mesh, &painter2, box2);
         }
     }
 
     shape_func = painter->shape->func;
-    size = box_get_size(*box);
-    mat4_imul(&mat, box->mat);
-    mat4_iscale(&mat, 1 / size.x, 1 / size.y, 1 / size.z);
-    mat4_invert(&mat);
+    box_get_size(box, size);
+    mat4_copy(box, mat);
+    mat4_iscale(mat, 1 / size[0], 1 / size[1], 1 / size[2]);
+    mat4_invert(mat, mat);
     use_box = painter->box && !box_is_null(*painter->box);
     // XXX: cleanup.
     skip_src_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA);
     skip_dst_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA,
                                  MODE_INTERSECT);
     if (mode != MODE_INTERSECT) {
-        iter = mesh_get_box_iterator(mesh, box->v,
+        iter = mesh_get_box_iterator(mesh, box,
                 skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
     } else {
         iter = mesh_get_iterator(mesh,
@@ -312,10 +315,10 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     // setting and getting!  Need to fix that!!
     accessor = mesh_get_accessor(mesh);
     while (mesh_iter(&iter, vp)) {
-        p = vec3(vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
+        vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
         if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
-        p = mat4_mul_vec3(mat, p);
-        k = shape_func(&p, &size, painter->smoothness);
+        mat4_mul_vec3(mat, p, p);
+        k = shape_func(p, size, painter->smoothness);
         k = clamp(k / painter->smoothness, -1.0f, 1.0f);
         v = k / 2.0f + 0.5f;
         if (!v && skip_src_empty) continue;
@@ -329,11 +332,12 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box)
     }
 }
 
-box_t mesh_get_box(const mesh_t *mesh, bool exact)
+// XXX: remove this function!
+void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4])
 {
     int bbox[2][3];
     mesh_get_bbox(mesh, bbox, exact);
-    return bbox_from_aabb(bbox);
+    bbox_from_aabb(box, bbox);
 }
 
 // Used for the cache.
@@ -424,7 +428,7 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
     }
 }
 
-void mesh_crop(mesh_t *mesh, box_t *box)
+void mesh_crop(mesh_t *mesh, const float box[4][4])
 {
     painter_t painter = {
         .mode = MODE_INTERSECT,

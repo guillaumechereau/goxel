@@ -23,18 +23,22 @@
 // XXX: this value should be set depending on the screen resolution.
 static float g_start_dist = 8;
 
-static bool rect_contains(vec4_t rect, vec2_t pos)
+static bool rect_contains(const float rect[4], const float pos[2])
 {
-    return pos.x >= rect.x && pos.x < rect.x + rect.z &&
-           pos.y >= rect.y && pos.y < rect.y + rect.w;
+    return pos[0] >= rect[0] && pos[0] < rect[0] + rect[2] &&
+           pos[1] >= rect[1] && pos[1] < rect[1] + rect[3];
 }
 
-static float get_angle(vec2_t a0, vec2_t a1, vec2_t b0, vec2_t b1)
+static float get_angle(const float a0[2], const float a1[2],
+                       const float b0[2], const float b1[2])
 {
-    vec2_t u = vec2_normalized(vec2_sub(a1, a0));
-    vec2_t v = vec2_normalized(vec2_sub(b1, b0));
-    float dot = vec2_dot(u, v);
-    float det = vec2_cross(u, v);
+    float u[2], v[2], dot, det;
+    vec2_sub(a1, a0, u);
+    vec2_normalize(u, u);
+    vec2_sub(b1, b0, v);
+    vec2_normalize(v, v);
+    dot = vec2_dot(u, v);
+    det = vec2_cross(u, v);
     return atan2(det, dot);
 }
 
@@ -57,9 +61,9 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
         switch (gest->state) {
         case GESTURE_POSSIBLE:
             if (nb_ts == 1 && ts[0].down[gest->button]) {
-                gest->start_pos[0] = ts[0].pos;
-                gest->pos = gest->start_pos[0];
-                if (!rect_contains(gest->view, gest->pos)) {
+                vec2_copy(ts[0].pos, gest->start_pos[0]);
+                vec2_copy(gest->start_pos[0], gest->pos);
+                if (!rect_contains(gest->viewport, gest->pos)) {
                     gest->state = GESTURE_FAILED;
                     break;
                 }
@@ -78,7 +82,7 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
-            gest->pos = ts[0].pos;
+            vec2_copy(ts[0].pos, gest->pos);
             gest->state = GESTURE_UPDATE;
             if (!ts[0].down[gest->button])
                 gest->state = GESTURE_END;
@@ -87,11 +91,11 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
     }
 
     if (gest->type == GESTURE_CLICK) {
-        gest->pos = ts[0].pos;
+        vec2_copy(ts[0].pos, gest->pos);
         switch (gest->state) {
         case GESTURE_POSSIBLE:
             if (ts[0].down[gest->button]) {
-                gest->start_pos[0] = ts[0].pos;
+                vec2_copy(ts[0].pos, gest->start_pos[0]);
                 gest->state = GESTURE_RECOGNISED;
             }
             break;
@@ -107,11 +111,11 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
         case GESTURE_POSSIBLE:
             if (ts[0].down[0] && ts[1].down[0]) {
                 gest->state = GESTURE_BEGIN;
-                gest->start_pos[0] = ts[0].pos;
-                gest->start_pos[1] = ts[1].pos;
+                vec2_copy(ts[0].pos, gest->start_pos[0]);
+                vec2_copy(ts[1].pos, gest->start_pos[1]);
                 gest->pinch = 1;
                 gest->rotation = 0;
-                gest->pos = vec2_mix(ts[0].pos, ts[1].pos, 0.5);
+                vec2_mix(ts[0].pos, ts[1].pos, 0.5, gest->pos);
             }
             break;
         case GESTURE_BEGIN:
@@ -121,7 +125,7 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
                           vec2_dist(gest->start_pos[0], gest->start_pos[1]);
             gest->rotation = get_angle(gest->start_pos[0], gest->start_pos[1],
                                        ts[0].pos, ts[1].pos);
-            gest->pos = vec2_mix(ts[0].pos, ts[1].pos, 0.5);
+            vec2_mix(ts[0].pos, ts[1].pos, 0.5, gest->pos);
             if (!ts[0].down[0] || !ts[1].down[0])
                 gest->state = GESTURE_END;
             break;
@@ -133,7 +137,8 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
 
 
 int gesture_update(int nb, gesture_t *gestures[],
-                   const inputs_t *inputs, const vec4_t *view, void *user)
+                   const inputs_t *inputs, const float viewport[4],
+                   void *user)
 {
     int i, j, mask = 0;
     bool allup = true;
@@ -155,7 +160,7 @@ int gesture_update(int nb, gesture_t *gestures[],
 
     for (i = 0; i < nb; i++) {
         gest = gestures[i];
-        gest->view = *view;
+        vec4_copy(viewport, gest->viewport);
         if ((gest->state == GESTURE_FAILED) && allup) {
             gest->state = GESTURE_POSSIBLE;
         }
@@ -185,7 +190,7 @@ int gesture_update(int nb, gesture_t *gestures[],
         for (i = 0; i < nb; i++) {
             gest = gestures[i];
             if (gest->type != GESTURE_HOVER) continue;
-            gest->pos = inputs->touches[0].pos;
+            vec2_copy(inputs->touches[0].pos, gest->pos);
             gest->callback(gest, user);
             triggered = gest;
         }

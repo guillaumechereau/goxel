@@ -28,8 +28,7 @@ static void export_as_pov(const char *path, int w, int h)
     char *buf;
     const char *template;
     uint8_t v[4];
-    mat4_t modelview;
-    vec3_t light_dir;
+    float modelview[4][4], light_dir[3];
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = goxel->camera;
     mesh_iterator_t iter;
@@ -46,10 +45,10 @@ static void export_as_pov(const char *path, int w, int h)
     camera.aspect = (float)w / h;
     camera_update(&camera);
 
-    modelview = camera.view_mat;
+    mat4_copy(camera.view_mat, modelview);
     // cam_to_view = mat4_inverted(camera.view_mat);
     // cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
-    light_dir = render_get_light_dir(&goxel->rend);
+    render_get_light_dir(&goxel->rend, light_dir);
 
     m = mustache_root();
     mustache_add_str(m, "version", GOXEL_VERSION_STR);
@@ -59,15 +58,15 @@ static void export_as_pov(const char *path, int w, int h)
     mustache_add_str(m_cam, "angle", "%.1f", camera.fovy * camera.aspect);
     mustache_add_str(m_cam, "modelview",
                      "<%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f>",
-                     modelview.v[0], modelview.v[1], modelview.v[2],
-                     modelview.v[4], modelview.v[5], modelview.v[6],
-                     modelview.v[8], modelview.v[9], modelview.v[10],
-                     modelview.v[12], modelview.v[13], modelview.v[14]);
+                     modelview[0][0], modelview[0][1], modelview[0][2],
+                     modelview[1][0], modelview[1][1], modelview[1][2],
+                     modelview[2][0], modelview[2][1], modelview[2][2],
+                     modelview[3][0], modelview[3][1], modelview[3][2]);
     m_light = mustache_add_dict(m, "light");
     mustache_add_str(m_light, "ambient", "%.2f",
                      goxel->rend.settings.ambient);
     mustache_add_str(m_light, "point_at", "<%.1f, %.1f, %.1f + 1024>",
-                     -light_dir.x, -light_dir.y, -light_dir.z);
+                     -light_dir[0], -light_dir[1], -light_dir[2]);
 
     m_voxels = mustache_add_list(m, "voxels");
     DL_FOREACH(goxel->image->layers, layer) {

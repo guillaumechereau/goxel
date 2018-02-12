@@ -25,76 +25,6 @@
 #include <math.h>
 #include <stdbool.h>
 
-typedef float real_t;
-
-typedef union {
-    struct {
-        real_t x;
-        real_t y;
-    };
-    real_t v[2];
-} vec2_t;
-
-typedef union {
-    struct {
-        real_t x;
-        real_t y;
-        real_t z;
-    };
-    struct {
-        real_t r;
-        real_t g;
-        real_t b;
-    };
-    vec2_t xy;
-    real_t v[3];
-} vec3_t;
-
-typedef union {
-    struct {
-        real_t x;
-        real_t y;
-        real_t z;
-        real_t w;
-    };
-    struct {
-        real_t r;
-        real_t g;
-        real_t b;
-        real_t a;
-    };
-    struct {
-        vec2_t xy;
-        vec2_t zw;
-    };
-    vec3_t xyz;
-    vec3_t rgb;
-    real_t v[4];
-} vec4_t;
-
-typedef union {
-    real_t v[9];
-    real_t v2[3][3];
-    vec3_t vecs[3];
-} mat3_t;
-
-typedef union {
-    real_t v[16];
-    vec4_t vecs[4];
-} mat4_t;
-
-
-typedef union {
-    struct {
-        real_t w, x, y, z;
-    };
-    struct {
-        real_t a;
-        vec3_t vec;
-    };
-    real_t v[4];
-} quat_t;
-
 enum  {
     EULER_ORDER_DEFAULT = 0, // XYZ.
     EULER_ORDER_XYZ = 0,
@@ -105,285 +35,338 @@ enum  {
     EULER_ORDER_ZYX
 };
 
-#define VEC2(x, y) {{x, y}}
-#define VEC3(x, y, z) {{x, y, z}}
-#define VEC4(x, y, z, d) {{x, y, z, d}}
-
-#define VEC3_SPLIT(v) (v).x, (v).y, (v).z
-#define VEC4_SPLIT(v) (v).x, (v).y, (v).z, (v).w
-
-#define MAT(...) {{__VA_ARGS__}}
-
-#define QUAT(...) ((quat_t){{__VA_ARGS__}})
+#define MAT4_IDENTITY {{1, 0, 0, 0}, \
+                       {0, 1, 0, 0}, \
+                       {0, 0, 1, 0}, \
+                       {0, 0, 0, 1}}
 
 #define DECL static inline
 
-static const vec3_t vec3_zero = VEC3(0, 0, 0);
-static const vec4_t vec4_zero = VEC4(0, 0, 0, 0);
+#define VEC(...) ((float[]){__VA_ARGS__})
+#define QUAT(w, x, y, z) ((float[]){w, x, y, z})
 
-static const mat4_t mat4_identity = MAT(1, 0, 0, 0,
-                                        0, 1, 0, 0,
-                                        0, 0, 1, 0,
-                                        0, 0, 0, 1);
+static const float vec3_zero[] = {0, 0, 0};
+static const float vec4_zero[] = {0, 0, 0, 0};
+static const float mat4_identity[4][4] = {{1, 0, 0, 0},
+                                          {0, 1, 0, 0},
+                                          {0, 0, 1, 0},
+                                          {0, 0, 0, 1}};
+static const float mat4_zero[4][4] = {{0, 0, 0, 0},
+                                      {0, 0, 0, 0},
+                                      {0, 0, 0, 0},
+                                      {0, 0, 0, 0}};
 
-static const mat4_t mat4_zero = MAT(0, 0, 0, 0,
-                                    0, 0, 0, 0,
-                                    0, 0, 0, 0,
-                                    0, 0, 0, 0);
+static const float quat_identity[4] = {1, 0, 0, 0};
 
-static const quat_t quat_identity = {{1, 0, 0, 0}};
 
-DECL vec2_t vec2(real_t x, real_t y)
+DECL void vec2_set(float v[2], float x, float y)
 {
-    return (vec2_t)VEC2(x, y);
+    v[0] = x;
+    v[1] = y;
 }
 
-DECL vec3_t vec3(real_t x, real_t y, real_t z)
+DECL void vec3_set(float v[3], float x, float y, float z)
 {
-    return (vec3_t)VEC3(x, y, z);
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
 }
 
-DECL vec4_t vec4(real_t x, real_t y, real_t z, real_t w)
+DECL void vec4_set(float v[4], float x, float y, float z, float w)
 {
-    return (vec4_t)VEC4(x, y, z, w);
+    v[0] = x;
+    v[1] = y;
+    v[2] = z;
+    v[3] = w;
 }
 
-DECL bool vec2_equal(vec2_t a, vec2_t b)
+DECL void vec2_copy(const float a[2], float out[2])
 {
-    return a.x == b.x && a.y == b.y;
+    out[0] = a[0];
+    out[1] = a[1];
 }
 
-DECL bool vec3_equal(vec3_t a, vec3_t b)
+DECL void vec3_copy(const float a[3], float out[3])
 {
-    return a.x == b.x && a.y == b.y && a.z == b.z;
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
 }
 
-DECL vec3_t vec3_add(vec3_t a, vec3_t b)
+DECL void vec4_copy(const float a[4], float out[4])
 {
-    return vec3(a.x + b.x, a.y + b.y, a.z + b.z);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
 }
 
-DECL vec3_t vec3_addk(vec3_t a, vec3_t b, real_t k)
+DECL bool vec2_equal(const float a[2], const float b[2])
 {
-    return vec3(a.x + b.x * k, a.y + b.y * k, a.z + b.z * k);
+    return a[0] == b[0] && a[1] == b[1];
 }
 
-DECL void vec3_iaddk(vec3_t *a, vec3_t b, real_t k)
+DECL bool vec3_equal(const float a[3], const float b[3])
 {
-    *a = vec3_addk(*a, b, k);
+    return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
 }
 
-DECL void vec3_iadd(vec3_t *a, vec3_t b)
+DECL void vec3_add(const float a[3], const float b[3], float out[3])
 {
-    *a = vec3_add(*a, b);
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
 }
 
-DECL vec2_t vec2_sub(vec2_t a, vec2_t b)
+DECL void vec3_iadd(float a[3], const float b[3])
 {
-    return vec2(a.x - b.x, a.y - b.y);
+    vec3_add(a, b, a);
 }
 
-DECL vec3_t vec3_sub(vec3_t a, vec3_t b)
+DECL void vec3_addk(const float a[3], const float b[3], float k, float out[3])
 {
-    return vec3(a.x - b.x, a.y - b.y, a.z - b.z);
+    out[0] = a[0] + b[0] * k;
+    out[1] = a[1] + b[1] * k;
+    out[2] = a[2] + b[2] * k;
 }
 
-DECL void vec3_isub(vec3_t *a, vec3_t b)
+DECL void vec3_iaddk(float a[3], const float b[3], float k)
 {
-    *a = vec3_sub(*a, b);
+    vec3_addk(a, b, k, a);
 }
 
-DECL vec2_t vec2_mul(vec2_t a, real_t k)
+
+DECL void vec2_sub(const float a[2], const float b[2], float out[2])
 {
-    return vec2(a.x * k, a.y * k);
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
 }
 
-DECL vec3_t vec3_mul(vec3_t a, real_t k)
+DECL void vec3_sub(const float a[3], const float b[3], float out[3])
 {
-    return vec3(a.x * k, a.y * k, a.z * k);
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    out[2] = a[2] - b[2];
 }
 
-DECL void vec3_imul(vec3_t *a, real_t k)
+DECL void vec3_isub(float a[3], const float b[3])
 {
-    *a = vec3_mul(*a, k);
+    vec3_sub(a, b, a);
 }
 
-DECL vec3_t vec3_neg(vec3_t a)
+DECL void vec2_mul(const float a[2], float k, float out[2])
 {
-    return vec3_mul(a, -1);
+    out[0] = a[0] * k;
+    out[1] = a[1] * k;
 }
 
-DECL real_t vec2_dot(vec2_t a, vec2_t b) {
-    return a.x * b.x + a.y * b.y;
-}
-DECL real_t vec3_dot(vec3_t a, vec3_t b) {
-    return a.x * b.x + a.y * b.y + a.z * b.z;
+DECL void vec3_mul(const float a[3], float k, float out[3])
+{
+    out[0] = a[0] * k;
+    out[1] = a[1] * k;
+    out[2] = a[2] * k;
 }
 
-DECL real_t vec2_norm2(vec2_t a) {
+DECL void vec3_imul(float a[3], float k)
+{
+    vec3_mul(a, k, a);
+}
+
+DECL void vec3_neg(const float a[3], float out[3])
+{
+    vec3_mul(a, -1, out);
+}
+
+DECL float vec2_dot(const float a[2], const float b[2])
+{
+    return a[0] * b[0] + a[1] * b[1];
+}
+
+DECL float vec3_dot(const float a[3], const float b[3])
+{
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+DECL float vec2_norm2(const float a[2])
+{
     return vec2_dot(a, a);
 }
-DECL real_t vec3_norm2(vec3_t a) {
+
+DECL float vec3_norm2(const float a[3])
+{
     return vec3_dot(a, a);
 }
 
-DECL real_t vec2_norm(vec2_t a)
+DECL float vec2_norm(const float a[2])
 {
     return sqrt(vec2_norm2(a));
 }
 
-DECL vec2_t vec2_normalized(vec2_t a)
+DECL void vec2_normalize(const float a[2], float out[2])
 {
-    return vec2_mul(a, 1 / vec2_norm(a));
+    vec2_mul(a, 1 / vec2_norm(a), out);
 }
 
-DECL real_t vec3_norm(vec3_t a)
+DECL float vec3_norm(const float a[3])
 {
     return sqrt(vec3_norm2(a));
 }
 
-DECL vec3_t vec3_normalized(vec3_t a)
+DECL void vec3_normalize(const float a[3], float out[3])
 {
-    return vec3_mul(a, 1 / vec3_norm(a));
+    vec3_mul(a, 1 / vec3_norm(a), out);
 }
 
-DECL void vec3_normalize(vec3_t *a)
+DECL float vec2_dist2(const float a[2], const float b[2])
 {
-    *a = vec3_normalized(*a);
+    float u[2];
+    vec2_sub(a, b, u);
+    return vec2_norm2(u);
 }
 
-DECL real_t vec2_dist2(vec2_t a, vec2_t b)
-{
-    return vec2_norm2(vec2_sub(a, b));
-}
-
-DECL real_t vec2_dist(vec2_t a, vec2_t b)
+DECL float vec2_dist(const float a[2], const float b[2])
 {
     return sqrt(vec2_dist2(a, b));
 }
 
-DECL real_t vec3_dist2(vec3_t a, vec3_t b)
+DECL float vec3_dist2(const float a[3], const float b[3])
 {
-    return vec3_norm2(vec3_sub(a, b));
+    float d[3];
+    vec3_sub(a, b, d);
+    return vec3_norm2(d);
 }
 
-DECL real_t vec3_dist(vec3_t a, vec3_t b)
+DECL float vec3_dist(const float a[3], const float b[3])
 {
     return sqrt(vec3_dist2(a, b));
 }
 
-DECL vec2_t vec2_mix(vec2_t a, vec2_t b, real_t t)
+DECL void vec2_mix(const float a[2], const float b[2], float t, float out[2])
 {
-    return vec2(a.x * (1 - t) + b.x * t,
-                a.y * (1 - t) + b.y * t);
+    out[0] = a[0] * (1 - t) + b[0] * t;
+    out[1] = a[1] * (1 - t) + b[1] * t;
 }
 
-DECL vec3_t vec3_mix(vec3_t a, vec3_t b, real_t t)
+DECL void vec3_mix(const float a[3], const float b[3], float t, float out[3])
 {
-    return vec3(a.x * (1 - t) + b.x * t,
-                a.y * (1 - t) + b.y * t,
-                a.z * (1 - t) + b.z * t);
-}
-DECL vec3_t vec3_lerp(vec3_t a, vec3_t b, real_t t) {
-    return vec3_mix(a, b, t);
+    out[0] = a[0] * (1 - t) + b[0] * t;
+    out[1] = a[1] * (1 - t) + b[1] * t;
+    out[2] = a[2] * (1 - t) + b[2] * t;
 }
 
-DECL vec3_t vec3_lerp_const(vec3_t a, vec3_t b, real_t d)
+DECL void vec3_lerp(const float a[3], const float b[3], float t, float out[3])
 {
-    real_t d2 = vec3_dist2(a, b);
-    if (d2 < d * d) return b;
-    return vec3_addk(a, vec3_normalized(vec3_sub(b, a)), d);
-}
-DECL bool vec3_ilerp_const(vec3_t *a, vec3_t b, real_t d)
-{
-    *a = vec3_lerp_const(*a, b, d);
-    return vec3_equal(*a, b);
+    vec3_mix(a, b, t, out);
 }
 
-DECL vec3_t vec3_project(vec3_t a, vec3_t b)
+DECL bool vec3_lerp_const(const float a[3], const float b[3], float d,
+                          float out[3])
 {
-    return vec3_mul(b, vec3_dot(a, b) / vec3_dot(b, b));
+    float u[3];
+    float d2 = vec3_dist2(a, b);
+    if (d2 < d * d) {
+        vec3_copy(b, out);
+        return true;
+    }
+    vec3_sub(b, a, u);
+    vec3_normalize(u, u);
+    vec3_addk(a, u, d, out);
+    return false;
 }
 
-DECL real_t vec2_cross(vec2_t a, vec2_t b)
+DECL bool vec3_ilerp_const(float a[3], const float b[3], float d)
 {
-    return a.x * b.y - a.y * b.x;
+    return vec3_lerp_const(a, b, d, a);
 }
 
-DECL vec3_t vec3_cross(vec3_t a, vec3_t b)
+DECL void vec3_project(const float a[3], const float b[3], float out[3])
 {
-    return vec3(a.y * b.z - a.z * b.y,
-                a.z * b.x - a.x * b.z,
-                a.x * b.y - a.y * b.x);
+    vec3_mul(b, vec3_dot(a, b) / vec3_dot(b, b), out);
 }
 
-DECL mat4_t mat4(real_t x1, real_t x2, real_t x3, real_t x4,
-                 real_t y1, real_t y2, real_t y3, real_t y4,
-                 real_t z1, real_t z2, real_t z3, real_t z4,
-                 real_t w1, real_t w2, real_t w3, real_t w4)
+DECL float vec2_cross(const float a[2], const float b[2])
 {
-    return (mat4_t)MAT(x1, x2, x3, x4,
-                       y1, y2, y3, y4,
-                       z1, z2, z3, z4,
-                       w1, w2, w3, w4);
+    return a[0] * b[1] - a[1] * b[0];
 }
 
-DECL vec4_t mat4_mul_vec(mat4_t m, vec4_t v)
+DECL void vec3_cross(const float a[3], const float b[3], float out[3])
 {
-    vec4_t ret = vec4_zero;
+    out[0] = a[1] * b[2] - a[2] * b[1];
+    out[1] = a[2] * b[0] - a[0] * b[2];
+    out[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+DECL void mat4_copy(const float m[4][4], float out[4][4])
+{
+    int i, j;
+    for (i = 0; i < 4; i++)
+        for (j = 0; j < 4; j++)
+            out[i][j] = m[i][j];
+}
+
+DECL void mat4_mul_vec4(const float m[4][4], const float v[4], float out[4])
+{
+    float ret[4] = {};
     int i, j;
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            ret.v[i] += m.v[j * 4 + i] * v.v[j];
+            ret[i] += m[j][i] * v[j];
         }
     }
-    return ret;
+    vec4_copy(ret, out);
 }
 
-DECL vec3_t mat4_mul_vec3(mat4_t m, vec3_t v)
+DECL void mat4_mul_vec3(const float m[4][4], const float v[3], float out[3])
 {
-    vec4_t v4 = vec4(v.x, v.y, v.z, 1);
-    return mat4_mul_vec(m, v4).xyz;
+    float v4[4] = {v[0], v[1], v[2], 1.0f};
+    mat4_mul_vec4(m, v4, v4);
+    vec3_copy(v4, out);
 }
 
-DECL mat4_t mat4_translate(mat4_t m, real_t x, real_t y, real_t z)
+DECL void mat4_translate(const float m[4][4], float x, float y, float z,
+                         float out[4][4])
 {
-#define M(row,col)  m.v[(row) * 4 + (col)]
+    float tmp[4][4];
     int i;
+    mat4_copy(m, tmp);
+#define M(row,col)  tmp[(row)][(col)]
     for (i = 0; i < 4; i++) {
        M(4 - 1, i) += M(0, i) * x + M(1, i) * y + M(2, i) * z;
     }
 #undef M
-    return m;
+    mat4_copy(tmp, out);
 }
 
-DECL void mat4_itranslate(mat4_t *m, real_t x, real_t y, real_t z)
+DECL void mat4_itranslate(float m[4][4], float x, float y, float z)
 {
-    *m = mat4_translate(*m, x, y, z);
+    mat4_translate(m, x, y, z, m);
 }
 
-DECL mat4_t mat4_scale(mat4_t m, real_t x, real_t y, real_t z)
+DECL void mat4_scale(const float m[4][4], float x, float y, float z,
+                     float out[4][4])
 {
     int i;
+    float tmp[4][4];
+    mat4_copy(m, tmp);
     for (i = 0; i < 4; i++) {
-        m.v[i] *= x;
-        m.v[i + 4] *= y;
-        m.v[i + 2 * 4] *= z;
+        tmp[0][i] *= x;
+        tmp[1][i] *= y;
+        tmp[2][i] *= z;
     }
-    return m;
+    mat4_copy(tmp, out);
 }
 
-DECL void mat4_iscale(mat4_t *m, real_t x, real_t y, real_t z)
+DECL void mat4_iscale(float m[4][4], float x, float y, float z)
 {
-    *m = mat4_scale(*m, x, y, z);
+    mat4_scale(m, x, y, z, m);
 }
 
-DECL bool mat4_invert(mat4_t *mat)
+DECL bool mat4_invert(const float mat[4][4], float out[4][4])
 {
-    real_t det;
+    float det;
     int i;
-    const real_t *m = mat->v;
-    real_t inv[16];
+    const float *m = (const float*)mat;
+    float inv[16];
 
 #define M(i, j, k) m[i] * m[j] * m[k]
     inv[0] =   M(5, 10, 15) - M(5, 11, 14)  - M(9, 6, 15) +
@@ -422,124 +405,149 @@ DECL bool mat4_invert(mat4_t *mat)
 
     det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
 
-    if (det == 0) {
+    if (det == 0)
         return false;
-    }
 
     det = 1.0 / det;
 
     for (i = 0; i < 16; i++)
-        mat->v[i] = inv[i] * det;
+        out[i / 4][i % 4] = inv[i] * det;
     return true;
 }
 
-DECL mat4_t mat4_inverted(mat4_t mat)
-{
-    mat4_t ret = mat;
-    if (mat4_invert(&ret))
-        return ret;
-    else
-        return mat4_zero;
-}
-
-DECL void mat4_igrow(mat4_t *m, real_t x, real_t y, real_t z)
+DECL void mat4_igrow(float m[4][4], float x, float y, float z)
 {
     // XXX: need to optimize this.
-    real_t sx, sy, sz;
-    sx = vec3_norm(mat4_mul_vec(*m, vec4(1, 0, 0, 0)).xyz);
-    sy = vec3_norm(mat4_mul_vec(*m, vec4(0, 1, 0, 0)).xyz);
-    sz = vec3_norm(mat4_mul_vec(*m, vec4(0, 0, 1, 0)).xyz);
-    sx = (2 * x + sx) / sx;
-    sy = (2 * y + sy) / sy;
-    sz = (2 * z + sz) / sz;
-    mat4_iscale(m, sx, sy, sz);
+    float s[3];
+    float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
+    int i;
+    for (i = 0; i < 3; i++) {
+        mat4_mul_vec4(m, v[i], v[i]);
+        s[i] = vec3_norm(v[i]);
+    }
+    s[0] = (2 * x + s[0]) / s[0];
+    s[1] = (2 * y + s[1]) / s[1];
+    s[2] = (2 * z + s[2]) / s[2];
+    mat4_iscale(m, s[0], s[1], s[2]);
 }
 
-DECL mat4_t mat4_mul(mat4_t a, mat4_t b)
+DECL void mat4_mul(const float a[4][4], const float b[4][4], float out[4][4])
 {
     int i, j, k;
-    mat4_t ret = {};
+    float ret[4][4] = {};
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            ret.v[j * 4 + i] = 0.0;
+            ret[j][i] = 0.0;
             for (k = 0; k < 4; ++k) {
-                ret.v[j * 4 + i] += a.v[k * 4 + i] * b.v[j * 4 + k];
+                ret[j][i] += a[k][i] * b[j][k];
             }
         }
     }
-    return ret;
-}
-DECL void mat4_imul(mat4_t *a, mat4_t b)
-{
-    *a = mat4_mul(*a, b);
+    mat4_copy(ret, out);
 }
 
-DECL mat4_t mat4_ortho(real_t left, real_t right, real_t bottom,
-                       real_t top, real_t nearval, real_t farval)
+DECL void mat4_imul(float a[4][4], const float b[4][4])
 {
-    real_t tx = -(right + left) / (right - left);
-    real_t ty = -(top + bottom) / (top - bottom);
-    real_t tz = -(farval + nearval) / (farval - nearval);
-    const mat4_t ret = mat4(
-        2 / (right - left), 0, 0, 0,
-        0, 2 / (top - bottom), 0, 0,
-        0, 0, -2 / (farval - nearval), 0,
-        tx, ty, tz, 1
-    );
-    return ret;
+    mat4_mul(a, b, a);
 }
 
-DECL mat4_t mat4_perspective(real_t fovy, real_t aspect,
-                             real_t nearval, real_t farval)
+DECL void mat4_ortho(float m[4][4], float left, float right, float bottom,
+                     float top, float nearval, float farval)
 {
-    real_t radian = fovy * M_PI / 180;
-    real_t f = 1. / tan(radian / 2.);
-    const mat4_t ret = mat4(
-        f / aspect, 0., 0., 0.,
-        0., f, 0., 0.,
-        0., 0., (farval + nearval) / (nearval - farval), -1,
-        0., 0., 2. * farval * nearval / (nearval - farval), 0.
-    );
-    return ret;
+    float tx = -(right + left) / (right - left);
+    float ty = -(top + bottom) / (top - bottom);
+    float tz = -(farval + nearval) / (farval - nearval);
+    const float ret[4][4] = {
+        {2 / (right - left), 0, 0, 0},
+        {0, 2 / (top - bottom), 0, 0},
+        {0, 0, -2 / (farval - nearval), 0},
+        {tx, ty, tz, 1},
+    };
+    mat4_copy(ret, m);
 }
 
-DECL mat4_t mat4_transposed(mat4_t m)
+DECL void mat4_perspective(float m[4][4], float fovy, float aspect,
+                           float nearval, float farval)
+{
+    float radian = fovy * M_PI / 180.f;
+    float f = 1.f / tan(radian / 2.f);
+    const float ret[4][4] = {
+        {f / aspect, 0.f, 0.f, 0.f},
+        {0.f, f, 0.f, 0.f},
+        {0.f, 0.f, (farval + nearval) / (nearval - farval), -1.f},
+        {0.f, 0.f, 2.f * farval * nearval / (nearval - farval), 0.f},
+    };
+    mat4_copy(ret, m);
+}
+
+DECL void mat4_transpose(const float m[4][4], float out[4][4])
 {
     int i, j;
-    mat4_t ret = {};
+    float ret[4][4] = {};
     for (i = 0; i < 4; i++)
         for (j = 0; j < 4; j++)
-            ret.v[i * 4 + j] = m.v[j * 4 + i];
-    return ret;
+            ret[i][j] = m[j][i];
+    mat4_copy(ret, out);
+}
+
+DECL void mat4_set_identity(float m[4][4])
+{
+    mat4_copy(mat4_identity, m);
 }
 
 // Similar to gluLookAt
-DECL mat4_t mat4_lookat(vec3_t eye, vec3_t center, vec3_t up)
+DECL void mat4_lookat(float m[4][4],
+                      const float eye[3], const float center[3],
+                      const float up[3])
 {
-    vec3_t f, s, u;
-    mat4_t m = mat4_identity;
-    f = vec3_normalized(vec3_sub(center, eye));
-    vec3_normalize(&up);
-    s = vec3_cross(f, up);
-    u = vec3_cross(vec3_normalized(s), f);
-    m.vecs[0].xyz = s;
-    m.vecs[1].xyz = u;
-    m.vecs[2].xyz = vec3_neg(f);
-    m = mat4_transposed(m);
-    return mat4_translate(m, -eye.x, -eye.y, -eye.z);
+    float f[3], s[3], u[3], ret[4][4];
+    mat4_set_identity(ret);
+    vec3_sub(center, eye, f);
+    vec3_normalize(f, f);
+    vec3_cross(f, up, s);
+    vec3_normalize(s, s);
+    vec3_cross(s, f, u);
+    vec3_normalize(u, u);
+    vec3_copy(s, ret[0]);
+    vec3_copy(u, ret[1]);
+    vec3_neg(f, ret[2]);
+    mat4_transpose(ret, ret);
+    mat4_translate(ret, -eye[0], -eye[1], -eye[2], ret);
+    mat4_copy(ret, m);
 }
 
-DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z);
-DECL mat4_t quat_to_mat4(quat_t q);
-DECL mat3_t quat_to_mat3(quat_t q);
-DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)
+DECL void quat_set_identity(float q[4])
 {
-    if (a == 0.0)
-        return m;
-    mat4_t tmp = mat4_identity;
-    real_t s = sin(a);
-    real_t c = cos(a);
-#define M(row,col)  tmp.v[col * 4 + row]
+    q[0] = 1;
+    q[1] = 0;
+    q[2] = 0;
+    q[3] = 0;
+}
+
+DECL void quat_copy(const float q[4], float out[4])
+{
+    out[0] = q[0];
+    out[1] = q[1];
+    out[2] = q[2];
+    out[3] = q[3];
+}
+
+DECL void quat_from_axis(float quat[4], float a, float x, float y, float z);
+DECL void quat_to_mat4(const float q[4], float out[4][4]);
+
+DECL void mat4_rotate(const float m[4][4], float a, float x, float y, float z,
+                      float out[4][4])
+{
+    if (a == 0.0) {
+        mat4_copy(m, out);
+        return;
+    }
+    float tmp[4][4];
+    float s = sin(a);
+    float c = cos(a);
+    mat4_set_identity(tmp);
+
+#define M(row,col)  tmp[col][row]
     if (x == 1.0 && y == 0.0 && z == 0.0) {
         M(1,1) = c;
         M(2,2) = c;
@@ -556,126 +564,110 @@ DECL mat4_t mat4_rotate(mat4_t m, real_t a, real_t x, real_t y, real_t z)
         M(0, 1) = -s;
         M(1, 0) = s;
     } else {
-        quat_t quat = quat_from_axis(a, x, y, z);
-        tmp = quat_to_mat4(quat);
+        float quat[4];
+        quat_from_axis(quat, a, x, y, z);
+        quat_to_mat4(quat, tmp);
     }
 #undef M
-    return mat4_mul(m, tmp);
-}
-DECL void mat4_irotate(mat4_t *m, real_t a, real_t x, real_t y, real_t z)
-{
-    *m = mat4_rotate(*m, a, x, y, z);
+    mat4_mul(m, tmp, out);
 }
 
-DECL quat_t quat(real_t w, real_t x, real_t y, real_t z) {
-   return (quat_t){{w, x, y, z}};
+DECL void mat4_irotate(float m[4][4], float a, float x, float y, float z)
+{
+    mat4_rotate(m, a, x, y, z, m);
 }
 
-DECL quat_t quat_from_axis(real_t a, real_t x, real_t y, real_t z)
+DECL void quat_from_axis(float quat[4], float a, float x, float y, float z)
 {
-    real_t sin_angle;
-    vec3_t vn;
+    float sin_angle;
+    float vn[3] = {x, y, z};
     a *= 0.5f;
-
-    vn = vec3(x, y, z);
-    vec3_normalize(&vn);
-
+    vec3_normalize(vn, vn);
     sin_angle = sin(a);
-
-    return quat(cos(a),
-                vn.x * sin_angle,
-                vn.y * sin_angle,
-                vn.z * sin_angle);
+    quat[0] = cos(a);
+    quat[1] = vn[0] * sin_angle;
+    quat[2] = vn[1] * sin_angle;
+    quat[3] = vn[2] * sin_angle;
 }
 
-DECL mat4_t quat_to_mat4(quat_t q)
+DECL void quat_to_mat4(const float q[4], float out[4][4])
 {
-    real_t w, x, y, z;
-    w = q.w;
-    x = q.x;
-    y = q.y;
-    z = q.z;
-    return mat4(
-            1-2*y*y-2*z*z,     2*x*y+2*z*w,     2*x*z-2*y*w,     0,
-              2*x*y-2*z*w,   1-2*x*x-2*z*z,     2*y*z+2*x*w,     0,
-              2*x*z+2*y*w,     2*y*z-2*x*w,   1-2*x*x-2*y*y,     0,
-              0,               0,               0,               1);
+    float w, x, y, z;
+    w = q[0];
+    x = q[1];
+    y = q[2];
+    z = q[3];
+    const float ret[4][4] = {
+            {1-2*y*y-2*z*z,     2*x*y+2*z*w,     2*x*z-2*y*w,  0},
+            { 2*x*y-2*z*w,   1-2*x*x-2*z*z,     2*y*z+2*x*w,   0},
+            { 2*x*z+2*y*w,     2*y*z-2*x*w,   1-2*x*x-2*y*y,   0},
+            { 0,               0,               0,             1}};
+    mat4_copy(ret, out);
 }
 
-DECL quat_t quat_conjugate(quat_t q) {
-    return quat(q.w, -q.x, -q.y, -q.z);
+DECL void quat_conjugate(const float q[4], float out[4]) {
+    out[0] =  q[0];
+    out[1] = -q[1];
+    out[2] = -q[2];
+    out[3] = -q[3];
 }
 
-DECL quat_t quat_mul(quat_t a, quat_t b)
+DECL void quat_mul(const float a[4], const float b[4], float out[4])
 {
-    return quat(a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-                a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
-                a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
-                a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x);
+    out[0] = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
+    out[1] = a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2];
+    out[2] = a[0] * b[2] + a[2] * b[0] + a[3] * b[1] - a[1] * b[3];
+    out[3] = a[0] * b[3] + a[3] * b[0] + a[1] * b[2] - a[2] * b[1];
 }
 
-DECL void quat_imul(quat_t *a, quat_t b)
+DECL void quat_imul(float a[4], const float b[4])
 {
-    *a = quat_mul(*a, b);
+    quat_mul(a, b, a);
 }
 
-DECL quat_t quat_rotate(quat_t q, real_t a, real_t x, real_t y, real_t z)
+DECL void quat_rotate(const float q[4], float a, float x, float y, float z,
+                      float out[4])
 {
-    quat_t other = quat_from_axis(a, x, y, z);
-    return quat_mul(q, other);
+    float other[4];
+    quat_from_axis(other, a, x, y, z);
+    quat_mul(q, other, out);
 }
 
-DECL void quat_irotate(quat_t *q, real_t a, real_t x, real_t y, real_t z)
+DECL void quat_irotate(float q[4], float a, float x, float y, float z)
 {
-    *q = quat_rotate(*q, a, x, y, z);
+    quat_rotate(q, a, x, y, z, q);
 }
 
-DECL vec4_t quat_mul_vec4(quat_t q, vec4_t v)
+DECL void quat_mul_vec4(const float q[4], const float v[4], float out[4])
 {
-    mat4_t m = quat_to_mat4(q);
-    return mat4_mul_vec(m, v);
+    float m[4][4];
+    quat_to_mat4(q, m);
+    mat4_mul_vec4(m, v, out);
 }
 
-DECL mat4_t mat4_mul_quat(mat4_t mat, quat_t q)
+DECL void mat4_mul_quat(const float mat[4][4], const float q[4],
+                        float out[4][4])
 {
-    mat4_t qm = quat_to_mat4(q);
-    return mat4_mul(mat, qm);
+    float qm[4][4];
+    quat_to_mat4(q, qm);
+    mat4_mul(mat, qm, out);
 }
 
-DECL void mat4_imul_quat(mat4_t *mat, quat_t q)
+DECL void mat4_imul_quat(float mat[4][4], const float q[4])
 {
-    *mat = mat4_mul_quat(*mat, q);
+    mat4_mul_quat(mat, q, mat);
 }
 
-void mat3_to_eul_(const mat3_t *m, int order, vec3_t *e);
-DECL vec3_t mat3_to_eul(mat3_t m, int order)
+void mat3_to_eul(const float m[3][3], int order, float e[3]);
+void quat_to_mat3(const float q[4], float out[3][3]);
+
+DECL void quat_to_eul(const float q[4], int order, float e[3])
 {
-    vec3_t e;
-    mat3_to_eul_(&m, order, &e);
-    return e;
+    float m[3][3];
+    quat_to_mat3(q, m);
+    mat3_to_eul(m, order, e);
 }
 
-void quat_to_mat3_(const quat_t *q, mat3_t *m);
-DECL mat3_t quat_to_mat3(quat_t q)
-{
-    mat3_t m;
-    quat_to_mat3_(&q, &m);
-    return m;
-}
-
-DECL vec3_t quat_to_eul(quat_t q, int order)
-{
-    mat3_t m;
-    m = quat_to_mat3(q);
-    return mat3_to_eul(m, order);
-}
-
-void eul_to_quat_(const vec3_t *e, int order, quat_t *q);
-DECL quat_t eul_to_quat(vec3_t e, int order)
-{
-    quat_t q;
-    eul_to_quat_(&e, order, &q);
-    return q;
-}
+void eul_to_quat(const float e[3], int order, float out[4]);
 
 #endif // VEC_H_

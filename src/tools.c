@@ -48,7 +48,9 @@ static int pick_color_gesture(gesture3d_t *gest, void *user)
 {
     cursor_t *curs = &goxel->cursor;
     mesh_t *mesh = goxel->layers_mesh;
-    int pi[3] = {floor(curs->pos.x), floor(curs->pos.y), floor(curs->pos.z)};
+    int pi[3] = {floor(curs->pos[0]),
+                 floor(curs->pos[1]),
+                 floor(curs->pos[2])};
     uint8_t color[4];
     curs->snap_mask = SNAP_MESH;
     curs->snap_offset = -0.5;
@@ -69,7 +71,7 @@ static gesture3d_t g_pick_color_gesture = {
     .buttons = CURSOR_CTRL,
 };
 
-int tool_iter(tool_t *tool, const vec4_t *view)
+int tool_iter(tool_t *tool, const float viewport[4])
 {
     assert(tool);
     if (    (tool->flags & TOOL_REQUIRE_CAN_EDIT) &&
@@ -77,7 +79,7 @@ int tool_iter(tool_t *tool, const vec4_t *view)
         goxel_set_help_text(goxel, "Cannot edit this layer");
         return 0;
     }
-    tool->state = tool->iter_fn(tool, view);
+    tool->state = tool->iter_fn(tool, viewport);
 
     if (tool->flags & TOOL_ALLOW_PICK_COLOR)
         gesture3d(&g_pick_color_gesture, &goxel->cursor, NULL);

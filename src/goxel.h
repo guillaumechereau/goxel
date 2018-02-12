@@ -327,8 +327,9 @@ int list_dir(const char *url, int flags, void *user,
 
 // Convert from screen coordinate to world coordinates.
 // Similar to gluUnproject.
-vec3_t unproject(const vec3_t *win, const mat4_t *model,
-                 const mat4_t *proj, const vec4_t *view);
+void unproject(const float win[3], const float model[4][4],
+               const float proj[4][4], const float viewport[4],
+               float out[3]);
 
 /* Function: b64_decode
  * Decode a base64 string
@@ -551,7 +552,7 @@ enum {
 
 typedef struct shape {
     const char *id;
-    float (*func)(const vec3_t *p, const vec3_t *s, float smoothness);
+    float (*func)(const float p[3], const float s[3], float smoothness);
 } shape_t;
 
 void shapes_init(void);
@@ -621,13 +622,14 @@ typedef struct painter {
     uint8_t         color[4];
     float           smoothness;
     int             symmetry; // bitfield X Y Z
-    box_t           *box;     // Clipping box (can be null)
+    float           (*box)[4][4];     // Clipping box (can be null)
 } painter_t;
 
 
 /* Function: mesh_get_box
  * Compute the bounding box of a mesh.  */
-box_t mesh_get_box(const mesh_t *mesh, bool exact);
+// XXX: remove this function!
+void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4]);
 
 /* Function: mesh_op
  * Apply a paint operation to a mesh.
@@ -637,15 +639,18 @@ box_t mesh_get_box(const mesh_t *mesh, bool exact);
  * Parameters:
  *   mesh    - The mesh we paint into.
  *   painter - Defines the paint operation to apply.
- *   box_t   - Defines the position and size of the shape.
+ *   box     - Defines the position and size of the shape as the
+ *             transformation matrix from the zero centered unit box.
  *
  * See Also:
  *   <painter_t>
  */
-void mesh_op(mesh_t *mesh, const painter_t *painter, const box_t *box);
+void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4]);
 
 // XXX: to cleanup.
-void mesh_extrude(mesh_t *mesh, const plane_t *plane, const box_t *box);
+void mesh_extrude(mesh_t *mesh,
+                  const float plane[4][4],
+                  const float box[4][4]);
 
 /* Function: mesh_blit
  *
@@ -667,7 +672,7 @@ void mesh_blit(mesh_t *mesh, const uint8_t *data,
                int x, int y, int z, int w, int h, int d,
                mesh_iterator_t *iter);
 
-void mesh_move(mesh_t *mesh, const mat4_t *mat);
+void mesh_move(mesh_t *mesh, const float mat[4][4]);
 
 void mesh_shift_alpha(mesh_t *mesh, int v);
 
@@ -685,7 +690,9 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int op,
 
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                            int effects, voxel_vertex_t *out);
-void mesh_crop(mesh_t *mesh, box_t *box);
+
+// XXX: use int[2][3] for the box?
+void mesh_crop(mesh_t *mesh, const float box[4][4]);
 
 /* Function: mesh_crc32
  * Compute the crc32 of the mesh data as an array of xyz rgba values.
@@ -729,8 +736,8 @@ typedef struct renderer renderer_t;
 typedef struct render_item_t render_item_t;
 struct renderer
 {
-    mat4_t view_mat;
-    mat4_t proj_mat;
+    float view_mat[4][4];
+    float proj_mat[4][4];
     int    fbo;     // The renderer target framebuffer.
     float  scale;   // For retina display.
 
@@ -749,16 +756,16 @@ struct renderer
 void render_init(void);
 void render_deinit(void);
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
-void render_plane(renderer_t *rend, const plane_t *plane,
+void render_plane(renderer_t *rend, const float plane[4][4],
                   const uint8_t color[4]);
-void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
+void render_line(renderer_t *rend, const float a[3], const float b[3],
                  const uint8_t color[4]);
-void render_box(renderer_t *rend, const box_t *box,
+void render_box(renderer_t *rend, const float box[4][4],
                 const uint8_t color[4], int effects);
-void render_sphere(renderer_t *rend, const mat4_t *mat);
-void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
+void render_sphere(renderer_t *rend, const float mat[4][4]);
+void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
                 int efffects);
-void render_rect(renderer_t *rend, const plane_t *plane, int effects);
+void render_rect(renderer_t *rend, const float plane[4][4], int effects);
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
@@ -766,7 +773,7 @@ void render_submit(renderer_t *rend, const int rect[4],
                    const uint8_t clear_color[4]);
 int render_get_default_settings(int i, char **name, render_settings_t *out);
 // Compute the light direction in the model coordinates (toward the light)
-vec3_t render_get_light_dir(const renderer_t *rend);
+void render_get_light_dir(const renderer_t *rend, float out[3]);
 
 // Ugly function that return the position of the block at a given id
 // when the mesh is rendered with render_mesh.
@@ -781,10 +788,10 @@ void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
 // #### Model3d ################
 
 typedef struct {
-     vec3_t   pos       __attribute__((aligned(4)));
-     vec3_t   normal    __attribute__((aligned(4)));
+     float    pos[3]    __attribute__((aligned(4)));
+     float    normal[3] __attribute__((aligned(4)));
      uint8_t  color[4]  __attribute__((aligned(4)));
-     vec2_t   uv        __attribute__((aligned(4)));
+     float    uv[2]     __attribute__((aligned(4)));
 } model_vertex_t;
 
 typedef struct {
@@ -809,10 +816,10 @@ model3d_t *model3d_line(void);
 model3d_t *model3d_rect(void);
 model3d_t *model3d_wire_rect(void);
 void model3d_render(model3d_t *model3d,
-                    const mat4_t *model, const mat4_t *proj,
+                    const float model[4][4], const float proj[4][4],
                     const uint8_t color[4],
                     const texture_t *tex,
-                    const vec3_t *light,
+                    const float light[3],
                     int   effects);
 
 // #### Palette ################
@@ -880,7 +887,7 @@ enum {
 // `down` represent each button in the mouse.  For touch events only the
 // first element is set.
 typedef struct {
-    vec2_t  pos;
+    float   pos[2];
     bool    down[3];
 } touch_t;
 
@@ -922,16 +929,17 @@ struct gesture
     int     type;
     int     button;
     int     state;
-    vec4_t  view;
-    vec2_t  pos;
-    vec2_t  start_pos[2];
+    float   viewport[4];
+    float   pos[2];
+    float   start_pos[2][2];
     float   pinch;
     float   rotation;
     int     (*callback)(const gesture_t *gest, void *user);
 };
 
 int gesture_update(int nb, gesture_t *gestures[],
-                   const inputs_t *inputs, const vec4_t *view, void *user);
+                   const inputs_t *inputs, const float viewport[4],
+                   void *user);
 
 
 // #############################
@@ -943,14 +951,14 @@ struct camera
     char   name[128];  // 127 chars max.
     bool   ortho; // Set to true for orthographic projection.
     float  dist;
-    quat_t rot;
-    vec3_t ofs;
+    float  rot[4]; // Quaternion.
+    float  ofs[3];
     float  fovy;
     float  aspect;
 
     // Auto computed from other values:
-    mat4_t view_mat;    // Model to view transformation.
-    mat4_t proj_mat;    // Proj transform from camera coordinates.
+    float view_mat[4][4];    // Model to view transformation.
+    float proj_mat[4][4];    // Proj transform from camera coordinates.
 };
 
 camera_t *camera_new(const char *name);
@@ -959,15 +967,18 @@ void camera_set(camera_t *camera, const camera_t *other);
 void camera_update(camera_t *camera);
 // Adjust the camera settings so that the rotation works for a given
 // position.
-void camera_set_target(camera_t *camera, const vec3_t *pos);
+void camera_set_target(camera_t *camera, const float pos[3]);
 
+// Function: camera_get_ray
 // Get the raytracing ray of the camera at a given screen position.
-// win:     pixel position in screen coordinates.
-// view:    viewport rect: [min_x, min_y, max_x, max_y].
-// o:       output ray origin.
-// d:       output ray direction.
-void camera_get_ray(const camera_t *camera, const vec2_t *win,
-                    const vec4_t *view, vec3_t *o, vec3_t *d);
+//
+// Parameters:
+//   win   - Pixel position in screen coordinates.
+//   view  - Viewport rect: [min_x, min_y, max_x, max_y].
+//   o     - Output ray origin.
+//   d     - Output ray direction.
+void camera_get_ray(const camera_t *camera, const float win[2],
+                    const float viewport[4], float o[3], float d[3]);
 
 typedef struct history history_t;
 
@@ -978,8 +989,8 @@ struct layer {
     int         id;         // Uniq id in the image (for clones).
     bool        visible;
     char        name[256];  // 256 chars max.
-    box_t       box;
-    mat4_t      mat;
+    float       box[4][4];  // Bounding box.
+    float       mat[4][4];
     // For 2d image layers.
     texture_t   *image;
     // For clone layers:
@@ -993,7 +1004,7 @@ struct image {
     layer_t *active_layer;
     camera_t *cameras;
     camera_t *active_camera;
-    box_t    box;
+    float    box[4][4];
 
     // For saving.
     char    *path;
@@ -1041,7 +1052,7 @@ typedef struct proc {
 
 int proc_parse(const char *txt, gox_proc_t *proc);
 void proc_release(gox_proc_t *proc);
-int proc_start(gox_proc_t *proc, const box_t *box);
+int proc_start(gox_proc_t *proc, const float box[4][4]);
 int proc_stop(gox_proc_t *proc);
 int proc_iter(gox_proc_t *proc);
 
@@ -1064,8 +1075,8 @@ enum {
 typedef struct gesture3d gesture3d_t;
 
 typedef struct cursor {
-    vec3_t pos;
-    vec3_t normal;
+    float  pos[3];
+    float  normal[3];
     int    snap_mask;
     int    snaped;
     int    flags; // Union of CURSOR_* values.
@@ -1096,7 +1107,7 @@ typedef struct tool tool_t;
 struct tool {
     int id;
     const char *action_id;
-    int (*iter_fn)(tool_t *tool, const vec4_t *view);
+    int (*iter_fn)(tool_t *tool, const float viewport[4]);
     int (*gui_fn)(tool_t *tool);
     const char *shortcut;
     int state; // XXX: to be removed I guess.
@@ -1115,7 +1126,7 @@ struct tool {
     }
 
 void tool_register_(const tool_t *tool);
-int tool_iter(tool_t *tool, const vec4_t *view);
+int tool_iter(tool_t *tool, const float viewport[4]);
 int tool_gui(tool_t *tool);
 
 int tool_gui_snap(void);
@@ -1142,14 +1153,14 @@ typedef struct goxel
 
     struct     {
         mesh_t *mesh;
-        box_t  box;
+        float  box[4][4];
     } clipboard;
 
     history_t  *history;     // Undo/redo history.
     int        snap_mask;    // Global snap mask (can edit in the GUI).
     float      snap_offset;  // Only for brush tool, remove that?
 
-    plane_t    plane;         // The snapping plane.
+    float      plane[4][4];         // The snapping plane.
     bool       plane_hidden;  // Set to true to hide the plane.
     bool       show_export_viewport;
 
@@ -1169,15 +1180,15 @@ typedef struct goxel
     float      tool_radius;
 
     // Some state for the tool iter functions.
-    plane_t    tool_plane;
+    float      tool_plane[4][4];
     bool       tool_shape_two_steps; // Param of the shape tool.
 
-    box_t      selection;   // The selection box.
+    float      selection[4][4];   // The selection box.
 
     struct {
-        quat_t rotation;
-        vec2_t pos;
-        vec3_t camera_ofs;
+        float  rotation[4];
+        float  pos[2];
+        float  camera_ofs[3];
     } move_origin;
 
     gox_proc_t proc;        // The current procedural rendering (if any).
@@ -1208,27 +1219,27 @@ void goxel_init(goxel_t *goxel);
 void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);
 void goxel_render(goxel_t *goxel);
-void goxel_render_view(goxel_t *goxel, const vec4_t *rect);
+void goxel_render_view(goxel_t *goxel, const float viewport[4]);
 // Called by the gui when the mouse hover a 3D view.
 // XXX: change the name since we also call it when the mouse get out of
 // the view.
-void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
+void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
                          const inputs_t *inputs);
 
-int goxel_unproject(goxel_t *goxel, const vec4_t *view,
-                    const vec2_t *pos, int snap_mask, float offset,
-                    vec3_t *out, vec3_t *normal);
+int goxel_unproject(goxel_t *goxel, const float viewport[4],
+                    const float pos[2], int snap_mask, float offset,
+                    float out[3], float normal[3]);
 
-bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, mesh_t *mesh,
-                     vec3_t *out, vec3_t *normal);
+bool goxel_unproject_on_mesh(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], mesh_t *mesh,
+                     float out[3], float normal[3]);
 
-bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, const plane_t *plane,
-                     vec3_t *out, vec3_t *normal);
-bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, const box_t *box, bool inside,
-                     vec3_t *out, vec3_t *normal, int *face);
+bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], const float plane[4][4],
+                     float out[3], float normal[3]);
+bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], const float box[4][4], bool inside,
+                     float out[3], float normal[3], int *face);
 // Recompute the meshes.  mask from MESH_ enum.
 void goxel_update_meshes(goxel_t *goxel, int mask);
 
@@ -1337,8 +1348,8 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv);
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);
 bool gui_angle(const char *id, float *v, int vmin, int vmax);
-bool gui_bbox(box_t *box);
-bool gui_quat(const char *label, quat_t *q);
+bool gui_bbox(float box[4][4]);
+bool gui_quat(const char *label, float q[4]);
 bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...);
 bool gui_action_checkbox(const char *id, const char *label);

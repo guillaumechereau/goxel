@@ -94,7 +94,7 @@ static const char *FSHADER =
 ;
 
 typedef struct {
-    vec4_t  rect;
+    float  rect[4];
 } view_t;
 
 typedef struct {
@@ -470,7 +470,7 @@ static int on_gesture(const gesture_t *gest, void *user)
 {
     gui_t *gui = (gui_t*)user;
     ImGuiIO& io = ImGui::GetIO();
-    io.MousePos = ImVec2(gest->pos.x, gest->pos.y);
+    io.MousePos = ImVec2(gest->pos[0], gest->pos[1]);
     io.MouseDown[0] = (gest->type == GESTURE_DRAG) &&
                       (gest->state != GESTURE_END);
     if (gest->state == GESTURE_BEGIN && !gui->mouse_in_view)
@@ -503,26 +503,28 @@ void gui_release(void)
 }
 
 // XXX: Move this somewhere else.
-void render_axis_arrows(goxel_t *goxel, const vec2_t *view_size)
+void render_axis_arrows(goxel_t *goxel, const float view_size[2])
 {
-    const vec3_t AXIS[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    const float AXIS[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     int i;
     const int d = 40;  // Distance to corner of the view.
-    vec2_t spos = vec2(d, d);
-    vec3_t pos, normal, b;
+    float spos[2] = {d, d};
+    float pos[3], normal[3], b[3];
     uint8_t c[4];
     float s = 1;
-    vec4_t view = vec4(0, 0, view_size->x, view_size->y);
-    camera_get_ray(&goxel->camera, &spos, &view, &pos, &normal);
+    float view[4] = {0, 0, view_size[0], view_size[1]};
+    camera_get_ray(&goxel->camera, spos, view, pos, normal);
     if (goxel->camera.ortho)
         s = goxel->camera.dist / 32;
     else
-        vec3_iaddk(&pos, normal, 100);
+        vec3_iaddk(pos, normal, 100);
 
     for (i = 0; i < 3; i++) {
-        b = vec3_addk(pos, AXIS[i], 2.0 * s);
-        vec4_set(c, AXIS[i].x * 255, AXIS[i].y * 255, AXIS[i].z * 255, 255);
-        render_line(&goxel->rend, &pos, &b, c);
+        vec3_addk(pos, AXIS[i], 2.0 * s, b);
+        vec4_set(c, AXIS[i][0] * 255,
+                    AXIS[i][1] * 255,
+                    AXIS[i][2] * 255, 255);
+        render_line(&goxel->rend, pos, b, c);
     }
 }
 
@@ -532,11 +534,11 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    int rect[4] = {(int)view->rect.x,
-                   (int)(height - view->rect.y - view->rect.w),
-                   (int)view->rect.z,
-                   (int)view->rect.w};
-    goxel_render_view(goxel, &view->rect);
+    int rect[4] = {(int)view->rect[0],
+                   (int)(height - view->rect[1] - view->rect[3]),
+                   (int)view->rect[2],
+                   (int)view->rect[3]};
+    goxel_render_view(goxel, view->rect);
     render_submit(&goxel->rend, rect, goxel->back_color);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
@@ -724,7 +726,7 @@ static void layers_panel(goxel_t *goxel)
     gui_action_button("img_clone_layer", "Clone", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
     if (bounded && gui_button("Crop to box", 1, 0)) {
-        mesh_crop(layer->mesh, &layer->box);
+        mesh_crop(layer->mesh, layer->box);
         goxel_update_meshes(goxel, -1);
     }
     gui_group_end();
@@ -739,12 +741,12 @@ static void layers_panel(goxel_t *goxel)
         if (bounded) {
             mesh_get_bbox(layer->mesh, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
-            layer->box = bbox_from_aabb(bbox);
+            bbox_from_aabb(layer->box, bbox);
         } else {
-            layer->box = box_null;
+            mat4_copy(mat4_zero, layer->box);
         }
     }
-    if (bounded) gui_bbox(&layer->box);
+    if (bounded) gui_bbox(layer->box);
 }
 
 
@@ -932,13 +934,16 @@ static void image_panel(goxel_t *goxel)
 {
     bool bounded;
     image_t *image = goxel->image;
-    box_t *box = &image->box;
+    float (*box)[4][4] = &image->box;
 
     bounded = !box_is_null(*box);
     if (ImGui::Checkbox("Bounded", &bounded)) {
-        *box = bounded ? bbox_from_extents(vec3_zero, 16, 16, 16) : box_null;
+        if (bounded)
+            bbox_from_extents(*box, vec3_zero, 16, 16, 16);
+        else
+            mat4_copy(mat4_zero, *box);
     }
-    if (bounded) gui_bbox(box);
+    if (bounded) gui_bbox(*box);
 }
 
 static void cameras_panel(goxel_t *goxel)
@@ -972,12 +977,12 @@ static void cameras_panel(goxel_t *goxel)
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 
     gui_group_begin("Offset");
-    gui_input_float("x", &cam->ofs.x, 1.0, 0, 0, NULL);
-    gui_input_float("y", &cam->ofs.y, 1.0, 0, 0, NULL);
-    gui_input_float("z", &cam->ofs.z, 1.0, 0, 0, NULL);
+    gui_input_float("x", &cam->ofs[0], 1.0, 0, 0, NULL);
+    gui_input_float("y", &cam->ofs[1], 1.0, 0, 0, NULL);
+    gui_input_float("z", &cam->ofs[2], 1.0, 0, 0, NULL);
     gui_group_end();
 
-    gui_quat("Rotation", &cam->rot);
+    gui_quat("Rotation", cam->rot);
 
     gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();
@@ -1267,8 +1272,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGuiStyle& style = ImGui::GetStyle();
     const theme_t *theme = theme_get();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
-    vec4_t display_rect = vec4(0, 0,
-                               goxel->screen_size[0], goxel->screen_size[1]);
+    float display_rect[4] = {
+        0.f, 0.f, (float)goxel->screen_size[0], (float)goxel->screen_size[1]};
     float font_size = ImGui::GetFontSize();
 
     io.DisplaySize = ImVec2((float)goxel->screen_size[0],
@@ -1277,7 +1282,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     io.DisplayFramebufferScale = ImVec2(goxel->screen_scale,
                                         goxel->screen_scale);
     io.DeltaTime = 1.0 / 60;
-    gesture_update(2, gestures, inputs, &display_rect, gui);
+    gesture_update(2, gestures, inputs, display_rect, gui);
     io.MouseWheel = inputs->mouse_wheel;
 
     for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
@@ -1365,29 +1370,29 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
     canvas_size.y -= 20; // Leave space for the help label.
-    gui->view.rect = vec4(canvas_pos.x, canvas_pos.y,
-                          canvas_size.x, canvas_size.y);
+    vec4_set(gui->view.rect, canvas_pos.x, canvas_pos.y,
+                             canvas_size.x, canvas_size.y);
     draw_list = ImGui::GetWindowDrawList();
     draw_list->AddCallback(render_view, &gui->view);
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
     gui->mouse_in_view = ImGui::IsItemHovered();
-    vec2_t view_size = vec2(gui->view.rect.z, gui->view.rect.w);
-    vec4_t view_rect = vec4(canvas_pos.x,
-                            io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
-                            canvas_size.x, canvas_size.y);
+    float view_size[2] = {gui->view.rect[2], gui->view.rect[3]};
+    float view_rect[4] = {canvas_pos.x,
+                          io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
+                          canvas_size.x, canvas_size.y};
     // Call mouse_in_view with inputs in the view referential.
     if (!(!gui->mouse_in_view && inputs->mouse_wheel) &&
             !gui->capture_mouse) {
         inputs_t inputs2 = *inputs;
         for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
-            inputs2.touches[i].pos.y =
-                io.DisplaySize.y - inputs2.touches[i].pos.y;
+            inputs2.touches[i].pos[1] =
+                io.DisplaySize.y - inputs2.touches[i].pos[1];
         }
-        goxel_mouse_in_view(goxel, &view_rect, &inputs2);
+        goxel_mouse_in_view(goxel, view_rect, &inputs2);
     }
 
-    render_axis_arrows(goxel, &view_size);
+    render_axis_arrows(goxel, view_size);
     ImGui::Text("%s", goxel->hint_text ?: "");
     ImGui::SameLine(180);
     ImGui::Text("%s", goxel->help_text ?: "");
@@ -1536,16 +1541,17 @@ bool gui_input_float(const char *label, float *v, float step,
     return ret;
 }
 
-bool gui_bbox(box_t *box)
+bool gui_bbox(float box[4][4])
 {
     int x, y, z, w, h, d;
     bool ret = false;
-    w = box->w.x * 2;
-    h = box->h.y * 2;
-    d = box->d.z * 2;
-    x = round(box->p.x - box->w.x);
-    y = round(box->p.y - box->h.y);
-    z = round(box->p.z - box->d.z);
+    float p[3];
+    w = box[0][0] * 2;
+    h = box[1][1] * 2;
+    d = box[2][2] * 2;
+    x = round(box[3][0] - box[0][0]);
+    y = round(box[3][1] - box[1][1]);
+    z = round(box[3][2] - box[2][2]);
 
     gui_group_begin("Origin");
     ret |= gui_input_int("x", &x, 0, 0);
@@ -1559,9 +1565,8 @@ bool gui_bbox(box_t *box)
     gui_group_end();
 
     if (ret) {
-        *box = bbox_from_extents(
-                vec3(x + w / 2., y + h / 2., z + d / 2.),
-                w / 2., h / 2., d / 2.);
+        vec3_set(p, x + w / 2., y + h / 2., z + d / 2.);
+        bbox_from_extents(box, p, w / 2., h / 2., d / 2.);
     }
     return ret;
 }
@@ -1822,33 +1827,32 @@ void gui_enabled_end(void)
     ImGui::PopStyleColor();
 }
 
-bool gui_quat(const char *label, quat_t *q)
+bool gui_quat(const char *label, float q[4])
 {
     // Hack to prevent weird behavior when we change the euler angles.
     // We keep track of the last used euler angles value and reuse them if
     // the quaternion is the same.
     static struct {
-        quat_t quat;
-        vec3_t eul;
+        float quat[4];
+        float eul[3];
     } last = {};
-
-    vec3_t eul;
+    float eul[3];
     bool ret = false;
 
-    if (memcmp(q, &last.quat, sizeof(*q)) == 0)
-        eul = last.eul;
+    if (memcmp(q, &last.quat, sizeof(last.quat)) == 0)
+        vec3_copy(last.eul, eul);
     else
-        eul = quat_to_eul(*q, EULER_ORDER_DEFAULT);
+        quat_to_eul(q, EULER_ORDER_DEFAULT, eul);
     gui_group_begin(label);
-    if (gui_angle("x", &eul.x, -180, +180)) ret = true;
-    if (gui_angle("y", &eul.y, -180, +180)) ret = true;
-    if (gui_angle("z", &eul.z, -180, +180)) ret = true;
+    if (gui_angle("x", &eul[0], -180, +180)) ret = true;
+    if (gui_angle("y", &eul[1], -180, +180)) ret = true;
+    if (gui_angle("z", &eul[2], -180, +180)) ret = true;
     gui_group_end();
 
     if (ret) {
-        *q = eul_to_quat(eul, EULER_ORDER_DEFAULT);
-        last.quat = *q;
-        last.eul = eul;
+        eul_to_quat(eul, EULER_ORDER_DEFAULT, q);
+        quat_copy(q, last.quat);
+        vec3_copy(eul, last.eul);
     }
     return ret;
 }

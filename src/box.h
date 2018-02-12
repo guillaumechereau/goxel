@@ -23,273 +23,213 @@
 
 // A Box is represented as the 4x4 matrix that transforms the unit cube into
 // the box.
-typedef union {
-    mat4_t mat;
-    struct {
-        vec3_t w; float w_;
-        vec3_t h; float h_;
-        vec3_t d; float d_;
-        vec3_t p; float p_;
-    };
-    float v[4][4];
-} box_t;
 
-static inline bool box_is_bbox(box_t b)
+static inline bool box_is_bbox(const float b[4][4])
 {
-    int i;
-    for (i = 0; i < 12; i++) {
-        if (mat4_identity.v[i] == 0 && b.mat.v[i] != 0)
+    int i, j;
+    for (i = 0; i < 3; i++)
+    for (j = 0; j < 4; j++) {
+        if (mat4_identity[i][j] == 0 && b[i][j] != 0)
             return false;
     }
     return true;
 }
 
-static inline box_t bbox_from_extents(vec3_t pos,
-                                      float hw, float hh, float hd)
+static inline void bbox_from_extents(float box[4][4], const float pos[3],
+                                     float hw, float hh, float hd)
 {
-    box_t ret;
-    ret.mat = mat4_identity;
-    ret.p = pos;
-    ret.w.x = hw;
-    ret.h.y = hh;
-    ret.d.z = hd;
-    return ret;
+    mat4_set_identity(box);
+    vec3_copy(pos, box[3]);
+    box[0][0] = hw;
+    box[1][1] = hh;
+    box[2][2] = hd;
 }
 
-static const box_t box_null = {
-    MAT(-FLT_MAX, 0, 0, 0,
-        0, -FLT_MAX, 0, 0,
-        0, 0, -FLT_MAX, 0,
-        0, 0, 0, 0)
-};
-
-static inline bool box_is_null(box_t b)
+static inline bool box_is_null(const float b[4][4])
 {
-    return b.v[3][3] == 0;
+    return b[3][3] == 0;
 }
 
-static inline box_t bbox_from_aabb(const int aabb[2][3])
+static inline void bbox_from_aabb(float box[4][4], const int aabb[2][3])
 {
-    vec3_t pos = vec3((aabb[1][0] + aabb[0][0]) / 2.0,
-                      (aabb[1][1] + aabb[0][1]) / 2.0,
-                      (aabb[1][2] + aabb[0][2]) / 2.0);
-    vec3_t size = vec3(aabb[1][0] - aabb[0][0],
-                       aabb[1][1] - aabb[0][1],
-                       aabb[1][2] - aabb[0][2]);
-    return bbox_from_extents(pos, size.x / 2, size.y / 2, size.z / 2);
+    const float pos[3] = {(aabb[1][0] + aabb[0][0]) / 2.f,
+                          (aabb[1][1] + aabb[0][1]) / 2.f,
+                          (aabb[1][2] + aabb[0][2]) / 2.f};
+    const float size[3] = {(float)(aabb[1][0] - aabb[0][0]),
+                           (float)(aabb[1][1] - aabb[0][1]),
+                           (float)(aabb[1][2] - aabb[0][2])};
+    bbox_from_extents(box, pos, size[0] / 2, size[1] / 2, size[2] / 2);
 }
 
-static inline void bbox_to_aabb(box_t b, int aabb[2][3])
+static inline void bbox_to_aabb(const float b[4][4], int aabb[2][3])
 {
-    aabb[0][0] = round(b.p.x - b.w.x);
-    aabb[0][1] = round(b.p.y - b.h.y);
-    aabb[0][2] = round(b.p.z - b.d.z);
-    aabb[1][0] = round(b.p.x + b.w.x);
-    aabb[1][1] = round(b.p.y + b.h.y);
-    aabb[1][2] = round(b.p.z + b.d.z);
+    aabb[0][0] = round(b[3][0] - b[0][0]);
+    aabb[0][1] = round(b[3][1] - b[1][1]);
+    aabb[0][2] = round(b[3][2] - b[2][2]);
+    aabb[1][0] = round(b[3][0] + b[0][0]);
+    aabb[1][1] = round(b[3][1] + b[1][1]);
+    aabb[1][2] = round(b[3][2] + b[2][2]);
 }
 
 
 // XXX: remove?
-static inline box_t bbox_from_points(vec3_t a, vec3_t b)
+static inline void bbox_from_points(
+        float box[4][4], const float a[3], const float b[3])
 {
-    vec3_t v0, v1;
-    v0.x = min(a.x, b.x);
-    v0.y = min(a.y, b.y);
-    v0.z = min(a.z, b.z);
-    v1.x = max(a.x, b.x);
-    v1.y = max(a.y, b.y);
-    v1.z = max(a.z, b.z);
-    return bbox_from_extents(vec3_mix(v0, v1, 0.5),
-                            (v1.x - v0.x) / 2,
-                            (v1.y - v0.y) / 2,
-                            (v1.z - v0.z) / 2);
+    float v0[3], v1[3], mid[3];
+    v0[0] = min(a[0], b[0]);
+    v0[1] = min(a[1], b[1]);
+    v0[2] = min(a[2], b[2]);
+    v1[0] = max(a[0], b[0]);
+    v1[1] = max(a[1], b[1]);
+    v1[2] = max(a[2], b[2]);
+    vec3_mix(v0, v1, 0.5, mid);
+    bbox_from_extents(box, mid, (v1[0] - v0[0]) / 2,
+                                (v1[1] - v0[1]) / 2,
+                                (v1[2] - v0[2]) / 2);
 }
 
-static inline box_t bbox_from_npoints(int n, const vec3_t *points)
+static inline void bbox_from_npoints(
+        float box[4][4], int n, const float (*points)[3])
 {
     assert(n >= 1);
     int i;
-    vec3_t v0, v1;
-    v0 = v1 = points[0];
+    float v0[3], v1[3], mid[3];
+    vec3_copy(points[0], v0);
+    vec3_copy(points[0], v1);
     for (i = 1; i < n; i++) {
-        v0.x = min(v0.x, points[i].x);
-        v0.y = min(v0.y, points[i].y);
-        v0.z = min(v0.z, points[i].z);
-        v1.x = max(v1.x, points[i].x);
-        v1.y = max(v1.y, points[i].y);
-        v1.z = max(v1.z, points[i].z);
+        v0[0] = min(v0[0], points[i][0]);
+        v0[1] = min(v0[1], points[i][1]);
+        v0[2] = min(v0[2], points[i][2]);
+        v1[0] = max(v1[0], points[i][0]);
+        v1[1] = max(v1[1], points[i][1]);
+        v1[2] = max(v1[2], points[i][2]);
     }
-    return bbox_from_extents(vec3_mix(v0, v1, 0.5),
-                            (v1.x - v0.x) / 2,
-                            (v1.y - v0.y) / 2,
-                            (v1.z - v0.z) / 2);
+    vec3_mix(v0, v1, 0.5, mid);
+    bbox_from_extents(box, mid, (v1[0] - v0[0]) / 2,
+                                (v1[1] - v0[1]) / 2,
+                                (v1[2] - v0[2]) / 2);
 }
 
-static inline box_t bbox_intersection(box_t a, box_t b) {
+static inline bool bbox_contains(const float a[4][4], const float b[4][4]) {
     assert(box_is_bbox(a));
     assert(box_is_bbox(b));
-    vec3_t a0, a1, b0, b1, c0, c1;
-    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
-    c0 = vec3(max(a0.x, b0.x), max(a0.y, b0.y), max(a0.z, b0.z));
-    c1 = vec3(min(a1.x, b1.x), min(a1.y, b1.y), min(a1.z, b1.z));
-    if (c0.x >= c1.x || c0.y > c1.y || c0.z > c1.z)
-        return box_null;
-    return bbox_from_extents(vec3_mix(c0, c1, 0.5),
-                             (c1.x - c0.x) / 2,
-                             (c1.y - c0.y) / 2,
-                             (c1.z - c0.z) / 2);
+    float a0[3], a1[3], b0[3], b1[3];
+    vec3_set(a0, a[3][0] - a[0][0], a[3][1] - a[1][1], a[3][2] - a[2][2]);
+    vec3_set(a1, a[3][0] + a[0][0], a[3][1] + a[1][1], a[3][2] + a[2][2]);
+    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
+    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
+    return (a0[0] <= b0[0] && a1[0] >= b1[0] &&
+            a0[1] <= b0[1] && a1[1] >= b1[1] &&
+            a0[2] <= b0[2] && a1[2] >= b1[2]);
 }
 
-static inline bool bbox_intersect(box_t a, box_t b) {
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
-    vec3_t a0, a1, b0, b1;
-    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
-    return a0.x <= b1.x && b0.x <= a1.x &&
-           a0.y <= b1.y && b0.y <= a1.y &&
-           a0.z <= b1.z && b0.z <= a1.z;
-}
-
-static inline bool bbox_contains(box_t a, box_t b) {
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
-    vec3_t a0, a1, b0, b1;
-    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
-    return (a0.x <= b0.x && a1.x >= b1.x &&
-            a0.y <= b0.y && a1.y >= b1.y &&
-            a0.z <= b0.z && a1.z >= b1.z);
-}
-
-static inline bool box_contains(box_t a, box_t b) {
-    const vec3_t PS[8] = {
-        vec3(-1, -1, +1),
-        vec3(+1, -1, +1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, +1, -1),
-        vec3(-1, +1, -1),
+static inline bool box_contains(const float a[4][4], const float b[4][4])
+{
+    const float PS[8][3] = {
+        {-1, -1, +1},
+        {+1, -1, +1},
+        {+1, +1, +1},
+        {-1, +1, +1},
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, +1, -1},
+        {-1, +1, -1},
     };
-    vec3_t p;
+    float p[3];
     int i;
-    mat4_t imat = mat4_inverted(a.mat);
+    float imat[4][4];
+
+    mat4_invert(a, imat);
     for (i = 0; i < 8; i++) {
-        p = mat4_mul_vec3(b.mat, PS[i]);
-        p = mat4_mul_vec3(imat, p);
-        if (p.x < -1 || p.x > 1 || p.y < -1 || p.y > 1 || p.z < -1 || p.z > 1)
+        mat4_mul_vec3(b, PS[i], p);
+        mat4_mul_vec3(imat, p, p);
+        if (    p[0] < -1 || p[0] > 1 ||
+                p[1] < -1 || p[1] > 1 ||
+                p[2] < -1 || p[2] > 1)
             return false;
     }
     return true;
 }
 
-static inline box_t bbox_merge(box_t a, box_t b)
-{
-    assert(box_is_bbox(a));
-    assert(box_is_bbox(b));
-
-    vec3_t a0, a1, b0, b1, r0, r1;
-    a0 = vec3(a.p.x - a.w.x, a.p.y - a.h.y, a.p.z - a.d.z);
-    a1 = vec3(a.p.x + a.w.x, a.p.y + a.h.y, a.p.z + a.d.z);
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
-
-    r0.x = min(a0.x, b0.x);
-    r0.y = min(a0.y, b0.y);
-    r0.z = min(a0.z, b0.z);
-    r1.x = max(a1.x, b1.x);
-    r1.y = max(a1.y, b1.y);
-    r1.z = max(a1.z, b1.z);
-
-    return bbox_from_extents(vec3_mix(r0, r1, 0.5),
-                            (r1.x - r0.x) / 2,
-                            (r1.y - r0.y) / 2,
-                            (r1.z - r0.z) / 2);
-}
-
-static inline bool bbox_contains_vec(box_t b, vec3_t v)
+static inline bool bbox_contains_vec(const float b[4][4], const float v[3])
 {
     assert(box_is_bbox(b));
-    vec3_t b0, b1;
-    b0 = vec3(b.p.x - b.w.x, b.p.y - b.h.y, b.p.z - b.d.z);
-    b1 = vec3(b.p.x + b.w.x, b.p.y + b.h.y, b.p.z + b.d.z);
+    float b0[3], b1[3];
+    vec3_set(b0, b[3][0] - b[0][0], b[3][1] - b[1][1], b[3][2] - b[2][2]);
+    vec3_set(b1, b[3][0] + b[0][0], b[3][1] + b[1][1], b[3][2] + b[2][2]);
 
-    return (b0.x <= v.x && b1.x > v.x &&
-            b0.y <= v.y && b1.y > v.y &&
-            b0.z <= v.z && b1.z > v.z);
+    return (b0[0] <= v[0] && b1[0] > v[0] &&
+            b0[1] <= v[1] && b1[1] > v[1] &&
+            b0[2] <= v[2] && b1[2] > v[2]);
 }
 
-static inline box_t box_get_bbox(box_t b)
+static inline void box_get_bbox(const float b[4][4], float out[4][4])
 {
-    vec3_t p[8] = {
-        vec3(-1, -1, +1),
-        vec3(+1, -1, +1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, +1, -1),
-        vec3(-1, +1, -1),
+    float p[8][3] = {
+        {-1, -1, +1},
+        {+1, -1, +1},
+        {+1, +1, +1},
+        {-1, +1, +1},
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, +1, -1},
+        {-1, +1, -1},
     };
     int i;
     for (i = 0; i < 8; i++) {
-        p[i] = mat4_mul_vec3(b.mat, p[i]);
+        mat4_mul_vec3(b, p[i], p[i]);
     }
-    return bbox_from_npoints(8, p);
+    bbox_from_npoints(out, 8, p);
 }
 
-static inline box_t bbox_grow(box_t b, float x, float y, float z)
+static inline void bbox_grow(const float b[4][4], float x, float y, float z,
+                             float out[4][4])
 {
-    b.w.x += x;
-    b.h.y += y;
-    b.d.z += z;
-    return b;
+    mat4_copy(b, out);
+    out[0][0] += x;
+    out[1][1] += y;
+    out[2][2] += z;
 }
 
-static inline vec3_t box_get_size(box_t b)
+static inline void box_get_size(const float b[4][4], float out[3])
 {
-    return vec3(
-        vec3_norm(mat4_mul_vec(b.mat, vec4(1, 0, 0, 0)).xyz),
-        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 1, 0, 0)).xyz),
-        vec3_norm(mat4_mul_vec(b.mat, vec4(0, 0, 1, 0)).xyz)
-    );
+    float v[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
+    int i;
+    for (i = 0; i < 3; i++) {
+        mat4_mul_vec4(b, v[i], v[i]);
+        out[i] = vec3_norm(v[i]);
+    }
 }
 
-static inline box_t box_swap_axis(box_t b, int x, int y, int z)
+static inline void box_swap_axis(const float b[4][4], int x, int y, int z,
+                                 float out[4][4])
 {
+    float m[4][4];
     assert(x >= 0 && x <= 2);
     assert(y >= 0 && y <= 2);
     assert(z >= 0 && z <= 2);
-    mat4_t m = b.mat;
-    b.mat.vecs[0] = m.vecs[x];
-    b.mat.vecs[1] = m.vecs[y];
-    b.mat.vecs[2] = m.vecs[z];
-    return b;
+    mat4_copy(b, m);
+    mat4_copy(m, out);
+    vec4_copy(m[x], out[0]);
+    vec4_copy(m[y], out[1]);
+    vec4_copy(m[z], out[2]);
 }
 
 // Create a new box with the 4 points opposit to the face f and the
 // new point.
-static inline box_t box_move_face(box_t b, int f, vec3_t p)
+static inline void box_move_face(
+        const float b[4][4], int f, const float p[3], float out[4][4])
 {
-    const vec3_t PS[8] = {
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, -1, +1),
-        vec3(-1, -1, +1),
-        vec3(-1, +1, -1),
-        vec3(+1, +1, -1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
+    const float PS[8][3] = {
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, -1, +1},
+        {-1, -1, +1},
+        {-1, +1, -1},
+        {+1, +1, -1},
+        {+1, +1, +1},
+        {-1, +1, +1},
     };
     const int FS[6][4] = {
         {0, 1, 2, 3},
@@ -300,7 +240,7 @@ static inline box_t box_move_face(box_t b, int f, vec3_t p)
         {0, 3, 7, 4}
     };
     const int FO[6] = {1, 0, 3, 2, 5, 4};
-    vec3_t ps[5];
+    float ps[5][3];
     int i;
 
     // XXX: for the moment we only support bbox, but we could make the
@@ -308,16 +248,16 @@ static inline box_t box_move_face(box_t b, int f, vec3_t p)
     assert(box_is_bbox(b));
     f = FO[f];
     for (i = 0; i < 4; i++)
-        ps[i] = mat4_mul_vec3(b.mat, PS[FS[f][i]]);
-    ps[4] = p;
-    return bbox_from_npoints(5, ps);
+        mat4_mul_vec3(b, PS[FS[f][i]], ps[i]);
+    vec3_copy(p, ps[4]);
+    bbox_from_npoints(out, 5, ps);
 }
 
-static inline float box_get_volume(box_t box)
+static inline float box_get_volume(const float box[4][4])
 {
     // The volume is the determinant of the 3x3 matrix of the box
     // time 8 (because the unit cube has a volume of 8).
-    float *v = &box.mat.v[0];
+    const float *v = &box[0][0];
     float a, b, c, d, e, f, g, h, i;
     a = v[0]; b = v[1]; c = v[2];
     d = v[4]; e = v[5]; f = v[6];
@@ -325,29 +265,23 @@ static inline float box_get_volume(box_t box)
     return 8 * fabs(a*e*i + b*f*g + c*d*h - c*e*g - b*d*i - a*f*h);
 }
 
-static inline void box_get_vertices(box_t box, vec3_t vertices[8])
+static inline void box_get_vertices(const float box[4][4],
+                                    float vertices[8][3])
 {
     int i;
-    const vec3_t P[8] = {
-        vec3(-1, -1, +1),
-        vec3(+1, -1, +1),
-        vec3(+1, +1, +1),
-        vec3(-1, +1, +1),
-        vec3(-1, -1, -1),
-        vec3(+1, -1, -1),
-        vec3(+1, +1, -1),
-        vec3(-1, +1, -1),
+    const float P[8][3] = {
+        {-1, -1, +1},
+        {+1, -1, +1},
+        {+1, +1, +1},
+        {-1, +1, +1},
+        {-1, -1, -1},
+        {+1, -1, -1},
+        {+1, +1, -1},
+        {-1, +1, -1},
     };
     for (i = 0; i < 8; i++) {
-        vertices[i] = mat4_mul_vec3(box.mat, P[i]);
+        mat4_mul_vec3(box, P[i], vertices[i]);
     }
-}
-
-static inline box_t bbox_from_box(box_t b)
-{
-    vec3_t vertices[8];
-    box_get_vertices(b, vertices);
-    return bbox_from_npoints(8, vertices);
 }
 
 #endif // BOX_H

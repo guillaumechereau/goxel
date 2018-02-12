@@ -391,18 +391,21 @@ void img_downsample(const uint8_t *img, int w, int h, int bpp,
 }
 
 // Like gluUnproject.
-vec3_t unproject(const vec3_t *win, const mat4_t *model,
-                 const mat4_t *proj, const vec4_t *view)
+void unproject(const float win[3], const float model[4][4],
+               const float proj[4][4], const float viewport[4],
+               float out[3])
 {
-    mat4_t inv;
-    vec4_t p;
-    inv = mat4_inverted(mat4_mul(*proj, *model));
-    p = vec4((win->x - view->v[0]) / view->v[2] * 2 - 1,
-             (win->y - view->v[1]) / view->v[3] * 2 - 1,
-             2 * win->z - 1, 1);
-    p = mat4_mul_vec(inv, p);
-    if (p.w != 0) vec3_imul(&(p.xyz), 1 / p.w);
-    return p.xyz;
+    float inv[4][4];
+    float p[4];
+
+    mat4_mul(proj, model, inv);
+    mat4_invert(inv, inv);
+    vec4_set(p, (win[0] - viewport[0]) / viewport[2] * 2 - 1,
+                (win[1] - viewport[1]) / viewport[3] * 2 - 1,
+                2 * win[2] - 1, 1);
+    mat4_mul_vec4(inv, p, p);
+    if (p[3]) vec3_imul(p, 1 / p[3]);
+    vec3_copy(p, out);
 }
 
 int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s)

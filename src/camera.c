@@ -34,39 +34,39 @@ void camera_set(camera_t *cam, const camera_t *other)
 {
     cam->ortho = other->ortho;
     cam->dist = other->dist;
-    cam->rot = other->rot;
-    cam->ofs = other->ofs;
+    quat_copy(other->rot, cam->rot);
+    vec3_copy(other->ofs, cam->ofs);
 }
 
-static void compute_clip(const mat4_t *view_mat, float *near_, float *far_)
+static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
 {
     int bpos[3];
-    vec3_t p;
+    float p[3];
     float n = FLT_MAX, f = 256;
     int i;
     const int margin = 8 * BLOCK_SIZE;
-    vec3_t vertices[8];
+    float vertices[8][3];
     const mesh_t *mesh = goxel->layers_mesh;
     mesh_iterator_t iter;
 
     if (!box_is_null(goxel->image->box)) {
         box_get_vertices(goxel->image->box, vertices);
         for (i = 0; i < 8; i++) {
-            p = mat4_mul_vec3(*view_mat, vertices[i]);
-            if (p.z < 0) {
-                n = min(n, -p.z - margin);
-                f = max(f, -p.z + margin);
+            mat4_mul_vec3(view_mat, vertices[i], p);
+            if (p[2] < 0) {
+                n = min(n, -p[2] - margin);
+                f = max(f, -p[2] + margin);
             }
         }
     }
 
     iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
-        p = vec3(bpos[0], bpos[1], bpos[2]);
-        p = mat4_mul_vec3(*view_mat, p);
-        if (p.z < 0) {
-            n = min(n, -p.z - margin);
-            f = max(f, -p.z + margin);
+        vec3_set(p, bpos[0], bpos[1], bpos[2]);
+        mat4_mul_vec3(view_mat, p, p);
+        if (p[2] < 0) {
+            n = min(n, -p[2] - margin);
+            f = max(f, -p[2] + margin);
         }
     }
     if (n >= f) n = 1;
@@ -82,51 +82,52 @@ void camera_update(camera_t *camera)
 
     camera->fovy = 20.;
     // Update the camera mats
-    camera->view_mat = mat4_identity;
-    mat4_itranslate(&camera->view_mat, 0, 0, -camera->dist);
-    mat4_imul_quat(&camera->view_mat, camera->rot);
-    mat4_itranslate(&camera->view_mat,
-           camera->ofs.x, camera->ofs.y, camera->ofs.z);
+    mat4_set_identity(camera->view_mat);
+    mat4_itranslate(camera->view_mat, 0, 0, -camera->dist);
+    mat4_imul_quat(camera->view_mat, camera->rot);
+    mat4_itranslate(camera->view_mat,
+           camera->ofs[0], camera->ofs[1], camera->ofs[2]);
 
-    compute_clip(&camera->view_mat, &clip_near, &clip_far);
+    compute_clip(camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
         size = camera->dist;
-        camera->proj_mat = mat4_ortho(
+        mat4_ortho(camera->proj_mat,
                 -size, +size,
                 -size / camera->aspect, +size / camera->aspect,
                 clip_near, clip_far);
     } else {
-        camera->proj_mat = mat4_perspective(
+        mat4_perspective(camera->proj_mat,
                 camera->fovy, camera->aspect, clip_near, clip_far);
     }
 }
 
 // Get the raytracing ray of the camera at a given screen position.
-void camera_get_ray(const camera_t *camera, const vec2_t *win,
-                    const vec4_t *view, vec3_t *o, vec3_t *d)
+void camera_get_ray(const camera_t *camera, const float win[2],
+                    const float viewport[4], float o[3], float d[3])
 {
-    vec3_t o1, o2, p;
-    p = vec3(win->x, win->y, 0);
-    o1 = unproject(&p, &camera->view_mat, &camera->proj_mat, view);
-    p = vec3(win->x, win->y, 1);
-    o2 = unproject(&p, &camera->view_mat, &camera->proj_mat, view);
-    *o = o1;
-    *d = vec3_normalized(vec3_sub(o2, o1));
+    float o1[3], o2[3], p[3];
+    vec3_set(p, win[0], win[1], 0);
+    unproject(p, camera->view_mat, camera->proj_mat, viewport, o1);
+    vec3_set(p, win[0], win[1], 1);
+    unproject(p, camera->view_mat, camera->proj_mat, viewport, o2);
+    vec3_copy(o1, o);
+    vec3_sub(o2, o1, d);
+    vec3_normalize(d, d);
 }
 
 // Adjust the camera settings so that the rotation works for a given
 // position.
-void camera_set_target(camera_t *cam, const vec3_t *pos)
+void camera_set_target(camera_t *cam, const float pos[3])
 {
     // Adjust the offset z coordinate (in the rotated referential) to put
     // it in the xy plan intersecting the target point.  Then adjust the
     // distance so that the final view matrix stays the same.
-    vec3_t u, v;
+    float u[4], v[4];
     float d;
-    quat_t roti = quat(cam->rot.w, -cam->rot.x, -cam->rot.y, -cam->rot.z);
-    u = quat_mul_vec4(roti, vec4(0, 0, 1, 0)).xyz;
-    v = vec3_sub(*pos, vec3_neg(cam->ofs));
+    float roti[4] = {cam->rot[0], -cam->rot[1], -cam->rot[2], -cam->rot[3]};
+    quat_mul_vec4(roti, VEC(0, 0, 1, 0), u);
+    vec3_add(pos, cam->ofs, v);
     d = vec3_dot(v, u);
-    vec3_iaddk(&cam->ofs, u, -d);
+    vec3_iaddk(cam->ofs, u, -d);
     cam->dist -= d;
 }

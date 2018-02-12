@@ -114,9 +114,9 @@ struct proc_node {
 typedef struct proc_ctx ctx_t;
 struct proc_ctx {
     ctx_t       *next, *prev;
-    box_t       box;
+    float       box[4][4];
     int         mode;
-    vec4_t      color;
+    float       color[4];
     bool        antialiased;
     uint32_t    seed;
     node_t      *prog;
@@ -299,15 +299,18 @@ static node_t *get_rule(node_t *prog, const char *id, ctx_t *ctx)
     return NULL;
 }
 
-static void scale_normalize(mat4_t *mat, float v)
+static void scale_normalize(float mat[4][4], float v)
 {
-    float x, y, z, m;
-    x = vec3_norm(mat4_mul_vec(*mat, vec4(1, 0, 0, 0)).xyz);
-    y = vec3_norm(mat4_mul_vec(*mat, vec4(0, 1, 0, 0)).xyz);
-    z = vec3_norm(mat4_mul_vec(*mat, vec4(0, 0, 1, 0)).xyz);
-    m = min3(x, y, z);
+    float s[3], m;
+    float u[3][4] = {{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}};
+    int i;
+    for (i = 0; i < 3; i++) {
+        mat4_mul_vec4(mat, u[i], u[i]);
+        s[i] = vec3_norm(u[i]);
+    }
+    m = min3(s[0], s[1], s[2]);
     if (v) m = v / 2;
-    mat4_iscale(mat, m / x, m / y, m / z);
+    mat4_iscale(mat, m / s[0], m / s[1], m / s[2]);
 }
 
 static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
@@ -343,50 +346,50 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     switch (op) {
 
     case OP_sx:
-        mat4_iscale(&ctx->box.mat, v[0], 1, 1);
+        mat4_iscale(ctx->box, v[0], 1, 1);
         break;
     case OP_sy:
-        mat4_iscale(&ctx->box.mat, 1, v[0], 1);
+        mat4_iscale(ctx->box, 1, v[0], 1);
         break;
     case OP_sz:
-        mat4_iscale(&ctx->box.mat, 1, 1, v[0]);
+        mat4_iscale(ctx->box, 1, 1, v[0]);
         break;
     case OP_s:
         if (n == 1) v[1] = v[2] = v[0];
-        mat4_iscale(&ctx->box.mat, v[0], v[1], v[2]);
+        mat4_iscale(ctx->box, v[0], v[1], v[2]);
         break;
     case OP_sn:
-        scale_normalize(&ctx->box.mat, v[0]);
+        scale_normalize(ctx->box, v[0]);
         break;
     case OP_x:
-        mat4_itranslate(&ctx->box.mat, 2 * v[0], 2 * v[1], 2 * v[2]);
+        mat4_itranslate(ctx->box, 2 * v[0], 2 * v[1], 2 * v[2]);
         break;
     case OP_y:
-        mat4_itranslate(&ctx->box.mat, 0, 2 * v[0], 2 * v[1]);
+        mat4_itranslate(ctx->box, 0, 2 * v[0], 2 * v[1]);
         break;
     case OP_z:
-        mat4_itranslate(&ctx->box.mat, 0, 0, 2 * v[0]);
+        mat4_itranslate(ctx->box, 0, 0, 2 * v[0]);
         break;
     case OP_rx:
-        mat4_irotate(&ctx->box.mat, v[0] / 180 * M_PI, 1, 0, 0);
+        mat4_irotate(ctx->box, v[0] / 180 * M_PI, 1, 0, 0);
         break;
     case OP_ry:
-        mat4_irotate(&ctx->box.mat, v[0] / 180 * M_PI, 0, 1, 0);
+        mat4_irotate(ctx->box, v[0] / 180 * M_PI, 0, 1, 0);
         break;
     case OP_rz:
-        mat4_irotate(&ctx->box.mat, v[0] / 180 * M_PI, 0, 0, 1);
+        mat4_irotate(ctx->box, v[0] / 180 * M_PI, 0, 0, 1);
         break;
     case OP_hue:
-        if (n == 1) ctx->color.x = mod(ctx->color.x + v[0], 360);
-        else move_value(&ctx->color.x, v[0], v[1]);
+        if (n == 1) ctx->color[0] = mod(ctx->color[0] + v[0], 360);
+        else move_value(&ctx->color[0], v[0], v[1]);
         break;
     case OP_sat:
         if (n == 1) v[1] = 1;
-        move_value(&ctx->color.y, v[0], v[1]);
+        move_value(&ctx->color[1], v[0], v[1]);
         break;
     case OP_light:
         if (n == 1) v[1] = 1;
-        move_value(&ctx->color.z, v[0], v[1]);
+        move_value(&ctx->color[2], v[0], v[1]);
         break;
     case OP_sub:
         ctx->mode = MODE_SUB;
@@ -425,14 +428,14 @@ static int set_args(gox_proc_t *proc, node_t *node, ctx_t *ctx)
 static void call_shape(const ctx_t *ctx, const shape_t *shape)
 {
     mesh_t *mesh = goxel->image->active_layer->mesh;
-    uint8_t hsl[3] = {ctx->color.x / 360 * 255,
-                      ctx->color.y * 255,
-                      ctx->color.z * 255};
+    uint8_t hsl[3] = {ctx->color[0] / 360 * 255,
+                      ctx->color[1] * 255,
+                      ctx->color[2] * 255};
     hsl_to_rgb(hsl, goxel->painter.color);
     goxel->painter.shape = shape;
     goxel->painter.mode = ctx->mode;
     goxel->painter.smoothness = ctx->antialiased ? 1 : 0;
-    mesh_op(mesh, &goxel->painter, &ctx->box);
+    mesh_op(mesh, &goxel->painter, ctx->box);
 }
 
 // Iter the program once.
@@ -459,9 +462,9 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
     }
 
     // XXX: find a better stopping condition.
-    if (vec3_norm2(ctx->box.w) < 0.2 ||
-        vec3_norm2(ctx->box.h) < 0.2 ||
-        vec3_norm2(ctx->box.d) < 0.2) goto end;
+    if (vec3_norm2(ctx->box[0]) < 0.2 ||
+        vec3_norm2(ctx->box[1]) < 0.2 ||
+        vec3_norm2(ctx->box[2]) < 0.2) goto end;
 
     DL_FOREACH(ctx->prog->children, expr) {
         if (expr->type == NODE_LOOP) {
@@ -565,7 +568,7 @@ void proc_release(gox_proc_t *proc)
     proc->error.line = 0;
 }
 
-int proc_start(gox_proc_t *proc, const box_t *box)
+int proc_start(gox_proc_t *proc, const float box[4][4])
 {
     // Reinit the context to a single ctx_t pointing at the main shape.
     ctx_t *ctx;
@@ -574,8 +577,9 @@ int proc_start(gox_proc_t *proc, const box_t *box)
     proc->ctxs = NULL;
     proc->frame = 0;
     ctx = calloc(1, sizeof(*ctx));
-    ctx->box = box ? *box : bbox_from_extents(vec3_zero, 0.5, 0.5, 0.5);
-    ctx->color = vec4(0, 0, 1, 1);
+    if (box) mat4_copy(box, ctx->box);
+    else bbox_from_extents(ctx->box, vec3_zero, 0.5, 0.5, 0.5);
+    vec4_set(ctx->color, 0, 0, 1, 1);
     ctx->mode = MODE_OVER;
     ctx->prog = get_rule(proc->prog, "main", ctx);
     set_seed(rand(), &ctx->seed);

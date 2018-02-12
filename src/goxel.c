@@ -40,103 +40,101 @@ static void unpack_pos_data(uint32_t v, int pos[3], int *face,
 }
 
 // XXX: can we merge this with unproject?
-static vec3_t unproject_delta(const vec3_t *win, const mat4_t *model,
-                              const mat4_t *proj, const vec4_t *view)
+static bool unproject_delta(const float win[3], const float model[4][4],
+                            const float proj[4][4], const float viewport[4],
+                            float out[3])
 {
-    mat4_t inv = mat4_mul(*proj, *model);
-    mat4_invert(&inv); // XXX: check for return value.
-    vec4_t norm_pos = vec4(
-            win->x / view->v[2],
-            win->y / view->v[3],
-             0, 0);
-    return mat4_mul_vec(inv, norm_pos).xyz;
+    float inv[4][4], norm_pos[4];
+
+    mat4_mul(proj, model, inv);
+    if (mat4_invert(inv, inv)) return false;
+    vec4_set(norm_pos, win[0] / viewport[2], win[1] / viewport[3], 0, 0);
+    mat4_mul_vec4(inv, norm_pos, norm_pos);
+    vec3_copy(norm_pos, out);
+    return true;
 }
 
 // XXX: lot of cleanup to do here.
-bool goxel_unproject_on_plane(goxel_t *goxel, const vec4_t *view,
-                              const vec2_t *pos, const plane_t *plane,
-                              vec3_t *out, vec3_t *normal)
+bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
+                              const float pos[2], const float plane[4][4],
+                              float out[3], float normal[3])
 {
     // If the angle between the screen and the plane is close to 90 deg,
     // the projection fails.  This prevents projecting too far away.
     const float min_angle_cos = 0.1;
     // XXX: pos should already be in windows coordinates.
-    vec3_t wpos = vec3(pos->x, pos->y, 0);
-    vec3_t opos;
-    vec3_t onorm;
+    float wpos[3] = {pos[0], pos[1], 0};
+    float opos[3], onorm[3];
 
-    camera_get_ray(&goxel->camera, &wpos.xy, view, &opos, &onorm);
-    if (fabs(vec3_dot(onorm, plane->n)) <= min_angle_cos)
+    camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
+    if (fabs(vec3_dot(onorm, plane[2])) <= min_angle_cos)
         return false;
 
-    if (!plane_line_intersection(*plane, opos, onorm, out))
+    if (!plane_line_intersection(plane, opos, onorm, out))
         return false;
-    *out = mat4_mul_vec3(plane->mat, *out);
-    *normal = plane->n;
+    mat4_mul_vec3(plane, out, out);
+    vec3_copy(plane[2], normal);
     return true;
 }
 
-bool goxel_unproject_on_box(goxel_t *goxel, const vec4_t *view,
-                     const vec2_t *pos, const box_t *box, bool inside,
-                     vec3_t *out, vec3_t *normal,
-                     int *face)
+bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
+                     const float pos[2], const float box[4][4], bool inside,
+                     float out[3], float normal[3], int *face)
 {
     int f;
-    vec3_t wpos = vec3(pos->x, pos->y, 0);
-    vec3_t opos;
-    vec3_t onorm;
-    plane_t plane;
+    float wpos[3] = {pos[0], pos[1], 0};
+    float opos[3], onorm[3];
+    float plane[4][4];
 
-    if (box_is_null(*box)) return false;
-    camera_get_ray(&goxel->camera, &wpos.xy, view, &opos, &onorm);
+    if (box_is_null(box)) return false;
+    camera_get_ray(&goxel->camera, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
-        plane.mat = box->mat;
-        mat4_imul(&plane.mat, FACES_MATS[f]);
+        mat4_copy(box, plane);
+        mat4_imul(plane, FACES_MATS[f]);
 
-        if (!inside && vec3_dot(plane.n, onorm) >= 0)
+        if (!inside && vec3_dot(plane[2], onorm) >= 0)
             continue;
-        if (inside && vec3_dot(plane.n, onorm) <= 0)
+        if (inside && vec3_dot(plane[2], onorm) <= 0)
             continue;
         if (!plane_line_intersection(plane, opos, onorm, out))
             continue;
-        if (!(out->x >= -1 && out->x < 1 && out->y >= -1 && out->y < 1))
+        if (!(out[0] >= -1 && out[0] < 1 && out[1] >= -1 && out[1] < 1))
             continue;
         if (face) *face = f;
-        *out = mat4_mul_vec3(plane.mat, *out);
-        *normal = vec3_normalized(plane.n);
+        mat4_mul_vec3(plane, out, out);
+        vec3_normalize(plane[2], normal);
         if (inside) vec3_imul(normal, -1);
         return true;
     }
     return false;
 }
 
-bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
-                             const vec2_t *pos, mesh_t *mesh,
-                             vec3_t *out, vec3_t *normal)
+bool goxel_unproject_on_mesh(goxel_t *goxel, const float view[4],
+                             const float pos[2], mesh_t *mesh,
+                             float out[3], float normal[3])
 {
-    vec2_t view_size = view->zw;
+    float view_size[2] = {view[2], view[3]};
     // XXX: No need to render the fbo if it is not dirty.
     if (goxel->pick_fbo && !vec2_equal(
-                vec2(goxel->pick_fbo->w, goxel->pick_fbo->h), view_size)) {
+                VEC(goxel->pick_fbo->w, goxel->pick_fbo->h), view_size)) {
         texture_delete(goxel->pick_fbo);
         goxel->pick_fbo = NULL;
     }
 
     if (!goxel->pick_fbo) {
         goxel->pick_fbo = texture_new_buffer(
-                view_size.x, view_size.y, TF_DEPTH);
+                view_size[0], view_size[1], TF_DEPTH);
     }
 
-    renderer_t rend = {
-        .view_mat = goxel->rend.view_mat,
-        .proj_mat = goxel->rend.proj_mat,
-        .settings = goxel->rend.settings,
-    };
+    renderer_t rend = {.settings = goxel->rend.settings};
+    mat4_copy(goxel->rend.view_mat, rend.view_mat);
+    mat4_copy(goxel->rend.proj_mat, rend.proj_mat);
+
     uint32_t pixel;
     int voxel_pos[3];
     int face, block_id, block_pos[3];
     int x, y;
-    int rect[4] = {0, 0, view_size.x, view_size.y};
+    int rect[4] = {0, 0, view_size[0], view_size[1]};
     uint8_t clear_color[4] = {0, 0, 0, 0};
 
     rend.settings.shadow = 0;
@@ -145,40 +143,40 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const vec4_t *view,
     render_mesh(&rend, mesh, EFFECT_RENDER_POS);
     render_submit(&rend, rect, clear_color);
 
-    x = round(pos->x - view->x);
-    y = round(pos->y - view->y);
+    x = round(pos[0] - view[0]);
+    y = round(pos[1] - view[1]);
     GL(glViewport(0, 0, goxel->pick_fbo->w, goxel->pick_fbo->h));
-    if (x < 0 || x >= view_size.x ||
-        y < 0 || y >= view_size.y) return false;
+    if (x < 0 || x >= view_size[0] ||
+        y < 0 || y >= view_size[1]) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
 
     unpack_pos_data(pixel, voxel_pos, &face, &block_id);
     if (!block_id) return false;
     render_get_block_pos(&rend, mesh, block_id, block_pos);
-    *out = vec3(block_pos[0] + voxel_pos[0] + 0.5,
-                block_pos[1] + voxel_pos[1] + 0.5,
-                block_pos[2] + voxel_pos[2] + 0.5);
-    normal->x = FACES_NORMALS[face][0];
-    normal->y = FACES_NORMALS[face][1];
-    normal->z = FACES_NORMALS[face][2];
-    vec3_iaddk(out, *normal, 0.5);
+    out[0] = block_pos[0] + voxel_pos[0] + 0.5;
+    out[1] = block_pos[1] + voxel_pos[1] + 0.5;
+    out[2] = block_pos[2] + voxel_pos[2] + 0.5;
+    normal[0] = FACES_NORMALS[face][0];
+    normal[1] = FACES_NORMALS[face][1];
+    normal[2] = FACES_NORMALS[face][2];
+    vec3_iaddk(out, normal, 0.5);
     return true;
 }
 
 
-int goxel_unproject(goxel_t *goxel, const vec4_t *view,
-                    const vec2_t *pos, int snap_mask, float offset,
-                    vec3_t *out, vec3_t *normal)
+int goxel_unproject(goxel_t *goxel, const float viewport[4],
+                    const float pos[2], int snap_mask, float offset,
+                    float out[3], float normal[3])
 {
     int i, ret = 0;
-    vec3_t p = vec3_zero, n = vec3_zero;
     bool r = false;
     float dist, best = INFINITY;
+    float v[3], p[3] = {}, n[3] = {}, box[4][4];
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
-        r = goxel_unproject_on_plane(goxel, view, pos,
-                                     &goxel->tool_plane, out, normal);
+        r = goxel_unproject_on_plane(goxel, viewport, pos,
+                                     goxel->tool_plane, out, normal);
         ret = r ? SNAP_PLANE : 0;
         goto end;
     }
@@ -186,47 +184,47 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
     for (i = 0; i < 7; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
-            r = goxel_unproject_on_mesh(goxel, view, pos,
-                                        goxel->layers_mesh, &p, &n);
+            r = goxel_unproject_on_mesh(goxel, viewport, pos,
+                                        goxel->layers_mesh, p, n);
         }
         if ((1 << i) == SNAP_PLANE)
-            r = goxel_unproject_on_plane(goxel, view, pos,
-                                         &goxel->plane, &p, &n);
+            r = goxel_unproject_on_plane(goxel, viewport, pos,
+                                         goxel->plane, p, n);
         if ((1 << i) == SNAP_SELECTION_IN)
-            r = goxel_unproject_on_box(goxel, view, pos,
-                                       &goxel->selection, true,
-                                       &p, &n, NULL);
+            r = goxel_unproject_on_box(goxel, viewport, pos,
+                                       goxel->selection, true,
+                                       p, n, NULL);
         if ((1 << i) == SNAP_SELECTION_OUT)
-            r = goxel_unproject_on_box(goxel, view, pos,
-                                       &goxel->selection, false,
-                                       &p, &n, NULL);
+            r = goxel_unproject_on_box(goxel, viewport, pos,
+                                       goxel->selection, false,
+                                       p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
-            box_t box = mesh_get_box(goxel->image->active_layer->mesh, true);
-            r = goxel_unproject_on_box(goxel, view, pos,
-                                       &box, false,
-                                       &p, &n, NULL);
+            mesh_get_box(goxel->image->active_layer->mesh, true, box);
+            r = goxel_unproject_on_box(goxel, viewport, pos, box, false,
+                                       p, n, NULL);
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(goxel, view, pos,
-                                       &goxel->image->box, true,
-                                       &p, &n, NULL);
+            r = goxel_unproject_on_box(goxel, viewport, pos,
+                                       goxel->image->box, true,
+                                       p, n, NULL);
         if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(goxel, view, pos,
-                                       &goxel->image->box, true,
-                                       &p, &n, NULL);
+            r = goxel_unproject_on_box(goxel, viewport, pos,
+                                       goxel->image->box, true,
+                                       p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
-            camera_get_ray(&goxel->camera, pos, view, &p, &n);
+            camera_get_ray(&goxel->camera, pos, viewport, p, n);
             r = true;
         }
 
         if (!r)
             continue;
 
-        dist = -mat4_mul_vec3(goxel->camera.view_mat, p).z;
+        mat4_mul_vec3(goxel->camera.view_mat, p, v);
+        dist = -v[2];
         if (dist < 0 || dist > best) continue;
 
-        *out = p;
-        *normal = n;
+        vec3_copy(p, out);
+        vec3_copy(n, normal);
         ret = 1 << i;
 
         if ((1 << i) == SNAP_IMAGE_BOX) {
@@ -238,11 +236,11 @@ int goxel_unproject(goxel_t *goxel, const vec4_t *view,
     }
 end:
     if (ret && offset)
-        vec3_iaddk(out, *normal, offset);
+        vec3_iaddk(out, normal, offset);
     if (ret && (snap_mask & SNAP_ROUNDED)) {
-        out->x = round(out->x - 0.5) + 0.5;
-        out->y = round(out->y - 0.5) + 0.5;
-        out->z = round(out->z - 0.5) + 0.5;
+        out[0] = round(out[0] - 0.5) + 0.5;
+        out[1] = round(out[1] - 0.5) + 0.5;
+        out[2] = round(out[2] - 0.5) + 0.5;
     }
     return ret;
 }
@@ -260,19 +258,17 @@ void goxel_init(goxel_t *gox)
     render_init();
     shapes_init();
     sound_init();
-    goxel->camera.ofs = vec3_zero;
-    goxel->camera.rot = quat_identity;
+    quat_set_identity(goxel->camera.rot);
     goxel->camera.dist = 128;
     goxel->camera.aspect = 1;
-    quat_irotate(&goxel->camera.rot, -M_PI / 4, 1, 0, 0);
-    quat_irotate(&goxel->camera.rot, -M_PI / 4, 0, 0, 1);
+    quat_irotate(goxel->camera.rot, -M_PI / 4, 1, 0, 0);
+    quat_irotate(goxel->camera.rot, -M_PI / 4, 0, 0, 1);
 
     goxel->image = image_new();
 
     goxel->layers_mesh = mesh_new();
     goxel->render_mesh = mesh_new();
     goxel_update_meshes(goxel, -1);
-    goxel->selection = box_null;
 
     vec4_set(goxel->back_color, 70, 70, 70, 255);
     vec4_set(goxel->grid_color, 19, 19, 19, 255);
@@ -305,7 +301,7 @@ void goxel_init(goxel_t *gox)
     render_get_default_settings(0, NULL, &goxel->rend.settings);
 
     model3d_init();
-    goxel->plane = plane(vec3_zero, vec3(1, 0, 0), vec3(0, 1, 0));
+    plane_from_vectors(goxel->plane, vec3_zero, VEC(1, 0, 0), VEC(0, 1, 0));
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
 
     goxel->gestures.drag = (gesture_t) {
@@ -352,31 +348,30 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
     camera_update(&goxel->camera);
     if (goxel->image->active_camera)
         camera_set(goxel->image->active_camera, &goxel->camera);
-    goxel->rend.view_mat = goxel->camera.view_mat;
-    goxel->rend.proj_mat = goxel->camera.proj_mat;
+    mat4_copy(goxel->camera.view_mat, goxel->rend.view_mat);
+    mat4_copy(goxel->camera.proj_mat, goxel->rend.proj_mat);
     gui_iter(goxel, inputs);
     sound_iter();
     goxel->frame_count++;
 }
 
-static quat_t compute_view_rotation(const quat_t *rot,
-        const vec2_t *start_pos, const vec2_t *end_pos,
-        const vec4_t *view)
+static void compute_view_rotation(const float rot[4],
+        const float start_pos[2], const float end_pos[2],
+        const float viewport[4], float out[4])
 {
-    quat_t q1, q2;
-    float x1, y1, x2, y2, x_rot, z_rot;
-    vec4_t x_axis;
-    x1 = start_pos->x / view->z;
-    y1 = start_pos->y / view->w;
-    x2 =   end_pos->x / view->z;
-    y2 =   end_pos->y / view->w;
+    float x1, y1, x2, y2, x_rot, z_rot, q1[4], q2[4], q[4], x_axis[4];
+    x1 = start_pos[0] / viewport[2];
+    y1 = start_pos[1] / viewport[3];
+    x2 =   end_pos[0] / viewport[2];
+    y2 =   end_pos[1] / viewport[3];
     z_rot = (x2 - x1) * 2 * M_PI;
     x_rot = -(y2 - y1) * 2 * M_PI;
-    q1 = quat_from_axis(z_rot, 0, 0, 1);
-    x_axis = quat_mul_vec4(quat_conjugate(quat_mul(*rot, q1)),
-                           vec4(1, 0, 0, 0));
-    q2 = quat_from_axis(x_rot, x_axis.x, x_axis.y, x_axis.z);
-    return quat_mul(q1, q2);
+    quat_from_axis(q1, z_rot, 0, 0, 1);
+    quat_mul(rot, q1, q);
+    quat_conjugate(q, q);
+    quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
+    quat_from_axis(q2, x_rot, x_axis[0], x_axis[1], x_axis[2]);
+    quat_mul(q1, q2, out);
 }
 
 static void set_cursor_hint(cursor_t *curs)
@@ -392,7 +387,7 @@ static void set_cursor_hint(cursor_t *curs)
         snap_str = "selection";
 
     goxel_set_hint_text(goxel, "[%.0f %.0f %.0f] (%s)",
-            curs->pos.x - 0.5, curs->pos.y - 0.5, curs->pos.z - 0.5,
+            curs->pos[0] - 0.5, curs->pos[1] - 0.5, curs->pos[2] - 0.5,
             snap_str);
 }
 
@@ -405,8 +400,8 @@ static int on_drag(const gesture_t *gest, void *user)
         c->flags &= ~CURSOR_PRESSED;
 
     c->snaped = goxel_unproject(
-            goxel, &gest->view, &gest->pos, c->snap_mask,
-            c->snap_offset, &c->pos, &c->normal);
+            goxel, gest->viewport, gest->pos, c->snap_mask,
+            c->snap_offset, c->pos, c->normal);
 
     // Set some default values.  The tools can override them.
     // XXX: would be better to reset the cursor when we change tool!
@@ -419,33 +414,37 @@ static int on_drag(const gesture_t *gest, void *user)
 static int on_pan(const gesture_t *gest, void *user)
 {
     if (gest->state == GESTURE_BEGIN) {
-        goxel->move_origin.camera_ofs = goxel->camera.ofs;
-        goxel->move_origin.pos = gest->pos;
+        quat_copy(goxel->camera.ofs, goxel->move_origin.camera_ofs);
+        vec2_copy(gest->pos, goxel->move_origin.pos);
     }
-    vec3_t wpos = vec3(gest->pos.x, gest->pos.y, 0);
-    vec3_t worigin_pos = vec3(goxel->move_origin.pos.x,
-                              goxel->move_origin.pos.y, 0);
-    vec3_t wdelta = vec3_sub(wpos, worigin_pos);
-    vec3_t odelta = unproject_delta(&wdelta, &goxel->camera.view_mat,
-                                    &goxel->camera.proj_mat, &gest->view);
-    vec3_imul(&odelta, 2); // XXX: why do I need that?
+    float wpos[3] = {gest->pos[0], gest->pos[1], 0};
+    float worigin_pos[3], wdelta[3], odelta[3];
+
+    vec3_set(worigin_pos, goxel->move_origin.pos[0],
+                          goxel->move_origin.pos[1], 0);
+    vec3_sub(wpos, worigin_pos, wdelta);
+
+    unproject_delta(wdelta, goxel->camera.view_mat,
+                    goxel->camera.proj_mat, gest->viewport, odelta);
+    vec3_imul(odelta, 2); // XXX: why do I need that?
     if (!goxel->camera.ortho)
-        vec3_imul(&odelta, goxel->camera.dist);
-    goxel->camera.ofs = vec3_add(goxel->move_origin.camera_ofs, odelta);
+        vec3_imul(odelta, goxel->camera.dist);
+    vec3_add(goxel->move_origin.camera_ofs, odelta, goxel->camera.ofs);
     return 0;
 }
 
 static int on_rotate(const gesture_t *gest, void *user)
 {
+    float view_rot[4];
     if (gest->state == GESTURE_BEGIN) {
-        goxel->move_origin.rotation = goxel->camera.rot;
-        goxel->move_origin.pos = gest->pos;
+        quat_copy(goxel->camera.rot, goxel->move_origin.rotation);
+        vec2_copy(gest->pos, goxel->move_origin.pos);
     }
-    goxel->camera.rot = quat_mul(goxel->move_origin.rotation,
-            compute_view_rotation(&goxel->move_origin.rotation,
-                &goxel->move_origin.pos, &gest->pos,
-                &gest->view));
 
+    compute_view_rotation(goxel->move_origin.rotation,
+                          goxel->move_origin.pos, gest->pos,
+                          gest->viewport, view_rot);
+    quat_mul(goxel->move_origin.rotation, view_rot, goxel->camera.rot);
     return 0;
 }
 
@@ -453,8 +452,8 @@ static int on_hover(const gesture_t *gest, void *user)
 {
     cursor_t *c = &goxel->cursor;
     c->snaped = goxel_unproject(
-                    goxel, &gest->view, &gest->pos, c->snap_mask,
-                    c->snap_offset, &c->pos, &c->normal);
+                    goxel, gest->viewport, gest->pos, c->snap_mask,
+                    c->snap_offset, c->pos, c->normal);
     set_cursor_hint(c);
     c->flags &= ~CURSOR_PRESSED;
     // Set some default values.  The tools can override them.
@@ -467,58 +466,59 @@ static int on_hover(const gesture_t *gest, void *user)
 
 
 // XXX: Cleanup this.
-void goxel_mouse_in_view(goxel_t *goxel, const vec4_t *view,
+void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
                          const inputs_t *inputs)
 {
-    vec4_t x_axis;
+    float x_axis[4], q[4], p[3], n[3];
     gesture_t *gests[] = {&goxel->gestures.drag,
                           &goxel->gestures.pan,
                           &goxel->gestures.rotate,
                           &goxel->gestures.hover};
 
-    gesture_update(4, gests, inputs, view, NULL);
+    gesture_update(4, gests, inputs, viewport, NULL);
     set_flag(&goxel->cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel->cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
+
     goxel->painter.box = !box_is_null(goxel->image->active_layer->box) ?
                          &goxel->image->active_layer->box :
                          !box_is_null(goxel->image->box) ?
                          &goxel->image->box : NULL;
 
-    tool_iter(goxel->tool, view);
+    tool_iter(goxel->tool, viewport);
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
 
         // Auto adjust the camera rotation position.
-        vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
-                                    goxel->layers_mesh, &p, &n)) {
-            camera_set_target(&goxel->camera, &p);
+        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
+                                    goxel->layers_mesh, p, n)) {
+            camera_set_target(&goxel->camera, p);
         }
         return;
     }
 
     // handle keyboard rotations
     if (inputs->keys[KEY_LEFT])
-        quat_irotate(&goxel->camera.rot, 0.05, 0, 0, +1);
+        quat_irotate(goxel->camera.rot, 0.05, 0, 0, +1);
     if (inputs->keys[KEY_RIGHT])
-        quat_irotate(&goxel->camera.rot, 0.05, 0, 0, -1);
+        quat_irotate(goxel->camera.rot, 0.05, 0, 0, -1);
     if (inputs->keys[KEY_UP]) {
-        x_axis = quat_mul_vec4(quat_conjugate(goxel->camera.rot),
-                               vec4(1, 0, 0, 0));
-        quat_irotate(&goxel->camera.rot, -0.05, x_axis.x, x_axis.y, x_axis.z);
+        quat_conjugate(goxel->camera.rot, q);
+        quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
+        quat_irotate(goxel->camera.rot, -0.05,
+                     x_axis[0], x_axis[1], x_axis[2]);
     }
     if (inputs->keys[KEY_DOWN]) {
-        x_axis = quat_mul_vec4(quat_conjugate(goxel->camera.rot),
-                               vec4(1, 0, 0, 0));
-        quat_irotate(&goxel->camera.rot, +0.05, x_axis.x, x_axis.y, x_axis.z);
+        quat_conjugate(goxel->camera.rot, q);
+        quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
+        quat_irotate(goxel->camera.rot, +0.05,
+                     x_axis[0], x_axis[1], x_axis[2]);
     }
     // C: recenter the view:
     if (inputs->keys['C']) {
-        vec3_t p, n;
-        if (goxel_unproject_on_mesh(goxel, view, &inputs->touches[0].pos,
-                                    goxel->layers_mesh, &p, &n)) {
-            camera_set_target(&goxel->camera, &p);
+        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
+                                    goxel->layers_mesh, p, n)) {
+            camera_set_target(&goxel->camera, p);
         }
     }
 }
@@ -535,64 +535,64 @@ void goxel_render(goxel_t *goxel)
     gui_render();
 }
 
-static void render_export_viewport(goxel_t *goxel, const vec4_t *view)
+static void render_export_viewport(goxel_t *goxel, const float viewport[4])
 {
     // Render the export viewport.
     int w = goxel->image->export_width;
     int h = goxel->image->export_height;
     float aspect = (float)w/h;
-    plane_t plane;
-    plane.mat = mat4_identity;
+    float plane[4][4];
+    mat4_set_identity(plane);
     if (aspect < goxel->camera.aspect) {
-        mat4_iscale(&plane.mat, aspect / goxel->camera.aspect, 1, 1);
+        mat4_iscale(plane, aspect / goxel->camera.aspect, 1, 1);
     } else {
-        mat4_iscale(&plane.mat, 1, goxel->camera.aspect / aspect, 1);
+        mat4_iscale(plane, 1, goxel->camera.aspect / aspect, 1);
     }
-    render_rect(&goxel->rend, &plane, EFFECT_STRIP);
+    render_rect(&goxel->rend, plane, EFFECT_STRIP);
 }
 
-void goxel_render_view(goxel_t *goxel, const vec4_t *rect)
+void goxel_render_view(goxel_t *goxel, const float viewport[4])
 {
     layer_t *layer;
     renderer_t *rend = &goxel->rend;
     const uint8_t layer_box_color[4] = {128, 128, 255, 255};
 
-    goxel->camera.aspect = rect->z / rect->w;
+    goxel->camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel->camera);
 
     render_mesh(rend, goxel->render_mesh, 0);
     if (!box_is_null(goxel->image->active_layer->box))
-        render_box(rend, &goxel->image->active_layer->box,
+        render_box(rend, goxel->image->active_layer->box,
                    layer_box_color, EFFECT_WIREFRAME);
 
     // Render all the image layers.
     DL_FOREACH(goxel->image->layers, layer) {
         if (layer->visible && layer->image)
-            render_img(rend, layer->image, &layer->mat, EFFECT_NO_SHADING);
+            render_img(rend, layer->image, layer->mat, EFFECT_NO_SHADING);
     }
 
     if (goxel->tool->id == TOOL_SELECTION)
-        render_box(rend, &goxel->selection, NULL,
+        render_box(rend, goxel->selection, NULL,
                    EFFECT_STRIP | EFFECT_WIREFRAME);
 
     // XXX: make a toggle for debug informations.
     if ((0)) {
-        box_t b;
+        float b[4][4];
         uint8_t c[4];
         vec4_set(c, 0, 255, 0, 80);
-        b = mesh_get_box(goxel->layers_mesh, true);
-        render_box(rend, &b, c, EFFECT_WIREFRAME);
+        mesh_get_box(goxel->layers_mesh, true, b);
+        render_box(rend, b, c, EFFECT_WIREFRAME);
         vec4_set(c, 0, 255, 255, 80);
-        b = mesh_get_box(goxel->layers_mesh, false);
-        render_box(rend, &b, c, EFFECT_WIREFRAME);
+        mesh_get_box(goxel->layers_mesh, false, b);
+        render_box(rend, b, c, EFFECT_WIREFRAME);
     }
     if (!goxel->plane_hidden)
-        render_plane(rend, &goxel->plane, goxel->grid_color);
+        render_plane(rend, goxel->plane, goxel->grid_color);
     if (!box_is_null(goxel->image->box))
-        render_box(rend, &goxel->image->box, goxel->image_box_color,
+        render_box(rend, goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
-        render_export_viewport(goxel, rect);
+        render_export_viewport(goxel, viewport);
 }
 
 void image_update(image_t *img);
@@ -642,8 +642,8 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h)
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
     camera_update(&camera);
-    rend.view_mat = camera.view_mat;
-    rend.proj_mat = camera.proj_mat;
+    mat4_copy(camera.view_mat, rend.view_mat);
+    mat4_copy(camera.proj_mat, rend.proj_mat);
     rend.fbo = fbo->framebuffer;
 
     render_mesh(&rend, mesh, 0);
@@ -713,7 +713,7 @@ void goxel_import_image_plane(goxel_t *goxel, const char *path)
     layer = image_add_layer(goxel->image);
     sprintf(layer->name, "img");
     layer->image = tex;
-    mat4_iscale(&layer->mat, layer->image->w, layer->image->h, 1);
+    mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);
 }
 
 static int search_action_for_format_cb(const action_t *a, void *user)
@@ -762,14 +762,15 @@ ACTION_REGISTER(export,
     .csig = "vp",
 )
 
-static layer_t *cut_as_new_layer(image_t *img, layer_t *layer, box_t *box)
+static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
+                                 const float box[4][4])
 {
     layer_t *new_layer;
     painter_t painter;
 
     img = img ?: goxel->image;
     layer = layer ?: img->active_layer;
-    box = box ?: &goxel->selection;
+    if (!box) box = (const void*)goxel->selection;
 
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
@@ -792,7 +793,7 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void reset_selection(void)
 {
-    goxel->selection = box_null;
+    mat4_copy(mat4_zero, goxel->selection);
 }
 
 ACTION_REGISTER(reset_selection,
@@ -805,7 +806,7 @@ static void fill_selection(layer_t *layer)
 {
     if (box_is_null(goxel->selection)) return;
     layer = layer ?: goxel->image->active_layer;
-    mesh_op(layer->mesh, &goxel->painter, &goxel->selection);
+    mesh_op(layer->mesh, &goxel->painter, goxel->selection);
     goxel_update_meshes(goxel, -1);
 }
 
@@ -835,7 +836,7 @@ static void copy_action(void)
 {
     painter_t painter;
     mesh_delete(goxel->clipboard.mesh);
-    goxel->clipboard.box = goxel->selection;
+    mat4_copy(goxel->selection, goxel->clipboard.box);
     goxel->clipboard.mesh = mesh_copy(goxel->image->active_layer->mesh);
     if (!box_is_null(goxel->selection)) {
         painter = (painter_t) {
@@ -843,7 +844,7 @@ static void copy_action(void)
             .mode = MODE_INTERSECT,
             .color = {255, 255, 255, 255},
         };
-        mesh_op(goxel->clipboard.mesh, &painter, &goxel->selection);
+        mesh_op(goxel->clipboard.mesh, &painter, goxel->selection);
     }
 }
 
@@ -851,18 +852,19 @@ static void past_action(void)
 {
     mesh_t *mesh = goxel->image->active_layer->mesh;
     mesh_t *tmp;
-    vec3_t p1, p2;
-    mat4_t mat = mat4_identity;
+    float p1[3], p2[3], mat[4][4];
+
+    mat4_set_identity(mat);
     if (!goxel->clipboard.mesh) return;
 
     tmp = mesh_copy(goxel->clipboard.mesh);
     if (    !box_is_null(goxel->selection) &&
             !box_is_null(goxel->clipboard.box)) {
-        p1 = goxel->selection.p;
-        p2 = goxel->clipboard.box.p;
-        mat4_itranslate(&mat, +p1.x, +p1.y, +p1.z);
-        mat4_itranslate(&mat, -p2.x, -p2.y, -p2.z);
-        mesh_move(tmp, &mat);
+        vec3_copy(goxel->selection[3], p1);
+        vec3_copy(goxel->clipboard.box[3], p2);
+        mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
+        mat4_itranslate(mat, -p2[0], -p2[1], -p2[2]);
+        mesh_move(tmp, mat);
     }
     mesh_merge(mesh, tmp, MODE_OVER, NULL);
     mesh_delete(tmp);
@@ -889,17 +891,16 @@ ACTION_REGISTER(past,
 
 static int view_default(const action_t *a, astack_t *s)
 {
-	goxel->camera.rot = quat_identity;
-	quat_irotate(&goxel->camera.rot, -M_PI / 4, 1, 0, 0);
-	quat_irotate(&goxel->camera.rot, -M_PI / 4, 0, 0, 1);
-	goxel_update_meshes(goxel, -1);
-	
-	return 0;
+    quat_set_identity(goxel->camera.rot);
+    quat_irotate(goxel->camera.rot, -M_PI / 4, 1, 0, 0);
+    quat_irotate(goxel->camera.rot, -M_PI / 4, 0, 0, 1);
+    goxel_update_meshes(goxel, -1);
+    return 0;
 }
 
 static int view_set(const action_t *a, astack_t *s)
 {
-    goxel->camera.rot = *((quat_t*)a->data);
+    quat_copy(a->data, goxel->camera.rot);
     goxel_update_meshes(goxel, -1);
     return 0;
 }

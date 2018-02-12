@@ -26,12 +26,12 @@ typedef struct {
     mesh_t *mesh;      // Mesh containing only the tool path.
 
     // Gesture start and last pos (should we put it in the 3d gesture?)
-    vec3_t start_pos;
-    vec3_t last_pos;
+    float start_pos[3];
+    float last_pos[3];
     // Cache of the last operation.
     // XXX: could we remove this?
     struct     {
-        vec3_t     pos;
+        float      pos[3];
         bool       pressed;
         int        mode;
         uint64_t   mesh_key;
@@ -57,61 +57,71 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     }
     brush->last_op.pressed = pressed;
     brush->last_op.mode = mode;
-    brush->last_op.pos = curs->pos;
+    vec3_copy(curs->pos, brush->last_op.pos);
     return false;
 }
 
-static box_t get_box(const vec3_t *p0, const vec3_t *p1, const vec3_t *n,
-                     float r, const plane_t *plane)
+static void get_box(const float p0[3], const float p1[3], const float n[3],
+                    float r, const float plane[4][4], float out[4][4])
 {
-    mat4_t rot;
-    box_t box;
+    float rot[4][4], box[4][4];
+    float v[3];
+
     if (p1 == NULL) {
-        box = bbox_from_extents(*p0, r, r, r);
-        box = box_swap_axis(box, 2, 0, 1);
-        return box;
+        bbox_from_extents(box, p0, r, r, r);
+        box_swap_axis(box, 2, 0, 1, box);
+        mat4_copy(box, out);
+        return;
     }
     if (r == 0) {
-        box = bbox_grow(bbox_from_points(*p0, *p1), 0.5, 0.5, 0.5);
+        bbox_from_points(box, p0, p1);
+        bbox_grow(box, 0.5, 0.5, 0.5, box);
         // Apply the plane rotation.
-        rot = plane->mat;
-        rot.vecs[3] = vec4(0, 0, 0, 1);
-        mat4_imul(&box.mat, rot);
-        return box;
+        mat4_copy(plane, rot);
+        vec4_set(rot[3], 0, 0, 0, 1);
+        mat4_imul(box, rot);
+        mat4_copy(box, out);
+        return;
     }
 
     // Create a box for a line:
     int i;
-    const vec3_t AXES[] = {vec3(1, 0, 0), vec3(0, 1, 0), vec3(0, 0, 1)};
+    const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
-    box.mat = mat4_identity;
-    box.p = vec3_mix(*p0, *p1, 0.5);
-    box.d = vec3_sub(*p1, box.p);
+    mat4_set_identity(box);
+    vec3_mix(p0, p1, 0.5, box[3]);
+    vec3_sub(p1, box[3], box[2]);
     for (i = 0; i < 3; i++) {
-        box.w = vec3_cross(box.d, AXES[i]);
-        if (vec3_norm2(box.w) > 0) break;
+        vec3_cross(box[2], AXES[i], box[0]);
+        if (vec3_norm2(box[0]) > 0) break;
     }
-    if (i == 3) return box;
-    box.w = vec3_mul(vec3_normalized(box.w), r);
-    box.h = vec3_mul(vec3_normalized(vec3_cross(box.d, box.w)), r);
-    return box;
+    if (i == 3) {
+        mat4_copy(box, out);
+        return;
+    }
+    vec3_normalize(box[0], v);
+    vec3_mul(v, r, box[0]);
+    vec3_cross(box[2], box[0], v);
+    vec3_normalize(v, v);
+    vec3_mul(v, r, box[1]);
+    mat4_copy(box, out);
 }
 
 static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_brush_t *brush = (tool_brush_t*)user;
     painter_t painter2;
-    box_t box;
+    float box[4][4];
     cursor_t *curs = gest->cursor;
     bool shift = curs->flags & CURSOR_SHIFT;
     float r = goxel->tool_radius;
     int nb, i;
-    vec3_t pos;
+    float pos[3];
 
     if (gest->state == GESTURE_BEGIN) {
         mesh_set(brush->mesh_orig, goxel->image->active_layer->mesh);
         brush->last_op.mode = 0; // Discard last op.
-        brush->last_pos = curs->pos;
+        vec3_copy(curs->pos, brush->last_pos);
         image_history_push(goxel->image);
         mesh_clear(brush->mesh);
 
@@ -119,9 +129,8 @@ static int on_drag(gesture3d_t *gest, void *user)
             painter2 = goxel->painter;
             painter2.shape = &shape_cylinder;
             painter2.mode = MODE_MAX;
-            box = get_box(&brush->start_pos, &curs->pos, &curs->normal,
-                          r, NULL);
-            mesh_op(brush->mesh, &painter2, &box);
+            get_box(brush->start_pos, curs->pos, curs->normal, r, NULL, box);
+            mesh_op(brush->mesh, &painter2, box);
         }
     }
 
@@ -138,9 +147,9 @@ static int on_drag(gesture3d_t *gest, void *user)
     nb = ceil(vec3_dist(curs->pos, brush->last_pos) / (2 * r));
     nb = max(nb, 1);
     for (i = 0; i < nb; i++) {
-        pos = vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb);
-        box = get_box(&pos, NULL, &curs->normal, r, NULL);
-        mesh_op(brush->mesh, &painter2, &box);
+        vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos);
+        get_box(pos, NULL, curs->normal, r, NULL, box);
+        mesh_op(brush->mesh, &painter2, box);
     }
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
@@ -148,7 +157,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_merge(goxel->tool_mesh, brush->mesh, goxel->painter.mode,
                goxel->painter.color);
     goxel_update_meshes(goxel, MESH_RENDER);
-    brush->start_pos = curs->pos;
+    vec3_copy(curs->pos, brush->start_pos);
     brush->last_op.mesh_key = mesh_get_key(goxel->tool_mesh);
 
     if (gest->state == GESTURE_END) {
@@ -158,7 +167,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         goxel->tool_mesh = NULL;
         goxel_update_meshes(goxel, -1);
     }
-    brush->last_pos = curs->pos;
+    vec3_copy(curs->pos, brush->last_pos);
     return 0;
 }
 
@@ -167,7 +176,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     mesh_t *mesh = goxel->image->active_layer->mesh;
     tool_brush_t *brush = (tool_brush_t*)user;
     cursor_t *curs = gest->cursor;
-    box_t box;
+    float box[4][4];
     bool shift = curs->flags & CURSOR_SHIFT;
 
     if (gest->state == GESTURE_END) {
@@ -178,17 +187,16 @@ static int on_hover(gesture3d_t *gest, void *user)
     }
 
     if (shift)
-        render_line(&goxel->rend, &brush->start_pos, &curs->pos, NULL);
+        render_line(&goxel->rend, brush->start_pos, curs->pos, NULL);
 
     if (goxel->tool_mesh && check_can_skip(brush, curs, goxel->painter.mode))
         return 0;
 
-    box = get_box(&curs->pos, NULL, &curs->normal,
-                  goxel->tool_radius, NULL);
+    get_box(curs->pos, NULL, curs->normal, goxel->tool_radius, NULL, box);
 
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, mesh);
-    mesh_op(goxel->tool_mesh, &goxel->painter, &box);
+    mesh_op(goxel->tool_mesh, &goxel->painter, box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     brush->last_op.mesh_key = mesh_get_key(mesh);
@@ -197,7 +205,7 @@ static int on_hover(gesture3d_t *gest, void *user)
 }
 
 
-static int iter(tool_t *tool, const vec4_t *view)
+static int iter(tool_t *tool, const float viewport[4])
 {
     tool_brush_t *brush = (tool_brush_t*)tool;
     cursor_t *curs = &goxel->cursor;

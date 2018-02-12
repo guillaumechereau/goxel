@@ -53,9 +53,8 @@ struct render_item_t
 
     union {
         mesh_t          *mesh;
-        mat4_t          mat;
+        float           mat[4][4];
     };
-    vec3_t          grid;
     uint8_t         color[4];
     bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
@@ -184,18 +183,19 @@ static void copy_color(const uint8_t in[4], uint8_t out[4])
 
 static float get_border_dist(float x, float y, int mask)
 {
-    const vec2_t corners[4] = {
-        vec2(0, 0), vec2(1, 0), vec2(1, 1), vec2(0, 1)};
-    const vec2_t normals[4] = {
-        vec2(0, 1), vec2(-1, 0), vec2(0, -1), vec2(1, 0)};
+    const float corners[4][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+    const float normals[4][2] = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
     float ret = 1;
     int i;
-    vec2_t p = vec2(x, y);
+    float u[2];
+    float p[2] = {x, y};
     for (i = 0; i < 4; i++) {
         if (mask & (1 << i))        // Corners.
             ret = min(ret, vec2_dist(p, corners[i]));
-        if (mask & (0x10 << i))  // Edges.
-            ret = min(ret, vec2_dot(normals[i], vec2_sub(p, corners[i])));
+        if (mask & (0x10 << i)) {  // Edges.
+            vec2_sub(p, corners[i], u);
+            ret = min(ret, vec2_dot(normals[i], u));
+        }
     }
     return ret;
 }
@@ -469,10 +469,11 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                           mesh_iterator_t *iter,
                           const int block_pos[3],
                           int block_id,
-                          int effects, prog_t *prog, mat4_t *model)
+                          int effects, prog_t *prog,
+                          const float model[4][4])
 {
     render_item_t *item;
-    mat4_t block_model;
+    float block_model[4][4];
     int attr;
     float block_id_f[2];
 
@@ -494,9 +495,9 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                                  (void*)(intptr_t)ATTRIBUTES[attr].offset));
     }
 
-    block_model = *model;
-    mat4_itranslate(&block_model, block_pos[0], block_pos[1], block_pos[2]);
-    GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, block_model.v));
+    mat4_copy(model, block_model);
+    mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
+    GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, (float*)block_model));
     if (item->size == 4) {
         // Use indexed triangles.
         GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -506,31 +507,31 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     }
 }
 
-static vec3_t get_light_dir(const renderer_t *rend, bool model_view)
+static void get_light_dir(const renderer_t *rend, bool model_view,
+                          float out[3])
 {
-    vec4_t light_dir;
-    mat4_t m;
+    float light_dir[4];
+    float m[4][4];
 
-    m = mat4_identity;
-    mat4_irotate(&m, rend->light.yaw, 0, 0, 1);
-    mat4_irotate(&m, rend->light.pitch, 1, 0, 0);
-    light_dir = mat4_mul_vec(m, vec4(0, 0, 1, 0));
+    mat4_set_identity(m);
+    mat4_irotate(m, rend->light.yaw, 0, 0, 1);
+    mat4_irotate(m, rend->light.pitch, 1, 0, 0);
+    mat4_mul_vec4(m, VEC(0, 0, 1, 0), light_dir);
 
     if (rend->light.fixed) {
-        m = mat4_identity;
-        mat4_imul(&m, mat4_inverted(rend->view_mat));
-        mat4_irotate(&m, -M_PI / 4, 1, 0, 0);
-        mat4_irotate(&m, -M_PI / 4, 0, 0, 1);
-        light_dir = mat4_mul_vec(m, light_dir);
+        mat4_invert(rend->view_mat, m);
+        mat4_irotate(m, -M_PI / 4, 1, 0, 0);
+        mat4_irotate(m, -M_PI / 4, 0, 0, 1);
+        mat4_mul_vec4(m, light_dir, light_dir);
     }
     if (model_view)
-        light_dir = mat4_mul_vec(rend->view_mat, light_dir);
-    return light_dir.xyz;
+        mat4_mul_vec4(rend->view_mat, light_dir, light_dir);
+    vec3_copy(light_dir, out);
 }
 
-vec3_t render_get_light_dir(const renderer_t *rend)
+void render_get_light_dir(const renderer_t *rend, float out[3])
 {
-    return get_light_dir(rend, false);
+    get_light_dir(rend, false, out);
 }
 
 // Compute the minimum projection box to use for the shadow map.
@@ -538,24 +539,26 @@ static void compute_shadow_map_box(
                 const renderer_t *rend,
                 float rect[6])
 {
-    const vec3_t POS[8] = {
-        VEC3(-0.5, -0.5, -0.5),
-        VEC3(+0.5, -0.5, -0.5),
-        VEC3(+0.5, -0.5, +0.5),
-        VEC3(-0.5, -0.5, +0.5),
-        VEC3(-0.5, +0.5, -0.5),
-        VEC3(+0.5, +0.5, -0.5),
-        VEC3(+0.5, +0.5, +0.5),
-        VEC3(-0.5, +0.5, +0.5)
+    const float POS[8][3] = {
+        {-0.5, -0.5, -0.5},
+        {+0.5, -0.5, -0.5},
+        {+0.5, -0.5, +0.5},
+        {-0.5, -0.5, +0.5},
+        {-0.5, +0.5, -0.5},
+        {+0.5, +0.5, -0.5},
+        {+0.5, +0.5, +0.5},
+        {-0.5, +0.5, +0.5}
     };
     const int N = BLOCK_SIZE;
 
     render_item_t *item;
-    vec3_t p;
+    float p[3];
     int i, bpos[3];
     mesh_iterator_t iter;
-    mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
-                                  vec3(0, 0, 0), vec3(0, 1, 0));
+    float view_mat[4][4], light_dir[3];
+
+    get_light_dir(rend, false, light_dir);
+    mat4_lookat(view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
     for (i = 0; i < 6; i++)
         rect[i] = NAN;
 
@@ -564,30 +567,33 @@ static void compute_shadow_map_box(
         iter = mesh_get_iterator(item->mesh, MESH_ITER_BLOCKS);
         while (mesh_iter(&iter, bpos)) {
             for (i = 0; i < 8; i++) {
-                p = vec3(bpos[0], bpos[1], bpos[2]);
-                p = vec3_addk(p, POS[i], N);
-                p = mat4_mul_vec3(view_mat, p);
-                rect[0] = min(rect[0], p.x);
-                rect[1] = max(rect[1], p.x);
-                rect[2] = min(rect[2], p.y);
-                rect[3] = max(rect[3], p.y);
-                rect[4] = min(rect[4], -p.z);
-                rect[5] = max(rect[5], -p.z);
+                vec3_set(p, bpos[0], bpos[1], bpos[2]);
+                vec3_addk(p, POS[i], N, p);
+                mat4_mul_vec3(view_mat, p, p);
+                rect[0] = min(rect[0], p[0]);
+                rect[1] = max(rect[1], p[0]);
+                rect[2] = min(rect[2], p[1]);
+                rect[3] = max(rect[3], p[1]);
+                rect[4] = min(rect[4], -p[2]);
+                rect[5] = max(rect[5], -p[2]);
             }
         }
     }
 }
 
 static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
-                         const mat4_t *shadow_mvp)
+                         const float shadow_mvp[4][4])
 {
     prog_t *prog;
-    mat4_t model = mat4_identity;
+    float model[4][4];
     int attr, block_pos[3], block_id;
     float pos_scale = 1.0f;
-    vec3_t light_dir = get_light_dir(rend, true);
+    float light_dir[3];
     bool shadow = false;
     mesh_iterator_t iter;
+
+    mat4_set_identity(model);
+    get_light_dir(rend, true, light_dir);
 
     if (effects & EFFECT_MARCHING_CUBES)
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
@@ -614,7 +620,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     if (effects & EFFECT_SEE_BACK) {
         GL(glCullFace(GL_FRONT));
-        vec3_imul(&light_dir, -0.5);
+        vec3_imul(light_dir, -0.5);
     }
     if (effects & EFFECT_SEMI_TRANSPARENT) {
         GL(glEnable(GL_BLEND));
@@ -628,16 +634,16 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         assert(shadow_mvp);
         GL(glActiveTexture(GL_TEXTURE2));
         GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
-        GL(glUniformMatrix4fv(prog->u_shadow_mvp_l, 1, 0, shadow_mvp->v));
+        GL(glUniformMatrix4fv(prog->u_shadow_mvp_l, 1, 0, (float*)shadow_mvp));
         GL(glUniform1i(prog->u_shadow_tex_l, 2));
         GL(glUniform1f(prog->u_shadow_k_l, rend->settings.shadow));
     }
 
-    GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, rend->proj_mat.v));
-    GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, rend->view_mat.v));
+    GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, (float*)rend->proj_mat));
+    GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, (float*)rend->view_mat));
     GL(glUniform1i(prog->u_bshadow_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
-    GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir.v));
+    GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir));
     GL(glUniform1f(prog->u_l_int_l, rend->light.intensity));
     GL(glUniform1f(prog->u_m_amb_l, rend->settings.ambient));
     GL(glUniform1f(prog->u_m_dif_l, rend->settings.diffuse));
@@ -657,7 +663,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, block_pos)) {
         render_block_(rend, mesh, &iter, block_pos,
-                      block_id++, effects, prog, &model);
+                      block_id++, effects, prog, model);
     }
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glDisableVertexAttribArray(attr));
@@ -705,61 +711,63 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 
 static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
-    mat4_t view = rend->view_mat;
-    mat4_imul(&view, item->mat);
-    mat4_t proj;
-    mat4_t *proj_mat;
-    vec3_t light;
+    float view[4][4];
+    float proj[4][4];
+    float (*proj_mat)[4][4];
+    float light[3];
+
+    mat4_copy(rend->view_mat, view);
+    mat4_imul(view, item->mat);
 
     if (item->proj_screen) {
-        proj = mat4_ortho(-0.5, +0.5, -0.5, +0.5, -10, +10);
+        mat4_ortho(proj, -0.5, +0.5, -0.5, +0.5, -10, +10);
         proj_mat = &proj;
-        view = item->mat;
+        mat4_copy(item->mat, view);
     } else {
         proj_mat = &rend->proj_mat;
     }
 
     if (!(item->effects & EFFECT_WIREFRAME))
-        light = get_light_dir(rend, false);
+        get_light_dir(rend, false, light);
 
-    model3d_render(item->model3d, &view, proj_mat, item->color,
-                   item->tex, &light, item->effects);
+    model3d_render(item->model3d, view, *proj_mat, item->color,
+                   item->tex, light, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
 {
     int x, y, n;
-    mat4_t view2, view3;
-    view2 = rend->view_mat;
+    float view2[4][4], view3[4][4];
 
-    mat4_imul(&view2, item->mat);
+    mat4_copy(rend->view_mat, view2);
+    mat4_imul(view2, item->mat);
     n = 3;
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
-        view3 = mat4_translate(view2, x + 0.5, y + 0.5, 0);
-        model3d_render(item->model3d, &view3, &rend->proj_mat, item->color,
-                       NULL, NULL, 0);
+        mat4_translate(view2, x + 0.5, y + 0.5, 0, view3);
+        model3d_render(item->model3d, view3, rend->proj_mat,
+                       item->color, NULL, NULL, 0);
     }
 }
 
-void render_plane(renderer_t *rend, const plane_t *plane,
+void render_plane(renderer_t *rend, const float plane[4][4],
                   const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
-    item->mat = plane->mat;
-    mat4_iscale(&item->mat, 8, 8, 1);
+    mat4_copy(plane, item->mat);
+    mat4_iscale(item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
     copy_color(color, item->color);
     DL_APPEND(rend->items, item);
 }
 
-void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
+void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
                 int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    item->mat = mat ? *mat : mat4_identity;
+    mat ? mat4_copy(mat, item->mat) : mat4_set_identity(item->mat);
     item->proj_screen = !mat;
     item->tex = texture_copy(tex);
     item->model3d = g_rect_model;
@@ -768,12 +776,12 @@ void render_img(renderer_t *rend, texture_t *tex, const mat4_t *mat,
     DL_APPEND(rend->items, item);
 }
 
-void render_rect(renderer_t *rend, const plane_t *plane, int effects)
+void render_rect(renderer_t *rend, const float plane[4][4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & EFFECT_STRIP) == effects);
     item->type = ITEM_MODEL3D;
-    item->mat = plane->mat;
+    mat4_copy(plane, item->mat);
     item->model3d = g_wire_rect_model;
     copy_color(NULL, item->color);
     item->proj_screen = true;
@@ -782,35 +790,34 @@ void render_rect(renderer_t *rend, const plane_t *plane, int effects)
 }
 
 // Return a plane whose u vector is the line ab.
-static plane_t line_create_plane(const vec3_t *a, const vec3_t *b)
+static void line_create_plane(const float a[3], const float b[3],
+                              float out[4][4])
 {
-    plane_t ret;
-    ret.mat = mat4_identity;
-    ret.p = *a;
-    ret.u = vec3_sub(*b, *a);
-    return ret;
+    mat4_set_identity(out);
+    vec3_copy(a, out[3]);
+    vec3_sub(b, a, out[0]);
 }
 
-void render_line(renderer_t *rend, const vec3_t *a, const vec3_t *b,
+void render_line(renderer_t *rend, const float a[3], const float b[3],
                  const uint8_t color[4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
     item->model3d = g_line_model;
-    item->mat = line_create_plane(a, b).mat;
+    line_create_plane(a, b, item->mat);
     copy_color(color, item->color);
-    mat4_itranslate(&item->mat, 0.5, 0, 0);
+    mat4_itranslate(item->mat, 0.5, 0, 0);
     DL_APPEND(rend->items, item);
 }
 
-void render_box(renderer_t *rend, const box_t *box,
+void render_box(renderer_t *rend, const float box[4][4],
                 const uint8_t color[4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
             == effects);
     item->type = ITEM_MODEL3D;
-    item->mat = box->mat;
+    mat4_copy(box, item->mat);
     copy_color(color, item->color);
     item->effects = effects;
     item->model3d = (effects & EFFECT_WIREFRAME) ? g_wire_cube_model :
@@ -818,11 +825,11 @@ void render_box(renderer_t *rend, const box_t *box,
     DL_APPEND(rend->items, item);
 }
 
-void render_sphere(renderer_t *rend, const mat4_t *mat)
+void render_sphere(renderer_t *rend, const float mat[4][4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
-    item->mat = *mat;
+    mat4_copy(mat, item->mat);
     item->model3d = g_sphere_model;
     DL_APPEND(rend->items, item);
 }
@@ -844,26 +851,23 @@ static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
 }
 
 
-static mat4_t render_shadow_map(renderer_t *rend)
+static void render_shadow_map(renderer_t *rend, float shadow_mvp[4][4])
 {
     render_item_t *item;
-    float rect[6];
+    float rect[6], light_dir[3];
     int effects;
     // Create a renderer looking at the scene from the light.
     compute_shadow_map_box(rend, rect);
-    mat4_t bias_mat = mat4(0.5, 0.0, 0.0, 0.0,
-                           0.0, 0.5, 0.0, 0.0,
-                           0.0, 0.0, 0.5, 0.0,
-                           0.5, 0.5, 0.5, 1.0);
-    mat4_t proj_mat = mat4_ortho(rect[0], rect[1],
-                                 rect[2], rect[3],
-                                 rect[4], rect[5]);
-    mat4_t view_mat = mat4_lookat(get_light_dir(rend, false),
-                                  vec3(0, 0, 0), vec3(0, 1, 0));
-    renderer_t srend = {
-        .view_mat = view_mat,
-        .proj_mat = proj_mat,
-    };
+    float bias_mat[4][4] = {{0.5, 0.0, 0.0, 0.0},
+                            {0.0, 0.5, 0.0, 0.0},
+                            {0.0, 0.0, 0.5, 0.0},
+                            {0.5, 0.5, 0.5, 1.0}};
+    float ret[4][4];
+    renderer_t srend = {};
+    get_light_dir(rend, false, light_dir);
+    mat4_lookat(srend.view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
+    mat4_ortho(srend.proj_mat,
+               rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
 
     // Generate the depth buffer.
     if (!g_shadow_map_fbo) {
@@ -894,11 +898,10 @@ static mat4_t render_shadow_map(renderer_t *rend)
             render_mesh_(&srend, item->mesh, effects, NULL);
         }
     }
-
-    mat4_t ret = bias_mat;
-    mat4_imul(&ret, proj_mat);
-    mat4_imul(&ret, view_mat);
-    return ret;
+    mat4_copy(bias_mat, ret);
+    mat4_imul(ret, srend.proj_mat);
+    mat4_imul(ret, srend.view_mat);
+    mat4_copy(ret, shadow_mvp);
 }
 
 static void render_background(renderer_t *rend, const uint8_t col[4])
@@ -906,10 +909,10 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     prog_t *prog;
     typedef struct {
         int8_t  pos[3]       __attribute__((aligned(4)));
-        vec4_t  color        __attribute__((aligned(4)));
+        float   color[4]     __attribute__((aligned(4)));
     } vertex_t;
     vertex_t vertices[4];
-    vec4_t c1, c2;
+    float c1[4], c2[4];
 
     if (col[3] == 0) {
         GL(glClearColor(0, 0, 0, 0));
@@ -918,15 +921,15 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     }
 
     // Add a small gradient to the color.
-    c1 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
-    c2 = vec4(col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
-    vec3_iadd(&c1.rgb, vec3(+0.2, +0.2, +0.2));
-    vec3_iadd(&c2.rgb, vec3(-0.2, -0.2, -0.2));
+    vec4_set(c1, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
+    vec4_set(c2, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
+    vec3_iadd(c1, VEC(+0.2, +0.2, +0.2));
+    vec3_iadd(c2, VEC(-0.2, -0.2, -0.2));
 
-    vertices[0] = (vertex_t){{-1, -1, 0}, c1};
-    vertices[1] = (vertex_t){{+1, -1, 0}, c1};
-    vertices[2] = (vertex_t){{+1, +1, 0}, c2};
-    vertices[3] = (vertex_t){{-1, +1, 0}, c2};
+    vertices[0] = (vertex_t){{-1, -1, 0}, {c1[0], c1[1], c1[2], c1[3]}};
+    vertices[1] = (vertex_t){{+1, -1, 0}, {c1[0], c1[1], c1[2], c1[3]}};
+    vertices[2] = (vertex_t){{+1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
+    vertices[3] = (vertex_t){{-1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
 
     prog = get_prog(BACKGROUND_VSHADER, BACKGROUND_FSHADER, NULL);
     GL(glUseProgram(prog->prog));
@@ -951,14 +954,14 @@ void render_submit(renderer_t *rend, const int rect[4],
                    const uint8_t clear_color[4])
 {
     render_item_t *item, *tmp;
-    mat4_t shadow_mvp;
+    float shadow_mvp[4][4];
     const float s = rend->scale;
     bool shadow = rend->settings.shadow &&
         !(rend->settings.effects & (EFFECT_RENDER_POS | EFFECT_SHADOW_MAP));
 
     if (shadow) {
         GL(glDisable(GL_SCISSOR_TEST));
-        shadow_mvp = render_shadow_map(rend);
+        render_shadow_map(rend, shadow_mvp);
     }
 
     GL(glBindFramebuffer(GL_FRAMEBUFFER, rend->fbo));
@@ -972,7 +975,7 @@ void render_submit(renderer_t *rend, const int rect[4],
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         switch (item->type) {
         case ITEM_MESH:
-            render_mesh_(rend, item->mesh, item->effects, &shadow_mvp);
+            render_mesh_(rend, item->mesh, item->effects, shadow_mvp);
             DL_DELETE(rend->items, item);
             mesh_delete(item->mesh);
             break;

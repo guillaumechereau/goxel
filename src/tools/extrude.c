@@ -47,13 +47,13 @@ static int select_cond(const uint8_t value[4],
 
 // Get the face index from the normal.
 // XXX: used in a few other places!
-static int get_face(vec3_t n)
+static int get_face(const float n[3])
 {
     int f;
     const int *n2;
     for (f = 0; f < 6; f++) {
         n2 = FACES_NORMALS[f];
-        if (vec3_dot(n, vec3(n2[0], n2[1], n2[2])) > 0.5)
+        if (vec3_dot(n, VEC(n2[0], n2[1], n2[2])) > 0.5)
             return f;
     }
     return -1;
@@ -68,9 +68,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_t *mesh = goxel->image->active_layer->mesh;
     mesh_t *tmp_mesh;
     cursor_t *curs = gest->cursor;
-    box_t box;
-    plane_t face_plane;
-    vec3_t n, pos;
+    float face_plane[4][4];
+    float n[3], pos[3], v[3], box[4][4];
     int pi[3];
     float delta;
 
@@ -79,9 +78,9 @@ static int on_drag(gesture3d_t *gest, void *user)
 
         tmp_mesh = mesh_new();
         tool->mesh = mesh_copy(mesh);
-        pi[0] = floor(curs->pos.x);
-        pi[1] = floor(curs->pos.y);
-        pi[2] = floor(curs->pos.z);
+        pi[0] = floor(curs->pos[0]);
+        pi[1] = floor(curs->pos[1]);
+        pi[2] = floor(curs->pos[2]);
         mesh_select(mesh, pi, select_cond, &tool->snap_face,
                     tmp_mesh);
         mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA, NULL);
@@ -91,49 +90,50 @@ static int on_drag(gesture3d_t *gest, void *user)
         image_history_push(goxel->image);
 
         // XXX: to remove: this is duplicated from selection tool.
-        box = mesh_get_box(tool->mesh, true);
-        face_plane.mat = mat4_mul(box.mat,
-                                  FACES_MATS[tool->snap_face]);
-        goxel->tool_plane = plane(curs->pos, curs->normal,
-                                  vec3_normalized(face_plane.u));
+        mesh_get_box(tool->mesh, true, box);
+        mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
+        vec3_normalize(face_plane[0], v);
+        plane_from_vectors(goxel->tool_plane, curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
 
-    box = mesh_get_box(tool->mesh, true);
+    mesh_get_box(tool->mesh, true, box);
 
     // XXX: have some generic way to resize boxes, since we use it all the
     // time!
-    face_plane.mat = mat4_mul(box.mat, FACES_MATS[tool->snap_face]);
-    n = vec3_normalized(face_plane.n);
+    mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
+    vec3_normalize(face_plane[2], n);
     // XXX: Is there a better way to compute the delta??
-    delta = vec3_dot(n,
-                vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
+    vec3_sub(curs->pos, goxel->tool_plane[3], v);
+    vec3_project(v, n, v);
+    delta = vec3_dot(n, v);
     // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
 
     // Skip if we didn't move.
     if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
-    pos = vec3_add(goxel->tool_plane.p,
-                   vec3_project(vec3_sub(curs->pos, goxel->tool_plane.p), n));
-    pos.x = round(pos.x);
-    pos.y = round(pos.y);
-    pos.z = round(pos.z);
+    vec3_sub(curs->pos, goxel->tool_plane[3], v);
+    vec3_project(v, n, v);
+    vec3_add(goxel->tool_plane[3], v, pos);
+    pos[0] = round(pos[0]);
+    pos[1] = round(pos[1]);
+    pos[2] = round(pos[2]);
 
     mesh_set(mesh, tool->mesh_orig);
     tmp_mesh = mesh_copy(tool->mesh);
 
     if (delta >= 1) {
-        vec3_iaddk(&face_plane.p, n, -0.5);
-        box = box_move_face(box, tool->snap_face, pos);
-        mesh_extrude(tmp_mesh, &face_plane, &box);
+        vec3_iaddk(face_plane[3], n, -0.5);
+        box_move_face(box, tool->snap_face, pos, box);
+        mesh_extrude(tmp_mesh, face_plane, box);
         mesh_merge(mesh, tmp_mesh, MODE_OVER, NULL);
     }
     if (delta < 0.5) {
-        box = box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos);
-        vec3_imul(&face_plane.n, -1.0);
-        vec3_iaddk(&face_plane.p, n, -0.5);
-        mesh_extrude(tmp_mesh, &face_plane, &box);
+        box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos, box);
+        vec3_imul(face_plane[2], -1.0);
+        vec3_iaddk(face_plane[3], n, -0.5);
+        mesh_extrude(tmp_mesh, face_plane, box);
         mesh_merge(mesh, tmp_mesh, MODE_SUB, NULL);
     }
     mesh_delete(tmp_mesh);
@@ -142,13 +142,13 @@ static int on_drag(gesture3d_t *gest, void *user)
 end:
     if (gest->state == GESTURE_END) {
         mesh_delete(tool->mesh);
-        goxel->tool_plane = plane_null;
+        mat4_copy(plane_null, goxel->tool_plane);
         goxel_update_meshes(goxel, -1);
     }
     return 0;
 }
 
-static int iter(tool_t *tool_, const vec4_t *view)
+static int iter(tool_t *tool_, const float viewport[4])
 {
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
     cursor_t *curs = &goxel->cursor;

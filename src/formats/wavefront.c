@@ -22,10 +22,10 @@ typedef struct {
     char    type[2];
     union {
         struct {
-            vec3_t   v;
+            float    v[3];
             uint8_t  c[3];
         };
-        vec3_t vn;
+        float vn[3];
         struct {
             int  vs[4];
             int vns[4];
@@ -75,10 +75,10 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     //      Allow to chose between quads or triangles.
     //      Also export mlt file for the colors.
     voxel_vertex_t* verts;
-    vec3_t v;
+    float v[3];
     uint8_t c[3];
     int nb_elems, i, j, bpos[3];
-    mat4_t mat;
+    float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
     bool mc = goxel->rend.settings.effects & EFFECT_MARCHING_CUBES;
@@ -94,27 +94,28 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
-        mat = mat4_identity;
-        mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
+        mat4_set_identity(mat);
+        mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
                 mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
-                v = vec3(verts[i * size + j].pos[0] * scale,
-                         verts[i * size + j].pos[1] * scale,
-                         verts[i * size + j].pos[2] * scale);
-                v = mat4_mul_vec3(mat, v);
+                v[0] = verts[i * size + j].pos[0] * scale;
+                v[1] = verts[i * size + j].pos[1] * scale;
+                v[2] = verts[i * size + j].pos[2] * scale;
+                mat4_mul_vec3(mat, v, v);
                 memcpy(c, verts[i * size + j].color, 3);
-                line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
+                line = (line_t){
+                    "v ", .v = {v[0], v[1], v[2]}, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);
             }
             // Put the normals
             for (j = 0; j < size; j++) {
-                v = vec3(verts[i * size + j].normal[0],
-                         verts[i * size + j].normal[1],
-                         verts[i * size + j].normal[2]);
-                line = (line_t){"vn", .vn = v};
+                v[0] = verts[i * size + j].normal[0];
+                v[1] = verts[i * size + j].normal[1];
+                v[2] = verts[i * size + j].normal[2];
+                line = (line_t){"vn", .vn = {v[0], v[1], v[2]}};
                 face.vns[j] = lines_add(lines, &line);
             }
             lines_add(lines, &face);
@@ -126,14 +127,15 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "v ", 2) == 0)
             fprintf(out, "v %g %g %g %f %f %f\n",
-                    VEC3_SPLIT(line_ptr->v),
+                    line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
                     line_ptr->c[0] / 255.,
                     line_ptr->c[1] / 255.,
                     line_ptr->c[2] / 255.);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "vn", 2) == 0)
-            fprintf(out, "vn %g %g %g\n", VEC3_SPLIT(line_ptr->vn));
+            fprintf(out, "vn %g %g %g\n",
+                    line_ptr->vn[0], line_ptr->vn[1], line_ptr->vn[2]);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "f ", 2) == 0) {
@@ -159,10 +161,10 @@ void wavefront_export(const mesh_t *mesh, const char *path)
 void ply_export(const mesh_t *mesh, const char *path)
 {
     voxel_vertex_t* verts;
-    vec3_t v;
+    float v[3];
     uint8_t c[3];
     int nb_elems, i, j, bpos[3];
-    mat4_t mat;
+    float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
     bool mc = goxel->rend.settings.effects & EFFECT_MARCHING_CUBES;
@@ -178,27 +180,28 @@ void ply_export(const mesh_t *mesh, const char *path)
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
-        mat = mat4_identity;
-        mat4_itranslate(&mat, bpos[0], bpos[1], bpos[2]);
+        mat4_set_identity(mat);
+        mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
                 mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
-                v = vec3(verts[i * size + j].pos[0] * scale,
-                         verts[i * size + j].pos[1] * scale,
-                         verts[i * size + j].pos[2] * scale);
-                v = mat4_mul_vec3(mat, v);
+                v[0] = verts[i * size + j].pos[0] * scale;
+                v[1] = verts[i * size + j].pos[1] * scale;
+                v[2] = verts[i * size + j].pos[2] * scale;
+                mat4_mul_vec3(mat, v, v);
                 memcpy(c, verts[i * size + j].color, 3);
-                line = (line_t){"v ", .v = v, .c = {c[0], c[1], c[2]}};
+                line = (line_t){
+                    "v ", .v = {v[0], v[1], v[2]}, .c = {c[0], c[1], c[2]}};
                 face.vs[j] = lines_add(lines, &line);
             }
             // Put the normals
             for (j = 0; j < size; j++) {
-                v = vec3(verts[i * size + j].normal[0],
-                         verts[i * size + j].normal[1],
-                         verts[i * size + j].normal[2]);
-                line = (line_t){"vn", .vn = v};
+                v[0] = verts[i * size + j].normal[0];
+                v[1] = verts[i * size + j].normal[1];
+                v[2] = verts[i * size + j].normal[2];
+                line = (line_t){"vn", .vn = {v[0], v[1], v[2]}};
                 face.vns[j] = lines_add(lines, &line);
             }
             lines_add(lines, &face);
@@ -222,7 +225,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
         if (strncmp(line_ptr->type, "v ", 2) == 0)
             fprintf(out, "%g %g %g %d %d %d\n",
-                    VEC3_SPLIT(line_ptr->v),
+                    line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
                     line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
     }
     while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
