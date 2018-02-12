@@ -114,7 +114,7 @@ struct proc_node {
 typedef struct proc_ctx ctx_t;
 struct proc_ctx {
     ctx_t       *next, *prev;
-    box_t       box;
+    float       box[4][4];
     int         mode;
     float       color[4];
     bool        antialiased;
@@ -346,38 +346,38 @@ static int apply_transf(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     switch (op) {
 
     case OP_sx:
-        mat4_iscale(ctx->box.mat, v[0], 1, 1);
+        mat4_iscale(ctx->box, v[0], 1, 1);
         break;
     case OP_sy:
-        mat4_iscale(ctx->box.mat, 1, v[0], 1);
+        mat4_iscale(ctx->box, 1, v[0], 1);
         break;
     case OP_sz:
-        mat4_iscale(ctx->box.mat, 1, 1, v[0]);
+        mat4_iscale(ctx->box, 1, 1, v[0]);
         break;
     case OP_s:
         if (n == 1) v[1] = v[2] = v[0];
-        mat4_iscale(ctx->box.mat, v[0], v[1], v[2]);
+        mat4_iscale(ctx->box, v[0], v[1], v[2]);
         break;
     case OP_sn:
-        scale_normalize(ctx->box.mat, v[0]);
+        scale_normalize(ctx->box, v[0]);
         break;
     case OP_x:
-        mat4_itranslate(ctx->box.mat, 2 * v[0], 2 * v[1], 2 * v[2]);
+        mat4_itranslate(ctx->box, 2 * v[0], 2 * v[1], 2 * v[2]);
         break;
     case OP_y:
-        mat4_itranslate(ctx->box.mat, 0, 2 * v[0], 2 * v[1]);
+        mat4_itranslate(ctx->box, 0, 2 * v[0], 2 * v[1]);
         break;
     case OP_z:
-        mat4_itranslate(ctx->box.mat, 0, 0, 2 * v[0]);
+        mat4_itranslate(ctx->box, 0, 0, 2 * v[0]);
         break;
     case OP_rx:
-        mat4_irotate(ctx->box.mat, v[0] / 180 * M_PI, 1, 0, 0);
+        mat4_irotate(ctx->box, v[0] / 180 * M_PI, 1, 0, 0);
         break;
     case OP_ry:
-        mat4_irotate(ctx->box.mat, v[0] / 180 * M_PI, 0, 1, 0);
+        mat4_irotate(ctx->box, v[0] / 180 * M_PI, 0, 1, 0);
         break;
     case OP_rz:
-        mat4_irotate(ctx->box.mat, v[0] / 180 * M_PI, 0, 0, 1);
+        mat4_irotate(ctx->box, v[0] / 180 * M_PI, 0, 0, 1);
         break;
     case OP_hue:
         if (n == 1) ctx->color[0] = mod(ctx->color[0] + v[0], 360);
@@ -435,7 +435,7 @@ static void call_shape(const ctx_t *ctx, const shape_t *shape)
     goxel->painter.shape = shape;
     goxel->painter.mode = ctx->mode;
     goxel->painter.smoothness = ctx->antialiased ? 1 : 0;
-    mesh_op(mesh, &goxel->painter, ctx->box.mat);
+    mesh_op(mesh, &goxel->painter, ctx->box);
 }
 
 // Iter the program once.
@@ -462,9 +462,9 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
     }
 
     // XXX: find a better stopping condition.
-    if (vec3_norm2(ctx->box.w) < 0.2 ||
-        vec3_norm2(ctx->box.h) < 0.2 ||
-        vec3_norm2(ctx->box.d) < 0.2) goto end;
+    if (vec3_norm2(ctx->box[0]) < 0.2 ||
+        vec3_norm2(ctx->box[1]) < 0.2 ||
+        vec3_norm2(ctx->box[2]) < 0.2) goto end;
 
     DL_FOREACH(ctx->prog->children, expr) {
         if (expr->type == NODE_LOOP) {
@@ -514,7 +514,7 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
             // Is it a basic shape?
             for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
                 if (str_equ(expr->id, SHAPES[i]->id)) {
-                    volume = box_get_volume(ctx2.box.mat);
+                    volume = box_get_volume(ctx2.box);
                     if (volume > max_op_volume)
                         return error(proc, expr, "abort: volume too big!");
                     volume_tot += volume;
@@ -577,8 +577,8 @@ int proc_start(gox_proc_t *proc, const float box[4][4])
     proc->ctxs = NULL;
     proc->frame = 0;
     ctx = calloc(1, sizeof(*ctx));
-    if (box) mat4_copy(box, ctx->box.mat);
-    else bbox_from_extents(ctx->box.mat, vec3_zero, 0.5, 0.5, 0.5);
+    if (box) mat4_copy(box, ctx->box);
+    else bbox_from_extents(ctx->box, vec3_zero, 0.5, 0.5, 0.5);
     vec4_set(ctx->color, 0, 0, 1, 1);
     ctx->mode = MODE_OVER;
     ctx->prog = get_rule(proc->prog, "main", ctx);
