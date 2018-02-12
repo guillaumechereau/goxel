@@ -1004,7 +1004,7 @@ struct image {
     layer_t *active_layer;
     camera_t *cameras;
     camera_t *active_camera;
-    box_t    box;
+    float    box[4][4];
 
     // For saving.
     char    *path;

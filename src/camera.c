@@ -49,8 +49,8 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     const mesh_t *mesh = goxel->layers_mesh;
     mesh_iterator_t iter;
 
-    if (!box_is_null(goxel->image->box.mat)) {
-        box_get_vertices(goxel->image->box.mat, vertices);
+    if (!box_is_null(goxel->image->box)) {
+        box_get_vertices(goxel->image->box, vertices);
         for (i = 0; i < 8; i++) {
             mat4_mul_vec3(view_mat, vertices[i], p);
             if (p[2] < 0) {

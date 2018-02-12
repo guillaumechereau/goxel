@@ -20,7 +20,7 @@
 
 static void export_as_png_slices(const char *path)
 {
-    box_t box;
+    float box[4][4];
     mesh_t *mesh;
     int x, y, z, w, h, d, pos[3], start_pos[3];
     uint8_t c[4];
@@ -31,14 +31,14 @@ static void export_as_png_slices(const char *path)
                    "png\0*.png\0", NULL, "untitled.png");
     if (!path) return;
     mesh = goxel->layers_mesh;
-    box = goxel->image->box;
-    if (box_is_null(box.mat)) mesh_get_box(mesh, true, box.mat);
-    w = box.w[0] * 2;
-    h = box.h[1] * 2;
-    d = box.d[2] * 2;
-    start_pos[0] = box.p[0] - box.w[0];
-    start_pos[1] = box.p[1] - box.h[1];
-    start_pos[2] = box.p[2] - box.d[2];
+    mat4_copy(goxel->image->box, box);
+    if (box_is_null(box)) mesh_get_box(mesh, true, box);
+    w = box[0][0] * 2;
+    h = box[1][1] * 2;
+    d = box[2][2] * 2;
+    start_pos[0] = box[3][0] - box[0][0];
+    start_pos[1] = box[3][1] - box[1][1];
+    start_pos[2] = box[3][2] - box[2][2];
     img = calloc(w * h * d, 4);
     for (z = 0; z < d; z++)
     for (y = 0; y < h; y++)

@@ -934,7 +934,7 @@ static void image_panel(goxel_t *goxel)
 {
     bool bounded;
     image_t *image = goxel->image;
-    float (*box)[4][4] = &image->box.mat;
+    float (*box)[4][4] = &image->box;
 
     bounded = !box_is_null(*box);
     if (ImGui::Checkbox("Bounded", &bounded)) {

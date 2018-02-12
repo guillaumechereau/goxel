@@ -236,7 +236,7 @@ void save_to_file(goxel_t *goxel, const char *path)
 
     // Write image info.
     chunk_write_start(&c, out, "IMG ");
-    if (!box_is_null(goxel->image->box.mat))
+    if (!box_is_null(goxel->image->box))
         chunk_write_dict_value(&c, out, "box", &goxel->image->box,
                                sizeof(goxel->image->box));
     chunk_write_finish(&c, out);

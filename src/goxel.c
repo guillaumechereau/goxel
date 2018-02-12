@@ -205,11 +205,11 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       goxel->image->box.mat, true,
+                                       goxel->image->box, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_IMAGE_BOX)
             r = goxel_unproject_on_box(goxel, viewport, pos,
-                                       goxel->image->box.mat, true,
+                                       goxel->image->box, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
             camera_get_ray(&goxel->camera, pos, viewport, p, n);
@@ -481,8 +481,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
 
     goxel->painter.box = !box_is_null(goxel->image->active_layer->box) ?
                          &goxel->image->active_layer->box :
-                         !box_is_null(goxel->image->box.mat) ?
-                         &goxel->image->box.mat : NULL;
+                         !box_is_null(goxel->image->box) ?
+                         &goxel->image->box : NULL;
 
     tool_iter(goxel->tool, viewport);
 
@@ -588,8 +588,8 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
     }
     if (!goxel->plane_hidden)
         render_plane(rend, goxel->plane, goxel->grid_color);
-    if (!box_is_null(goxel->image->box.mat))
-        render_box(rend, goxel->image->box.mat, goxel->image_box_color,
+    if (!box_is_null(goxel->image->box))
+        render_box(rend, goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, viewport);

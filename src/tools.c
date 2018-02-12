@@ -115,7 +115,7 @@ int tool_gui_snap(void)
         gui_same_line();
         snap_button("Sel out", SNAP_SELECTION_OUT, w);
     }
-    if (!box_is_null(goxel->image->box.mat))
+    if (!box_is_null(goxel->image->box))
         snap_button("Image box", SNAP_IMAGE_BOX, -1);
 
     v = goxel->snap_offset;
