@@ -836,7 +836,7 @@ static void copy_action(void)
 {
     painter_t painter;
     mesh_delete(goxel->clipboard.mesh);
-    goxel->clipboard.box = goxel->selection;
+    mat4_copy(goxel->selection.mat, goxel->clipboard.box);
     goxel->clipboard.mesh = mesh_copy(goxel->image->active_layer->mesh);
     if (!box_is_null(goxel->selection.mat)) {
         painter = (painter_t) {
@@ -859,9 +859,9 @@ static void past_action(void)
 
     tmp = mesh_copy(goxel->clipboard.mesh);
     if (    !box_is_null(goxel->selection.mat) &&
-            !box_is_null(goxel->clipboard.box.mat)) {
+            !box_is_null(goxel->clipboard.box)) {
         vec3_copy(goxel->selection.p, p1);
-        vec3_copy(goxel->clipboard.box.p, p2);
+        vec3_copy(goxel->clipboard.box[3], p2);
         mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
         mat4_itranslate(mat, -p2[0], -p2[1], -p2[2]);
         mesh_move(tmp, mat);

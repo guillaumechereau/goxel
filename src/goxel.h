@@ -1153,7 +1153,7 @@ typedef struct goxel
 
     struct     {
         mesh_t *mesh;
-        box_t  box;
+        float  box[4][4];
     } clipboard;
 
     history_t  *history;     // Undo/redo history.
