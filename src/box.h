@@ -23,16 +23,6 @@
 
 // A Box is represented as the 4x4 matrix that transforms the unit cube into
 // the box.
-typedef union {
-    float mat[4][4];
-    struct {
-        float w[3]; float w_;
-        float h[3]; float h_;
-        float d[3]; float d_;
-        float p[3]; float p_;
-    };
-    float v[4][4];
-} box_t;
 
 static inline bool box_is_bbox(const float b[4][4])
 {
