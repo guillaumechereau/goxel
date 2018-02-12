@@ -127,8 +127,7 @@ static int on_adjust(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
     cursor_t *curs = gest->cursor;
-    float pos[3], v[3];
-    box_t box;
+    float pos[3], v[3], box[4][4];
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
     goxel_set_help_text(goxel, "Adjust height.");
@@ -144,10 +143,10 @@ static int on_adjust(gesture3d_t *gest, void *user)
     pos[1] = round(pos[1] - 0.5) + 0.5;
     pos[2] = round(pos[2] - 0.5) + 0.5;
 
-    get_box(shape->start_pos, pos, curs->normal, 0, goxel->plane, box.mat);
+    get_box(shape->start_pos, pos, curs->normal, 0, goxel->plane, box);
 
     mesh_set(mesh, shape->mesh_orig);
-    mesh_op(mesh, &goxel->painter, box.mat);
+    mesh_op(mesh, &goxel->painter, box);
     goxel_update_meshes(goxel, MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
