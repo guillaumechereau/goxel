@@ -1248,13 +1248,20 @@ void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);
 
 void goxel_import_image_plane(goxel_t *goxel, const char *path);
 
-// Render the view into an RGBA buffer.
-void goxel_render_to_buf(uint8_t *buf, int w, int h);
+// Render the view into an RGB[A] buffer.
+void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
 // #############################
 
-void save_to_file(goxel_t *goxel, const char *path);
+void save_to_file(goxel_t *goxel, const char *path, bool with_preview);
 int load_from_file(goxel_t *goxel, const char *path);
+
+// Iter info of a gox file, without actually reading it.
+// For the moment only returns the image preview if available.
+int gox_iter_infos(const char *path,
+                   int (*callback)(const char *attr, int size,
+                                   void *value, void *user),
+                   void *user);
 
 
 // #### Colors functions #######

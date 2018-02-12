@@ -74,6 +74,9 @@ static int default_function(const action_t *a, astack_t *s)
     } else if (strcmp(a->csig, "vpp") == 0) {
         func(stack_get_p(s, 0),
              stack_get_p(s, 1));
+    } else if (strcmp(a->csig, "vpi") == 0) {
+        func(stack_get_p(s, 0),
+             stack_get_i(s, 1));
     } else if (strcmp(a->csig, "vppp") == 0) {
         func(stack_get_p(s, 0),
              stack_get_p(s, 1),

@@ -29,7 +29,7 @@ static void export_as_png(const char *path, int w, int h)
     if (!path) return;
     LOG_I("Exporting to file %s", path);
     buf = calloc(w * h, 4);
-    goxel_render_to_buf(buf, w, h);
+    goxel_render_to_buf(buf, w, h, 4);
     img_write(buf, w, h, 4, path);
     free(buf);
 }

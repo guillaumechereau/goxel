@@ -39,6 +39,9 @@ static size_t gzwrite(gzFile file, const void *buff, size_t size) {
     return fwrite(buff, size, 1, file);
 }
 static int gzeof(gzFile file) {return feof(file);}
+static int gzseek(gzFile file, long offset, int whence) {
+    return fseek(file, offset, whence);
+}
 
 #endif
 
@@ -64,6 +67,11 @@ static int gzeof(gzFile file) {return feof(file);}
  *          n bytes: value
  *
  *  chunks types:
+ *
+ *  IMG : a dict of info:
+ *      - box: the image gox.
+ *
+ *  PREV: a png image for preview.
  *
  *  BL16: a 16^3 block saved as a 64x64 png image.
  *
@@ -216,7 +224,7 @@ static void chunk_write_all(gzFile out, const char *type,
     write_int32(out, 0);        // CRC XXX: todo.
 }
 
-void save_to_file(goxel_t *goxel, const char *path)
+void save_to_file(goxel_t *goxel, const char *path, bool with_preview)
 {
     // XXX: remove all empty blocks before saving.
     LOG_I("Save to %s", path);
@@ -226,11 +234,15 @@ void save_to_file(goxel_t *goxel, const char *path)
     int nb_blocks, index, size, bpos[3];
     uint64_t uid;
     gzFile out;
-    uint8_t *png;
+    uint8_t *png, *preview;
     camera_t *camera;
     mesh_iterator_t iter;
 
     out = gzopen(path, str_endswith(path, ".gz") ? "wb" : "wbT");
+    if (!out) {
+        LOG_E("Cannot save to %s", path);
+        return;
+    }
     gzwrite(out, "GOX ", 4);
     write_int32(out, VERSION);
 
@@ -240,6 +252,15 @@ void save_to_file(goxel_t *goxel, const char *path)
         chunk_write_dict_value(&c, out, "box", &goxel->image->box,
                                sizeof(goxel->image->box));
     chunk_write_finish(&c, out);
+
+    if (with_preview) {
+        preview = calloc(128 * 128, 4);
+        goxel_render_to_buf(preview, 128, 128, 4);
+        png = img_write_to_mem(preview, 128, 128, 4, &size);
+        chunk_write_all(out, "PREV", (char*)png, size);
+        free(preview);
+        free(png);
+    }
 
     // Add all the blocks data into the hash table.
     index = 0;
@@ -333,6 +354,43 @@ void save_to_file(goxel_t *goxel, const char *path)
     gzclose(out);
 }
 
+// Iter info of a gox file, without actually reading it.
+// For the moment only returns the image preview if available.
+int gox_iter_infos(const char *path,
+                   int (*callback)(const char *attr, int size,
+                                   void *value, void *user),
+                   void *user)
+{
+    gzFile in;
+    chunk_t c;
+    uint8_t *png;
+    char magic[4];
+
+    in = gzopen(path, "rb");
+
+    gzread(in, magic, 4);
+    assert(strncmp(magic, "GOX ", 4) == 0);
+    read_int32(in);
+
+    while (chunk_read_start(&c, in)) {
+        if (strncmp(c.type, "BL16", 4) == 0) break;
+        if (strncmp(c.type, "LAYR", 4) == 0) break;
+        if (strncmp(c.type, "PREV", 4) == 0) {
+            png = calloc(1, c.length);
+            chunk_read(&c, in, (char*)png, c.length);
+            callback(c.type, c.length, png, user);
+            free(png);
+        } else {
+            // Ignore other blocks.
+            chunk_read(&c, in, NULL, c.length);
+        }
+        chunk_read_finish(&c, in);
+    }
+    gzclose(in);
+    return 0;
+}
+
+
 static block_hash_t *hash_find_at(block_hash_t *hash, int index)
 {
     int i;
@@ -362,6 +420,7 @@ int load_from_file(goxel_t *goxel, const char *path)
 
     LOG_I("Load from file %s", path);
     in = gzopen(path, "rb");
+    if (!in) return -1;
 
     gzread(in, magic, 4);
     assert(strncmp(magic, "GOX ", 4) == 0);
@@ -395,12 +454,7 @@ int load_from_file(goxel_t *goxel, const char *path)
             free(png);
 
         } else if (strncmp(c.type, "LAYR", 4) == 0) {
-            layer = calloc(1, sizeof(*layer));
-            layer->mesh = mesh_new();
-            layer->visible = true;
-            DL_APPEND(goxel->image->layers, layer);
-            goxel->image->active_layer = layer;
-
+            layer = image_add_layer(goxel->image);
             nb_blocks = chunk_read_int32(&c, in);   assert(nb_blocks >= 0);
             for (i = 0; i < nb_blocks; i++) {
                 index = chunk_read_int32(&c, in);   assert(index >= 0);
@@ -426,8 +480,11 @@ int load_from_file(goxel_t *goxel, const char *path)
                 if (strcmp(dict_key, "img-path") == 0) {
                     layer->image = texture_new_image(dict_value, TF_NEAREST);
                 }
-                if (strcmp(dict_key, "id") == 0)
-                    memcpy(&layer->id, dict_value, dict_value_size);
+                if (strcmp(dict_key, "id") == 0) {
+                    typeof(layer->id) id;
+                    memcpy(&id, dict_value, dict_value_size);
+                    if (id) layer->id = id;
+                }
                 if (strcmp(dict_key, "base_id") == 0)
                     memcpy(&layer->base_id, dict_value, dict_value_size);
                 if (strcmp(dict_key, "box") == 0)
@@ -498,7 +555,7 @@ ACTION_REGISTER(open,
     .shortcut = "Ctrl O",
 )
 
-static void save_as(const char *path)
+static void save_as(const char *path, bool with_preview)
 {
     if (!path) {
         path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "gox\0*.gox\0",
@@ -509,23 +566,23 @@ static void save_as(const char *path)
         free(goxel->image->path);
         goxel->image->path = strdup(path);
     }
-    save_to_file(goxel, goxel->image->path);
+    save_to_file(goxel, goxel->image->path, with_preview);
 }
 
 ACTION_REGISTER(save_as,
     .help = "Save the image as",
     .cfunc = save_as,
-    .csig = "vp",
+    .csig = "vpi",
 )
 
-static void save(const char *path)
+static void save(const char *path, bool with_preview)
 {
-    save_as(path ?: goxel->image->path);
+    save_as(path ?: goxel->image->path, with_preview);
 }
 
 ACTION_REGISTER(save,
     .help = "Save the image",
     .cfunc = save,
-    .csig = "vp",
+    .csig = "vpi",
     .shortcut = "Ctrl S"
 )

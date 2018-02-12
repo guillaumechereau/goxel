@@ -629,8 +629,8 @@ void goxel_update_meshes(goxel_t *goxel, int mask)
         mesh_set(goxel->render_mesh, goxel->layers_mesh);
 }
 
-// Render the view into an RGBA buffer.
-void goxel_render_to_buf(uint8_t *buf, int w, int h)
+// Render the view into an RGB[A] buffer.
+void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 {
     camera_t camera = goxel->camera;
     mesh_t *mesh;
@@ -648,12 +648,13 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h)
     mat4_copy(camera.view_mat, rend.view_mat);
     mat4_copy(camera.proj_mat, rend.proj_mat);
     rend.fbo = fbo->framebuffer;
+    rend.scale = 1.0;
 
     render_mesh(&rend, mesh, 0);
     render_submit(&rend, rect, clear_color);
-    tmp_buf = calloc(w * h * 4 , 4);
-    texture_get_data(fbo, w * 2, h * 2, 4, tmp_buf);
-    img_downsample(tmp_buf, w * 2, h * 2, 4, buf);
+    tmp_buf = calloc(w * h * bpp , bpp);
+    texture_get_data(fbo, w * 2, h * 2, bpp, tmp_buf);
+    img_downsample(tmp_buf, w * 2, h * 2, bpp, buf);
     free(tmp_buf);
     texture_delete(fbo);
 }
