@@ -291,6 +291,7 @@ int check_gl_errors(const char *file, int line);
 enum {
     GOX_GL_QCOM_tiled_rendering,
     GOX_GL_OES_packed_depth_stencil,
+    GOX_GL_OES_depth_texture,
     GOX_GL_EXT_discard_framebuffer,
 
     GOX_GL_EXTENSIONS_COUNT
@@ -403,6 +404,8 @@ struct texture {
 };
 
 texture_t *texture_new_image(const char *path, int flags);
+texture_t *texture_new_from_buf(const uint8_t *data,
+                                int w, int h, int bpp, int flags);
 texture_t *texture_new_surface(int w, int h, int flags);
 texture_t *texture_new_buffer(int w, int h, int flags);
 void texture_get_data(const texture_t *tex, int w, int h, int bpp,

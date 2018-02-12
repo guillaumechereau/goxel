@@ -176,6 +176,24 @@ texture_t *texture_new_image(const char *path, int flags)
     return tex;
 }
 
+texture_t *texture_new_from_buf(const uint8_t *data,
+                                int w, int h, int bpp, int flags)
+{
+    texture_t *tex;
+    tex = calloc(1, sizeof(*tex));
+    tex->tex_w = next_pow2(w);
+    tex->tex_h = next_pow2(h);
+    tex->w = w;
+    tex->h = h;
+    tex->flags = TF_HAS_TEX | flags;
+    tex->format = (int[]){0, 0, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA}[bpp];
+    texture_create_empty(tex);
+    texture_set_data(tex, data, w, h, bpp);
+    tex->ref = 1;
+    LL_APPEND(g_textures, tex);
+    return tex;
+}
+
 texture_t *texture_new_surface(int w, int h, int flags)
 {
     texture_t *tex;

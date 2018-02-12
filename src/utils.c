@@ -129,6 +129,7 @@ static void parse_gl_extensions(bool extensions[GOX_GL_EXTENSIONS_COUNT])
     static const char *NAMES[] = {
         [GOX_GL_QCOM_tiled_rendering]     = "GL_QCOM_tiled_rendering",
         [GOX_GL_OES_packed_depth_stencil] = "GL_OES_packed_depth_stencil",
+        [GOX_GL_OES_depth_texture]        = "GL_OES_depth_texture",
         [GOX_GL_EXT_discard_framebuffer]  = "GL_EXT_discard_framebuffer",
     };
     _Static_assert(ARRAY_SIZE(NAMES) == GOX_GL_EXTENSIONS_COUNT, "");
@@ -145,8 +146,8 @@ static void parse_gl_extensions(bool extensions[GOX_GL_EXTENSIONS_COUNT])
             }
         }
     }
-    for (i = 0; i < nb; i++)
-        LOG_D("GL extension %s: %d", NAMES[i], extensions[i]);
+    // for (i = 0; i < nb; i++)
+    //    LOG_D("GL extension %s: %d", NAMES[i], extensions[i]);
     free(str);
 }
 
