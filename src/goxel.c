@@ -574,9 +574,12 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
             render_img(rend, layer->image, layer->mat, EFFECT_NO_SHADING);
     }
 
-    if (goxel->tool->id == TOOL_SELECTION)
+    if ((goxel->tool->id == TOOL_SELECTION) ||
+        (goxel->snap_mask & (SNAP_SELECTION_IN | SNAP_SELECTION_OUT)))
+    {
         render_box(rend, goxel->selection, NULL,
                    EFFECT_STRIP | EFFECT_WIREFRAME);
+    }
 
     // XXX: make a toggle for debug informations.
     if ((0)) {
