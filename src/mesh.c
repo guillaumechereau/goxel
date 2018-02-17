@@ -244,6 +244,7 @@ bool mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
                      {INT_MIN, INT_MIN, INT_MIN}};
     int pos[3];
     mesh_iterator_t iter;
+    bool empty = false;
 
     if (!exact) {
         for (block = mesh->blocks; block; block = block->hh.next) {
@@ -267,8 +268,10 @@ bool mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
             ret[1][2] = max(ret[1][2], pos[2] + 1);
         }
     }
+    empty = ret[0][0] >= ret[1][0];
+    if (empty) memset(ret, 0, sizeof(ret));
     memcpy(bbox, ret, sizeof(ret));
-    return ret[0][0] < ret[1][0];
+    return !empty;
 }
 
 static void mesh_prepare_write(mesh_t *mesh)
