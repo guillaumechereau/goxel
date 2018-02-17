@@ -369,7 +369,7 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
         return;
     }
 
-    if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0) {
+    if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0 && !color) {
         mesh_copy_block(other, pos, mesh, pos);
         return;
     }
