@@ -236,7 +236,24 @@ static void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
     memcpy(BLOCK_AT(block, x, y, z), v, 4);
 }
 
-// Return false if the box is empty.
+/*
+ * Function: mesh_get_bbox
+ *
+ * Get the bounding box of a mesh.
+ *
+ * Inputs:
+ *   mesh   - The mesh
+ *   exact  - If true, compute the exact bounding box.  If false, returns
+ *            an approximation that might be slightly bigger than the
+ *            actual box, but faster to compute.
+ *
+ * Outputs:
+ *   bbox  - The bounding box as the bottom left and top right corner of
+ *           the mesh.  If the mesh is empty, this will contain all zero.
+ *
+ * Returns:
+ *   true if the mesh is not empty.
+ */
 bool mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
 {
     block_t *block;

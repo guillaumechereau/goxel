@@ -129,8 +129,7 @@ bool mesh_is_empty(const mesh_t *mesh);
  *
  * Outputs:
  *   bbox  - The bounding box as the bottom left and top right corner of
- *           the mesh.  If the mesh is empty, this will contain an invalid
- *           box.
+ *           the mesh.  If the mesh is empty, this will contain all zero.
  *
  * Returns:
  *   true if the mesh is not empty.
