@@ -84,7 +84,7 @@ static int settings_ini_handler(void *user, const char *section,
                                 const char *name, const char *value,
                                 int lineno)
 {
-    if (strcmp(section, "") == 0) {
+    if (strcmp(section, "ui") == 0) {
         if (strcmp(name, "theme") == 0) {
             theme_set(value);
         }
@@ -110,6 +110,7 @@ static void settings_save(void)
     asprintf(&path, "%s/settings.ini", sys_get_user_dir());
     sys_make_dir(path);
     file = fopen(path, "w");
+    fprintf(file, "[ui]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
     fclose(file);
     free(path);
