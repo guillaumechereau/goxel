@@ -6552,10 +6552,10 @@ static const uint8_t DATA_data_themes_dark_ini[206]
     "inner=#5A6E6EFF\n"
     "";
 
-static const uint8_t DATA_data_themes_default_ini[252]
+static const uint8_t DATA_data_themes_original_ini[253]
                      __attribute__((aligned(4))) =
     "[theme]\n"
-    "name=default\n"
+    "name=original\n"
     "\n"
     "[base]\n"
     "background=#607272FF\n"
@@ -6804,9 +6804,9 @@ static asset_t ASSETS[] = {
     },
 
     {
-        .path = "data/themes/default.ini",
-        .data = DATA_data_themes_default_ini,
-        .size = 252,
+        .path = "data/themes/original.ini",
+        .data = DATA_data_themes_original_ini,
+        .size = 253,
     },
 
     {0}

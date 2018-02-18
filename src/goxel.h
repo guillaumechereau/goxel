@@ -44,6 +44,7 @@
 #include <stdarg.h>
 
 #define GOXEL_VERSION_STR "0.7.2"
+#define GOXEL_DEFAULT_THEME "original"
 
 // #### Set the DEBUG macro ####
 #ifndef DEBUG

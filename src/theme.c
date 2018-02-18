@@ -137,7 +137,7 @@ static int on_theme(int i, const char *path, void *user)
     data = assets_get(path, NULL);
     ini_parse_string(data, theme_ini_handler, theme);
     DL_APPEND(g_themes, theme);
-    if (strcmp(theme->name, "default") == 0)
+    if (strcmp(theme->name, GOXEL_DEFAULT_THEME) == 0)
         g_theme = *theme;
     return 0;
 }
