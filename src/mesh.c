@@ -223,19 +223,6 @@ static void block_get_at(const block_t *block, const int pos[3],
     memcpy(out, BLOCK_AT(block, x, y, z), 4);
 }
 
-static void block_set_at(block_t *block, const int pos[3], const uint8_t v[4])
-{
-    int x, y, z;
-    block_prepare_write(block);
-    x = pos[0] - block->pos[0];
-    y = pos[1] - block->pos[1];
-    z = pos[2] - block->pos[2];
-    assert(x >= 0 && x < N);
-    assert(y >= 0 && y < N);
-    assert(z >= 0 && z < N);
-    memcpy(BLOCK_AT(block, x, y, z), v, 4);
-}
-
 /*
  * Function: mesh_get_bbox
  *
@@ -545,7 +532,15 @@ void mesh_set_at(mesh_t *mesh, mesh_iterator_t *iter,
             vec3_copy(p, iter->block_pos);
         }
     }
-    return block_set_at(block, pos, v);
+
+    block_prepare_write(block);
+    p[0] = pos[0] - block->pos[0];
+    p[1] = pos[1] - block->pos[1];
+    p[2] = pos[2] - block->pos[2];
+    assert(p[0] >= 0 && p[0] < N);
+    assert(p[1] >= 0 && p[1] < N);
+    assert(p[2] >= 0 && p[2] < N);
+    memcpy(BLOCK_AT(block, p[0], p[1], p[2]), v, 4);
 }
 
 
