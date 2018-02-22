@@ -618,6 +618,8 @@ int mesh_iter(mesh_iterator_t *it, int pos[3])
 {
     int i;
     if (!it->block_id) { // First call.
+        // XXX: this is not good: mesh_iter shouldn't make change to the
+        // mesh.
         if (it->flags & MESH_ITER_INCLUDES_NEIGHBORS)
             mesh_add_neighbors_blocks((mesh_t*)it->mesh);
         if (!mesh_iter_next_block(it)) return 0;
@@ -633,7 +635,10 @@ int mesh_iter(mesh_iterator_t *it, int pos[3])
 
 next_block:
     if (!mesh_iter_next_block(it)) {
-        mesh_remove_empty_blocks((mesh_t*)it->mesh, true);
+        // XXX: this is not good: mesh_iter shouldn't make changes to the
+        // mesh.
+        if (it->flags & MESH_ITER_INCLUDES_NEIGHBORS)
+            mesh_remove_empty_blocks((mesh_t*)it->mesh, true);
         return 0;
     }
 
