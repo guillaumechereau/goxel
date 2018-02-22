@@ -644,7 +644,7 @@ end:
 
 uint64_t mesh_get_key(const mesh_t *mesh)
 {
-    return mesh->key;
+    return mesh ? mesh->key : 0;
 }
 
 void *mesh_get_block_data(const mesh_t *mesh, mesh_accessor_t *iter,

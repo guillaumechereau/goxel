@@ -171,7 +171,7 @@ int mesh_iter(mesh_iterator_t *it, int pos[3]);
  *   mesh - The mesh.
  *
  * Return:
- *   The key.
+ *   The key, if the mesh input is NULL, returns zero.
  *
  */
 uint64_t mesh_get_key(const mesh_t *mesh);
