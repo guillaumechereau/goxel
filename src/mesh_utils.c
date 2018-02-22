@@ -267,7 +267,7 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
 {
     int i, vp[3];
-    uint8_t value[4], c[4];
+    uint8_t value[4], new_value[4], c[4];
     mesh_iterator_t iter;
     mesh_accessor_t accessor;
     float size[3], p[3];
@@ -327,8 +327,9 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
         if (!c[3] && skip_src_empty) continue;
         mesh_get_at(mesh, &accessor, vp, value);
         if (!value[3] && skip_dst_empty) continue;
-        combine(value, c, mode, value);
-        mesh_set_at(mesh, &accessor, vp, value);
+        combine(value, c, mode, new_value);
+        if (!vec4_equal(value, new_value))
+            mesh_set_at(mesh, &accessor, vp, new_value);
     }
 }
 
