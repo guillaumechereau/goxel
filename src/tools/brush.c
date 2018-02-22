@@ -47,7 +47,7 @@ typedef struct {
 static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
                            int mode)
 {
-    mesh_t *mesh = goxel->image->active_layer->mesh;
+    mesh_t *mesh = goxel->tool_mesh;
     const bool pressed = curs->flags & CURSOR_PRESSED;
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
@@ -57,6 +57,7 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
     }
     brush->last_op.pressed = pressed;
     brush->last_op.mode = mode;
+    brush->last_op.mesh_key = mesh_get_key(mesh);
     vec3_copy(curs->pos, brush->last_op.pos);
     return false;
 }
@@ -135,8 +136,9 @@ static int on_drag(gesture3d_t *gest, void *user)
     }
 
     if (    (gest->state == GESTURE_UPDATE) &&
-            (check_can_skip(brush, curs, goxel->painter.mode)))
+            (check_can_skip(brush, curs, goxel->painter.mode))) {
         return 0;
+    }
 
     painter2 = goxel->painter;
     painter2.mode = MODE_MAX;
