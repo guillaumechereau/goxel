@@ -20,7 +20,7 @@
 #include "ini.h"
 
 
-bool gui_settings_popup(void)
+bool gui_settings_popup(void *data)
 {
     const char **names;
     theme_t *theme;

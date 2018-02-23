@@ -33,7 +33,7 @@ extern "C" {
 #include "imgui_internal.h"
 
 extern "C" {
-    bool gui_settings_popup(void);
+    bool gui_settings_popup(void *data);
 }
 
 static inline ImVec4 color_lighten(ImVec4 c, float k)
@@ -126,8 +126,9 @@ typedef struct gui_t {
 
     struct {
         const char *title;
-        bool      (*func)(void);
+        bool      (*func)(void *data);
         int         flags;
+        void       *data;
     } popup;
 
     // Textures for the color editor.
@@ -1007,7 +1008,7 @@ static void import_image_plane(goxel_t *goxel)
     goxel_import_image_plane(goxel, path);
 }
 
-static bool shift_alpha_popup(void)
+static bool shift_alpha_popup(void *data)
 {
     static int v = 0;
     static mesh_t *original_mesh = NULL;
@@ -1028,7 +1029,7 @@ static bool shift_alpha_popup(void)
     return false;
 }
 
-static bool about_popup(void)
+static bool about_popup(void *data)
 {
     using namespace ImGui;
     Text("Goxel " GOXEL_VERSION_STR);
@@ -1138,10 +1139,10 @@ static void render_menu(void)
         render_menu_item("copy", "Copy");
         render_menu_item("past", "Past");
         if (ImGui::MenuItem("Shift Alpha"))
-            gui_open_popup("Shift Alpha", shift_alpha_popup, 0);
+            gui_open_popup("Shift Alpha", 0, NULL, shift_alpha_popup);
         if (ImGui::MenuItem("Settings"))
-            gui_open_popup("Settings", gui_settings_popup,
-                    GUI_POPUP_FULL | GUI_POPUP_RESIZE);
+            gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
+                           NULL, gui_settings_popup);
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
@@ -1154,7 +1155,7 @@ static void render_menu(void)
     }
     if (ImGui::BeginMenu("Help")) {
         if (ImGui::MenuItem("About"))
-            gui_open_popup("About", about_popup, 0);
+            gui_open_popup("About", 0, NULL, about_popup);
         ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
@@ -1352,12 +1353,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
         }
         if (ImGui::BeginPopupModal(gui->popup.title, NULL, flags)) {
             typeof(gui->popup.func) func = gui->popup.func;
-            if (func()) {
+            if (func(gui->popup.data)) {
                 ImGui::CloseCurrentPopup();
                 // Only reset if there was no change.
                 if (func == gui->popup.func) {
                     gui->popup.title = NULL;
                     gui->popup.func = NULL;
+                    free(gui->popup.data);
+                    gui->popup.data = NULL;
                 }
             }
             ImGui::EndPopup();
@@ -1857,11 +1860,14 @@ bool gui_quat(const char *label, float q[4])
     return ret;
 }
 
-void gui_open_popup(const char *title, bool (*func)(void), int flags)
+void gui_open_popup(const char *title, int flags, void *data,
+                    bool (*func)(void *data))
 {
     gui->popup.title = title;
     gui->popup.func = func;
     gui->popup.flags = flags;
+    assert(!gui->popup.data);
+    gui->popup.data = data;
 }
 
 void gui_popup_body_begin(void) {

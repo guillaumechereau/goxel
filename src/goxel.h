@@ -1383,7 +1383,21 @@ enum {
     GUI_POPUP_RESIZE    = 1 << 1,
 };
 
-void gui_open_popup(const char *title, bool (*func)(void), int flags);
+
+/*
+ * Function: gui_open_popup
+ * Open a modal popup.
+ *
+ * Parameters:
+ *    title - The title of the popup.
+ *    flags - Union of <GUI_POPUP_FLAGS> values.
+ *    data  - Data passed to the popup.  It will be automatically released
+ *            by the gui.
+ *    func  - The popup function, that render the popup gui.  Should return
+ *            true to close the popup.
+ */
+void gui_open_popup(const char *title, int flags, void *data,
+                    bool (*func)(void *data));
 void gui_popup_body_begin(void);
 void gui_popup_body_end(void);
 
