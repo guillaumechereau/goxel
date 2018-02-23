@@ -1350,7 +1350,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs);
 void gui_render(void);
 
 // Gui widgets:
-void gui_text(const char *label);
+void gui_text(const char *label, ...);
 bool gui_button(const char *label, float w, int icon);
 void gui_group_begin(const char *label);
 void gui_group_end(void);

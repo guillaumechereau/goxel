@@ -1706,9 +1706,12 @@ float gui_get_avail_width(void)
     return GetContentRegionAvailWidth();
 }
 
-void gui_text(const char *label)
+void gui_text(const char *label, ...)
 {
-    Text("%s", label);
+    va_list args;
+    va_start(args, label);
+    TextV(label, args);
+    va_end(args);
 }
 
 void gui_same_line(void)
