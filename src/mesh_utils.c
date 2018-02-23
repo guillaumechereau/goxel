@@ -420,13 +420,37 @@ end:
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
                 const uint8_t color[4])
 {
+    mesh_t *cached;
     assert(mesh && other);
+    static cache_t *cache = NULL;
     mesh_iterator_t iter;
     int bpos[3];
+    uint64_t id1, id2;
+
+    // Check if the merge op has been cached.
+    if (!cache) cache = cache_create(512);
+    id1 = mesh_get_key(mesh);
+    id2 = mesh_get_key(other);
+    struct {
+        uint64_t id1;
+        uint64_t id2;
+        int      mode;
+        uint8_t  color[4];
+    } key = { id1, id2, mode };
+    if (color) memcpy(key.color, color, 4);
+    _Static_assert(sizeof(key) == 24, "");
+    cached = cache_get(cache, &key, sizeof(key));
+    if (cached) {
+        mesh_set(mesh, cached);
+        return;
+    }
+
     iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
     while (mesh_iter(&iter, bpos)) {
         block_merge(mesh, other, bpos, mode, color);
     }
+
+    cache_add(cache, &key, sizeof(key), mesh_copy(mesh), 1, mesh_del);
 }
 
 void mesh_crop(mesh_t *mesh, const float box[4][4])
