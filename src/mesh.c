@@ -344,7 +344,7 @@ mesh_t *mesh_new(void)
     mesh_t *mesh;
     mesh = calloc(1, sizeof(*mesh));
     mesh->ref = calloc(1, sizeof(*mesh->ref));
-    mesh->key = g_uid++; // XXX: could be set to 1 I guess.
+    mesh->key = 1; // Empty mesh key.
     *mesh->ref = 1;
     return mesh;
 }
@@ -401,6 +401,7 @@ void mesh_clear(mesh_t *mesh)
         HASH_DEL(mesh->blocks, block);
         block_delete(block);
     }
+    mesh->key = 1; // Empty mesh key.
     mesh->blocks = NULL;
 }
 
