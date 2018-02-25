@@ -22,6 +22,14 @@
 
 #define N BLOCK_SIZE
 
+// Used for the cache.
+static int mesh_del(void *data_)
+{
+    mesh_t *mesh = data_;
+    mesh_delete(mesh);
+    return 0;
+}
+
 int mesh_select(const mesh_t *mesh,
                 const int start_pos[3],
                 int (*cond)(const uint8_t value[4],
@@ -278,6 +286,25 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     bool use_box, skip_src_empty, skip_dst_empty;
     painter_t painter2;
     float box2[4][4];
+    mesh_t *cached;
+    static cache_t *cache = NULL;
+
+    // Check if the operation has been cached.
+    if (!cache) cache = cache_create(32);
+    struct {
+        uint64_t  id;
+        float     box[4][4];
+        painter_t painter;
+    } key;
+    memset(&key, 0, sizeof(key));
+    key.id = mesh_get_key(mesh);
+    mat4_copy(box, key.box);
+    key.painter = *painter;
+    cached = cache_get(cache, &key, sizeof(key));
+    if (cached) {
+        mesh_set(mesh, cached);
+        return;
+    }
 
     if (painter->symmetry) {
         painter2 = *painter;
@@ -331,6 +358,8 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
         if (!vec4_equal(value, new_value))
             mesh_set_at(mesh, &accessor, vp, new_value);
     }
+
+    cache_add(cache, &key, sizeof(key), mesh_copy(mesh), 1, mesh_del);
 }
 
 // XXX: remove this function!
@@ -339,14 +368,6 @@ void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4])
     int bbox[2][3];
     mesh_get_bbox(mesh, bbox, exact);
     bbox_from_aabb(box, bbox);
-}
-
-// Used for the cache.
-static int mesh_del(void *data_)
-{
-    mesh_t *mesh = data_;
-    mesh_delete(mesh);
-    return 0;
 }
 
 static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
