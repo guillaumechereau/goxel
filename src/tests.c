@@ -31,6 +31,7 @@ static void test_file(const char *b64_data, uint64_t crc32)
     FILE *file;
     size_t data_size;
     uint8_t *data;
+    if (DEFINED(WIN32)) return; // Don't test on Windows for the moment!
     data = calloc(b64_decode(b64_data, NULL), 1);
     data_size = b64_decode(b64_data, data);
     file = fopen("/tmp/goxel_test.gox", "w");
