@@ -112,8 +112,18 @@ static void test_load_file_v1_with_preview(void)
     test_file(b64_data, 0x7e06d030);
 }
 
+static void test_load_corrupt(void)
+{
+    FILE *file;
+    if (DEFINED(WIN32)) return; // Don't test on Windows for the moment!
+    file = fopen("/tmp/goxel_test.gox", "w");
+    fclose(file);
+    action_exec2("import", "p", "/tmp/goxel_test.gox");
+}
+
 void tests_run(void)
 {
     test_load_file_v2();
     test_load_file_v1_with_preview();
+    test_load_corrupt();
 }

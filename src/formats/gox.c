@@ -418,16 +418,16 @@ int load_from_file(goxel_t *goxel, const char *path)
     uint64_t uid = 1;
     camera_t *camera;
 
-    LOG_I("Load from file %s", path);
+    LOG_D("Load from file %s", path);
     in = gzopen(path, "rb");
     if (!in) return -1;
 
     gzread(in, magic, 4);
-    assert(strncmp(magic, "GOX ", 4) == 0);
+    if (strncmp(magic, "GOX ", 4) != 0) goto error;
     version = read_int32(in);
     if (version > VERSION) {
         LOG_W("Cannot open gox file version %d", version);
-        return -1;
+        goto error;
     }
 
     // Remove all layers.
@@ -534,6 +534,10 @@ int load_from_file(goxel_t *goxel, const char *path)
     goxel_update_meshes(goxel, -1);
     gzclose(in);
     return 0;
+
+error:
+    gzclose(in);
+    return -1;
 }
 
 static void action_open(const char *path)
