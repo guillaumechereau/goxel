@@ -54,6 +54,11 @@
 #       define DEBUG 0
 #   endif
 #endif
+
+#if !DEBUG && !defined(NDEBUG)
+#   define NDEBUG
+#endif
+#include <assert.h>
 // #############################
 
 
