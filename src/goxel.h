@@ -351,6 +351,20 @@ void unproject(const float win[3], const float model[4][4],
  */
 int b64_decode(const char *src, void *dest);
 
+/*
+ * Function: crc64
+ * Compute crc64 hash
+ *
+ * Parameters:
+ *   crc    - Initial crc value.
+ *   s      - Data pointer.
+ *   len    - Data size.
+ *
+ * Return:
+ *   The new crc64 value.
+ */
+uint64_t crc64(uint64_t crc, const uint8_t *s, uint64_t len);
+
 // #############################
 
 
