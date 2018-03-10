@@ -307,6 +307,7 @@ static void mesh_add_neighbors_blocks(mesh_t *mesh)
         {-1, 0, 0}, {+1, 0, 0},
     };
     int i, p[3];
+    uint64_t key = mesh->key;
     block_t *block, *tmp, *other;
 
     mesh_prepare_write(mesh);
@@ -320,11 +321,14 @@ static void mesh_add_neighbors_blocks(mesh_t *mesh)
             if (!other) mesh_add_block(mesh, p);
         }
     }
+    // Adding empty blocks shouldn't change the key of the mesh.
+    mesh->key = key;
 }
 
 void mesh_remove_empty_blocks(mesh_t *mesh, bool fast)
 {
     block_t *block, *tmp;
+    uint64_t key = mesh->key;
     mesh_prepare_write(mesh);
     HASH_ITER(hh, mesh->blocks, block, tmp) {
         if (block_is_empty(block, false)) {
@@ -332,6 +336,8 @@ void mesh_remove_empty_blocks(mesh_t *mesh, bool fast)
             block_delete(block);
         }
     }
+    // Empty blocks shouldn't change the key of the mesh.
+    mesh->key = key;
 }
 
 bool mesh_is_empty(const mesh_t *mesh)
