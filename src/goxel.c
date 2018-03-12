@@ -464,6 +464,7 @@ static int on_hover(const gesture_t *gest, void *user)
     c->snap_mask = goxel->snap_mask;
     set_flag(&c->snap_mask, SNAP_ROUNDED, goxel->painter.smoothness == 0);
     c->snap_offset = 0;
+    set_flag(&c->flags, CURSOR_OUT, gest->state == GESTURE_END);
     return 0;
 }
 

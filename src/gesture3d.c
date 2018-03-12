@@ -49,7 +49,8 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
         case GESTURE_POSSIBLE:
             if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
                 break;
-            if (curs->snaped && !pressed) gest->state = GESTURE_BEGIN;
+            if (curs->snaped && !pressed && !(curs->flags & CURSOR_OUT))
+                gest->state = GESTURE_BEGIN;
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
@@ -57,6 +58,7 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
             if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
                 gest->state = GESTURE_END;
             if (pressed) gest->state = GESTURE_END;
+            if (curs->flags & CURSOR_OUT) gest->state = GESTURE_END;
             break;
         }
     }

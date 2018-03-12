@@ -132,6 +132,25 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
         }
     }
 
+    if (gest->type == GESTURE_HOVER) {
+        switch (gest->state) {
+        case GESTURE_POSSIBLE:
+            if (nb_ts == 0) {
+                vec2_copy(ts[0].pos, gest->pos);
+                if (rect_contains(gest->viewport, gest->pos)) {
+                    gest->state = GESTURE_BEGIN;
+                }
+            }
+            break;
+        case GESTURE_BEGIN:
+        case GESTURE_UPDATE:
+            vec2_copy(ts[0].pos, gest->pos);
+            gest->state = rect_contains(gest->viewport, gest->pos) ?
+                GESTURE_UPDATE : GESTURE_END;
+            break;
+        }
+    }
+
     return 0;
 }
 
@@ -141,7 +160,7 @@ int gesture_update(int nb, gesture_t *gestures[],
                    void *user)
 {
     int i, j, mask = 0;
-    bool allup = true;
+    bool allup = true; // Set if all the mouse buttons are up.
     gesture_t *gest, *triggered = NULL;
 
     for (i = 0; allup && i < ARRAY_SIZE(inputs->touches); i++) {
@@ -184,17 +203,5 @@ int gesture_update(int nb, gesture_t *gestures[],
                 gest->state = GESTURE_FAILED;
         }
     }
-
-    // Special case for the hover gesture.
-    if (!triggered && allup) {
-        for (i = 0; i < nb; i++) {
-            gest = gestures[i];
-            if (gest->type != GESTURE_HOVER) continue;
-            vec2_copy(inputs->touches[0].pos, gest->pos);
-            gest->callback(gest, user);
-            triggered = gest;
-        }
-    }
-
     return triggered ? 1 : 0;
 }

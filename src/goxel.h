@@ -1079,6 +1079,8 @@ enum {
     CURSOR_PRESSED      = 1 << 0,
     CURSOR_SHIFT        = 1 << 1,
     CURSOR_CTRL         = 1 << 2,
+
+    CURSOR_OUT          = 1 << 3, // Outside of sensing area.
 };
 
 typedef struct gesture3d gesture3d_t;

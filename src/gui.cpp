@@ -476,7 +476,7 @@ static int on_gesture(const gesture_t *gest, void *user)
                       (gest->state != GESTURE_END);
     if (gest->state == GESTURE_BEGIN && !gui->mouse_in_view)
         gui->capture_mouse = true;
-    if (gest->state == GESTURE_END)
+    if (gest->state == GESTURE_END || gest->type == GESTURE_HOVER)
         gui->capture_mouse = false;
     return 0;
 }
