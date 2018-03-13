@@ -540,14 +540,14 @@ static void compute_shadow_map_box(
                 float rect[6])
 {
     const float POS[8][3] = {
-        {-0.5, -0.5, -0.5},
-        {+0.5, -0.5, -0.5},
-        {+0.5, -0.5, +0.5},
-        {-0.5, -0.5, +0.5},
-        {-0.5, +0.5, -0.5},
-        {+0.5, +0.5, -0.5},
-        {+0.5, +0.5, +0.5},
-        {-0.5, +0.5, +0.5}
+        {0, 0, 0},
+        {1, 0, 0},
+        {1, 0, 1},
+        {0, 0, 1},
+        {0, 1, 0},
+        {1, 1, 0},
+        {1, 1, 1},
+        {0, 1, 1},
     };
     const int N = BLOCK_SIZE;
 
@@ -559,8 +559,12 @@ static void compute_shadow_map_box(
 
     get_light_dir(rend, false, light_dir);
     mat4_lookat(view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
-    for (i = 0; i < 6; i++)
-        rect[i] = NAN;
+    rect[0] = +FLT_MAX;
+    rect[1] = -FLT_MAX;
+    rect[2] = +FLT_MAX;
+    rect[3] = -FLT_MAX;
+    rect[4] = +FLT_MAX;
+    rect[5] = -FLT_MAX;
 
     DL_FOREACH(rend->items, item) {
         if (item->type != ITEM_MESH) continue;
