@@ -261,6 +261,7 @@ void goxel_init(goxel_t *gox)
     render_init();
     shapes_init();
     sound_init();
+    cycles_init();
     quat_set_identity(goxel->camera.rot);
     goxel->camera.dist = 128;
     goxel->camera.aspect = 1;
@@ -332,6 +333,7 @@ void goxel_init(goxel_t *gox)
 
 void goxel_release(goxel_t *goxel)
 {
+    cycles_release();
     proc_release(&goxel->proc);
     gui_release();
 }
@@ -488,7 +490,8 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
                          !box_is_null(goxel->image->box) ?
                          &goxel->image->box : NULL;
 
-    tool_iter(goxel->tool, viewport);
+    if (!goxel->no_edit)
+        tool_iter(goxel->tool, viewport);
 
     if (inputs->mouse_wheel) {
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
@@ -555,6 +558,72 @@ static void render_export_viewport(goxel_t *goxel, const float viewport[4])
     render_rect(&goxel->rend, plane, EFFECT_STRIP);
 }
 
+static void render_view_cycles(const float viewport[4])
+{
+    int rect[4] = {(int)viewport[0],
+                   (int)(goxel->screen_size[1] - viewport[1] - viewport[3]),
+                   (int)viewport[2],
+                   (int)viewport[3]};
+    int w = viewport[2];
+    int h = viewport[3];
+    uint8_t *buf = calloc(4, w * h);
+    cycles_render(buf, &w, &h, &goxel->camera, NULL);
+    render_img2(&goxel->rend, buf, w, h, 4, NULL,
+                EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN);
+    free(buf);
+    render_submit(&goxel->rend, rect, goxel->back_color);
+}
+
+void goxel_render_export_view(const float viewport[4])
+{
+    typeof(goxel->export_task) *task = &goxel->export_task;
+    int i, w, h, bpp = 4;
+    uint8_t *tmp;
+    float a, mat[4][4];
+    int rect[4] = {(int)viewport[0],
+                   (int)(goxel->screen_size[1] - viewport[1] - viewport[3]),
+                   (int)viewport[2],
+                   (int)viewport[3]};
+    camera_t camera = goxel->camera;
+
+    // Recreate the buffer if needed.
+    if (    !task->buf ||
+            task->w != goxel->image->export_width ||
+            task->h != goxel->image->export_height) {
+        free(task->buf);
+        task->w = goxel->image->export_width;
+        task->h = goxel->image->export_height;
+        task->buf = calloc(task->w * task->h, 4);
+    }
+
+    task->status = 1;
+    w = task->w;
+    h = task->h;
+    camera.aspect = (float)w / h;
+    camera_update(&camera);
+    cycles_render(task->buf, &w, &h, &camera, &task->progress);
+    mat4_set_identity(mat);
+    a = 1.0 * w / h / rect[2] * rect[3];
+    mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
+    render_img2(&goxel->rend, task->buf, w, h, 4, mat,
+                EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
+    render_submit(&goxel->rend, rect, goxel->back_color);
+    if (task->progress == 1) { // Finished.
+        if (*task->output) {
+            tmp = calloc(w * h, bpp);
+            // Flip output y.
+            for (i = 0; i < h; i++) {
+                memcpy(&tmp[i * (size_t)w * bpp],
+                    &task->buf[((size_t)h - i - 1) * (size_t)w * bpp],
+                    bpp * (size_t)w);
+            }
+            img_write(tmp, w, h, bpp, task->output);
+            free(tmp);
+        }
+        task->status = 2;
+    }
+}
+
 void goxel_render_view(goxel_t *goxel, const float viewport[4])
 {
     layer_t *layer;
@@ -563,6 +632,11 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
 
     goxel->camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel->camera);
+
+    if (goxel->use_cycles) {
+        render_view_cycles(viewport);
+        return;
+    }
 
     render_mesh(rend, goxel->render_mesh, 0);
     if (!box_is_null(goxel->image->active_layer->box))
@@ -600,6 +674,13 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
                    EFFECT_SEE_BACK);
     if (goxel->show_export_viewport)
         render_export_viewport(goxel, viewport);
+
+    // XXX: cleanup this!
+    int rect[4] = {(int)viewport[0],
+                   (int)(goxel->screen_size[1] - viewport[1] - viewport[3]),
+                   (int)viewport[2],
+                   (int)viewport[3]};
+    render_submit(&goxel->rend, rect, goxel->back_color);
 }
 
 void image_update(image_t *img);
@@ -645,10 +726,11 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     uint8_t clear_color[4] = {0, 0, 0, 0};
 
     camera.aspect = (float)w / h;
+    camera_update(&camera);
+
     mesh = goxel->layers_mesh;
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
-    camera_update(&camera);
     mat4_copy(camera.view_mat, rend.view_mat);
     mat4_copy(camera.proj_mat, rend.proj_mat);
     rend.fbo = fbo->framebuffer;
@@ -656,7 +738,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 
     render_mesh(&rend, mesh, 0);
     render_submit(&rend, rect, clear_color);
-    tmp_buf = calloc(w * h * bpp , bpp);
+    tmp_buf = calloc(w * h, bpp);
     texture_get_data(fbo, w * 2, h * 2, bpp, tmp_buf);
     img_downsample(tmp_buf, w * 2, h * 2, bpp, buf);
     free(tmp_buf);

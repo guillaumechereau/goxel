@@ -116,6 +116,7 @@ typedef struct gui_t {
     int     current_panel;
     view_t  view;
     int     min_panel_size;
+    bool    use_cycles;
     struct {
         gesture_t drag;
         gesture_t hover;
@@ -535,12 +536,13 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    int rect[4] = {(int)view->rect[0],
-                   (int)(height - view->rect[1] - view->rect[3]),
-                   (int)view->rect[2],
-                   (int)view->rect[3]};
-    goxel_render_view(goxel, view->rect);
-    render_submit(&goxel->rend, rect, goxel->back_color);
+    // XXX: 6 here means 'export' panel.  Need to use an enum!
+    if (    gui->current_panel == 6 &&
+            goxel->export_task.status) {
+        goxel_render_export_view(view->rect);
+    } else {
+        goxel_render_view(goxel, view->rect);
+    }
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
@@ -889,6 +891,9 @@ static void render_panel(goxel_t *goxel)
     const char **names;
     render_settings_t settings;
 
+    ImGui::Checkbox("Cycles", &gui->use_cycles);
+    goxel->use_cycles = gui->use_cycles;
+    goxel->no_edit = goxel->use_cycles;
     ImGui::Checkbox("Ortho", &goxel->camera.ortho);
     names = (const char**)calloc(nb, sizeof(*names));
     for (i = 0; i < nb; i++) {
@@ -918,6 +923,10 @@ static void export_panel(goxel_t *goxel)
 {
     int i;
     int maxsize;
+    const char *path;
+
+    goxel->no_edit = goxel->export_task.status;
+
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
     goxel->show_export_viewport = true;
@@ -928,7 +937,23 @@ static void export_panel(goxel_t *goxel)
     i = goxel->image->export_height;
     if (gui_input_int("height", &i, 1, maxsize))
         goxel->image->export_height = clamp(i, 1, maxsize);
+    if (gui_button("Set output", 1, 0)) {
+        path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "png\0*.png\0", NULL,
+                                    "untitled.png");
+        if (path) strcpy(goxel->export_task.output, path);
+    }
     gui_group_end();
+
+    if (*goxel->export_task.output)
+        gui_text("%s", goxel->export_task.output);
+
+    if (gui_button("Render", 1, 0))
+        goxel->export_task.status = 1;
+
+    if (goxel->export_task.status) {
+        gui_text("%d/100", (int)(goxel->export_task.progress * 100));
+    }
+
 }
 
 static void image_panel(goxel_t *goxel)
@@ -1334,6 +1359,9 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::Begin("Goxel", NULL, window_flags);
 
     render_menu();
+
+    goxel->no_edit = false; // Set depending on what panel is selected.
+    goxel->use_cycles = false;  // Also set depending on the panel.
     render_left_panel();
     ImGui::SameLine();
 

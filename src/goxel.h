@@ -1206,6 +1206,7 @@ typedef struct goxel
 
     camera_t   camera;
 
+    bool       use_cycles; // Render with cycles.
     uint8_t    back_color[4];
     uint8_t    grid_color[4];
     uint8_t    image_box_color[4];
@@ -1218,6 +1219,7 @@ typedef struct goxel
 
     tool_t     *tool;
     float      tool_radius;
+    bool       no_edit; // Disable editing.
 
     // Some state for the tool iter functions.
     float      tool_plane[4][4];
@@ -1250,6 +1252,15 @@ typedef struct goxel
         gesture_t hover;
     } gestures;
 
+    // Hold info about the cycles rendering task.
+    struct {
+        int status;
+        uint8_t *buf;       // RGBA buffer.
+        int w, h;           // Size of the buffer.
+        char output[1024];  // Output path.
+        float progress;
+    } export_task;
+
 } goxel_t;
 
 // the global goxel instance.
@@ -1260,6 +1271,7 @@ void goxel_release(goxel_t *goxel);
 void goxel_iter(goxel_t *goxel, inputs_t *inputs);
 void goxel_render(goxel_t *goxel);
 void goxel_render_view(goxel_t *goxel, const float viewport[4]);
+void goxel_render_export_view(const float viewport[4]);
 // Called by the gui when the mouse hover a 3D view.
 // XXX: change the name since we also call it when the mouse get out of
 // the view.
@@ -1489,6 +1501,12 @@ void *cache_get(cache_t *cache, const void *key, int keylen);
 void sound_init(void);
 void sound_play(const char *sound);
 void sound_iter(void);
+
+// Section: cycles
+void cycles_init(void);
+void cycles_release(void);
+void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
+                   float *progress);
 
 // Section: tests
 
