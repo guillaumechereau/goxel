@@ -15,7 +15,7 @@ matrix:
       dist: trusty
       compiler: clang
     - os: osx
-      osx_image: xcode8.3
+      osx_image: xcode9.2
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
