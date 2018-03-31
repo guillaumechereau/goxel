@@ -742,6 +742,9 @@ enum {
     EFFECT_NO_SHADING       = 1 << 10,
     EFFECT_STRIP            = 1 << 11,
     EFFECT_WIREFRAME        = 1 << 12,
+
+    EFFECT_PROJ_SCREEN      = 1 << 13, // Image project in screen.
+    EFFECT_ANTIALIASING     = 1 << 14,
 };
 
 typedef struct {
@@ -788,6 +791,18 @@ void render_box(renderer_t *rend, const float box[4][4],
 void render_sphere(renderer_t *rend, const float mat[4][4]);
 void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
                 int efffects);
+
+/*
+ * Function: render_img2
+ * Render an image directly from it's pixel data.
+ *
+ * XXX: this is experimental: eventually I think we should remove render_img
+ * and only user render_img2 (renamed to render_img).
+ */
+void render_img2(renderer_t *rend,
+                 const uint8_t *data, int w, int h, int bpp,
+                 const float mat[4][4], int effects);
+
 void render_rect(renderer_t *rend, const float plane[4][4], int effects);
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
