@@ -621,6 +621,7 @@ void goxel_render_export_view(const float viewport[4])
             free(tmp);
         }
         task->status = 0;
+        gui_alert("Render", "Render complete");
     }
 }
 

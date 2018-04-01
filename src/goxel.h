@@ -1457,6 +1457,7 @@ float gui_get_avail_width(void);
 void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
+void gui_alert(const char *title, const char *msg);
 
 enum {
     GUI_POPUP_FULL      = 1 << 0,

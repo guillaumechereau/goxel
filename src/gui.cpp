@@ -947,8 +947,13 @@ static void export_panel(goxel_t *goxel)
     if (*goxel->export_task.output)
         gui_text("%s", goxel->export_task.output);
 
-    if (gui_button(goxel->export_task.status ? "Cancel" : "Render", 1, 0))
+    if (gui_button(goxel->export_task.status ? "Cancel" : "Render", 1, 0)) {
         goxel->export_task.status = goxel->export_task.status ? 0 : 1;
+        if (goxel->export_task.status && !(*goxel->export_task.output)) {
+            gui_alert("Error", "Output not set");
+            goxel->export_task.status = 0;
+        }
+    }
 
     if (goxel->export_task.status) {
         gui_text("%d/100", (int)(goxel->export_task.progress * 100));
@@ -1908,6 +1913,17 @@ void gui_popup_body_begin(void) {
 
 void gui_popup_body_end(void) {
     ImGui::EndChild();
+}
+
+static bool alert_popup(void *data)
+{
+    if (data) gui_text((const char *)data);
+    return gui_button("OK", 0, 0);
+}
+
+void gui_alert(const char *title, const char *msg)
+{
+    gui_open_popup(title, 0, msg ? strdup(msg) : NULL, alert_popup);
 }
 
 }
