@@ -166,7 +166,7 @@ static bool isCharPressed(int c)
 
 static void init_prog(prog_t *p)
 {
-    p->prog = create_program(VSHADER, FSHADER, NULL);
+    p->prog = gl_create_prog(VSHADER, FSHADER, NULL);
     GL(glUseProgram(p->prog));
 #define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
 #define ATTRIB(x) p->x##_l = glGetAttribLocation(p->prog, #x)

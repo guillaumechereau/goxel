@@ -158,7 +158,7 @@ enum {
 #if DEBUG
 #  define GL(line) ({                                                   \
        line;                                                            \
-       if (check_gl_errors(__FILE__, __LINE__)) assert(false);          \
+       if (gl_check_errors(__FILE__, __LINE__)) assert(false);          \
    })
 #else
 #  define GL(line) line
@@ -283,17 +283,9 @@ static inline void set_flag(int *x, int flag, bool v)
 #include "box.h"
 #include "plane.h"
 
+// ######### Section: GL utils ############################
 
-// #### Utils ##################
-
-char *read_file(const char *path, int *size);
-
-// Used internally by the LOG macro
-void dolog(int level, const char *msg,
-           const char *func, const char *file, int line, ...);
-int check_gl_errors(const char *file, int line);
-
-// Enum of all the gl extensions we care for.
+/* Enum of all the gl extensions we care for. */
 enum {
     GOX_GL_QCOM_tiled_rendering,
     GOX_GL_OES_packed_depth_stencil,
@@ -302,12 +294,37 @@ enum {
 
     GOX_GL_EXTENSIONS_COUNT
 };
-bool _has_gl_extension(int extension);
-#define has_gl_extension(x) (_has_gl_extension(GOX_##x))
 
-int create_program(const char *vertex_shader, const char *fragment_shader,
+int gl_check_errors(const char *file, int line);
+
+/*
+ * Function: gl_has_extension
+ * Check whether an OpenGL extension is available.
+ */
+bool _gl_has_extension(int extension);
+#define gl_has_extension(x) (_gl_has_extension(GOX_##x))
+
+/*
+ * Function: gl_create_prog
+ * Helper function to create an OpenGL program.
+ */
+int gl_create_prog(const char *vertex_shader, const char *fragment_shader,
                    const char *include);
-void delete_program(int prog);
+
+/*
+ * Function: gl_create_prog
+ * Helper function to delete an OpenGL program.
+ */
+void gl_delete_prog(int prog);
+
+// #### Section: Utils ##################
+
+char *read_file(const char *path, int *size);
+
+// Used internally by the LOG macro
+void dolog(int level, const char *msg,
+           const char *func, const char *file, int line, ...);
+
 uint8_t *img_read(const char *path, int *width, int *height, int *bpp);
 uint8_t *img_read_from_mem(const char *data, int size,
                            int *w, int *h, int *bpp);

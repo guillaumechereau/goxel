@@ -300,7 +300,7 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader,
     prog->vshader = vshader;
     prog->fshader = fshader;
     prog->include = include;
-    prog->prog = create_program(vshader, fshader, include_full);
+    prog->prog = gl_create_prog(vshader, fshader, include_full);
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glBindAttribLocation(prog->prog, attr, ATTRIBUTES[attr].name));
     }
@@ -385,7 +385,7 @@ void render_deinit(void)
     int i;
     for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
         if (g_progs[i].prog)
-            delete_program(g_progs[i].prog);
+            gl_delete_prog(g_progs[i].prog);
     }
     memset(&g_progs, 0, sizeof(g_progs));
     GL(glDeleteBuffers(1, &g_index_buffer));

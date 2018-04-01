@@ -45,7 +45,7 @@ static texture_t *g_white_tex = NULL;
 
 static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
 {
-    prog->prog = create_program(vshader, fshader, NULL);
+    prog->prog = gl_create_prog(vshader, fshader, NULL);
 #define UNIFORM(x) GL(prog->x##_l = glGetUniformLocation(prog->prog, #x))
 #define ATTRIB(x)  GL(prog->x##_l = glGetAttribLocation(prog->prog, #x))
     ATTRIB(a_pos);
