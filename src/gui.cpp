@@ -893,7 +893,7 @@ static void render_panel(goxel_t *goxel)
 
     ImGui::Checkbox("Cycles", &gui->use_cycles);
     goxel->use_cycles = gui->use_cycles;
-    goxel->no_edit = goxel->use_cycles;
+    goxel->no_edit = goxel->use_cycles || gui->popup.title;
     ImGui::Checkbox("Ortho", &goxel->camera.ortho);
     names = (const char**)calloc(nb, sizeof(*names));
     for (i = 0; i < nb; i++) {
@@ -925,7 +925,7 @@ static void export_panel(goxel_t *goxel)
     int maxsize;
     const char *path;
 
-    goxel->no_edit = goxel->export_task.status;
+    goxel->no_edit = goxel->export_task.status || gui->popup.title;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
