@@ -36,11 +36,6 @@
 		F057B390204EEDD000E2A63F /* device_memory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B112204EEDCF00E2A63F /* device_memory.cpp */; };
 		F057B394204EEDD000E2A63F /* device_split_kernel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B118204EEDCF00E2A63F /* device_split_kernel.cpp */; };
 		F057B395204EEDD000E2A63F /* device_task.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B11A204EEDCF00E2A63F /* device_task.cpp */; };
-		F057B396204EEDD000E2A63F /* memory_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B11D204EEDCF00E2A63F /* memory_manager.cpp */; };
-		F057B397204EEDD000E2A63F /* opencl_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B120204EEDCF00E2A63F /* opencl_base.cpp */; };
-		F057B398204EEDD000E2A63F /* opencl_mega.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B121204EEDCF00E2A63F /* opencl_mega.cpp */; };
-		F057B399204EEDD000E2A63F /* opencl_split.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B122204EEDCF00E2A63F /* opencl_split.cpp */; };
-		F057B39A204EEDD000E2A63F /* opencl_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B123204EEDCF00E2A63F /* opencl_util.cpp */; };
 		F057B3A4204EEDD000E2A63F /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = F057B130204EEDCF00E2A63F /* CMakeLists.txt */; };
 		F057B3A5204EEDD000E2A63F /* node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B131204EEDCF00E2A63F /* node.cpp */; };
 		F057B3A6204EEDD000E2A63F /* node_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B134204EEDCF00E2A63F /* node_type.cpp */; };
@@ -214,13 +209,6 @@
 		F057B119204EEDCF00E2A63F /* device_split_kernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = device_split_kernel.h; sourceTree = "<group>"; };
 		F057B11A204EEDCF00E2A63F /* device_task.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = device_task.cpp; sourceTree = "<group>"; };
 		F057B11B204EEDCF00E2A63F /* device_task.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = device_task.h; sourceTree = "<group>"; };
-		F057B11D204EEDCF00E2A63F /* memory_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = memory_manager.cpp; sourceTree = "<group>"; };
-		F057B11E204EEDCF00E2A63F /* memory_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = memory_manager.h; sourceTree = "<group>"; };
-		F057B11F204EEDCF00E2A63F /* opencl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opencl.h; sourceTree = "<group>"; };
-		F057B120204EEDCF00E2A63F /* opencl_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opencl_base.cpp; sourceTree = "<group>"; };
-		F057B121204EEDCF00E2A63F /* opencl_mega.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opencl_mega.cpp; sourceTree = "<group>"; };
-		F057B122204EEDCF00E2A63F /* opencl_split.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opencl_split.cpp; sourceTree = "<group>"; };
-		F057B123204EEDCF00E2A63F /* opencl_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opencl_util.cpp; sourceTree = "<group>"; };
 		F057B130204EEDCF00E2A63F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		F057B131204EEDCF00E2A63F /* node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = node.cpp; sourceTree = "<group>"; };
 		F057B132204EEDCF00E2A63F /* node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = node.h; sourceTree = "<group>"; };
@@ -589,23 +577,8 @@
 				F057B119204EEDCF00E2A63F /* device_split_kernel.h */,
 				F057B11A204EEDCF00E2A63F /* device_task.cpp */,
 				F057B11B204EEDCF00E2A63F /* device_task.h */,
-				F057B11C204EEDCF00E2A63F /* opencl */,
 			);
 			path = device;
-			sourceTree = "<group>";
-		};
-		F057B11C204EEDCF00E2A63F /* opencl */ = {
-			isa = PBXGroup;
-			children = (
-				F057B11D204EEDCF00E2A63F /* memory_manager.cpp */,
-				F057B11E204EEDCF00E2A63F /* memory_manager.h */,
-				F057B11F204EEDCF00E2A63F /* opencl.h */,
-				F057B120204EEDCF00E2A63F /* opencl_base.cpp */,
-				F057B121204EEDCF00E2A63F /* opencl_mega.cpp */,
-				F057B122204EEDCF00E2A63F /* opencl_split.cpp */,
-				F057B123204EEDCF00E2A63F /* opencl_util.cpp */,
-			);
-			path = opencl;
 			sourceTree = "<group>";
 		};
 		F057B12F204EEDCF00E2A63F /* graph */ = {
@@ -1168,7 +1141,6 @@
 				F037D5D61EA6069A00C96D10 /* shape.c in Sources */,
 				F057B435204EEDD000E2A63F /* attribute.cpp in Sources */,
 				F07DEA0A1BD0F31500BAA1AD /* model3d.c in Sources */,
-				F057B398204EEDD000E2A63F /* opencl_mega.cpp in Sources */,
 				F057B3A5204EEDD000E2A63F /* node.cpp in Sources */,
 				F0A160051E962F1300C6EF33 /* wavefront.c in Sources */,
 				F057B3B4204EEDD000E2A63F /* kernel_split_avx2.cpp in Sources */,
@@ -1199,7 +1171,6 @@
 				F0A160091E962F4600C6EF33 /* mustache.c in Sources */,
 				F057B442204EEDD000E2A63F /* mesh.cpp in Sources */,
 				F057B4A8204EF13900E2A63F /* cycles.cpp in Sources */,
-				F057B397204EEDD000E2A63F /* opencl_base.cpp in Sources */,
 				F07DE9D31BD0F03900BAA1AD /* AppDelegate.swift in Sources */,
 				F057B3AD204EEDD000E2A63F /* filter_sse3.cpp in Sources */,
 				F057B451204EEDD000E2A63F /* subd_dice.cpp in Sources */,
@@ -1215,7 +1186,6 @@
 				F057B43F204EEDD000E2A63F /* image.cpp in Sources */,
 				F07DEA2D1BD0F33A00BAA1AD /* imgui_draw.cpp in Sources */,
 				F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */,
-				F057B39A204EEDD000E2A63F /* opencl_util.cpp in Sources */,
 				F057B468204EEDD000E2A63F /* util_task.cpp in Sources */,
 				F057B3BA204EEDD000E2A63F /* kernel_sse41.cpp in Sources */,
 				F057B44F204EEDD000E2A63F /* tile.cpp in Sources */,
@@ -1231,7 +1201,6 @@
 				F057B395204EEDD000E2A63F /* device_task.cpp in Sources */,
 				F057B379204EEDD000E2A63F /* bvh_node.cpp in Sources */,
 				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,
-				F057B396204EEDD000E2A63F /* memory_manager.cpp in Sources */,
 				F097B3F31F0C97DB00A3622B /* gesture.c in Sources */,
 				F057B452204EEDD000E2A63F /* subd_patch.cpp in Sources */,
 				F07DEA0B1BD0F31500BAA1AD /* palette.c in Sources */,
@@ -1251,7 +1220,6 @@
 				F07DEA051BD0F31500BAA1AD /* gui.cpp in Sources */,
 				F0E71BB01F1DA7A100D20C7C /* ini.c in Sources */,
 				F057B46A204EEDD000E2A63F /* util_time.cpp in Sources */,
-				F057B399204EEDD000E2A63F /* opencl_split.cpp in Sources */,
 				F057B377204EEDD000E2A63F /* bvh_binning.cpp in Sources */,
 				F057B469204EEDD000E2A63F /* util_thread.cpp in Sources */,
 				F057B3B8204EEDD000E2A63F /* kernel_sse2.cpp in Sources */,
