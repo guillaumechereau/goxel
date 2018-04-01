@@ -785,18 +785,14 @@ void render_img2(renderer_t *rend,
                  const float mat[4][4], int effects)
 {
     // Experimental for the moment!
-    static texture_t *tex = NULL;
-    texture_delete(tex);
-    tex = texture_new_from_buf(data, w, h, bpp,
-            (effects & EFFECT_ANTIALIASING) ? 0 : TF_NEAREST);
-
     // Same as render_img, but we flip the texture!
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
     mat ? mat4_copy(mat, item->mat) : mat4_set_identity(item->mat);
     mat4_iscale(item->mat, 1, -1, 1);
     item->proj_screen = effects & EFFECT_PROJ_SCREEN;
-    item->tex = texture_copy(tex);
+    item->tex = texture_new_from_buf(data, w, h, bpp,
+            (effects & EFFECT_ANTIALIASING) ? 0 : TF_NEAREST);
     item->model3d = g_rect_model;
     copy_color(NULL, item->color);
     item->effects = effects;
