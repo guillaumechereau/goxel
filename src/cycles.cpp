@@ -266,6 +266,8 @@ static bool sync_mesh(int w, int h)
 
     key = mesh_get_key(goxel->render_mesh);
     key = crc64(key, goxel->back_color, sizeof(goxel->back_color));
+    key = crc64(key, (const uint8_t*)&w, sizeof(w));
+    key = crc64(key, (const uint8_t*)&h, sizeof(h));
 
     if (key == last_key) return false;
     last_key = key;
