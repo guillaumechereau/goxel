@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F01452C52070FC51007F0106 /* utils_gl.c in Sources */ = {isa = PBXBuildFile; fileRef = F01452C42070FC51007F0106 /* utils_gl.c */; };
 		F0158ECC1F17289B008893E6 /* sound_openal.inl in Resources */ = {isa = PBXBuildFile; fileRef = F0158ECA1F17289B008893E6 /* sound_openal.inl */; };
 		F0158ECD1F17289B008893E6 /* sound.c in Sources */ = {isa = PBXBuildFile; fileRef = F0158ECB1F17289B008893E6 /* sound.c */; };
 		F025C7DB1F33239000C52709 /* png_slices.c in Sources */ = {isa = PBXBuildFile; fileRef = F025C7DA1F33239000C52709 /* png_slices.c */; };
@@ -164,6 +165,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F01452C42070FC51007F0106 /* utils_gl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils_gl.c; sourceTree = "<group>"; };
 		F0158ECA1F17289B008893E6 /* sound_openal.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sound_openal.inl; sourceTree = "<group>"; };
 		F0158ECB1F17289B008893E6 /* sound.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sound.c; sourceTree = "<group>"; };
 		F025C7DA1F33239000C52709 /* png_slices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = png_slices.c; sourceTree = "<group>"; };
@@ -879,6 +881,7 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F01452C42070FC51007F0106 /* utils_gl.c */,
 				F057B4A7204EF13900E2A63F /* cycles.cpp */,
 				F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */,
 				F0ED3C611F98B03200FB50DE /* mesh_utils.c */,
@@ -1151,6 +1154,7 @@
 				F057B454204EEDD000E2A63F /* subd_split.cpp in Sources */,
 				F07DEA0F1BD0F31500BAA1AD /* shape.c in Sources */,
 				F0A160011E962F1300C6EF33 /* txt.c in Sources */,
+				F01452C52070FC51007F0106 /* utils_gl.c in Sources */,
 				F07DEA091BD0F31500BAA1AD /* mesh.c in Sources */,
 				F0AE90F71C8EE01300C29080 /* assets.c in Sources */,
 				F07DEA2C1BD0F33A00BAA1AD /* imgui.cpp in Sources */,
