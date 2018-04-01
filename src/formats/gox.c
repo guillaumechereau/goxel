@@ -405,7 +405,7 @@ int load_from_file(goxel_t *goxel, const char *path)
     layer_t *layer, *layer_tmp;
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
     gzFile in;
-    char magic[4];
+    char magic[4] = {};
     uint8_t *voxel_data;
     int nb_blocks;
     int w, h, bpp;
