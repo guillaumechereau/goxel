@@ -120,11 +120,13 @@ static ccl::Shader *create_background_shader(void)
     backgroundShaderNode->name = "backgroundNode";
     backgroundShaderNode->set(
         *backgroundShaderNode->type->find_input(S("color")),
-        ccl::make_float3(1, 1, 1)
+        ccl::make_float3(goxel->back_color[0] / 255.0f,
+                         goxel->back_color[1] / 255.0f,
+                         goxel->back_color[2] / 255.0f)
     );
     backgroundShaderNode->set(
         *backgroundShaderNode->type->find_input(S("strength")),
-        0.1f
+        0.5f
     );
 
     shaderGraph->add(backgroundShaderNode);
@@ -263,7 +265,10 @@ static bool sync_mesh(int w, int h)
     ccl::SceneParams scene_params;
 
     key = mesh_get_key(goxel->render_mesh);
+    key = crc64(key, goxel->back_color, sizeof(goxel->back_color));
+
     if (key == last_key) return false;
+    last_key = key;
     // For the moment I don't see how to update the mesh without crashing
     // the application, except by creating a new session!
     if (g_session) {
@@ -283,11 +288,10 @@ static bool sync_mesh(int w, int h)
     sync_scene(g_session->scene, w, h);
     g_session->scene->mutex.unlock();
     g_session->reset(g_buffer_params, g_session_params.samples);
-    last_key = key;
     return true;
 }
 
-static bool sync_lights(int w, int h)
+static bool sync_lights(int w, int h, bool force)
 {
     static uint64_t last_key = 0;
     uint64_t key;
@@ -299,7 +303,8 @@ static bool sync_lights(int w, int h)
     key = mesh_get_key(goxel->render_mesh);
     key = crc64(key, (uint8_t*)&goxel->rend.light, sizeof(goxel->rend.light));
     key = crc64(key, (uint8_t*)light_dir, sizeof(light_dir));
-    if (key == last_key) return false;
+
+    if (!force && key == last_key) return false;
 
     light = scene->lights[0];
     light->type = ccl::LIGHT_DISTANT;
@@ -311,7 +316,7 @@ static bool sync_lights(int w, int h)
     return true;
 }
 
-static bool sync_camera(int w, int h, const camera_t *camera)
+static bool sync_camera(int w, int h, const camera_t *camera, bool force)
 {
     static uint64_t last_key = 0;
     uint64_t key;
@@ -324,7 +329,7 @@ static bool sync_camera(int w, int h, const camera_t *camera)
     key = crc64(key, (uint8_t*)&w, sizeof(w));
     key = crc64(key, (uint8_t*)&h, sizeof(h));
 
-    if (key == last_key) return false;
+    if (!force && key == last_key) return false;
 
     scene = g_session->scene;
     scene->camera->width = w;
@@ -356,9 +361,10 @@ static bool sync_camera(int w, int h, const camera_t *camera)
 
 static bool sync(int w, int h, const camera_t *cam)
 {
-    sync_mesh(w, h);
-    sync_lights(w, h);
-    sync_camera(w, h, cam);
+    bool mesh_changed;
+    mesh_changed = sync_mesh(w, h);
+    sync_lights(w, h, mesh_changed);
+    sync_camera(w, h, cam, mesh_changed);
     return true;
 }
 
