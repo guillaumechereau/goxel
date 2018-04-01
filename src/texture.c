@@ -31,71 +31,6 @@ static int next_pow2(int x)
 
 static bool is_pow2(int x) { return x == next_pow2(x); }
 
-
-static void generate_framebuffer(texture_t *tex)
-{
-    assert(tex->w > 0 && tex->h > 0);
-    const int w = tex->tex_w;
-    const int h = tex->tex_h;
-    bool stencil = tex->flags & TF_STENCIL;
-    bool depth = tex->flags & TF_DEPTH;
-    assert(w == next_pow2(w));
-    assert(h == next_pow2(h));
-
-    GL(glGenFramebuffers(1, &tex->framebuffer));
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, tex->framebuffer));
-    GL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                              GL_TEXTURE_2D, tex->tex, 0));
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) ==
-            GL_FRAMEBUFFER_COMPLETE);
-
-#ifndef GLES2
-    if (depth || stencil) {
-        GL(glGenRenderbuffers(1, &tex->depth));
-        GL(glBindRenderbuffer(GL_RENDERBUFFER, tex->depth));
-        GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_STENCIL, w, h));
-        GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-                GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, tex->depth));
-    }
-#else
-    // With opengl ES2, we need to check if we support packed depth/stencil
-    // or not.
-    if (has_gl_extension(GL_OES_packed_depth_stencil)) {
-        if (depth || stencil) {
-            GL(glGenRenderbuffers(1, &tex->depth));
-            GL(glBindRenderbuffer(GL_RENDERBUFFER, tex->depth));
-            GL(glRenderbufferStorage(GL_RENDERBUFFER,
-                                     GL_DEPTH24_STENCIL8_OES, w, h));
-            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                                         GL_RENDERBUFFER, tex->depth));
-            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                                         GL_RENDERBUFFER, tex->depth));
-        }
-    } else {
-        if (depth) {
-            GL(glGenRenderbuffers(1, &tex->depth));
-            GL(glBindRenderbuffer(GL_RENDERBUFFER, tex->depth));
-            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-                                     w, h));
-            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                        GL_RENDERBUFFER, tex->depth));
-        }
-        if (stencil) {
-            GL(glGenRenderbuffers(1, &tex->stencil));
-            GL(glBindRenderbuffer(GL_RENDERBUFFER, tex->stencil));
-            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
-                                     w, h));
-            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                        GL_RENDERBUFFER, tex->stencil));
-        }
-    }
-#endif
-    assert(
-        glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
-    GL(glBindFramebuffer(GL_FRAMEBUFFER, sys_get_screen_framebuffer()));
-}
-
 static void texture_create_empty(texture_t *tex)
 {
     assert(tex->flags & TF_HAS_TEX);
@@ -220,8 +155,8 @@ texture_t *texture_new_buffer(int w, int h, int flags)
     tex->w = w;
     tex->h = h;
     tex->flags = flags | TF_HAS_FB | TF_HAS_TEX;
-    texture_create_empty(tex);
-    generate_framebuffer(tex);
+    gl_gen_fbo(tex->tex_w, tex->tex_h, tex->format, 1,
+               &tex->framebuffer, &tex->tex);
     tex->ref = 1;
     LL_APPEND(g_textures, tex);
     return tex;

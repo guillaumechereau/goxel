@@ -317,6 +317,21 @@ int gl_create_prog(const char *vertex_shader, const char *fragment_shader,
  */
 void gl_delete_prog(int prog);
 
+/*
+ * Function: gl_gen_fbo
+ * Helper function to generate an OpenGL framebuffer object with an
+ * associated texture.
+ *
+ * Parameters:
+ *   w          - Width of the fbo.
+ *   h          - Height of the fbo.
+ *   format     - GL_RGBA or GL_DEPTH_COMPONENT.
+ *   out_fbo    - The created fbo.
+ *   out_tex    - The created texture.
+ */
+int gl_gen_fbo(int w, int h, GLenum format, int msaa,
+               GLuint *out_fbo, GLuint *out_tex);
+
 // #### Section: Utils ##################
 
 char *read_file(const char *path, int *size);
