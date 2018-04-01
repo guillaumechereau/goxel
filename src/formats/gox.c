@@ -418,7 +418,6 @@ int load_from_file(goxel_t *goxel, const char *path)
     uint64_t uid = 1;
     camera_t *camera;
 
-    LOG_D("Load from file %s", path);
     in = gzopen(path, "rb");
     if (!in) return -1;
 
