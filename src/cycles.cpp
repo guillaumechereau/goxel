@@ -255,7 +255,7 @@ void cycles_init(void)
     g_session_params.start_resolution = 64;
     g_session_params.device = device_info;
     g_session_params.samples = 20;
-    g_session_params.threads = 1;
+    // g_session_params.threads = 1;
 }
 
 static bool sync_mesh(int w, int h)
