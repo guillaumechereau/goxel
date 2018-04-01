@@ -947,8 +947,8 @@ static void export_panel(goxel_t *goxel)
     if (*goxel->export_task.output)
         gui_text("%s", goxel->export_task.output);
 
-    if (gui_button("Render", 1, 0))
-        goxel->export_task.status = 1;
+    if (gui_button(goxel->export_task.status ? "Cancel" : "Render", 1, 0))
+        goxel->export_task.status = goxel->export_task.status ? 0 : 1;
 
     if (goxel->export_task.status) {
         gui_text("%d/100", (int)(goxel->export_task.progress * 100));

@@ -620,7 +620,7 @@ void goxel_render_export_view(const float viewport[4])
             img_write(tmp, w, h, bpp, task->output);
             free(tmp);
         }
-        task->status = 2;
+        task->status = 0;
     }
 }
 
