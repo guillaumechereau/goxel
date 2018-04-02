@@ -385,22 +385,6 @@ static inline bool str_equ(const char *s1, const char *s2) {
     return strcmp(s1, s2) == 0;
 }
 
-/*
- * Function: list_dir
- * List all the files in a directory.
- *
- * Parameters:
- *   url   - Path of the directory we want to list.
- *   flags - Unused for the moment.
- *   user  - User data passed to the callback.
- *   f     - Function called once per entry, taking as arguments the index
- *           and path of the file, as well as the user data.
- *
- * Return:
- *   The number of files found.
- */
-int list_dir(const char *url, int flags, void *user,
-             int (*f)(int i, const char *path, void *user));
 
 /*
  * Function: unproject
@@ -510,7 +494,19 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
 
 // #### System #################
 void sys_log(const char *msg);
-// List all the files in a directory.
+
+/*
+ * Function: sys_list_dir
+ * List all the files in a directory.
+ *
+ * Parameters:
+ *   dir      - Path of the directory we want to list.
+ *   callback - Function called once per entry.
+ *   user     - User data passed to the callback.
+ *
+ * Return:
+ *   The number of files found.
+ */
 int sys_list_dir(const char *dir,
                  int (*callback)(const char *dir, const char *name,
                                  void *user),

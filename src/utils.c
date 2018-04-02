@@ -23,7 +23,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <dirent.h>
 
 // Prevent warnings in stb code.
 #ifdef __GNUC__
@@ -250,24 +249,6 @@ bool str_startswith(const char *s1, const char *s2)
     if (!s1 || !s2) return false;
     if (strlen(s1) < strlen(s2)) return false;
     return strncmp(s1, s2, strlen(s2)) == 0;
-}
-
-int list_dir(const char *url, int flags, void *user,
-             int (*f)(int i, const char *path, void *user))
-{
-    DIR *dir;
-    struct dirent *dirent;
-    char *path;
-    int i = 0;
-    dir = opendir(url);
-    while ((dirent = readdir(dir))) {
-        if (dirent->d_name[0] == '.') continue;
-        asprintf(&path, "%s/%s", url, dirent->d_name);
-        if (f(i, path, user) != 0) i++;
-        free(path);
-    }
-    closedir(dir);
-    return i;
 }
 
 void img_downsample(const uint8_t *img, int w, int h, int bpp,
