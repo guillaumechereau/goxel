@@ -487,12 +487,18 @@ void gl_delete_prog(int prog);
 int gl_gen_fbo(int w, int h, GLenum format, int msaa,
                GLuint *out_fbo, GLuint *out_tex);
 
+/* ########################################################################
+ * Section: System
+ * Some system related functions.  All the things that might depend on the
+ * operating system, not relying on libc, should go there.
+ */
 
-// #############################
-
-
-
-// #### System #################
+/*
+ * Function: sys_log
+ * Write a log message to output.
+ *
+ * Note: this should never be called directly, use the LOG_ macros instead.
+ */
 void sys_log(const char *msg);
 
 /*
@@ -511,12 +517,32 @@ int sys_list_dir(const char *dir,
                  int (*callback)(const char *dir, const char *name,
                                  void *user),
                  void *user);
+
+/*
+ * Function: sys_get_user_dir
+ * Return the user config directory for goxel
+ *
+ * On linux, this should be $HOME/.config/goxel.
+ */
 const char *sys_get_user_dir(void);
+
+/*
+ * Function: sys_make_dir
+ * Create all the directories parent of a given file path if they do not
+ * exist yet.
+ *
+ * For example, sys_make_dir("/a/b/c.txt") will create /a/ and /a/b/.
+ */
 int sys_make_dir(const char *path);
 
 const char *sys_get_clipboard_text(void* user);
 void sys_set_clipboard_text(void *user, const char *text);
 GLuint sys_get_screen_framebuffer(void);
+
+/*
+ * Function: sys_get_time
+ * Return the unix time (seconds since Jan 01 1970).
+ */
 double sys_get_time(void); // Unix time.
 // #############################
 
