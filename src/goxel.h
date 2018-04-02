@@ -172,14 +172,48 @@ enum {
 
 // Some useful inline functions / macros
 
+/*
+ * Macro: ARRAY_SIZE
+ * Return the number of elements in an array
+ */
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
+
+/*
+ * Macro: SWAP
+ * Swap two variables
+ */
 #define SWAP(x0, x) do {typeof(x0) tmp = x0; x0 = x; x = tmp;} while (0)
 
-// Used to pass and get values to callback 'void *user' arguments.
+/*
+ * Macro: USER_PASS
+ * Used to pass values to callback 'void *user' arguments.
+ *
+ * For a function with the following declaration: f(void *user), we can pass
+ * several arguments packed in an array like that:
+ *
+ * int x, y;
+ * f(USER_PASS(&x, &y));
+ */
 #define USER_PASS(...) ((const void*[]){__VA_ARGS__})
+
+/*
+ * Macro: USER_GET
+ * Used to unpack values passed to a callback with USER_PASS:
+ *
+ * void f(void *user)
+ * {
+ *     char *arg1 = USER_GET(user, 0);
+ *     int   arg2 = *((int*)USER_GET(user, 1));
+ * }
+ */
 #define USER_GET(var, n) (((void**)var)[n])
 
-// IS_IN(x, ...): returns true if x is equal to any of the other arguments.
+/*
+ * Macro: IS_IN
+ * IS_IN(x, ...): returns true if x is equal to any of the other arguments.
+ *
+ * Deprecated.
+ */
 #define IS_IN(x, ...) ({ \
         bool _ret = false; \
         const typeof(x) _V[] = {__VA_ARGS__}; \
@@ -189,17 +223,32 @@ enum {
         _ret; \
     })
 
-// Some useful vector macros.
+/*
+ * Macro: vec3_set
+ * Set a 3 sized array values.
+ */
 #define vec3_set(v, x, y, z) do { \
     (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); } while(0)
 
+/*
+ * Macro: vec4_set
+ * Set a 4 sized array values.
+ */
 #define vec4_set(v, x, y, z, w) do { \
     (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
 
+/*
+ * Macro: vec4_copy
+ * Copy a 4 sized array into an other one.
+ */
 #define vec4_copy(a, b) do { \
         (b)[0] = (a)[0]; (b)[1] = (a)[1]; (b)[2] = (a)[2]; (b)[3] = (a)[3]; \
     } while (0)
 
+/*
+ * Macro: vec4_equal
+ * Test whether two 4 sized vectors are equal.
+ */
 #define vec4_equal(a, b) ({ \
         (a)[0] == (b)[0] && \
         (a)[1] == (b)[1] && \
@@ -214,28 +263,62 @@ enum {
 #define MB (1024 * KB)
 #define GB (1024 * MB)
 
+/*
+ * Macro: min
+ * Safe min function.
+ */
 #define min(a, b) ({ \
       __typeof__ (a) _a = (a); \
       __typeof__ (b) _b = (b); \
       _a < _b ? _a : _b; \
       })
 
+/*
+ * Macro: max
+ * Safe max function.
+ */
 #define max(a, b) ({ \
       __typeof__ (a) _a = (a); \
       __typeof__ (b) _b = (b); \
       _a > _b ? _a : _b; \
       })
 
+/*
+ * Macro: max3
+ * Safe max function, return the max of three values.
+ */
 #define max3(x, y, z) (max((x), max((y), (z))))
+
+/*
+ * Macro: min3
+ * Safe max function, return the max of three values.
+ */
 #define min3(x, y, z) (min((x), min((y), (z))))
 
+/*
+ * Macro: clamp
+ * Clamp a value.
+ */
 #define clamp(x, a, b) (min(max(x, a), b))
 
+/*
+ * Macro: sign
+ * Return the sign (+1 or -1) of a value.
+ *
+ * Deprecated: use cmp instead.
+ */
 #define sign(x) ({ \
       __typeof__ (x) _x = (x); \
       (_x > 0) ? +1 : (_x < 0)? -1 : 0; \
       })
 
+/*
+ * Macro: cmp
+ * Compare two values.
+ *
+ * Return:
+ *   +1 if a > b, -1 if a < b, 0 if a == b.
+ */
 #define cmp(a, b) ({ \
     __typeof__ (a) _a = (a); \
     __typeof__ (b) _b = (b); \
@@ -258,6 +341,12 @@ static inline float smoothstep(float edge0, float edge1, float x)
     return x * x * (3.0f - 2.0f * x);
 }
 
+/*
+ * Function: mix
+ * Linear blend of x and y.
+ *
+ * Similar to GLES mix function.
+ */
 static inline float mix(float x, float y, float t)
 {
     return (1.0 - t) * x + t * y;
@@ -275,6 +364,99 @@ static inline void set_flag(int *x, int flag, bool v)
 {
     v ? (*x |= flag) : (*x &= ~flag);
 }
+
+/*
+ * Function: read_file
+ * Read a file from disk.
+ *
+ * Return:
+ *   A newly allocated buffer containing the file data.
+ */
+char *read_file(const char *path, int *size);
+
+// Used internally by the LOG macro
+void dolog(int level, const char *msg,
+           const char *func, const char *file, int line, ...);
+
+uint8_t *img_read(const char *path, int *width, int *height, int *bpp);
+uint8_t *img_read_from_mem(const char *data, int size,
+                           int *w, int *h, int *bpp);
+void img_write(const uint8_t *img, int w, int h, int bpp, const char *path);
+uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp,
+                          int *size);
+void img_downsample(const uint8_t *img, int w, int h, int bpp,
+                    uint8_t *out);
+bool str_endswith(const char *str, const char *end);
+bool str_startswith(const char *s1, const char *s2);
+// Get gregorian date from unix time.
+int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s);
+int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
+
+static inline bool str_equ(const char *s1, const char *s2) {
+    return strcmp(s1, s2) == 0;
+}
+
+/*
+ * Function: list_dir
+ * List all the files in a directory.
+ *
+ * Parameters:
+ *   url   - Path of the directory we want to list.
+ *   flags - Unused for the moment.
+ *   user  - User data passed to the callback.
+ *   f     - Function called once per entry, taking as arguments the index
+ *           and path of the file, as well as the user data.
+ *
+ * Return:
+ *   The number of files found.
+ */
+int list_dir(const char *url, int flags, void *user,
+             int (*f)(int i, const char *path, void *user));
+
+/*
+ * Function: unproject
+ * Convert from screen coordinate to world coordinates.
+ *
+ * Similar to gluUnproject.
+ *
+ * Parameters:
+ *   win        - Windows coordinates to be mapped.
+ *   model      - Modelview matrix.
+ *   proj       - Projection matrix.
+ *   viewport   - Viewport rect (x, y, w, h).
+ *   out        - Output of the computed object coordinates.
+ */
+void unproject(const float win[3], const float model[4][4],
+               const float proj[4][4], const float viewport[4],
+               float out[3]);
+
+/*
+ * Function: b64_decode
+ * Decode a base64 string
+ *
+ * Parameters:
+ *   src  - A base 64 encoded string.
+ *   dest - Buffer that will receive the decoded value or NULL.  If set to
+ *          NULL the function just returns the size of the decoded data.
+ *
+ * Return:
+ *   The size of the decoded data.
+ */
+int b64_decode(const char *src, void *dest);
+
+/*
+ * Function: crc64
+ * Compute crc64 hash
+ *
+ * Parameters:
+ *   crc    - Initial crc value.
+ *   s      - Data pointer.
+ *   len    - Data size.
+ *
+ * Return:
+ *   The new crc64 value.
+ */
+uint64_t crc64(uint64_t crc, const uint8_t *s, uint64_t len);
 
 // #############################
 
@@ -332,70 +514,6 @@ void gl_delete_prog(int prog);
 int gl_gen_fbo(int w, int h, GLenum format, int msaa,
                GLuint *out_fbo, GLuint *out_tex);
 
-// #### Section: Utils ##################
-
-char *read_file(const char *path, int *size);
-
-// Used internally by the LOG macro
-void dolog(int level, const char *msg,
-           const char *func, const char *file, int line, ...);
-
-uint8_t *img_read(const char *path, int *width, int *height, int *bpp);
-uint8_t *img_read_from_mem(const char *data, int size,
-                           int *w, int *h, int *bpp);
-void img_write(const uint8_t *img, int w, int h, int bpp, const char *path);
-uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp,
-                          int *size);
-void img_downsample(const uint8_t *img, int w, int h, int bpp,
-                    uint8_t *out);
-bool str_endswith(const char *str, const char *end);
-bool str_startswith(const char *s1, const char *s2);
-// Get gregorian date from unix time.
-int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s);
-int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
-
-static inline bool str_equ(const char *s1, const char *s2) {
-    return strcmp(s1, s2) == 0;
-}
-
-// List all the files in a directory.
-// flags: unused for the moment.
-// Return the number of directory found.
-int list_dir(const char *url, int flags, void *user,
-             int (*f)(int i, const char *path, void *user));
-
-// Convert from screen coordinate to world coordinates.
-// Similar to gluUnproject.
-void unproject(const float win[3], const float model[4][4],
-               const float proj[4][4], const float viewport[4],
-               float out[3]);
-
-/* Function: b64_decode
- * Decode a base64 string
- *
- * Parameters:
- *   src  - A base 64 encoded string.
- *   dest - Buffer that will receive the decoded value or NULL.  If set to
- *          NULL the function just returns the size of the decoded data.
- *
- * Return:
- *   The size of the decoded data.
- */
-int b64_decode(const char *src, void *dest);
-
-/*
- * Function: crc64
- * Compute crc64 hash
- *
- * Parameters:
- *   crc    - Initial crc value.
- *   s      - Data pointer.
- *   len    - Data size.
- *
- * Return:
- *   The new crc64 value.
- */
-uint64_t crc64(uint64_t crc, const uint8_t *s, uint64_t len);
 
 // #############################
 
