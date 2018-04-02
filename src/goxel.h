@@ -302,17 +302,6 @@ enum {
 #define clamp(x, a, b) (min(max(x, a), b))
 
 /*
- * Macro: sign
- * Return the sign (+1 or -1) of a value.
- *
- * Deprecated: use cmp instead.
- */
-#define sign(x) ({ \
-      __typeof__ (x) _x = (x); \
-      (_x > 0) ? +1 : (_x < 0)? -1 : 0; \
-      })
-
-/*
  * Macro: cmp
  * Compare two values.
  *

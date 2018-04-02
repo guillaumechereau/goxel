@@ -871,7 +871,7 @@ static int item_sort_value(const render_item_t *a)
 
 static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
 {
-    return sign(item_sort_value(a) - item_sort_value(b));
+    return cmp(item_sort_value(a), item_sort_value(b));
 }
 
 
