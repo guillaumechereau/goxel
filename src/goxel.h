@@ -375,15 +375,51 @@ uint8_t *img_write_to_mem(const uint8_t *img, int w, int h, int bpp,
                           int *size);
 void img_downsample(const uint8_t *img, int w, int h, int bpp,
                     uint8_t *out);
-bool str_endswith(const char *str, const char *end);
-bool str_startswith(const char *s1, const char *s2);
-// Get gregorian date from unix time.
+/*
+ * Function: unix_to_dtf
+ * Get gregorian date from unix time.
+ *
+ * Parameters:
+ *   t  - Unix time.
+ *   iy - Output year.
+ *   im - Output month (1 - 12).
+ *   id - Output day (1 - 31).
+ *   h  - Output hour.
+ *   m  - Output minute.
+ *   s  - Output seconds.
+ */
 int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s);
+
+/*
+ * Function: utf_16_to_8
+ * Convert a string encoded in utf_16 to utf_8.
+ *
+ * Parameters:
+ *   in16   - Input string in utf 16 encoding.
+ *   out8   - Output buffer that receive the utf8 string.
+ *   size8  - Size of the output buffer.
+ */
 int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
 
+/*
+ * Function: str_equ
+ * Return whether two strings are equal.
+ */
 static inline bool str_equ(const char *s1, const char *s2) {
     return strcmp(s1, s2) == 0;
 }
+
+/*
+ * Function: str_endswith
+ * Return whether a string ends with an other one.
+ */
+bool str_endswith(const char *str, const char *end);
+
+/*
+ * Function: str_startswith
+ * Return whether a string starts with an other one.
+ */
+bool str_startswith(const char *s1, const char *s2);
 
 
 /*
