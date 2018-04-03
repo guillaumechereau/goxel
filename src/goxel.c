@@ -388,8 +388,8 @@ static void set_cursor_hint(cursor_t *curs)
     }
     if (curs->snaped == SNAP_MESH) snap_str = "mesh";
     if (curs->snaped == SNAP_PLANE) snap_str = "plane";
-    if (IS_IN(curs->snaped, SNAP_SELECTION_IN, SNAP_SELECTION_OUT))
-        snap_str = "selection";
+    if (    curs->snaped == SNAP_SELECTION_IN ||
+            curs->snaped == SNAP_SELECTION_OUT) snap_str = "selection";
 
     goxel_set_hint_text(goxel, "[%.0f %.0f %.0f] (%s)",
             curs->pos[0] - 0.5, curs->pos[1] - 0.5, curs->pos[2] - 0.5,

@@ -63,7 +63,10 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
         }
     }
 
-    if (IS_IN(gest->state, GESTURE_BEGIN, GESTURE_UPDATE, GESTURE_END)) {
+    if (    gest->state == GESTURE_BEGIN ||
+            gest->state == GESTURE_UPDATE ||
+            gest->state == GESTURE_END)
+    {
         r = gest->callback(gest, user);
         if (r == GESTURE_FAILED) {
             gest->state = GESTURE_FAILED;

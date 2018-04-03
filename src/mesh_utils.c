@@ -326,10 +326,13 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     mat4_iscale(mat, 1 / size[0], 1 / size[1], 1 / size[2]);
     mat4_invert(mat, mat);
     use_box = painter->box && !box_is_null(*painter->box);
-    // XXX: cleanup.
-    skip_src_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA);
-    skip_dst_empty = IS_IN(mode, MODE_SUB, MODE_SUB_CLAMP, MODE_MULT_ALPHA,
-                                 MODE_INTERSECT);
+    skip_src_empty = mode == MODE_SUB ||
+                     mode == MODE_SUB_CLAMP ||
+                     mode == MODE_MULT_ALPHA;
+    skip_dst_empty = mode == MODE_SUB ||
+                     mode == MODE_SUB_CLAMP ||
+                     mode == MODE_MULT_ALPHA ||
+                     mode == MODE_INTERSECT;
     if (mode != MODE_INTERSECT) {
         iter = mesh_get_box_iterator(mesh, box,
                 skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
@@ -386,18 +389,21 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
 
     // XXX: cleanup this code!
 
-    if (IS_IN(mode, MODE_OVER, MODE_MAX, MODE_SUB, MODE_SUB_CLAMP)
-            && id2 == 0) {
+    if (    (mode == MODE_OVER ||
+             mode == MODE_MAX ||
+             mode == MODE_SUB ||
+             mode == MODE_SUB_CLAMP) && id2 == 0)
+    {
         return;
     }
 
-    if (IS_IN(mode, MODE_OVER, MODE_MAX) && id1 == 0 && !color) {
+    if ((mode == MODE_OVER || mode == MODE_MAX) && id1 == 0 && !color) {
         mesh_copy_block(other, pos, mesh, pos);
         return;
     }
 
-    if (IS_IN(mode, MODE_MULT_ALPHA) && id1 == 0) return;
-    if (IS_IN(mode, MODE_MULT_ALPHA) && id2 == 0) {
+    if ((mode == MODE_MULT_ALPHA) && id1 == 0) return;
+    if ((mode == MODE_MULT_ALPHA) && id2 == 0) {
         // XXX: could just delete the block.
     }
 

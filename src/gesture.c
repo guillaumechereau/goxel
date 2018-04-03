@@ -183,12 +183,15 @@ int gesture_update(int nb, gesture_t *gestures[],
         if ((gest->state == GESTURE_FAILED) && allup) {
             gest->state = GESTURE_POSSIBLE;
         }
-        if (IS_IN(gest->state, GESTURE_END, GESTURE_TRIGGERED))
+        if (gest->state == GESTURE_END || gest->state == GESTURE_TRIGGERED)
             gest->state = GESTURE_POSSIBLE;
 
         update(gest, inputs, mask);
-        if (IS_IN(gest->state, GESTURE_BEGIN, GESTURE_UPDATE, GESTURE_END,
-                               GESTURE_TRIGGERED)) {
+        if (    gest->state == GESTURE_BEGIN ||
+                gest->state == GESTURE_UPDATE ||
+                gest->state == GESTURE_END ||
+                gest->state == GESTURE_TRIGGERED)
+        {
             gest->callback(gest, user);
             triggered = gest;
             break;

@@ -209,21 +209,6 @@ enum {
 #define USER_GET(var, n) (((void**)var)[n])
 
 /*
- * Macro: IS_IN
- * IS_IN(x, ...): returns true if x is equal to any of the other arguments.
- *
- * Deprecated.
- */
-#define IS_IN(x, ...) ({ \
-        bool _ret = false; \
-        const typeof(x) _V[] = {__VA_ARGS__}; \
-        int _i; \
-        for (_i = 0; _i < (int)ARRAY_SIZE(_V); _i++) \
-            if (x == _V[_i]) _ret = true; \
-        _ret; \
-    })
-
-/*
  * Macro: vec3_set
  * Set a 3 sized array values.
  */
