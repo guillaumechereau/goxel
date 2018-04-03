@@ -20,9 +20,6 @@
 #include "goxel.h"
 #include <stdarg.h>
 
-// Global list of all the textures.
-static texture_t *g_textures = NULL;
-
 // Return the next power of 2 larger or equal to x.
 static int next_pow2(int x)
 {
@@ -107,7 +104,6 @@ texture_t *texture_new_image(const char *path, int flags)
     texture_set_data(tex, img, w, h, bpp);
     free(img);
     tex->ref = 1;
-    LL_APPEND(g_textures, tex);
     return tex;
 }
 
@@ -125,7 +121,6 @@ texture_t *texture_new_from_buf(const uint8_t *data,
     texture_create_empty(tex);
     texture_set_data(tex, data, w, h, bpp);
     tex->ref = 1;
-    LL_APPEND(g_textures, tex);
     return tex;
 }
 
@@ -141,7 +136,6 @@ texture_t *texture_new_surface(int w, int h, int flags)
     tex->format = (flags & TF_RGB) ? GL_RGB : GL_RGBA;
     texture_create_empty(tex);
     tex->ref = 1;
-    LL_APPEND(g_textures, tex);
     return tex;
 }
 
@@ -158,7 +152,6 @@ texture_t *texture_new_buffer(int w, int h, int flags)
     gl_gen_fbo(tex->tex_w, tex->tex_h, tex->format, 1,
                &tex->framebuffer, &tex->tex);
     tex->ref = 1;
-    LL_APPEND(g_textures, tex);
     return tex;
 }
 
@@ -179,7 +172,6 @@ void texture_delete(texture_t *tex)
     }
     if (tex->tex)
         GL(glDeleteTextures(1, &tex->tex));
-    LL_DELETE(g_textures, tex);
     free(tex);
 }
 

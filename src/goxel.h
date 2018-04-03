@@ -607,7 +607,6 @@ enum {
 // Reresent a 2d texture.
 typedef struct texture texture_t;
 struct texture {
-    texture_t   *next;      // All the textures are in a global list.
     int         ref;        // For reference copy.
     char        *path;      // Only for image textures.
 
