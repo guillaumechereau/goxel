@@ -739,7 +739,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 
     render_mesh(&rend, mesh, 0);
     render_submit(&rend, rect, clear_color);
-    tmp_buf = calloc(w * h, bpp);
+    tmp_buf = calloc(w * h * 4, bpp);
     texture_get_data(fbo, w * 2, h * 2, bpp, tmp_buf);
     img_downsample(tmp_buf, w * 2, h * 2, bpp, buf);
     free(tmp_buf);
