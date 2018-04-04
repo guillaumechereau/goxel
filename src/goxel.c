@@ -419,7 +419,7 @@ static int on_drag(const gesture_t *gest, void *user)
 static int on_pan(const gesture_t *gest, void *user)
 {
     if (gest->state == GESTURE_BEGIN) {
-        quat_copy(goxel->camera.ofs, goxel->move_origin.camera_ofs);
+        vec3_copy(goxel->camera.ofs, goxel->move_origin.camera_ofs);
         vec2_copy(gest->pos, goxel->move_origin.pos);
     }
     float wpos[3] = {gest->pos[0], gest->pos[1], 0};
