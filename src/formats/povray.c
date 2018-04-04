@@ -40,7 +40,7 @@ static void export_as_pov(const char *path, int w, int h)
                     "povray\0*.pov\0", NULL, "untitled.pov");
     if (!path) return;
 
-    template = assets_get("asset://data/povray_template.pov", NULL);
+    template = assets_get("asset://data/other/povray_template.pov", NULL);
     assert(template);
     camera.aspect = (float)w / h;
     camera_update(&camera);

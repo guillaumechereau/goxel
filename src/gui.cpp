@@ -495,7 +495,7 @@ static void gui_init(const inputs_t *inputs)
     gui->gestures.hover.type = GESTURE_HOVER;
     gui->gestures.hover.callback = on_gesture;
 
-    g_tex_icons = texture_new_image("asset://data/icons.png", 0);
+    g_tex_icons = texture_new_image("asset://data/images/icons.png", 0);
     GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
 }
 

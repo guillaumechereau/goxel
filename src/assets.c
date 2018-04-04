@@ -20,8 +20,8 @@
 
 typedef struct {
     const char      *path;
-    const uint8_t   *data;
     int             size;
+    const void      *data __attribute__((aligned(4)));
 } asset_t;
 
 static asset_t ASSETS[]; // Defined in assets.inl
@@ -51,5 +51,14 @@ int assets_list(const char *url, void *user,
     return j;
 }
 
-
-#include "assets.inl"
+static asset_t ASSETS[] = {
+#include "assets/fonts.inl"
+#include "assets/icons.inl"
+#include "assets/images.inl"
+#include "assets/other.inl"
+#include "assets/palettes.inl"
+#include "assets/progs.inl"
+#include "assets/sounds.inl"
+#include "assets/themes.inl"
+{}, // NULL asset at the end of the list.
+};

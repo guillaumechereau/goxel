@@ -62,7 +62,7 @@ for src in SRC:
 
 white_img = PIL.Image.new('L', (512, 512), "white")
 ret_img = PIL.Image.merge('LA', (white_img, ret_img))
-ret_img.save('data/icons.png')
+ret_img.save('data/images/icons.png')
 
 # Also create the application icons (in data/icons)
 if not os.path.exists('data/icons'): os.makedirs('data/icons')
