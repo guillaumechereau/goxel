@@ -146,7 +146,6 @@
 		F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160061E962F4600C6EF33 /* marchingcube.c */; };
 		F0A160091E962F4600C6EF33 /* mustache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160071E962F4600C6EF33 /* mustache.c */; };
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
-		F0AE90F81C8EE01300C29080 /* assets.inl in Resources */ = {isa = PBXBuildFile; fileRef = F0AE90F61C8EE01300C29080 /* assets.inl */; };
 		F0C4F1421F308976002E73C5 /* gui_settings.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C4F1411F308976002E73C5 /* gui_settings.c */; };
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
 		F0D463BD1E48759A004F1A37 /* cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0D463BC1E48759A004F1A37 /* cache.c */; };
@@ -463,7 +462,6 @@
 		F0A160061E962F4600C6EF33 /* marchingcube.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = marchingcube.c; sourceTree = "<group>"; };
 		F0A160071E962F4600C6EF33 /* mustache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mustache.c; sourceTree = "<group>"; };
 		F0AE90F51C8EE01200C29080 /* assets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = assets.c; sourceTree = "<group>"; };
-		F0AE90F61C8EE01300C29080 /* assets.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = assets.inl; sourceTree = "<group>"; };
 		F0C4F1411F308976002E73C5 /* gui_settings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gui_settings.c; sourceTree = "<group>"; };
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
 		F0D463BC1E48759A004F1A37 /* cache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cache.c; sourceTree = "<group>"; };
@@ -904,7 +902,6 @@
 				F06C68391D2EAECC00887FCE /* camera.c */,
 				F06C683A1D2EAECC00887FCE /* quantization.c */,
 				F0AE90F51C8EE01200C29080 /* assets.c */,
-				F0AE90F61C8EE01300C29080 /* assets.inl */,
 				F0EEB7E51C8EC472004AB676 /* procedural.inl */,
 				F0EEB7E31C8EC27C004AB676 /* action.c */,
 				F0EEB7D91C8EC25D004AB676 /* procedural.c */,
@@ -1076,7 +1073,6 @@
 			files = (
 				F0EEB7E61C8EC472004AB676 /* procedural.inl in Resources */,
 				F07DEA071BD0F31500BAA1AD /* imgui_user.inl in Resources */,
-				F0AE90F81C8EE01300C29080 /* assets.inl in Resources */,
 				F057B43A204EEDD000E2A63F /* CMakeLists.txt in Resources */,
 				F057B450204EEDD000E2A63F /* CMakeLists.txt in Resources */,
 				F0158ECC1F17289B008893E6 /* sound_openal.inl in Resources */,
