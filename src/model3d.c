@@ -18,9 +18,6 @@
 
 #include "goxel.h"
 
-static const char *VSHADER;
-static const char *FSHADER;
-
 typedef struct {
     GLint prog;
     GLint a_pos_l;
@@ -85,7 +82,9 @@ static texture_t *create_white_tex(void)
 
 void model3d_init(void)
 {
-    init_prog(&prog, VSHADER, FSHADER);
+    const char *shader;
+    shader = assets_get("asset://data/shaders/model3d.glsl", NULL);
+    init_prog(&prog, shader, shader);
     g_white_tex = create_white_tex();
 }
 
@@ -355,56 +354,3 @@ void model3d_render(model3d_t *model3d,
     GL(glDisableVertexAttribArray(prog.a_color_l));
     GL(glCullFace(GL_BACK));
 }
-
-static const char *VSHADER =
-    "                                                                   \n"
-    "attribute vec3  a_pos;                                             \n"
-    "attribute vec4  a_color;                                           \n"
-    "attribute vec3  a_normal;                                          \n"
-    "attribute vec2  a_uv;                                              \n"
-    "uniform   mat4  u_model;                                           \n"
-    "uniform   mat4  u_proj;                                            \n"
-    "uniform   vec4  u_color;                                           \n"
-    "uniform   vec2  u_uv_scale;                                        \n"
-    "uniform   vec3  u_l_dir;                                           \n"
-    "uniform   float u_l_diff;                                          \n"
-    "uniform   float u_l_emit;                                          \n"
-    "                                                                   \n"
-    "varying   vec4 v_color;                                            \n"
-    "varying   vec2 v_uv;                                               \n"
-    "                                                                   \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    vec4 col = u_color * a_color;                                  \n"
-    "    vec3 pos = (u_model * vec4(a_pos, 1.0)).xyz;                   \n"
-    "    gl_Position = u_proj * vec4(pos, 1.0);                         \n"
-    "    float diff = max(0.0, dot(u_l_dir, a_normal));                 \n"
-    "    col.rgb *= (u_l_emit + u_l_diff * diff);                       \n"
-    "    v_color = col;                                                 \n"
-    "    v_uv = a_uv * u_uv_scale;                                      \n"
-    "}                                                                  \n"
-;
-
-static const char *FSHADER =
-    "                                                                   \n"
-    "#ifdef GL_ES                                                       \n"
-    "precision highp float;                                             \n"
-    "#endif                                                             \n"
-    "                                                                   \n"
-    "uniform sampler2D u_tex;                                           \n"
-    "uniform float     u_strip;                                         \n"
-    "uniform float     u_time;                                          \n"
-    "                                                                   \n"
-    "varying lowp vec4  v_color;                                        \n"
-    "varying      vec2  v_uv;                                           \n"
-    "                                                                   \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    gl_FragColor = v_color * texture2D(u_tex, v_uv);               \n"
-    "    if (u_strip > 0.0) {                                           \n"
-    "       float p = gl_FragCoord.x + gl_FragCoord.y + u_time * 4.0;   \n"
-    "       if (mod(p, 8.0) < 4.0)                                      \n"
-    "           gl_FragColor.rgb *= 0.5;                                \n"
-    "    }                                                              \n"
-    "}                                                                  \n"
-;

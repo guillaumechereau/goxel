@@ -80,20 +80,9 @@ static model3d_t *g_grid_model;
 static model3d_t *g_rect_model;
 static model3d_t *g_wire_rect_model;
 
-// All the shaders code is at the bottom of the file.
-static const char *VSHADER;
-static const char *FSHADER;
-static const char *POS_DATA_VSHADER;
-static const char *POS_DATA_FSHADER;
-static const char *SHADOW_MAP_VSHADER;
-static const char *SHADOW_MAP_FSHADER;
-static const char *BACKGROUND_VSHADER;
-static const char *BACKGROUND_FSHADER;
-
 typedef struct {
     // Those values are used as a key to identify the shader.
-    const char *vshader;
-    const char *fshader;
+    const char *path;
     const char *include;
 
     GLint prog;
@@ -290,17 +279,17 @@ static void init_bump_texture(void)
     free(data);
 }
 
-static void init_prog(prog_t *prog, const char *vshader, const char *fshader,
-                      const char *include)
+static void init_prog(prog_t *prog, const char *path, const char *include)
 {
     char include_full[256];
+    const char *code;
     int attr;
     sprintf(include_full, "#define VOXEL_TEXTURE_SIZE %d.0\n%s\n",
             VOXEL_TEXTURE_SIZE, include ?: "");
-    prog->vshader = vshader;
-    prog->fshader = fshader;
+    code = assets_get(path, NULL);
+    prog->path = path;
     prog->include = include;
-    prog->prog = gl_create_prog(vshader, fshader, include_full);
+    prog->prog = gl_create_prog(code, code, include_full);
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glBindAttribLocation(prog->prog, attr, ATTRIBUTES[attr].name));
     }
@@ -331,20 +320,17 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader,
     GL(glUniform1i(prog->u_shadow_tex_l, 2));
 }
 
-static prog_t *get_prog(const char *vshader, const char *fshader,
-                        const char *include)
+static prog_t *get_prog(const char *path, const char *include)
 {
     int i;
     prog_t *p = NULL;
     for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
         p = &g_progs[i];
-        if (!p->vshader) break;
-        if (p->vshader == vshader && p->fshader == fshader &&
-            p->include == include)
-            return p;
+        if (!p->path) break;
+        if (p->path == path && p->include == include) return p;
     }
     assert(i < ARRAY_SIZE(g_progs));
-    init_prog(p, vshader, fshader, include);
+    init_prog(p, path, include);
     return p;
 }
 
@@ -603,13 +589,13 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         pos_scale = 1.0 / MC_VOXEL_SUB_POS;
 
     if (effects & EFFECT_RENDER_POS)
-        prog = get_prog(POS_DATA_VSHADER, POS_DATA_FSHADER, NULL);
+        prog = get_prog("asset://data/shaders/pos_data.glsl", NULL);
     else if (effects & EFFECT_SHADOW_MAP)
-        prog = get_prog(SHADOW_MAP_VSHADER, SHADOW_MAP_FSHADER, NULL);
+        prog = get_prog("asset://data/shaders/shadow_map.glsl", NULL);
     else {
         shadow = rend->settings.shadow;
-        prog = get_prog(VSHADER, FSHADER,
-                        shadow ? "#define SHADOW" : NULL);
+        prog = get_prog("asset://data/shaders/mesh.glsl",
+                         shadow ? "#define SHADOW" : NULL);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
@@ -955,7 +941,7 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     vertices[2] = (vertex_t){{+1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
     vertices[3] = (vertex_t){{-1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
 
-    prog = get_prog(BACKGROUND_VSHADER, BACKGROUND_FSHADER, NULL);
+    prog = get_prog("asset://data/shaders/background.glsl", NULL);
     GL(glUseProgram(prog->prog));
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
@@ -1064,236 +1050,3 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
     }
     return 5;
 }
-
-
-// #### All the shaders code #######
-
-/*
- * I followed those name conventions.  All the vectors are expressed in eye
- * coordinates.
- *
- *         reflection         light source
- *
- *               r              s
- *                 ^         ^
- *                  \   n   /
- *  eye              \  ^  /
- *     v  <....       \ | /
- *              -----__\|/
- *                  ----+----
- *
- *
- */
-
-static const char *VSHADER =
-    "                                                                   \n"
-    "attribute vec3 a_pos;                                              \n"
-    "attribute vec3 a_normal;                                           \n"
-    "attribute vec4 a_color;                                            \n"
-    "attribute vec2 a_bshadow_uv;                                       \n"
-    "attribute vec2 a_bump_uv;   // bump tex base coordinates [0,255]   \n"
-    "attribute vec2 a_uv;        // uv coordinates [0,1]                \n"
-    "uniform   mat4 u_model;                                            \n"
-    "uniform   mat4 u_view;                                             \n"
-    "uniform   mat4 u_proj;                                             \n"
-    "uniform   mat4 u_shadow_mvp;                                       \n"
-    "uniform   float u_pos_scale;                                       \n"
-    "                                                                   \n"
-    "varying   vec3 v_pos;                                              \n"
-    "varying   vec4 v_color;                                            \n"
-    "varying   vec2 v_bshadow_uv;                                       \n"
-    "varying   vec2 v_uv;                                               \n"
-    "varying   vec2 v_bump_uv;                                          \n"
-    "varying   vec3 v_normal;                                           \n"
-    "varying   vec4 v_shadow_coord;  // Used for shadow mapping.        \n"
-    "                                                                   \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    v_normal = a_normal;                                           \n"
-    "    v_color = a_color;                                             \n"
-    "    v_bshadow_uv = (a_bshadow_uv + 0.5) /                          \n"
-    "                          (16.0 * VOXEL_TEXTURE_SIZE);             \n"
-    "    v_pos = a_pos * u_pos_scale;                                   \n"
-    "    v_uv = a_uv;                                                   \n"
-    "    v_bump_uv = a_bump_uv;                                         \n"
-    "    gl_Position = u_proj * u_view * u_model * vec4(v_pos, 1.0);    \n"
-    "    v_shadow_coord = (u_shadow_mvp * u_model * vec4(v_pos, 1.0));  \n"
-    "}                                                                  \n"
-;
-
-static const char *FSHADER =
-    "                                                                   \n"
-    "#ifdef GL_ES                                                       \n"
-    "precision highp float;                                             \n"
-    "#endif                                                             \n"
-    "                                                                   \n"
-    "uniform   mat4 u_model;                                            \n"
-    "uniform   mat4 u_view;                                             \n"
-    "uniform   mat4 u_proj;                                             \n"
-    "                                                                   \n"
-    "// Light parameters                                                \n"
-    "uniform   vec3 u_l_dir;                                            \n"
-    "uniform  float u_l_int;                                            \n"
-    "// Material parameters                                             \n"
-    "uniform  float u_m_amb; // Ambient light coef.                     \n"
-    "uniform  float u_m_dif; // Diffuse light coef.                     \n"
-    "uniform  float u_m_spe; // Specular light coef.                    \n"
-    "uniform  float u_m_shi; // Specular light shininess.               \n"
-    "uniform  float u_m_smo; // Smoothness.                             \n"
-    "                                                                   \n"
-    "uniform sampler2D u_bshadow_tex;                                   \n"
-    "uniform sampler2D u_bump_tex;                                      \n"
-    "uniform float     u_bshadow;                                       \n"
-    "uniform sampler2D u_shadow_tex;                                    \n"
-    "uniform float     u_shadow_k;                                      \n"
-    "                                                                   \n"
-    "varying lowp vec3 v_pos;                                           \n"
-    "varying lowp vec4 v_color;                                         \n"
-    "varying lowp vec2 v_uv;                                            \n"
-    "varying lowp vec2 v_bshadow_uv;                                    \n"
-    "varying lowp vec2 v_bump_uv;                                       \n"
-    "varying lowp vec3 v_normal;                                        \n"
-    "varying vec4 v_shadow_coord;                                       \n"
-    "                                                                   \n"
-    "vec2 uv, bump_uv;                                                  \n"
-    "vec3 n, s, r, v, bump;                                             \n"
-    "float s_dot_n;                                                     \n"
-    "float l_amb, l_dif, l_spe;                                         \n"
-    "float bshadow;                                                     \n"
-    "float visibility;                                                  \n"
-    "vec2 PS[4]; // Poisson offsets used for the shadow map.            \n"
-    "int i;                                                             \n"
-    "                                                                   \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    // clamp uv so to prevent overflow with multismapling.         \n"
-    "    uv = clamp(v_uv, 0.0, 1.0);                                    \n"
-    "    s = u_l_dir;                                                   \n"
-    "    n = normalize((u_view * u_model * vec4(v_normal, 0.0)).xyz);   \n"
-    "    bump_uv = (v_bump_uv + 0.5 + uv * 15.0) / 256.0;               \n"
-    "    bump = texture2D(u_bump_tex, bump_uv).xyz - 0.5;               \n"
-    "    bump = normalize((u_view * u_model * vec4(bump, 0.0)).xyz);    \n"
-    "    n = mix(bump, n, u_m_smo);                                     \n"
-    "    s_dot_n = dot(s, n);                                           \n"
-    "    l_dif = u_m_dif * max(0.0, s_dot_n);                           \n"
-    "    l_amb = u_m_amb;                                               \n"
-    "                                                                   \n"
-    "    // Specular light.                                             \n"
-    "    v = normalize(-(u_view * u_model * vec4(v_pos, 1.0)).xyz);     \n"
-    "    r = reflect(-s, n);                                            \n"
-    "    l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);           \n"
-    "    l_spe = s_dot_n > 0.0 ? l_spe : 0.0;                           \n"
-    "                                                                   \n"
-    "    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;            \n"
-    "    bshadow = sqrt(bshadow);                                       \n"
-    "    bshadow = mix(1.0, bshadow, u_bshadow);                        \n"
-    "    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);                       \n"
-    "    gl_FragColor.rgb += (l_dif + l_amb) * u_l_int * v_color.rgb;   \n"
-    "    gl_FragColor.rgb += l_spe * u_l_int * vec3(1.0);               \n"
-    "    gl_FragColor.rgb *= bshadow;                                   \n"
-    "                                                                   \n"
-    "    // Shadow map.                                                 \n"
-    "    #ifdef SHADOW                                                  \n"
-    "    visibility = 1.0;                                              \n"
-    "    vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;         \n"
-    "    float bias = 0.005 * tan(acos(clamp(s_dot_n, 0.0, 1.0)));      \n"
-    "    bias = clamp(bias, 0.0, 0.015);                                \n"
-    "    shadow_coord.z -= bias;                                        \n"
-    "    PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;               \n"
-    "    PS[1] = vec2(+0.94558609, -0.76890725) / 1024.0;               \n"
-    "    PS[2] = vec2(-0.09418410, -0.92938870) / 1024.0;               \n"
-    "    PS[3] = vec2(+0.34495938, +0.29387760) / 1024.0;               \n"
-    "    for (i = 0; i < 4; i++)                                        \n"
-    "        if (texture2D(u_shadow_tex, v_shadow_coord.xy +            \n"
-    "           PS[i]).z < shadow_coord.z) visibility -= 0.2;           \n"
-    "    if (s_dot_n <= 0.0) visibility = 0.5;                          \n"
-    "    gl_FragColor.rgb *= mix(1.0, visibility, u_shadow_k);          \n"
-    "    #endif                                                         \n"
-    "                                                                   \n"
-    "}                                                                  \n"
-;
-
-static const char *POS_DATA_VSHADER =
-    "                                                                   \n"
-    "attribute vec3 a_pos;                                              \n"
-    "attribute vec2 a_pos_data;                                         \n"
-    "uniform   mat4 u_model;                                            \n"
-    "uniform   mat4 u_view;                                             \n"
-    "uniform   mat4 u_proj;                                             \n"
-    "varying   vec2 v_pos_data;                                         \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    vec3 pos = a_pos;                                              \n"
-    "    gl_Position = u_proj * u_view * u_model * vec4(pos, 1.0);      \n"
-    "    v_pos_data = a_pos_data;                                       \n"
-    "}                                                                  \n"
-;
-
-static const char *POS_DATA_FSHADER =
-    "                                                                 \n"
-    "#ifdef GL_ES                                                     \n"
-    "precision highp float;                                           \n"
-    "#endif                                                           \n"
-    "                                                                 \n"
-    "varying lowp vec2 v_pos_data;                                    \n"
-    "uniform lowp vec2 u_block_id;                                    \n"
-    "                                                                 \n"
-    "void main()                                                      \n"
-    "{                                                                \n"
-    "    gl_FragColor.rg = u_block_id;                                \n"
-    "    gl_FragColor.ba = v_pos_data;                                \n"
-    "}                                                                \n"
-;
-
-static const char *SHADOW_MAP_VSHADER =
-    "                                                                   \n"
-    "attribute vec3 a_pos;                                              \n"
-    "uniform   mat4 u_model;                                            \n"
-    "uniform   mat4 u_view;                                             \n"
-    "uniform   mat4 u_proj;                                             \n"
-    "uniform   float u_pos_scale;                                       \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    gl_Position = u_proj * u_view * u_model *                      \n"
-    "                   vec4(a_pos * u_pos_scale, 1.0);                 \n"
-    "}                                                                  \n"
-;
-
-static const char *SHADOW_MAP_FSHADER =
-    "                                                                   \n"
-    "#ifdef GL_ES                                                       \n"
-    "precision highp float;                                             \n"
-    "#endif                                                             \n"
-    "                                                                   \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "}                                                                  \n"
-;
-
-static const char *BACKGROUND_VSHADER =
-    "                                                                   \n"
-    "attribute vec3 a_pos;                                              \n"
-    "attribute vec4 a_color;                                            \n"
-    "                                                                   \n"
-    "varying vec4 v_color;                                              \n"
-    "                                                                   \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    gl_Position = vec4(a_pos, 1.0);                                \n"
-    "    v_color = a_color;                                             \n"
-    "}                                                                  \n"
-;
-
-static const char *BACKGROUND_FSHADER =
-    "                                                                   \n"
-    "#ifdef GL_ES                                                       \n"
-    "precision mediump float;                                           \n"
-    "#endif                                                             \n"
-    "                                                                   \n"
-    "varying vec4 v_color;                                              \n"
-    "                                                                   \n"
-    "void main()                                                        \n"
-    "{                                                                  \n"
-    "    gl_FragColor = v_color;                                        \n"
-    "}                                                                  \n"
-;

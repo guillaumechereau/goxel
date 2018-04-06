@@ -49,7 +49,9 @@ int gl_check_errors(const char *file, int line)
     }
 }
 
-static int compile_shader(int shader, const char *code, const char *include)
+static int compile_shader(int shader, const char *code,
+                          const char *include1,
+                          const char *include2)
 {
     int status, len;
     char *log;
@@ -58,10 +60,12 @@ static int compile_shader(int shader, const char *code, const char *include)
 #else
     const char *pre = "";
 #endif
-    const char *sources[] = {pre, include, code};
-    glShaderSource(shader, 3, (const char**)&sources, NULL);
+    const char *sources[] = {pre, include1, include2, code};
+    assert(code);
+    glShaderSource(shader, 4, (const char**)&sources, NULL);
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+
     if (status != GL_TRUE) {
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
         log = malloc(len + 1);
@@ -80,11 +84,13 @@ int gl_create_prog(const char *vertex_shader_code,
     int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     include = include ? : "";
     assert(vertex_shader);
-    if (compile_shader(vertex_shader, vertex_shader_code, include))
+    if (compile_shader(vertex_shader, vertex_shader_code,
+                       "#define VERTEX_SHADER\n", include))
         return 0;
     int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
     assert(fragment_shader);
-    if (compile_shader(fragment_shader, fragment_shader_code, include))
+    if (compile_shader(fragment_shader, fragment_shader_code,
+                       "#define FRAGMENT_SHADER\n", include))
         return 0;
     int prog = glCreateProgram();
     glAttachShader(prog, vertex_shader);

@@ -58,6 +58,7 @@ static asset_t ASSETS[] = {
 #include "assets/other.inl"
 #include "assets/palettes.inl"
 #include "assets/progs.inl"
+#include "assets/shaders.inl"
 #include "assets/sounds.inl"
 #include "assets/themes.inl"
 {}, // NULL asset at the end of the list.

@@ -36,9 +36,10 @@ TYPES = {
     "ttf":   { "text": False },
     "wav":   { "text": False },
     "ini":   { "text": True },
+    "glsl":  { "text": True },
 }
 GROUPS = ['fonts', 'icons', 'images', 'other', 'palettes', 'progs',
-          'sounds', 'themes']
+          'shaders', 'sounds', 'themes']
 TEMPLATE = '{{.path = "{path}", .size = {size}, .data =\n{data}\n}},'
 File = namedtuple('File', 'path name data size')
 
