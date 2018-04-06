@@ -1,4 +1,5 @@
 uniform   mat4  u_model;
+uniform   mat4  u_view;
 uniform   mat4  u_proj;
 uniform   vec4  u_color;
 uniform   vec2  u_uv_scale;
@@ -24,7 +25,7 @@ attribute vec2  a_uv;
 void main()
 {
     vec4 col = u_color * a_color;
-    vec3 pos = (u_model * vec4(a_pos, 1.0)).xyz;
+    vec3 pos = (u_view * u_model * vec4(a_pos, 1.0)).xyz;
     gl_Position = u_proj * vec4(pos, 1.0);
     float diff = max(0.0, dot(u_l_dir, a_normal));
     col.rgb *= (u_l_emit + u_l_diff * diff);

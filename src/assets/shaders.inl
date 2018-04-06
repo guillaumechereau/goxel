@@ -187,8 +187,9 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/model3d.glsl", .size = 1273, .data =
+{.path = "data/shaders/model3d.glsl", .size = 1306, .data =
     "uniform   mat4  u_model;\n"
+    "uniform   mat4  u_view;\n"
     "uniform   mat4  u_proj;\n"
     "uniform   vec4  u_color;\n"
     "uniform   vec2  u_uv_scale;\n"
@@ -214,7 +215,7 @@
     "void main()\n"
     "{\n"
     "    vec4 col = u_color * a_color;\n"
-    "    vec3 pos = (u_model * vec4(a_pos, 1.0)).xyz;\n"
+    "    vec3 pos = (u_view * u_model * vec4(a_pos, 1.0)).xyz;\n"
     "    gl_Position = u_proj * vec4(pos, 1.0);\n"
     "    float diff = max(0.0, dot(u_l_dir, a_normal));\n"
     "    col.rgb *= (u_l_emit + u_l_diff * diff);\n"

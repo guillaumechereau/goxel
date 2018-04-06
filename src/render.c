@@ -701,18 +701,13 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 
 static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
-    float view[4][4];
     float proj[4][4];
     float (*proj_mat)[4][4];
     float light[3];
 
-    mat4_copy(rend->view_mat, view);
-    mat4_imul(view, item->mat);
-
     if (item->proj_screen) {
         mat4_ortho(proj, -0.5, +0.5, -0.5, +0.5, -10, +10);
         proj_mat = &proj;
-        mat4_copy(item->mat, view);
     } else {
         proj_mat = &rend->proj_mat;
     }
@@ -720,22 +715,26 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     if (!(item->effects & EFFECT_WIREFRAME))
         get_light_dir(rend, false, light);
 
-    model3d_render(item->model3d, view, *proj_mat, item->color,
+    model3d_render(item->model3d,
+                   item->mat,
+                   item->proj_screen ? mat4_identity : rend->view_mat,
+                   *proj_mat,
+                   item->color,
                    item->tex, light, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
 {
     int x, y, n;
-    float view2[4][4], view3[4][4];
+    float model_mat[4][4];
 
-    mat4_copy(rend->view_mat, view2);
-    mat4_imul(view2, item->mat);
     n = 3;
     for (y = -n; y < n; y++)
     for (x = -n; x < n; x++) {
-        mat4_translate(view2, x + 0.5, y + 0.5, 0, view3);
-        model3d_render(item->model3d, view3, rend->proj_mat,
+        mat4_copy(item->mat, model_mat);
+        mat4_translate(model_mat, x + 0.5, y + 0.5, 0, model_mat);
+        model3d_render(item->model3d,
+                       model_mat, rend->view_mat, rend->proj_mat,
                        item->color, NULL, NULL, 0);
     }
 }

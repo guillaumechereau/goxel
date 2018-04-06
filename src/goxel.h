@@ -1098,7 +1098,9 @@ model3d_t *model3d_wire_rect(void);
  * Render a 3d model using OpenGL calls.
  */
 void model3d_render(model3d_t *model3d,
-                    const float model[4][4], const float proj[4][4],
+                    const float model[4][4],
+                    const float view[4][4],
+                    const float proj[4][4],
                     const uint8_t color[4],
                     const texture_t *tex,
                     const float light[3],

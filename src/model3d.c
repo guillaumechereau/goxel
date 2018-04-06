@@ -26,6 +26,7 @@ typedef struct {
     GLint a_uv_l;
     GLint u_color_l;
     GLint u_model_l;
+    GLint u_view_l;
     GLint u_proj_l;
     GLint u_tex_l;
     GLint u_uv_scale_l;
@@ -51,6 +52,7 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     ATTRIB(a_uv);
     UNIFORM(u_color);
     UNIFORM(u_model);
+    UNIFORM(u_view);
     UNIFORM(u_proj);
     UNIFORM(u_tex);
     UNIFORM(u_uv_scale);
@@ -277,7 +279,9 @@ static void copy_color(const uint8_t in[4], uint8_t out[4])
 }
 
 void model3d_render(model3d_t *model3d,
-                    const float model[4][4], const float proj[4][4],
+                    const float model[4][4],
+                    const float view[4][4],
+                    const float proj[4][4],
                     const uint8_t color[4],
                     const texture_t *tex,
                     const float light[3],
@@ -290,6 +294,7 @@ void model3d_render(model3d_t *model3d,
     copy_color(color, c);
     GL(glUseProgram(prog.prog));
     GL(glUniformMatrix4fv(prog.u_model_l, 1, 0, (float*)model));
+    GL(glUniformMatrix4fv(prog.u_view_l, 1, 0, (float*)view));
     GL(glUniformMatrix4fv(prog.u_proj_l, 1, 0, (float*)proj));
     GL(glEnableVertexAttribArray(prog.a_pos_l));
     GL(glEnable(GL_BLEND));
