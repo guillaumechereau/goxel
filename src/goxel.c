@@ -668,8 +668,10 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
         mesh_get_box(goxel->layers_mesh, false, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
     }
-    if (!goxel->plane_hidden)
-        render_plane(rend, goxel->plane, goxel->grid_color);
+    if (!goxel->plane_hidden) {
+        render_plane(rend, goxel->plane, goxel->grid_color,
+                     goxel->image->box);
+    }
     if (!box_is_null(goxel->image->box))
         render_box(rend, goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK);

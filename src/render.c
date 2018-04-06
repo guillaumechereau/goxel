@@ -56,6 +56,7 @@ struct render_item_t
         float           mat[4][4];
     };
     uint8_t         color[4];
+    float           clip_box[4][4];
     bool            proj_screen; // Render with a 2d proj.
     model3d_t       *model3d;
     texture_t       *tex;
@@ -720,7 +721,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
                    item->proj_screen ? mat4_identity : rend->view_mat,
                    *proj_mat,
                    item->color,
-                   item->tex, light, item->effects);
+                   item->tex, light, item->clip_box, item->effects);
 }
 
 static void render_grid_item(renderer_t *rend, const render_item_t *item)
@@ -735,12 +736,12 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
         mat4_translate(model_mat, x + 0.5, y + 0.5, 0, model_mat);
         model3d_render(item->model3d,
                        model_mat, rend->view_mat, rend->proj_mat,
-                       item->color, NULL, NULL, 0);
+                       item->color, NULL, NULL, item->clip_box, 0);
     }
 }
 
 void render_plane(renderer_t *rend, const float plane[4][4],
-                  const uint8_t color[4])
+                  const uint8_t color[4], const float clip_box[4][4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
@@ -748,6 +749,7 @@ void render_plane(renderer_t *rend, const float plane[4][4],
     mat4_iscale(item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
     copy_color(color, item->color);
+    mat4_copy(clip_box, item->clip_box);
     DL_APPEND(rend->items, item);
 }
 

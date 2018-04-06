@@ -28,6 +28,7 @@ typedef struct {
     GLint u_model_l;
     GLint u_view_l;
     GLint u_proj_l;
+    GLint u_clip_l;
     GLint u_tex_l;
     GLint u_uv_scale_l;
     GLint u_strip_l;
@@ -54,6 +55,7 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_model);
     UNIFORM(u_view);
     UNIFORM(u_proj);
+    UNIFORM(u_clip);
     UNIFORM(u_tex);
     UNIFORM(u_uv_scale);
     UNIFORM(u_strip);
@@ -285,11 +287,13 @@ void model3d_render(model3d_t *model3d,
                     const uint8_t color[4],
                     const texture_t *tex,
                     const float light[3],
+                    const float clip_box[4][4],
                     int   effects)
 {
     uint8_t c[4];
     float cf[4];
     float light_dir[3];
+    float clip[4][4] = {};
 
     copy_color(color, c);
     GL(glUseProgram(prog.prog));
@@ -342,6 +346,9 @@ void model3d_render(model3d_t *model3d,
 
     GL(glUniform1f(prog.u_l_emit_l, 1.0f));
     GL(glUniform1f(prog.u_l_diff_l, 0.0f));
+
+    if (clip_box && !box_is_null(clip_box)) mat4_invert(clip_box, clip);
+    GL(glUniformMatrix4fv(prog.u_clip_l, 1, 0, (float*)clip));
 
     if (model3d->solid) {
         if (light && (!(effects & EFFECT_NO_SHADING))) {
