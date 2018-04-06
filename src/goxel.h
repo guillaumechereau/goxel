@@ -1319,6 +1319,12 @@ void camera_set_target(camera_t *camera, const float pos[3]);
 void camera_get_ray(const camera_t *camera, const float win[2],
                     const float viewport[4], float o[3], float d[3]);
 
+/*
+ * Function: camera_fit_box
+ * Move a camera so that a given box is entirely visible.
+ */
+void camera_fit_box(camera_t *camera, const float box[4][4]);
+
 typedef struct history history_t;
 
 typedef struct layer layer_t;

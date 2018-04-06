@@ -131,3 +131,17 @@ void camera_set_target(camera_t *cam, const float pos[3])
     vec3_iaddk(cam->ofs, u, -d);
     cam->dist -= d;
 }
+
+/*
+ * Function: camera_fit_box
+ * Move a camera so that a given box is entirely visible.
+ */
+void camera_fit_box(camera_t *cam, const float box[4][4])
+{
+    float size[3];
+    box_get_size(box, size);
+    mat4_mul_vec3(box, VEC(0, 0, 0), cam->ofs);
+    vec3_imul(cam->ofs, -1);
+    // XXX: not the proper way to compute the distance.
+    cam->dist = max3(size[0], size[1], size[2]) * 8;
+}

@@ -269,6 +269,10 @@ void goxel_init(goxel_t *gox)
     quat_irotate(goxel->camera.rot, -M_PI / 4, 0, 0, 1);
 
     goxel->image = image_new();
+    camera_fit_box(&goxel->camera, goxel->image->box);
+    // Put plane horizontal at the center of the image box.
+    plane_from_vectors(goxel->plane, goxel->image->box[3],
+                       VEC(1, 0, 0), VEC(0, 1, 0));
 
     goxel->layers_mesh = mesh_new();
     goxel->render_mesh = mesh_new();
@@ -305,7 +309,6 @@ void goxel_init(goxel_t *gox)
     render_get_default_settings(0, NULL, &goxel->rend.settings);
 
     model3d_init();
-    plane_from_vectors(goxel->plane, vec3_zero, VEC(1, 0, 0), VEC(0, 1, 0));
     goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
 
     goxel->gestures.drag = (gesture_t) {
