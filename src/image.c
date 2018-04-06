@@ -138,6 +138,7 @@ image_t *image_new(void)
 {
     layer_t *layer;
     image_t *img = calloc(1, sizeof(*img));
+    bbox_from_extents(img->box, vec3_zero, 16, 16, 16);
     img->export_width = 1024;
     img->export_height = 1024;
     layer = layer_new(img, "background");
