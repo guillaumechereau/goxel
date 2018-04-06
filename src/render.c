@@ -740,8 +740,8 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
     }
 }
 
-void render_plane(renderer_t *rend, const float plane[4][4],
-                  const uint8_t color[4], const float clip_box[4][4])
+void render_grid(renderer_t *rend, const float plane[4][4],
+                 const uint8_t color[4], const float clip_box[4][4])
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;

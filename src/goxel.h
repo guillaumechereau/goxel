@@ -974,8 +974,8 @@ struct renderer
 void render_init(void);
 void render_deinit(void);
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
-void render_plane(renderer_t *rend, const float plane[4][4],
-                  const uint8_t color[4], const float clip_box[4][4]);
+void render_grid(renderer_t *rend, const float plane[4][4],
+                 const uint8_t color[4], const float clip_box[4][4]);
 void render_line(renderer_t *rend, const float a[3], const float b[3],
                  const uint8_t color[4]);
 void render_box(renderer_t *rend, const float box[4][4],
