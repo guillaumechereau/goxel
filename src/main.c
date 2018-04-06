@@ -177,13 +177,14 @@ static void load_icon(GLFWimage *image, const char *path)
 
 static void set_window_icon(GLFWwindow *window)
 {
-    GLFWimage icons[3];
+    GLFWimage icons[4];
     int i;
     load_icon(&icons[0], "asset://data/icons/icon16.png");
     load_icon(&icons[1], "asset://data/icons/icon32.png");
     load_icon(&icons[2], "asset://data/icons/icon48.png");
-    glfwSetWindowIcon(window, 3, icons);
-    for (i = 0; i < 3; i++) free(icons[i].pixels);
+    load_icon(&icons[3], "asset://data/icons/icon128.png");
+    glfwSetWindowIcon(window, 4, icons);
+    for (i = 0; i < 4; i++) free(icons[i].pixels);
 }
 
 #else

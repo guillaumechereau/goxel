@@ -68,6 +68,6 @@ ret_img.save('data/images/icons.png')
 if not os.path.exists('data/icons'): os.makedirs('data/icons')
 base = PIL.Image.open('icon.png').convert('RGBA')
 
-for size in [16, 32, 48]:
+for size in [16, 32, 48, 128]:
     img = base.resize((size, size), PIL.Image.BILINEAR)
     img.save('data/icons/icon%d.png' % size)
