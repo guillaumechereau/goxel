@@ -703,23 +703,24 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 static void render_model_item(renderer_t *rend, const render_item_t *item)
 {
     float proj[4][4];
-    float (*proj_mat)[4][4];
+    const float (*proj_mat)[4][4];
+    const float (*view_mat)[4][4];
     float light[3];
 
     if (item->proj_screen) {
         mat4_ortho(proj, -0.5, +0.5, -0.5, +0.5, -10, +10);
         proj_mat = &proj;
+        view_mat = &mat4_identity;
     } else {
         proj_mat = &rend->proj_mat;
+        view_mat = &rend->view_mat;
     }
 
     if (!(item->effects & EFFECT_WIREFRAME))
         get_light_dir(rend, false, light);
 
     model3d_render(item->model3d,
-                   item->mat,
-                   item->proj_screen ? mat4_identity : rend->view_mat,
-                   *proj_mat,
+                   item->mat, *view_mat, *proj_mat,
                    item->color,
                    item->tex, light, item->clip_box, item->effects);
 }
