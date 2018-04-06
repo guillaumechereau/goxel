@@ -74,10 +74,6 @@ void main()
 #ifdef FRAGMENT_SHADER
 
 /************************************************************************/
-#ifdef GL_ES
-precision highp float;
-#endif
-
 vec2 uv, bump_uv;
 vec3 n, s, r, v, bump;
 float s_dot_n;

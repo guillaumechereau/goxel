@@ -38,10 +38,6 @@ void main()
 #ifdef FRAGMENT_SHADER
 
 /************************************************************************/
-#ifdef GL_ES
-precision highp float;
-#endif
-
 void main()
 {
     gl_FragColor = v_color * texture2D(u_tex, v_uv);

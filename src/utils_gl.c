@@ -55,11 +55,15 @@ static int compile_shader(int shader, const char *code,
 {
     int status, len;
     char *log;
-#ifndef GLES2
-    const char *pre = "#define highp\n#define mediump\n#define lowp\n";
-#else
-    const char *pre = "";
-#endif
+    // Common header we add to all the shaders.
+    const char *pre =
+        "#ifdef GL_ES\n"
+        "    precision medium float\n"
+        "#else\n"
+        "    #define highp\n"
+        "    #define mediump\n"
+        "    #define lowp\n"
+        "#endif\n";
     const char *sources[] = {pre, include1, include2, code};
     assert(code);
     glShaderSource(shader, 4, (const char**)&sources, NULL);

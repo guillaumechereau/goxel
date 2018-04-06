@@ -18,10 +18,6 @@ void main()
 #ifdef FRAGMENT_SHADER
 
 /************************************************************************/
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 void main()
 {
     gl_FragColor = v_color;
