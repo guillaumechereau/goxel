@@ -352,6 +352,8 @@ void render_init()
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, BATCH_QUAD_COUNT * 6 * 2,
                     index_array, GL_STATIC_DRAW));
+    GL(glEnable(GL_LINE_SMOOTH));
+
     free(index_array);
     init_border_texture();
     init_bump_texture();
@@ -848,6 +850,7 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
 
 static int item_sort_value(const render_item_t *a)
 {
+    if (a->effects & EFFECT_WIREFRAME) return 20;
     if (a->proj_screen)     return 10;
     switch (a->type) {
         case ITEM_MESH:     return 0;
