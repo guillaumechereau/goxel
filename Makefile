@@ -1,3 +1,6 @@
+SHELL = bash
+.ONESHELL:
+
 all:
 	scons -j 8
 
@@ -30,22 +33,31 @@ doc:
 	mkdir -p doc ndconfig
 	naturaldocs -i /tmp/goxel_src -o html doc -p ndconfig
 
+# Targets to install/uninstall goxel and its data files on unix system.
 PREFIX ?= /usr/local
 
 .PHONY: install
 install:
 	install -Dm744 goxel $(DESTDIR)$(PREFIX)/bin/goxel
-	for size in 16 24 32 48 64 128 256; do \
-		install -Dm644 data/icons/icon$$size.png $(DESTDIR)$(PREFIX)/share/icons/hicolor/$${size}x$$size/apps/goxel.png; \
+	for size in 16 24 32 48 64 128 256; do
+	    install -Dm644 data/icons/icon$${size}.png \
+	        $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/icons/hicolor/ \
+	            $${size}x$${size}/apps/goxel.png)
 	done
-	install -Dm644 snap/gui/goxel.desktop $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
-	install -Dm644 snap/gui/io.github.guillaumechereau.Goxel.appdata.xml $(DESTDIR)$(PREFIX)/share/metainfo/io.github.guillaumechereau.Goxel.appdata.xml
-	
+	install -Dm644 snap/gui/goxel.desktop \
+	    $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
+	install -Dm644 \
+	    snap/gui/io.github.guillaumechereau.Goxel.appdata.xml \
+	    $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
+	        io.github.guillaumechereau.Goxel.appdata.xml)
+
 .PHONY: uninstall
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/goxel
 	for size in 16 24 32 48 64 128 256; do \
-		rm -f $(DESTDIR)$(PREFIX)/share/icons/hicolor/$${size}x$$size/apps/goxel.png \
+	    rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/icons/hicolor/ \
+	        $${size}x$${size}/apps/goxel.png)
 	done
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
-	rm -f $(DESTDIR)$(PREFIX)/share/metainfo/io.github.guillaumechereau.Goxel.appdata.xml
+	rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
+	         io.github.guillaumechereau.Goxel.appdata.xml)
