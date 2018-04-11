@@ -39,6 +39,9 @@ SRC = [
     'edit.svg',
     'link.svg',
     None,
+
+    'menu.svg',
+    None,
 ]
 
 ret_img = PIL.Image.new('L', (512, 512))

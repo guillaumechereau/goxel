@@ -727,6 +727,8 @@ enum {
     ICON_VISIBILITY_OFF = 30,
     ICON_EDIT = 31,
     ICON_LINK = 32,
+
+    ICON_MENU = 33,
 };
 
 
@@ -1680,6 +1682,7 @@ struct theme {
     struct {
         int  item_height;
         int  icons_height;
+        int  icons_button_size;
         int  item_padding_h;
         int  item_rounding;
         int  item_spacing_h;

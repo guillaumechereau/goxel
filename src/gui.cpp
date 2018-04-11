@@ -113,6 +113,7 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
 
+    bool    hidden;
     int     current_panel;
     view_t  view;
     int     min_panel_size;
@@ -720,6 +721,7 @@ static void layers_panel(goxel_t *goxel)
     gui_action_button("img_move_layer_up", NULL, 0, "");
     ImGui::SameLine();
     gui_action_button("img_move_layer_down", NULL, 0, "");
+    auto_adjust_panel_size();
 
     layer = goxel->image->active_layer;
     bounded = !box_is_null(layer->box);
@@ -1238,6 +1240,12 @@ static bool render_tab(const char *label, bool *v)
     return ret;
 }
 
+static void render_top_bar(void)
+{
+    if (gui_button("##menu", 0, ICON_MENU))
+        gui->hidden = !gui->hidden;
+}
+
 static void render_left_panel(void)
 {
     int i;
@@ -1364,11 +1372,14 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::Begin("Goxel", NULL, window_flags);
 
     render_menu();
+    render_top_bar();
 
     goxel->no_edit = false; // Set depending on what panel is selected.
     goxel->use_cycles = false;  // Also set depending on the panel.
-    render_left_panel();
-    ImGui::SameLine();
+    if (!gui->hidden) {
+        render_left_panel();
+        ImGui::SameLine();
+    }
 
     if (gui->popup.title) {
         ImGui::OpenPopup(gui->popup.title);
@@ -1787,15 +1798,26 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 button_size;
     const theme_t *theme = theme_get();
     ImVec2 center;
+    int w;
 
     button_size = ImVec2(size * GetContentRegionAvailWidth(),
                          theme->sizes.item_height);
     if (size == -1) button_size.x = GetContentRegionAvailWidth();
-    if (size == 0 && label == NULL) button_size.x = theme->sizes.item_height;
+    if (size == 0 && (label == NULL || label[0] == '#')) {
+        button_size.x = theme->sizes.icons_button_size;
+        button_size.y = theme->sizes.icons_button_size;
+    }
+    if (size == 0 && label && label[0] != '#') {
+        w = CalcTextSize(label, NULL, true).x +
+            theme->sizes.item_padding_h * 2;
+        if (w < theme->sizes.item_height)
+            button_size.x = theme->sizes.item_height;
+    }
     label = label ?: "";
     ret = Button(label, button_size);
     if (icon) {
-        center = (GetItemRectMin() + GetItemRectMax()) / 2;
+        center = GetItemRectMin() + ImVec2(GetItemRectSize().y / 2,
+                                           GetItemRectSize().y / 2);
         uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
