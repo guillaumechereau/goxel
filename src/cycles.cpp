@@ -16,6 +16,8 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef WITH_CYCLES
+
 #include "device/device.h"
 #include "render/background.h"
 #include "render/camera.h"
@@ -403,3 +405,15 @@ void cycles_release(void)
     delete g_session;
     g_session = NULL;
 }
+
+#else
+// Dummy implementations.
+extern "C" {
+#include "goxel.h"
+}
+void cycles_init(void) {}
+void cycles_release(void) {}
+void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
+                   float *progress) {}
+
+#endif
