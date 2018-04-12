@@ -349,8 +349,11 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
         if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
         mat4_mul_vec3(mat, p, p);
         k = shape_func(p, size, painter->smoothness);
-        k = clamp(k / painter->smoothness, -1.0f, 1.0f);
-        v = k / 2.0f + 0.5f;
+        if (painter->smoothness) {
+            v = clamp(k / painter->smoothness, -1.0f, 1.0f) / 2.0f + 0.5f;
+        } else {
+            v = (k >= 0.f) ? 1.f : 0.f;
+        }
         if (!v && skip_src_empty) continue;
         memcpy(c, painter->color, 4);
         c[3] *= v;
