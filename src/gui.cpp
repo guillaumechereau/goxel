@@ -28,7 +28,6 @@ extern "C" {
             w = f[3] / 255.; }     \
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include "imgui.h"
 #include "imgui_internal.h"
 

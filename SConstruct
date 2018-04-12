@@ -92,7 +92,8 @@ if conf.CheckLib('libpng'):
 
 sources += glob.glob('ext_src/imgui/*.cpp')
 env.Append(CPPPATH=['ext_src/imgui'])
-env.Append(CXXFLAGS='-DIMGUI_INCLUDE_IMGUI_USER_INL')
+env.Append(CXXFLAGS=['-DIMGUI_INCLUDE_IMGUI_USER_INL',
+                     '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS'])
 
 sources += glob.glob('ext_src/inih/*.c')
 env.Append(CPPPATH=['ext_src/inih'])
