@@ -117,13 +117,13 @@ namespace ImGui {
         const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
 
         // NB- we don't call ItemSize() yet because we may turn into a text edit box below
-        if (!ItemAdd(total_bb, &id))
+        if (!ItemAdd(total_bb, id, &frame_bb))
         {
             ItemSize(total_bb, style.FramePadding.y);
             return false;
         }
 
-        const bool hovered = IsHovered(frame_bb, id);
+        const bool hovered = ItemHoverable(frame_bb, id);
         if (hovered)
             SetHoveredID(id);
 

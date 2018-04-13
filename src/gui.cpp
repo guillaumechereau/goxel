@@ -303,6 +303,7 @@ static void load_fonts_texture()
 
 static void init_ImGui(const inputs_t *inputs)
 {
+    ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = 1.0f/60.0f;
 
@@ -333,7 +334,6 @@ static void init_ImGui(const inputs_t *inputs)
         io.GetClipboardTextFn = sys_get_clipboard_text;
     }
 
-    io.RenderDrawListsFn = ImImpl_RenderDrawLists;
     load_fonts_texture();
 
     ImGuiStyle& style = ImGui::GetStyle();
@@ -501,7 +501,7 @@ static void gui_init(const inputs_t *inputs)
 
 void gui_release(void)
 {
-    ImGui::Shutdown();
+    ImGui::DestroyContext();
 }
 
 // XXX: Move this somewhere else.
@@ -596,7 +596,7 @@ static void tools_panel(goxel_t *goxel)
     gui_group_end();
     auto_adjust_panel_size();
 
-    ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
     if (ImGui::CollapsingHeader("Tool Options"))
         tool_gui(goxel->tool);
 }
@@ -867,7 +867,7 @@ static void render_advanced_panel(goxel_t *goxel)
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
         ImGui::PushID(COLORS[i].label);
         c = COLORS[i].color;
-        ImGui::ColorButton(c);
+        ImGui::ColorButton(COLORS[i].label, c);
         if (ImGui::BeginPopupContextItem("color context menu", 0)) {
             color_edit("##edit", COLORS[i].color);
             if (ImGui::Button("Close"))
@@ -915,7 +915,7 @@ static void render_panel(goxel_t *goxel)
     if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
-    ImGui::SetNextTreeNodeOpen(false, ImGuiSetCond_Once);
+    ImGui::SetNextTreeNodeOpen(false, ImGuiCond_Once);
     if (ImGui::CollapsingHeader("Render Advanced"))
         render_advanced_panel(goxel);
 }
@@ -1069,7 +1069,7 @@ static bool about_popup(void *data)
     Text("GPL 3 License");
     Text("http://guillaumechereau.github.io/goxel");
 
-    SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+    SetNextTreeNodeOpen(true, ImGuiCond_Once);
     if (CollapsingHeader("Credits")) {
         Text("Code:");
         BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
@@ -1196,7 +1196,7 @@ static void render_menu(void)
 static bool render_tab(const char *label, bool *v)
 {
     ImFont *font = GImGui->Font;
-    const ImFont::Glyph *glyph;
+    const ImFontGlyph *glyph;
     char c;
     bool ret;
     const theme_t *theme = theme_get();
@@ -1233,7 +1233,7 @@ static bool render_tab(const char *label, bool *v)
                 ImVec2(glyph->U1, glyph->V1),
                 ImVec2(glyph->U0, glyph->V1),
                 ImGui::ColorConvertFloat4ToU32(COLOR(TAB, TEXT, *v)));
-        pos.y -= glyph->XAdvance / scale;
+        pos.y -= glyph->AdvanceX / scale;
     }
     ImGui::PopID();
     return ret;
@@ -1352,7 +1352,6 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     style.Colors[ImGuiCol_ButtonHovered] =
         color_lighten(COLOR(BASE, INNER, 0), 1.2);
     style.Colors[ImGuiCol_CheckMark] = COLOR(WIDGET, INNER, 1);
-    style.Colors[ImGuiCol_ComboBg] = COLOR(WIDGET, INNER, 0);
     style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, 0);
     style.Colors[ImGuiCol_Border] = COLOR(BASE, OUTLINE, 0);
 
@@ -1388,7 +1387,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x - 40,
                                             io.DisplaySize.y - 40),
                         (gui->popup.flags & GUI_POPUP_RESIZE) ?
-                            ImGuiSetCond_Once : 0);
+                            ImGuiCond_Once : 0);
         }
         if (gui->popup.flags & GUI_POPUP_RESIZE) {
             flags &= ~(ImGuiWindowFlags_NoMove |
@@ -1480,6 +1479,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 void gui_render(void)
 {
     ImGui::Render();
+    ImImpl_RenderDrawLists(ImGui::GetDrawData());
 }
 
 extern "C" {
@@ -1765,7 +1765,7 @@ void gui_same_line(void)
 bool gui_color(const char *label, uint8_t color[4])
 {
     ImGui::PushID(label);
-    ImGui::ColorButton(color);
+    ImGui::ColorButton(label, color);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
         color_edit("##edit", color);
         if (ImGui::Button("Close"))
@@ -1928,8 +1928,7 @@ void gui_open_popup(const char *title, int flags, void *data,
 }
 
 void gui_popup_body_begin(void) {
-    ImGui::BeginChild("body",
-            ImVec2(0, -ImGui::GetItemsLineHeightWithSpacing()));
+    ImGui::BeginChild("body", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
 }
 
 void gui_popup_body_end(void) {
