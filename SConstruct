@@ -29,11 +29,17 @@ if clang:
     env.Replace(CC='clang', CXX='clang++')
 
 # Asan & Ubsan (need to come first).
+# Cycles doesn't like libasan with clang, so we only use it on
+# C code with clang.
 if debug and target_os == 'posix':
-    env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
-               LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'])
     if not clang:
-        env.Append(LIBS=['asan', 'ubsan'])
+        env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
+                   LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
+                   LIBS=['asan', 'ubsan'])
+    else:
+        env.Append(CFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
+                   LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'])
+
 
 env.Append(CFLAGS= '-Wall -std=gnu99 -Wno-unknown-pragmas '
                    '-Wno-unknown-warning-option',
