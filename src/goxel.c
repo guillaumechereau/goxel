@@ -58,9 +58,9 @@ static bool unproject_delta(const float win[3], const float model[4][4],
 }
 
 // XXX: lot of cleanup to do here.
-bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
-                              const float pos[2], const float plane[4][4],
-                              float out[3], float normal[3])
+static bool goxel_unproject_on_plane(
+        const float viewport[4], const float pos[2], const float plane[4][4],
+        float out[3], float normal[3])
 {
     // If the angle between the screen and the plane is close to 90 deg,
     // the projection fails.  This prevents projecting too far away.
@@ -80,9 +80,10 @@ bool goxel_unproject_on_plane(goxel_t *goxel, const float viewport[4],
     return true;
 }
 
-bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
-                     const float pos[2], const float box[4][4], bool inside,
-                     float out[3], float normal[3], int *face)
+static bool goxel_unproject_on_box(
+        const float viewport[4], const float pos[2],
+        const float box[4][4], bool inside, float out[3],
+        float normal[3], int *face)
 {
     int f;
     float wpos[3] = {pos[0], pos[1], 0};
@@ -112,9 +113,9 @@ bool goxel_unproject_on_box(goxel_t *goxel, const float viewport[4],
     return false;
 }
 
-bool goxel_unproject_on_mesh(goxel_t *goxel, const float view[4],
-                             const float pos[2], mesh_t *mesh,
-                             float out[3], float normal[3])
+static bool goxel_unproject_on_mesh(
+        const float view[4], const float pos[2], mesh_t *mesh,
+        float out[3], float normal[3])
 {
     float view_size[2] = {view[2], view[3]};
     // XXX: No need to render the fbo if it is not dirty.
@@ -167,7 +168,7 @@ bool goxel_unproject_on_mesh(goxel_t *goxel, const float view[4],
 }
 
 
-int goxel_unproject(goxel_t *goxel, const float viewport[4],
+int goxel_unproject(const float viewport[4],
                     const float pos[2], int snap_mask, float offset,
                     float out[3], float normal[3])
 {
@@ -178,7 +179,7 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel->tool_plane)) {
-        r = goxel_unproject_on_plane(goxel, viewport, pos,
+        r = goxel_unproject_on_plane(viewport, pos,
                                      goxel->tool_plane, out, normal);
         ret = r ? SNAP_PLANE : 0;
         goto end;
@@ -187,31 +188,31 @@ int goxel_unproject(goxel_t *goxel, const float viewport[4],
     for (i = 0; i < 7; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
-            r = goxel_unproject_on_mesh(goxel, viewport, pos,
+            r = goxel_unproject_on_mesh(viewport, pos,
                                         goxel->layers_mesh, p, n);
         }
         if ((1 << i) == SNAP_PLANE)
-            r = goxel_unproject_on_plane(goxel, viewport, pos,
+            r = goxel_unproject_on_plane(viewport, pos,
                                          goxel->plane, p, n);
         if ((1 << i) == SNAP_SELECTION_IN)
-            r = goxel_unproject_on_box(goxel, viewport, pos,
+            r = goxel_unproject_on_box(viewport, pos,
                                        goxel->selection, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_SELECTION_OUT)
-            r = goxel_unproject_on_box(goxel, viewport, pos,
+            r = goxel_unproject_on_box(viewport, pos,
                                        goxel->selection, false,
                                        p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
             mesh_get_box(goxel->image->active_layer->mesh, true, box);
-            r = goxel_unproject_on_box(goxel, viewport, pos, box, false,
+            r = goxel_unproject_on_box(viewport, pos, box, false,
                                        p, n, NULL);
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(goxel, viewport, pos,
+            r = goxel_unproject_on_box(viewport, pos,
                                        goxel->image->box, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(goxel, viewport, pos,
+            r = goxel_unproject_on_box(viewport, pos,
                                        goxel->image->box, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
@@ -408,7 +409,7 @@ static int on_drag(const gesture_t *gest, void *user)
         c->flags &= ~CURSOR_PRESSED;
 
     c->snaped = goxel_unproject(
-            goxel, gest->viewport, gest->pos, c->snap_mask,
+            gest->viewport, gest->pos, c->snap_mask,
             c->snap_offset, c->pos, c->normal);
 
     // Set some default values.  The tools can override them.
@@ -459,9 +460,8 @@ static int on_rotate(const gesture_t *gest, void *user)
 static int on_hover(const gesture_t *gest, void *user)
 {
     cursor_t *c = &goxel->cursor;
-    c->snaped = goxel_unproject(
-                    goxel, gest->viewport, gest->pos, c->snap_mask,
-                    c->snap_offset, c->pos, c->normal);
+    c->snaped = goxel_unproject(gest->viewport, gest->pos, c->snap_mask,
+                                c->snap_offset, c->pos, c->normal);
     set_cursor_hint(c);
     c->flags &= ~CURSOR_PRESSED;
     // Set some default values.  The tools can override them.
@@ -500,7 +500,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
         goxel->camera.dist /= pow(1.1, inputs->mouse_wheel);
 
         // Auto adjust the camera rotation position.
-        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
+        if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
                                     goxel->layers_mesh, p, n)) {
             camera_set_target(&goxel->camera, p);
         }
@@ -526,7 +526,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
     }
     // C: recenter the view:
     if (inputs->keys['C']) {
-        if (goxel_unproject_on_mesh(goxel, viewport, inputs->touches[0].pos,
+        if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
                                     goxel->layers_mesh, p, n)) {
             camera_set_target(&goxel->camera, p);
         }
