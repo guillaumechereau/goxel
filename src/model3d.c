@@ -33,6 +33,7 @@ typedef struct {
     GLint u_uv_scale_l;
     GLint u_strip_l;
     GLint u_time_l;
+    GLint u_grid_alpha_l;
 
     GLint u_l_dir_l;
     GLint u_l_diff_l;
@@ -60,6 +61,7 @@ static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
     UNIFORM(u_uv_scale);
     UNIFORM(u_strip);
     UNIFORM(u_time);
+    UNIFORM(u_grid_alpha);
     UNIFORM(u_l_dir);
     UNIFORM(u_l_diff);
     UNIFORM(u_l_emit);
@@ -294,6 +296,7 @@ void model3d_render(model3d_t *model3d,
     float cf[4];
     float light_dir[3];
     float clip[4][4] = {};
+    float grid_alpha;
 
     copy_color(color, c);
     GL(glUseProgram(prog.prog));
@@ -350,6 +353,9 @@ void model3d_render(model3d_t *model3d,
 
     if (clip_box && !box_is_null(clip_box)) mat4_invert(clip_box, clip);
     GL(glUniformMatrix4fv(prog.u_clip_l, 1, 0, (float*)clip));
+
+    grid_alpha = (effects & EFFECT_GRID) ? 0.25 : 0.0;
+    GL(glUniform1f(prog.u_grid_alpha_l, grid_alpha));
 
     if (model3d->solid) {
         if (light && (!(effects & EFFECT_NO_SHADING))) {

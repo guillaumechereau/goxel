@@ -936,9 +936,10 @@ enum {
     EFFECT_NO_SHADING       = 1 << 10,
     EFFECT_STRIP            = 1 << 11,
     EFFECT_WIREFRAME        = 1 << 12,
+    EFFECT_GRID             = 1 << 13,
 
-    EFFECT_PROJ_SCREEN      = 1 << 13, // Image project in screen.
-    EFFECT_ANTIALIASING     = 1 << 14,
+    EFFECT_PROJ_SCREEN      = 1 << 14, // Image project in screen.
+    EFFECT_ANTIALIASING     = 1 << 15,
 };
 
 typedef struct {

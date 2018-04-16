@@ -828,8 +828,8 @@ void render_box(renderer_t *rend, const float box[4][4],
                 const uint8_t color[4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
-    assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK)) \
-            == effects);
+    assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK |
+                       EFFECT_GRID)) == effects);
     item->type = ITEM_MODEL3D;
     mat4_copy(box, item->mat);
     copy_color(color, item->color);
