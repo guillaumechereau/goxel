@@ -392,6 +392,7 @@ static void set_cursor_hint(cursor_t *curs)
     }
     if (curs->snaped == SNAP_MESH) snap_str = "mesh";
     if (curs->snaped == SNAP_PLANE) snap_str = "plane";
+    if (curs->snaped == SNAP_IMAGE_BOX) snap_str = "bounding box";
     if (    curs->snaped == SNAP_SELECTION_IN ||
             curs->snaped == SNAP_SELECTION_OUT) snap_str = "selection";
 
