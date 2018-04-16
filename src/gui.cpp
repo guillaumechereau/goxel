@@ -131,10 +131,6 @@ typedef struct gui_t {
         int         flags;
         void       *data;
     } popup;
-
-    // Textures for the color editor.
-    texture_t *hsl_tex;
-    texture_t *hue_tex;
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -341,127 +337,41 @@ static void init_ImGui(const inputs_t *inputs)
     style.WindowPadding = ImVec2(4, 4);
 }
 
-// Create an Sat/Hue bitmap with all the value for a given hue.
-static void hsl_bitmap(int hue, uint8_t *buffer, int w, int h)
+static bool color_edit(const char *name, uint8_t color[4],
+                       const uint8_t backup_color[4])
 {
-    int x, y;
-    uint8_t hsl[3], rgb[3];
-    for (y = 0; y < h; y++)
-    for (x = 0; x < w; x++) {
-        hsl[0] = hue;
-        hsl[1] = 256 * (h - y - 1) / h;
-        hsl[2] = 256 * x / w;
-        hsl_to_rgb(hsl, rgb);
-        memcpy(&buffer[(y * w + x) * 3], rgb, 3);
-    }
-}
+    bool ret = false;
+    ImVec4 col = color;
+    ImVec4 backup_col;
+    if (backup_color) backup_col = backup_color;
 
-static void hue_bitmap(uint8_t *buffer, int w, int h)
-{
-    int x, y;
-    uint8_t rgb[3], hsl[3] = {0, 255, 127};
-    for (y = 0; y < h; y++) {
-        hsl[0] = 256 * (h - y - 1) / h;
-        hsl_to_rgb(hsl, rgb);
-        for (x = 0; x < w; x++) {
-            memcpy(&buffer[(y * w + x) * 3], rgb, 3);
+    ImGui::Text("Pick Color");
+    ImGui::Separator();
+    ret |= ImGui::ColorPicker4("##picker", (float*)&col,
+                        ImGuiColorEditFlags_NoSidePreview |
+                        ImGuiColorEditFlags_NoSmallPreview |
+                        ImGuiColorEditFlags_NoAlpha);
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    ImGui::Text("Current");
+    ImGui::ColorButton("##current", col, ImGuiColorEditFlags_NoPicker,
+                       ImVec2(60, 40));
+    if (backup_color) {
+        ImGui::Text("Previous");
+        if (ImGui::ColorButton("##previous", backup_col,
+                               ImGuiColorEditFlags_NoPicker,
+                               ImVec2(60, 40))) {
+            col = backup_col;
+            ret = true;
         }
     }
-}
+    ImGui::EndGroup();
 
-static int create_hsl_texture(int hue) {
-    uint8_t *buffer;
-    if (!gui->hsl_tex) {
-        gui->hsl_tex = texture_new_surface(256, 256, TF_RGB);
-    }
-    buffer = (uint8_t*)malloc(256 * 256 * 3); 
-    hsl_bitmap(hue, buffer, 256, 256);
-
-    glBindTexture(GL_TEXTURE_2D, gui->hsl_tex->tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0,
-            GL_RGB, GL_UNSIGNED_BYTE, buffer);
-
-    free(buffer);
-    return gui->hsl_tex->tex;
-}
-
-static int create_hue_texture(void)
-{
-    uint8_t *buffer;
-    if (!gui->hue_tex) {
-        gui->hue_tex = texture_new_surface(32, 256, TF_RGB);
-        buffer = (uint8_t*)malloc(32 * 256 * 3);
-        hue_bitmap(buffer, 32, 256);
-        glBindTexture(GL_TEXTURE_2D, gui->hue_tex->tex);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 32, 256, 0,
-                GL_RGB, GL_UNSIGNED_BYTE, buffer);
-        free(buffer);
-    }
-    return gui->hue_tex->tex;
-}
-
-static bool color_edit(const char *name, uint8_t color[4]) {
-    bool ret = false;
-    ImVec2 c_pos;
-    ImGuiIO& io = ImGui::GetIO();
-    uint8_t hsl[4];
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
-    ImGui::Text("Edit color");
-    ImVec4 c = color;
-    rgb_to_hsl(color, hsl);
-    hsl[3] = color[3];
-
-    c_pos = ImGui::GetCursorScreenPos();
-    int tex_size = 256;
-    ImGui::Image((void*)(uintptr_t)create_hsl_texture(hsl[0]),
-            ImVec2(tex_size, tex_size));
-    // Draw lines.
-    draw_list->AddLine(c_pos + ImVec2(hsl[2] * tex_size / 255, 0),
-            c_pos + ImVec2(hsl[2] * tex_size / 255, 256),
-            0xFFFFFFFF, 2.0f);
-    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl[1] * tex_size / 255),
-            c_pos + ImVec2(256, 256 - hsl[1] * tex_size / 255),
-            0xFFFFFFFF, 2.0f);
-
-    draw_list->AddLine(c_pos + ImVec2(hsl[2] * tex_size / 255, 0),
-            c_pos + ImVec2(hsl[2] * tex_size / 255, 256),
-            0xFF000000, 1.0f);
-    draw_list->AddLine(c_pos + ImVec2(0,   256 - hsl[1] * tex_size / 255),
-            c_pos + ImVec2(256, 256 - hsl[1] * tex_size / 255),
-            0xFF000000, 1.0f);
-
-    if (ImGui::IsItemHovered() && io.MouseDown[0]) {
-        ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
-                ImGui::GetIO().MousePos.y - c_pos.y);
-        hsl[1] = 255 - pos.y;
-        hsl[2] = pos.x;
-        hsl_to_rgb(hsl, color);
-        c = color;
-        ret = true;
-    }
-    ImGui::SameLine();
-    c_pos = ImGui::GetCursorScreenPos();
-    ImGui::Image((void*)(uintptr_t)create_hue_texture(), ImVec2(32, 256));
-    draw_list->AddLine(c_pos + ImVec2( 0, 255 - hsl[0] * 256 / 255),
-            c_pos + ImVec2(31, 255 - hsl[0] * 256 / 255),
-            0xFFFFFFFF, 2.0f);
-
-    if (ImGui::IsItemHovered() && io.MouseDown[0]) {
-        ImVec2 pos = ImVec2(ImGui::GetIO().MousePos.x - c_pos.x,
-                ImGui::GetIO().MousePos.y - c_pos.y);
-        hsl[0] = 255 - pos.y;
-        hsl_to_rgb(hsl, color);
-        c = color;
-        ret = true;
-    }
-
-    ret = ImGui::ColorEdit3(name, (float*)&c) || ret;
     if (ret) {
-        color[0] = c.x * 255;
-        color[1] = c.y * 255;
-        color[2] = c.z * 255;
-        color[3] = c.w * 255;
+        color[0] = col.x * 255;
+        color[1] = col.y * 255;
+        color[2] = col.z * 255;
+        color[3] = col.w * 255;
     }
     return ret;
 }
@@ -869,7 +779,7 @@ static void render_advanced_panel(goxel_t *goxel)
         c = COLORS[i].color;
         ImGui::ColorButton(COLORS[i].label, c);
         if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            color_edit("##edit", COLORS[i].color);
+            color_edit("##edit", COLORS[i].color, NULL);
             if (ImGui::Button("Close"))
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
@@ -1764,10 +1674,12 @@ void gui_same_line(void)
 
 bool gui_color(const char *label, uint8_t color[4])
 {
+    static uint8_t backup_color[4];
     ImGui::PushID(label);
-    ImGui::ColorButton(label, color);
+    if (ImGui::ColorButton(label, color))
+        memcpy(backup_color, color, 4);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-        color_edit("##edit", color);
+        color_edit("##edit", color, backup_color);
         if (ImGui::Button("Close"))
             ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
