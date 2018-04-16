@@ -1152,6 +1152,12 @@ static void render_top_bar(void)
 {
     if (gui_button("##menu", 0, ICON_MENU))
         gui->hidden = !gui->hidden;
+    gui_same_line();
+    gui_action_button("undo", NULL, 0, "");
+    gui_same_line();
+    gui_action_button("redo", NULL, 0, "");
+    gui_same_line();
+    gui_action_button("layer_clear", NULL, 0, "");
 }
 
 static void render_left_panel(void)

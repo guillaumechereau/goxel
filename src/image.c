@@ -473,6 +473,7 @@ ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .cfunc = image_clear_layer,
     .csig = "vpp",
+    .icon = ICON_DELETE,
     .flags = ACTION_TOUCH_IMAGE,
 )
 
