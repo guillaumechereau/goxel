@@ -752,7 +752,7 @@ void render_grid(renderer_t *rend, const float plane[4][4],
     mat4_iscale(item->mat, 8, 8, 1);
     item->model3d = g_grid_model;
     copy_color(color, item->color);
-    mat4_copy(clip_box, item->clip_box);
+    if (clip_box) mat4_copy(clip_box, item->clip_box);
     DL_APPEND(rend->items, item);
 }
 
