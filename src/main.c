@@ -212,7 +212,7 @@ int main(int argc, char **argv)
     g_scale = args.scale;
 
     glfwInit();
-    // glfwWindowHint(GLFW_SAMPLES, 4); Should we use that?
+    glfwWindowHint(GLFW_SAMPLES, 4);
     monitor = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(monitor);
     window = glfwCreateWindow(mode->width, mode->height, title, NULL, NULL);
