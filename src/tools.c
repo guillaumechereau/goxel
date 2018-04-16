@@ -134,33 +134,6 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) gui_same_line();
 }
 
-int tool_gui_mode(void)
-{
-    int i;
-    bool v;
-    struct {
-        int        mode;
-        const char *name;
-        int        icon;
-    } values[] = {
-        {MODE_OVER,   "Add",  ICON_MODE_ADD},
-        {MODE_SUB,    "Sub",  ICON_MODE_SUB},
-        {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
-    };
-    gui_text("Mode");
-
-    gui_group_begin(NULL);
-    for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
-        v = goxel->painter.mode == values[i].mode;
-        if (gui_selectable_icon(values[i].name, &v, values[i].icon)) {
-            goxel->painter.mode = values[i].mode;
-        }
-        auto_grid(ARRAY_SIZE(values), i, 4);
-    }
-    gui_group_end();
-    return 0;
-}
-
 int tool_gui_shape(void)
 {
     struct {
@@ -204,20 +177,6 @@ int tool_gui_smoothness(void)
     s = goxel->painter.smoothness;
     if (gui_checkbox("Antialiased", &s, NULL)) {
         goxel->painter.smoothness = s ? 1 : 0;
-    }
-    return 0;
-}
-
-int tool_gui_color(void)
-{
-    int alpha = goxel->painter.color[3];
-    gui_text("Color");
-    gui_color("##color", goxel->painter.color);
-    if (goxel->painter.mode == MODE_PAINT) {
-        if (gui_input_int("Alpha", &alpha, 0, 255))
-            goxel->painter.color[3] = alpha;
-    } else {
-        goxel->painter.color[3] = 255;
     }
     return 0;
 }

@@ -112,7 +112,7 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    bool    hidden;
+    bool    show_panels;
     int     current_panel;
     view_t  view;
     int     min_panel_size;
@@ -1148,16 +1148,46 @@ static bool render_tab(const char *label, bool *v)
     return ret;
 }
 
+static int render_mode_select(void)
+{
+    int i;
+    bool v;
+    struct {
+        int        mode;
+        const char *name;
+        int        icon;
+    } values[] = {
+        {MODE_OVER,   "Add",  ICON_MODE_ADD},
+        {MODE_SUB,    "Sub",  ICON_MODE_SUB},
+        {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
+    };
+    gui_group_begin(NULL);
+    for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
+        v = goxel->painter.mode == values[i].mode;
+        if (gui_selectable_icon(values[i].name, &v, values[i].icon)) {
+            goxel->painter.mode = values[i].mode;
+        }
+        auto_grid(ARRAY_SIZE(values), i, 4);
+    }
+    gui_group_end();
+    return 0;
+}
+
+
 static void render_top_bar(void)
 {
     if (gui_button("##menu", 0, ICON_MENU))
-        gui->hidden = !gui->hidden;
+        gui->show_panels = !gui->show_panels;
     gui_same_line();
     gui_action_button("undo", NULL, 0, "");
     gui_same_line();
     gui_action_button("redo", NULL, 0, "");
     gui_same_line();
     gui_action_button("layer_clear", NULL, 0, "");
+    gui_same_line();
+    render_mode_select();
+    gui_same_line();
+    gui_color("##color", goxel->painter.color);
 }
 
 static void render_left_panel(void)
@@ -1196,23 +1226,26 @@ static void render_left_panel(void)
         bool b = (gui->current_panel == (int)i);
         if (render_tab(PANELS[i].name, &b)) {
             on_click();
-            gui->current_panel = i;
+            if (i != gui->current_panel) {
+                gui->current_panel = i;
+                gui->show_panels = true;
+            } else {
+                gui->show_panels = false;
+            }
         }
     }
     ImGui::EndGroup();
-
-    ImGui::SameLine();
-    ImGui::BeginGroup();
-
-    goxel->show_export_viewport = false;
-
-    ImGui::PushID("panel");
-    ImGui::PushID(PANELS[gui->current_panel].name);
-    PANELS[gui->current_panel].fn(goxel);
-    ImGui::PopID();
-    ImGui::PopID();
-
-    ImGui::EndGroup();
+    if (gui->show_panels) {
+        ImGui::SameLine();
+        ImGui::BeginGroup();
+        goxel->show_export_viewport = false;
+        ImGui::PushID("panel");
+        ImGui::PushID(PANELS[gui->current_panel].name);
+        PANELS[gui->current_panel].fn(goxel);
+        ImGui::PopID();
+        ImGui::PopID();
+        ImGui::EndGroup();
+    }
     ImGui::EndChild();
 }
 
@@ -1289,7 +1322,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     goxel->no_edit = false; // Set depending on what panel is selected.
     goxel->use_cycles = false;  // Also set depending on the panel.
-    if (!gui->hidden) {
+    if (gui->show_panels) {
         render_left_panel();
         ImGui::SameLine();
     }
@@ -1680,8 +1713,12 @@ void gui_same_line(void)
 bool gui_color(const char *label, uint8_t color[4])
 {
     static uint8_t backup_color[4];
+    ImVec2 size;
+    const theme_t *theme = theme_get();
+
+    size.x = size.y = theme->sizes.icons_button_size;
     ImGui::PushID(label);
-    if (ImGui::ColorButton(label, color))
+    if (ImGui::ColorButton(label, color, 0, size))
         memcpy(backup_color, color, 4);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
         color_edit("##edit", color, backup_color);

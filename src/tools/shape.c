@@ -199,9 +199,7 @@ static int gui(tool_t *tool)
     gui_checkbox("Two steps", &goxel->tool_shape_two_steps,
                  "Second click set the height");
     tool_gui_snap();
-    tool_gui_mode();
     tool_gui_shape();
-    tool_gui_color();
     tool_gui_symmetry();
 
     return 0;

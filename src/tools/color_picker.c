@@ -46,7 +46,6 @@ int tool_color_picker_iter(tool_t *tool, const float viewport[4])
 
 static int gui(tool_t *tool)
 {
-    tool_gui_color();
     return 0;
 }
 
