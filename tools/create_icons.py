@@ -30,16 +30,19 @@ SRC = [
     'shape_cylinder.svg',
     None,
 
+    'arrow_back.svg',
+    'arrow_forward.svg',
+    'delete.svg',
     'add.svg',
     'remove.svg',
     'arrow_downward.svg',
     'arrow_upward.svg',
+    None,
+
     'visibility.svg',
     'visibility_off.svg',
     'edit.svg',
     'link.svg',
-    None,
-
     'menu.svg',
     None,
 ]
