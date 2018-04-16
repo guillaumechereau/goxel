@@ -1511,7 +1511,6 @@ typedef struct goxel
     float      snap_offset;  // Only for brush tool, remove that?
 
     float      plane[4][4];         // The snapping plane.
-    bool       plane_hidden;  // Set to true to hide the plane.
     bool       show_export_viewport;
 
     camera_t   camera;

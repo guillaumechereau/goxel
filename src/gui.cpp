@@ -788,7 +788,6 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::Text("%s", COLORS[i].label);
         ImGui::PopID();
     }
-    gui_action_checkbox("grid_visible", "Show grid");
     ImGui::PopID();
 }
 

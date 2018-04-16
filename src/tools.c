@@ -94,11 +94,14 @@ int tool_gui(tool_t *tool)
 }
 
 
-static void snap_button(const char *label, int s, float w)
+static bool snap_button(const char *label, int s, float w)
 {
     bool v = goxel->snap_mask & s;
-    if (gui_selectable(label, &v, NULL, w))
+    if (gui_selectable(label, &v, NULL, w)) {
         set_flag(&goxel->snap_mask, s, v);
+        return true;
+    }
+    return false;
 }
 
 int tool_gui_snap(void)

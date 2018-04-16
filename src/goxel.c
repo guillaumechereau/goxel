@@ -310,7 +310,7 @@ void goxel_init(goxel_t *gox)
     render_get_default_settings(0, NULL, &goxel->rend.settings);
 
     model3d_init();
-    goxel->snap_mask = SNAP_PLANE | SNAP_MESH | SNAP_IMAGE_BOX;
+    goxel->snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
 
     goxel->gestures.drag = (gesture_t) {
         .type = GESTURE_DRAG,
@@ -671,7 +671,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
         mesh_get_box(goxel->layers_mesh, false, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
     }
-    if (!goxel->plane_hidden)
+    if (goxel->snap_mask & SNAP_PLANE)
         render_grid(rend, goxel->plane, goxel->grid_color, goxel->image->box);
     if (!box_is_null(goxel->image->box))
         render_box(rend, goxel->image->box, goxel->image_box_color,
@@ -909,21 +909,6 @@ ACTION_REGISTER(fill_selection,
     .cfunc = fill_selection,
     .csig = "vp",
     .flags = ACTION_TOUCH_IMAGE,
-)
-
-static int show_grid_action(const action_t *a, astack_t *s)
-{
-    if (stack_type(s, 0) == 'b')
-        goxel->plane_hidden = !stack_get_b(s, 0);
-    stack_push_b(s, !goxel->plane_hidden);
-    return 0;
-}
-
-ACTION_REGISTER(grid_visible,
-    .help = "Show the grid",
-    .func = show_grid_action,
-    .shortcut = "#",
-    .flags = ACTION_TOGGLE,
 )
 
 static void copy_action(void)
