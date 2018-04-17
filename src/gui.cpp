@@ -112,7 +112,6 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    bool    show_panels;
     int     current_panel;
     view_t  view;
     int     min_panel_size;
@@ -447,7 +446,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
     // XXX: 6 here means 'export' panel.  Need to use an enum!
-    if (    gui->current_panel == 6 &&
+    if (    gui->current_panel == 7 &&
             goxel->export_task.status) {
         goxel_render_export_view(view->rect);
     } else {
@@ -1164,9 +1163,6 @@ static int render_mode_select(void)
 
 static void render_top_bar(void)
 {
-    if (gui_button("##menu", 0, ICON_MENU))
-        gui->show_panels = !gui->show_panels;
-    gui_same_line();
     gui_action_button("undo", NULL, 0, "");
     gui_same_line();
     gui_action_button("redo", NULL, 0, "");
@@ -1188,6 +1184,7 @@ static void render_left_panel(void)
         int icon;
         void (*fn)(goxel_t *goxel);
     } PANELS[] = {
+        {NULL},
         {"Tools", ICON_TOOLS, tools_panel},
         {"Palette", ICON_PALETTE, palette_panel},
         {"Layers", ICON_LAYERS, layers_panel},
@@ -1199,7 +1196,8 @@ static void render_left_panel(void)
     };
     ImDrawList* draw_list;
 
-    left_pane_width = max(168, gui->min_panel_size);
+    left_pane_width = gui->current_panel ? max(168, gui->min_panel_size) :
+                        theme->sizes.icons_height + 4;
     gui->min_panel_size = 0;
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
 
@@ -1211,20 +1209,19 @@ static void render_left_panel(void)
     draw_list->AddRectFilled(rmin, rmax,
                 ImGui::ColorConvertFloat4ToU32(COLOR(TAB, BACKGROUND, 0)));
 
-    for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
+    for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (gui->current_panel == (int)i);
         if (render_tab(PANELS[i].name, PANELS[i].icon, &b)) {
             on_click();
             if (i != gui->current_panel) {
                 gui->current_panel = i;
-                gui->show_panels = true;
             } else {
-                gui->show_panels = false;
+                gui->current_panel = 0;
             }
         }
     }
     ImGui::EndGroup();
-    if (gui->show_panels) {
+    if (gui->current_panel) {
         ImGui::SameLine();
         ImGui::BeginGroup();
         goxel->show_export_viewport = false;
@@ -1311,10 +1308,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
 
     goxel->no_edit = false; // Set depending on what panel is selected.
     goxel->use_cycles = false;  // Also set depending on the panel.
-    if (gui->show_panels) {
-        render_left_panel();
-        ImGui::SameLine();
-    }
+    render_left_panel();
+    ImGui::SameLine();
 
     if (gui->popup.title) {
         ImGui::OpenPopup(gui->popup.title);
