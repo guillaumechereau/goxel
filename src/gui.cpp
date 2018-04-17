@@ -461,7 +461,7 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) ImGui::SameLine();
 }
 
-static void tools_panel(goxel_t *goxel)
+static void tools_panel(void)
 {
     const struct {
         int         tool;
@@ -596,7 +596,7 @@ static bool layer_item(int i, int icon, bool *visible, bool *edit,
     return ret;
 }
 
-static void layers_panel(goxel_t *goxel)
+static void layers_panel(void)
 {
     layer_t *layer;
     int i = 0, icon, bbox[2][3];
@@ -662,7 +662,7 @@ static void layers_panel(goxel_t *goxel)
     if (bounded) gui_bbox(layer->box);
 }
 
-static void view_panel(goxel_t *goxel)
+static void view_panel(void)
 {
     // XXX: I don't like to use this array.
     const struct {
@@ -719,7 +719,7 @@ static bool render_palette_entry(const uint8_t color[4], uint8_t target[4])
 }
 
 
-static void palette_panel(goxel_t *goxel)
+static void palette_panel(void)
 {
     palette_t *p;
     int i, current, nb = 0, nb_col = 8;
@@ -752,7 +752,7 @@ static void palette_panel(goxel_t *goxel)
     }
 }
 
-static void render_advanced_panel(goxel_t *goxel)
+static void render_advanced_panel(void)
 {
     float v;
     ImVec4 c;
@@ -798,7 +798,7 @@ static void render_advanced_panel(goxel_t *goxel)
 }
 
 
-static void render_panel(goxel_t *goxel)
+static void render_panel(void)
 {
     int i, current = -1;
     int nb = render_get_default_settings(0, NULL, NULL);
@@ -832,10 +832,10 @@ static void render_panel(goxel_t *goxel)
     }
     ImGui::SetNextTreeNodeOpen(false, ImGuiCond_Once);
     if (ImGui::CollapsingHeader("Render Advanced"))
-        render_advanced_panel(goxel);
+        render_advanced_panel();
 }
 
-static void export_panel(goxel_t *goxel)
+static void export_panel(void)
 {
     int i;
     int maxsize;
@@ -877,7 +877,7 @@ static void export_panel(goxel_t *goxel)
 
 }
 
-static void image_panel(goxel_t *goxel)
+static void image_panel(void)
 {
     bool bounded;
     image_t *image = goxel->image;
@@ -893,7 +893,7 @@ static void image_panel(goxel_t *goxel)
     if (bounded) gui_bbox(*box);
 }
 
-static void cameras_panel(goxel_t *goxel)
+static void cameras_panel(void)
 {
     camera_t *cam;
     int i = 0;
@@ -941,7 +941,7 @@ static void cameras_panel(goxel_t *goxel)
     gui_group_end();
 }
 
-static void debug_panel(goxel_t *goxel)
+static void debug_panel(void)
 {
     ImGui::Text("FPS: %d", (int)round(goxel->fps));
 }
@@ -1190,7 +1190,7 @@ static void render_left_panel(void)
     const struct {
         const char *name;
         int icon;
-        void (*fn)(goxel_t *goxel);
+        void (*fn)(void);
     } PANELS[] = {
         {NULL},
         {"Tools", ICON_TOOLS, tools_panel},
@@ -1236,7 +1236,7 @@ static void render_left_panel(void)
         goxel->show_export_viewport = false;
         ImGui::PushID("panel");
         ImGui::PushID(PANELS[gui->current_panel].name);
-        PANELS[gui->current_panel].fn(goxel);
+        PANELS[gui->current_panel].fn();
         ImGui::PopID();
         ImGui::PopID();
         ImGui::EndGroup();
