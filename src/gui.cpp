@@ -912,6 +912,7 @@ static void cameras_panel(goxel_t *goxel)
     gui_action_button("img_move_camera_up", NULL, 0, "");
     ImGui::SameLine();
     gui_action_button("img_move_camera_down", NULL, 0, "");
+    auto_adjust_panel_size();
 
     cam = &goxel->camera;
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
