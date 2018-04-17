@@ -1659,13 +1659,13 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
         ret = ImGui::Button("", size);
         if (icon) {
             center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
+            center.y += 0.5;
             uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
             window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
                                        center - ImVec2(16, 16),
                                        center + ImVec2(16, 16),
-                                       uv0, uv1,
-                                       ImGui::GetColorU32(color));
+                                       uv0, uv1, 0xFFFFFFFF);
         }
     } else {
         ret = ImGui::Button(label, size);
@@ -1771,13 +1771,14 @@ bool gui_button(const char *label, float size, int icon)
     if (icon) {
         center = GetItemRectMin() + ImVec2(GetItemRectSize().y / 2,
                                            GetItemRectSize().y / 2);
+        center.x += 0.5;
+        center.y += 0.5;
         uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             center - ImVec2(16, 16),
                             center + ImVec2(16, 16),
-                            uv0, uv1,
-                            ImGui::GetColorU32(COLOR(WIDGET, TEXT, 0)));
+                            uv0, uv1, 0xFFFFFFFF);
     }
     if (ret) on_click();
     return ret;
