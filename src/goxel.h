@@ -1493,6 +1493,7 @@ int tool_gui_snap(void);
 int tool_gui_shape(void);
 int tool_gui_radius(void);
 int tool_gui_smoothness(void);
+int tool_gui_color(void);
 int tool_gui_symmetry(void);
 
 typedef struct goxel

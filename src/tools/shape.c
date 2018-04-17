@@ -200,8 +200,8 @@ static int gui(tool_t *tool)
                  "Second click set the height");
     tool_gui_snap();
     tool_gui_shape();
+    tool_gui_color();
     tool_gui_symmetry();
-
     return 0;
 }
 
