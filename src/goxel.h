@@ -739,6 +739,8 @@ enum {
     ICON_IMAGE = 38,
     ICON_EXPORT = 39,
     ICON_DEBUG = 40,
+
+    ICON_VIEW = 41,
 };
 
 

@@ -445,8 +445,8 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    // XXX: 6 here means 'export' panel.  Need to use an enum!
-    if (    gui->current_panel == 7 &&
+    // XXX: 8 here means 'export' panel.  Need to use an enum!
+    if (    gui->current_panel == 8 &&
             goxel->export_task.status) {
         goxel_render_export_view(view->rect);
     } else {
@@ -662,6 +662,42 @@ static void layers_panel(goxel_t *goxel)
     if (bounded) gui_bbox(layer->box);
 }
 
+static void view_panel(goxel_t *goxel)
+{
+    // XXX: I don't like to use this array.
+    const struct {
+        uint8_t    *color;
+        const char *label;
+    } COLORS[] = {
+        {goxel->back_color, "Back color"},
+        {goxel->grid_color, "Grid color"},
+        {goxel->image_box_color, "Box color"},
+    };
+    int i;
+    ImVec4 c;
+
+    gui_group_begin("Light");
+    gui_angle("Pitch", &goxel->rend.light.pitch, -90, +90);
+    gui_angle("Yaw", &goxel->rend.light.yaw, 0, 360);
+    gui_checkbox("Fixed", &goxel->rend.light.fixed, NULL);
+    gui_group_end();
+
+    for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
+        ImGui::PushID(COLORS[i].label);
+        c = COLORS[i].color;
+        ImGui::ColorButton(COLORS[i].label, c);
+        if (ImGui::BeginPopupContextItem("color context menu", 0)) {
+            color_edit("##edit", COLORS[i].color, NULL);
+            if (ImGui::Button("Close"))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+        ImGui::SameLine();
+        ImGui::Text("%s", COLORS[i].label);
+        ImGui::PopID();
+    }
+
+}
 
 static bool render_palette_entry(const uint8_t color[4], uint8_t target[4])
 {
@@ -720,22 +756,8 @@ static void render_advanced_panel(goxel_t *goxel)
 {
     float v;
     ImVec4 c;
-    int i;
-    const struct {
-        uint8_t    *color;
-        const char *label;
-    } COLORS[] = {
-        {goxel->back_color, "Back color"},
-        {goxel->grid_color, "Grid color"},
-        {goxel->image_box_color, "Box color"},
-    };
 
     ImGui::PushID("render_advanced");
-    ImGui::Text("Light");
-    gui_angle("Pitch", &goxel->rend.light.pitch, -90, +90);
-    gui_angle("Yaw", &goxel->rend.light.yaw, 0, 360);
-    gui_checkbox("Fixed", &goxel->rend.light.fixed, NULL);
-
     gui_group_begin(NULL);
     v = goxel->rend.settings.border_shadow;
     if (gui_input_float("bshadow", &v, 0.1, 0.0, 1.0, NULL)) {
@@ -772,21 +794,6 @@ static void render_advanced_panel(goxel_t *goxel)
         ImGui::CheckboxFlags("Flat",
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_FLAT);
 
-    ImGui::Text("Other");
-    for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
-        ImGui::PushID(COLORS[i].label);
-        c = COLORS[i].color;
-        ImGui::ColorButton(COLORS[i].label, c);
-        if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            color_edit("##edit", COLORS[i].color, NULL);
-            if (ImGui::Button("Close"))
-                ImGui::CloseCurrentPopup();
-            ImGui::EndPopup();
-        }
-        ImGui::SameLine();
-        ImGui::Text("%s", COLORS[i].label);
-        ImGui::PopID();
-    }
     ImGui::PopID();
 }
 
@@ -1189,6 +1196,7 @@ static void render_left_panel(void)
         {"Tools", ICON_TOOLS, tools_panel},
         {"Palette", ICON_PALETTE, palette_panel},
         {"Layers", ICON_LAYERS, layers_panel},
+        {"View", ICON_VIEW, view_panel},
         {"Render", ICON_RENDER, render_panel},
         {"Cameras", ICON_CAMERA, cameras_panel},
         {"Image", ICON_IMAGE, image_panel},
