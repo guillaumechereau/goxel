@@ -810,7 +810,6 @@ static void render_panel(void)
     ImGui::Checkbox("Cycles", &gui->use_cycles);
     goxel->use_cycles = gui->use_cycles;
     goxel->no_edit = goxel->use_cycles || gui->popup.title;
-    ImGui::Checkbox("Ortho", &goxel->camera.ortho);
     names = (const char**)calloc(nb, sizeof(*names));
     for (i = 0; i < nb; i++) {
         render_get_default_settings(i, &name, &settings);
@@ -931,6 +930,7 @@ static void cameras_panel(void)
     gui_group_end();
 
     gui_quat("Rotation", cam->rot);
+    ImGui::Checkbox("Ortho", &cam->ortho);
 
     gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();

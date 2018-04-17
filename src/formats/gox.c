@@ -91,6 +91,7 @@ static int gzseek(gzFile file, long offset, int whence) {
  *          dist: float
  *          rot: quaternion
  *          ofs: offset
+ *          ortho: bool
  *
  */
 
@@ -340,6 +341,8 @@ void save_to_file(goxel_t *goxel, const char *path, bool with_preview)
                                sizeof(camera->rot));
         chunk_write_dict_value(&c, out, "ofs", &camera->ofs,
                                sizeof(camera->ofs));
+        chunk_write_dict_value(&c, out, "ortho", &camera->ortho,
+                               sizeof(camera->ortho));
         if (camera == goxel->image->active_camera)
             chunk_write_dict_value(&c, out, "active", NULL, 0);
 
@@ -502,6 +505,8 @@ int load_from_file(goxel_t *goxel, const char *path)
                     memcpy(&camera->rot, dict_value, dict_value_size);
                 if (strcmp(dict_key, "ofs") == 0)
                     memcpy(&camera->ofs, dict_value, dict_value_size);
+                if (strcmp(dict_key, "ortho") == 0)
+                    memcpy(&camera->ortho, dict_value, dict_value_size);
                 if (strcmp(dict_key, "active") == 0) {
                     goxel->image->active_camera = camera;
                     camera_set(&goxel->camera, camera);
