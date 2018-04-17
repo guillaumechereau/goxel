@@ -631,13 +631,13 @@ static void layers_panel(void)
     gui_action_button("img_move_layer_down", NULL, 0, "");
     auto_adjust_panel_size();
 
-    layer = goxel->image->active_layer;
-    bounded = !box_is_null(layer->box);
-
     gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
     gui_action_button("img_clone_layer", "Clone", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
+
+    layer = goxel->image->active_layer;
+    bounded = !box_is_null(layer->box);
     if (bounded && gui_button("Crop to box", 1, 0)) {
         mesh_crop(layer->mesh, layer->box);
         goxel_update_meshes(goxel, -1);
