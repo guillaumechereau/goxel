@@ -288,6 +288,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     float box2[4][4];
     mesh_t *cached;
     static cache_t *cache = NULL;
+    const float *sym_o = painter->symmetry_origin;
 
     // Check if the operation has been cached.
     if (!cache) cache = cache_create(32);
@@ -312,9 +313,11 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
             if (!(painter->symmetry & (1 << i))) continue;
             painter2.symmetry &= ~(1 << i);
             mat4_set_identity(box2);
+            mat4_itranslate(box2, +sym_o[0], +sym_o[1], +sym_o[2]);
             if (i == 0) mat4_iscale(box2, -1,  1,  1);
             if (i == 1) mat4_iscale(box2,  1, -1,  1);
             if (i == 2) mat4_iscale(box2,  1,  1, -1);
+            mat4_itranslate(box2, -sym_o[0], -sym_o[1], -sym_o[2]);
             mat4_imul(box2, box);
             mesh_op(mesh, &painter2, box2);
         }

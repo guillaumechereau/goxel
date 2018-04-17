@@ -299,6 +299,11 @@ void goxel_init(goxel_t *gox)
         .smoothness = 0,
         .color = {255, 255, 255, 255},
     };
+
+    // Set symmetry origin to the center of the image.
+    mat4_mul_vec3(goxel->image->box, VEC(0, 0, 0),
+                  goxel->painter.symmetry_origin);
+
     goxel->rend = (renderer_t) {
         .light = {
             .pitch = 10 * DD2R,

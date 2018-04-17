@@ -840,6 +840,7 @@ typedef struct painter {
     uint8_t         color[4];
     float           smoothness;
     int             symmetry; // bitfield X Y Z
+    float           symmetry_origin[3];
     float           (*box)[4][4];     // Clipping box (can be null)
 } painter_t;
 

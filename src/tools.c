@@ -200,15 +200,19 @@ int tool_gui_symmetry(void)
     float w;
     int i;
     bool v;
-    char *labels[] = {"X", "Y", "Z"};
-    gui_text("Symmetry");
+    const char *labels_u[] = {"X", "Y", "Z"};
+    const char *labels_l[] = {"x", "y", "z"};
     w = gui_get_avail_width() / 3.0 - 1;
-    gui_group_begin(NULL);
+    gui_group_begin("Symmetry");
     for (i = 0; i < 3; i++) {
         v = (goxel->painter.symmetry >> i) & 0x1;
-        if (gui_selectable(labels[i], &v, NULL, w))
+        if (gui_selectable(labels_u[i], &v, NULL, w))
             set_flag(&goxel->painter.symmetry, 1 << i, v);
-        gui_same_line();
+        if (i < 2) gui_same_line();
+    }
+    for (i = 0; i < 3; i++) {
+        gui_input_float(labels_l[i], &goxel->painter.symmetry_origin[i],
+                         0.5, -FLT_MAX, +FLT_MAX, "%.1f");
     }
     gui_group_end();
     return 0;
