@@ -1102,48 +1102,36 @@ static void render_menu(void)
     ImGui::PopStyleColor(2);
 }
 
-static bool render_tab(const char *label, bool *v)
+static bool render_tab(const char *label, int icon, bool *v)
 {
-    ImFont *font = GImGui->Font;
-    const ImFontGlyph *glyph;
-    char c;
     bool ret;
     const theme_t *theme = theme_get();
-    int pad = theme->sizes.item_padding_h;
-    ImVec2 text_size = ImGui::CalcTextSize(label);
-    int xpad = (theme->sizes.item_height - text_size.y) / 2;
-    float scale = ImGui::GetIO().DisplayFramebufferScale.y;
+    ImVec2 center;
+    ImVec2 uv0, uv1; // The position in the icon texture.
     ImGuiWindow* window = ImGui::GetCurrentWindow();
-    ImVec2 pos = window->DC.CursorPos + ImVec2(0, text_size.x + pad);
 
     ImGui::PushStyleColor(ImGuiCol_Button, COLOR(TAB, INNER, *v));
-
     ImGui::PushID(label);
-
-    ret = ImGui::InvisibleButton("", ImVec2(theme->sizes.item_height,
-                                            text_size.x + pad * 2));
+    ret = ImGui::InvisibleButton("", ImVec2(theme->sizes.icons_height,
+                                            theme->sizes.icons_height));
     ImGui::GoxBox(ImGui::GetItemRectMin(), ImGui::GetItemRectSize(),
-                  false, 0x09);
-
+                 false, 0x05);
     ImGui::PopStyleColor();
-    while ((c = *label++)) {
-        glyph = font->FindGlyph(c);
-        if (!glyph) continue;
 
-        window->DrawList->PrimReserve(6, 4);
-        window->DrawList->PrimQuadUV(
-                pos + ImVec2(glyph->Y0 + xpad, -glyph->X0) / scale,
-                pos + ImVec2(glyph->Y0 + xpad, -glyph->X1) / scale,
-                pos + ImVec2(glyph->Y1 + xpad, -glyph->X1) / scale,
-                pos + ImVec2(glyph->Y1 + xpad, -glyph->X0) / scale,
+    center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
+    center.y += 0.5;
+    uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
+    uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
+    window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                               center - ImVec2(16, 16),
+                               center + ImVec2(16, 16),
+                               uv0, uv1, 0xFFFFFFFF);
 
-                ImVec2(glyph->U0, glyph->V0),
-                ImVec2(glyph->U1, glyph->V0),
-                ImVec2(glyph->U1, glyph->V1),
-                ImVec2(glyph->U0, glyph->V1),
-                ImGui::ColorConvertFloat4ToU32(COLOR(TAB, TEXT, *v)));
-        pos.y -= glyph->AdvanceX / scale;
+    if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("%s", label);
+        goxel_set_help_text(goxel, label);
     }
+
     ImGui::PopID();
     return ret;
 }
@@ -1197,16 +1185,17 @@ static void render_left_panel(void)
     float left_pane_width;
     const struct {
         const char *name;
+        int icon;
         void (*fn)(goxel_t *goxel);
     } PANELS[] = {
-        {"Tools", tools_panel},
-        {"Palette", palette_panel},
-        {"Layers", layers_panel},
-        {"Render", render_panel},
-        {"Cameras", cameras_panel},
-        {"Image", image_panel},
-        {"Export", export_panel},
-        {"Debug", debug_panel},
+        {"Tools", ICON_TOOLS, tools_panel},
+        {"Palette", ICON_PALETTE, palette_panel},
+        {"Layers", ICON_LAYERS, layers_panel},
+        {"Render", ICON_RENDER, render_panel},
+        {"Cameras", ICON_CAMERA, cameras_panel},
+        {"Image", ICON_IMAGE, image_panel},
+        {"Export", ICON_EXPORT, export_panel},
+        {"Debug", ICON_DEBUG, debug_panel},
     };
     ImDrawList* draw_list;
 
@@ -1217,14 +1206,14 @@ static void render_left_panel(void)
     ImGui::BeginGroup();
     draw_list = ImGui::GetWindowDrawList();
     ImVec2 rmin = ImGui::GetCursorScreenPos() - ImVec2(4, 4);
-    ImVec2 rmax = rmin + ImVec2(theme->sizes.item_height + 4,
+    ImVec2 rmax = rmin + ImVec2(theme->sizes.icons_height + 4,
                                 ImGui::GetWindowHeight());
     draw_list->AddRectFilled(rmin, rmax,
                 ImGui::ColorConvertFloat4ToU32(COLOR(TAB, BACKGROUND, 0)));
 
     for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (gui->current_panel == (int)i);
-        if (render_tab(PANELS[i].name, &b)) {
+        if (render_tab(PANELS[i].name, PANELS[i].icon, &b)) {
             on_click();
             if (i != gui->current_panel) {
                 gui->current_panel = i;
