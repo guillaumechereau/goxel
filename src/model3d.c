@@ -354,7 +354,7 @@ void model3d_render(model3d_t *model3d,
     if (clip_box && !box_is_null(clip_box)) mat4_invert(clip_box, clip);
     GL(glUniformMatrix4fv(prog.u_clip_l, 1, 0, (float*)clip));
 
-    grid_alpha = (effects & EFFECT_GRID) ? 0.25 : 0.0;
+    grid_alpha = (effects & EFFECT_GRID) ? 0.05 : 0.0;
     GL(glUniform1f(prog.u_grid_alpha_l, grid_alpha));
 
     if (model3d->solid) {
