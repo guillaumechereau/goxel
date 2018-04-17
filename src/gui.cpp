@@ -1744,7 +1744,7 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 button_size;
     const theme_t *theme = theme_get();
     ImVec2 center;
-    int w;
+    int w, isize;
 
     button_size = ImVec2(size * GetContentRegionAvailWidth(),
                          theme->sizes.item_height);
@@ -1759,6 +1759,7 @@ bool gui_button(const char *label, float size, int icon)
         if (w < theme->sizes.item_height)
             button_size.x = theme->sizes.item_height;
     }
+    isize = (label && label[0] != '#' && label) ? 12 : 16;
     label = label ?: "";
     ret = Button(label, button_size);
     if (icon) {
@@ -1769,8 +1770,8 @@ bool gui_button(const char *label, float size, int icon)
         uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
-                            center - ImVec2(16, 16),
-                            center + ImVec2(16, 16),
+                            center - ImVec2(isize, isize),
+                            center + ImVec2(isize, isize),
                             uv0, uv1, 0xFFFFFFFF);
     }
     if (ret) on_click();
