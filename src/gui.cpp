@@ -129,6 +129,7 @@ typedef struct gui_t {
         bool      (*func)(void *data);
         int         flags;
         void       *data;
+        bool       opened;
     } popup;
 } gui_t;
 
@@ -1318,7 +1319,10 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     ImGui::SameLine();
 
     if (gui->popup.title) {
-        ImGui::OpenPopup(gui->popup.title);
+        if (!gui->popup.opened) {
+            ImGui::OpenPopup(gui->popup.title);
+            gui->popup.opened = true;
+        }
         int flags = ImGuiWindowFlags_AlwaysAutoResize |
                     ImGuiWindowFlags_NoMove;
         if (gui->popup.flags & GUI_POPUP_FULL) {
@@ -1337,10 +1341,8 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
                 ImGui::CloseCurrentPopup();
                 // Only reset if there was no change.
                 if (func == gui->popup.func) {
-                    gui->popup.title = NULL;
-                    gui->popup.func = NULL;
                     free(gui->popup.data);
-                    gui->popup.data = NULL;
+                    memset(&gui->popup, 0, sizeof(gui->popup));
                 }
             }
             ImGui::EndPopup();
