@@ -46,9 +46,9 @@ bool gui_settings_popup(void *data)
 
     // For the moment I disable the theme editor!
 #if 0
-    int group, color;
-    theme_t *theme = theme_get();
-    ImVec4 fcolor;
+    int group;
+    uint8_t *color;
+    theme = theme_get();
 
     gui_group_begin("Sizes");
     #define X(a) gui_input_int(#a, &theme->sizes.a, 0, 1000);
@@ -57,21 +57,18 @@ bool gui_settings_popup(void *data)
     gui_group_end();
 
     for (group = 0; group < THEME_GROUP_COUNT; group++) {
-        if (ImGui::CollapsingHeader(THEME_GROUP_INFOS[group].name)) {
-            for (color = 0; color < THEME_COLOR_COUNT; color++) {
-                if (!THEME_GROUP_INFOS[group].colors[color]) continue;
-                fcolor = theme->groups[group].colors[color];
-                if (ImGui::ColorEdit4(THEME_COLOR_INFOS[color].name,
-                                      (float*)&fcolor)) {
-                    theme->groups[group].colors[color] = fcolor;
-                }
+        if (gui_collapsing_header(THEME_GROUP_INFOS[group].name)) {
+            for (i = 0; i < THEME_COLOR_COUNT; i++) {
+                if (!THEME_GROUP_INFOS[group].colors[i]) continue;
+                color = theme->groups[group].colors[i];
+                gui_color(THEME_COLOR_INFOS[i].name, color);
             }
         }
     }
 
-    if (ImGui::Button("Revert")) theme_revert_default();
-    ImGui::SameLine();
-    if (ImGui::Button("Save")) theme_save();
+    if (gui_button("Revert", 0, 0)) theme_revert_default();
+    gui_same_line();
+    if (gui_button("Save", 0, 0)) theme_save();
 #endif
 
     gui_popup_body_end();

@@ -1631,6 +1631,7 @@ void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
 #define THEME_SIZES(X) \
     X(item_height) \
     X(icons_height) \
+    X(icons_button_size) \
     X(item_padding_h) \
     X(item_rounding) \
     X(item_spacing_h) \
@@ -1709,6 +1710,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs);
 void gui_render(void);
 
 // Gui widgets:
+bool gui_collapsing_header(const char *label);
 void gui_text(const char *label, ...);
 bool gui_button(const char *label, float w, int icon);
 void gui_group_begin(const char *label);

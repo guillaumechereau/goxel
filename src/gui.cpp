@@ -507,7 +507,7 @@ static void tools_panel(void)
     auto_adjust_panel_size();
 
     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
-    if (ImGui::CollapsingHeader("Tool Options"))
+    if (gui_collapsing_header("Tool Options"))
         tool_gui(goxel->tool);
 }
 
@@ -828,7 +828,7 @@ static void material_panel(void)
         goxel->rend.settings.shadow = clamp(v, 0, 1);
     }
     ImGui::SetNextTreeNodeOpen(false, ImGuiCond_Once);
-    if (ImGui::CollapsingHeader("Render Advanced"))
+    if (gui_collapsing_header("Render Advanced"))
         material_advanced_panel();
 }
 
@@ -984,7 +984,7 @@ static bool about_popup(void *data)
     Text("http://guillaumechereau.github.io/goxel");
 
     SetNextTreeNodeOpen(true, ImGuiCond_Once);
-    if (CollapsingHeader("Credits")) {
+    if (gui_collapsing_header("Credits")) {
         Text("Code:");
         BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
         BulletText("Dustin Willis Webber <dustin.webber@gmail.com>");
@@ -1904,6 +1904,11 @@ static bool alert_popup(void *data)
 void gui_alert(const char *title, const char *msg)
 {
     gui_open_popup(title, 0, msg ? strdup(msg) : NULL, alert_popup);
+}
+
+bool gui_collapsing_header(const char *label)
+{
+    return ImGui::CollapsingHeader(label);
 }
 
 }
