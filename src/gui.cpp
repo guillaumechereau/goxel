@@ -1289,6 +1289,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
     style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, 0);
     style.Colors[ImGuiCol_Button] = COLOR(BASE, INNER, 0);
     style.Colors[ImGuiCol_FrameBg] = COLOR(BASE, INNER, 0);
+    style.Colors[ImGuiCol_PopupBg] = COLOR(BASE, BACKGROUND, 0);
     style.Colors[ImGuiCol_ButtonActive] = COLOR(BASE, INNER, 1);
     style.Colors[ImGuiCol_ButtonHovered] =
         color_lighten(COLOR(BASE, INNER, 0), 1.2);
@@ -1818,8 +1819,10 @@ bool gui_combo(const char *label, int *v, const char **names, int nb)
 
     PushStyleVar(ImGuiStyleVar_ItemSpacing,
                  ImVec2(0, (theme->sizes.item_height - font_size) / 2));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WIDGET, INNER, 0));
     ret = Combo(label, v, names, nb);
     PopStyleVar();
+    PopStyleColor();
     return ret;
 }
 
