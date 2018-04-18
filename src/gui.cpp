@@ -1730,7 +1730,19 @@ bool gui_color(const char *label, uint8_t color[4])
 bool gui_checkbox(const char *label, bool *v, const char *hint)
 {
     bool ret;
+    const theme_t *theme = theme_get();
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    // Checkbox inside a group box have a plain background.
+    if (gui->group) {
+        GoxBox2(ImGui::GetCursorScreenPos(),
+                ImVec2(0, theme->sizes.item_height),
+                COLOR(WIDGET, INNER, 0), true, 0);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg,
+                color_lighten(style.Colors[ImGuiCol_FrameBg], 1.2));
+    }
     ret = Checkbox(label, v);
+    if (gui->group) ImGui::PopStyleColor();
     if (hint && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", hint);
     if (ret) on_click();
     return ret;
