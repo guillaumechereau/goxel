@@ -36,6 +36,7 @@
 #include "noc_file_dialog.h"
 #include "block_def.h"
 #include "mesh.h"
+#include "theme.h"
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -1625,81 +1626,6 @@ int gox_iter_infos(const char *path,
 // #### Colors functions #######
 void hsl_to_rgb(const uint8_t hsl[3], uint8_t rgb[3]);
 void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
-
-// #### Gui ####################
-
-#define THEME_SIZES(X) \
-    X(item_height) \
-    X(icons_height) \
-    X(icons_button_size) \
-    X(item_padding_h) \
-    X(item_rounding) \
-    X(item_spacing_h) \
-    X(item_spacing_v) \
-    X(item_inner_spacing_h)
-
-
-enum {
-    THEME_GROUP_BASE,
-    THEME_GROUP_WIDGET,
-    THEME_GROUP_TAB,
-    THEME_GROUP_MENU,
-    THEME_GROUP_COUNT
-};
-
-enum {
-    THEME_COLOR_BACKGROUND,
-    THEME_COLOR_OUTLINE,
-    THEME_COLOR_INNER,
-    THEME_COLOR_INNER_SELECTED,
-    THEME_COLOR_TEXT,
-    THEME_COLOR_TEXT_SELECTED,
-    THEME_COLOR_COUNT
-};
-
-typedef struct {
-    const char *name;
-    int parent;
-    bool colors[THEME_COLOR_COUNT];
-} theme_group_info_t;
-extern theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT];
-
-typedef struct {
-    const char *name;
-} theme_color_info_t;
-extern theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT];
-
-typedef struct {
-    uint8_t colors[THEME_COLOR_COUNT][4];
-} theme_group_t;
-
-typedef struct theme theme_t;
-struct theme {
-    char name[64];
-
-    struct {
-        int  item_height;
-        int  icons_height;
-        int  icons_button_size;
-        int  item_padding_h;
-        int  item_rounding;
-        int  item_spacing_h;
-        int  item_spacing_v;
-        int  item_inner_spacing_h;
-    } sizes;
-
-    theme_group_t groups[THEME_GROUP_COUNT];
-
-    theme_t *prev, *next; // Global list of themes.
-};
-
-// Return the current theme.
-theme_t *theme_get(void);
-theme_t *theme_get_list(void);
-void theme_revert_default(void);
-void theme_save(void);
-void theme_get_color(int group, int color, bool selected, uint8_t out[4]);
-void theme_set(const char *name);
 
 /* ################################
  * Section: Gui
