@@ -752,7 +752,7 @@ static void palette_panel(void)
     }
 }
 
-static void render_advanced_panel(void)
+static void material_advanced_panel(void)
 {
     float v;
     ImVec4 c;
@@ -798,7 +798,7 @@ static void render_advanced_panel(void)
 }
 
 
-static void render_panel(void)
+static void material_panel(void)
 {
     int i, current = -1;
     int nb = render_get_default_settings(0, NULL, NULL);
@@ -807,9 +807,6 @@ static void render_panel(void)
     const char **names;
     render_settings_t settings;
 
-    ImGui::Checkbox("Cycles", &gui->use_cycles);
-    goxel->use_cycles = gui->use_cycles;
-    goxel->no_edit = goxel->use_cycles || gui->popup.title;
     names = (const char**)calloc(nb, sizeof(*names));
     for (i = 0; i < nb; i++) {
         render_get_default_settings(i, &name, &settings);
@@ -831,10 +828,10 @@ static void render_panel(void)
     }
     ImGui::SetNextTreeNodeOpen(false, ImGuiCond_Once);
     if (ImGui::CollapsingHeader("Render Advanced"))
-        render_advanced_panel();
+        material_advanced_panel();
 }
 
-static void export_panel(void)
+static void render_panel(void)
 {
     int i;
     int maxsize;
@@ -1197,10 +1194,10 @@ static void render_left_panel(void)
         {"Palette", ICON_PALETTE, palette_panel},
         {"Layers", ICON_LAYERS, layers_panel},
         {"View", ICON_VIEW, view_panel},
-        {"Render", ICON_RENDER, render_panel},
+        {"Material", ICON_MATERIAL, material_panel},
         {"Cameras", ICON_CAMERA, cameras_panel},
         {"Image", ICON_IMAGE, image_panel},
-        {"Export", ICON_EXPORT, export_panel},
+        {"Render", ICON_RENDER, render_panel},
         {"Debug", ICON_DEBUG, debug_panel},
     };
     ImDrawList* draw_list;

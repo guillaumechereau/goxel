@@ -741,6 +741,7 @@ enum {
     ICON_DEBUG = 40,
 
     ICON_VIEW = 41,
+    ICON_MATERIAL = 42,
 };
 
 
