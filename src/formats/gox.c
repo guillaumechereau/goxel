@@ -439,6 +439,7 @@ int load_from_file(goxel_t *goxel, const char *path)
         free(layer);
     }
     goxel->image->layers = NULL;
+    memset(&goxel->image->box, 0, sizeof(goxel->image->box));
 
     while (chunk_read_start(&c, in)) {
         if (strncmp(c.type, "BL16", 4) == 0) {
@@ -537,6 +538,13 @@ int load_from_file(goxel_t *goxel, const char *path)
     goxel->image->path = strdup(path);
     goxel_update_meshes(goxel, -1);
     gzclose(in);
+
+    // Update plane, snap mask and camera pos not to confuse people.
+    plane_from_vectors(goxel->plane, goxel->image->box[3],
+                       VEC(1, 0, 0), VEC(0, 1, 0));
+    if (box_is_null(goxel->image->box)) goxel->snap_mask |= SNAP_PLANE;
+    camera_fit_box(&goxel->camera, goxel->image->box);
+
     return 0;
 
 error:

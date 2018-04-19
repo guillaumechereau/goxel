@@ -139,6 +139,11 @@ void camera_set_target(camera_t *cam, const float pos[3])
 void camera_fit_box(camera_t *cam, const float box[4][4])
 {
     float size[3];
+    if (box_is_null(box)) {
+        goxel->camera.dist = 128;
+        goxel->camera.aspect = 1;
+        return;
+    }
     box_get_size(box, size);
     mat4_mul_vec3(box, VEC(0, 0, 0), cam->ofs);
     vec3_imul(cam->ofs, -1);
