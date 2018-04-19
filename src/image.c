@@ -174,6 +174,7 @@ static void image_delete_camera(image_t *img, camera_t *cam);
 
 void image_delete(image_t *img)
 {
+    if (!img) return;
     image_t *hist, *snap, *snap_tmp;
     layer_t *layer, *layer_tmp;
     while (img->cameras)
