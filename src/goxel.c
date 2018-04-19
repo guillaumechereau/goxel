@@ -263,25 +263,10 @@ void goxel_init(goxel_t *gox)
     shapes_init();
     sound_init();
     cycles_init();
-    quat_set_identity(goxel->camera.rot);
-    goxel->camera.dist = 128;
-    goxel->camera.aspect = 1;
-    quat_irotate(goxel->camera.rot, -M_PI / 4, 1, 0, 0);
-    quat_irotate(goxel->camera.rot, -M_PI / 4, 0, 0, 1);
-
-    goxel->image = image_new();
-    camera_fit_box(&goxel->camera, goxel->image->box);
-    // Put plane horizontal at the center of the image box.
-    plane_from_vectors(goxel->plane, goxel->image->box[3],
-                       VEC(1, 0, 0), VEC(0, 1, 0));
+    model3d_init();
 
     goxel->layers_mesh = mesh_new();
     goxel->render_mesh = mesh_new();
-    goxel_update_meshes(goxel, -1);
-
-    vec4_set(goxel->back_color, 70, 70, 70, 255);
-    vec4_set(goxel->grid_color, 19, 19, 19, 255);
-    vec4_set(goxel->image_box_color, 204, 204, 255, 255);
 
     // Load and set default palette.
     palette_load_all(&goxel->palettes);
@@ -290,6 +275,51 @@ void goxel_init(goxel_t *gox)
             break;
     }
     goxel->palette = goxel->palette ?: goxel->palettes;
+
+    goxel->gestures.drag = (gesture_t) {
+        .type = GESTURE_DRAG,
+        .button = 0,
+        .callback = on_drag,
+    };
+    goxel->gestures.pan = (gesture_t) {
+        .type = GESTURE_DRAG,
+        .button = 2,
+        .callback = on_pan,
+    };
+    goxel->gestures.rotate = (gesture_t) {
+        .type = GESTURE_DRAG,
+        .button = 1,
+        .callback = on_rotate,
+    };
+    goxel->gestures.hover = (gesture_t) {
+        .type = GESTURE_HOVER,
+        .callback = on_hover,
+    };
+
+    goxel_reset(goxel);
+}
+
+void goxel_reset(goxel_t *goxel)
+{
+    image_delete(goxel->image);
+    goxel->image = image_new();
+    quat_set_identity(goxel->camera.rot);
+    goxel->camera.dist = 128;
+    goxel->camera.aspect = 1;
+    quat_irotate(goxel->camera.rot, -M_PI / 4, 1, 0, 0);
+    quat_irotate(goxel->camera.rot, -M_PI / 4, 0, 0, 1);
+    action_exec2("settings_load", "");
+
+    camera_fit_box(&goxel->camera, goxel->image->box);
+    // Put plane horizontal at the center of the image box.
+    plane_from_vectors(goxel->plane, goxel->image->box[3],
+                       VEC(1, 0, 0), VEC(0, 1, 0));
+
+    vec4_set(goxel->back_color, 70, 70, 70, 255);
+    vec4_set(goxel->grid_color, 19, 19, 19, 255);
+    vec4_set(goxel->image_box_color, 204, 204, 255, 255);
+
+    goxel_update_meshes(goxel, -1);
 
     action_exec2("tool_set_brush", "");
     goxel->tool_radius = 0.5;
@@ -314,30 +344,7 @@ void goxel_init(goxel_t *gox)
     };
     render_get_default_settings(0, NULL, &goxel->rend.settings);
 
-    model3d_init();
     goxel->snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
-
-    goxel->gestures.drag = (gesture_t) {
-        .type = GESTURE_DRAG,
-        .button = 0,
-        .callback = on_drag,
-    };
-    goxel->gestures.pan = (gesture_t) {
-        .type = GESTURE_DRAG,
-        .button = 2,
-        .callback = on_pan,
-    };
-    goxel->gestures.rotate = (gesture_t) {
-        .type = GESTURE_DRAG,
-        .button = 1,
-        .callback = on_rotate,
-    };
-    goxel->gestures.hover = (gesture_t) {
-        .type = GESTURE_HOVER,
-        .callback = on_hover,
-    };
-
-    action_exec2("settings_load", "");
 }
 
 void goxel_release(goxel_t *goxel)

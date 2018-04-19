@@ -230,7 +230,7 @@ int main(int argc, char **argv)
     // Run the unit tests in debug.
     if (DEBUG) {
         tests_run();
-        goxel_init(g_goxel);
+        goxel_reset(g_goxel);
     }
 
     if (args.input)
