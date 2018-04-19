@@ -28,7 +28,7 @@ static int iter(tool_t *tool, const float viewport[4])
     curs->snap_mask = SNAP_MESH;
     curs->snap_offset = 0;
 
-    goxel_set_help_text(goxel, "Click on the mesh to set plane.");
+    goxel_set_help_text("Click on the mesh to set plane.");
 
     if (curs->snaped && (curs->flags & CURSOR_PRESSED)) {
         curs->pos[0] = round(curs->pos[0]);

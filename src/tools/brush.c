@@ -158,7 +158,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     mesh_set(goxel->tool_mesh, brush->mesh_orig);
     mesh_merge(goxel->tool_mesh, brush->mesh, goxel->painter.mode,
                goxel->painter.color);
-    goxel_update_meshes(goxel, MESH_RENDER);
+    goxel_update_meshes(MESH_RENDER);
     vec3_copy(curs->pos, brush->start_pos);
     brush->last_op.mesh_key = mesh_get_key(goxel->tool_mesh);
 
@@ -167,7 +167,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         mesh_set(brush->mesh_orig, goxel->tool_mesh);
         mesh_delete(goxel->tool_mesh);
         goxel->tool_mesh = NULL;
-        goxel_update_meshes(goxel, -1);
+        goxel_update_meshes(-1);
     }
     vec3_copy(curs->pos, brush->last_pos);
     return 0;
@@ -184,7 +184,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     if (gest->state == GESTURE_END) {
         mesh_delete(goxel->tool_mesh);
         goxel->tool_mesh = NULL;
-        goxel_update_meshes(goxel, MESH_RENDER);
+        goxel_update_meshes(MESH_RENDER);
         return 0;
     }
 
@@ -199,7 +199,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, mesh);
     mesh_op(goxel->tool_mesh, &goxel->painter, box);
-    goxel_update_meshes(goxel, MESH_RENDER);
+    goxel_update_meshes(MESH_RENDER);
 
     brush->last_op.mesh_key = mesh_get_key(mesh);
 

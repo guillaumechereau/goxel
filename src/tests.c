@@ -42,7 +42,7 @@ static void test_file(const char *b64_data, uint64_t crc32)
     TEST(mesh_crc32(goxel->image->active_layer->mesh) == crc32);
     image_delete(goxel->image);
     goxel->image = image_new();
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 }
 
 static void test_load_file_v2(void)

@@ -431,7 +431,7 @@ void image_undo(image_t *img)
     DL_DELETE2(img->history, img, history_prev, history_next);
     DL_PREPEND_ELEM2(img->history, prev, img, history_prev, history_next);
     swap(img, prev);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
     debug_print_history(img);
 }
 
@@ -445,7 +445,7 @@ void image_redo(image_t *img)
     DL_DELETE2(img->history, next, history_prev, history_next);
     DL_PREPEND_ELEM2(img->history, img, next, history_prev, history_next);
     swap(img, next);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
     debug_print_history(img);
 }
 

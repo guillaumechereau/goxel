@@ -77,7 +77,7 @@ static void vox_import_old(const char *path)
     free(voxels);
     free(cube);
     fclose(file);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 }
 
 typedef struct {
@@ -181,7 +181,7 @@ static void vox_import(const char *path)
     free(ctx.voxels);
     free(ctx.palette);
     mesh_remove_empty_blocks(mesh, false);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 }
 
 static int get_color_index(uint8_t v[4], uint8_t (*palette)[4], bool exact)

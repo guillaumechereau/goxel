@@ -451,7 +451,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     if (gui->current_panel == 8 && goxel->render_task.status) {
         goxel_render_export_view(view->rect);
     } else {
-        goxel_render_view(goxel, view->rect);
+        goxel_render_view(view->rect);
     }
     GL(glViewport(0, 0, width * scale, height * scale));
 }
@@ -611,13 +611,13 @@ static void layers_panel(void)
                    layer->name, sizeof(layer->name));
         if (current && goxel->image->active_layer != layer) {
             goxel->image->active_layer = layer;
-            goxel_update_meshes(goxel, -1);
+            goxel_update_meshes(-1);
         }
         if (visible != layer->visible) {
             layer->visible = visible;
             if (ImGui::IsKeyDown(KEY_LEFT_SHIFT))
                 toggle_layer_only_visible(goxel, layer);
-            goxel_update_meshes(goxel, -1);
+            goxel_update_meshes(-1);
         }
         i++;
         auto_adjust_panel_size();
@@ -641,7 +641,7 @@ static void layers_panel(void)
     bounded = !box_is_null(layer->box);
     if (bounded && gui_button("Crop to box", 1, 0)) {
         mesh_crop(layer->mesh, layer->box);
-        goxel_update_meshes(goxel, -1);
+        goxel_update_meshes(-1);
     }
     gui_group_end();
 
@@ -955,7 +955,7 @@ static void import_image_plane(goxel_t *goxel)
     path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
             "png\0*.png\0jpg\0*.jpg;*.jpeg\0", NULL, NULL);
     if (!path) return;
-    goxel_import_image_plane(goxel, path);
+    goxel_import_image_plane(path);
 }
 
 static bool shift_alpha_popup(void *data)
@@ -969,7 +969,7 @@ static bool shift_alpha_popup(void *data)
     if (ImGui::InputInt("shift", &v, 1)) {
         mesh_set(mesh, original_mesh);
         mesh_shift_alpha(mesh, v);
-        goxel_update_meshes(goxel, -1);
+        goxel_update_meshes(-1);
     }
     if (ImGui::Button("OK")) {
         mesh_delete(original_mesh);
@@ -1139,7 +1139,7 @@ static bool render_tab(const char *label, int icon, bool *v)
 
     if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("%s", label);
-        goxel_set_help_text(goxel, label);
+        goxel_set_help_text(label);
     }
 
     ImGui::PopID();
@@ -1247,7 +1247,7 @@ static void render_left_panel(void)
     ImGui::EndChild();
 }
 
-void gui_iter(goxel_t *goxel, const inputs_t *inputs)
+void gui_iter(const inputs_t *inputs)
 {
     if (!gui) gui_init(inputs);
     unsigned int i;
@@ -1380,7 +1380,7 @@ void gui_iter(goxel_t *goxel, const inputs_t *inputs)
             inputs2.touches[i].pos[1] =
                 io.DisplaySize.y - inputs2.touches[i].pos[1];
         }
-        goxel_mouse_in_view(goxel, view_rect, &inputs2);
+        goxel_mouse_in_view(view_rect, &inputs2);
     }
 
     render_axis_arrows(goxel, view_size);
@@ -1591,7 +1591,7 @@ bool gui_action_button(const char *id, const char *label, float size,
     assert(action);
     PushID(action->id);
     ret = gui_button(label, size, action->icon);
-    if (IsItemHovered()) goxel_set_help_text(goxel, action_get(id)->help);
+    if (IsItemHovered()) goxel_set_help_text(action_get(id)->help);
     if (ret) {
         va_start(ap, sig);
         action_execv(action_get(id), sig, ap);
@@ -1612,10 +1612,9 @@ bool gui_action_checkbox(const char *id, const char *label)
     }
     if (ImGui::IsItemHovered()) {
         if (!action->shortcut)
-            goxel_set_help_text(goxel, action->help);
+            goxel_set_help_text(action->help);
         else
-            goxel_set_help_text(goxel, "%s (%s)",
-                    action->help, action->shortcut);
+            goxel_set_help_text("%s (%s)", action->help, action->shortcut);
     }
     return false;
 }
@@ -1672,7 +1671,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     if (ret) *v = !*v;
     if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("%s", tooltip);
-        goxel_set_help_text(goxel, tooltip);
+        goxel_set_help_text(tooltip);
     }
     ImGui::PopID();
 

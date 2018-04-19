@@ -117,7 +117,7 @@ static int kv6_import(const char *path)
 
     mesh_blit(goxel->image->active_layer->mesh, (const uint8_t*)cube,
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 end:
     free(cube);
     free(blocks);
@@ -199,7 +199,7 @@ static int kvx_import(const char *path)
 
     mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 
 end:
     free(palette);

@@ -254,10 +254,9 @@ static int on_pan(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
 static int on_hover(const gesture_t *gest, void *user);
 
-void goxel_init(goxel_t *gox)
+void goxel_init(void)
 {
-    goxel = gox;
-    memset(goxel, 0, sizeof(*goxel));
+    goxel = calloc(1, sizeof(*goxel));
 
     render_init();
     shapes_init();
@@ -296,10 +295,10 @@ void goxel_init(goxel_t *gox)
         .callback = on_hover,
     };
 
-    goxel_reset(goxel);
+    goxel_reset();
 }
 
-void goxel_reset(goxel_t *goxel)
+void goxel_reset(void)
 {
     image_delete(goxel->image);
     goxel->image = image_new();
@@ -319,7 +318,7 @@ void goxel_reset(goxel_t *goxel)
     vec4_set(goxel->grid_color, 19, 19, 19, 255);
     vec4_set(goxel->image_box_color, 204, 204, 255, 255);
 
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 
     action_exec2("tool_set_brush", "");
     goxel->tool_radius = 0.5;
@@ -347,20 +346,20 @@ void goxel_reset(goxel_t *goxel)
     goxel->snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
 }
 
-void goxel_release(goxel_t *goxel)
+void goxel_release(void)
 {
     cycles_release();
     proc_release(&goxel->proc);
     gui_release();
 }
 
-void goxel_iter(goxel_t *goxel, inputs_t *inputs)
+void goxel_iter(inputs_t *inputs)
 {
     double time = sys_get_time();
     goxel->fps = mix(goxel->fps, 1.0 / (time - goxel->frame_time), 0.1);
     goxel->frame_time = time;
-    goxel_set_help_text(goxel, NULL);
-    goxel_set_hint_text(goxel, NULL);
+    goxel_set_help_text(NULL);
+    goxel_set_hint_text(NULL);
     goxel->screen_size[0] = inputs->window_size[0];
     goxel->screen_size[1] = inputs->window_size[1];
     goxel->screen_scale = inputs->scale;
@@ -371,7 +370,7 @@ void goxel_iter(goxel_t *goxel, inputs_t *inputs)
         camera_set(goxel->image->active_camera, &goxel->camera);
     mat4_copy(goxel->camera.view_mat, goxel->rend.view_mat);
     mat4_copy(goxel->camera.proj_mat, goxel->rend.proj_mat);
-    gui_iter(goxel, inputs);
+    gui_iter(inputs);
     sound_iter();
     goxel->frame_count++;
 }
@@ -399,7 +398,7 @@ static void set_cursor_hint(cursor_t *curs)
 {
     const char *snap_str = NULL;
     if (!curs->snaped) {
-        goxel_set_hint_text(goxel, NULL);
+        goxel_set_hint_text(NULL);
         return;
     }
     if (curs->snaped == SNAP_MESH) snap_str = "mesh";
@@ -408,7 +407,7 @@ static void set_cursor_hint(cursor_t *curs)
     if (    curs->snaped == SNAP_SELECTION_IN ||
             curs->snaped == SNAP_SELECTION_OUT) snap_str = "selection";
 
-    goxel_set_hint_text(goxel, "[%.0f %.0f %.0f] (%s)",
+    goxel_set_hint_text("[%.0f %.0f %.0f] (%s)",
             curs->pos[0] - 0.5, curs->pos[1] - 0.5, curs->pos[2] - 0.5,
             snap_str);
 }
@@ -488,8 +487,7 @@ static int on_hover(const gesture_t *gest, void *user)
 
 
 // XXX: Cleanup this.
-void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
-                         const inputs_t *inputs)
+void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs)
 {
     float x_axis[4], q[4], p[3], n[3];
     gesture_t *gests[] = {&goxel->gestures.drag,
@@ -546,7 +544,7 @@ void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
     }
 }
 
-void goxel_render(goxel_t *goxel)
+void goxel_render(void)
 {
     GL(glViewport(0, 0, goxel->screen_size[0] * goxel->screen_scale,
                         goxel->screen_size[1] * goxel->screen_scale));
@@ -558,7 +556,7 @@ void goxel_render(goxel_t *goxel)
     gui_render();
 }
 
-static void render_export_viewport(goxel_t *goxel, const float viewport[4])
+static void render_export_viewport(const float viewport[4])
 {
     // Render the export viewport.
     int w = goxel->image->export_width;
@@ -643,7 +641,7 @@ void goxel_render_export_view(const float viewport[4])
     }
 }
 
-void goxel_render_view(goxel_t *goxel, const float viewport[4])
+void goxel_render_view(const float viewport[4])
 {
     layer_t *layer;
     renderer_t *rend = &goxel->rend;
@@ -692,7 +690,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
         render_box(rend, goxel->image->box, goxel->image_box_color,
                    EFFECT_SEE_BACK | EFFECT_GRID);
     if (goxel->show_export_viewport)
-        render_export_viewport(goxel, viewport);
+        render_export_viewport(viewport);
 
     // XXX: cleanup this!
     int rect[4] = {(int)viewport[0],
@@ -703,7 +701,7 @@ void goxel_render_view(goxel_t *goxel, const float viewport[4])
 }
 
 void image_update(image_t *img);
-void goxel_update_meshes(goxel_t *goxel, int mask)
+void goxel_update_meshes(int mask)
 {
     layer_t *layer;
     mesh_t *mesh;
@@ -790,7 +788,7 @@ ACTION_REGISTER(export_as,
 
 
 // XXX: we could merge all the set_xxx_text function into a single one.
-void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
+void goxel_set_help_text(const char *msg, ...)
 {
     va_list args;
     free(goxel->help_text);
@@ -801,7 +799,7 @@ void goxel_set_help_text(goxel_t *goxel, const char *msg, ...)
     va_end(args);
 }
 
-void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
+void goxel_set_hint_text(const char *msg, ...)
 {
     va_list args;
     free(goxel->hint_text);
@@ -812,7 +810,7 @@ void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...)
     va_end(args);
 }
 
-void goxel_import_image_plane(goxel_t *goxel, const char *path)
+void goxel_import_image_plane(const char *path)
 {
     layer_t *layer;
     texture_t *tex;
@@ -841,7 +839,7 @@ static int goxel_import_file(const char *path)
 {
     const action_t *a = NULL;
     if (str_endswith(path, ".gox")) {
-        load_from_file(goxel, path);
+        load_from_file(path);
         return 0;
     }
     actions_iter(search_action_for_format_cb, USER_PASS(path, "import_", &a));
@@ -916,7 +914,7 @@ static void fill_selection(layer_t *layer)
     if (box_is_null(goxel->selection)) return;
     layer = layer ?: goxel->image->active_layer;
     mesh_op(layer->mesh, &goxel->painter, goxel->selection);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 }
 
 ACTION_REGISTER(fill_selection,
@@ -988,14 +986,14 @@ static int view_default(const action_t *a, astack_t *s)
     quat_set_identity(goxel->camera.rot);
     quat_irotate(goxel->camera.rot, -M_PI / 4, 1, 0, 0);
     quat_irotate(goxel->camera.rot, -M_PI / 4, 0, 0, 1);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
     return 0;
 }
 
 static int view_set(const action_t *a, astack_t *s)
 {
     quat_copy(a->data, goxel->camera.rot);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
     return 0;
 }
 

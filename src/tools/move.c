@@ -49,7 +49,7 @@ static void do_move(layer_t *layer, const float mat[4][4])
             box_get_bbox(layer->box, layer->box);
         }
     }
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
 }
 
 // Get the face index from the normal.
@@ -78,7 +78,7 @@ static int on_move(gesture3d_t *gest, void *user)
     if (box_is_null(tool->box)) return GESTURE_FAILED;
 
     if (gest->type == GESTURE_HOVER) {
-        goxel_set_help_text(goxel, "Drag to move face");
+        goxel_set_help_text("Drag to move face");
         if (curs->snaped != SNAP_LAYER_OUT) return GESTURE_FAILED;
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
@@ -94,7 +94,7 @@ static int on_move(gesture3d_t *gest, void *user)
         return 0;
     }
     if (gest->type == GESTURE_DRAG) {
-        goxel_set_help_text(goxel, "Drag to move face");
+        goxel_set_help_text("Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(tool->box, FACES_MATS[tool->snap_face], face_plane);

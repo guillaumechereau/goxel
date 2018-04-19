@@ -225,7 +225,7 @@ static void chunk_write_all(gzFile out, const char *type,
     write_int32(out, 0);        // CRC XXX: todo.
 }
 
-void save_to_file(goxel_t *goxel, const char *path, bool with_preview)
+void save_to_file(const char *path, bool with_preview)
 {
     // XXX: remove all empty blocks before saving.
     LOG_I("Save to %s", path);
@@ -403,7 +403,7 @@ static block_hash_t *hash_find_at(block_hash_t *hash, int index)
     return hash;
 }
 
-int load_from_file(goxel_t *goxel, const char *path)
+int load_from_file(const char *path)
 {
     layer_t *layer, *layer_tmp;
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
@@ -536,7 +536,7 @@ int load_from_file(goxel_t *goxel, const char *path)
     }
 
     goxel->image->path = strdup(path);
-    goxel_update_meshes(goxel, -1);
+    goxel_update_meshes(-1);
     gzclose(in);
 
     // Update plane, snap mask and camera pos not to confuse people.
@@ -561,7 +561,7 @@ static void action_open(const char *path)
     if (!path) return;
     image_delete(goxel->image);
     goxel->image = image_new();
-    load_from_file(goxel, path);
+    load_from_file(path);
 }
 
 ACTION_REGISTER(open,
@@ -582,7 +582,7 @@ static void save_as(const char *path, bool with_preview)
         free(goxel->image->path);
         goxel->image->path = strdup(path);
     }
-    save_to_file(goxel, goxel->image->path, with_preview);
+    save_to_file(goxel->image->path, with_preview);
 }
 
 ACTION_REGISTER(save_as,

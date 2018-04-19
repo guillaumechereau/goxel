@@ -1588,34 +1588,34 @@ typedef struct goxel
 // the global goxel instance.
 extern goxel_t *goxel;
 
-void goxel_init(goxel_t *goxel);
-void goxel_release(goxel_t *goxel);
-void goxel_reset(goxel_t *goxel);
-void goxel_iter(goxel_t *goxel, inputs_t *inputs);
-void goxel_render(goxel_t *goxel);
-void goxel_render_view(goxel_t *goxel, const float viewport[4]);
+// XXX: add some doc.
+void goxel_init(void);
+void goxel_release(void);
+void goxel_reset(void);
+void goxel_iter(inputs_t *inputs);
+void goxel_render(void);
+void goxel_render_view(const float viewport[4]);
 void goxel_render_export_view(const float viewport[4]);
 // Called by the gui when the mouse hover a 3D view.
 // XXX: change the name since we also call it when the mouse get out of
 // the view.
-void goxel_mouse_in_view(goxel_t *goxel, const float viewport[4],
-                         const inputs_t *inputs);
+void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs);
 
 // Recompute the meshes.  mask from MESH_ enum.
-void goxel_update_meshes(goxel_t *goxel, int mask);
+void goxel_update_meshes(int mask);
 
-void goxel_set_help_text(goxel_t *goxel, const char *msg, ...);
-void goxel_set_hint_text(goxel_t *goxel, const char *msg, ...);
+void goxel_set_help_text(const char *msg, ...);
+void goxel_set_hint_text(const char *msg, ...);
 
-void goxel_import_image_plane(goxel_t *goxel, const char *path);
+void goxel_import_image_plane(const char *path);
 
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
 // #############################
 
-void save_to_file(goxel_t *goxel, const char *path, bool with_preview);
-int load_from_file(goxel_t *goxel, const char *path);
+void save_to_file(const char *path, bool with_preview);
+int load_from_file(const char *path);
 
 // Iter info of a gox file, without actually reading it.
 // For the moment only returns the image preview if available.
@@ -1634,7 +1634,7 @@ void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
  */
 
 void gui_release(void);
-void gui_iter(goxel_t *goxel, const inputs_t *inputs);
+void gui_iter(const inputs_t *inputs);
 void gui_render(void);
 
 // Gui widgets:

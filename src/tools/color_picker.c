@@ -35,11 +35,11 @@ int tool_color_picker_iter(tool_t *tool, const float viewport[4])
     curs->snap_mask = SNAP_MESH;
     curs->snap_offset = -0.5;
 
-    goxel_set_help_text(goxel, "Click on a voxel to pick the color");
+    goxel_set_help_text("Click on a voxel to pick the color");
     if (!curs->snaped) return 0;
     mesh_get_at(mesh, NULL, pi, color);
     color[3] = 255;
-    goxel_set_help_text(goxel, "%d %d %d", color[0], color[1], color[2]);
+    goxel_set_help_text("%d %d %d", color[0], color[1], color[2]);
     if (curs->flags & CURSOR_PRESSED) vec4_copy(color, goxel->painter.color);
     return 0;
 }

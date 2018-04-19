@@ -24,7 +24,7 @@ static int tool_set_action(const action_t *a, astack_t *s)
     if (goxel->tool_mesh) {
         mesh_delete(goxel->tool_mesh);
         goxel->tool_mesh = NULL;
-        goxel_update_meshes(goxel, MESH_LAYERS);
+        goxel_update_meshes(MESH_LAYERS);
     }
     goxel->tool = (tool_t*)a->data;
     return 0;
@@ -55,12 +55,11 @@ static int pick_color_gesture(gesture3d_t *gest, void *user)
     curs->snap_mask = SNAP_MESH;
     curs->snap_offset = -0.5;
 
-    goxel_set_help_text(goxel, "Click on a voxel to pick the color");
+    goxel_set_help_text("Click on a voxel to pick the color");
     if (!curs->snaped) return 0;
     mesh_get_at(mesh, NULL, pi, color);
     color[3] = 255;
-    goxel_set_help_text(goxel, "pick: %d %d %d",
-                        color[0], color[1], color[2]);
+    goxel_set_help_text("pick: %d %d %d", color[0], color[1], color[2]);
     if (curs->flags & CURSOR_PRESSED) vec4_copy(color, goxel->painter.color);
     return 0;
 }
@@ -76,7 +75,7 @@ int tool_iter(tool_t *tool, const float viewport[4])
     assert(tool);
     if (    (tool->flags & TOOL_REQUIRE_CAN_EDIT) &&
             !image_layer_can_edit(goxel->image, goxel->image->active_layer)) {
-        goxel_set_help_text(goxel, "Cannot edit this layer");
+        goxel_set_help_text("Cannot edit this layer");
         return 0;
     }
     tool->state = tool->iter_fn(tool, viewport);

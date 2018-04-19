@@ -85,7 +85,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     cursor_t *curs = gest->cursor;
     uint8_t box_color[4] = {255, 255, 0, 255};
 
-    goxel_set_help_text(goxel, "Click and drag to draw.");
+    goxel_set_help_text("Click and drag to draw.");
     get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane, box);
     render_box(&goxel->rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
@@ -106,18 +106,18 @@ static int on_drag(gesture3d_t *gest, void *user)
         image_history_push(goxel->image);
     }
 
-    goxel_set_help_text(goxel, "Drag.");
+    goxel_set_help_text("Drag.");
     get_box(shape->start_pos, curs->pos, curs->normal, 0, goxel->plane, box);
     if (!goxel->tool_mesh) goxel->tool_mesh = mesh_new();
     mesh_set(goxel->tool_mesh, shape->mesh_orig);
     mesh_op(goxel->tool_mesh, &goxel->painter, box);
-    goxel_update_meshes(goxel, MESH_RENDER);
+    goxel_update_meshes(MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
         mesh_set(layer_mesh, goxel->tool_mesh);
         mesh_delete(goxel->tool_mesh);
         goxel->tool_mesh = NULL;
-        goxel_update_meshes(goxel, -1);
+        goxel_update_meshes(-1);
         shape->adjust = goxel->tool_shape_two_steps;
     }
     return 0;
@@ -130,7 +130,7 @@ static int on_adjust(gesture3d_t *gest, void *user)
     float pos[3], v[3], box[4][4];
     mesh_t *mesh = goxel->image->active_layer->mesh;
 
-    goxel_set_help_text(goxel, "Adjust height.");
+    goxel_set_help_text("Adjust height.");
 
     if (gest->state == GESTURE_BEGIN) {
         plane_from_normal(goxel->tool_plane, curs->pos, goxel->plane[0]);
@@ -147,13 +147,13 @@ static int on_adjust(gesture3d_t *gest, void *user)
 
     mesh_set(mesh, shape->mesh_orig);
     mesh_op(mesh, &goxel->painter, box);
-    goxel_update_meshes(goxel, MESH_RENDER);
+    goxel_update_meshes(MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
         mat4_copy(plane_null, goxel->tool_plane);
         mesh_set(shape->mesh_orig, mesh);
         shape->adjust = false;
-        goxel_update_meshes(goxel, -1);
+        goxel_update_meshes(-1);
     }
 
     return 0;

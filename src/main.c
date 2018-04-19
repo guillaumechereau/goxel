@@ -29,7 +29,6 @@
 #endif
 #include <GLFW/glfw3.h>
 
-static goxel_t      *g_goxel = NULL;
 static inputs_t     *g_inputs = NULL;
 static GLFWwindow   *g_window = NULL;
 static float        g_scale = 1;
@@ -136,8 +135,8 @@ static void loop_function(void) {
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
     g_inputs->touches[0].down[2] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
-    goxel_iter(g_goxel, g_inputs);
-    goxel_render(g_goxel);
+    goxel_iter(g_inputs);
+    goxel_render();
 
     memset(g_inputs, 0, sizeof(*g_inputs));
     glfwSwapBuffers(g_window);
@@ -204,7 +203,6 @@ int main(int argc, char **argv)
     inputs_t inputs = {};
     const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
     g_inputs = &inputs;
-    g_goxel = calloc(1, sizeof(*g_goxel));
 
 #ifndef NO_ARGP
     argp_parse (&argp, argc, argv, 0, 0, &args);
@@ -226,11 +224,11 @@ int main(int argc, char **argv)
 #ifdef WIN32
     glewInit();
 #endif
-    goxel_init(g_goxel);
+    goxel_init();
     // Run the unit tests in debug.
     if (DEBUG) {
         tests_run();
-        goxel_reset(g_goxel);
+        goxel_reset();
     }
 
     if (args.input)
@@ -246,6 +244,6 @@ int main(int argc, char **argv)
     }
     start_main_loop(loop_function);
 end:
-    goxel_release(g_goxel);
+    goxel_release();
     return ret;
 }

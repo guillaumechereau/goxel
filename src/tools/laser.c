@@ -43,10 +43,10 @@ static int on_drag(gesture3d_t *gest, void *user)
         image_history_push(goxel->image);
 
     mesh_op(mesh, &painter, laser->box);
-    goxel_update_meshes(goxel, MESH_RENDER);
+    goxel_update_meshes(MESH_RENDER);
 
     if (gest->state == GESTURE_END)
-        goxel_update_meshes(goxel, -1);
+        goxel_update_meshes(-1);
 
     return 0;
 }

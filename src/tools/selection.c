@@ -107,7 +107,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     cursor_t *curs = gest->cursor;
     uint8_t box_color[4] = {255, 255, 0, 255};
 
-    goxel_set_help_text(goxel, "Click and drag to set selection.");
+    goxel_set_help_text("Click and drag to set selection.");
     get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane, box);
     render_box(&goxel->rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
@@ -123,7 +123,7 @@ static int on_resize(gesture3d_t *gest, void *user)
     if (box_is_null(goxel->selection)) return GESTURE_FAILED;
 
     if (gest->type == GESTURE_HOVER) {
-        goxel_set_help_text(goxel, "Drag to move face");
+        goxel_set_help_text("Drag to move face");
         if (curs->snaped != SNAP_SELECTION_OUT) return GESTURE_FAILED;
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
@@ -139,7 +139,7 @@ static int on_resize(gesture3d_t *gest, void *user)
         return 0;
     }
     if (gest->type == GESTURE_DRAG) {
-        goxel_set_help_text(goxel, "Drag to move face");
+        goxel_set_help_text("Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(goxel->selection, FACES_MATS[tool->snap_face],
@@ -183,12 +183,12 @@ static int on_drag(gesture3d_t *gest, void *user)
             vec3_copy(curs->pos, tool->start_pos);
         curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
-        goxel_set_help_text(goxel, "Drag.");
+        goxel_set_help_text("Drag.");
         get_box(tool->start_pos, curs->pos, curs->normal,
                 0, goxel->plane, goxel->selection);
         if (gest->state == GESTURE_END) tool->adjust = true;
     } else {
-        goxel_set_help_text(goxel, "Adjust height.");
+        goxel_set_help_text("Adjust height.");
         if (gest->state == GESTURE_BEGIN)
             plane_from_normal(goxel->tool_plane, curs->pos, goxel->plane[0]);
         vec3_sub(curs->pos, goxel->tool_plane[3], v);
