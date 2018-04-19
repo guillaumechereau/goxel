@@ -576,7 +576,7 @@ static void render_view_cycles(const float viewport[4])
     int w = viewport[2];
     int h = viewport[3];
     uint8_t *buf = calloc(4, w * h);
-    cycles_render(buf, &w, &h, &goxel->camera, NULL);
+    cycles_render(buf, &w, &h, &goxel->camera, NULL, false);
     render_img2(&goxel->rend, buf, w, h, 4, NULL,
                 EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN);
     free(buf);
@@ -585,7 +585,7 @@ static void render_view_cycles(const float viewport[4])
 
 void goxel_render_export_view(const float viewport[4])
 {
-    typeof(goxel->export_task) *task = &goxel->export_task;
+    typeof(goxel->render_task) *task = &goxel->render_task;
     int i, w, h, bpp = 4;
     uint8_t *tmp;
     float a, mat[4][4];
@@ -605,12 +605,15 @@ void goxel_render_export_view(const float viewport[4])
         task->buf = calloc(task->w * task->h, 4);
     }
 
-    task->status = 1;
+    if (!task->status) task->status = 1;
+
     w = task->w;
     h = task->h;
     camera.aspect = (float)w / h;
     camera_update(&camera);
-    cycles_render(task->buf, &w, &h, &camera, &task->progress);
+    cycles_render(task->buf, &w, &h, &camera, &task->progress,
+                  task->force_restart);
+    task->force_restart = false;
     mat4_set_identity(mat);
     a = 1.0 * w / h / rect[2] * rect[3];
     mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
@@ -629,8 +632,7 @@ void goxel_render_export_view(const float viewport[4])
             img_write(tmp, w, h, bpp, task->output);
             free(tmp);
         }
-        task->status = 0;
-        gui_alert("Render", "Render complete");
+        task->status = 2;
     }
 }
 

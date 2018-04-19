@@ -1575,12 +1575,13 @@ typedef struct goxel
 
     // Hold info about the cycles rendering task.
     struct {
-        int status;
+        int status;         // 0: stopped, 1: running, 2: finished.
         uint8_t *buf;       // RGBA buffer.
         int w, h;           // Size of the buffer.
         char output[1024];  // Output path.
         float progress;
-    } export_task;
+        bool force_restart;
+    } render_task;
 
 } goxel_t;
 
@@ -1746,7 +1747,7 @@ void sound_iter(void);
 void cycles_init(void);
 void cycles_release(void);
 void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
-                   float *progress);
+                   float *progress, bool force_restart);
 
 // Section: tests
 

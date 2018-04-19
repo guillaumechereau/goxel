@@ -260,7 +260,7 @@ void cycles_init(void)
     // g_session_params.threads = 1;
 }
 
-static bool sync_mesh(int w, int h)
+static bool sync_mesh(int w, int h, bool force)
 {
     static uint64_t last_key = 0;
     uint64_t key;
@@ -270,6 +270,7 @@ static bool sync_mesh(int w, int h)
     key = crc64(key, goxel->back_color, sizeof(goxel->back_color));
     key = crc64(key, (const uint8_t*)&w, sizeof(w));
     key = crc64(key, (const uint8_t*)&h, sizeof(h));
+    key = crc64(key, (const uint8_t*)&force, sizeof(force));
 
     if (key == last_key) return false;
     last_key = key;
@@ -363,17 +364,17 @@ static bool sync_camera(int w, int h, const camera_t *camera, bool force)
     return true;
 }
 
-static bool sync(int w, int h, const camera_t *cam)
+static bool sync(int w, int h, const camera_t *cam, bool force)
 {
     bool mesh_changed;
-    mesh_changed = sync_mesh(w, h);
+    mesh_changed = sync_mesh(w, h, force);
     sync_lights(w, h, mesh_changed);
     sync_camera(w, h, cam, mesh_changed);
     return true;
 }
 
 void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
-                   float *progress)
+                   float *progress, bool force_restart)
 {
     static ccl::DeviceDrawParams draw_params = ccl::DeviceDrawParams();
 
@@ -382,7 +383,7 @@ void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
     g_buffer_params.full_width = *w;
     g_buffer_params.full_height = *h;
 
-    sync(*w, *h, cam);
+    sync(*w, *h, cam, force_restart);
     if (!g_session) return;
 
     std::unique_lock<std::mutex> lock(g_session->display_mutex);

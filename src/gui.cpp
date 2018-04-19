@@ -446,9 +446,9 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    // XXX: 8 here means 'export' panel.  Need to use an enum!
-    if (    gui->current_panel == 8 &&
-            goxel->export_task.status) {
+    // XXX: 8 here means 'export' panel.  Need to use an enum or find a
+    // better way!
+    if (gui->current_panel == 8 && goxel->render_task.status) {
         goxel_render_export_view(view->rect);
     } else {
         goxel_render_view(goxel, view->rect);
@@ -837,39 +837,44 @@ static void render_panel(void)
     int i;
     int maxsize;
     const char *path;
+    typeof(goxel->render_task) *task = &goxel->render_task;
 
-    goxel->no_edit = goxel->export_task.status || gui->popup.title;
+    goxel->no_edit = task->status || gui->popup.title;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
     goxel->show_export_viewport = true;
     gui_group_begin(NULL);
     i = goxel->image->export_width;
-    if (gui_input_int("width", &i, 1, maxsize))
+    if (gui_input_int("w", &i, 1, maxsize))
         goxel->image->export_width = clamp(i, 1, maxsize);
     i = goxel->image->export_height;
-    if (gui_input_int("height", &i, 1, maxsize))
+    if (gui_input_int("h", &i, 1, maxsize))
         goxel->image->export_height = clamp(i, 1, maxsize);
+    if (gui_button("Fit screen", 1, 0)) {
+        goxel->image->export_width = gui->view.rect[2];
+        goxel->image->export_height = gui->view.rect[3];
+    }
     if (gui_button("Set output", 1, 0)) {
         path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "png\0*.png\0", NULL,
                                     "untitled.png");
-        if (path) strcpy(goxel->export_task.output, path);
+        if (path) strcpy(goxel->render_task.output, path);
     }
     gui_group_end();
 
-    if (*goxel->export_task.output)
-        gui_text("%s", goxel->export_task.output);
+    if (*goxel->render_task.output)
+        gui_text("%s", goxel->render_task.output);
 
-    if (gui_button(goxel->export_task.status ? "Cancel" : "Render", 1, 0)) {
-        goxel->export_task.status = goxel->export_task.status ? 0 : 1;
-        if (goxel->export_task.status && !(*goxel->export_task.output)) {
-            gui_alert("Error", "Output not set");
-            goxel->export_task.status = 0;
-        }
+    if (task->status == 0 && gui_button("Render", 0, 0)) task->status = 1;
+    if (task->status == 1 && gui_button("Cancel", 0, 0)) task->status = 0;
+    if (task->status == 2 && gui_button("Restart", 0, 0)) {
+        task->status = 1;
+        task->progress = 0;
+        task->force_restart = true;
     }
 
-    if (goxel->export_task.status) {
-        gui_text("%d/100", (int)(goxel->export_task.progress * 100));
+    if (goxel->render_task.status) {
+        gui_text("%d/100", (int)(goxel->render_task.progress * 100));
     }
 
 }
