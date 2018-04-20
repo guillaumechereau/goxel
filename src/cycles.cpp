@@ -172,6 +172,17 @@ static ccl::Mesh *create_mesh_for_block(
             ret->add_triangle(i * 4 + 0, i * 4 + 1, i * 4 + 2, 0, false);
             ret->add_triangle(i * 4 + 2, i * 4 + 3, i * 4 + 0, 0, false);
         }
+        // Set color attribute.
+        attr = ret->attributes.add(S("Col"), ccl::TypeDesc::TypeColor,
+                ccl::ATTR_ELEMENT_CORNER_BYTE);
+        for (i = 0; i < nb * 6; i++) {
+            attr->data_uchar4()[i] = ccl::make_uchar4(
+                    vertices[i / 6 * 4].color[0],
+                    vertices[i / 6 * 4].color[1],
+                    vertices[i / 6 * 4].color[2],
+                    vertices[i / 6 * 4].color[3]
+            );
+        }
     } else { // Triangles
         ret->reserve_mesh(nb * 3, nb);
         for (i = 0; i < nb; i++) { // Once per triangle.
@@ -183,19 +194,19 @@ static ccl::Mesh *create_mesh_for_block(
             }
             ret->add_triangle(i * 3 + 0, i * 3 + 1, i * 3 + 2, 0, false);
         }
+        // Set color attribute.
+        attr = ret->attributes.add(S("Col"), ccl::TypeDesc::TypeColor,
+                ccl::ATTR_ELEMENT_CORNER_BYTE);
+        for (i = 0; i < nb * 3; i++) {
+            attr->data_uchar4()[i] = ccl::make_uchar4(
+                    vertices[i].color[0],
+                    vertices[i].color[1],
+                    vertices[i].color[2],
+                    vertices[i].color[3]
+            );
+        }
     }
 
-    // Set color attribute.
-    attr = ret->attributes.add(S("Col"), ccl::TypeDesc::TypeColor,
-            ccl::ATTR_ELEMENT_CORNER_BYTE);
-    for (i = 0; i < nb * ((size == 4) ? 6 : 3); i++) {
-        attr->data_uchar4()[i] = ccl::make_uchar4(
-                vertices[i / 6 * 4].color[0],
-                vertices[i / 6 * 4].color[1],
-                vertices[i / 6 * 4].color[2],
-                vertices[i / 6 * 4].color[3]
-        );
-    }
 
 end:
     free(vertices);
