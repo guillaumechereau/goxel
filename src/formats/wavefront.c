@@ -97,7 +97,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
         mat4_set_identity(mat);
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
-                mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
+                                    goxel->rend.settings.effects, verts);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
@@ -183,7 +183,7 @@ void ply_export(const mesh_t *mesh, const char *path)
         mat4_set_identity(mat);
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
-                mc ? EFFECT_MARCHING_CUBES | EFFECT_FLAT : 0, verts);
+                                    goxel->rend.settings.effects, verts);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
