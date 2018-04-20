@@ -19,6 +19,10 @@
 #include "goxel.h"
 #include <limits.h>
 
+// Number of sub position per voxel in the marching
+// cube rendering.
+#define MC_VOXEL_SUB_POS 8 // XXX: try to make it higher (up to 16!)
+
 static const int N = BLOCK_SIZE;
 
 // Marching cube data.
