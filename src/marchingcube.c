@@ -88,7 +88,8 @@ static void mc_interp_normal(const mc_vert_t *vert, int normals[8][3],
 }
 
 int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
-                              int effects, voxel_vertex_t *out)
+                              int effects, voxel_vertex_t *out,
+                              int *size, int *subdivide)
 {
     int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
     int a, sum_a;
@@ -106,6 +107,10 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                       {INT_MIN, INT_MIN, INT_MIN}};
 
     mc_vert_t tri[5][3];
+
+    *size = 3;      // Triangles.
+    *subdivide = MC_VOXEL_SUB_POS;
+
     if (!(effects & EFFECT_FLAT)) k = 8;
 
     // To speed things up we first get the voxel cube around the block.

@@ -23,7 +23,8 @@ static const int N = BLOCK_SIZE;
 
 // Implemented in marchingcube.c
 int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
-                              int effects, voxel_vertex_t *out);
+                              int effects, voxel_vertex_t *out,
+                              int *size, int *pos_scale);
 
 static bool block_is_face_visible(uint32_t neighboors_mask, int f)
 {
@@ -203,7 +204,8 @@ static uint16_t get_pos_data(uint16_t x, uint16_t y, uint16_t z, uint16_t f)
 
 
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
-                           int effects, voxel_vertex_t *out)
+                           int effects, voxel_vertex_t *out,
+                           int *size, int *subdivide)
 {
     int x, y, z, f;
     int i, nb = 0;
@@ -216,7 +218,11 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
     const int *vpos;
 
     if (effects & EFFECT_MARCHING_CUBES)
-        return mesh_generate_vertices_mc(mesh, block_pos, effects, out);
+        return mesh_generate_vertices_mc(mesh, block_pos, effects, out,
+                                         size, subdivide);
+
+    *size = 4;      // Quad.
+    *subdivide = 1; // Unit is one voxel.
 
     // To speed things up we first get the voxel cube around the block.
     // XXX: can we do this while still using mesh iterators somehow?

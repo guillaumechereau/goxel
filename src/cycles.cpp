@@ -146,7 +146,7 @@ static ccl::Mesh *create_mesh_for_block(
         const mesh_t *mesh, const int block_pos[3])
 {
     ccl::Mesh *ret = NULL;
-    int nb = 0, i, j;
+    int nb = 0, i, j, size, subdivide;
     voxel_vertex_t* vertices;
     ccl::Attribute *attr;
 
@@ -155,7 +155,9 @@ static ccl::Mesh *create_mesh_for_block(
 
     vertices = (voxel_vertex_t*)calloc(
             BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4, sizeof(*vertices));
-    nb = mesh_generate_vertices(mesh, block_pos, 0, vertices);
+    nb = mesh_generate_vertices(mesh, block_pos, 0, vertices,
+                                &size, &subdivide);
+    assert(size == 4 && subdivide == 1); // No marching cube support yet.
     if (!nb) goto end;
 
     ret->reserve_mesh(nb * 4, nb * 2);

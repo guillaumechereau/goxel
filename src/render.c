@@ -65,6 +65,7 @@ struct render_item_t
     GLuint      vertex_buffer;
     int         size;           // 4 (quads) or 3 (triangles).
     int         nb_elements;    // Number of quads or triangle.
+    int         subdivide;      // Unit per voxel (usually 1).
 };
 
 // The buffered item hash table.  For the moment it is only used of the blocks.
@@ -436,8 +437,8 @@ static render_item_t *get_item_for_block(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
     item->nb_elements = mesh_generate_vertices(
-            mesh, block_pos, effects, g_vertices_buffer);
-    item->size = (effects & EFFECT_MARCHING_CUBES) ? 3 : 4;
+            mesh, block_pos, effects, g_vertices_buffer,
+            &item->size, &item->subdivide);
     if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
         item->nb_elements = BATCH_QUAD_COUNT;
@@ -474,6 +475,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         block_id_f[0] = ((block_id >> 0) & 0xff) / 255.0;
         GL(glUniform2fv(prog->u_block_id_l, 1, block_id_f));
     }
+    GL(glUniform1f(prog->u_pos_scale_l, 1.f / item->subdivide));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glVertexAttribPointer(attr,
@@ -580,16 +582,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     prog_t *prog;
     float model[4][4];
     int attr, block_pos[3], block_id;
-    float pos_scale = 1.0f;
     float light_dir[3];
     bool shadow = false;
     mesh_iterator_t iter;
 
     mat4_set_identity(model);
     get_light_dir(rend, true, light_dir);
-
-    if (effects & EFFECT_MARCHING_CUBES)
-        pos_scale = 1.0 / MC_VOXEL_SUB_POS;
 
     if (effects & EFFECT_RENDER_POS)
         prog = get_prog("asset://data/shaders/pos_data.glsl", NULL);
@@ -644,7 +642,6 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     GL(glUniform1f(prog->u_m_shi_l, rend->settings.shininess));
     GL(glUniform1f(prog->u_m_smo_l, rend->settings.smoothness));
     GL(glUniform1f(prog->u_bshadow_l, rend->settings.border_shadow));
-    GL(glUniform1f(prog->u_pos_scale_l, pos_scale));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));

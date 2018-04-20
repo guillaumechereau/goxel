@@ -945,8 +945,25 @@ int mesh_select(const mesh_t *mesh,
 void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
                 const uint8_t color[4]);
 
+/*
+ * Function: mesh_generate_vertices
+ * Generate a vertice array for rendering a mesh block.
+ *
+ * Parameters:
+ *   mesh       - Input mesh.
+ *   block_pos  - Position of the mesh block to render.
+ *   effects    - Effect flags.
+ *   out        - Output array.
+ *   size       - Output the size of a single face.
+ *                4 for quads and 3 for triangles.  Normal mesh uses quad
+ *                but marching cube effect return triangle arrays.
+ *   subdivide  - Ouput the number of subdivisions used for a voxel.  Normal
+ *                render uses 1 unit per voxel, but marching cube rendering
+ *                can use more.
+ */
 int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
-                           int effects, voxel_vertex_t *out);
+                           int effects, voxel_vertex_t *out,
+                           int *size, int *subdivide);
 
 // XXX: use int[2][3] for the box?
 void mesh_crop(mesh_t *mesh, const float box[4][4]);

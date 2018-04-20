@@ -81,9 +81,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
-    bool mc = goxel->rend.settings.effects & EFFECT_MARCHING_CUBES;
-    int size = mc ? 3 : 4;
-    float scale = mc ? 1.0 / MC_VOXEL_SUB_POS : 1.0;
+    int size, subdivide;
     UT_array *lines;
     line_t line, face, *line_ptr;
     mesh_iterator_t iter;
@@ -97,13 +95,14 @@ void wavefront_export(const mesh_t *mesh, const char *path)
         mat4_set_identity(mat);
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
-                                    goxel->rend.settings.effects, verts);
+                                    goxel->rend.settings.effects, verts,
+                                    &size, &subdivide);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
-                v[0] = verts[i * size + j].pos[0] * scale;
-                v[1] = verts[i * size + j].pos[1] * scale;
-                v[2] = verts[i * size + j].pos[2] * scale;
+                v[0] = verts[i * size + j].pos[0] / (float)subdivide;
+                v[1] = verts[i * size + j].pos[1] / (float)subdivide;
+                v[2] = verts[i * size + j].pos[2] / (float)subdivide;
                 mat4_mul_vec3(mat, v, v);
                 memcpy(c, verts[i * size + j].color, 3);
                 line = (line_t){
@@ -167,9 +166,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
-    bool mc = goxel->rend.settings.effects & EFFECT_MARCHING_CUBES;
-    int size = mc ? 3 : 4;
-    float scale = mc ? 1.0 / MC_VOXEL_SUB_POS : 1.0;
+    int size, subdivide;
     UT_array *lines;
     line_t line, face, *line_ptr;
     mesh_iterator_t iter;
@@ -183,13 +180,14 @@ void ply_export(const mesh_t *mesh, const char *path)
         mat4_set_identity(mat);
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
-                                    goxel->rend.settings.effects, verts);
+                                    goxel->rend.settings.effects, verts,
+                                    &size, &subdivide);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
             for (j = 0; j < size; j++) {
-                v[0] = verts[i * size + j].pos[0] * scale;
-                v[1] = verts[i * size + j].pos[1] * scale;
-                v[2] = verts[i * size + j].pos[2] * scale;
+                v[0] = verts[i * size + j].pos[0] / (float)subdivide;
+                v[1] = verts[i * size + j].pos[1] / (float)subdivide;
+                v[2] = verts[i * size + j].pos[2] / (float)subdivide;
                 mat4_mul_vec3(mat, v, v);
                 memcpy(c, verts[i * size + j].color, 3);
                 line = (line_t){
