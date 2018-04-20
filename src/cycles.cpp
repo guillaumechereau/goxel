@@ -415,6 +415,6 @@ extern "C" {
 void cycles_init(void) {}
 void cycles_release(void) {}
 void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
-                   float *progress) {}
+                   float *progress, bool force_restart) {}
 
 #endif
