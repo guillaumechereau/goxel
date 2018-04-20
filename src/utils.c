@@ -92,44 +92,6 @@ void dolog(int level, const char *msg,
     free(full_msg);
 }
 
-static void parse_gl_extensions(bool extensions[GOX_GL_EXTENSIONS_COUNT])
-{
-    static const char *NAMES[] = {
-        [GOX_GL_QCOM_tiled_rendering]     = "GL_QCOM_tiled_rendering",
-        [GOX_GL_OES_packed_depth_stencil] = "GL_OES_packed_depth_stencil",
-        [GOX_GL_OES_depth_texture]        = "GL_OES_depth_texture",
-        [GOX_GL_EXT_discard_framebuffer]  = "GL_EXT_discard_framebuffer",
-    };
-    _Static_assert(ARRAY_SIZE(NAMES) == GOX_GL_EXTENSIONS_COUNT, "");
-    char *str, *token, *tmp = NULL;
-    const int nb = GOX_GL_EXTENSIONS_COUNT;
-    int i;
-    str = strdup((const char*)glGetString(GL_EXTENSIONS));
-    for (   token = strtok_r(str, " ", &tmp); token;
-            token = strtok_r(NULL, " ", &tmp)) {
-        for (i = 0; i < nb; i++) {
-            if (strcmp(token, NAMES[i]) == 0) {
-                extensions[i] = true;
-                break;
-            }
-        }
-    }
-    // for (i = 0; i < nb; i++)
-    //    LOG_D("GL extension %s: %d", NAMES[i], extensions[i]);
-    free(str);
-}
-
-bool _has_gl_extension(int extension)
-{
-    static bool *extensions = NULL;
-    assert(extension < GOX_GL_EXTENSIONS_COUNT);
-    if (!extensions) {
-        extensions = calloc(GOX_GL_EXTENSIONS_COUNT, sizeof(*extensions));
-        parse_gl_extensions(extensions);
-    }
-    return extensions[extension];
-}
-
 double get_unix_time(void)
 {
     struct timeval tv;

@@ -224,3 +224,10 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
     if (tex) *out_tex = tex;
     return 0;
 }
+
+bool gl_has_extension(const char *ext)
+{
+    const char *str;
+    GL(str = (const char*)glGetString(GL_EXTENSIONS));
+    return strstr(str, ext);
+}

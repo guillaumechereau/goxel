@@ -498,24 +498,13 @@ uint64_t crc64(uint64_t crc, const uint8_t *s, uint64_t len);
 
 // ######### Section: GL utils ############################
 
-/* Enum of all the gl extensions we care for. */
-enum {
-    GOX_GL_QCOM_tiled_rendering,
-    GOX_GL_OES_packed_depth_stencil,
-    GOX_GL_OES_depth_texture,
-    GOX_GL_EXT_discard_framebuffer,
-
-    GOX_GL_EXTENSIONS_COUNT
-};
-
 int gl_check_errors(const char *file, int line);
 
 /*
  * Function: gl_has_extension
  * Check whether an OpenGL extension is available.
  */
-bool _gl_has_extension(int extension);
-#define gl_has_extension(x) (_gl_has_extension(GOX_##x))
+bool gl_has_extension(const char *extension);
 
 /*
  * Function: gl_create_prog
