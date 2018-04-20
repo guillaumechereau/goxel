@@ -339,15 +339,15 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="32"
-     inkscape:cx="25.71142"
-     inkscape:cy="49.849075"
+     inkscape:zoom="2.8284271"
+     inkscape:cx="50.371404"
+     inkscape:cy="137.15733"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
-     showgrid="false"
+     showgrid="true"
      units="px"
-     inkscape:window-width="1920"
-     inkscape:window-height="1025"
+     inkscape:window-width="1366"
+     inkscape:window-height="713"
      inkscape:window-x="0"
      inkscape:window-y="27"
      inkscape:window-maximized="1"
@@ -373,7 +373,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -1046,22 +1046,22 @@
     <path
        inkscape:connector-curvature="0"
        id="path38139"
-       d="M 47.291912,1.3192082 C 46.874917,0.65126187 46.113049,0.91950962 46.005602,1.5742481 45.880965,2.3340212 45.580222,4.0860694 45.45548,4.8007677 45.307257,5.6505857 44.574319,5.7748038 44.185417,5.1593749"
+       d="m 47.291912,13.479972 c -0.416995,-0.667947 -1.178863,-0.399699 -1.28631,0.25504 -0.124637,0.759773 -0.42538,2.511821 -0.550122,3.226519 -0.148223,0.849818 -0.881161,0.974036 -1.270063,0.358607"
        style="fill:none;stroke:#000000;stroke-width:0.52412605;stroke-linecap:round;stroke-miterlimit:10;stroke-opacity:1" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.41930091;stroke-linecap:round;stroke-miterlimit:10;stroke-opacity:1"
-       d="m 44.616878,2.8153783 h 2.261918"
+       d="m 44.616878,14.976142 h 2.261918"
        id="line38141"
        inkscape:connector-curvature="0" />
     <path
        inkscape:connector-curvature="0"
        style="fill:none;stroke:#000000;stroke-width:0.31447563;stroke-linecap:round;stroke-miterlimit:10;stroke-opacity:1"
-       d="m 46.573651,4.3877566 0.873508,1.1505615"
+       d="m 46.573651,16.54852 0.873508,1.150562"
        id="line38143" />
     <path
        inkscape:connector-curvature="0"
        style="fill:none;stroke:#000000;stroke-width:0.31447563;stroke-linecap:round;stroke-miterlimit:10;stroke-opacity:1"
-       d="M 46.573651,5.5383181 47.447159,4.3877566"
+       d="M 46.573651,17.699082 47.447159,16.54852"
        id="line38145" />
     <path
        inkscape:connector-curvature="0"

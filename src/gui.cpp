@@ -160,6 +160,17 @@ static bool isCharPressed(int c)
         theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s), c_); \
         ImVec4 ret_ = c_; ret_; })
 
+/*
+ * Return the color that should be used to draw an icon depending on the
+ * style and the icon.  Some icons shouldn't have their color change with
+ * the style and some other do.
+ */
+static uint32_t get_icon_color(int icon, bool selected)
+{
+    return (icon >= ICON_COLORIZABLE_START && icon < ICON_COLORIZABLE_END) ?
+            ImGui::GetColorU32(COLOR(WIDGET, TEXT, selected)) : 0xFFFFFFFF;
+}
+
 static void init_prog(prog_t *p)
 {
     p->prog = gl_create_prog(VSHADER, FSHADER, NULL);
@@ -574,7 +585,7 @@ static bool layer_item(int i, int icon, bool *visible, bool *edit,
                     (void*)(intptr_t)g_tex_icons->tex,
                     center - ImVec2(12, 12),
                     center + ImVec2(12, 12),
-                    uv0, uv1, ImGui::GetColorU32(COLOR(WIDGET, TEXT, 0)));
+                    uv0, uv1, get_icon_color(icon, 0));
         }
         ImGui::PopStyleVar();
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
@@ -1135,7 +1146,7 @@ static bool render_tab(const char *label, int icon, bool *v)
     window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
                                center - ImVec2(16, 16),
                                center + ImVec2(16, 16),
-                               uv0, uv1, 0xFFFFFFFF);
+                               uv0, uv1, get_icon_color(icon, 0));
 
     if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("%s", label);
@@ -1662,7 +1673,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
             window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
                                        center - ImVec2(16, 16),
                                        center + ImVec2(16, 16),
-                                       uv0, uv1, 0xFFFFFFFF);
+                                       uv0, uv1, get_icon_color(icon, *v));
         }
     } else {
         ret = ImGui::Button(label, size);
@@ -1788,7 +1799,7 @@ bool gui_button(const char *label, float size, int icon)
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
                             center - ImVec2(isize, isize),
                             center + ImVec2(isize, isize),
-                            uv0, uv1, 0xFFFFFFFF);
+                            uv0, uv1, get_icon_color(icon, 0));
     }
     if (ret) on_click();
     return ret;

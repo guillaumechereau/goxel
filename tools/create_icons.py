@@ -37,6 +37,11 @@ ret_img = PIL.Image.new('RGBA', (512, 512))
 
 for x, y in itertools.product(range(8), range(8)):
     img = src_img.crop((x * 46 + 2, y * 46 + 2, x * 46 + 46, y * 46 + 46))
+    # Make the image white in the special range.
+    if y >= 2 and y < 4:
+        tmp = PIL.Image.new('RGBA', (44, 44), (255, 255, 255, 255))
+        tmp.putalpha(img.split()[3])
+        img = tmp
     ret_img.paste(img, (64 * x + 10, 64 * y + 10))
 
 ret_img.save('data/images/icons.png')

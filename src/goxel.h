@@ -734,7 +734,6 @@ enum {
     ICON_TOOL_LASER = 5,
     ICON_TOOL_MOVE = 6,
     ICON_TOOL_EXTRUDE = 7,
-    ICON_TOOL_PROCEDURAL = 8,
 
     ICON_MODE_ADD = 9,
     ICON_MODE_SUB = 10,
@@ -751,6 +750,7 @@ enum {
     ICON_LINK = 21,
     ICON_MENU = 22,
     ICON_DELETE = 23,
+    ICON_TOOL_PROCEDURAL = 24,
 
     ICON_VISIBILITY = 25,
     ICON_VISIBILITY_OFF = 26,
@@ -769,6 +769,14 @@ enum {
     ICON_VIEW = 41,
     ICON_MATERIAL = 42,
 };
+
+
+/*
+ * Some icons have there color blended depending on the style.  We define
+ * them with a range in the icons atlas:
+ */
+#define ICON_COLORIZABLE_START 17
+#define ICON_COLORIZABLE_END   33
 
 
 // #### Tool/Operation/Painter #
