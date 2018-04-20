@@ -1431,6 +1431,7 @@ void gui_iter(const inputs_t *inputs)
         // Check the action shortcuts.
         actions_iter(check_action_shortcut, NULL);
     }
+    ImGui::EndFrame();
 }
 
 void gui_render(void)
