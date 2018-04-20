@@ -138,7 +138,7 @@ image_t *image_new(void)
 {
     layer_t *layer;
     image_t *img = calloc(1, sizeof(*img));
-    const int aabb[2][3] = {{0, 0, 0}, {32, 32, 32}};
+    const int aabb[2][3] = {{-16, -16, 0}, {16, 16, 32}};
     bbox_from_aabb(img->box, aabb);
     img->export_width = 1024;
     img->export_height = 1024;
