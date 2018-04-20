@@ -155,27 +155,40 @@ static ccl::Mesh *create_mesh_for_block(
 
     vertices = (voxel_vertex_t*)calloc(
             BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4, sizeof(*vertices));
-    nb = mesh_generate_vertices(mesh, block_pos, 0, vertices,
+    nb = mesh_generate_vertices(mesh, block_pos,
+                                goxel->rend.settings.effects, vertices,
                                 &size, &subdivide);
-    assert(size == 4 && subdivide == 1); // No marching cube support yet.
     if (!nb) goto end;
 
-    ret->reserve_mesh(nb * 4, nb * 2);
-    for (i = 0; i < nb; i++) { // Once per quad.
-        for (j = 0; j < 4; j++) {
-            ret->add_vertex(ccl::make_float3(
-                        vertices[i * 4 + j].pos[0],
-                        vertices[i * 4 + j].pos[1],
-                        vertices[i * 4 + j].pos[2]));
+    if (size == 4) { // Quads
+        ret->reserve_mesh(nb * 4, nb * 2);
+        for (i = 0; i < nb; i++) { // Once per quad.
+            for (j = 0; j < 4; j++) {
+                ret->add_vertex(ccl::make_float3(
+                            vertices[i * 4 + j].pos[0] / (float)subdivide,
+                            vertices[i * 4 + j].pos[1] / (float)subdivide,
+                            vertices[i * 4 + j].pos[2] / (float)subdivide));
+            }
+            ret->add_triangle(i * 4 + 0, i * 4 + 1, i * 4 + 2, 0, false);
+            ret->add_triangle(i * 4 + 2, i * 4 + 3, i * 4 + 0, 0, false);
         }
-        ret->add_triangle(i * 4 + 0, i * 4 + 1, i * 4 + 2, 0, false);
-        ret->add_triangle(i * 4 + 2, i * 4 + 3, i * 4 + 0, 0, false);
+    } else { // Triangles
+        ret->reserve_mesh(nb * 3, nb);
+        for (i = 0; i < nb; i++) { // Once per triangle.
+            for (j = 0; j < 3; j++) {
+                ret->add_vertex(ccl::make_float3(
+                            vertices[i * 3 + j].pos[0] / (float)subdivide,
+                            vertices[i * 3 + j].pos[1] / (float)subdivide,
+                            vertices[i * 3 + j].pos[2] / (float)subdivide));
+            }
+            ret->add_triangle(i * 3 + 0, i * 3 + 1, i * 3 + 2, 0, false);
+        }
     }
 
     // Set color attribute.
     attr = ret->attributes.add(S("Col"), ccl::TypeDesc::TypeColor,
             ccl::ATTR_ELEMENT_CORNER_BYTE);
-    for (i = 0; i < nb * 6; i++) {
+    for (i = 0; i < nb * ((size == 4) ? 6 : 3); i++) {
         attr->data_uchar4()[i] = ccl::make_uchar4(
                 vertices[i / 6 * 4].color[0],
                 vertices[i / 6 * 4].color[1],
@@ -272,6 +285,8 @@ static bool sync_mesh(int w, int h, bool force)
     key = crc64(key, goxel->back_color, sizeof(goxel->back_color));
     key = crc64(key, (const uint8_t*)&w, sizeof(w));
     key = crc64(key, (const uint8_t*)&h, sizeof(h));
+    key = crc64(key, (const uint8_t*)&goxel->rend.settings.effects,
+                     sizeof(goxel->rend.settings.effects));
     key = crc64(key, (const uint8_t*)&force, sizeof(force));
 
     if (key == last_key) return false;
