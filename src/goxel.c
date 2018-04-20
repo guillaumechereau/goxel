@@ -353,7 +353,7 @@ void goxel_release(void)
     gui_release();
 }
 
-void goxel_iter(inputs_t *inputs)
+int goxel_iter(inputs_t *inputs)
 {
     double time = sys_get_time();
     goxel->fps = mix(goxel->fps, 1.0 / (time - goxel->frame_time), 0.1);
@@ -373,6 +373,7 @@ void goxel_iter(inputs_t *inputs)
     gui_iter(inputs);
     sound_iter();
     goxel->frame_count++;
+    return goxel->quit ? 1 : 0;
 }
 
 static void compute_view_rotation(const float rot[4],

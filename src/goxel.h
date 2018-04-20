@@ -1592,7 +1592,7 @@ extern goxel_t *goxel;
 void goxel_init(void);
 void goxel_release(void);
 void goxel_reset(void);
-void goxel_iter(inputs_t *inputs);
+int goxel_iter(inputs_t *inputs);
 void goxel_render(void);
 void goxel_render_view(const float viewport[4]);
 void goxel_render_export_view(const float viewport[4]);
