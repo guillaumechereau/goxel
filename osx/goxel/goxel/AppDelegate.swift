@@ -126,6 +126,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     open var inputs = inputs_t()
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        // Set fullscreen.
+        if let screen = NSScreen.main() {
+            window.setFrame(screen.visibleFrame, display: true, animate: true)
+        }
         timer = Timer(timeInterval: 1.0 / 60.0,
             target: self,
             selector: #selector(AppDelegate.onTimer(_:)),
