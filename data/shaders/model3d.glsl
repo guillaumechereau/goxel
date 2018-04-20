@@ -1,3 +1,8 @@
+
+#if defined(GL_ES) && defined(FRAGMENT_SHADER)
+#extension GL_OES_standard_derivatives : enable
+#endif
+
 uniform   mat4  u_model;
 uniform   mat4  u_view;
 uniform   mat4  u_proj;
@@ -47,9 +52,6 @@ void main()
 
 #ifdef FRAGMENT_SHADER
 
-// XXX: need to check if available, and disable the grid if not.
-#extension GL_OES_standard_derivatives : enable
-
 /************************************************************************/
 void main()
 {
@@ -68,6 +70,7 @@ void main()
     }
 
     // Grid effect.
+#if !defined(GL_ES) || defined(GL_OES_standard_derivatives)
     if (u_grid_alpha > 0.0) {
         vec2 c;
         if (abs((u_model * vec4(v_normal, 0.0)).x) > 0.5) c = v_pos.yz;
@@ -77,6 +80,8 @@ void main()
         float line = min(grid.x, grid.y);
         gl_FragColor.rgb *= mix(1.0 - u_grid_alpha, 1.0, min(line, 1.0));
     }
+#endif
+
 }
 /************************************************************************/
 
