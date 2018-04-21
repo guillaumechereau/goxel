@@ -18,12 +18,6 @@
 
 #include "goxel.h"
 
-#if DEBUG
-#   define DEBUG_ONLY(x) x
-#else
-#   define DEBUG_ONLY(x)
-#endif
-
 #ifdef GLES2
 #   define GLFW_INCLUDE_ES2
 #endif
@@ -193,6 +187,11 @@ static void set_window_icon(GLFWwindow *window)
 static void set_window_icon(GLFWwindow *window) {}
 #endif
 
+static void set_window_title(void *user, const char *title)
+{
+    glfwSetWindowTitle(g_window, title);
+}
+
 int main(int argc, char **argv)
 {
     args_t args = {.scale = 1};
@@ -201,8 +200,10 @@ int main(int argc, char **argv)
     const GLFWvidmode *mode;
     int ret = 0;
     inputs_t inputs = {};
-    const char *title = "Goxel " GOXEL_VERSION_STR DEBUG_ONLY(" (debug)");
     g_inputs = &inputs;
+
+    // Setup sys callbacks.
+    sys_callbacks.set_window_title = set_window_title;
 
 #ifndef NO_ARGP
     argp_parse (&argp, argc, argv, 0, 0, &args);
@@ -213,7 +214,7 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_SAMPLES, 4);
     monitor = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(monitor);
-    window = glfwCreateWindow(mode->width, mode->height, title, NULL, NULL);
+    window = glfwCreateWindow(mode->width, mode->height, "Goxel", NULL, NULL);
     g_window = window;
     glfwMakeContextCurrent(window);
     glfwSetScrollCallback(window, on_scroll);

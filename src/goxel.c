@@ -353,6 +353,14 @@ void goxel_release(void)
     gui_release();
 }
 
+static void update_window_title(void)
+{
+    char buf[1024];
+    sprintf(buf, "Goxel %s%s %s", GOXEL_VERSION_STR, DEBUG ? " (debug)" : "",
+            goxel->image->path ?: "");
+    sys_set_window_title(buf);
+}
+
 int goxel_iter(inputs_t *inputs)
 {
     double time = sys_get_time();
@@ -372,6 +380,8 @@ int goxel_iter(inputs_t *inputs)
     mat4_copy(goxel->camera.proj_mat, goxel->rend.proj_mat);
     gui_iter(inputs);
     sound_iter();
+    update_window_title();
+
     goxel->frame_count++;
     return goxel->quit ? 1 : 0;
 }

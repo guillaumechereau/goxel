@@ -540,6 +540,17 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
  * operating system, not relying on libc, should go there.
  */
 
+
+/*
+ * Global structure that hold pointers to system functions.  Need to be
+ * set at init time.
+ */
+typedef struct {
+    void *user;
+    void (*set_window_title)(void *user, const char *title);
+} sys_callbacks_t;
+extern sys_callbacks_t sys_callbacks;
+
 /*
  * Function: sys_log
  * Write a log message to output.
@@ -591,6 +602,12 @@ GLuint sys_get_screen_framebuffer(void);
  * Return the unix time (seconds since Jan 01 1970).
  */
 double sys_get_time(void); // Unix time.
+
+/*
+ * Function: sys_set_window_title
+ * Set the window title.
+ */
+void sys_set_window_title(const char *title);
 // #############################
 
 
