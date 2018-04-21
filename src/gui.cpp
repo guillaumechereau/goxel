@@ -894,14 +894,18 @@ static void image_panel(void)
 {
     bool bounded;
     image_t *image = goxel->image;
+    int bbox[2][3];
     float (*box)[4][4] = &image->box;
 
     bounded = !box_is_null(*box);
     if (ImGui::Checkbox("Bounded", &bounded)) {
-        if (bounded)
-            bbox_from_extents(*box, vec3_zero, 16, 16, 16);
-        else
+        if (bounded) {
+            mesh_get_bbox(goxel->layers_mesh, bbox, true);
+            if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
+            bbox_from_aabb(*box, bbox);
+        } else {
             mat4_copy(mat4_zero, *box);
+        }
     }
     if (bounded) gui_bbox(*box);
 }
