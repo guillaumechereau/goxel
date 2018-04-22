@@ -136,6 +136,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             userInfo: nil,
             repeats: true)
         RunLoop.current.add(timer, forMode: RunLoopMode.defaultRunLoopMode)
+
+        sys_callbacks.user = Unmanaged.passUnretained(self).toOpaque()
+        sys_callbacks.set_window_title = { (user, title) in
+            let mySelf = Unmanaged<AppDelegate>.fromOpaque(user!).takeUnretainedValue()
+            let title = String(cString: title!)
+            mySelf.window.title = title
+        }
         goxel_init()
     }
 
