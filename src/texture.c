@@ -23,7 +23,14 @@
 // Return the next power of 2 larger or equal to x.
 static int next_pow2(int x)
 {
-    return pow(2, ceil(log(x) / log(2)));
+    x--;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    x++;
+    return x;
 }
 
 static bool is_pow2(int x) { return x == next_pow2(x); }
