@@ -1079,3 +1079,21 @@ ACTION_REGISTER(redo,
     .default_shortcut = "Ctrl Y",
     .icon = ICON_ARROW_FORWARD,
 )
+
+static void toggle_mode(void)
+{
+    int mode = goxel->painter.mode;
+    switch (mode) {
+    case MODE_OVER:     mode = MODE_SUB; break;
+    case MODE_SUB:      mode = MODE_PAINT; break;
+    case MODE_PAINT:    mode = MODE_OVER; break;
+    }
+    goxel->painter.mode = mode;
+}
+
+ACTION_REGISTER(toggle_mode,
+    .help = "Toggle the tool mode (add, sub, paint)",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
+    .cfunc = toggle_mode,
+    .csig = "v",
+)
