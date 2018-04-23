@@ -19,7 +19,6 @@
 #include "goxel.h"
 
 typedef struct {
-    char    type[2];
     union {
         struct {
             float    v[3];
@@ -35,38 +34,36 @@ typedef struct {
 
 static UT_icd line_icd = {sizeof(line_t), NULL, NULL, NULL};
 
-static int lines_find(UT_array *lines, const line_t *line)
+static int lines_find(UT_array *lines, const line_t *line, int search_nb)
 {
-    int i, ret = 0;
+    int i, len;
     line_t *l;
-    for (i = 0; i < utarray_len(lines); i++) {
+    len = utarray_len(lines);
+    for (i = len - 1; (i >= 0) && (i > len - 1 - search_nb); i--) {
         l = (line_t*)utarray_eltptr(lines, i);
-        if (strncmp(l->type, line->type, 2) != 0) continue;
-        ret++;
-        if (memcmp(l, line, sizeof(*line)) == 0)
-            return ret;
+        if (memcmp(l, line, sizeof(*line)) == 0) return i + 1;
     }
     return 0;
 }
 
-static int lines_add(UT_array *lines, const line_t *line)
+/*
+ * Function: lines_add
+ * Add a line entry into a list and return its index.
+ *
+ * Parameters:
+ *   lines      - The list.
+ *   line       - The new line we want to add.
+ *   search_nb  - How far into the list we search for a similar line.  If
+ *                a similar line is found we just return its index insead
+ *                of adding a new one.
+ */
+static int lines_add(UT_array *lines, const line_t *line, int search_nb)
 {
-    int i;
-    i = lines_find(lines, line);
-    if (i) return i;
+    int idx;
+    idx = lines_find(lines, line, search_nb);
+    if (idx) return idx;
     utarray_push_back(lines, line);
-    return lines_find(lines, line);
-}
-
-static int lines_count(UT_array *lines, const char *type)
-{
-    line_t *line = NULL;
-    int ret = 0;
-    while( (line = (line_t*)utarray_next(lines, line))) {
-        if (strncmp(line->type, type, 2) == 0)
-            ret++;
-    }
-    return ret;
+    return utarray_len(lines);
 }
 
 static void export(const mesh_t *mesh, const char *path, bool ply)
@@ -82,13 +79,15 @@ static void export(const mesh_t *mesh, const char *path, bool ply)
     FILE *out;
     const int N = BLOCK_SIZE;
     int size, subdivide;
-    UT_array *lines;
+    UT_array *lines_f, *lines_v, *lines_vn;
     line_t line, face, *line_ptr = NULL;
     mesh_iterator_t iter;
 
-    utarray_new(lines, &line_icd);
+    utarray_new(lines_f, &line_icd);
+    utarray_new(lines_v, &line_icd);
+    utarray_new(lines_vn, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
-    face = (line_t){"f "};
+    face = (line_t){};
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
@@ -106,18 +105,19 @@ static void export(const mesh_t *mesh, const char *path, bool ply)
                 mat4_mul_vec3(mat, v, v);
                 memcpy(c, verts[i * size + j].color, 3);
                 line = (line_t){
-                    "v ", .v = {v[0], v[1], v[2]}, .c = {c[0], c[1], c[2]}};
-                face.vs[j] = lines_add(lines, &line);
+                    .v = {v[0], v[1], v[2]}, .c = {c[0], c[1], c[2]}};
+                // XXX: not sure about the search nb value to use here.
+                face.vs[j] = lines_add(lines_v, &line, 1024);
             }
             // Put the normals
             for (j = 0; j < size; j++) {
                 v[0] = verts[i * size + j].normal[0];
                 v[1] = verts[i * size + j].normal[1];
                 v[2] = verts[i * size + j].normal[2];
-                line = (line_t){"vn", .vn = {v[0], v[1], v[2]}};
-                face.vns[j] = lines_add(lines, &line);
+                line = (line_t){.vn = {v[0], v[1], v[2]}};
+                face.vns[j] = lines_add(lines_vn, &line, 512);
             }
-            lines_add(lines, &face);
+            lines_add(lines_f, &face, 0);
         }
     }
     out = fopen(path, "w");
@@ -125,70 +125,65 @@ static void export(const mesh_t *mesh, const char *path, bool ply)
         fprintf(out, "ply\n");
         fprintf(out, "format ascii 1.0\n");
         fprintf(out, "comment Generated from Goxel " GOXEL_VERSION_STR "\n");
-        fprintf(out, "element vertex %d\n", lines_count(lines, "v "));
+        fprintf(out, "element vertex %d\n", utarray_len(lines_v));
         fprintf(out, "property float x\n");
         fprintf(out, "property float y\n");
         fprintf(out, "property float z\n");
         fprintf(out, "property uchar red\n");
         fprintf(out, "property uchar green\n");
         fprintf(out, "property uchar blue\n");
-        fprintf(out, "element face %d\n", lines_count(lines, "f "));
+        fprintf(out, "element face %d\n", utarray_len(lines_f));
         fprintf(out, "property list uchar int vertex_index\n");
         fprintf(out, "end_header\n");
-        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-            if (strncmp(line_ptr->type, "v ", 2) == 0)
-                fprintf(out, "%g %g %g %d %d %d\n",
-                        line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
-                        line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
+        while( (line_ptr = (line_t*)utarray_next(lines_v, line_ptr))) {
+            fprintf(out, "%g %g %g %d %d %d\n",
+                    line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
+                    line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
         }
-        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-            if (strncmp(line_ptr->type, "f ", 2) == 0) {
-                if (size == 4) {
-                    fprintf(out, "4 %d %d %d %d\n", line_ptr->vs[0] - 1,
-                                                    line_ptr->vs[1] - 1,
-                                                    line_ptr->vs[2] - 1,
-                                                    line_ptr->vs[3] - 1);
-                } else {
-                    fprintf(out, "3 %d %d %d\n",    line_ptr->vs[0] - 1,
-                                                    line_ptr->vs[1] - 1,
-                                                    line_ptr->vs[2] - 1);
-                }
+        while( (line_ptr = (line_t*)utarray_next(lines_f, line_ptr))) {
+            if (size == 4) {
+                fprintf(out, "4 %d %d %d %d\n", line_ptr->vs[0] - 1,
+                                                line_ptr->vs[1] - 1,
+                                                line_ptr->vs[2] - 1,
+                                                line_ptr->vs[3] - 1);
+            } else {
+                fprintf(out, "3 %d %d %d\n",    line_ptr->vs[0] - 1,
+                                                line_ptr->vs[1] - 1,
+                                                line_ptr->vs[2] - 1);
             }
         }
     } else {
         fprintf(out, "# Goxel " GOXEL_VERSION_STR "\n");
-        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-            if (strncmp(line_ptr->type, "v ", 2) == 0)
-                fprintf(out, "v %g %g %g %f %f %f\n",
-                        line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
-                        line_ptr->c[0] / 255.,
-                        line_ptr->c[1] / 255.,
-                        line_ptr->c[2] / 255.);
+        while( (line_ptr = (line_t*)utarray_next(lines_v, line_ptr))) {
+            fprintf(out, "v %g %g %g %f %f %f\n",
+                    line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
+                    line_ptr->c[0] / 255.,
+                    line_ptr->c[1] / 255.,
+                    line_ptr->c[2] / 255.);
         }
-        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-            if (strncmp(line_ptr->type, "vn", 2) == 0)
-                fprintf(out, "vn %g %g %g\n",
-                        line_ptr->vn[0], line_ptr->vn[1], line_ptr->vn[2]);
+        while( (line_ptr = (line_t*)utarray_next(lines_vn, line_ptr))) {
+            fprintf(out, "vn %g %g %g\n",
+                    line_ptr->vn[0], line_ptr->vn[1], line_ptr->vn[2]);
         }
-        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-            if (strncmp(line_ptr->type, "f ", 2) == 0) {
-                if (size == 4) {
-                    fprintf(out, "f %d//%d %d//%d %d//%d %d//%d\n",
-                                 line_ptr->vs[0], line_ptr->vns[0],
-                                 line_ptr->vs[1], line_ptr->vns[1],
-                                 line_ptr->vs[2], line_ptr->vns[2],
-                                 line_ptr->vs[3], line_ptr->vns[3]);
-                } else {
-                    fprintf(out, "f %d//%d %d//%d %d//%d\n",
-                                 line_ptr->vs[0], line_ptr->vns[0],
-                                 line_ptr->vs[1], line_ptr->vns[1],
-                                 line_ptr->vs[2], line_ptr->vns[2]);
-                }
+        while( (line_ptr = (line_t*)utarray_next(lines_f, line_ptr))) {
+            if (size == 4) {
+                fprintf(out, "f %d//%d %d//%d %d//%d %d//%d\n",
+                             line_ptr->vs[0], line_ptr->vns[0],
+                             line_ptr->vs[1], line_ptr->vns[1],
+                             line_ptr->vs[2], line_ptr->vns[2],
+                             line_ptr->vs[3], line_ptr->vns[3]);
+            } else {
+                fprintf(out, "f %d//%d %d//%d %d//%d\n",
+                             line_ptr->vs[0], line_ptr->vns[0],
+                             line_ptr->vs[1], line_ptr->vns[1],
+                             line_ptr->vs[2], line_ptr->vns[2]);
             }
         }
     }
     fclose(out);
-    utarray_free(lines);
+    utarray_free(lines_f);
+    utarray_free(lines_v);
+    utarray_free(lines_vn);
     free(verts);
 }
 
