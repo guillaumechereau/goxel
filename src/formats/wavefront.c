@@ -69,7 +69,7 @@ static int lines_count(UT_array *lines, const char *type)
     return ret;
 }
 
-void wavefront_export(const mesh_t *mesh, const char *path)
+static void export(const mesh_t *mesh, const char *path, bool ply)
 {
     // XXX: Merge faces that can be merged into bigger ones.
     //      Allow to chose between quads or triangles.
@@ -83,7 +83,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     const int N = BLOCK_SIZE;
     int size, subdivide;
     UT_array *lines;
-    line_t line, face, *line_ptr;
+    line_t line, face, *line_ptr = NULL;
     mesh_iterator_t iter;
 
     utarray_new(lines, &line_icd);
@@ -121,34 +121,69 @@ void wavefront_export(const mesh_t *mesh, const char *path)
         }
     }
     out = fopen(path, "w");
-    fprintf(out, "# Goxel " GOXEL_VERSION_STR "\n");
-    line_ptr = NULL;
-    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-        if (strncmp(line_ptr->type, "v ", 2) == 0)
-            fprintf(out, "v %g %g %g %f %f %f\n",
-                    line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
-                    line_ptr->c[0] / 255.,
-                    line_ptr->c[1] / 255.,
-                    line_ptr->c[2] / 255.);
-    }
-    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-        if (strncmp(line_ptr->type, "vn", 2) == 0)
-            fprintf(out, "vn %g %g %g\n",
-                    line_ptr->vn[0], line_ptr->vn[1], line_ptr->vn[2]);
-    }
-    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-        if (strncmp(line_ptr->type, "f ", 2) == 0) {
-            if (size == 4) {
-                fprintf(out, "f %d//%d %d//%d %d//%d %d//%d\n",
-                             line_ptr->vs[0], line_ptr->vns[0],
-                             line_ptr->vs[1], line_ptr->vns[1],
-                             line_ptr->vs[2], line_ptr->vns[2],
-                             line_ptr->vs[3], line_ptr->vns[3]);
-            } else {
-                fprintf(out, "f %d//%d %d//%d %d//%d\n",
-                             line_ptr->vs[0], line_ptr->vns[0],
-                             line_ptr->vs[1], line_ptr->vns[1],
-                             line_ptr->vs[2], line_ptr->vns[2]);
+    if (ply) {
+        fprintf(out, "ply\n");
+        fprintf(out, "format ascii 1.0\n");
+        fprintf(out, "comment Generated from Goxel " GOXEL_VERSION_STR "\n");
+        fprintf(out, "element vertex %d\n", lines_count(lines, "v "));
+        fprintf(out, "property float x\n");
+        fprintf(out, "property float y\n");
+        fprintf(out, "property float z\n");
+        fprintf(out, "property uchar red\n");
+        fprintf(out, "property uchar green\n");
+        fprintf(out, "property uchar blue\n");
+        fprintf(out, "element face %d\n", lines_count(lines, "f "));
+        fprintf(out, "property list uchar int vertex_index\n");
+        fprintf(out, "end_header\n");
+        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
+            if (strncmp(line_ptr->type, "v ", 2) == 0)
+                fprintf(out, "%g %g %g %d %d %d\n",
+                        line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
+                        line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
+        }
+        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
+            if (strncmp(line_ptr->type, "f ", 2) == 0) {
+                if (size == 4) {
+                    fprintf(out, "4 %d %d %d %d\n", line_ptr->vs[0] - 1,
+                                                    line_ptr->vs[1] - 1,
+                                                    line_ptr->vs[2] - 1,
+                                                    line_ptr->vs[3] - 1);
+                } else {
+                    fprintf(out, "3 %d %d %d\n",    line_ptr->vs[0] - 1,
+                                                    line_ptr->vs[1] - 1,
+                                                    line_ptr->vs[2] - 1);
+                }
+            }
+        }
+    } else {
+        fprintf(out, "# Goxel " GOXEL_VERSION_STR "\n");
+        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
+            if (strncmp(line_ptr->type, "v ", 2) == 0)
+                fprintf(out, "v %g %g %g %f %f %f\n",
+                        line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
+                        line_ptr->c[0] / 255.,
+                        line_ptr->c[1] / 255.,
+                        line_ptr->c[2] / 255.);
+        }
+        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
+            if (strncmp(line_ptr->type, "vn", 2) == 0)
+                fprintf(out, "vn %g %g %g\n",
+                        line_ptr->vn[0], line_ptr->vn[1], line_ptr->vn[2]);
+        }
+        while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
+            if (strncmp(line_ptr->type, "f ", 2) == 0) {
+                if (size == 4) {
+                    fprintf(out, "f %d//%d %d//%d %d//%d %d//%d\n",
+                                 line_ptr->vs[0], line_ptr->vns[0],
+                                 line_ptr->vs[1], line_ptr->vns[1],
+                                 line_ptr->vs[2], line_ptr->vns[2],
+                                 line_ptr->vs[3], line_ptr->vns[3]);
+                } else {
+                    fprintf(out, "f %d//%d %d//%d %d//%d\n",
+                                 line_ptr->vs[0], line_ptr->vns[0],
+                                 line_ptr->vs[1], line_ptr->vns[1],
+                                 line_ptr->vs[2], line_ptr->vns[2]);
+                }
             }
         }
     }
@@ -157,92 +192,14 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     free(verts);
 }
 
+void wavefront_export(const mesh_t *mesh, const char *path)
+{
+    export(mesh, path, false);
+}
+
 void ply_export(const mesh_t *mesh, const char *path)
 {
-    voxel_vertex_t* verts;
-    float v[3];
-    uint8_t c[3];
-    int nb_elems, i, j, bpos[3];
-    float mat[4][4];
-    FILE *out;
-    const int N = BLOCK_SIZE;
-    int size, subdivide;
-    UT_array *lines;
-    line_t line, face, *line_ptr;
-    mesh_iterator_t iter;
-
-    utarray_new(lines, &line_icd);
-    verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
-    face = (line_t){"f "};
-    iter = mesh_get_iterator(mesh,
-            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-    while (mesh_iter(&iter, bpos)) {
-        mat4_set_identity(mat);
-        mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
-        nb_elems = mesh_generate_vertices(mesh, bpos,
-                                    goxel->rend.settings.effects, verts,
-                                    &size, &subdivide);
-        for (i = 0; i < nb_elems; i++) {
-            // Put the vertices.
-            for (j = 0; j < size; j++) {
-                v[0] = verts[i * size + j].pos[0] / (float)subdivide;
-                v[1] = verts[i * size + j].pos[1] / (float)subdivide;
-                v[2] = verts[i * size + j].pos[2] / (float)subdivide;
-                mat4_mul_vec3(mat, v, v);
-                memcpy(c, verts[i * size + j].color, 3);
-                line = (line_t){
-                    "v ", .v = {v[0], v[1], v[2]}, .c = {c[0], c[1], c[2]}};
-                face.vs[j] = lines_add(lines, &line);
-            }
-            // Put the normals
-            for (j = 0; j < size; j++) {
-                v[0] = verts[i * size + j].normal[0];
-                v[1] = verts[i * size + j].normal[1];
-                v[2] = verts[i * size + j].normal[2];
-                line = (line_t){"vn", .vn = {v[0], v[1], v[2]}};
-                face.vns[j] = lines_add(lines, &line);
-            }
-            lines_add(lines, &face);
-        }
-    }
-    out = fopen(path, "w");
-    fprintf(out, "ply\n");
-    fprintf(out, "format ascii 1.0\n");
-    fprintf(out, "comment Generated from Goxel " GOXEL_VERSION_STR "\n");
-    fprintf(out, "element vertex %d\n", lines_count(lines, "v "));
-    fprintf(out, "property float x\n");
-    fprintf(out, "property float y\n");
-    fprintf(out, "property float z\n");
-    fprintf(out, "property uchar red\n");
-    fprintf(out, "property uchar green\n");
-    fprintf(out, "property uchar blue\n");
-    fprintf(out, "element face %d\n", lines_count(lines, "f "));
-    fprintf(out, "property list uchar int vertex_index\n");
-    fprintf(out, "end_header\n");
-    line_ptr = NULL;
-    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-        if (strncmp(line_ptr->type, "v ", 2) == 0)
-            fprintf(out, "%g %g %g %d %d %d\n",
-                    line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
-                    line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
-    }
-    while( (line_ptr = (line_t*)utarray_next(lines, line_ptr))) {
-        if (strncmp(line_ptr->type, "f ", 2) == 0) {
-            if (size == 4) {
-                fprintf(out, "4 %d %d %d %d\n", line_ptr->vs[0] - 1,
-                                                line_ptr->vs[1] - 1,
-                                                line_ptr->vs[2] - 1,
-                                                line_ptr->vs[3] - 1);
-            } else {
-                fprintf(out, "3 %d %d %d\n",    line_ptr->vs[0] - 1,
-                                                line_ptr->vs[1] - 1,
-                                                line_ptr->vs[2] - 1);
-            }
-        }
-    }
-    fclose(out);
-    utarray_free(lines);
-    free(verts);
+    export(mesh, path, true);
 }
 
 static void export_as_obj(const char *path)
