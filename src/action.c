@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include <unistd.h>
 
 typedef struct {
     UT_hash_handle  hh;
@@ -25,6 +26,10 @@ typedef struct {
 
 // Global hash of all the actions.
 static action_hash_item_t *g_actions = NULL;
+
+// Incremented each time an action is called, and decremented each time one
+// finish so that we know when action are being called within other actions.
+static int g_reentry = 0;
 
 void action_register(const action_t *action)
 {
@@ -102,23 +107,51 @@ static int default_function(const action_t *a, astack_t *s)
     return 0;
 }
 
+
+static void *thread_func(void *args)
+{
+    astack_t *s = args;
+    int (*func)(const action_t *a, astack_t *s);
+    action_t *action;
+
+    pthread_mutex_lock(&goxel->mutex);
+
+    action = stack_get_p(s, -1);
+    stack_pop(s);
+
+    func = action->func ?: default_function;
+    func(action, s);
+    goxel_set_progress_popup(NULL, 0);
+
+    g_reentry--;
+    if (g_reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
+        goxel_update_meshes(-1);
+    }
+    stack_delete(s);
+
+    pthread_mutex_unlock(&goxel->mutex);
+    return NULL;
+}
+
 int action_execv(const action_t *action, const char *sig, va_list ap)
 {
     assert(action);
     // So that we do not add undo snapshot when an action calls an other one.
-    static int reentry = 0;
     char c;
     bool b;
     int i, nb;
     int (*func)(const action_t *a, astack_t *s);
-    astack_t *s = stack_create();
-    func = action->func ?: default_function;
+    pthread_t thread;
+    astack_t *s;
 
-    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
+    func = action->func ?: default_function;
+    s = stack_create();
+
+    if (g_reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
         image_history_push(goxel->image);
     }
 
-    reentry++;
+    g_reentry++;
 
     while ((c = *sig++)) {
         if (c == '>') break;
@@ -128,6 +161,13 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
             case 'p': stack_push_p(s, va_arg(ap, void*)); break;
             default: assert(false);
         }
+    }
+
+    if (g_reentry == 1 && (action->flags & ACTION_THREADED)) {
+        assert(action->csig[0] == 'v');
+        stack_push_p(s, (void*)action);
+        pthread_create(&thread, NULL, thread_func, s);
+        return 0;
     }
 
     if ((action->flags & ACTION_TOGGLE) && (stack_size(s) == 0) && (!c)) {
@@ -150,8 +190,8 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
         }
     }
 
-    reentry--;
-    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
+    g_reentry--;
+    if (g_reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
         goxel_update_meshes(-1);
     }
     stack_delete(s);
@@ -166,4 +206,23 @@ int action_exec(const action_t *action, const char *sig, ...)
     ret = action_execv(action, sig, ap);
     va_end(ap);
     return ret;
+}
+
+/*
+ * Function: action_progress
+ * To be used by threaded tasks to update the progress dialog.
+ */
+int action_progress(const char *title, int total, int current)
+{
+    static double last_time = 0;
+    double time = sys_get_time();
+    goxel_set_progress_popup(title, (float)current / total);
+    // Unlock and relock the global mutex to let the main loop iterate.
+    pthread_mutex_unlock(&goxel->mutex);
+    // If we have been running too long, sleep a little bit to let the main
+    // thread some time to wake up.
+    if (time - last_time < 0.016) usleep(10000);
+    last_time = time;
+    pthread_mutex_lock(&goxel->mutex);
+    return 0;
 }

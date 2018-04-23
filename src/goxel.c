@@ -256,7 +256,14 @@ static int on_hover(const gesture_t *gest, void *user);
 
 void goxel_init(void)
 {
+    pthread_mutexattr_t mutex_attr;
+
     goxel = calloc(1, sizeof(*goxel));
+
+    // Init the global mutex.
+    pthread_mutexattr_init(&mutex_attr);
+    pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&goxel->mutex, &mutex_attr);
 
     render_init();
     shapes_init();
@@ -363,7 +370,10 @@ static void update_window_title(void)
 
 int goxel_iter(inputs_t *inputs)
 {
-    double time = sys_get_time();
+    double time;
+
+    pthread_mutex_lock(&goxel->mutex);
+    time = sys_get_time();
     goxel->fps = mix(goxel->fps, 1.0 / (time - goxel->frame_time), 0.1);
     goxel->frame_time = time;
     goxel_set_help_text(NULL);
@@ -383,6 +393,7 @@ int goxel_iter(inputs_t *inputs)
     update_window_title();
 
     goxel->frame_count++;
+    pthread_mutex_unlock(&goxel->mutex);
     return goxel->quit ? 1 : 0;
 }
 
@@ -773,6 +784,26 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     texture_delete(fbo);
 }
 
+static bool progress_popup(void *data)
+{
+    gui_text("%d/100", (int)(goxel->progress.value * 100));
+    return !goxel->progress.title;
+}
+
+void goxel_set_progress_popup(const char *title, float progress)
+{
+    if (!title) {
+        free(goxel->progress.title);
+        memset(&goxel->progress, 0, sizeof(goxel->progress));
+        return;
+    }
+    assert(title);
+    if (!goxel->progress.title) {
+        goxel->progress.title = strdup(title);
+        gui_open_popup(goxel->progress.title, 0, NULL, progress_popup);
+    }
+    goxel->progress.value = progress;
+}
 
 static void export_as(const char *type, const char *path)
 {

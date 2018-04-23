@@ -38,6 +38,7 @@
 #include "mesh.h"
 #include "theme.h"
 #include <float.h>
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -695,6 +696,7 @@ enum {
     // Toggle actions accept and return a boolean value.
     ACTION_TOGGLE               = 1 << 1,
     ACTION_CAN_EDIT_SHORTCUT    = 1 << 2,
+    ACTION_THREADED             = 1 << 3, // Run in a separate thread.
 };
 
 // Represent an action.
@@ -725,6 +727,13 @@ action_t *action_get(const char *id);
 int action_exec(const action_t *action, const char *sig, ...);
 int action_execv(const action_t *action, const char *sig, va_list ap);
 void actions_iter(int (*f)(action_t *action, void *user), void *user);
+
+/*
+ * Function: action_progress
+ * To be used by threaded tasks to update the progress dialog.
+ */
+int action_progress(const char *task, int total, int current);
+
 
 // Convenience macro to call action_exec directly from an action id.
 #define action_exec2(id, sig, ...) \
@@ -1696,6 +1705,14 @@ typedef struct goxel
         bool force_restart;
     } render_task;
 
+    // Global mutex to separate the main loop from the action thread.
+    pthread_mutex_t mutex;
+
+    struct {
+        char *title;
+        float value;
+    } progress;
+
 } goxel_t;
 
 // the global goxel instance.
@@ -1724,6 +1741,8 @@ void goxel_import_image_plane(const char *path);
 
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
+
+void goxel_set_progress_popup(const char *title, float progress);
 
 // #############################
 

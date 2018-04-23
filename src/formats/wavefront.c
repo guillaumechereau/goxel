@@ -81,7 +81,7 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
-    int size, subdivide;
+    int size, subdivide, tot = 0, progress = 0;
     UT_array *lines;
     line_t line, face, *line_ptr;
     mesh_iterator_t iter;
@@ -89,9 +89,16 @@ void wavefront_export(const mesh_t *mesh, const char *path)
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
+
+    // Count total number of blocks.
+    iter = mesh_get_iterator(mesh,
+            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
+    while (mesh_iter(&iter, bpos)) tot++;
+
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
+        action_progress("Export", tot, progress++);
         mat4_set_identity(mat);
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
@@ -166,7 +173,7 @@ void ply_export(const mesh_t *mesh, const char *path)
     float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
-    int size, subdivide;
+    int size, subdivide, tot = 0, progress = 0;
     UT_array *lines;
     line_t line, face, *line_ptr;
     mesh_iterator_t iter;
@@ -174,9 +181,16 @@ void ply_export(const mesh_t *mesh, const char *path)
     utarray_new(lines, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){"f "};
+
+    // Count total number of blocks.
+    iter = mesh_get_iterator(mesh,
+            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
+    while (mesh_iter(&iter, bpos)) tot++;
+
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
+        action_progress("Export", tot, progress++);
         mat4_set_identity(mat);
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
@@ -257,6 +271,7 @@ ACTION_REGISTER(export_as_obj,
     .help = "Export the image as a wavefront obj file",
     .cfunc = export_as_obj,
     .csig = "vp",
+    .flags = ACTION_THREADED,
     .file_format = {
         .name = "obj",
         .ext = "*.obj\0",
@@ -275,6 +290,7 @@ ACTION_REGISTER(export_as_ply,
     .help = "Save the image as a ply file",
     .cfunc = export_as_ply,
     .csig = "vp",
+    .flags = ACTION_THREADED,
     .file_format = {
         .name = "ply",
         .ext = "*.ply\0",

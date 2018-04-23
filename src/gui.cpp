@@ -125,7 +125,7 @@ typedef struct gui_t {
     int     group;
 
     struct {
-        const char *title;
+        char       *title;
         bool      (*func)(void *data);
         int         flags;
         void       *data;
@@ -1363,6 +1363,7 @@ void gui_iter(const inputs_t *inputs)
                 // Only reset if there was no change.
                 if (func == gui->popup.func) {
                     free(gui->popup.data);
+                    free(gui->popup.title);
                     memset(&gui->popup, 0, sizeof(gui->popup));
                 }
             }
@@ -1903,7 +1904,7 @@ bool gui_quat(const char *label, float q[4])
 void gui_open_popup(const char *title, int flags, void *data,
                     bool (*func)(void *data))
 {
-    gui->popup.title = title;
+    gui->popup.title = strdup(title);
     gui->popup.func = func;
     gui->popup.flags = flags;
     assert(!gui->popup.data);
