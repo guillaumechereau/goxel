@@ -1024,13 +1024,13 @@ static bool about_popup(void *data)
     return gui_button("OK", 0, 0);
 }
 
-static int check_action_shortcut(const action_t *action, void *user)
+static int check_action_shortcut(action_t *action, void *user)
 {
     ImGuiIO& io = ImGui::GetIO();
     const char *s = action->shortcut;
     bool check_key = true;
     bool check_char = true;
-    if (!s) return 0;
+    if (!*s) return 0;
     if (io.KeyCtrl) {
         if (!str_startswith(s, "Ctrl")) return 0;
         s += strlen("Ctrl ");
@@ -1047,7 +1047,7 @@ static int check_action_shortcut(const action_t *action, void *user)
     return 0;
 }
 
-static int import_menu_action_callback(const action_t *a, void *user)
+static int import_menu_action_callback(action_t *a, void *user)
 {
     if (!a->file_format.name) return 0;
     if (!str_startswith(a->id, "import_")) return 0;
@@ -1055,7 +1055,7 @@ static int import_menu_action_callback(const action_t *a, void *user)
     return 0;
 }
 
-static int export_menu_action_callback(const action_t *a, void *user)
+static int export_menu_action_callback(action_t *a, void *user)
 {
     if (!a->file_format.name) return 0;
     if (!str_startswith(a->id, "export_")) return 0;
@@ -1932,6 +1932,31 @@ void gui_alert(const char *title, const char *msg)
 bool gui_collapsing_header(const char *label)
 {
     return ImGui::CollapsingHeader(label);
+}
+
+void gui_columns(int count)
+{
+    ImGui::Columns(count);
+}
+
+void gui_next_column(void)
+{
+    ImGui::NextColumn();
+}
+
+void gui_separator(void)
+{
+    ImGui::Separator();
+}
+
+void gui_push_id(const char *id)
+{
+    ImGui::PushID(id);
+}
+
+void gui_pop_id(void)
+{
+    ImGui::PopID();
 }
 
 }

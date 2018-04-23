@@ -568,7 +568,7 @@ ACTION_REGISTER(open,
     .help = "Open an image",
     .cfunc = action_open,
     .csig = "vp",
-    .shortcut = "Ctrl O",
+    .default_shortcut = "Ctrl O",
 )
 
 static void save_as(const char *path, bool with_preview)
@@ -600,5 +600,5 @@ ACTION_REGISTER(save,
     .help = "Save the image",
     .cfunc = save,
     .csig = "vpi",
-    .shortcut = "Ctrl S"
+    .default_shortcut = "Ctrl S"
 )

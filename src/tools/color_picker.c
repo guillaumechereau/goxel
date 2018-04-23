@@ -53,5 +53,5 @@ static int gui(tool_t *tool)
 TOOL_REGISTER(TOOL_PICK_COLOR, pick_color, tool_pick_color_t,
              .iter_fn = tool_color_picker_iter,
              .gui_fn = gui,
-             .shortcut = "C",
+             .default_shortcut = "C",
 )

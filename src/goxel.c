@@ -834,7 +834,7 @@ void goxel_import_image_plane(const char *path)
     mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);
 }
 
-static int search_action_for_format_cb(const action_t *a, void *user)
+static int search_action_for_format_cb(action_t *a, void *user)
 {
     const char *path = USER_GET(user, 0);
     const char *type = USER_GET(user, 1);
@@ -977,7 +977,7 @@ ACTION_REGISTER(copy,
     .help = "Copy",
     .cfunc = copy_action,
     .csig = "v",
-    .shortcut = "Ctrl C",
+    .default_shortcut = "Ctrl C",
     .flags = 0,
 )
 
@@ -985,7 +985,7 @@ ACTION_REGISTER(past,
     .help = "Past",
     .cfunc = past_action,
     .csig = "v",
-    .shortcut = "Ctrl V",
+    .default_shortcut = "Ctrl V",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -1010,36 +1010,41 @@ static int view_set(const action_t *a, astack_t *s)
 
 ACTION_REGISTER(view_left,
     .help = "Set camera view to left",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
     .data = &QUAT(0.5, -0.5, 0.5, 0.5),
-    .shortcut = "Ctrl 3",
+    .default_shortcut = "Ctrl 3",
 )
 
 ACTION_REGISTER(view_right,
     .help = "Set camera view to right",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
     .data = &QUAT(-0.5, 0.5, 0.5, 0.5),
-    .shortcut = "3",
+    .default_shortcut = "3",
 )
 
 ACTION_REGISTER(view_top,
     .help = "Set camera view to top",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
     .data = &QUAT(1, 0, 0, 0),
-    .shortcut = "7",
+    .default_shortcut = "7",
 )
 
 ACTION_REGISTER(view_default,
     .help = "Set camera view to default",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_default,
-    .shortcut = "5",
+    .default_shortcut = "5",
 )
 
 ACTION_REGISTER(view_front,
     .help = "Set camera view to front",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
     .data = &QUAT(HS2, -HS2, 0, 0),
-    .shortcut = "1",
+    .default_shortcut = "1",
 )
 
 static void quit(void)
@@ -1048,9 +1053,10 @@ static void quit(void)
 }
 ACTION_REGISTER(quit,
     .help = "Quit the application",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = quit,
     .csig = "v",
-    .shortcut = "Ctrl Q",
+    .default_shortcut = "Ctrl Q",
 )
 
 static void undo(void) { image_undo(goxel->image); }
@@ -1058,16 +1064,18 @@ static void redo(void) { image_redo(goxel->image); }
 
 ACTION_REGISTER(undo,
     .help = "Undo",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = undo,
     .csig = "v",
-    .shortcut = "Ctrl Z",
+    .default_shortcut = "Ctrl Z",
     .icon = ICON_ARROW_BACK,
 )
 
 ACTION_REGISTER(redo,
     .help = "Redo",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = redo,
     .csig = "v",
-    .shortcut = "Ctrl Y",
+    .default_shortcut = "Ctrl Y",
     .icon = ICON_ARROW_FORWARD,
 )

@@ -691,9 +691,10 @@ bool  stack_get_b(const astack_t *s, int i);
 void  stack_pop(astack_t *s);
 
 enum {
-    ACTION_TOUCH_IMAGE    = 1 << 0,  // Push the undo history.
+    ACTION_TOUCH_IMAGE          = 1 << 0,  // Push the undo history.
     // Toggle actions accept and return a boolean value.
-    ACTION_TOGGLE         = 1 << 1,
+    ACTION_TOGGLE               = 1 << 1,
+    ACTION_CAN_EDIT_SHORTCUT    = 1 << 2,
 };
 
 // Represent an action.
@@ -702,7 +703,8 @@ struct action {
     const char      *id;            // Globally unique id.
     const char      *help;          // Help text.
     int             flags;
-    const char      *shortcut;      // Optional shortcut.
+    const char      *default_shortcut;
+    char            shortcut[8];    // Can be changed at runtime.
     int             icon;           // Optional icon id.
     int             (*func)(const action_t *a, astack_t *s);
     void            *data;
@@ -719,10 +721,10 @@ struct action {
 };
 
 void action_register(const action_t *action);
-const action_t *action_get(const char *id);
+action_t *action_get(const char *id);
 int action_exec(const action_t *action, const char *sig, ...);
 int action_execv(const action_t *action, const char *sig, va_list ap);
-void actions_iter(int (*f)(const action_t *action, void *user), void *user);
+void actions_iter(int (*f)(action_t *action, void *user), void *user);
 
 // Convenience macro to call action_exec directly from an action id.
 #define action_exec2(id, sig, ...) \
@@ -1585,7 +1587,7 @@ struct tool {
     const char *action_id;
     int (*iter_fn)(tool_t *tool, const float viewport[4]);
     int (*gui_fn)(tool_t *tool);
-    const char *shortcut;
+    const char *default_shortcut;
     int state; // XXX: to be removed I guess.
     int flags;
 };
@@ -1778,6 +1780,13 @@ void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
 void gui_alert(const char *title, const char *msg);
+
+void gui_columns(int count);
+void gui_next_column(void);
+void gui_separator(void);
+
+void gui_push_id(const char *id);
+void gui_pop_id(void);
 
 enum {
     GUI_POPUP_FULL      = 1 << 0,

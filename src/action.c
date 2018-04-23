@@ -31,10 +31,15 @@ void action_register(const action_t *action)
     action_hash_item_t *item;
     item = calloc(1, sizeof(*item));
     item->action = *action;
+    assert(!*item->action.shortcut);
+    if (item->action.default_shortcut) {
+        assert(strlen(action->default_shortcut) < sizeof(action->shortcut));
+        strcpy(item->action.shortcut, item->action.default_shortcut);
+    }
     HASH_ADD_KEYPTR(hh, g_actions, action->id, strlen(action->id), item);
 }
 
-const action_t *action_get(const char *id)
+action_t *action_get(const char *id)
 {
     action_hash_item_t *item;
     HASH_FIND_STR(g_actions, id, item);
@@ -42,7 +47,7 @@ const action_t *action_get(const char *id)
     return item ? &item->action : NULL;
 }
 
-void actions_iter(int (*f)(const action_t *action, void *user), void *user)
+void actions_iter(int (*f)(action_t *action, void *user), void *user)
 {
     action_hash_item_t *item, *tmp;
     HASH_ITER(hh, g_actions, item, tmp) {

@@ -19,6 +19,19 @@
 #include "goxel.h"
 #include "ini.h"
 
+static int shortcut_callback(action_t *action, void *user)
+{
+    if (!(action->flags & ACTION_CAN_EDIT_SHORTCUT)) return 0;
+    gui_push_id(action->id);
+    gui_text(action->id);
+    gui_next_column();
+    // XXX: need to check if the inputs are valid!
+    gui_input_text("", action->shortcut, sizeof(action->shortcut));
+    gui_next_column();
+    gui_pop_id();
+    return 0;
+}
+
 
 bool gui_settings_popup(void *data)
 {
@@ -70,6 +83,13 @@ bool gui_settings_popup(void *data)
     gui_same_line();
     if (gui_button("Save", 0, 0)) theme_save();
 #endif
+    if (gui_collapsing_header("Shortcuts")) {
+        gui_columns(2);
+        gui_separator();
+        actions_iter(shortcut_callback, NULL);
+        gui_separator();
+        gui_columns(1);
+    }
 
     gui_popup_body_end();
     gui_action_button("settings_save", "Save", 0, "");
@@ -81,9 +101,17 @@ static int settings_ini_handler(void *user, const char *section,
                                 const char *name, const char *value,
                                 int lineno)
 {
+    action_t *a;
     if (strcmp(section, "ui") == 0) {
         if (strcmp(name, "theme") == 0) {
             theme_set(value);
+        }
+    }
+    if (strcmp(section, "shortcuts") == 0) {
+        if ((a = action_get(name))) {
+            strncpy(a->shortcut, value, sizeof(a->shortcut));
+        } else {
+            LOG_W("Cannot set shortcut for unknow action '%s'", name);
         }
     }
     return 0;
@@ -100,6 +128,14 @@ static void settings_load(const char *path)
     free(path_);
 }
 
+static int shortcut_save_callback(action_t *a, void *user)
+{
+    FILE *file = user;
+    if (strcmp(a->shortcut, a->default_shortcut ?: "") != 0)
+        fprintf(file, "%s=%s\n", a->id, a->shortcut);
+    return 0;
+}
+
 static void settings_save(void)
 {
     char *path;
@@ -109,6 +145,10 @@ static void settings_save(void)
     file = fopen(path, "w");
     fprintf(file, "[ui]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
+
+    fprintf(file, "[shortcuts]\n");
+    actions_iter(shortcut_save_callback, file);
+
     fclose(file);
     free(path);
 }

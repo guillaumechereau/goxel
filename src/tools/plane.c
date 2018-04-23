@@ -59,5 +59,5 @@ static int gui(tool_t *tool)
 TOOL_REGISTER(TOOL_SET_PLANE, plane, tool_plane_t,
               .iter_fn = iter,
               .gui_fn = gui,
-              .shortcut = "P"
+              .default_shortcut = "P"
 )

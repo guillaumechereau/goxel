@@ -35,10 +35,11 @@ void tool_register_(const tool_t *tool)
     action_t action;
     action = (action_t) {
         .id = tool->action_id,
-        .shortcut = tool->shortcut,
+        .default_shortcut = tool->default_shortcut,
         .help = "set tool",
         .func = tool_set_action,
         .data = (void*)tool,
+        .flags = ACTION_CAN_EDIT_SHORTCUT,
     };
     action_register(&action);
 }
