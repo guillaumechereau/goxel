@@ -506,7 +506,7 @@ static void tools_panel(void)
             sprintf(action_id, "tool_set_%s", values[i].tool_id);
             action = action_get(action_id);
             assert(action);
-            if (action->shortcut)
+            if (*action->shortcut)
                 sprintf(label, "%s (%s)", values[i].name, action->shortcut);
         }
         if (gui_selectable_icon(label, &v, values[i].icon)) {
@@ -1627,7 +1627,7 @@ bool gui_action_checkbox(const char *id, const char *label)
         return true;
     }
     if (ImGui::IsItemHovered()) {
-        if (!action->shortcut)
+        if (!*action->shortcut)
             goxel_set_help_text(action->help);
         else
             goxel_set_help_text("%s (%s)", action->help, action->shortcut);
