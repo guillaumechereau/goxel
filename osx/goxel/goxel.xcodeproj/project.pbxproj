@@ -30,14 +30,12 @@
 		F057B37A204EEDD000E2A63F /* bvh_sort.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B0F3204EEDCF00E2A63F /* bvh_sort.cpp */; };
 		F057B37B204EEDD000E2A63F /* bvh_split.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B0F5204EEDCF00E2A63F /* bvh_split.cpp */; };
 		F057B37C204EEDD000E2A63F /* bvh_unaligned.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B0F7204EEDCF00E2A63F /* bvh_unaligned.cpp */; };
-		F057B37D204EEDD000E2A63F /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = F057B0F9204EEDCF00E2A63F /* CMakeLists.txt */; };
 		F057B38C204EEDD000E2A63F /* device.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B10B204EEDCF00E2A63F /* device.cpp */; };
 		F057B38D204EEDD000E2A63F /* device_cpu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B10D204EEDCF00E2A63F /* device_cpu.cpp */; };
 		F057B38F204EEDD000E2A63F /* device_denoising.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B10F204EEDCF00E2A63F /* device_denoising.cpp */; };
 		F057B390204EEDD000E2A63F /* device_memory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B112204EEDCF00E2A63F /* device_memory.cpp */; };
 		F057B394204EEDD000E2A63F /* device_split_kernel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B118204EEDCF00E2A63F /* device_split_kernel.cpp */; };
 		F057B395204EEDD000E2A63F /* device_task.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B11A204EEDCF00E2A63F /* device_task.cpp */; };
-		F057B3A4204EEDD000E2A63F /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = F057B130204EEDCF00E2A63F /* CMakeLists.txt */; };
 		F057B3A5204EEDD000E2A63F /* node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B131204EEDCF00E2A63F /* node.cpp */; };
 		F057B3A6204EEDD000E2A63F /* node_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B134204EEDCF00E2A63F /* node_type.cpp */; };
 		F057B3A9204EEDD000E2A63F /* filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B1A0204EEDCF00E2A63F /* filter.cpp */; };
@@ -63,7 +61,6 @@
 		F057B437204EEDD000E2A63F /* bake.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B28E204EEDCF00E2A63F /* bake.cpp */; };
 		F057B438204EEDD000E2A63F /* buffers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B290204EEDCF00E2A63F /* buffers.cpp */; };
 		F057B439204EEDD000E2A63F /* camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B292204EEDCF00E2A63F /* camera.cpp */; };
-		F057B43A204EEDD000E2A63F /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = F057B294204EEDCF00E2A63F /* CMakeLists.txt */; };
 		F057B43B204EEDD000E2A63F /* constant_fold.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B295204EEDCF00E2A63F /* constant_fold.cpp */; };
 		F057B43C204EEDD000E2A63F /* curves.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B297204EEDCF00E2A63F /* curves.cpp */; };
 		F057B43D204EEDD000E2A63F /* film.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B299204EEDCF00E2A63F /* film.cpp */; };
@@ -85,12 +82,10 @@
 		F057B44D204EEDD000E2A63F /* svm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2B7204EEDCF00E2A63F /* svm.cpp */; };
 		F057B44E204EEDD000E2A63F /* tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2B9204EEDCF00E2A63F /* tables.cpp */; };
 		F057B44F204EEDD000E2A63F /* tile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2BB204EEDCF00E2A63F /* tile.cpp */; };
-		F057B450204EEDD000E2A63F /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = F057B2BE204EEDCF00E2A63F /* CMakeLists.txt */; };
 		F057B451204EEDD000E2A63F /* subd_dice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2BF204EEDCF00E2A63F /* subd_dice.cpp */; };
 		F057B452204EEDD000E2A63F /* subd_patch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2C1204EEDCF00E2A63F /* subd_patch.cpp */; };
 		F057B453204EEDD000E2A63F /* subd_patch_table.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2C3204EEDCF00E2A63F /* subd_patch_table.cpp */; };
 		F057B454204EEDD000E2A63F /* subd_split.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2C5204EEDCF00E2A63F /* subd_split.cpp */; };
-		F057B45B204EEDD000E2A63F /* CMakeLists.txt in Resources */ = {isa = PBXBuildFile; fileRef = F057B2CF204EEDCF00E2A63F /* CMakeLists.txt */; };
 		F057B45C204EEDD000E2A63F /* util_aligned_malloc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2D1204EEDCF00E2A63F /* util_aligned_malloc.cpp */; };
 		F057B45D204EEDD000E2A63F /* util_debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2D8204EEDCF00E2A63F /* util_debug.cpp */; };
 		F057B45E204EEDD000E2A63F /* util_guarded_allocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F057B2DD204EEDCF00E2A63F /* util_guarded_allocator.cpp */; };
@@ -197,7 +192,6 @@
 		F057B0F6204EEDCF00E2A63F /* bvh_split.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bvh_split.h; sourceTree = "<group>"; };
 		F057B0F7204EEDCF00E2A63F /* bvh_unaligned.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bvh_unaligned.cpp; sourceTree = "<group>"; };
 		F057B0F8204EEDCF00E2A63F /* bvh_unaligned.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bvh_unaligned.h; sourceTree = "<group>"; };
-		F057B0F9204EEDCF00E2A63F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		F057B10B204EEDCF00E2A63F /* device.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = device.cpp; sourceTree = "<group>"; };
 		F057B10C204EEDCF00E2A63F /* device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = device.h; sourceTree = "<group>"; };
 		F057B10D204EEDCF00E2A63F /* device_cpu.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = device_cpu.cpp; sourceTree = "<group>"; };
@@ -210,7 +204,6 @@
 		F057B119204EEDCF00E2A63F /* device_split_kernel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = device_split_kernel.h; sourceTree = "<group>"; };
 		F057B11A204EEDCF00E2A63F /* device_task.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = device_task.cpp; sourceTree = "<group>"; };
 		F057B11B204EEDCF00E2A63F /* device_task.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = device_task.h; sourceTree = "<group>"; };
-		F057B130204EEDCF00E2A63F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		F057B131204EEDCF00E2A63F /* node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = node.cpp; sourceTree = "<group>"; };
 		F057B132204EEDCF00E2A63F /* node.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = node.h; sourceTree = "<group>"; };
 		F057B133204EEDCF00E2A63F /* node_enum.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = node_enum.h; sourceTree = "<group>"; };
@@ -249,7 +242,6 @@
 		F057B291204EEDCF00E2A63F /* buffers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = buffers.h; sourceTree = "<group>"; };
 		F057B292204EEDCF00E2A63F /* camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = camera.cpp; sourceTree = "<group>"; };
 		F057B293204EEDCF00E2A63F /* camera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
-		F057B294204EEDCF00E2A63F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		F057B295204EEDCF00E2A63F /* constant_fold.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = constant_fold.cpp; sourceTree = "<group>"; };
 		F057B296204EEDCF00E2A63F /* constant_fold.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = constant_fold.h; sourceTree = "<group>"; };
 		F057B297204EEDCF00E2A63F /* curves.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = curves.cpp; sourceTree = "<group>"; };
@@ -290,7 +282,6 @@
 		F057B2BA204EEDCF00E2A63F /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tables.h; sourceTree = "<group>"; };
 		F057B2BB204EEDCF00E2A63F /* tile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tile.cpp; sourceTree = "<group>"; };
 		F057B2BC204EEDCF00E2A63F /* tile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tile.h; sourceTree = "<group>"; };
-		F057B2BE204EEDCF00E2A63F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		F057B2BF204EEDCF00E2A63F /* subd_dice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = subd_dice.cpp; sourceTree = "<group>"; };
 		F057B2C0204EEDCF00E2A63F /* subd_dice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = subd_dice.h; sourceTree = "<group>"; };
 		F057B2C1204EEDCF00E2A63F /* subd_patch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = subd_patch.cpp; sourceTree = "<group>"; };
@@ -299,7 +290,6 @@
 		F057B2C4204EEDCF00E2A63F /* subd_patch_table.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = subd_patch_table.h; sourceTree = "<group>"; };
 		F057B2C5204EEDCF00E2A63F /* subd_split.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = subd_split.cpp; sourceTree = "<group>"; };
 		F057B2C6204EEDCF00E2A63F /* subd_split.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = subd_split.h; sourceTree = "<group>"; };
-		F057B2CF204EEDCF00E2A63F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		F057B2D0204EEDCF00E2A63F /* util_algorithm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util_algorithm.h; sourceTree = "<group>"; };
 		F057B2D1204EEDCF00E2A63F /* util_aligned_malloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = util_aligned_malloc.cpp; sourceTree = "<group>"; };
 		F057B2D2204EEDCF00E2A63F /* util_aligned_malloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util_aligned_malloc.h; sourceTree = "<group>"; };
@@ -557,7 +547,6 @@
 				F057B0F6204EEDCF00E2A63F /* bvh_split.h */,
 				F057B0F7204EEDCF00E2A63F /* bvh_unaligned.cpp */,
 				F057B0F8204EEDCF00E2A63F /* bvh_unaligned.h */,
-				F057B0F9204EEDCF00E2A63F /* CMakeLists.txt */,
 			);
 			path = bvh;
 			sourceTree = "<group>";
@@ -584,7 +573,6 @@
 		F057B12F204EEDCF00E2A63F /* graph */ = {
 			isa = PBXGroup;
 			children = (
-				F057B130204EEDCF00E2A63F /* CMakeLists.txt */,
 				F057B131204EEDCF00E2A63F /* node.cpp */,
 				F057B132204EEDCF00E2A63F /* node.h */,
 				F057B133204EEDCF00E2A63F /* node_enum.h */,
@@ -653,7 +641,6 @@
 				F057B291204EEDCF00E2A63F /* buffers.h */,
 				F057B292204EEDCF00E2A63F /* camera.cpp */,
 				F057B293204EEDCF00E2A63F /* camera.h */,
-				F057B294204EEDCF00E2A63F /* CMakeLists.txt */,
 				F057B295204EEDCF00E2A63F /* constant_fold.cpp */,
 				F057B296204EEDCF00E2A63F /* constant_fold.h */,
 				F057B297204EEDCF00E2A63F /* curves.cpp */,
@@ -701,7 +688,6 @@
 		F057B2BD204EEDCF00E2A63F /* subd */ = {
 			isa = PBXGroup;
 			children = (
-				F057B2BE204EEDCF00E2A63F /* CMakeLists.txt */,
 				F057B2BF204EEDCF00E2A63F /* subd_dice.cpp */,
 				F057B2C0204EEDCF00E2A63F /* subd_dice.h */,
 				F057B2C1204EEDCF00E2A63F /* subd_patch.cpp */,
@@ -717,7 +703,6 @@
 		F057B2CE204EEDCF00E2A63F /* util */ = {
 			isa = PBXGroup;
 			children = (
-				F057B2CF204EEDCF00E2A63F /* CMakeLists.txt */,
 				F057B2D0204EEDCF00E2A63F /* util_algorithm.h */,
 				F057B2D1204EEDCF00E2A63F /* util_aligned_malloc.cpp */,
 				F057B2D2204EEDCF00E2A63F /* util_aligned_malloc.h */,
@@ -1073,13 +1058,8 @@
 			files = (
 				F0EEB7E61C8EC472004AB676 /* procedural.inl in Resources */,
 				F07DEA071BD0F31500BAA1AD /* imgui_user.inl in Resources */,
-				F057B43A204EEDD000E2A63F /* CMakeLists.txt in Resources */,
-				F057B450204EEDD000E2A63F /* CMakeLists.txt in Resources */,
 				F0158ECC1F17289B008893E6 /* sound_openal.inl in Resources */,
-				F057B37D204EEDD000E2A63F /* CMakeLists.txt in Resources */,
-				F057B3A4204EEDD000E2A63F /* CMakeLists.txt in Resources */,
 				F07DE9D51BD0F03900BAA1AD /* Assets.xcassets in Resources */,
-				F057B45B204EEDD000E2A63F /* CMakeLists.txt in Resources */,
 				F0EEB7E01C8EC25D004AB676 /* procedural.leg in Resources */,
 				F07DE9D81BD0F03900BAA1AD /* MainMenu.xib in Resources */,
 			);
