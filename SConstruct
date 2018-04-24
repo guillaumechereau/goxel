@@ -136,8 +136,9 @@ if cycles:
         '-DWITHOUT_OPENIMAGEIO',
         '-DWITH_GLEW_MX',
         '-DWITH_CYCLES',
-        '-fno-var-tracking-assignments',
     ])
+    # Try to improve compilation speed on linux.
+    if not clang: env.Append(CPPFLAGS='-fno-var-tracking-assignments')
     # This seems to fix a crash on windows.
     if target_os == 'msys':
         env.Append(CXXFLAGS='-msse2 -O3 -fno-tree-slp-vectorize')
