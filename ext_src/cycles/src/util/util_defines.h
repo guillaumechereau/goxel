@@ -58,7 +58,7 @@
 #    define ccl_device_inline static inline __attribute__((always_inline))
 #    define ccl_device_forceinline static inline __attribute__((always_inline))
 #    define ccl_align(...) __attribute__((aligned(__VA_ARGS__)))
-#    ifndef FREE_WINDOWS64
+#    if !defined(FREE_WINDOWS64) && !defined(__forceinline)
 #      define __forceinline inline __attribute__((always_inline))
 #    endif
 #    define ccl_try_align(...) __attribute__((aligned(__VA_ARGS__)))

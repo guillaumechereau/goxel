@@ -41,4 +41,6 @@
 #   endif
 #endif
 
-#define GLEW_VERSION_1_5 0
+#ifndef GLEW_VERSION_1_5
+#   define GLEW_VERSION_1_5 0
+#endif

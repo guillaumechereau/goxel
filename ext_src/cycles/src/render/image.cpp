@@ -537,7 +537,7 @@ bool ImageManager::file_load_image(Image *img,
 			}
 			tmppixels.clear();
 		}
-		cmyk = strcmp(in->format_name(), "jpeg") == 0 && components == 4;
+		cmyk = in->format_name() && strcmp(in->format_name(), "jpeg") == 0 && components == 4;
 		in->close();
 		delete in;
 	}

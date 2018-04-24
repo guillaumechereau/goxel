@@ -52,9 +52,9 @@ if werror:
 
 if debug:
     if env['CC'] == 'gcc':
-        env.Append(CFLAGS='-Og')
+        env.Append(CCFLAGS='-Og')
 else:
-    env.Append(CCFLAGS='-Ofast -DNDEBUG')
+    env.Append(CCFLAGS='-DNDEBUG', CFLAGS='-Ofast', CXXFLAGS='-Ofast')
 
 if profile or debug:
     env.Append(CCFLAGS='-g')
@@ -80,6 +80,8 @@ if argp_standalone:
 
 if target_os == 'msys':
     env.Append(CCFLAGS='-DNO_ARGP')
+    env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
+                         '-DFREE_WINDOWS'])
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32',
                      'z', 'tre', 'intl', 'iconv'],
                LINKFLAGS='--static')
@@ -135,6 +137,9 @@ if cycles:
         '-DWITH_GLEW_MX',
         '-DWITH_CYCLES',
     ])
+    # This seems to fix a crash on windows.
+    if target_os == 'msys':
+        env.Append(CXXFLAGS='-msse2 -O3 -fno-tree-slp-vectorize')
 
 env.Append(CPPFLAGS=['-Wno-sign-compare', '-Wno-strict-aliasing',
                      '-Wno-uninitialized'])
