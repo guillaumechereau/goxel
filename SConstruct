@@ -52,7 +52,7 @@ if werror:
 
 if debug:
     if env['CC'] == 'gcc':
-        env.Append(CCFLAGS='-Og')
+        env.Append(CFLAGS='-Og', CXXFLAGS='-O1')
 else:
     env.Append(CCFLAGS='-DNDEBUG', CFLAGS='-Ofast', CXXFLAGS='-Ofast')
 
@@ -136,6 +136,7 @@ if cycles:
         '-DWITHOUT_OPENIMAGEIO',
         '-DWITH_GLEW_MX',
         '-DWITH_CYCLES',
+        '-fno-var-tracking-assignments',
     ])
     # This seems to fix a crash on windows.
     if target_os == 'msys':
