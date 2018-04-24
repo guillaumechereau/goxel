@@ -78,7 +78,7 @@ static void export(const mesh_t *mesh, const char *path, bool ply)
     float mat[4][4];
     FILE *out;
     const int N = BLOCK_SIZE;
-    int size, subdivide;
+    int size = 0, subdivide;
     UT_array *lines_f, *lines_v, *lines_vn;
     line_t line, face, *line_ptr = NULL;
     mesh_iterator_t iter;
