@@ -2,7 +2,7 @@
 Goxel
 =====
 
-Version 0.7.3
+Version 0.8.0
 
 By Guillaume Chereau <guillaume@noctua-software.com>
 
@@ -52,6 +52,7 @@ Features
 - Marching Cube rendering.
 - Procedural rendering.
 - Export to obj, pyl, png, magica voxel, qubicle.
+- Ray tracing.
 
 
 Usage
