@@ -314,13 +314,13 @@ static bool sync_mesh(int w, int h, bool force)
         // scene_params.persistent_data = true;
         g_session = new ccl::Session(g_session_params);
         g_session->scene = new ccl::Scene(scene_params, g_session->device);
-        g_session->start();
     }
     if (!g_session->ready_to_reset()) return false;
     g_session->scene->mutex.lock();
     sync_scene(g_session->scene, w, h);
     g_session->scene->mutex.unlock();
     g_session->reset(g_buffer_params, g_session_params.samples);
+    g_session->start();
     return true;
 }
 
