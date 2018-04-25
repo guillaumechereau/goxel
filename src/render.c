@@ -931,7 +931,7 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         return;
     }
-
+    GL(glClear(GL_DEPTH_BUFFER_BIT));
     // Add a small gradient to the color.
     vec4_set(c1, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
     vec4_set(c2, col[0] / 255., col[1] / 255., col[2] / 255., col[3] / 255.);
