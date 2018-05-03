@@ -577,6 +577,12 @@ int sys_list_dir(const char *dir,
                  void *user);
 
 /*
+ * Function: sys_delete_file
+ * Delete a file from the system.
+ */
+int sys_delete_file(const char *path);
+
+/*
  * Function: sys_get_user_dir
  * Return the user config directory for goxel
  *

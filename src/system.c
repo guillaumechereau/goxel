@@ -71,6 +71,11 @@ int sys_list_dir(const char *dirpath,
     return 0;
 }
 
+int sys_delete_file(const char *path)
+{
+    return remove(path);
+}
+
 double sys_get_time(void)
 {
     struct timeval now;
