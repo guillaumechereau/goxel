@@ -18,6 +18,7 @@
 
 
 #include "goxel.h"
+#include <errno.h>
 
 #define VERSION 2 // Current version of the file format.
 
@@ -241,7 +242,7 @@ void save_to_file(const char *path, bool with_preview)
 
     out = gzopen(path, str_endswith(path, ".gz") ? "wb" : "wbT");
     if (!out) {
-        LOG_E("Cannot save to %s", path);
+        LOG_E("Cannot save to %s: %s", path, strerror(errno));
         return;
     }
     gzwrite(out, "GOX ", 4);
