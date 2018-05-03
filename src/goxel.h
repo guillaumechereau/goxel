@@ -791,7 +791,7 @@ enum {
 
 
 /*
- * Some icons have there color blended depending on the style.  We define
+ * Some icons have their color blended depending on the style.  We define
  * them with a range in the icons atlas:
  */
 #define ICON_COLORIZABLE_START 17
