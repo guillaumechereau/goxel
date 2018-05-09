@@ -22,30 +22,6 @@
 
 #define VERSION 2 // Current version of the file format.
 
-#ifndef NO_ZLIB
-#   include <zlib.h>
-#else
-
-// If we don't have zlib, we simulate the gz functions using normal file
-// operations.
-typedef FILE *gzFile;
-static gzFile gzopen(const char *path, const char *mode) {
-    return fopen(path, mode);
-}
-static void gzclose(gzFile file) {fclose(file);}
-static size_t gzread(gzFile file, void *buff, size_t size) {
-    return fread(buff, size, 1, file);
-}
-static size_t gzwrite(gzFile file, const void *buff, size_t size) {
-    return fwrite(buff, size, 1, file);
-}
-static int gzeof(gzFile file) {return feof(file);}
-static int gzseek(gzFile file, long offset, int whence) {
-    return fseek(file, offset, whence);
-}
-
-#endif
-
 /*
  * File format, version 2:
  *
@@ -116,51 +92,58 @@ typedef struct {
     int      pos;
 } chunk_t;
 
-static void write_int32(gzFile out, int32_t v)
+static void write_int32(FILE *out, int32_t v)
 {
-    gzwrite(out, (char*)&v, 4);
+    fwrite((char*)&v, 4, 1, out);
 }
 
-static int32_t read_int32(gzFile in)
+static int32_t read_int32(FILE *in)
 {
     int32_t v;
-    gzread(in, &v, 4);
+    if (fread(&v, 4, 1, in) != 1) {
+        // XXX: use a better error mechanism!
+        LOG_E("Error reading file");
+    }
     return v;
 }
 
-static bool chunk_read_start(chunk_t *c, gzFile in)
+static bool chunk_read_start(chunk_t *c, FILE *in)
 {
+    size_t r;
     memset(c, 0, sizeof(*c));
-    gzread(in, c->type, 4);
-    if (gzeof(in)) return false;
+    r = fread(c->type, 4, 1, in);
+    if (r == 0) return false; // eof.
+    if (r != 1) LOG_E("Error reading file");
     c->length = read_int32(in);
     return true;
 }
 
-static void chunk_read(chunk_t *c, gzFile in, char *buff, int size)
+static void chunk_read(chunk_t *c, FILE *in, char *buff, int size)
 {
     c->pos += size;
     assert(c->pos <= c->length);
-    if (buff)
-        gzread(in, buff, size);
-    else
-        gzseek(in, size, SEEK_CUR);
+    if (buff) {
+        // XXX: use a better error mechanism!
+        if (fread(buff, size, 1, in) != 1) LOG_E("Error reading file");
+    } else {
+        fseek(in, size, SEEK_CUR);
+    }
 }
 
-static int32_t chunk_read_int32(chunk_t *c, gzFile in)
+static int32_t chunk_read_int32(chunk_t *c, FILE *in)
 {
     int32_t v;
     chunk_read(c, in, (char*)&v, 4);
     return v;
 }
 
-static void chunk_read_finish(chunk_t *c, gzFile in)
+static void chunk_read_finish(chunk_t *c, FILE *in)
 {
     assert(c->pos == c->length);
     read_int32(in); // TODO: check crc.
 }
 
-static bool chunk_read_dict_value(chunk_t *c, gzFile in,
+static bool chunk_read_dict_value(chunk_t *c, FILE *in,
                                   char *key, char *value, int *value_size) {
     int size;
     assert(c->pos <= c->length);
@@ -177,7 +160,7 @@ static bool chunk_read_dict_value(chunk_t *c, gzFile in,
     return true;
 }
 
-static void chunk_write_start(chunk_t *c, gzFile out, const char *type)
+static void chunk_write_start(chunk_t *c, FILE *out, const char *type)
 {
     memset(c, 0, sizeof(*c));
     assert(strlen(type) == 4);
@@ -185,7 +168,7 @@ static void chunk_write_start(chunk_t *c, gzFile out, const char *type)
     c->buffer = calloc(1, CHUNK_BUFF_SIZE);
 }
 
-static void chunk_write(chunk_t *c, gzFile out, const char *data, int size)
+static void chunk_write(chunk_t *c, FILE *out, const char *data, int size)
 {
     if (size == 0) return;
     assert(c->length + size < CHUNK_BUFF_SIZE);
@@ -193,12 +176,12 @@ static void chunk_write(chunk_t *c, gzFile out, const char *data, int size)
     c->length += size;
 }
 
-static void chunk_write_int32(chunk_t *c, gzFile out, int32_t v)
+static void chunk_write_int32(chunk_t *c, FILE *out, int32_t v)
 {
     chunk_write(c, out, (char*)&v, 4);
 }
 
-static void chunk_write_dict_value(chunk_t *c, gzFile out, const char *name,
+static void chunk_write_dict_value(chunk_t *c, FILE *out, const char *name,
                                    const void *data, int size)
 {
     chunk_write_int32(c, out, (int)strlen(name));
@@ -207,22 +190,22 @@ static void chunk_write_dict_value(chunk_t *c, gzFile out, const char *name,
     chunk_write(c, out, data, size);
 }
 
-static void chunk_write_finish(chunk_t *c, gzFile out)
+static void chunk_write_finish(chunk_t *c, FILE *out)
 {
-    gzwrite(out, c->type, 4);
+    fwrite(c->type, 4, 1, out);
     write_int32(out, c->length);
-    gzwrite(out, c->buffer, c->length);
+    fwrite(c->buffer, c->length, 1, out);
     write_int32(out, 0);        // CRC XXX: todo.
     free(c->buffer);
     c->buffer = NULL;
 }
 
-static void chunk_write_all(gzFile out, const char *type,
+static void chunk_write_all(FILE *out, const char *type,
                             const char *data, int size)
 {
-    gzwrite(out, type, 4);
+    fwrite(type, 4, 1, out);
     write_int32(out, size);
-    gzwrite(out, data, size);
+    fwrite(data, size, 1, out);
     write_int32(out, 0);        // CRC XXX: todo.
 }
 
@@ -235,17 +218,17 @@ void save_to_file(const char *path, bool with_preview)
     chunk_t c;
     int nb_blocks, index, size, bpos[3];
     uint64_t uid;
-    gzFile out;
+    FILE *out;
     uint8_t *png, *preview;
     camera_t *camera;
     mesh_iterator_t iter;
 
-    out = gzopen(path, str_endswith(path, ".gz") ? "wb" : "wbT");
+    out = fopen(path, "wb");
     if (!out) {
         LOG_E("Cannot save to %s: %s", path, strerror(errno));
         return;
     }
-    gzwrite(out, "GOX ", 4);
+    fwrite("GOX ", 4, 1, out);
     write_int32(out, VERSION);
 
     // Write image info.
@@ -355,7 +338,7 @@ void save_to_file(const char *path, bool with_preview)
         free(data);
     }
 
-    gzclose(out);
+    fclose(out);
 }
 
 // Iter info of a gox file, without actually reading it.
@@ -365,15 +348,15 @@ int gox_iter_infos(const char *path,
                                    void *value, void *user),
                    void *user)
 {
-    gzFile in;
+    FILE *in;
     chunk_t c;
     uint8_t *png;
     char magic[4];
 
-    in = gzopen(path, "rb");
+    in = fopen(path, "rb");
 
-    gzread(in, magic, 4);
-    assert(strncmp(magic, "GOX ", 4) == 0);
+    if (fread(magic, 4, 1, in) != 1) return -1;
+    if (strncmp(magic, "GOX ", 4) != 0) return -1;
     read_int32(in);
 
     while (chunk_read_start(&c, in)) {
@@ -390,7 +373,7 @@ int gox_iter_infos(const char *path,
         }
         chunk_read_finish(&c, in);
     }
-    gzclose(in);
+    fclose(in);
     return 0;
 }
 
@@ -408,7 +391,7 @@ int load_from_file(const char *path)
 {
     layer_t *layer, *layer_tmp;
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
-    gzFile in;
+    FILE *in;
     char magic[4] = {};
     uint8_t *voxel_data;
     int nb_blocks;
@@ -422,10 +405,10 @@ int load_from_file(const char *path)
     uint64_t uid = 1;
     camera_t *camera;
 
-    in = gzopen(path, "rb");
+    in = fopen(path, "rb");
     if (!in) return -1;
 
-    gzread(in, magic, 4);
+    if (fread(magic, 4, 1, in) != 1) goto error;
     if (strncmp(magic, "GOX ", 4) != 0) goto error;
     version = read_int32(in);
     if (version > VERSION) {
@@ -539,7 +522,7 @@ int load_from_file(const char *path)
     goxel->image->path = strdup(path);
     goxel->image->saved_key = image_get_key(goxel->image);
     goxel_update_meshes(-1);
-    gzclose(in);
+    fclose(in);
 
     // Update plane, snap mask and camera pos not to confuse people.
     plane_from_vectors(goxel->plane, goxel->image->box[3],
@@ -550,7 +533,7 @@ int load_from_file(const char *path)
     return 0;
 
 error:
-    gzclose(in);
+    fclose(in);
     return -1;
 }
 
