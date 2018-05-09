@@ -51,6 +51,7 @@ namespace ImGui {
     void GoxBox(ImVec2 pos, ImVec2 size, bool selected,
                 int rounding_corners_flags = ~0);
     void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
+                 float thickness = 1,
                  int rounding_corners_flags = ~0);
 };
 

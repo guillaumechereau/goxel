@@ -36,6 +36,7 @@ static inline ImVec4 color_lighten(ImVec4 c, float k)
 namespace ImGui {
 
     void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
+                 float thickness = 1,
                  int rounding_corners_flags = ~0)
     {
         ImGuiContext& g = *GImGui;
@@ -52,7 +53,7 @@ namespace ImGui {
             window->DrawList->AddRect(
                     pos, pos + size,
                     ImGui::ColorConvertFloat4ToU32(color), r,
-                    rounding_corners_flags);
+                    rounding_corners_flags, thickness);
         }
     }
 
@@ -63,7 +64,7 @@ namespace ImGui {
         const ImGuiStyle& style = g.Style;
         ImVec4 color  = style.Colors[selected ? ImGuiCol_ButtonActive :
                                      ImGuiCol_Button];
-        return GoxBox2(pos, size, color, true, rounding_corners_flags);
+        return GoxBox2(pos, size, color, true, 1, rounding_corners_flags);
     }
 
     // Copied from imgui, with some customization...
