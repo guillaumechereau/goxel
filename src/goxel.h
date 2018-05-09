@@ -487,7 +487,7 @@ int b64_decode(const char *src, void *dest);
  * Return:
  *   The new crc64 value.
  */
-uint64_t crc64(uint64_t crc, const uint8_t *s, uint64_t len);
+uint64_t crc64(uint64_t crc, const void *s, uint64_t len);
 
 // #############################
 

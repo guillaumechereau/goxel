@@ -510,11 +510,11 @@ static const uint64_t crc64_tab[256] = {
  * Return:
  *   The new crc64 value.
  */
-uint64_t crc64(uint64_t crc, const uint8_t *s, uint64_t len)
+uint64_t crc64(uint64_t crc, const void *s, uint64_t len)
 {
     uint64_t j, byte;
     for (j = 0; j < len; j++) {
-        byte = s[j];
+        byte = ((const uint8_t*)s)[j];
         crc = crc64_tab[(uint8_t)crc ^ byte] ^ (crc >> 8);
     }
     return crc;
