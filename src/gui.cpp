@@ -842,9 +842,11 @@ static void material_panel(void)
     }
     free(names);
 
-    v = goxel->rend.settings.shadow;
-    if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
-        goxel->rend.settings.shadow = clamp(v, 0, 1);
+    if (!DEFINED(GOXEL_NO_SHADOW)) {
+        v = goxel->rend.settings.shadow;
+        if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
+            goxel->rend.settings.shadow = clamp(v, 0, 1);
+        }
     }
     ImGui::SetNextTreeNodeOpen(false, ImGuiCond_Once);
     if (gui_collapsing_header("Render Advanced"))

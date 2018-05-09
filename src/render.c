@@ -1050,5 +1050,6 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             out->effects = EFFECT_MARCHING_CUBES | EFFECT_FLAT;
             break;
     }
+    if (DEFINED(GOXEL_NO_SHADOW)) out->shadow = 0;
     return 5;
 }
