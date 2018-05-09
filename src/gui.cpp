@@ -128,10 +128,11 @@ typedef struct gui_t {
     struct {
         const char *title;
         bool      (*func)(void *data);
+        void      (*on_closed)(void);
         int         flags;
-        void       *data;
-        bool       opened;
-    } popup;
+        void       *data; // Automatically released when popup close.
+    } popup[8]; // Stack of modal popups
+    int popup_count;
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -854,7 +855,7 @@ static void render_panel(void)
     const char *path;
     typeof(goxel->render_task) *task = &goxel->render_task;
 
-    goxel->no_edit = task->status || gui->popup.title;
+    goxel->no_edit = task->status || gui->popup_count;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
@@ -1026,6 +1027,12 @@ static bool about_popup(void *data)
         BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
         BulletText("Michal (https://github.com/YarlBoro)");
     }
+    return gui_button("OK", 0, 0);
+}
+
+static bool alert_popup(void *data)
+{
+    if (data) gui_text((const char *)data);
     return gui_button("OK", 0, 0);
 }
 
@@ -1268,6 +1275,42 @@ static void render_left_panel(void)
     ImGui::EndChild();
 }
 
+static void render_popups(int index)
+{
+    typeof(gui->popup[0]) *popup;
+    ImGuiIO& io = ImGui::GetIO();
+
+    popup = &gui->popup[index];
+    if (!popup->title) return;
+
+    ImGui::OpenPopup(popup->title);
+    int flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
+    if (popup->flags & GUI_POPUP_FULL) {
+        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x - 40,
+                                        io.DisplaySize.y - 40),
+                (popup->flags & GUI_POPUP_RESIZE) ?  ImGuiCond_Once : 0);
+    }
+    if (popup->flags & GUI_POPUP_RESIZE) {
+        flags &= ~(ImGuiWindowFlags_NoMove |
+                   ImGuiWindowFlags_AlwaysAutoResize);
+    }
+    if (ImGui::BeginPopupModal(popup->title, NULL, flags)) {
+        typeof(popup->func) func = popup->func;
+        if (func(popup->data)) {
+            ImGui::CloseCurrentPopup();
+            gui->popup_count--;
+            popup->title = NULL;
+            popup->func = NULL;
+            free(popup->data);
+            popup->data = NULL;
+            if (popup->on_closed) popup->on_closed();
+            popup->on_closed = NULL;
+        }
+        render_popups(index + 1);
+        ImGui::EndPopup();
+    }
+}
+
 void gui_iter(const inputs_t *inputs)
 {
     if (!gui) gui_init(inputs);
@@ -1345,36 +1388,7 @@ void gui_iter(const inputs_t *inputs)
     render_left_panel();
     ImGui::SameLine();
 
-    if (gui->popup.title) {
-        if (!gui->popup.opened) {
-            ImGui::OpenPopup(gui->popup.title);
-            gui->popup.opened = true;
-        }
-        int flags = ImGuiWindowFlags_AlwaysAutoResize |
-                    ImGuiWindowFlags_NoMove;
-        if (gui->popup.flags & GUI_POPUP_FULL) {
-            ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x - 40,
-                                            io.DisplaySize.y - 40),
-                        (gui->popup.flags & GUI_POPUP_RESIZE) ?
-                            ImGuiCond_Once : 0);
-        }
-        if (gui->popup.flags & GUI_POPUP_RESIZE) {
-            flags &= ~(ImGuiWindowFlags_NoMove |
-                       ImGuiWindowFlags_AlwaysAutoResize);
-        }
-        if (ImGui::BeginPopupModal(gui->popup.title, NULL, flags)) {
-            typeof(gui->popup.func) func = gui->popup.func;
-            if (func(gui->popup.data)) {
-                ImGui::CloseCurrentPopup();
-                // Only reset if there was no change.
-                if (func == gui->popup.func) {
-                    free(gui->popup.data);
-                    memset(&gui->popup, 0, sizeof(gui->popup));
-                }
-            }
-            ImGui::EndPopup();
-        }
-    }
+    render_popups(0);
 
     ImGui::BeginChild("3d view", ImVec2(0, 0), false,
                       ImGuiWindowFlags_NoScrollWithMouse);
@@ -1917,11 +1931,18 @@ bool gui_quat(const char *label, float q[4])
 void gui_open_popup(const char *title, int flags, void *data,
                     bool (*func)(void *data))
 {
-    gui->popup.title = title;
-    gui->popup.func = func;
-    gui->popup.flags = flags;
-    assert(!gui->popup.data);
-    gui->popup.data = data;
+    typeof(gui->popup[0]) *popup;
+    popup = &gui->popup[gui->popup_count++];
+    popup->title = title;
+    popup->func = func;
+    popup->flags = flags;
+    assert(!popup->data);
+    popup->data = data;
+}
+
+void gui_on_popup_closed(void (*func)(void))
+{
+    gui->popup[gui->popup_count - 1].on_closed = func;
 }
 
 void gui_popup_body_begin(void) {
@@ -1930,12 +1951,6 @@ void gui_popup_body_begin(void) {
 
 void gui_popup_body_end(void) {
     ImGui::EndChild();
-}
-
-static bool alert_popup(void *data)
-{
-    if (data) gui_text((const char *)data);
-    return gui_button("OK", 0, 0);
 }
 
 void gui_alert(const char *title, const char *msg)
