@@ -1883,6 +1883,9 @@ void sound_init(void);
 void sound_play(const char *sound);
 void sound_iter(void);
 
+bool sound_is_enabled(void);
+void sound_set_enabled(bool v);
+
 // Section: cycles
 void cycles_init(void);
 void cycles_release(void);

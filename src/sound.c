@@ -25,9 +25,9 @@
  * This is disabled by default.
  */
 
-#ifdef SOUND
-
 #include "goxel.h"
+
+#ifdef SOUND
 
 // Abstraction used to represent any kind of sound sources: wav, sfxr, mod.
 typedef struct sound_source {
@@ -48,6 +48,7 @@ typedef struct sound {
 } sound_t;
 
 static sound_t *g_sounds = NULL;
+static bool g_enabled = true;
 
 
 // Functions defined by the backend.
@@ -62,6 +63,16 @@ void sound_backend_iter(void);
 void sound_init(void)
 {
     sound_backend_init();
+}
+
+bool sound_is_enabled(void)
+{
+    return g_enabled;
+}
+
+void sound_set_enabled(bool v)
+{
+    g_enabled = v;
 }
 
 
@@ -135,6 +146,7 @@ static sound_t *sound_get(const char *name)
 
 void sound_play(const char *name)
 {
+    if (!g_enabled) return;
     sound_t *sound = sound_get(name);
     sound->source->reset(sound->source);
     sound_backend_stop_sound(sound);
@@ -160,5 +172,7 @@ void sound_iter(void)
 void sound_init(void) {}
 void sound_play(const char *sound) {}
 void sound_iter(void) {}
+bool sound_is_enabled(void) { return false; }
+void sound_set_enabled(bool v) {}
 
 #endif
