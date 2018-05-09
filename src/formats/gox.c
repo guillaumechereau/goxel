@@ -537,6 +537,7 @@ int load_from_file(const char *path)
     }
 
     goxel->image->path = strdup(path);
+    goxel->image->saved_key = image_get_key(goxel->image);
     goxel_update_meshes(-1);
     gzclose(in);
 
@@ -582,6 +583,7 @@ static void save_as(const char *path, bool with_preview)
     if (path != goxel->image->path) {
         free(goxel->image->path);
         goxel->image->path = strdup(path);
+        goxel->image->saved_key = image_get_key(goxel->image);
     }
     save_to_file(goxel->image->path, with_preview);
 }

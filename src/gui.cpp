@@ -1063,11 +1063,11 @@ static int export_menu_action_callback(action_t *a, void *user)
     return 0;
 }
 
-static bool render_menu_item(const char *id, const char *label)
+static bool render_menu_item(const char *id, const char *label, bool enabled)
 {
     const action_t *action = action_get(id);
     assert(action);
-    if (ImGui::MenuItem(label, action->shortcut)) {
+    if (ImGui::MenuItem(label, action->shortcut, false, enabled)) {
         action_exec(action, "");
         return true;
     }
@@ -1081,9 +1081,10 @@ static void render_menu(void)
 
     if (!ImGui::BeginMenuBar()) return;
     if (ImGui::BeginMenu("File")) {
-        render_menu_item("save", "Save");
-        render_menu_item("save_as", "Save as");
-        render_menu_item("open", "Open");
+        render_menu_item("save", "Save",
+                image_get_key(goxel->image) != goxel->image->saved_key);
+        render_menu_item("save_as", "Save as", true);
+        render_menu_item("open", "Open", true);
         if (ImGui::BeginMenu("Import...")) {
             if (ImGui::MenuItem("image plane")) import_image_plane(goxel);
             actions_iter(import_menu_action_callback, NULL);
@@ -1093,16 +1094,16 @@ static void render_menu(void)
             actions_iter(export_menu_action_callback, NULL);
             ImGui::EndMenu();
         }
-        render_menu_item("quit", "Quit");
+        render_menu_item("quit", "Quit", true);
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Edit")) {
         if (ImGui::MenuItem("Clear", "Delete"))
             action_exec2("layer_clear", "");
-        render_menu_item("undo", "Undo");
-        render_menu_item("redo", "Redo");
-        render_menu_item("copy", "Copy");
-        render_menu_item("past", "Past");
+        render_menu_item("undo", "Undo", true);
+        render_menu_item("redo", "Redo", true);
+        render_menu_item("copy", "Copy", true);
+        render_menu_item("past", "Past", true);
         if (ImGui::MenuItem("Shift Alpha"))
             gui_open_popup("Shift Alpha", 0, NULL, shift_alpha_popup);
         if (ImGui::MenuItem("Settings"))
@@ -1111,11 +1112,11 @@ static void render_menu(void)
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("View")) {
-        render_menu_item("view_left", "Left");
-        render_menu_item("view_right", "Right");
-        render_menu_item("view_front", "Front");
-        render_menu_item("view_top", "Top");
-        render_menu_item("view_default", "Default");
+        render_menu_item("view_left", "Left", true);
+        render_menu_item("view_right", "Right", true);
+        render_menu_item("view_front", "Front", true);
+        render_menu_item("view_top", "Top", true);
+        render_menu_item("view_default", "Default", true);
         ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Help")) {

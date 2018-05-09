@@ -1462,6 +1462,12 @@ void camera_get_ray(const camera_t *camera, const float win[2],
  */
 void camera_fit_box(camera_t *camera, const float box[4][4]);
 
+/*
+ * Function: camera_get_key
+ * Return a value that is guarantied to change when the camera change.
+ */
+uint64_t camera_get_key(const camera_t *camera);
+
 typedef struct history history_t;
 
 typedef struct layer layer_t;
@@ -1489,9 +1495,10 @@ struct image {
     float    box[4][4];
 
     // For saving.
-    char    *path;
-    int     export_width;
-    int     export_height;
+    char     *path;
+    int      export_width;
+    int      export_height;
+    uint64_t saved_key;     // image_get_key() value of saved file.
 
     image_t *history;
     image_t *history_next, *history_prev;
@@ -1508,6 +1515,12 @@ void image_history_push(image_t *img);
 void image_undo(image_t *img);
 void image_redo(image_t *img);
 bool image_layer_can_edit(const image_t *img, const layer_t *layer);
+
+/*
+ * Function: image_get_key
+ * Return a value that is guarantied to change when the image change.
+ */
+uint64_t image_get_key(const image_t *img);
 
 // ##### Procedural rendering ########################
 

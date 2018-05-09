@@ -134,6 +134,17 @@ static void layer_delete(layer_t *layer)
     free(layer);
 }
 
+static uint64_t layer_get_key(const layer_t *layer)
+{
+    uint64_t key;
+    key = mesh_get_key(layer->mesh);
+    key = crc64(key, &layer->visible, sizeof(layer->visible));
+    key = crc64(key, &layer->name, sizeof(layer->name));
+    key = crc64(key, &layer->box, sizeof(layer->box));
+    key = crc64(key, &layer->mat, sizeof(layer->mat));
+    return key;
+}
+
 image_t *image_new(void)
 {
     layer_t *layer;
@@ -468,6 +479,26 @@ void image_clear_layer(layer_t *layer, const float box[4][4])
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)
 {
     return !layer->base_id && !layer->image;
+}
+
+/*
+ * Function: image_get_key
+ * Return a value that is garantied to change when the image change.
+ */
+uint64_t image_get_key(const image_t *img)
+{
+    uint64_t key = 0, k;
+    layer_t *layer;
+    camera_t *camera;
+    DL_FOREACH(img->layers, layer) {
+        k = layer_get_key(layer);
+        key = crc64(key, &k, sizeof(k));
+    }
+    DL_FOREACH(img->cameras, camera) {
+        k = camera_get_key(camera);
+        key = crc64(key, &k, sizeof(k));
+    }
+    return key;
 }
 
 ACTION_REGISTER(layer_clear,
