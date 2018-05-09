@@ -138,8 +138,8 @@ static gui_t *gui = NULL;
 
 // Notify the gui that we want the panel size to be at least as large as
 // the last item.
-static void auto_adjust_panel_size(void) {
-    float w = ImGui::GetItemRectMax().x;
+static void auto_adjust_panel_size(float w = 0) {
+    if (w == 0) w = ImGui::GetItemRectMax().x;
     ImGuiStyle& style = ImGui::GetStyle();
     if (ImGui::GetScrollMaxY() > 0) w += style.ScrollbarSize;
     gui->min_panel_size = max(gui->min_panel_size, w);
@@ -656,6 +656,7 @@ static void layers_panel(void)
         goxel_update_meshes(-1);
     }
     gui_group_end();
+    auto_adjust_panel_size();
 
     if (layer->base_id) {
         gui_group_begin(NULL);
@@ -782,7 +783,8 @@ static void material_advanced_panel(void)
     if (gui_input_float(#name, &v, 0.1, min, max, NULL)) { \
         v = clamp(v, min, max); \
         goxel->rend.settings.name = v; \
-    }
+    } \
+    auto_adjust_panel_size();
 
     MAT_FLOAT(ambient, 0, 1);
     MAT_FLOAT(diffuse, 0, 1);
@@ -803,6 +805,7 @@ static void material_advanced_panel(void)
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_MARCHING_CUBES)) {
         goxel->rend.settings.smoothness = 1;
     }
+    auto_adjust_panel_size();
     if (goxel->rend.settings.effects & EFFECT_MARCHING_CUBES)
         ImGui::CheckboxFlags("Flat",
             (unsigned int*)&goxel->rend.settings.effects, EFFECT_FLAT);
@@ -928,6 +931,7 @@ static void cameras_panel(void)
             }
         }
         i++;
+        auto_adjust_panel_size();
     }
     gui_group_end();
     gui_action_button("img_new_camera", NULL, 0, "");
@@ -1534,6 +1538,7 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
+    const theme_t *theme = theme_get();
     bool self_group = false, ret;
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
@@ -1550,6 +1555,11 @@ bool gui_input_float(const char *label, float *v, float step,
     ret = ImGui::GoxInputFloat(label, v, step, minv, maxv, format);
     if (ret) on_click();
     if (self_group) gui_group_end();
+
+    // Empirical panel size required to render this element.
+    auto_adjust_panel_size(
+            ImGui::CalcTextSize(label).x +
+            theme->sizes.item_height * 4);
     return ret;
 }
 
