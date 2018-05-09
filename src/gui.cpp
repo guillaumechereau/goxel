@@ -729,7 +729,10 @@ static bool render_palette_entry(const uint8_t color[4], uint8_t target[4])
                            0xFFFFFFFF, 0, 0, 1);
     }
     ImGui::PopStyleColor(2);
-    if (ret) memcpy(target, color, 4);
+    if (ret) {
+        on_click();
+        memcpy(target, color, 4);
+    }
     return ret;
 }
 
