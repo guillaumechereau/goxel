@@ -143,7 +143,7 @@ static void start_main_loop(void (*func)(void))
 {
     while (!glfwWindowShouldClose(g_window)) {
         func();
-        if (goxel->quit) break;
+        if (goxel.quit) break;
     }
     glfwTerminate();
 }

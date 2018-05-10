@@ -65,7 +65,7 @@ static int get_face(const float n[3])
 static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_extrude_t *tool = (tool_extrude_t*)user;
-    mesh_t *mesh = goxel->image->active_layer->mesh;
+    mesh_t *mesh = goxel.image->active_layer->mesh;
     mesh_t *tmp_mesh;
     cursor_t *curs = gest->cursor;
     float face_plane[4][4];
@@ -87,13 +87,13 @@ static int on_drag(gesture3d_t *gest, void *user)
         mesh_delete(tmp_mesh);
 
         mesh_set(tool->mesh_orig, mesh);
-        image_history_push(goxel->image);
+        image_history_push(goxel.image);
 
         // XXX: to remove: this is duplicated from selection tool.
         mesh_get_box(tool->mesh, true, box);
         mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
-        plane_from_vectors(goxel->tool_plane, curs->pos, curs->normal, v);
+        plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
 
@@ -104,18 +104,18 @@ static int on_drag(gesture3d_t *gest, void *user)
     mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
     // XXX: Is there a better way to compute the delta??
-    vec3_sub(curs->pos, goxel->tool_plane[3], v);
+    vec3_sub(curs->pos, goxel.tool_plane[3], v);
     vec3_project(v, n, v);
     delta = vec3_dot(n, v);
-    // render_box(&goxel->rend, &box, NULL, EFFECT_WIREFRAME);
+    // render_box(&goxel.rend, &box, NULL, EFFECT_WIREFRAME);
 
     // Skip if we didn't move.
     if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
-    vec3_sub(curs->pos, goxel->tool_plane[3], v);
+    vec3_sub(curs->pos, goxel.tool_plane[3], v);
     vec3_project(v, n, v);
-    vec3_add(goxel->tool_plane[3], v, pos);
+    vec3_add(goxel.tool_plane[3], v, pos);
     pos[0] = round(pos[0]);
     pos[1] = round(pos[1]);
     pos[2] = round(pos[2]);
@@ -142,7 +142,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 end:
     if (gest->state == GESTURE_END) {
         mesh_delete(tool->mesh);
-        mat4_copy(plane_null, goxel->tool_plane);
+        mat4_copy(plane_null, goxel.tool_plane);
         goxel_update_meshes(-1);
     }
     return 0;
@@ -151,7 +151,7 @@ end:
 static int iter(tool_t *tool_, const float viewport[4])
 {
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
-    cursor_t *curs = &goxel->cursor;
+    cursor_t *curs = &goxel.cursor;
     curs->snap_offset = -0.5;
     curs->snap_mask &= ~SNAP_ROUNDED;
 

@@ -205,7 +205,7 @@ void image_delete(image_t *img)
 layer_t *image_add_layer(image_t *img)
 {
     layer_t *layer;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     layer = layer_new(img, "unnamed");
     layer->visible = true;
     DL_APPEND(img->layers, layer);
@@ -216,13 +216,13 @@ layer_t *image_add_layer(image_t *img)
 void image_delete_layer(image_t *img, layer_t *layer)
 {
     layer_t *other;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     layer = layer ?: img->active_layer;
     DL_DELETE(img->layers, layer);
     if (layer == img->active_layer) img->active_layer = NULL;
 
     // Unclone all layers cloned from this one.
-    DL_FOREACH(goxel->image->layers, other) {
+    DL_FOREACH(goxel.image->layers, other) {
         if (other->base_id == layer->id) {
             other->base_id = 0;
         }
@@ -241,7 +241,7 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
 {
     assert(d == -1 || d == +1);
     layer_t *other = NULL;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     layer = layer ?: img->active_layer;
     if (d == -1) {
         other = layer->next;
@@ -267,7 +267,7 @@ static void image_move_layer_down(image_t *img, layer_t *layer)
 layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     other = other ?: img->active_layer;
     layer = layer_copy(other);
     layer->id = img_get_new_id(img);
@@ -280,7 +280,7 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 layer_t *image_clone_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     other = other ?: img->active_layer;
     layer = layer_clone(other);
     layer->id = img_get_new_id(img);
@@ -292,14 +292,14 @@ layer_t *image_clone_layer(image_t *img, layer_t *other)
 
 void image_unclone_layer(image_t *img, layer_t *layer)
 {
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     layer = layer ?: img->active_layer;
     layer->base_id = 0;
 }
 
 void image_select_parent_layer(image_t *img, layer_t *layer)
 {
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     layer = layer ?: img->active_layer;
     img->active_layer = img_get_layer(img, layer->base_id);
 }
@@ -307,7 +307,7 @@ void image_select_parent_layer(image_t *img, layer_t *layer)
 void image_merge_visible_layers(image_t *img)
 {
     layer_t *layer, *last = NULL;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         if (last) {
@@ -324,7 +324,7 @@ void image_merge_visible_layers(image_t *img)
 camera_t *image_add_camera(image_t *img)
 {
     camera_t *cam;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     cam = camera_new("unnamed");
     DL_APPEND(img->cameras, cam);
     img->active_camera = cam;
@@ -333,7 +333,7 @@ camera_t *image_add_camera(image_t *img)
 
 static void image_delete_camera(image_t *img, camera_t *cam)
 {
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     cam = cam ?: img->active_camera;
     if (!cam) return;
     DL_DELETE(img->cameras, cam);
@@ -346,7 +346,7 @@ void image_move_camera(image_t *img, camera_t *cam, int d)
     // XXX: make a generic algo to move objects in a list.
     assert(d == -1 || d == +1);
     camera_t *other = NULL;
-    img = img ?: goxel->image;
+    img = img ?: goxel.image;
     cam = cam ?: img->active_camera;
     if (!cam) return;
     if (d == -1) {
@@ -463,7 +463,7 @@ void image_redo(image_t *img)
 void image_clear_layer(layer_t *layer, const float box[4][4])
 {
     painter_t painter;
-    layer = layer ?: goxel->image->active_layer;
+    layer = layer ?: goxel.image->active_layer;
     if (!box || box_is_null(box)) {
         mesh_clear(layer->mesh);
         return;

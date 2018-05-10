@@ -33,8 +33,8 @@ typedef struct {
 static int iter(tool_t *tool, const float viewport[4])
 {
     float box[4][4];
-    gox_proc_t *proc = &goxel->proc;
-    cursor_t *curs = &goxel->cursor;
+    gox_proc_t *proc = &goxel.proc;
+    cursor_t *curs = &goxel.cursor;
 
     if (proc->state == PROC_PARSE_ERROR) return 0;
 
@@ -46,9 +46,9 @@ static int iter(tool_t *tool, const float viewport[4])
     case STATE_SNAPED:
         if (!curs->snaped) return STATE_IDLE;
         bbox_from_extents(box, curs->pos, 0.5, 0.5, 0.5);
-        render_box(&goxel->rend, box, NULL, EFFECT_WIREFRAME);
+        render_box(&goxel.rend, box, NULL, EFFECT_WIREFRAME);
         if (curs->flags & CURSOR_PRESSED) {
-            image_history_push(goxel->image);
+            image_history_push(goxel.image);
             proc_stop(proc);
             proc_start(proc, box);
             return STATE_PAINT;
@@ -80,7 +80,7 @@ static int gui(tool_t *tool)
     static bool first_time = true;
     int i;
     static int current = -1;
-    gox_proc_t *proc = &goxel->proc;
+    gox_proc_t *proc = &goxel.proc;
     bool enabled;
     static bool auto_run;
     static int timer = 0;
@@ -108,7 +108,7 @@ static int gui(tool_t *tool)
         proc_parse(prog_buff, proc);
     }
     if (proc->error.str) {
-        gui_input_text_multiline_highlight(goxel->proc.error.line);
+        gui_input_text_multiline_highlight(goxel.proc.error.line);
         gui_text(proc->error.str);
     }
     enabled = proc->state >= PROC_READY;
@@ -121,7 +121,7 @@ static int gui(tool_t *tool)
         if (    (gui_button("Run", 0, 0) && enabled) ||
                 (auto_run && proc->state == PROC_READY &&
                  timer && timer++ >= 16)) {
-            mesh_clear(goxel->image->active_layer->mesh);
+            mesh_clear(goxel.image->active_layer->mesh);
             proc_start(proc, NULL);
             timer = 0;
         }
@@ -138,7 +138,7 @@ static int gui(tool_t *tool)
                     NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
                     NULL, NULL, NULL);
         if (dir_path) {
-            mesh_clear(goxel->image->active_layer->mesh);
+            mesh_clear(goxel.image->active_layer->mesh);
             proc_start(proc, NULL);
             prog_export_animation = true;
             sprintf(prog_export_animation_path, "%s", dir_path);

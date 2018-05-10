@@ -108,8 +108,8 @@ static int on_hover(gesture3d_t *gest, void *user)
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to set selection.");
-    get_box(curs->pos, curs->pos, curs->normal, 0, goxel->plane, box);
-    render_box(&goxel->rend, box, box_color, EFFECT_WIREFRAME);
+    get_box(curs->pos, curs->pos, curs->normal, 0, goxel.plane, box);
+    render_box(&goxel.rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
 
@@ -120,7 +120,7 @@ static int on_resize(gesture3d_t *gest, void *user)
     tool_selection_t *tool = user;
     float n[3], pos[3], v[3];
 
-    if (box_is_null(goxel->selection)) return GESTURE_FAILED;
+    if (box_is_null(goxel.selection)) return GESTURE_FAILED;
 
     if (gest->type == GESTURE_HOVER) {
         goxel_set_help_text("Drag to move face");
@@ -128,13 +128,13 @@ static int on_resize(gesture3d_t *gest, void *user)
         tool->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(goxel->selection, FACES_MATS[tool->snap_face],
+        mat4_mul(goxel.selection, FACES_MATS[tool->snap_face],
                  face_plane);
-        render_img(&goxel->rend, NULL, face_plane, EFFECT_NO_SHADING);
+        render_img(&goxel.rend, NULL, face_plane, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane[0], v);
-            plane_from_vectors(goxel->tool_plane, curs->pos, curs->normal, v);
+            plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
         }
         return 0;
     }
@@ -142,30 +142,30 @@ static int on_resize(gesture3d_t *gest, void *user)
         goxel_set_help_text("Drag to move face");
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(goxel->selection, FACES_MATS[tool->snap_face],
+        mat4_mul(goxel.selection, FACES_MATS[tool->snap_face],
                  face_plane);
 
         vec3_normalize(face_plane[2], n);
-        vec3_sub(curs->pos, goxel->tool_plane[3], v);
+        vec3_sub(curs->pos, goxel.tool_plane[3], v);
         vec3_project(v, n, v);
-        vec3_add(goxel->tool_plane[3], v, pos);
+        vec3_add(goxel.tool_plane[3], v, pos);
         pos[0] = round(pos[0]);
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
         if (g_drag_mode == DRAG_RESIZE) {
-            box_move_face(goxel->selection, tool->snap_face, pos,
-                          goxel->selection);
+            box_move_face(goxel.selection, tool->snap_face, pos,
+                          goxel.selection);
         } else {
             float d[3], ofs[3];
-            vec3_add(goxel->selection[3], face_plane[2], d);
+            vec3_add(goxel.selection[3], face_plane[2], d);
             vec3_sub(pos, d, d);
             vec3_project(d, n, ofs);
-            vec3_iadd(goxel->selection[3], ofs);
+            vec3_iadd(goxel.selection[3], ofs);
         }
 
         if (gest->state == GESTURE_END) {
             gest->type = GESTURE_HOVER;
-            mat4_copy(plane_null, goxel->tool_plane);
+            mat4_copy(plane_null, goxel.tool_plane);
         }
         return 0;
     }
@@ -185,23 +185,23 @@ static int on_drag(gesture3d_t *gest, void *user)
 
         goxel_set_help_text("Drag.");
         get_box(tool->start_pos, curs->pos, curs->normal,
-                0, goxel->plane, goxel->selection);
+                0, goxel.plane, goxel.selection);
         if (gest->state == GESTURE_END) tool->adjust = true;
     } else {
         goxel_set_help_text("Adjust height.");
         if (gest->state == GESTURE_BEGIN)
-            plane_from_normal(goxel->tool_plane, curs->pos, goxel->plane[0]);
-        vec3_sub(curs->pos, goxel->tool_plane[3], v);
-        vec3_project(v, goxel->plane[2], v);
-        vec3_add(goxel->tool_plane[3], v, pos);
+            plane_from_normal(goxel.tool_plane, curs->pos, goxel.plane[0]);
+        vec3_sub(curs->pos, goxel.tool_plane[3], v);
+        vec3_project(v, goxel.plane[2], v);
+        vec3_add(goxel.tool_plane[3], v, pos);
         pos[0] = round(pos[0] - 0.5) + 0.5;
         pos[1] = round(pos[1] - 0.5) + 0.5;
         pos[2] = round(pos[2] - 0.5) + 0.5;
         get_box(tool->start_pos, pos, curs->normal, 0,
-                goxel->plane, goxel->selection);
+                goxel.plane, goxel.selection);
         if (gest->state == GESTURE_END) {
             tool->adjust = false;
-            mat4_copy(plane_null, goxel->tool_plane);
+            mat4_copy(plane_null, goxel.tool_plane);
             return GESTURE_FAILED;
         }
     }
@@ -212,7 +212,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 static int iter(tool_t *tool, const float viewport[4])
 {
     tool_selection_t *selection = (tool_selection_t*)tool;
-    cursor_t *curs = &goxel->cursor;
+    cursor_t *curs = &goxel.cursor;
     curs->snap_mask |= SNAP_ROUNDED;
     curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
     curs->snap_offset = 0.5;
@@ -247,7 +247,7 @@ end:
 static int gui(tool_t *tool)
 {
     int x, y, z, w, h, d;
-    float (*box)[4][4] = &goxel->selection;
+    float (*box)[4][4] = &goxel.selection;
     if (box_is_null(*box)) return 0;
 
     gui_text("Drag mode");
@@ -261,7 +261,7 @@ static int gui(tool_t *tool)
     }
     gui_action_button("fill_selection", "Fill", 1.0, "");
     gui_action_button("layer_clear", "Clear", 1.0, "pp",
-                      goxel->image->active_layer, *box);
+                      goxel.image->active_layer, *box);
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
     gui_group_end();
 

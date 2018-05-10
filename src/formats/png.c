@@ -22,8 +22,8 @@
 static void export_as_png(const char *path, int w, int h)
 {
     uint8_t *buf;
-    w = w ?: goxel->image->export_width;
-    h = h ?: goxel->image->export_height;
+    w = w ?: goxel.image->export_width;
+    h = h ?: goxel.image->export_height;
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                    "png\0*.png\0", NULL, "untitled.png");
     if (!path) return;

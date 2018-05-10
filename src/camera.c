@@ -46,11 +46,11 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     int i;
     const int margin = 8 * BLOCK_SIZE;
     float vertices[8][3];
-    const mesh_t *mesh = goxel->layers_mesh;
+    const mesh_t *mesh = goxel.layers_mesh;
     mesh_iterator_t iter;
 
-    if (!box_is_null(goxel->image->box)) {
-        box_get_vertices(goxel->image->box, vertices);
+    if (!box_is_null(goxel.image->box)) {
+        box_get_vertices(goxel.image->box, vertices);
         for (i = 0; i < 8; i++) {
             mat4_mul_vec3(view_mat, vertices[i], p);
             if (p[2] < 0) {
@@ -140,8 +140,8 @@ void camera_fit_box(camera_t *cam, const float box[4][4])
 {
     float size[3];
     if (box_is_null(box)) {
-        goxel->camera.dist = 128;
-        goxel->camera.aspect = 1;
+        cam->dist = 128;
+        cam->aspect = 1;
         return;
     }
     box_get_size(box, size);

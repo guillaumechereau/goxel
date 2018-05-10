@@ -122,9 +122,9 @@ static ccl::Shader *create_background_shader(void)
     backgroundShaderNode->name = "backgroundNode";
     backgroundShaderNode->set(
         *backgroundShaderNode->type->find_input(S("color")),
-        ccl::make_float3(goxel->back_color[0] / 255.0f,
-                         goxel->back_color[1] / 255.0f,
-                         goxel->back_color[2] / 255.0f)
+        ccl::make_float3(goxel.back_color[0] / 255.0f,
+                         goxel.back_color[1] / 255.0f,
+                         goxel.back_color[2] / 255.0f)
     );
     backgroundShaderNode->set(
         *backgroundShaderNode->type->find_input(S("strength")),
@@ -156,7 +156,7 @@ static ccl::Mesh *create_mesh_for_block(
     vertices = (voxel_vertex_t*)calloc(
             BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4, sizeof(*vertices));
     nb = mesh_generate_vertices(mesh, block_pos,
-                                goxel->rend.settings.effects, vertices,
+                                goxel.rend.settings.effects, vertices,
                                 &size, &subdivide);
     if (!nb) goto end;
 
@@ -215,7 +215,7 @@ end:
 
 static void sync_scene(ccl::Scene *scene, int w, int h)
 {
-    mesh_t *gmesh = goxel->render_mesh;
+    mesh_t *gmesh = goxel.render_mesh;
     int block_pos[3];
     mesh_iterator_t iter;
 
@@ -292,12 +292,12 @@ static bool sync_mesh(int w, int h, bool force)
     uint64_t key;
     ccl::SceneParams scene_params;
 
-    key = mesh_get_key(goxel->render_mesh);
-    key = crc64(key, goxel->back_color, sizeof(goxel->back_color));
+    key = mesh_get_key(goxel.render_mesh);
+    key = crc64(key, goxel.back_color, sizeof(goxel.back_color));
     key = crc64(key, (const uint8_t*)&w, sizeof(w));
     key = crc64(key, (const uint8_t*)&h, sizeof(h));
-    key = crc64(key, (const uint8_t*)&goxel->rend.settings.effects,
-                     sizeof(goxel->rend.settings.effects));
+    key = crc64(key, (const uint8_t*)&goxel.rend.settings.effects,
+                     sizeof(goxel.rend.settings.effects));
     key = crc64(key, (const uint8_t*)&force, sizeof(force));
 
     if (key == last_key) return false;
@@ -331,10 +331,10 @@ static bool sync_lights(int w, int h, bool force)
     float light_dir[3];
     ccl::Light *light;
     ccl::Scene *scene = g_session->scene;
-    render_get_light_dir(&goxel->rend, light_dir);
+    render_get_light_dir(&goxel.rend, light_dir);
 
-    key = mesh_get_key(goxel->render_mesh);
-    key = crc64(key, (uint8_t*)&goxel->rend.light, sizeof(goxel->rend.light));
+    key = mesh_get_key(goxel.render_mesh);
+    key = crc64(key, (uint8_t*)&goxel.rend.light, sizeof(goxel.rend.light));
     key = crc64(key, (uint8_t*)light_dir, sizeof(light_dir));
 
     if (!force && key == last_key) return false;

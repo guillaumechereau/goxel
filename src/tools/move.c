@@ -72,7 +72,7 @@ static int on_move(gesture3d_t *gest, void *user)
     cursor_t *curs = gest->cursor;
     tool_move_t *tool = user;
     float n[3], pos[3], d[3], ofs[3], v[3];
-    layer_t *layer = goxel->image->active_layer;
+    layer_t *layer = goxel.image->active_layer;
     float mat[4][4];
 
     if (box_is_null(tool->box)) return GESTURE_FAILED;
@@ -84,12 +84,12 @@ static int on_move(gesture3d_t *gest, void *user)
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(tool->box, FACES_MATS[tool->snap_face], face_plane);
-        render_img(&goxel->rend, NULL, face_plane, EFFECT_NO_SHADING);
+        render_img(&goxel.rend, NULL, face_plane, EFFECT_NO_SHADING);
         if (curs->flags & CURSOR_PRESSED) {
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane[0], v);
-            plane_from_vectors(goxel->tool_plane, curs->pos, curs->normal, v);
-            image_history_push(goxel->image);
+            plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
+            image_history_push(goxel.image);
         }
         return 0;
     }
@@ -100,9 +100,9 @@ static int on_move(gesture3d_t *gest, void *user)
         mat4_mul(tool->box, FACES_MATS[tool->snap_face], face_plane);
 
         vec3_normalize(face_plane[2], n);
-        vec3_sub(curs->pos, goxel->tool_plane[3], v);
+        vec3_sub(curs->pos, goxel.tool_plane[3], v);
         vec3_project(v, n, v);
-        vec3_add(goxel->tool_plane[3], v, pos);
+        vec3_add(goxel.tool_plane[3], v, pos);
         pos[0] = round(pos[0]);
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
@@ -116,7 +116,7 @@ static int on_move(gesture3d_t *gest, void *user)
 
         if (gest->state == GESTURE_END) {
             gest->type = GESTURE_HOVER;
-            mat4_copy(plane_null, goxel->tool_plane);
+            mat4_copy(plane_null, goxel.tool_plane);
         }
         return 0;
     }
@@ -126,8 +126,8 @@ static int on_move(gesture3d_t *gest, void *user)
 static int iter(tool_t *tool, const float viewport[4])
 {
     tool_move_t *move = (tool_move_t*)tool;
-    layer_t *layer = goxel->image->active_layer;
-    cursor_t *curs = &goxel->cursor;
+    layer_t *layer = goxel.image->active_layer;
+    cursor_t *curs = &goxel.cursor;
     curs->snap_mask = SNAP_LAYER_OUT;
 
     if (!move->gestures.move.type) {
@@ -138,7 +138,7 @@ static int iter(tool_t *tool, const float viewport[4])
     }
     gesture3d(&move->gestures.move, curs, move);
     mesh_get_box(layer->mesh, true, move->box);
-    render_box(&goxel->rend, move->box, NULL,
+    render_box(&goxel.rend, move->box, NULL,
                EFFECT_STRIP | EFFECT_WIREFRAME);
     return 0;
 }
@@ -150,7 +150,7 @@ static int gui(tool_t *tool)
     int i;
     double v;
 
-    layer = goxel->image->active_layer;
+    layer = goxel.image->active_layer;
     gui_group_begin(NULL);
     i = 0;
     if (gui_input_int("Move X", &i, 0, 0))
@@ -185,7 +185,7 @@ static int gui(tool_t *tool)
     gui_group_end();
 
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
-        image_history_push(goxel->image);
+        image_history_push(goxel.image);
         do_move(layer, mat);
     }
     return 0;

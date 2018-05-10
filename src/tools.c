@@ -21,12 +21,12 @@
 
 static int tool_set_action(const action_t *a, astack_t *s)
 {
-    if (goxel->tool_mesh) {
-        mesh_delete(goxel->tool_mesh);
-        goxel->tool_mesh = NULL;
+    if (goxel.tool_mesh) {
+        mesh_delete(goxel.tool_mesh);
+        goxel.tool_mesh = NULL;
         goxel_update_meshes(MESH_LAYERS);
     }
-    goxel->tool = (tool_t*)a->data;
+    goxel.tool = (tool_t*)a->data;
     return 0;
 }
 
@@ -47,8 +47,8 @@ void tool_register_(const tool_t *tool)
 
 static int pick_color_gesture(gesture3d_t *gest, void *user)
 {
-    cursor_t *curs = &goxel->cursor;
-    mesh_t *mesh = goxel->layers_mesh;
+    cursor_t *curs = &goxel.cursor;
+    mesh_t *mesh = goxel.layers_mesh;
     int pi[3] = {floor(curs->pos[0]),
                  floor(curs->pos[1]),
                  floor(curs->pos[2])};
@@ -61,7 +61,7 @@ static int pick_color_gesture(gesture3d_t *gest, void *user)
     mesh_get_at(mesh, NULL, pi, color);
     color[3] = 255;
     goxel_set_help_text("pick: %d %d %d", color[0], color[1], color[2]);
-    if (curs->flags & CURSOR_PRESSED) vec4_copy(color, goxel->painter.color);
+    if (curs->flags & CURSOR_PRESSED) vec4_copy(color, goxel.painter.color);
     return 0;
 }
 
@@ -75,14 +75,14 @@ int tool_iter(tool_t *tool, const float viewport[4])
 {
     assert(tool);
     if (    (tool->flags & TOOL_REQUIRE_CAN_EDIT) &&
-            !image_layer_can_edit(goxel->image, goxel->image->active_layer)) {
+            !image_layer_can_edit(goxel.image, goxel.image->active_layer)) {
         goxel_set_help_text("Cannot edit this layer");
         return 0;
     }
     tool->state = tool->iter_fn(tool, viewport);
 
     if (tool->flags & TOOL_ALLOW_PICK_COLOR)
-        gesture3d(&g_pick_color_gesture, &goxel->cursor, NULL);
+        gesture3d(&g_pick_color_gesture, &goxel.cursor, NULL);
 
     return tool->state;
 }
@@ -96,9 +96,9 @@ int tool_gui(tool_t *tool)
 
 static bool snap_button(const char *label, int s, float w)
 {
-    bool v = goxel->snap_mask & s;
+    bool v = goxel.snap_mask & s;
     if (gui_selectable(label, &v, NULL, w)) {
-        set_flag(&goxel->snap_mask, s, v);
+        set_flag(&goxel.snap_mask, s, v);
         return true;
     }
     return false;
@@ -113,17 +113,17 @@ int tool_gui_snap(void)
     snap_button("Mesh", SNAP_MESH, w);
     gui_same_line();
     snap_button("Plane", SNAP_PLANE, w);
-    if (!box_is_null(goxel->selection)) {
+    if (!box_is_null(goxel.selection)) {
         snap_button("Sel In", SNAP_SELECTION_IN, w);
         gui_same_line();
         snap_button("Sel out", SNAP_SELECTION_OUT, w);
     }
-    if (!box_is_null(goxel->image->box))
+    if (!box_is_null(goxel.image->box))
         snap_button("Image box", SNAP_IMAGE_BOX, -1);
 
-    v = goxel->snap_offset;
+    v = goxel.snap_offset;
     if (gui_input_float("Offset", &v, 0.1, -1, +1, "%.1f"))
-        goxel->snap_offset = clamp(v, -1, +1);
+        goxel.snap_offset = clamp(v, -1, +1);
     gui_group_end();
     return 0;
 }
@@ -150,9 +150,9 @@ int tool_gui_shape(void)
     gui_text("Shape");
     gui_group_begin(NULL);
     for (i = 0; i < (int)ARRAY_SIZE(shapes); i++) {
-        v = goxel->painter.shape == shapes[i].shape;
+        v = goxel.painter.shape == shapes[i].shape;
         if (gui_selectable_icon(shapes[i].name, &v, shapes[i].icon)) {
-            goxel->painter.shape = shapes[i].shape;
+            goxel.painter.shape = shapes[i].shape;
         }
         auto_grid(ARRAY_SIZE(shapes), i, 4);
     }
@@ -163,10 +163,10 @@ int tool_gui_shape(void)
 int tool_gui_radius(void)
 {
     int i;
-    i = goxel->tool_radius * 2;
+    i = goxel.tool_radius * 2;
     if (gui_input_int("Size", &i, 1, 128)) {
         i = clamp(i, 1, 128);
-        goxel->tool_radius = i / 2.0;
+        goxel.tool_radius = i / 2.0;
     }
     return 0;
 }
@@ -174,23 +174,23 @@ int tool_gui_radius(void)
 int tool_gui_smoothness(void)
 {
     bool s;
-    s = goxel->painter.smoothness;
+    s = goxel.painter.smoothness;
     if (gui_checkbox("Antialiased", &s, NULL)) {
-        goxel->painter.smoothness = s ? 1 : 0;
+        goxel.painter.smoothness = s ? 1 : 0;
     }
     return 0;
 }
 
 int tool_gui_color(void)
 {
-    int alpha = goxel->painter.color[3];
+    int alpha = goxel.painter.color[3];
     gui_text("Color");
-    gui_color("##color", goxel->painter.color);
-    if (goxel->painter.mode == MODE_PAINT) {
+    gui_color("##color", goxel.painter.color);
+    if (goxel.painter.mode == MODE_PAINT) {
         if (gui_input_int("Alpha", &alpha, 0, 255))
-            goxel->painter.color[3] = alpha;
+            goxel.painter.color[3] = alpha;
     } else {
-        goxel->painter.color[3] = 255;
+        goxel.painter.color[3] = 255;
     }
     return 0;
 }
@@ -205,13 +205,13 @@ int tool_gui_symmetry(void)
     w = gui_get_avail_width() / 3.0 - 1;
     gui_group_begin("Symmetry");
     for (i = 0; i < 3; i++) {
-        v = (goxel->painter.symmetry >> i) & 0x1;
+        v = (goxel.painter.symmetry >> i) & 0x1;
         if (gui_selectable(labels_u[i], &v, NULL, w))
-            set_flag(&goxel->painter.symmetry, 1 << i, v);
+            set_flag(&goxel.painter.symmetry, 1 << i, v);
         if (i < 2) gui_same_line();
     }
     for (i = 0; i < 3; i++) {
-        gui_input_float(labels_l[i], &goxel->painter.symmetry_origin[i],
+        gui_input_float(labels_l[i], &goxel.painter.symmetry_origin[i],
                          0.5, -FLT_MAX, +FLT_MAX, "%.1f");
     }
     gui_group_end();

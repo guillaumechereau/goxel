@@ -68,7 +68,7 @@ static void qubicle_import(const char *path)
     mat_count = READ(uint32_t, file);
 
     for (i = 0; i < mat_count; i++) {
-        layer = image_add_layer(goxel->image);
+        layer = image_add_layer(goxel.image);
         iter = mesh_get_accessor(layer->mesh);
         memset(layer->name, 0, sizeof(layer->name));
         len = READ(uint8_t, file);
@@ -188,7 +188,7 @@ static void export_as_qubicle(const char *path)
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                     "qubicle\0*.qb\0", NULL, "untitled.qb");
     if (!path) return;
-    qubicle_export(goxel->image, path);
+    qubicle_export(goxel.image, path);
 }
 
 ACTION_REGISTER(import_qubicle,

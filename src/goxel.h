@@ -1718,7 +1718,7 @@ typedef struct goxel
 } goxel_t;
 
 // the global goxel instance.
-extern goxel_t *goxel;
+extern goxel_t goxel;
 
 // XXX: add some doc.
 void goxel_init(void);

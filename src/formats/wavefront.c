@@ -94,7 +94,7 @@ static void export(const mesh_t *mesh, const char *path, bool ply)
         mat4_set_identity(mat);
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
-                                    goxel->rend.settings.effects, verts,
+                                    goxel.rend.settings.effects, verts,
                                     &size, &subdivide);
         for (i = 0; i < nb_elems; i++) {
             // Put the vertices.
@@ -202,7 +202,7 @@ static void export_as_obj(const char *path)
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                     "obj\0*.obj\0", NULL, "untitled.obj");
     if (!path) return;
-    wavefront_export(goxel->layers_mesh, path);
+    wavefront_export(goxel.layers_mesh, path);
 }
 
 ACTION_REGISTER(export_as_obj,
@@ -220,7 +220,7 @@ static void export_as_ply(const char *path)
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                     "ply\0*.ply\0", NULL, "untitled.ply");
     if (!path) return;
-    ply_export(goxel->layers_mesh, path);
+    ply_export(goxel.layers_mesh, path);
 }
 
 ACTION_REGISTER(export_as_ply,

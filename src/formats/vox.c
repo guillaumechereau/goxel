@@ -71,7 +71,7 @@ static void vox_import_old(const char *path)
         memcpy(cube[i], palette[voxels[i]], 4);
     }
 
-    mesh_blit(goxel->image->active_layer->mesh, (uint8_t*)cube,
+    mesh_blit(goxel.image->active_layer->mesh, (uint8_t*)cube,
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     free(palette);
     free(voxels);
@@ -147,7 +147,7 @@ static void vox_import(const char *path)
                                         NULL, NULL);
     if (!path) return;
 
-    mesh = goxel->image->active_layer->mesh;
+    mesh = goxel.image->active_layer->mesh;
     file = fopen(path, "rb");
     r = fread(magic, 1, 4, file);
     (void)r;
@@ -317,7 +317,7 @@ static void export_as_vox(const char *path)
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                     "magica voxel\0*.vox\0", NULL, "untitled.vox");
     if (!path) return;
-    vox_export(goxel->layers_mesh, path);
+    vox_export(goxel.layers_mesh, path);
 }
 
 ACTION_REGISTER(export_as_vox,

@@ -30,11 +30,11 @@ static void export_as_pov(const char *path, int w, int h)
     uint8_t v[4];
     float modelview[4][4], light_dir[3];
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
-    camera_t camera = goxel->camera;
+    camera_t camera = goxel.camera;
     mesh_iterator_t iter;
 
-    w = w ?: goxel->image->export_width;
-    h = h ?: goxel->image->export_height;
+    w = w ?: goxel.image->export_width;
+    h = h ?: goxel.image->export_height;
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                     "povray\0*.pov\0", NULL, "untitled.pov");
@@ -48,7 +48,7 @@ static void export_as_pov(const char *path, int w, int h)
     mat4_copy(camera.view_mat, modelview);
     // cam_to_view = mat4_inverted(camera.view_mat);
     // cam_look_at = mat4_mul_vec(cam_to_view, vec4(0, 0, -1, 1)).xyz;
-    render_get_light_dir(&goxel->rend, light_dir);
+    render_get_light_dir(&goxel.rend, light_dir);
 
     m = mustache_root();
     mustache_add_str(m, "version", GOXEL_VERSION_STR);
@@ -64,12 +64,12 @@ static void export_as_pov(const char *path, int w, int h)
                      modelview[3][0], modelview[3][1], modelview[3][2]);
     m_light = mustache_add_dict(m, "light");
     mustache_add_str(m_light, "ambient", "%.2f",
-                     goxel->rend.settings.ambient);
+                     goxel.rend.settings.ambient);
     mustache_add_str(m_light, "point_at", "<%.1f, %.1f, %.1f + 1024>",
                      -light_dir[0], -light_dir[1], -light_dir[2]);
 
     m_voxels = mustache_add_list(m, "voxels");
-    DL_FOREACH(goxel->image->layers, layer) {
+    DL_FOREACH(goxel.image->layers, layer) {
         iter = mesh_get_iterator(layer->mesh, MESH_ITER_VOXELS);
         while (mesh_iter(&iter, p)) {
             mesh_get_at(layer->mesh, &iter, p, v);

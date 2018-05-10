@@ -39,9 +39,9 @@ static void test_file(const char *b64_data, uint64_t crc32)
     fclose(file);
     free(data);
     action_exec2("import", "p", "/tmp/goxel_test.gox");
-    TEST(mesh_crc32(goxel->image->active_layer->mesh) == crc32);
-    image_delete(goxel->image);
-    goxel->image = image_new();
+    TEST(mesh_crc32(goxel.image->active_layer->mesh) == crc32);
+    image_delete(goxel.image);
+    goxel.image = image_new();
     goxel_update_meshes(-1);
 }
 
