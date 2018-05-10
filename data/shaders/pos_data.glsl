@@ -1,3 +1,11 @@
+#ifdef GL_ES
+    precision mediump float;
+#else
+    #define highp
+    #define mediump
+    #define lowp
+#endif
+
 varying lowp vec2 v_pos_data;
 uniform      mat4 u_model;
 uniform      mat4 u_view;

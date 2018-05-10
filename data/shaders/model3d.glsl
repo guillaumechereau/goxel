@@ -1,6 +1,13 @@
-
 #if defined(GL_ES) && defined(FRAGMENT_SHADER)
 #extension GL_OES_standard_derivatives : enable
+#endif
+
+#ifdef GL_ES
+    precision mediump float;
+#else
+    #define highp
+    #define mediump
+    #define lowp
 #endif
 
 uniform   mat4  u_model;

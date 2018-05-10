@@ -1,3 +1,11 @@
+#ifdef GL_ES
+    precision mediump float;
+#else
+    #define highp
+    #define mediump
+    #define lowp
+#endif
+
 #ifdef VERTEX_SHADER
 
 /************************************************************************/

@@ -15,6 +15,14 @@
  *
  */
 
+#ifdef GL_ES
+    precision mediump float;
+#else
+    #define highp
+    #define mediump
+    #define lowp
+#endif
+
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_proj;
