@@ -139,9 +139,9 @@ if cycles:
     ])
     # Try to improve compilation speed on linux.
     if not clang: env.Append(CPPFLAGS='-fno-var-tracking-assignments')
-    # This seems to fix a crash on windows.
-    if target_os == 'msys':
-        env.Append(CXXFLAGS='-msse2 -O3 -fno-tree-slp-vectorize')
+    # Seems to fix a crash on windows and i386 targets!
+    env.Append(CXXFLAGS='-msse2 -fno-tree-slp-vectorize')
+    if target_os == 'msys': env.Append(CXXFLAGS='-O3')
 
 env.Append(CPPFLAGS=['-Wno-sign-compare', '-Wno-strict-aliasing',
                      '-Wno-uninitialized'])
