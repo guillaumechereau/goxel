@@ -139,7 +139,7 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
 {
     assert(format == GL_RGBA || format == GL_DEPTH_COMPONENT);
     assert(msaa == 1); // For the moment.
-    GLuint fbo, color, tex = 0, depth, internal_format;
+    GLuint fbo, color, tex = 0, depth, stencil, internal_format;
     (void)color;
 
     internal_format = (format != GL_DEPTH_COMPONENT) ? GL_UNSIGNED_BYTE
@@ -193,7 +193,18 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
             GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                         GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth));
         } else {
-            assert(false); // Not implemented yet!
+            GL(glGenRenderbuffers(1, &depth));
+            GL(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
+                                     w, h));
+            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                        GL_RENDERBUFFER, depth));
+            GL(glGenRenderbuffers(1, &stencil));
+            GL(glBindRenderbuffer(GL_RENDERBUFFER, stencil));
+            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
+                                     w, h));
+            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                        GL_RENDERBUFFER, stencil));
         }
         if (tex) GL(glFramebufferTexture2D(
                     GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,

@@ -93,7 +93,9 @@ void palette_load_all(palette_t **list)
 {
     char *dir;
     assets_list("data/palettes/", list, on_palette);
-    asprintf(&dir, "%s/palettes", sys_get_user_dir());
-    sys_list_dir(dir, on_palette2, list);
-    free(dir);
+    if (sys_get_user_dir()) {
+        asprintf(&dir, "%s/palettes", sys_get_user_dir());
+        sys_list_dir(dir, on_palette2, list);
+        free(dir);
+    }
 }

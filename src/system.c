@@ -175,3 +175,11 @@ const char *sys_get_user_dir(void)
 }
 
 #endif
+
+#ifdef __EMSCRIPTEN__
+
+const char *sys_get_user_dir(void) {
+    return NULL;
+}
+
+#endif
