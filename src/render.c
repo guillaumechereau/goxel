@@ -353,7 +353,9 @@ void render_init()
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
     GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, BATCH_QUAD_COUNT * 6 * 2,
                     index_array, GL_STATIC_DRAW));
+#ifndef GLES2
     GL(glEnable(GL_LINE_SMOOTH));
+#endif
 
     free(index_array);
     init_border_texture();
@@ -885,8 +887,10 @@ static void render_shadow_map(renderer_t *rend, float shadow_mvp[4][4])
     if (!g_shadow_map_fbo) {
         GL(glGenFramebuffers(1, &g_shadow_map_fbo));
         GL(glBindFramebuffer(GL_FRAMEBUFFER, g_shadow_map_fbo));
+        #ifndef GLES2
         GL(glDrawBuffer(GL_NONE));
         GL(glReadBuffer(GL_NONE));
+        #endif
         g_shadow_map = texture_new_surface(2048, 2048, 0);
         GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
         GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,

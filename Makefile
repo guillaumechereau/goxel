@@ -15,7 +15,8 @@ run:
 
 .PHONY: js
 js:
-	$(EMSCRIPTEN)/emscons scons debug=0 emscripten=1
+	$(EMSCRIPTEN)/emscons scons debug=0 emscripten=1 clang=1 \
+	    cycles=0
 
 clean:
 	scons -c

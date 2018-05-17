@@ -140,6 +140,7 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
     assert(format == GL_RGBA || format == GL_DEPTH_COMPONENT);
     assert(msaa == 1); // For the moment.
     GLuint fbo, color, tex = 0, depth, internal_format;
+    (void)color;
 
     internal_format = (format != GL_DEPTH_COMPONENT) ? GL_UNSIGNED_BYTE
                                                      : GL_UNSIGNED_INT;

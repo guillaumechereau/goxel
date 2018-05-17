@@ -51,10 +51,11 @@ if werror:
     env.Append(CCFLAGS='-Werror')
 
 if debug:
-    if env['CC'] == 'gcc':
-        env.Append(CFLAGS='-Og', CXXFLAGS='-O1')
+    env.Append(CCFLAGS=['-O1'])
+    if env['CC'] == 'gcc': env.Append(CCFLAGS='-Og')
 else:
-    env.Append(CCFLAGS='-DNDEBUG', CFLAGS='-Ofast', CXXFLAGS='-Ofast')
+    env.Append(CCFLAGS=['-O3', '-DNDEBUG'])
+    if env['CC'] == 'gcc': env.Append(CCFLAGS='-Ofast')
 
 if profile or debug:
     env.Append(CCFLAGS='-g')
@@ -95,7 +96,7 @@ env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
 
-if conf.CheckLib('libpng'):
+if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
     env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
 
 sources += glob.glob('ext_src/imgui/*.cpp')
