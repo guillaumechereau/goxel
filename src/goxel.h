@@ -998,13 +998,13 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
 // XXX: use int[2][3] for the box?
 void mesh_crop(mesh_t *mesh, const float box[4][4]);
 
-/* Function: mesh_crc32
- * Compute the crc32 of the mesh data as an array of xyz rgba values.
+/* Function: mesh_crc64
+ * Compute the crc64 of the mesh data as an array of xyz rgba values.
  *
  * This is only used in the tests, to make sure that we can still open
  * old file formats.
  */
-uint32_t mesh_crc32(const mesh_t *mesh);
+uint64_t mesh_crc64(const mesh_t *mesh);
 
 // #### Renderer ###############
 
