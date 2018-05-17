@@ -99,11 +99,6 @@ env.Append(CPPPATH=['ext_src/noc'])
 if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
     env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
 
-sources += glob.glob('ext_src/imgui/*.cpp')
-env.Append(CPPPATH=['ext_src/imgui'])
-env.Append(CXXFLAGS=['-DIMGUI_INCLUDE_IMGUI_USER_INL',
-                     '-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS'])
-
 sources += glob.glob('ext_src/inih/*.c')
 env.Append(CPPPATH=['ext_src/inih'])
 env.Append(CFLAGS='-DINI_HANDLER_LINENO=1')

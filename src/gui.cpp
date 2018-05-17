@@ -28,8 +28,11 @@ extern "C" {
             w = f[3] / 255.; }     \
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui.h"
-#include "imgui_internal.h"
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+#define IMGUI_INCLUDE_IMGUI_USER_INL
+
+#include "../ext_src/imgui/imgui.h"
+#include "../ext_src/imgui/imgui_internal.h"
 
 extern "C" {
     bool gui_settings_popup(void *data);
