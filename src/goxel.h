@@ -126,6 +126,9 @@ enum {
 
 #ifdef __EMSCRIPTEN__
 #   include <emscripten.h>
+#   define KEEPALIVE EMSCRIPTEN_KEEPALIVE
+#else
+#   define KEEPALIVE
 #endif
 
 // #### Include OpenGL #########

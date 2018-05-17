@@ -255,6 +255,7 @@ static int on_pan(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
 static int on_hover(const gesture_t *gest, void *user);
 
+KEEPALIVE
 void goxel_init(void)
 {
     render_init();
@@ -360,6 +361,7 @@ static void update_window_title(void)
     sys_set_window_title(buf);
 }
 
+KEEPALIVE
 int goxel_iter(inputs_t *inputs)
 {
     double time = sys_get_time();
@@ -554,6 +556,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs)
     }
 }
 
+KEEPALIVE
 void goxel_render(void)
 {
     GL(glViewport(0, 0, goxel.screen_size[0] * goxel.screen_scale,
