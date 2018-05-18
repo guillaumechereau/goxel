@@ -10,7 +10,6 @@ target_os = str(Platform())
 
 debug = int(ARGUMENTS.get('debug', 1))
 profile = int(ARGUMENTS.get('profile', 0))
-glut = int(ARGUMENTS.get('glut', 0))
 emscripten = ARGUMENTS.get('emscripten', 0)
 werror = int(ARGUMENTS.get("werror", 1))
 clang = int(ARGUMENTS.get("clang", 0))
@@ -72,9 +71,6 @@ if target_os == 'posix':
         env.Append(LIBS=['argp'])
     # Note: add '--static' to link with all the libs needed by glfw3.
     env.ParseConfig('pkg-config --libs glfw3')
-
-if glut:
-    env.Append(CCFLAGS='-DUSE_GLUT=1', LIBS='glut')
 
 if argp_standalone:
     env.Append(LIBS='argp')

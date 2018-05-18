@@ -1458,8 +1458,6 @@ void gui_iter(const inputs_t *inputs)
         // far as I can tell, GLFW3 does not allow to check for ctrl-Z on any
         // layout on Windows.  For the moment I just ignore the problem until I
         // either find a solution, either find a replacement for GLFW.
-        // With the GLUT backend ctrl-z and ctrl-y are actually reported as the
-        // key 25 and 26, which might makes more sense.  Here I test for both.
         if (isCharPressed(26)) action_exec2("undo", "");
         if (isCharPressed(25)) action_exec2("redo", "");
         // Check the action shortcuts.
