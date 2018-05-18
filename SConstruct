@@ -134,11 +134,10 @@ if cycles:
     # Seems to fix a crash on windows and i386 targets!
     env.Append(CXXFLAGS='-msse2 -fno-tree-slp-vectorize')
     if target_os == 'msys': env.Append(CXXFLAGS='-O3')
-
-env.Append(CPPFLAGS=['-Wno-sign-compare', '-Wno-strict-aliasing',
-                     '-Wno-uninitialized'])
-if clang:
-    env.Append(CPPFLAGS=['-Wno-overloaded-virtual'])
+    env.Append(CPPFLAGS=['-Wno-sign-compare', '-Wno-strict-aliasing',
+                         '-Wno-uninitialized'])
+    if clang:
+        env.Append(CPPFLAGS=['-Wno-overloaded-virtual'])
 
 
 if target_os == 'posix':
