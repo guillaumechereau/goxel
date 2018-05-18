@@ -22,6 +22,9 @@
 #include "goxel.h"
 #include <stdarg.h>
 
+// Amount of time (s) after which we force stop a rendering iteration.
+#define MAX_ITER_TIME (16.0 / 1000.)
+
 #define NODES \
     X(PROG) \
     X(SHAPE) \
@@ -600,6 +603,7 @@ int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter)
 {
     int r;
     bool last;
+    double start_time;
     ctx_t *ctx;
     painter_t painter2 = *painter;
 
@@ -618,6 +622,7 @@ int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter)
         proc->ctxs->prev->last = true;
 
     proc->in_frame = false;
+    start_time = sys_get_time();
 
     while (true) {
         ctx = proc->ctxs;
@@ -635,7 +640,7 @@ int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter)
             break;
         }
         if (last) break;
-        if (sys_get_time() - goxel.frame_time > 16 / 1000.) {
+        if (sys_get_time() - start_time > MAX_ITER_TIME) {
             proc->in_frame = true;
             return 0;
         }
