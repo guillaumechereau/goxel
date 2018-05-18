@@ -425,21 +425,22 @@ static int set_args(gox_proc_t *proc, node_t *node, ctx_t *ctx)
     return 0;
 }
 
-static void call_shape(const ctx_t *ctx, const shape_t *shape)
+static void call_shape(const ctx_t *ctx, const shape_t *shape,
+                       mesh_t *mesh, painter_t *painter)
 {
-    mesh_t *mesh = goxel.image->active_layer->mesh;
     uint8_t hsl[3] = {ctx->color[0] / 360 * 255,
                       ctx->color[1] * 255,
                       ctx->color[2] * 255};
-    hsl_to_rgb(hsl, goxel.painter.color);
-    goxel.painter.shape = shape;
-    goxel.painter.mode = ctx->mode;
-    goxel.painter.smoothness = ctx->antialiased ? 1 : 0;
-    mesh_op(mesh, &goxel.painter, ctx->box);
+    hsl_to_rgb(hsl, painter->color);
+    painter->shape = shape;
+    painter->mode = ctx->mode;
+    painter->smoothness = ctx->antialiased ? 1 : 0;
+    mesh_op(mesh, painter, ctx->box);
 }
 
 // Iter the program once.
-static int iter(gox_proc_t *proc, ctx_t *ctx)
+static int iter(gox_proc_t *proc, ctx_t *ctx, mesh_t *mesh,
+                painter_t *painter)
 {
     const float max_op_volume = 512 * 512 * 512;
     float v;
@@ -495,7 +496,7 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
             if (v) {
                 ctx2 = *ctx;
                 ctx2.prog = expr->children->next;
-                iter(proc, &ctx2);
+                iter(proc, &ctx2, mesh, painter);
             }
         }
         if (expr->type == NODE_SET) {
@@ -518,7 +519,7 @@ static int iter(gox_proc_t *proc, ctx_t *ctx)
                     if (volume > max_op_volume)
                         return error(proc, expr, "abort: volume too big!");
                     volume_tot += volume;
-                    call_shape(&ctx2, SHAPES[i]);
+                    call_shape(&ctx2, SHAPES[i], mesh, painter);
                     break;
                 }
             }
@@ -595,11 +596,12 @@ int proc_stop(gox_proc_t *proc)
     return 0;
 }
 
-int proc_iter(gox_proc_t *proc)
+int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter)
 {
     int r;
     bool last;
     ctx_t *ctx;
+    painter_t painter2 = *painter;
 
     if (proc->state != PROC_RUNNING) return 0;
 
@@ -626,7 +628,7 @@ int proc_iter(gox_proc_t *proc)
         DL_DELETE(proc->ctxs, ctx);
         last = ctx->last;
         ctx->last = false;
-        r = iter(proc, ctx);
+        r = iter(proc, ctx, mesh, &painter2);
         free(ctx);
         if (r != 0) {
             proc->state = PROC_DONE;

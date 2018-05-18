@@ -194,7 +194,7 @@ static int gui(tool_t *tool)
     if (proc->state != PROC_RUNNING) prog_export_animation = false;
 
     if (proc->state == PROC_RUNNING) {
-        proc_iter(proc);
+        proc_iter(proc, goxel.image->active_layer->mesh, &goxel.painter);
         if (!proc->in_frame)
             goxel_update_meshes(MESH_RENDER);
     }
