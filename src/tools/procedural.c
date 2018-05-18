@@ -28,6 +28,22 @@ enum {
 typedef struct {
     tool_t  tool;
     gox_proc_t proc;
+
+    bool auto_run;
+    int timer;
+
+    bool initialized;
+    char **progs;
+    char **names;
+    int nb_progs;
+    int current;
+
+    char prog_path[1024];       // "\0" if no loaded prog.
+    char prog_buff[64 * 1024];  // XXX: make it dynamic?
+
+    bool export_animation;
+    char export_animation_path[1024];
+
 } tool_procedural_t;
 
 
@@ -75,38 +91,27 @@ static void on_example(int i, const char *name, const char *code,
 
 static int gui(tool_t *tool)
 {
-    static char **progs = NULL;
-    static char **names = NULL;
-    static int nb_progs = 0;
-    static bool first_time = true;
-    int i;
-    static int current = -1;
-    gox_proc_t *proc = &((tool_procedural_t*)tool)->proc;
+    tool_procedural_t *p = (tool_procedural_t*)tool;
     bool enabled;
-    static bool auto_run;
-    static int timer = 0;
-    static char prog_path[1024];       // "\0" if no loaded prog.
-    static char prog_buff[64 * 1024];  // XXX: make it dynamic?
-    static bool prog_export_animation;
-    static char prog_export_animation_path[1024];
+    gox_proc_t *proc;
 
-    if (first_time) {
-        first_time = false;
-        strcpy(prog_buff, "shape main {\n    cube[s 3]\n}");
-        for (i = 0; i < nb_progs; i++) {free(progs[i]); free(names[i]);}
-        free(progs);
-        free(names);
-        nb_progs = proc_list_examples(NULL, NULL);
-        progs = (char**)calloc(nb_progs, sizeof(*progs));
-        names = (char**)calloc(nb_progs, sizeof(*names));
-        proc_list_examples(on_example, USER_PASS(progs, names));
-        proc_parse(prog_buff, proc);
+    if (!p->initialized) {
+        p->initialized = true;
+        strcpy(p->prog_buff, "shape main {\n    cube[s 3]\n}");
+        p->nb_progs = proc_list_examples(NULL, NULL);
+        p->progs = (char**)calloc(p->nb_progs, sizeof(*p->progs));
+        p->names = (char**)calloc(p->nb_progs, sizeof(*p->names));
+        proc_list_examples(on_example,
+                USER_PASS(p->progs, p->names));
+        proc_parse(p->prog_buff, &p->proc);
+        p->current = -1;
     }
+    proc = &p->proc;
 
-    if (gui_input_text_multiline("", prog_buff,
-                                 ARRAY_SIZE(prog_buff), 300, 400)) {
-        timer = 0;
-        proc_parse(prog_buff, proc);
+    if (gui_input_text_multiline("", p->prog_buff,
+                                 ARRAY_SIZE(p->prog_buff), 300, 400)) {
+        p->timer = 0;
+        proc_parse(p->prog_buff, proc);
     }
     if (proc->error.str) {
         gui_input_text_multiline_highlight(proc->error.line);
@@ -114,23 +119,24 @@ static int gui(tool_t *tool)
     }
     enabled = proc->state >= PROC_READY;
 
-    if (auto_run && proc->state == PROC_READY && timer == 0) timer = 1;
+    if (p->auto_run && proc->state == PROC_READY && p->timer == 0)
+        p->timer = 1;
     if (proc->state == PROC_RUNNING) {
         if (gui_button("Stop", 0, 0)) proc_stop(proc);
     } else {
         gui_enabled_begin(enabled);
         if (    (gui_button("Run", 0, 0) && enabled) ||
-                (auto_run && proc->state == PROC_READY &&
-                 timer && timer++ >= 16)) {
+                (p->auto_run && proc->state == PROC_READY &&
+                 p->timer && p->timer++ >= 16)) {
             mesh_clear(goxel.image->active_layer->mesh);
             proc_start(proc, NULL);
-            timer = 0;
+            p->timer = 0;
         }
         gui_enabled_end();
     }
     gui_same_line();
-    if (gui_checkbox("Auto", &auto_run, NULL))
-        proc_parse(prog_buff, proc);
+    if (gui_checkbox("Auto", &p->auto_run, NULL))
+        proc_parse(p->prog_buff, proc);
     gui_same_line();
 
     if (gui_button("Export Animation", 0, 0)) {
@@ -141,14 +147,14 @@ static int gui(tool_t *tool)
         if (dir_path) {
             mesh_clear(goxel.image->active_layer->mesh);
             proc_start(proc, NULL);
-            prog_export_animation = true;
-            sprintf(prog_export_animation_path, "%s", dir_path);
+            p->export_animation = true;
+            sprintf(p->export_animation_path, "%s", dir_path);
         }
     }
 
     // File load / save.  No error check yet!
-    if (*prog_path) {
-        gui_input_text("##path", prog_path, sizeof(prog_path));
+    if (*p->prog_path) {
+        gui_input_text("##path", p->prog_path, sizeof(p->prog_path));
     }
     if (gui_button("Load", 0, 0)) {
         const char *path;
@@ -157,42 +163,43 @@ static int gui(tool_t *tool)
         if (path) {
             FILE *f = fopen(path, "r");
             int nb;
-            nb = (int)fread(prog_buff, 1, sizeof(prog_buff), f);
-            prog_buff[nb] = '\0';
+            nb = (int)fread(p->prog_buff, 1, sizeof(p->prog_buff), f);
+            p->prog_buff[nb] = '\0';
             fclose(f);
-            strcpy(prog_path, path);
+            strcpy(p->prog_path, path);
         }
-        proc_parse(prog_buff, proc);
+        proc_parse(p->prog_buff, proc);
     }
     gui_same_line();
     if (gui_button("Save", 0, 0)) {
-        if (!*prog_path) {
+        if (!*p->prog_path) {
             const char *path;
             path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                                    "goxcf\0*.goxcf\0", NULL, NULL);
             if (path)
-                strcpy(prog_path, path);
+                strcpy(p->prog_path, path);
         }
-        if (*prog_path) {
-            FILE *f = fopen(prog_path, "w");
-            fwrite(prog_buff, strlen(prog_buff), 1, f);
+        if (*p->prog_path) {
+            FILE *f = fopen(p->prog_path, "w");
+            fwrite(p->prog_buff, strlen(p->prog_buff), 1, f);
             fclose(f);
         }
     }
 
-    if (gui_combo("Examples", &current, (const char**)names, nb_progs)) {
-        strcpy(prog_buff, progs[current]);
-        proc_parse(prog_buff, proc);
+    if (gui_combo("Examples", &p->current,
+                    (const char**)p->names, p->nb_progs)) {
+        strcpy(p->prog_buff, p->progs[p->current]);
+        proc_parse(p->prog_buff, proc);
     }
 
-    if (proc->state == PROC_RUNNING && prog_export_animation
+    if (proc->state == PROC_RUNNING && p->export_animation
             && !proc->in_frame) {
-        char path[1024];
+        char path[2048];
         sprintf(path, "%s/img_%04d.png",
-                prog_export_animation_path, proc->frame);
+                p->export_animation_path, proc->frame);
         action_exec2("export_as", "pp", "png", path);
     }
-    if (proc->state != PROC_RUNNING) prog_export_animation = false;
+    if (proc->state != PROC_RUNNING) p->export_animation = false;
 
     if (proc->state == PROC_RUNNING) {
         proc_iter(proc, goxel.image->active_layer->mesh, &goxel.painter);
