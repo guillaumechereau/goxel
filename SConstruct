@@ -2,10 +2,6 @@ import glob
 import os
 import sys
 
-# CCFLAGS   : C and C++
-# CFLAGS    : only C
-# CXXFLAGS  : only C++
-
 target_os = str(Platform())
 
 debug = int(ARGUMENTS.get('debug', 1))
@@ -40,14 +36,18 @@ if debug and target_os == 'posix':
                    LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'])
 
 
-env.Append(CFLAGS= '-Wall -std=gnu99 -Wno-unknown-pragmas '
-                   '-Wno-unknown-warning-option',
-           CXXFLAGS='-std=gnu++11 -Wall -Wno-narrowing '
-                    '-Wno-unknown-pragmas -Wno-unused-function'
-        )
-
+# Global compilation flags.
+# CCFLAGS   : C and C++
+# CFLAGS    : only C
+# CXXFLAGS  : only C++
+env.Append(
+    CCFLAGS=['-Wall', '-Wno-unknow-pragma', '-Wno-unknown-warning-option'],
+    CFLAGS=['-std=gnu99'],
+    CXXFLAGS=['-std=gnu++11', '-Wno-narrowing', '-Wno-unused-function']
+)
 if werror:
     env.Append(CCFLAGS='-Werror')
+
 
 if debug:
     env.Append(CCFLAGS=['-O1'])
