@@ -134,6 +134,7 @@ typedef struct gui_t {
         void      (*on_closed)(void);
         int         flags;
         void       *data; // Automatically released when popup close.
+        bool        opened;
     } popup[8]; // Stack of modal popups
     int popup_count;
 } gui_t;
@@ -1292,7 +1293,10 @@ static void render_popups(int index)
     popup = &gui->popup[index];
     if (!popup->title) return;
 
-    ImGui::OpenPopup(popup->title);
+    if (!popup->opened) {
+        ImGui::OpenPopup(popup->title);
+        popup->opened = true;
+    }
     int flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
     if (popup->flags & GUI_POPUP_FULL) {
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x - 40,
@@ -1314,6 +1318,7 @@ static void render_popups(int index)
             popup->data = NULL;
             if (popup->on_closed) popup->on_closed();
             popup->on_closed = NULL;
+            popup->opened = false;
         }
         render_popups(index + 1);
         ImGui::EndPopup();
