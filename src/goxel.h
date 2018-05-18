@@ -1692,8 +1692,6 @@ typedef struct goxel
         float  camera_ofs[3];
     } move_origin;
 
-    gox_proc_t proc;        // The current procedural rendering (if any).
-
     palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
     char       *help_text;  // Seen in the bottom of the screen.

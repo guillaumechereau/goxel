@@ -349,7 +349,6 @@ void goxel_reset(void)
 void goxel_release(void)
 {
     cycles_release();
-    proc_release(&goxel.proc);
     gui_release();
 }
 

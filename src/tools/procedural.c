@@ -27,13 +27,14 @@ enum {
 
 typedef struct {
     tool_t  tool;
+    gox_proc_t proc;
 } tool_procedural_t;
 
 
 static int iter(tool_t *tool, const float viewport[4])
 {
     float box[4][4];
-    gox_proc_t *proc = &goxel.proc;
+    gox_proc_t *proc = &((tool_procedural_t*)tool)->proc;
     cursor_t *curs = &goxel.cursor;
 
     if (proc->state == PROC_PARSE_ERROR) return 0;
@@ -80,7 +81,7 @@ static int gui(tool_t *tool)
     static bool first_time = true;
     int i;
     static int current = -1;
-    gox_proc_t *proc = &goxel.proc;
+    gox_proc_t *proc = &((tool_procedural_t*)tool)->proc;
     bool enabled;
     static bool auto_run;
     static int timer = 0;
@@ -108,7 +109,7 @@ static int gui(tool_t *tool)
         proc_parse(prog_buff, proc);
     }
     if (proc->error.str) {
-        gui_input_text_multiline_highlight(goxel.proc.error.line);
+        gui_input_text_multiline_highlight(proc->error.line);
         gui_text(proc->error.str);
     }
     enabled = proc->state >= PROC_READY;
