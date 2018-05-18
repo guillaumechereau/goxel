@@ -65,16 +65,16 @@ sources = glob.glob('src/*.c') + glob.glob('src/*.cpp') + \
           glob.glob('src/formats/*.c') + \
           glob.glob('src/tools/*.c')
 
+# Linux compilation support.
 if target_os == 'posix':
     env.Append(LIBS=['GL', 'm', 'z'])
     if not conf.CheckDeclaration('__GLIBC__', includes='#include <features.h>'):
         env.Append(LIBS=['argp'])
     # Note: add '--static' to link with all the libs needed by glfw3.
     env.ParseConfig('pkg-config --libs glfw3')
+    env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
 
-if argp_standalone:
-    env.Append(LIBS='argp')
-
+# Windows compilation support.
 if target_os == 'msys':
     env.Append(CCFLAGS='-DNO_ARGP')
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
@@ -82,22 +82,35 @@ if target_os == 'msys':
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32',
                      'z', 'tre', 'intl', 'iconv'],
                LINKFLAGS='--static')
+    sources += glob.glob('ext_src/glew/glew.c')
+    env.Append(CPPPATH=['ext_src/glew'])
+    env.Append(CCFLAGS='-DGLEW_STATIC')
 
+# OSX Compilation support.
 if target_os == 'darwin':
     sources += glob.glob('src/*.m')
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
     env.Append(LIBS=['m', 'z', 'argp', 'glfw3', 'objc'])
 
+# Add external libs.
 env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
 
-if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
-    env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
-
 sources += glob.glob('ext_src/inih/*.c')
 env.Append(CPPPATH=['ext_src/inih'])
 env.Append(CFLAGS='-DINI_HANDLER_LINENO=1')
+
+if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
+    env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
+
+if sound:
+    env.Append(LIBS='openal')
+    env.Append(CCFLAGS='-DSOUND=OPENAL')
+
+if argp_standalone:
+    env.Append(LIBS='argp')
+
 
 # Cycles rendering support.
 if cycles:
@@ -140,14 +153,6 @@ if cycles:
         env.Append(CPPFLAGS=['-Wno-overloaded-virtual'])
 
 
-if target_os == 'posix':
-    env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
-
-if target_os == 'msys':
-    sources += glob.glob('ext_src/glew/glew.c')
-    env.Append(CPPPATH=['ext_src/glew'])
-    env.Append(CCFLAGS='-DGLEW_STATIC')
-
 if target_os == 'js':
     assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
     env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
@@ -165,10 +170,6 @@ if target_os == 'js':
     env.Append(CCFLAGS=['-DGLES2 1', '-DNO_ZLIB', '-DNO_ARGP'] + flags)
     env.Append(LINKFLAGS=flags)
     env.Append(LIBS=['GL'])
-
-if sound:
-    env.Append(LIBS='openal')
-    env.Append(CCFLAGS='-DSOUND=OPENAL')
 
 # Append external environment flags
 env.Append(
