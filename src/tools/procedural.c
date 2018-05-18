@@ -126,6 +126,8 @@ static int gui(tool_t *tool)
     tool_procedural_t *p = (tool_procedural_t*)tool;
     bool enabled;
     gox_proc_t *proc;
+    const char *dir_path;
+    char *path;
 
     if (!p->initialized) {
         p->initialized = true;
@@ -172,7 +174,6 @@ static int gui(tool_t *tool)
     gui_same_line();
 
     if (gui_button("Export Animation", 0, 0)) {
-        const char *dir_path;
         dir_path = noc_file_dialog_open(
                     NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
                     NULL, NULL, NULL);
@@ -184,10 +185,7 @@ static int gui(tool_t *tool)
         }
     }
 
-    // File load / save.  No error check yet!
-    if (*p->prog_path) {
-        gui_input_text("##path", p->prog_path, sizeof(p->prog_path));
-    }
+    if (*p->prog_path) gui_text(p->prog_path);
     if (gui_button("Load", 0, 0)) load(p);
     gui_same_line();
     if (gui_button("Save", 0, 0)) save(p);
@@ -200,10 +198,10 @@ static int gui(tool_t *tool)
 
     if (proc->state == PROC_RUNNING && p->export_animation
             && !proc->in_frame) {
-        char path[2048];
-        sprintf(path, "%s/img_%04d.png",
+        asprintf(&path, "%s/img_%04d.png",
                 p->export_animation_path, proc->frame);
         action_exec2("export_as", "pp", "png", path);
+        free(path);
     }
     if (proc->state != PROC_RUNNING) p->export_animation = false;
 
