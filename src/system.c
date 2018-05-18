@@ -22,9 +22,12 @@
 #include <dirent.h>
 #include <errno.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
+
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
-
 
 #if defined(__unix__) && !defined(__EMSCRIPTEN__)
 #define NOC_FILE_DIALOG_GTK
@@ -85,10 +88,6 @@ static void init_unix(void)
 #define NOC_FILE_DIALOG_WIN32
 #define NOC_FILE_DIALOG_IMPLEMENTATION
 #include "noc_file_dialog.h"
-
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
 
 // On mingw mkdir takes only one argument!
 #define mkdir(p, m) mkdir(p)
