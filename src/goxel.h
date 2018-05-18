@@ -1557,12 +1557,6 @@ int proc_start(gox_proc_t *proc, const float box[4][4]);
 int proc_stop(gox_proc_t *proc);
 int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter);
 
-// Get the list of programs saved in data/procs.
-int proc_list_examples(void (*f)(int index,
-                                 const char *name, const char *code,
-                                 void *user), void *user);
-
-
 // Represent a 3d cursor.
 // The program keeps track of two cursors, that are then used by the tools.
 

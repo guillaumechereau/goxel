@@ -80,6 +80,28 @@ static int iter(tool_t *tool, const float viewport[4])
     return tool->state;
 }
 
+static int list_saved_on_path(int i, const char *path, void *user_)
+{
+   const char *data, *name;
+   void (*f)(int, const char*, const char*, void*) = USER_GET(user_, 0);
+   void *user = USER_GET(user_, 1);
+   if (!str_endswith(path, ".goxcf")) return -1;
+   if (f) {
+       data = assets_get(path, NULL);
+       name = strrchr(path, '/') + 1;
+       f(i, name, data, user);
+   }
+   return 0;
+}
+
+// List all the programs in data/progs.
+static int proc_list_examples(void (*f)(int index,
+                              const char *name, const char *code,
+                              void *user), void *user)
+{
+    return assets_list("data/progs", USER_PASS(f, user), list_saved_on_path);
+}
+
 static void on_example(int i, const char *name, const char *code,
                        void *user)
 {
