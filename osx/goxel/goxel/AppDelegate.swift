@@ -124,6 +124,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     fileprivate var timer: Timer!
     
     open var inputs = inputs_t()
+    var userDirectory: [CChar]? = nil;
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Set fullscreen.
@@ -142,6 +143,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let mySelf = Unmanaged<AppDelegate>.fromOpaque(user!).takeUnretainedValue()
             let title = String(cString: title!)
             mySelf.window.title = title
+        }
+        sys_callbacks.get_user_dir = { (user) in
+            let mySelf = Unmanaged<AppDelegate>.fromOpaque(user!).takeUnretainedValue()
+            if mySelf.userDirectory == nil {
+                let paths = NSSearchPathForDirectoriesInDomains(
+                    .applicationSupportDirectory, .userDomainMask, true)
+                if paths.count > 0 {
+                    mySelf.userDirectory = paths[0].cString(using: .utf8)
+                }
+            }
+            return UnsafePointer(mySelf.userDirectory)
         }
         goxel_init()
     }

@@ -124,8 +124,6 @@
 		F07DEA111BD0F31500BAA1AD /* texture.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9FA1BD0F31500BAA1AD /* texture.c */; };
 		F07DEA121BD0F31500BAA1AD /* tools.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9FB1BD0F31500BAA1AD /* tools.c */; };
 		F07DEA131BD0F31500BAA1AD /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9FC1BD0F31500BAA1AD /* utils.c */; };
-		F07DEA2C1BD0F33A00BAA1AD /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F07DEA1D1BD0F33A00BAA1AD /* imgui.cpp */; };
-		F07DEA2D1BD0F33A00BAA1AD /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F07DEA1F1BD0F33A00BAA1AD /* imgui_draw.cpp */; };
 		F07DEA331BD1014800BAA1AD /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F07DEA321BD1014800BAA1AD /* CoreFoundation.framework */; };
 		F097B3F31F0C97DB00A3622B /* gesture.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F11F0C97DB00A3622B /* gesture.c */; };
 		F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F21F0C97DB00A3622B /* gesture3d.c */; };
@@ -148,7 +146,6 @@
 		F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */; };
 		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
 		F0E71BB01F1DA7A100D20C7C /* ini.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAE1F1DA7A100D20C7C /* ini.c */; };
-		F0E71BB21F1DAD2E00D20C7C /* system_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BB11F1DAD2E00D20C7C /* system_osx.m */; };
 		F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C611F98B03200FB50DE /* mesh_utils.c */; };
 		F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */; };
 		F0EEB7DE1C8EC25D004AB676 /* procedural.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7D91C8EC25D004AB676 /* procedural.c */; };
@@ -156,6 +153,7 @@
 		F0EEB7E41C8EC27C004AB676 /* action.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7E31C8EC27C004AB676 /* action.c */; };
 		F0EEB7E61C8EC472004AB676 /* procedural.inl in Resources */ = {isa = PBXBuildFile; fileRef = F0EEB7E51C8EC472004AB676 /* procedural.inl */; };
 		F0EEB7E81C8EC4D1004AB676 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F0EEB7E71C8EC4D1004AB676 /* libz.tbd */; };
+		F0F14C6720AF282E0006E575 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F0F14C6620AF282E0006E575 /* imgui.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -422,11 +420,6 @@
 		F07DE9FB1BD0F31500BAA1AD /* tools.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tools.c; sourceTree = "<group>"; };
 		F07DE9FC1BD0F31500BAA1AD /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
 		F07DE9FD1BD0F31500BAA1AD /* vec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec.h; sourceTree = "<group>"; };
-		F07DEA1C1BD0F33A00BAA1AD /* imconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imconfig.h; sourceTree = "<group>"; };
-		F07DEA1D1BD0F33A00BAA1AD /* imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui.cpp; sourceTree = "<group>"; };
-		F07DEA1E1BD0F33A00BAA1AD /* imgui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui.h; sourceTree = "<group>"; };
-		F07DEA1F1BD0F33A00BAA1AD /* imgui_draw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_draw.cpp; sourceTree = "<group>"; };
-		F07DEA201BD0F33A00BAA1AD /* imgui_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = imgui_internal.h; sourceTree = "<group>"; };
 		F07DEA221BD0F33A00BAA1AD /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 		F07DEA231BD0F33A00BAA1AD /* stb_image_write.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image_write.h; sourceTree = "<group>"; };
 		F07DEA241BD0F33A00BAA1AD /* stb_rect_pack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_rect_pack.h; sourceTree = "<group>"; };
@@ -461,7 +454,6 @@
 		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
 		F0E71BAE1F1DA7A100D20C7C /* ini.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ini.c; sourceTree = "<group>"; };
 		F0E71BAF1F1DA7A100D20C7C /* ini.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ini.h; sourceTree = "<group>"; };
-		F0E71BB11F1DAD2E00D20C7C /* system_osx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = system_osx.m; sourceTree = "<group>"; };
 		F0ED3C611F98B03200FB50DE /* mesh_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_utils.c; sourceTree = "<group>"; };
 		F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_to_vertices.c; sourceTree = "<group>"; };
 		F0ED3C631F98B03300FB50DE /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
@@ -470,6 +462,7 @@
 		F0EEB7E31C8EC27C004AB676 /* action.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = action.c; sourceTree = "<group>"; };
 		F0EEB7E51C8EC472004AB676 /* procedural.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = procedural.inl; sourceTree = "<group>"; };
 		F0EEB7E71C8EC4D1004AB676 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		F0F14C6620AF282E0006E575 /* imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -864,13 +857,13 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F0F14C6620AF282E0006E575 /* imgui.cpp */,
 				F01452C42070FC51007F0106 /* utils_gl.c */,
 				F057B4A7204EF13900E2A63F /* cycles.cpp */,
 				F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */,
 				F0ED3C611F98B03200FB50DE /* mesh_utils.c */,
 				F0ED3C631F98B03300FB50DE /* mesh.h */,
 				F0C4F1411F308976002E73C5 /* gui_settings.c */,
-				F0E71BB11F1DAD2E00D20C7C /* system_osx.m */,
 				F0E71BAB1F1DA30D00D20C7C /* theme.c */,
 				F0158ECA1F17289B008893E6 /* sound_openal.inl */,
 				F0158ECB1F17289B008893E6 /* sound.c */,
@@ -920,24 +913,11 @@
 				F057B0BF204EEDCF00E2A63F /* cycles */,
 				F0E71BAD1F1DA7A100D20C7C /* inih */,
 				F0DE970D1E6FE8BF000354AF /* noc */,
-				F07DEA1B1BD0F33A00BAA1AD /* imgui */,
 				F07DEA211BD0F33A00BAA1AD /* stb */,
 				F07DEA271BD0F33A00BAA1AD /* uthash */,
 			);
 			name = ext_src;
 			path = ../../../ext_src;
-			sourceTree = "<group>";
-		};
-		F07DEA1B1BD0F33A00BAA1AD /* imgui */ = {
-			isa = PBXGroup;
-			children = (
-				F07DEA1C1BD0F33A00BAA1AD /* imconfig.h */,
-				F07DEA1D1BD0F33A00BAA1AD /* imgui.cpp */,
-				F07DEA1E1BD0F33A00BAA1AD /* imgui.h */,
-				F07DEA1F1BD0F33A00BAA1AD /* imgui_draw.cpp */,
-				F07DEA201BD0F33A00BAA1AD /* imgui_internal.h */,
-			);
-			path = imgui;
 			sourceTree = "<group>";
 		};
 		F07DEA211BD0F33A00BAA1AD /* stb */ = {
@@ -1101,7 +1081,6 @@
 				F057B3B9204EEDD000E2A63F /* kernel_sse3.cpp in Sources */,
 				F06C683C1D2EAECC00887FCE /* camera.c in Sources */,
 				F057B38D204EEDD000E2A63F /* device_cpu.cpp in Sources */,
-				F0E71BB21F1DAD2E00D20C7C /* system_osx.m in Sources */,
 				F057B448204EEDD000E2A63F /* particles.cpp in Sources */,
 				F057B3AA204EEDD000E2A63F /* filter_avx.cpp in Sources */,
 				F037D5D11EA6069A00C96D10 /* laser.c in Sources */,
@@ -1133,7 +1112,6 @@
 				F01452C52070FC51007F0106 /* utils_gl.c in Sources */,
 				F07DEA091BD0F31500BAA1AD /* mesh.c in Sources */,
 				F0AE90F71C8EE01300C29080 /* assets.c in Sources */,
-				F07DEA2C1BD0F33A00BAA1AD /* imgui.cpp in Sources */,
 				F0D463BF1E4875CA004F1A37 /* stack.c in Sources */,
 				F057B390204EEDD000E2A63F /* device_memory.cpp in Sources */,
 				F057B43E204EEDD000E2A63F /* graph.cpp in Sources */,
@@ -1164,7 +1142,6 @@
 				F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */,
 				F057B463204EEDD000E2A63F /* util_path.cpp in Sources */,
 				F057B43F204EEDD000E2A63F /* image.cpp in Sources */,
-				F07DEA2D1BD0F33A00BAA1AD /* imgui_draw.cpp in Sources */,
 				F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */,
 				F057B468204EEDD000E2A63F /* util_task.cpp in Sources */,
 				F057B3BA204EEDD000E2A63F /* kernel_sse41.cpp in Sources */,
@@ -1203,6 +1180,7 @@
 				F057B377204EEDD000E2A63F /* bvh_binning.cpp in Sources */,
 				F057B469204EEDD000E2A63F /* util_thread.cpp in Sources */,
 				F057B3B8204EEDD000E2A63F /* kernel_sse2.cpp in Sources */,
+				F0F14C6720AF282E0006E575 /* imgui.cpp in Sources */,
 				F0D463BD1E48759A004F1A37 /* cache.c in Sources */,
 				F057B37B204EEDD000E2A63F /* bvh_split.cpp in Sources */,
 				F07DEA0D1BD0F31500BAA1AD /* render.c in Sources */,
