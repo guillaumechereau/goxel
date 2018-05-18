@@ -498,7 +498,8 @@ static int on_hover(const gesture_t *gest, void *user)
 
 
 // XXX: Cleanup this.
-void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs)
+void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
+                         bool capture_keys)
 {
     float x_axis[4], q[4], p[3], n[3];
     gesture_t *gests[] = {&goxel.gestures.drag,
@@ -530,6 +531,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs)
     }
 
     // handle keyboard rotations
+    if (!capture_keys) return;
     if (inputs->keys[KEY_LEFT])
         quat_irotate(goxel.camera.rot, 0.05, 0, 0, +1);
     if (inputs->keys[KEY_RIGHT])
@@ -547,6 +549,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs)
                      x_axis[0], x_axis[1], x_axis[2]);
     }
     // C: recenter the view:
+    // XXX: this should be an action!
     if (inputs->keys['C']) {
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
                                     goxel.layers_mesh, p, n)) {

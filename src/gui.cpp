@@ -1424,7 +1424,7 @@ void gui_iter(const inputs_t *inputs)
             inputs2.touches[i].pos[1] =
                 io.DisplaySize.y - inputs2.touches[i].pos[1];
         }
-        goxel_mouse_in_view(view_rect, &inputs2);
+        goxel_mouse_in_view(view_rect, &inputs2, !io.WantCaptureKeyboard);
     }
 
     render_axis_arrows(view_size);
