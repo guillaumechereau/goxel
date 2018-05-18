@@ -89,6 +89,38 @@ static void on_example(int i, const char *name, const char *code,
     names[i] = strdup(name);
 }
 
+static void load(tool_procedural_t *p)
+{
+    const char *path;
+    FILE *f;
+    int nb;
+
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
+                                "goxcf\0*.goxcf\0", NULL, NULL);
+    if (!path) return;
+    f = fopen(path, "r");
+    nb = (int)fread(p->prog_buff, 1, sizeof(p->prog_buff), f);
+    p->prog_buff[nb] = '\0';
+    fclose(f);
+    strcpy(p->prog_path, path);
+    proc_parse(p->prog_buff, &p->proc);
+}
+
+static void save(tool_procedural_t *p)
+{
+    const char *path;
+    FILE *f;
+    if (!*p->prog_path) {
+        path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                "goxcf\0*.goxcf\0", NULL, NULL);
+        if (path) strcpy(p->prog_path, path);
+    }
+    if (!*p->prog_path) return;
+    f = fopen(p->prog_path, "w");
+    fwrite(p->prog_buff, strlen(p->prog_buff), 1, f);
+    fclose(f);
+}
+
 static int gui(tool_t *tool)
 {
     tool_procedural_t *p = (tool_procedural_t*)tool;
@@ -156,35 +188,9 @@ static int gui(tool_t *tool)
     if (*p->prog_path) {
         gui_input_text("##path", p->prog_path, sizeof(p->prog_path));
     }
-    if (gui_button("Load", 0, 0)) {
-        const char *path;
-        path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                    "goxcf\0*.goxcf\0", NULL, NULL);
-        if (path) {
-            FILE *f = fopen(path, "r");
-            int nb;
-            nb = (int)fread(p->prog_buff, 1, sizeof(p->prog_buff), f);
-            p->prog_buff[nb] = '\0';
-            fclose(f);
-            strcpy(p->prog_path, path);
-        }
-        proc_parse(p->prog_buff, proc);
-    }
+    if (gui_button("Load", 0, 0)) load(p);
     gui_same_line();
-    if (gui_button("Save", 0, 0)) {
-        if (!*p->prog_path) {
-            const char *path;
-            path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                                   "goxcf\0*.goxcf\0", NULL, NULL);
-            if (path)
-                strcpy(p->prog_path, path);
-        }
-        if (*p->prog_path) {
-            FILE *f = fopen(p->prog_path, "w");
-            fwrite(p->prog_buff, strlen(p->prog_buff), 1, f);
-            fclose(f);
-        }
-    }
+    if (gui_button("Save", 0, 0)) save(p);
 
     if (gui_combo("Examples", &p->current,
                     (const char**)p->names, p->nb_progs)) {
