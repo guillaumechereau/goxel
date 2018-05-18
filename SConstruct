@@ -6,7 +6,6 @@ target_os = str(Platform())
 
 debug = int(ARGUMENTS.get('debug', 1))
 profile = int(ARGUMENTS.get('profile', 0))
-emscripten = ARGUMENTS.get('emscripten', 0)
 werror = int(ARGUMENTS.get("werror", 1))
 clang = int(ARGUMENTS.get("clang", 0))
 argp_standalone = int(ARGUMENTS.get("argp_standalone", 0))
@@ -15,7 +14,6 @@ sound = False
 
 if os.environ.get('CC') == 'clang': clang = 1
 if profile: debug = 0
-if emscripten: target_os = 'js'
 
 env = Environment(ENV = os.environ)
 conf = env.Configure()
@@ -151,25 +149,6 @@ if cycles:
                          '-Wno-uninitialized'])
     if clang:
         env.Append(CPPFLAGS=['-Wno-overloaded-virtual'])
-
-
-if target_os == 'js':
-    assert(os.environ['EMSCRIPTEN_TOOL_PATH'])
-    env.Tool('emscripten', toolpath=[os.environ['EMSCRIPTEN_TOOL_PATH']])
-
-    funcs = ['_main']
-    funcs = ','.join("'{}'".format(x) for x in funcs)
-    flags = [
-             '-s', 'ALLOW_MEMORY_GROWTH=1',
-             '-s', 'USE_GLFW=3',
-             '-Os',
-             '-s', 'NO_EXIT_RUNTIME=1',
-             '-s', '"EXPORTED_FUNCTIONS=[{}]"'.format(funcs),
-            ]
-
-    env.Append(CCFLAGS=['-DGLES2 1', '-DNO_ZLIB', '-DNO_ARGP'] + flags)
-    env.Append(LINKFLAGS=flags)
-    env.Append(LIBS=['GL'])
 
 # Append external environment flags
 env.Append(
