@@ -310,9 +310,9 @@ void goxel_reset(void)
     action_exec2("settings_load", "");
 
     camera_fit_box(&goxel.camera, goxel.image->box);
-    // Put plane horizontal at the center of the image box.
-    plane_from_vectors(goxel.plane, goxel.image->box[3],
-                       VEC(1, 0, 0), VEC(0, 1, 0));
+    // Put plane horizontal at the origin.
+    plane_from_vectors(goxel.plane,
+            VEC(0, 0, 0), VEC(1, 0, 0), VEC(0, 1, 0));
 
     vec4_set(goxel.back_color, 70, 70, 70, 255);
     vec4_set(goxel.grid_color, 19, 19, 19, 255);

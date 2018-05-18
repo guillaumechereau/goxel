@@ -918,6 +918,7 @@ static void image_panel(void)
             bbox_from_aabb(*box, bbox);
         } else {
             mat4_copy(mat4_zero, *box);
+            goxel.snap_mask |= SNAP_PLANE;
         }
     }
     if (bounded) gui_bbox(*box);
