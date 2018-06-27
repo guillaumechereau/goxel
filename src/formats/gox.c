@@ -31,8 +31,8 @@
  *  4 bytes magic string        : "GOX "
  *  4 bytes version             : 2
  *  List of chunks:
- *      4 bytes: data length
  *      4 bytes: type
+ *      4 bytes: data length
  *      n bytes: data
  *      4 bytes: CRC
  *
