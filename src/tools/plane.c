@@ -42,6 +42,13 @@ static int iter(tool_t *tool, const float viewport[4])
 static int gui(tool_t *tool)
 {
     int i;
+    bool v;
+
+    v = goxel.snap_mask & SNAP_PLANE;
+    if (gui_checkbox("Visible", &v, NULL)) {
+        set_flag(&goxel.snap_mask, SNAP_PLANE, v);
+    }
+
     gui_group_begin(NULL);
     i = 0;
     if (gui_input_int("Move", &i, 0, 0))
