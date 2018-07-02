@@ -942,7 +942,7 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     vertex_t vertices[4];
     float c1[4], c2[4];
 
-    if (col[3] == 0) {
+    if (!col || col[3] == 0) {
         GL(glClearColor(0, 0, 0, 0));
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         return;
@@ -997,7 +997,7 @@ void render_submit(renderer_t *rend, const int rect[4],
     GL(glViewport(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
     GL(glScissor(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
     GL(glLineWidth(rend->scale));
-    if (clear_color) render_background(rend, clear_color);
+    render_background(rend, clear_color);
 
     DL_SORT(rend->items, item_sort_cmp);
     DL_FOREACH_SAFE(rend->items, item, tmp) {
