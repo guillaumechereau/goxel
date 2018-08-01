@@ -44,6 +44,8 @@ struct sseb
 	__forceinline sseb& operator=( const sseb& other ) { m128 = other.m128; return *this; }
 
 	__forceinline sseb( const __m128  input ) : m128(input) {}
+	__forceinline sseb( const __m128i  input ) : m128(_mm_castsi128_ps(input)) {}
+	__forceinline sseb( const __m128d  input ) : m128(_mm_castpd_ps(input)) {}
 	__forceinline operator const __m128&( void ) const { return m128; }
 	__forceinline operator const __m128i( void ) const { return _mm_castps_si128(m128); }
 	__forceinline operator const __m128d( void ) const { return _mm_castps_pd(m128); }
