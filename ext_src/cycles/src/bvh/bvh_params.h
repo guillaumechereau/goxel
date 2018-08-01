@@ -179,15 +179,6 @@ public:
 	__forceinline float time_from() const { return time_from_; }
 	__forceinline float time_to() const { return time_to_; }
 
-
-	BVHReference& operator=(const BVHReference &arg) {
-		if(&arg != this) {
-			memcpy(this, &arg, sizeof(BVHReference));
-		}
-		return *this;
-	}
-
-
 protected:
 	BoundBox rbounds;
 	uint type;
