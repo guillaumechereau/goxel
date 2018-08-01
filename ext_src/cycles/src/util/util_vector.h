@@ -131,7 +131,7 @@ public:
 	{
 		if(this != &from) {
 			resize(from.size());
-			memcpy(data_, from.data_, datasize_*sizeof(T));
+			std::copy(from.data(), from.data() + from.size(), data());
 		}
 
 		return *this;
@@ -142,7 +142,7 @@ public:
 		resize(from.size());
 
 		if(from.size() > 0) {
-			memcpy(data_, &from[0], datasize_*sizeof(T));
+			std::copy(from.data(), from.data() + from.size(), data());
 		}
 
 		return *this;
@@ -204,7 +204,8 @@ public:
 					return NULL;
 				}
 				else if(data_ != NULL) {
-					memcpy(newdata, data_, ((datasize_ < newsize)? datasize_: newsize)*sizeof(T));
+					size_t to_copy = (datasize_ < newsize)? datasize_: newsize;
+					std::copy(data_, data_ + to_copy, newdata);
 					mem_free(data_, capacity_);
 				}
 				data_ = newdata;
@@ -256,7 +257,8 @@ public:
 		if(newcapacity > capacity_) {
 			T *newdata = mem_allocate(newcapacity);
 			if(data_ != NULL) {
-				memcpy(newdata, data_, ((datasize_ < newcapacity)? datasize_: newcapacity)*sizeof(T));
+				size_t to_copy = (datasize_ < newcapacity)? datasize_: newcapacity;
+				std::copy(data_, data_ + to_copy, newdata);
 				mem_free(data_, capacity_);
 			}
 			data_ = newdata;
@@ -291,7 +293,7 @@ public:
 		if(from.size()) {
 			size_t old_size = size();
 			resize(old_size + from.size());
-			memcpy(data_ + old_size, from.data(), sizeof(T) * from.size());
+			std::copy(from.data(), from.data() + from.size(), data());
 		}
 	}
 
