@@ -1213,7 +1213,7 @@ typedef struct {
 typedef struct palette palette_t;
 struct palette {
     palette_t *next, *prev; // For the global list of palettes.
-    char    name[128];
+    char    name[256];
     int     columns;
     int     size;
     palette_entry_t *entries;
@@ -1399,7 +1399,7 @@ typedef struct camera camera_t;
 struct camera
 {
     camera_t  *next, *prev; // List of camera in an image.
-    char   name[128];  // 127 chars max.
+    char   name[256];  // 127 chars max.
     bool   ortho; // Set to true for orthographic projection.
     float  dist;
     float  rot[4]; // Quaternion.
