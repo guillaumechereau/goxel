@@ -343,7 +343,7 @@ void ImDrawList::ClearFreeMemory()
     _ChannelsCount = 1;
     for (int i = 0; i < _Channels.Size; i++)
     {
-        if (i == 0) memset(&_Channels[0], 0, sizeof(_Channels[0]));  // channel 0 is a copy of CmdBuffer/IdxBuffer, don't destruct again
+        if (i == 0) memset(static_cast<void *>(&_Channels[0]), 0, sizeof(_Channels[0]));  // channel 0 is a copy of CmdBuffer/IdxBuffer, don't destruct again
         _Channels[i].CmdBuffer.clear();
         _Channels[i].IdxBuffer.clear();
     }
@@ -486,7 +486,7 @@ void ImDrawList::ChannelsSplit(int channels_count)
     // _Channels[] (24/32 bytes each) hold storage that we'll swap with this->_CmdBuffer/_IdxBuffer
     // The content of _Channels[0] at this point doesn't matter. We clear it to make state tidy in a debugger but we don't strictly need to.
     // When we switch to the next channel, we'll copy _CmdBuffer/_IdxBuffer into _Channels[0] and then _Channels[1] into _CmdBuffer/_IdxBuffer
-    memset(&_Channels[0], 0, sizeof(ImDrawChannel));
+    memset(static_cast<void *>(&_Channels[0]), 0, sizeof(ImDrawChannel));
     for (int i = 1; i < channels_count; i++)
     {
         if (i >= old_channels_count)
@@ -546,11 +546,11 @@ void ImDrawList::ChannelsSetCurrent(int idx)
 {
     IM_ASSERT(idx < _ChannelsCount);
     if (_ChannelsCurrent == idx) return;
-    memcpy(&_Channels.Data[_ChannelsCurrent].CmdBuffer, &CmdBuffer, sizeof(CmdBuffer)); // copy 12 bytes, four times
-    memcpy(&_Channels.Data[_ChannelsCurrent].IdxBuffer, &IdxBuffer, sizeof(IdxBuffer));
+    memcpy(static_cast<void *>(&_Channels.Data[_ChannelsCurrent].CmdBuffer), &CmdBuffer, sizeof(CmdBuffer)); // copy 12 bytes, four times
+    memcpy(static_cast<void *>(&_Channels.Data[_ChannelsCurrent].IdxBuffer), &IdxBuffer, sizeof(IdxBuffer));
     _ChannelsCurrent = idx;
-    memcpy(&CmdBuffer, &_Channels.Data[_ChannelsCurrent].CmdBuffer, sizeof(CmdBuffer));
-    memcpy(&IdxBuffer, &_Channels.Data[_ChannelsCurrent].IdxBuffer, sizeof(IdxBuffer));
+    memcpy(static_cast<void *>(&CmdBuffer), &_Channels.Data[_ChannelsCurrent].CmdBuffer, sizeof(CmdBuffer));
+    memcpy(static_cast<void *>(&IdxBuffer), &_Channels.Data[_ChannelsCurrent].IdxBuffer, sizeof(IdxBuffer));
     _IdxWritePtr = IdxBuffer.Data + IdxBuffer.Size;
 }
 
