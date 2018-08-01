@@ -130,7 +130,7 @@ public:
 protected:
 	/* stack */
 	struct Stack {
-		Stack() { memset(users, 0, sizeof(users)); }
+		Stack() { clear(); }
 		Stack(const Stack& other) { memcpy(users, other.users, sizeof(users)); }
 		Stack& operator=(const Stack& other) { memcpy(users, other.users, sizeof(users)); return *this; }
 
@@ -152,6 +152,8 @@ protected:
 
 			printf(">\n");
 		}
+		void clear()
+		{ memset(users, 0, sizeof(users)); }
 
 		int users[SVM_STACK_SIZE];
 	};

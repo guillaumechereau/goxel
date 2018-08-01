@@ -732,7 +732,7 @@ void SVMCompiler::compile_type(Shader *shader, ShaderGraph *graph, ShaderType ty
 	}
 
 	/* clear all compiler state */
-	memset(&active_stack, 0, sizeof(active_stack));
+	active_stack.clear();
 	current_svm_nodes.clear();
 
 	foreach(ShaderNode *node_iter, graph->nodes) {
