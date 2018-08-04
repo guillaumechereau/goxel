@@ -498,6 +498,18 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     } else {
         GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
     }
+
+    if (effects & EFFECT_WIREFRAME) {
+        GL(glUniform1f(prog->u_m_amb_l, 0));
+        GL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+        if (item->size == 4)
+            GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
+                              GL_UNSIGNED_SHORT, 0));
+        else
+            GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
+        GL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+        GL(glUniform1f(prog->u_m_amb_l, rend->settings.ambient));
+    }
 }
 
 static void get_light_dir(const renderer_t *rend, bool model_view,

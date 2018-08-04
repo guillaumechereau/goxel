@@ -978,6 +978,7 @@ static void cameras_panel(void)
 static void debug_panel(void)
 {
     ImGui::Text("FPS: %d", (int)round(goxel.fps));
+    gui_checkbox("Show wireframe", &goxel.show_wireframe, NULL);
 }
 
 static void import_image_plane(void)

@@ -670,7 +670,8 @@ void goxel_render_view(const float viewport[4])
         return;
     }
 
-    render_mesh(rend, goxel.render_mesh, 0);
+    render_mesh(rend, goxel.render_mesh,
+                goxel.show_wireframe ? EFFECT_WIREFRAME : 0);
     if (!box_is_null(goxel.image->active_layer->box))
         render_box(rend, goxel.image->active_layer->box,
                    layer_box_color, EFFECT_WIREFRAME);

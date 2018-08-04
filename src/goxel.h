@@ -1695,6 +1695,7 @@ typedef struct goxel
     double     frame_time;  // Clock time at beginning of the frame (sec)
     double     fps;         // Average fps.
     bool       quit;        // Set to true to quit the application.
+    bool       show_wireframe; // Show debug wireframe on meshes.
 
     struct {
         gesture_t drag;
