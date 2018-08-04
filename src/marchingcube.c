@@ -33,15 +33,18 @@ static const int8_t MC_TRI_TABLE[256][16];
 // between them.  If mu = 0, the vertex is at v0, if mu = 1, the vertex is
 // at v1, otherwise the vertex is somewhere in between.
 typedef struct {
+    int     edge;
     int     v0, v1;
     float   mu;
+    float   pos[3];     // Interpolated position.
+    uint8_t color[4];   // Computed color.
 } mc_vert_t;
 
 static int mc_compute(const int neighboors[8],
                       mc_vert_t (*out)[3])
 {
     int edges, i, nb_tri;
-    int f0, f1;
+    float f0, f1;
     int cube_index = 0;
     mc_vert_t verts[12];
 
@@ -50,11 +53,12 @@ static int mc_compute(const int neighboors[8],
     if (!edges) return 0;
     for (i = 0; i < 12; i++) {
         if (!(edges & (1 << i))) continue;
+        verts[i].edge = i;
         verts[i].v0 = EDGES_VERTICES[i][0];
         verts[i].v1 = EDGES_VERTICES[i][1];
-        f0 = neighboors[verts[i].v0];
-        f1 = neighboors[verts[i].v1];
-        verts[i].mu = (f0 - 127) / (float)(f0 - f1);
+        f0 = neighboors[verts[i].v0] / 255.;
+        f1 = neighboors[verts[i].v1] / 255.;
+        verts[i].mu = (f0 - 0.5) / (float)(f0 - f1);
     }
     nb_tri = 0;
     for (i = 0; MC_TRI_TABLE[cube_index][i] != -1; i += 3) {
@@ -67,55 +71,202 @@ static int mc_compute(const int neighboors[8],
     return nb_tri;
 }
 
-static void mc_interp_pos(const mc_vert_t *vert, uint8_t out[3])
+static void mc_interp_pos(const mc_vert_t *vert, float out[3], bool rounded)
 {
     int i;
     const int *p0 = VERTICES_POSITIONS[vert->v0];
     const int *p1 = VERTICES_POSITIONS[vert->v1];
     const float mu = vert->mu;
-    for (i = 0; i < 3; i++)
-        out[i] = (p0[i] * (1 - mu) + p1[i] * mu) * MC_VOXEL_SUB_POS;
+    for (i = 0; i < 3; i++) {
+        out[i] = (p0[i] * (1 - mu) + p1[i] * mu);
+        if (rounded)
+            out[i] = round(out[i] * MC_VOXEL_SUB_POS / 4) * 4;
+        else
+            out[i] = out[i] * MC_VOXEL_SUB_POS;
+    }
 }
 
-static void mc_interp_normal(const mc_vert_t *vert, int normals[8][3],
-                             float out[3])
+static void compute_triangle_normal(const mc_vert_t t[3], float out[3])
 {
     int i;
-    float ret[3] = {};
-    const int *p0 = normals[vert->v0];
-    const int *p1 = normals[vert->v1];
-    const float mu = vert->mu;
+    float u[3] = {t[1].pos[0] - t[0].pos[0], t[1].pos[1] - t[0].pos[1], t[1].pos[2] - t[0].pos[2]};
+    float v[3] = {t[2].pos[0] - t[0].pos[0], t[2].pos[1] - t[0].pos[1], t[2].pos[2] - t[0].pos[2]};
+    float n[3] = {u[1] * v[2] - u[2] * v[1],
+                  u[2] * v[0] - u[0] * v[2],
+                  u[0] * v[1] - u[1] * v[0]};
+    for (i = 0; i < 3; i++) out[i] = n[i];
+    vec3_normalize(out, out);
+}
+
+static void mix_pos(const float a[3], const float b[3], float out[3])
+{
+    int i;
     for (i = 0; i < 3; i++)
-        ret[i] = (p0[i] * (1 - mu) + p1[i] * mu);
-    vec3_normalize(ret, ret);
-    vec3_copy(ret, out);
+        out[i] = (a[i] + b[i]) / 2;
+}
+
+static bool color_eq(const uint8_t a[4], const uint8_t b[4])
+{
+    return memcmp(a, b, 3) == 0;
+}
+
+static bool poly_attach_triangle(int nb, mc_vert_t *poly,
+                                const mc_vert_t tri[3])
+{
+    int i, j, k;
+    float n1[3], n2[3];
+
+    // Can always attach to an empty poly.
+    if (nb == 0) {
+        memcpy(poly, tri, 3 * sizeof(mc_vert_t));
+        return true;
+    }
+
+    compute_triangle_normal(poly, n1);
+    compute_triangle_normal(tri, n2);
+    if (fabs(vec3_dot(n1, n2) - 1.0) > 0.01) return false;
+    for (i = 0; i < nb; i++)
+    for (j = 0; j < 3; j++) {
+        if (poly[i].edge == tri[(j + 2) % 3].edge &&
+            poly[(i + 1) % nb].edge == tri[(j + 1) % 3].edge) goto ok;
+    }
+    return false;
+ok:
+    // Shift poly to make space for new vertex and add new point.
+    for (k = nb; k > i + 1; k--) poly[k] = poly[k - 1];
+    poly[i + 1] = tri[j];
+    return true;
+}
+
+// Try to extract as many triangles as possible as a single polygon.
+static int get_poly(int nb, const mc_vert_t (*tri)[3], mc_vert_t *out,
+                    int *size)
+{
+    int i;
+    *size = 0;
+    for (i = 0; i < nb; i++) {
+        if (!poly_attach_triangle(*size, out, tri[i])) break;
+        if (*size == 0) *size = 2;
+        assert(*size < 6 * 6);
+        (*size)++;
+    }
+    return i;
+}
+
+// Shift poly points in place so that the n-th point become the first one.
+static void poly_shift(int nb, mc_vert_t *poly, int n)
+{
+    mc_vert_t tmp;
+    int i;
+    for (i = 0; i < n; i++) {
+        tmp = poly[0];
+        memmove(poly, poly + 1, (nb - 1) * sizeof(*poly));
+        poly[nb - 1] = tmp;
+    }
+}
+
+static int split_poly(int nb, mc_vert_t *poly, mc_vert_t (*out)[3],
+                      const float center[3])
+{
+    int i, j;
+    float c[3] = {0, 0, 0};
+    mc_vert_t p1, p2;
+
+    if (nb < 3) return 0;
+
+    if (center == NULL) {
+        center = c;
+        for (i = 0; i < nb; i++) {
+            for (j = 0; j < 3; j++) {
+                c[j] += poly[i].pos[j];
+            }
+        }
+        for (i = 0; i < 3; i++) c[i] /= nb;
+    }
+
+    // First pass, try to remove all the plain color triangles.
+    for (i = 0; i < nb; i++) {
+        if (    color_eq(poly[i].color, poly[(i + 1) % nb].color) &&
+                color_eq(poly[i].color, poly[(i + nb - 1) % nb].color)) {
+            poly_shift(nb, poly, i);
+            out[0][0] = poly[0];
+            out[0][1] = poly[1];
+            out[0][2] = poly[nb - 1];
+            return 1 + split_poly(nb - 1, poly + 1, out + 1, center);
+        }
+    }
+
+    // Second pass, try to remove all two adjacent colors into a quad.
+    for (i = 0; nb < 6 && i < nb; i++) {
+        if (color_eq(poly[i].color, poly[(i + 1) % nb].color)) {
+            poly_shift(nb, poly, i);
+            p1 = poly[0];
+            mix_pos(poly[0].pos, poly[nb - 1].pos, p1.pos);
+            p2 = poly[0];
+            mix_pos(poly[1].pos, poly[2].pos, p2.pos);
+            out[0][0] = poly[0];
+            out[0][1] = poly[1];
+            out[0][2] = p2;
+            out[1][0] = poly[0];
+            out[1][1] = p2;
+            out[1][2] = p1;
+            poly[0] = p1;
+            memcpy(poly[0].color, poly[nb - 1].color, 4);
+            poly[1] = p2;
+            memcpy(poly[1].color, poly[2].color, 4);
+            return 2 + split_poly(nb, poly, out + 2, center);
+        }
+    }
+
+    for (i = 0; i < nb; i++) {
+        out[i * 2 + 0][0] = poly[i];
+        out[i * 2 + 0][1] = poly[i];
+        out[i * 2 + 0][2] = poly[i];
+        mix_pos(poly[i].pos, poly[(i + 1) % nb].pos, out[i * 2 + 0][1].pos);
+        memcpy(out[i * 2 + 0][2].pos, center, sizeof(c));
+        out[i * 2 + 1][0] = poly[i];
+        out[i * 2 + 1][1] = poly[i];
+        out[i * 2 + 1][2] = poly[i];
+        memcpy(out[i * 2 + 1][1].pos, center, sizeof(c));
+        mix_pos(poly[i].pos, poly[(i + nb - 1) % nb].pos,
+                out[i * 2 + 1][2].pos);
+    }
+    return nb * 2;
+}
+
+static int split_triangles(int nb, const mc_vert_t (*tri)[3],
+                           mc_vert_t (*out)[3])
+{
+    mc_vert_t poly[6 * 6];
+    mc_vert_t new_tri[30][3];
+    int i = 0, ret = 0, poly_size;
+    while (i < nb) {
+        i += get_poly(nb - i, tri + i, poly, &poly_size);
+        ret += split_poly(poly_size, poly, new_tri + ret, NULL);
+    }
+    memcpy(out, new_tri, ret * sizeof(*out));
+    return ret;
 }
 
 int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                               int effects, voxel_vertex_t *out,
                               int *size, int *subdivide)
 {
-    int i, vi, x, y, z, v, w, vx, vy, vz, wx, wy, wz, nb_tri, nb_tri_tot = 0;
-    int a, sum_a;
-    float n[3];
-    uint8_t color[4], tmp[4];
-    int colorbest;
-    bool use_max_color;
+    int i, vi, x, y, z, v, vx, vy, vz, nb_tri, nb_tri_tot = 0;
+    uint8_t color[4] = {255, 255, 255, 255}, tmp[4];
     uint8_t *data;
 
     int densities[8];
-    int normals[8][3];
-    int d, k = 2;
     int p[3], s[3];
     int rect[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
                       {INT_MIN, INT_MIN, INT_MIN}};
 
-    mc_vert_t tri[5][3];
+    mc_vert_t tri[30][3];
+    float n[3];
+    const bool flat = effects & EFFECT_FLAT;
 
     *size = 3;      // Triangles.
     *subdivide = MC_VOXEL_SUB_POS;
-
-    if (!(effects & EFFECT_FLAT)) k = 8;
 
     // To speed things up we first get the voxel cube around the block.
     data = malloc((N + 2) * (N + 2) * (N + 2) * 4);
@@ -161,74 +312,50 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
     for (y = rect[0][1]; y < rect[1][1]; y++)
     for (x = rect[0][0]; x < rect[1][0]; x++) {
         memset(densities, 0, sizeof(densities));
-        memset(normals, 0, sizeof(normals));
-        vec3_set(n, 0, 0, 0);
-        get_at(data, x, y, z, color);
-        use_max_color = (color[3] == 0);
-        colorbest = 8;
-        sum_a = 0;
         for (v = 0; v < 8; v++) {
-
             vx = x + VERTICES_POSITIONS[v][0];
             vy = y + VERTICES_POSITIONS[v][1];
             vz = z + VERTICES_POSITIONS[v][2];
-
-            for (w = 0; w < 8; w++) {
-                wx = vx + VERTICES_POSITIONS[w][0] - 1;
-                wy = vy + VERTICES_POSITIONS[w][1] - 1;
-                wz = vz + VERTICES_POSITIONS[w][2] - 1;
-
-                get_at(data, wx, wy, wz, tmp);
-                a = tmp[3];
-
-                if (use_max_color && a) {
-                    d = abs(x - wx) + abs(y - wy) + abs(z - wz);
-                    if (d < colorbest) {
-                        get_at(data, wx, wy, wz, color);
-                        colorbest = d;
-                    }
-                }
-
-                sum_a += a;
-                densities[v] += a;
-
-                if (!(effects & EFFECT_FLAT)) {
-                    normals[v][0] -= a * (2 * VERTICES_POSITIONS[w][0] - 1);
-                    normals[v][1] -= a * (2 * VERTICES_POSITIONS[w][1] - 1);
-                    normals[v][2] -= a * (2 * VERTICES_POSITIONS[w][2] - 1);
-                }
-                else {
-                    n[0] -= a * (2 * VERTICES_POSITIONS[w][0] - 1);
-                    n[1] -= a * (2 * VERTICES_POSITIONS[w][1] - 1);
-                    n[2] -= a * (2 * VERTICES_POSITIONS[w][2] - 1);
-                }
-            }
-            densities[v] /= k;
+            get_at(data, vx, vy, vz, tmp);
+            densities[v] = tmp[3];
         }
-        if (sum_a == 0) continue;
         nb_tri = mc_compute(densities, tri);
-        if (effects & EFFECT_FLAT) vec3_normalize(n, n);
 
         for (i = 0; i < nb_tri; i++) {
             for (v = 0; v < 3; v++) {
-                vi = (nb_tri_tot + i) * 3 + v;
-                memcpy(out[vi].color, color, sizeof(color));
+                mc_interp_pos(&tri[i][v], tri[i][v].pos, flat);
+                uint8_t c1[4], c2[4];
+                get_at(data, x + VERTICES_POSITIONS[tri[i][v].v0][0],
+                             y + VERTICES_POSITIONS[tri[i][v].v0][1],
+                             z + VERTICES_POSITIONS[tri[i][v].v0][2],
+                             c1);
+                get_at(data, x + VERTICES_POSITIONS[tri[i][v].v1][0],
+                             y + VERTICES_POSITIONS[tri[i][v].v1][1],
+                             z + VERTICES_POSITIONS[tri[i][v].v1][2],
+                             c2);
+                memcpy(tri[i][v].color, c1[3] > c2[3] ? c1 : c2, sizeof(color));
+            }
+        }
+        if (flat) nb_tri = split_triangles(nb_tri, tri, tri);
+
+        for (i = 0; i < nb_tri; i++) {
+            compute_triangle_normal(tri[i], n);
+            for (v = 0; v < 3; v++) {
+                vi = nb_tri_tot * 3 + v;
+                memcpy(out[vi].color, tri[i][v].color, sizeof(out[vi].color));
                 out[vi].color[3] = 255;
-                mc_interp_pos(&tri[i][v], out[vi].pos);
-                if (!(effects & EFFECT_FLAT))
-                    mc_interp_normal(&tri[i][v], normals, n);
-                out[vi].normal[0] = n[0] * 126;
-                out[vi].normal[1] = n[1] * 126;
-                out[vi].normal[2] = n[2] * 126;
-                out[vi].pos[0] += x * MC_VOXEL_SUB_POS;
-                out[vi].pos[1] += y * MC_VOXEL_SUB_POS;
-                out[vi].pos[2] += z * MC_VOXEL_SUB_POS;
+                out[vi].pos[0] = tri[i][v].pos[0] + x * MC_VOXEL_SUB_POS + MC_VOXEL_SUB_POS / 2 + 0.5;
+                out[vi].pos[1] = tri[i][v].pos[1] + y * MC_VOXEL_SUB_POS + MC_VOXEL_SUB_POS / 2 + 0.5;
+                out[vi].pos[2] = tri[i][v].pos[2] + z * MC_VOXEL_SUB_POS + MC_VOXEL_SUB_POS / 2 + 0.5;
+                out[vi].normal[0] = n[0] * 64;
+                out[vi].normal[1] = n[1] * 64;
+                out[vi].normal[2] = n[2] * 64;
                 // XXX: this shouldn't matter.
                 memset(out[vi].bshadow_uv, 0, sizeof(out[vi].bshadow_uv));
                 memset(out[vi].bump_uv, 0, sizeof(out[vi].bump_uv));
             }
+            nb_tri_tot++;
         }
-        nb_tri_tot += nb_tri;
     }
     free(data);
     return nb_tri_tot;
