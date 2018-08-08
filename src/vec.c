@@ -37,7 +37,7 @@ static void mat3_to_eul2_(const float m[3][3], int order,
         e1[i] = atan2(-m[k][j], m[j][j]);
         e1[j] = atan2(-m[i][k], cy);
         e1[k] = 0.0;
-        *e2 = *e1;
+        vec3_copy(e1, e2);
     }
     if (parity) {
         vec3_imul(e1, -1);
@@ -54,9 +54,9 @@ void mat3_to_eul(const float m[3][3], int order, float e[3])
     // Pick best.
     if (    fabs(e1[0]) + fabs(e1[1]) + fabs(e1[2]) >
             fabs(e2[0]) + fabs(e2[1]) + fabs(e2[2])) {
-        vec3_copy(e1, e);
-    } else {
         vec3_copy(e2, e);
+    } else {
+        vec3_copy(e1, e);
     }
 }
 
