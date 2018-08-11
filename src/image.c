@@ -501,6 +501,39 @@ uint64_t image_get_key(const image_t *img)
     return key;
 }
 
+/*
+ * Turn an image layer into a mesh of 1 voxel depth.
+ */
+static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
+{
+    uint8_t *data;
+    int i, j, w, h, bpp = 0, pos[3];
+    uint8_t c[4];
+    float p[3];
+    img = img ?: goxel.image;
+    layer = layer ?: img->active_layer;
+    mesh_accessor_t acc;
+
+    image_history_push(img);
+    data = img_read(layer->image->path, &w, &h, &bpp);
+    acc = mesh_get_accessor(layer->mesh);
+    for (j = 0; j < w; j++)
+    for (i = 0; i < h; i++) {
+        vec3_set(p, i / (float)h - 0.5, 0.5 - j / (float)w, 0);
+        mat4_mul_vec3(layer->mat, p, p);
+        pos[0] = round(p[0]);
+        pos[1] = round(p[1]);
+        pos[2] = round(p[2]);
+        memset(c, 0, 4);
+        c[3] = 255;
+        memcpy(c, data + (j * w + i) * bpp, bpp);
+        mesh_set_at(layer->mesh, &acc, pos, c);
+    }
+    texture_delete(layer->image);
+    layer->image = NULL;
+    free(data);
+}
+
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .cfunc = image_clear_layer,
@@ -621,4 +654,11 @@ ACTION_REGISTER(img_move_camera_down,
     .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
+)
+
+ACTION_REGISTER(img_image_layer_to_mesh,
+    .help = "Turn an image layer into a mesh",
+    .cfunc = image_image_layer_to_mesh,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
