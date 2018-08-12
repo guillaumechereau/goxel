@@ -14,6 +14,8 @@ By Guillaume Chereau <guillaume@noctua-software.com>
 
 Webpage: https://guillaumechereau.github.io/goxel
 
+Online Procedural Rendering: https://voxeltoy.com
+
 About
 -----
 
