@@ -333,13 +333,11 @@ void goxel_reset(void)
     mat4_mul_vec3(goxel.image->box, VEC(0, 0, 0),
                   goxel.painter.symmetry_origin);
 
-    goxel.rend = (renderer_t) {
-        .light = {
-            .pitch = 10 * DD2R,
-            .yaw = 120 * DD2R,
-            .fixed = true,
-            .intensity = 1.
-        },
+    goxel.rend.light = (typeof(goxel.rend.light)) {
+        .pitch = 10 * DD2R,
+        .yaw = 120 * DD2R,
+        .fixed = true,
+        .intensity = 1.
     };
     render_get_default_settings(0, NULL, &goxel.rend.settings);
 
