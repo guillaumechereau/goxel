@@ -1672,6 +1672,7 @@ typedef struct goxel
     uint8_t    back_color[4];
     uint8_t    grid_color[4];
     uint8_t    image_box_color[4];
+    bool       hide_box;
 
     texture_t  *pick_fbo;
     painter_t  painter;

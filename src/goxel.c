@@ -778,7 +778,7 @@ void goxel_render_view(const float viewport[4])
     }
     if (goxel.snap_mask & SNAP_PLANE)
         render_grid(rend, goxel.plane, goxel.grid_color, goxel.image->box);
-    if (!box_is_null(goxel.image->box))
+    if (!box_is_null(goxel.image->box) && !goxel.hide_box)
         render_box(rend, goxel.image->box, goxel.image_box_color,
                    EFFECT_SEE_BACK | EFFECT_GRID);
     if (goxel.show_export_viewport)

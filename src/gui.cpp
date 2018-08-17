@@ -729,6 +729,7 @@ static void view_panel(void)
         ImGui::Text("%s", COLORS[i].label);
         ImGui::PopID();
     }
+    gui_checkbox("Hide box", &goxel.hide_box, NULL);
 
 }
 
