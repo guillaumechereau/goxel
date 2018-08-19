@@ -483,7 +483,7 @@ int load_from_file(const char *path)
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size))) {
                 if (strcmp(dict_key, "name") == 0)
-                    sprintf(camera->name, "%s", dict_value);
+                    strncpy(camera->name, dict_value, sizeof(camera->name));
                 if (strcmp(dict_key, "dist") == 0)
                     memcpy(&camera->dist, dict_value, dict_value_size);
                 if (strcmp(dict_key, "rot") == 0)
