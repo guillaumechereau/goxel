@@ -659,6 +659,7 @@ DECL void mat4_imul_quat(float mat[4][4], const float q[4])
 }
 
 void mat3_to_eul(const float m[3][3], int order, float e[3]);
+void mat3_to_eul2(const float m[3][3], int order, float e1[3], float e2[3]);
 void quat_to_mat3(const float q[4], float out[3][3]);
 
 DECL void quat_to_eul(const float q[4], int order, float e[3])
@@ -666,6 +667,13 @@ DECL void quat_to_eul(const float q[4], int order, float e[3])
     float m[3][3];
     quat_to_mat3(q, m);
     mat3_to_eul(m, order, e);
+}
+
+DECL void quat_to_eul2(const float q[4], int order, float e1[3], float e2[3])
+{
+    float m[3][3];
+    quat_to_mat3(q, m);
+    mat3_to_eul2(m, order, e1, e2);
 }
 
 void eul_to_quat(const float e[3], int order, float out[4]);

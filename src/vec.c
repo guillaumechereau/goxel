@@ -18,14 +18,16 @@ void mat3_normalize_(const float m[3][3], float out[3][3])
         vec3_normalize(m[i], out[i]);
 }
 
-static void mat3_to_eul2_(const float m[3][3], int order,
-                          float e1[3], float e2[3])
+void mat3_to_eul2(const float m[3][3], int order, float e1[3], float e2[3])
 {
 
     const int *r = EUL_ORDERS[order];
     int i = r[0], j = r[1], k = r[2];
     int parity = r[3];
     float cy = hypot(m[i][i], m[i][j]);
+    float n[3][3];
+
+    mat3_normalize_(m, n);
     if (cy > 16.0f * FLT_EPSILON) {
         e1[i] = atan2(m[j][k], m[k][k]);
         e1[j] = atan2(-m[i][k], cy);
@@ -47,9 +49,8 @@ static void mat3_to_eul2_(const float m[3][3], int order,
 
 void mat3_to_eul(const float m[3][3], int order, float e[3])
 {
-    float e1[3], e2[3], n[3][3];
-    mat3_normalize_(m, n);
-    mat3_to_eul2_(n, order, e1, e2);
+    float e1[3], e2[3];
+    mat3_to_eul2(m, order, e1, e2);
 
     // Pick best.
     if (    fabs(e1[0]) + fabs(e1[1]) + fabs(e1[2]) >
