@@ -34,6 +34,14 @@ extern "C" {
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
 
+#ifndef GUI_TOOLS_COLUMNS_NB
+#   define GUI_TOOLS_COLUMNS_NB 4
+#endif
+
+#ifndef GUI_PALETTE_COLUMNS_NB
+#   define GUI_PALETTE_COLUMNS_NB 8
+#endif
+
 extern "C" {
     bool gui_settings_popup(void *data);
 }
@@ -518,7 +526,7 @@ static void tools_panel(void)
         if (gui_selectable_icon(label, &v, values[i].icon)) {
             action_exec(action, "");
         }
-        auto_grid(nb, i, 4);
+        auto_grid(nb, i, GUI_TOOLS_COLUMNS_NB);
     }
     gui_group_end();
     auto_adjust_panel_size();
@@ -751,7 +759,7 @@ static bool render_palette_entry(const uint8_t color[4], uint8_t target[4])
 static void palette_panel(void)
 {
     palette_t *p;
-    int i, current, nb = 0, nb_col = 8;
+    int i, current, nb = 0, nb_col = GUI_PALETTE_COLUMNS_NB;
     const char **names;
 
     DL_COUNT(goxel.palettes, p, nb);
