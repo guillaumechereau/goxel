@@ -1711,6 +1711,7 @@ typedef struct goxel
         gesture_t pan;
         gesture_t rotate;
         gesture_t hover;
+        gesture_t pinch;
     } gestures;
 
     // Hold info about the cycles rendering task.
