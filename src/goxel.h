@@ -1880,7 +1880,7 @@ void *cache_get(cache_t *cache, const void *key, int keylen);
 
 // ####### Sound #################################
 void sound_init(void);
-void sound_play(const char *sound);
+void sound_play(const char *sound, float volume, float pitch);
 void sound_iter(void);
 
 bool sound_is_enabled(void);

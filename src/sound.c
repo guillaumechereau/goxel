@@ -54,7 +54,7 @@ static bool g_enabled = true;
 // Functions defined by the backend.
 void sound_backend_init(void);
 sound_backend_t *sound_backend_create(sound_source_t *source);
-void sound_backend_play_sound(sound_t *sound);
+void sound_backend_play_sound(sound_t *sound, float volume, float pitch);
 void sound_backend_stop_sound(sound_t *sound);
 int sound_backend_iter_sound(sound_t *sound);
 void sound_backend_iter(void);
@@ -144,14 +144,14 @@ static sound_t *sound_get(const char *name)
     return sound;
 }
 
-void sound_play(const char *name)
+void sound_play(const char *name, float volume, float pitch)
 {
     if (!g_enabled) return;
     sound_t *sound = sound_get(name);
     sound->source->reset(sound->source);
     sound_backend_stop_sound(sound);
     sound->state = 1;
-    sound_backend_play_sound(sound);
+    sound_backend_play_sound(sound, volume, pitch);
 }
 
 void sound_iter(void)
@@ -170,7 +170,7 @@ void sound_iter(void)
 // Dummy API when we compile without sound support.
 
 void sound_init(void) {}
-void sound_play(const char *sound) {}
+void sound_play(const char *name, float volume, float pitch) {}
 void sound_iter(void) {}
 bool sound_is_enabled(void) { return false; }
 void sound_set_enabled(bool v) {}

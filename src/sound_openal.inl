@@ -126,9 +126,11 @@ void sound_backend_stop_sound(sound_t *sound)
     AL(alSourceStop(sound->backend->source));
 }
 
-void sound_backend_play_sound(sound_t *sound)
+void sound_backend_play_sound(sound_t *sound, float volume, float pitch)
 {
-    AL(alSourcef(sound->backend->source, AL_GAIN,  1.0));
+    assert(pitch >= 0.5 && pitch <= 2.0);
+    AL(alSourcef(sound->backend->source, AL_GAIN,  volume));
+    AL(alSourcef(sound->backend->source, AL_PITCH, pitch));
 }
 
 int sound_backend_iter_sound(sound_t *sound)
