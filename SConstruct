@@ -122,7 +122,7 @@ if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
 
 if sound:
     env.Append(LIBS='openal')
-    env.Append(CCFLAGS='-DSOUND=OPENAL')
+    env.Append(CCFLAGS='-DSOUND=1')
 
 if argp_standalone:
     env.Append(LIBS='argp')

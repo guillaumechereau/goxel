@@ -1724,6 +1724,9 @@ typedef struct goxel
         bool force_restart;
     } render_task;
 
+    // Used to check if the active mesh changed to play tick sound.
+    uint64_t    last_mesh_key;
+    double      last_click_time;
 } goxel_t;
 
 // the global goxel instance.

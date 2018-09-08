@@ -381,6 +381,9 @@ KEEPALIVE
 int goxel_iter(inputs_t *inputs)
 {
     double time = sys_get_time();
+    uint64_t mesh_key;
+    float pitch;
+
     goxel.fps = mix(goxel.fps, 1.0 / (time - goxel.frame_time), 0.1);
     goxel.frame_time = time;
     goxel_set_help_text(NULL);
@@ -396,6 +399,20 @@ int goxel_iter(inputs_t *inputs)
     mat4_copy(goxel.camera.view_mat, goxel.rend.view_mat);
     mat4_copy(goxel.camera.proj_mat, goxel.rend.proj_mat);
     gui_iter(inputs);
+
+    if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
+        mesh_key = mesh_get_key(goxel.render_mesh);
+        if (goxel.last_mesh_key != mesh_key) {
+            if (goxel.last_mesh_key) {
+                pitch = goxel.painter.mode == MODE_OVER ? 1.0 :
+                        goxel.painter.mode == MODE_SUB ? 0.8 : 1.2;
+                sound_play("build", 0.2, pitch);
+                goxel.last_click_time = time;
+            }
+            goxel.last_mesh_key = mesh_key;
+        }
+    }
+
     sound_iter();
     update_window_title();
 
