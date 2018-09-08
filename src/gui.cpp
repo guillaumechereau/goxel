@@ -1360,17 +1360,20 @@ void gui_iter(const inputs_t *inputs)
     io.DisplayFramebufferScale = ImVec2(goxel.screen_scale,
                                         goxel.screen_scale);
     io.DeltaTime = 1.0 / 60;
-    gesture_update(2, gestures, inputs, display_rect, gui);
-    io.MouseWheel = inputs->mouse_wheel;
+    if (inputs) {
+        gesture_update(2, gestures, inputs, display_rect, gui);
+        io.MouseWheel = inputs->mouse_wheel;
 
-    for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
-        io.KeysDown[i] = inputs->keys[i];
-    io.KeyShift = inputs->keys[KEY_LEFT_SHIFT] ||
-                  inputs->keys[KEY_RIGHT_SHIFT];
-    io.KeyCtrl = inputs->keys[KEY_CONTROL];
-    for (i = 0; i < ARRAY_SIZE(inputs->chars); i++) {
-        if (!inputs->chars[i]) break;
-        io.AddInputCharacter(inputs->chars[i]);
+        for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
+            io.KeysDown[i] = inputs->keys[i];
+        io.KeyShift = inputs->keys[KEY_LEFT_SHIFT] ||
+                      inputs->keys[KEY_RIGHT_SHIFT];
+        io.KeyCtrl = inputs->keys[KEY_CONTROL];
+        for (i = 0; i < ARRAY_SIZE(inputs->chars); i++) {
+            if (!inputs->chars[i]) break;
+            io.AddInputCharacter(inputs->chars[i]);
+        }
+        memset((void*)inputs->chars, 0, sizeof(inputs->chars));
     }
 
     // Setup theme.
@@ -1438,7 +1441,8 @@ void gui_iter(const inputs_t *inputs)
                           io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
                           canvas_size.x, canvas_size.y};
     // Call mouse_in_view with inputs in the view referential.
-    if (!(!gui->mouse_in_view && inputs->mouse_wheel) &&
+    if (    inputs &&
+            !(!gui->mouse_in_view && inputs->mouse_wheel) &&
             !gui->capture_mouse) {
         inputs_t inputs2 = *inputs;
         for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
