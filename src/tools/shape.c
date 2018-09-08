@@ -196,11 +196,11 @@ static int iter(tool_t *tool, const float viewport[4])
 static int gui(tool_t *tool)
 {
     tool_gui_smoothness();
-    gui_checkbox("Two steps", &goxel.tool_shape_two_steps,
-                 "Second click set the height");
+    if (!DEFINED(GOXEL_MOBILE))
+        gui_checkbox("Two steps", &goxel.tool_shape_two_steps,
+                     "Second click set the height");
     tool_gui_snap();
     tool_gui_shape();
-    tool_gui_color();
     tool_gui_symmetry();
     return 0;
 }
