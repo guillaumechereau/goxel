@@ -499,6 +499,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
     }
 
+#ifndef GLES2
     if (effects & EFFECT_WIREFRAME) {
         GL(glUniform1f(prog->u_m_amb_l, 0));
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
@@ -510,6 +511,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
         GL(glUniform1f(prog->u_m_amb_l, rend->settings.ambient));
     }
+#endif
 }
 
 static void get_light_dir(const renderer_t *rend, bool model_view,
