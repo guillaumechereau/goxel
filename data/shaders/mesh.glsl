@@ -15,54 +15,46 @@
  *
  */
 
-#ifdef GL_ES
-    precision mediump float;
-#else
-    #define highp
-    #define mediump
-    #define lowp
-#endif
-
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_proj;
-uniform mat4 u_shadow_mvp;
-uniform float u_pos_scale;
+uniform highp mat4  u_model;
+uniform highp mat4  u_view;
+uniform highp mat4  u_proj;
+uniform highp mat4  u_shadow_mvp;
+uniform lowp  float u_pos_scale;
 
 // Light parameters
-uniform vec3 u_l_dir;
-uniform float u_l_int;
+uniform lowp    vec3  u_l_dir;
+uniform lowp    float u_l_int;
 
 // Material parameters
-uniform float u_m_amb; // Ambient light coef.
-uniform float u_m_dif; // Diffuse light coef.
-uniform float u_m_spe; // Specular light coef.
-uniform float u_m_shi; // Specular light shininess.
-uniform float u_m_smo; // Smoothness.
+uniform lowp float u_m_amb; // Ambient light coef.
+uniform lowp float u_m_dif; // Diffuse light coef.
+uniform lowp float u_m_spe; // Specular light coef.
+uniform lowp float u_m_shi; // Specular light shininess.
+uniform lowp float u_m_smo; // Smoothness.
 
-uniform sampler2D u_bshadow_tex;
-uniform sampler2D u_bump_tex;
-uniform float     u_bshadow;
-uniform sampler2D u_shadow_tex;
-uniform float     u_shadow_k;
+uniform mediump sampler2D u_bshadow_tex;
+uniform mediump sampler2D u_bump_tex;
+uniform mediump float     u_bshadow;
+uniform mediump sampler2D u_shadow_tex;
+uniform mediump float     u_shadow_k;
 
-varying lowp vec3 v_pos;
-varying lowp vec4 v_color;
-varying lowp vec2 v_bshadow_uv;
-varying lowp vec2 v_uv;
-varying lowp vec2 v_bump_uv;
-varying lowp vec3 v_normal;
-varying      vec4 v_shadow_coord;
+varying highp   vec3 v_pos;
+varying lowp    vec4 v_color;
+varying mediump vec2 v_bshadow_uv;
+varying mediump vec2 v_uv;
+varying mediump vec2 v_bump_uv;
+varying mediump vec3 v_normal;
+varying mediump vec4 v_shadow_coord;
 
 #ifdef VERTEX_SHADER
 
 /************************************************************************/
-attribute vec3 a_pos;
-attribute vec3 a_normal;
-attribute vec4 a_color;
-attribute vec2 a_bshadow_uv;
-attribute vec2 a_bump_uv;   // bump tex base coordinates [0,255]
-attribute vec2 a_uv;        // uv coordinates [0,1]
+attribute highp   vec3 a_pos;
+attribute mediump vec3 a_normal;
+attribute lowp    vec4 a_color;
+attribute mediump vec2 a_bshadow_uv;
+attribute mediump vec2 a_bump_uv;   // bump tex base coordinates [0,255]
+attribute mediump vec2 a_uv;        // uv coordinates [0,1]
 
 void main()
 {
@@ -82,13 +74,13 @@ void main()
 #ifdef FRAGMENT_SHADER
 
 /************************************************************************/
-vec2 uv, bump_uv;
-vec3 n, s, r, v, bump;
-float s_dot_n;
-float l_amb, l_dif, l_spe;
-float bshadow;
-float visibility;
-vec2 PS[4]; // Poisson offsets used for the shadow map.
+mediump vec2 uv, bump_uv;
+mediump vec3 n, s, r, v, bump;
+mediump float s_dot_n;
+lowp float l_amb, l_dif, l_spe;
+lowp float bshadow;
+lowp float visibility;
+lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
 int i;
 
 void main()
@@ -122,8 +114,8 @@ void main()
     // Shadow map.
     #ifdef SHADOW
     visibility = 1.0;
-    vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
-    float bias = 0.005 * tan(acos(clamp(s_dot_n, 0.0, 1.0)));
+    mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
+    lowp float bias = 0.005 * tan(acos(clamp(s_dot_n, 0.0, 1.0)));
     bias = clamp(bias, 0.0, 0.015);
     shadow_coord.z -= bias;
     PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;

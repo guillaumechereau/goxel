@@ -1,18 +1,10 @@
-#ifdef GL_ES
-    precision mediump float;
-#else
-    #define highp
-    #define mediump
-    #define lowp
-#endif
-
-varying vec4 v_color;
+varying lowp vec4 v_color;
 
 #ifdef VERTEX_SHADER
 
 /************************************************************************/
-attribute vec3 a_pos;
-attribute vec4 a_color;
+attribute highp vec3 a_pos;
+attribute lowp  vec4 a_color;
 
 void main()
 {
