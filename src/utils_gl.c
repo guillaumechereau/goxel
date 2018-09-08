@@ -56,9 +56,14 @@ static int compile_shader(int shader, const char *code,
     int status, len;
     char *log;
     // Common header we add to all the shaders.
-    const char *sources[] = {include1, include2, code};
+#ifndef GLES2
+    const char *pre = "#define highp\n#define mediump\n#define lowp\n";
+#else
+    const char *pre = "";
+#endif
+    const char *sources[] = {pre, include1, include2, code};
     assert(code);
-    glShaderSource(shader, 3, (const char**)&sources, NULL);
+    glShaderSource(shader, 4, (const char**)&sources, NULL);
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
@@ -139,8 +144,7 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
 {
     assert(format == GL_RGBA || format == GL_DEPTH_COMPONENT);
     assert(msaa == 1); // For the moment.
-    GLuint fbo, color, tex = 0, depth, stencil, internal_format;
-    (void)color; (void)stencil;
+    GLuint fbo, color, tex = 0, depth, internal_format;
 
     internal_format = (format != GL_DEPTH_COMPONENT) ? GL_UNSIGNED_BYTE
                                                      : GL_UNSIGNED_INT;
@@ -193,18 +197,7 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
             GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                         GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth));
         } else {
-            GL(glGenRenderbuffers(1, &depth));
-            GL(glBindRenderbuffer(GL_RENDERBUFFER, depth));
-            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
-                                     w, h));
-            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                        GL_RENDERBUFFER, depth));
-            GL(glGenRenderbuffers(1, &stencil));
-            GL(glBindRenderbuffer(GL_RENDERBUFFER, stencil));
-            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
-                                     w, h));
-            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-                        GL_RENDERBUFFER, stencil));
+            assert(false); // Not implemented yet!
         }
         if (tex) GL(glFramebufferTexture2D(
                     GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
