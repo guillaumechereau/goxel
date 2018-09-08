@@ -789,28 +789,33 @@ enum {
     ICON_VISIBILITY_OFF = 26,
     ICON_ARROW_DOWNWARD = 27,
     ICON_ARROW_UPWARD = 28,
+    ICON_EDIT = 29,
+    ICON_COPY = 30,
+    ICON_GALLERY = 31,
+    ICON_INFO = 32,
 
-    ICON_TOOLS = 33,
-    ICON_PALETTE = 34,
-    ICON_LAYERS = 35,
-    ICON_RENDER = 36,
-    ICON_CAMERA = 37,
-    ICON_IMAGE = 38,
-    ICON_EXPORT = 39,
-    ICON_DEBUG = 40,
+    ICON_SETTINGS = 33,
+    ICON_CLOUD = 34,
 
-    ICON_VIEW = 41,
-    ICON_MATERIAL = 42,
+    ICON_TOOLS = 41,
+    ICON_PALETTE = 42,
+    ICON_LAYERS = 43,
+    ICON_RENDER = 44,
+    ICON_CAMERA = 45,
+    ICON_IMAGE = 46,
+    ICON_EXPORT = 47,
+    ICON_DEBUG = 48,
+
+    ICON_VIEW = 49,
+    ICON_MATERIAL = 50,
 };
-
 
 /*
  * Some icons have their color blended depending on the style.  We define
  * them with a range in the icons atlas:
  */
 #define ICON_COLORIZABLE_START 17
-#define ICON_COLORIZABLE_END   33
-
+#define ICON_COLORIZABLE_END   41
 
 // #### Tool/Operation/Painter #
 
