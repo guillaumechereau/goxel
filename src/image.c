@@ -158,6 +158,8 @@ image_t *image_new(void)
     DL_APPEND(img->layers, layer);
     DL_APPEND2(img->history, img, history_prev, history_next);
     img->active_layer = layer;
+    // Prevent saving an empty image.
+    img->saved_key = image_get_key(img);
     return img;
 }
 
