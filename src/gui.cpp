@@ -660,6 +660,10 @@ static void layers_panel(void)
         mesh_crop(layer->mesh, layer->box);
         goxel_update_meshes(-1);
     }
+    if (!box_is_null(goxel.image->box) && gui_button("Crop to image", 1, 0)) {
+        mesh_crop(layer->mesh, goxel.image->box);
+        goxel_update_meshes(-1);
+    }
     gui_group_end();
     auto_adjust_panel_size();
 
