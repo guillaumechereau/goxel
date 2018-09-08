@@ -34,15 +34,7 @@ void on_scroll(GLFWwindow *win, double x, double y)
 
 void on_char(GLFWwindow *win, unsigned int c)
 {
-    int i;
-    if (c > 0 && c < 0x10000) {
-        for (i = 0; i < ARRAY_SIZE(g_inputs->chars); i++) {
-            if (!g_inputs->chars[i]) {
-                g_inputs->chars[i] = c;
-                break;
-            }
-        }
-    }
+    inputs_insert_char(g_inputs, c);
 }
 
 typedef struct

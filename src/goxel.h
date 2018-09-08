@@ -1290,6 +1290,8 @@ typedef struct inputs
     int         framebuffer; // Screen framebuffer
 } inputs_t;
 
+// Conveniance function to add a char in the inputs.
+void inputs_insert_char(inputs_t *inputs, uint32_t c);
 
 
 /* #########################################

@@ -58,6 +58,20 @@ static bool unproject_delta(const float win[3], const float model[4][4],
     return true;
 }
 
+// Conveniance function to add a char in the inputs.
+void inputs_insert_char(inputs_t *inputs, uint32_t c)
+{
+    int i;
+    if (c > 0 && c < 0x10000) {
+        for (i = 0; i < ARRAY_SIZE(inputs->chars); i++) {
+            if (!inputs->chars[i]) {
+                inputs->chars[i] = c;
+                break;
+            }
+        }
+    }
+}
+
 // XXX: lot of cleanup to do here.
 static bool goxel_unproject_on_plane(
         const float viewport[4], const float pos[2], const float plane[4][4],
