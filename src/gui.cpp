@@ -127,7 +127,6 @@ typedef struct gui_t {
     int     current_panel;
     view_t  view;
     int     min_panel_size;
-    bool    use_cycles;
     struct {
         gesture_t drag;
         gesture_t hover;
