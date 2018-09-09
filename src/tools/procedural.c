@@ -190,27 +190,29 @@ static int gui(tool_t *tool)
         }
         gui_enabled_end();
     }
-    gui_same_line();
-    if (gui_checkbox("Auto", &p->auto_run, NULL))
-        proc_parse(p->prog_buff, proc);
-    gui_same_line();
+    if (!DEFINED(GOXEL_MOBILE)) {
+        gui_same_line();
+        if (gui_checkbox("Auto", &p->auto_run, NULL))
+            proc_parse(p->prog_buff, proc);
+        gui_same_line();
 
-    if (gui_button("Export Animation", 0, 0)) {
-        dir_path = noc_file_dialog_open(
-                    NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
-                    NULL, NULL, NULL);
-        if (dir_path) {
-            mesh_clear(goxel.image->active_layer->mesh);
-            proc_start(proc, NULL);
-            p->export_animation = true;
-            sprintf(p->export_animation_path, "%s", dir_path);
+        if (gui_button("Export Animation", 0, 0)) {
+            dir_path = noc_file_dialog_open(
+                        NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
+                        NULL, NULL, NULL);
+            if (dir_path) {
+                mesh_clear(goxel.image->active_layer->mesh);
+                proc_start(proc, NULL);
+                p->export_animation = true;
+                sprintf(p->export_animation_path, "%s", dir_path);
+            }
         }
-    }
 
-    if (*p->prog_path) gui_text(p->prog_path);
-    if (gui_button("Load", 0, 0)) load(p);
-    gui_same_line();
-    if (gui_button("Save", 0, 0)) save(p);
+        if (*p->prog_path) gui_text(p->prog_path);
+        if (gui_button("Load", 0, 0)) load(p);
+        gui_same_line();
+        if (gui_button("Save", 0, 0)) save(p);
+    }
 
     if (gui_combo("Examples", &p->current,
                     (const char**)p->names, p->nb_progs)) {
