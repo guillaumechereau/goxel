@@ -1060,7 +1060,6 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
         case 4:
             if (name) *name = "Half smooth";
             out->smoothness = 0.2;
-            out->effects = EFFECT_BORDERS_ALL;
             break;
         case 5:
             if (name) *name = "Marching";
