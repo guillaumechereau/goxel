@@ -19,6 +19,10 @@
 
 #include "goxel.h"
 
+#ifndef RENDER_CACHE_SIZE
+#   define RENDER_CACHE_SIZE (1 * GB)
+#endif
+
 /*
  * The rendering is delayed from the time we call the different render
  * functions.  This allows to call `render_xxx` anywhere in the code, without
@@ -362,7 +366,7 @@ void render_init()
     init_bump_texture();
 
     // XXX: pick the proper memory size according to what is available.
-    g_items_cache = cache_create(1 * GB);
+    g_items_cache = cache_create(RENDER_CACHE_SIZE);
     g_cube_model = model3d_cube();
     g_line_model = model3d_line();
     g_wire_cube_model = model3d_wire_cube();
