@@ -832,7 +832,6 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     renderer_t rend = goxel.rend;
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *tmp_buf;
-    uint8_t clear_color[4] = {0, 0, 0, 0};
 
     camera.aspect = (float)w / h;
     camera_update(&camera);
@@ -846,7 +845,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     rend.scale = 1.0;
 
     render_mesh(&rend, mesh, 0);
-    render_submit(&rend, rect, clear_color);
+    render_submit(&rend, rect, (bpp == 3) ? goxel.back_color : NULL);
     tmp_buf = calloc(w * h * 4, bpp);
     texture_get_data(fbo, w * 2, h * 2, bpp, tmp_buf);
     img_downsample(tmp_buf, w * 2, h * 2, bpp, buf);
