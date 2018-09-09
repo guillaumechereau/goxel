@@ -163,6 +163,7 @@ static int iter(tool_t *tool, const float viewport[4])
 {
     tool_shape_t *shape = (tool_shape_t*)tool;
     cursor_t *curs = &goxel.cursor;
+    curs->snap_mask |= SNAP_ROUNDED;
     curs->snap_offset = (goxel.painter.mode == MODE_OVER) ? 0.5 : -0.5;
 
     if (!shape->mesh_orig)
