@@ -584,6 +584,9 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     set_flag(&goxel.cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel.cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
 
+    // Need to set the cursor snap mask to default because the tool might
+    // change it.
+    goxel.cursor.snap_mask = goxel.snap_mask;
     goxel.painter.box = !box_is_null(goxel.image->active_layer->box) ?
                          &goxel.image->active_layer->box :
                          !box_is_null(goxel.image->box) ?
