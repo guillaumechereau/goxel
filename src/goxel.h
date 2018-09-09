@@ -1787,6 +1787,7 @@ void gui_render(void);
 bool gui_collapsing_header(const char *label);
 void gui_text(const char *label, ...);
 bool gui_button(const char *label, float w, int icon);
+bool gui_button_right(const char *label, int icon);
 void gui_group_begin(const char *label);
 void gui_group_end(void);
 bool gui_checkbox(const char *label, bool *v, const char *hint);
@@ -1812,6 +1813,9 @@ float gui_get_avail_width(void);
 void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
+// Add an icon in top left corner of last item.
+void gui_floating_icon(int icon);
+
 void gui_alert(const char *title, const char *msg);
 
 void gui_columns(int count);

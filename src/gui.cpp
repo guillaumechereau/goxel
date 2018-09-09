@@ -938,6 +938,7 @@ static void image_panel(void)
         }
     }
     if (bounded) gui_bbox(*box);
+    auto_adjust_panel_size();
 }
 
 static void cameras_panel(void)
@@ -993,7 +994,8 @@ static void cameras_panel(void)
 static void debug_panel(void)
 {
     ImGui::Text("FPS: %d", (int)round(goxel.fps));
-    gui_checkbox("Show wireframe", &goxel.show_wireframe, NULL);
+    if (!DEFINED(GLES2))
+        gui_checkbox("Show wireframe", &goxel.show_wireframe, NULL);
 }
 
 static void import_image_plane(void)
@@ -1860,6 +1862,19 @@ bool gui_button(const char *label, float size, int icon)
     return ret;
 }
 
+bool gui_button_right(const char *label, int icon)
+{
+    const theme_t *theme = theme_get();
+    float text_size = ImGui::CalcTextSize(label).x;
+    float w = text_size + 2 * theme->sizes.item_padding_h;
+    w = max(w, theme->sizes.item_height);
+    w += theme->sizes.item_padding_h;
+    gui_same_line();
+    ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - w, 0));
+    gui_same_line();
+    return gui_button(label, 0, icon);
+}
+
 bool gui_input_text(const char *label, char *txt, int size)
 {
     return InputText(label, txt, size);
@@ -2008,6 +2023,18 @@ void gui_push_id(const char *id)
 void gui_pop_id(void)
 {
     ImGui::PopID();
+}
+
+void gui_floating_icon(int icon)
+{
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 uv0, uv1, pos;
+    uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
+    uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
+    pos = GetItemRectMin();
+    draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
+            pos, pos + ImVec2(32, 32),
+            uv0, uv1, get_icon_color(icon, 0));
 }
 
 }
