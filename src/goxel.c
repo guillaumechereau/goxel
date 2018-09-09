@@ -580,7 +580,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                           &goxel.gestures.pinch,
                           &goxel.gestures.hover};
 
-    gesture_update(4, gests, inputs, viewport, NULL);
+    gesture_update(ARRAY_SIZE(gests), gests, inputs, viewport, NULL);
     set_flag(&goxel.cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel.cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
 
