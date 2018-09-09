@@ -61,5 +61,8 @@ static asset_t ASSETS[] = {
 #include "assets/shaders.inl"
 #include "assets/sounds.inl"
 #include "assets/themes.inl"
+#ifdef ASSETS_EXTRA
+#   include ASSETS_EXTRA // Allow to add custom assets at build time.
+#endif
 {}, // NULL asset at the end of the list.
 };
