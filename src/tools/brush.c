@@ -211,6 +211,9 @@ static int iter(tool_t *tool, const float viewport[4])
 {
     tool_brush_t *brush = (tool_brush_t*)tool;
     cursor_t *curs = &goxel.cursor;
+    // XXX: for the moment we force rounded positions for the brush tool
+    // to make things easier.
+    curs->snap_mask |= SNAP_ROUNDED;
 
     if (!brush->mesh_orig)
         brush->mesh_orig = mesh_copy(goxel.image->active_layer->mesh);
