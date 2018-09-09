@@ -67,21 +67,23 @@ static int iter(tool_t *tool, const float viewport[4])
         };
     }
 
-    // Create the tool box from the camera along the visible ray.
-    mat4_set_identity(laser->box);
-    mat4_invert(goxel.camera.view_mat, view_mat_inv);
-    mat4_mul_vec4(view_mat_inv, VEC(1, 0, 0, 0), v);
-    vec3_copy(v, laser->box[0]);
-    mat4_mul_vec4(view_mat_inv, VEC(0, 1, 0, 0), v);
-    vec3_copy(v, laser->box[1]);
-    mat4_mul_vec4(view_mat_inv, VEC(0, 0, 1, 0), v);
-    vec3_copy(v, laser->box[2]);
-    vec3_neg(curs->normal, laser->box[2]);
-    vec3_copy(curs->pos, laser->box[3]);
-    // Just a large value for the size of the laser box.
-    mat4_itranslate(laser->box, 0, 0, -1024);
-    mat4_iscale(laser->box, goxel.tool_radius, goxel.tool_radius, 1024);
-    render_box(&goxel.rend, laser->box, NULL, EFFECT_WIREFRAME);
+    if (curs->snaped & SNAP_CAMERA) {
+        // Create the tool box from the camera along the visible ray.
+        mat4_set_identity(laser->box);
+        mat4_invert(goxel.camera.view_mat, view_mat_inv);
+        mat4_mul_vec4(view_mat_inv, VEC(1, 0, 0, 0), v);
+        vec3_copy(v, laser->box[0]);
+        mat4_mul_vec4(view_mat_inv, VEC(0, 1, 0, 0), v);
+        vec3_copy(v, laser->box[1]);
+        mat4_mul_vec4(view_mat_inv, VEC(0, 0, 1, 0), v);
+        vec3_copy(v, laser->box[2]);
+        vec3_neg(curs->normal, laser->box[2]);
+        vec3_copy(curs->pos, laser->box[3]);
+        // Just a large value for the size of the laser box.
+        mat4_itranslate(laser->box, 0, 0, -1024);
+        mat4_iscale(laser->box, goxel.tool_radius, goxel.tool_radius, 1024);
+        render_box(&goxel.rend, laser->box, NULL, EFFECT_WIREFRAME);
+    }
 
     gesture3d(&laser->gestures.drag, curs, laser);
 
