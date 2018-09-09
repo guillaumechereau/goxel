@@ -135,6 +135,7 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
     if (gest->type == GESTURE_HOVER) {
         switch (gest->state) {
         case GESTURE_POSSIBLE:
+            if (DEFINED(GOXEL_MOBILE)) break; //Workaround.
             if (nb_ts == 0) {
                 vec2_copy(ts[0].pos, gest->pos);
                 if (rect_contains(gest->viewport, gest->pos)) {
