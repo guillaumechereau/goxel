@@ -81,6 +81,10 @@ sources = glob.glob('src/*.c') + glob.glob('src/*.cpp') + \
           glob.glob('src/formats/*.c') + \
           glob.glob('src/tools/*.c')
 
+# Check for libpng.
+if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
+    env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
+
 # Linux compilation support.
 if target_os == 'posix':
     env.Append(LIBS=['GL', 'm', 'z'])
@@ -116,9 +120,6 @@ env.Append(CPPPATH=['ext_src/noc'])
 sources += glob.glob('ext_src/inih/*.c')
 env.Append(CPPPATH=['ext_src/inih'])
 env.Append(CFLAGS='-DINI_HANDLER_LINENO=1')
-
-if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
-    env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
 
 if sound:
     env.Append(LIBS='openal')
