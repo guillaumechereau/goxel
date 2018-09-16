@@ -44,7 +44,7 @@
 #include <string.h>
 #include <stdarg.h>
 
-#define GOXEL_VERSION_STR "0.8.0"
+#define GOXEL_VERSION_STR "0.8.1"
 #ifndef GOXEL_DEFAULT_THEME
 #   define GOXEL_DEFAULT_THEME "original"
 #endif
