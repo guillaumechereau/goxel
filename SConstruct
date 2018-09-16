@@ -70,7 +70,7 @@ if debug:
     if env['CC'] == 'gcc': env.Append(CCFLAGS='-Og')
 else:
     env.Append(CCFLAGS=['-O3', '-DNDEBUG'])
-    if env['CC'] == 'gcc': env.Append(CCFLAGS='-Ofast')
+    if env['CC'] == 'gcc': env.Append(CFLAGS='-Ofast', CXXFLAGS='-Ofast')
 
 if profile or debug:
     env.Append(CCFLAGS='-g')
