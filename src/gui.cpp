@@ -20,6 +20,10 @@ extern "C" {
 #include "goxel.h"
 }
 
+#ifndef typeof
+#   define typeof __typeof__
+#endif
+
 #define IM_VEC4_CLASS_EXTRA \
         ImVec4(const uint8_t f[4]) { \
             x = f[0] / 255.; \

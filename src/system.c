@@ -29,7 +29,7 @@
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
 
-#if defined(__unix__) && !defined(__EMSCRIPTEN__)
+#if defined(__unix__) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
 #define NOC_FILE_DIALOG_GTK
 #define NOC_FILE_DIALOG_IMPLEMENTATION
 #include "noc_file_dialog.h"
