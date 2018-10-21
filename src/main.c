@@ -207,6 +207,7 @@ int main(int argc, char **argv)
     monitor = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(monitor);
     window = glfwCreateWindow(mode->width, mode->height, "Goxel", NULL, NULL);
+    assert(window);
     g_window = window;
     glfwMakeContextCurrent(window);
     glfwSetScrollCallback(window, on_scroll);
