@@ -552,6 +552,7 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
  */
 typedef struct {
     void *user;
+    void (*log)(void *user, const char *msg);
     void (*set_window_title)(void *user, const char *title);
     const char *(*get_user_dir)(void *user);
     const char *(*get_clipboard_text)(void* user);

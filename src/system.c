@@ -120,8 +120,12 @@ static void init_win(void)
 
 void sys_log(const char *msg)
 {
-    printf("%s\n", msg);
-    fflush(stdout);
+    if (sys_callbacks.log) {
+        sys_callbacks.log(sys_callbacks.user, msg);
+    } else {
+        printf("%s\n", msg);
+        fflush(stdout);
+    }
 }
 
 // List all the files in a directory.
