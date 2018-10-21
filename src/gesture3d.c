@@ -44,7 +44,7 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
         }
     }
 
-    if (gest->type == GESTURE_HOVER) {
+    if (!DEFINED(GOXEL_MOBILE) && gest->type == GESTURE_HOVER) {
         switch (gest->state) {
         case GESTURE_POSSIBLE:
             if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
