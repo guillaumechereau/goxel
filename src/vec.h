@@ -577,6 +577,15 @@ DECL void mat4_irotate(float m[4][4], float a, float x, float y, float z)
     mat4_rotate(m, a, x, y, z, m);
 }
 
+DECL bool mat4_equal(const float a[4][4], const float b[4][4])
+{
+    int i, j;
+    for (i = 0; i < 4; i++)
+        for (j = 0; j < 4; j++)
+            if (a[i][j] != b[i][j]) return false;
+    return true;
+}
+
 DECL void quat_from_axis(float quat[4], float a, float x, float y, float z)
 {
     float sin_angle;
