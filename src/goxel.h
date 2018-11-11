@@ -1500,6 +1500,9 @@ struct layer {
     // For clone layers:
     int         base_id;
     uint64_t    base_mesh_key;
+    // For shape layers.
+    shape_t     *shape;
+    uint64_t    shape_key;
 };
 
 typedef struct image image_t;

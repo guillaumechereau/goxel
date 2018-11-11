@@ -675,6 +675,10 @@ static void layers_panel(void)
         mesh_crop(layer->mesh, goxel.image->box);
         goxel_update_meshes(-1);
     }
+    if (gui_action_button("img_new_shape_layer", "New Shape Layer", 1, "")) {
+        action_exec2("tool_set_move", "");
+    }
+
     gui_group_end();
     auto_adjust_panel_size();
 
@@ -687,7 +691,7 @@ static void layers_panel(void)
     if (layer->image) {
         gui_action_button("img_image_layer_to_mesh", "To Mesh", 1, "");
     }
-    if (ImGui::Checkbox("Bounded", &bounded)) {
+    if (!layer->shape && ImGui::Checkbox("Bounded", &bounded)) {
         if (bounded) {
             mesh_get_bbox(layer->mesh, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
@@ -696,7 +700,9 @@ static void layers_panel(void)
             mat4_copy(mat4_zero, layer->box);
         }
     }
-    if (bounded) gui_bbox(layer->box);
+    if (bounded) {
+        if (gui_bbox(layer->box)) goxel_update_meshes(-1);
+    }
 }
 
 static void view_panel(void)

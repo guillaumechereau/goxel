@@ -116,13 +116,29 @@ static layer_t *layer_clone(layer_t *other)
 // Make sure the layer mesh is up to date.
 void image_update(image_t *img)
 {
+    painter_t painter = {};
+    uint64_t key;
     layer_t *layer, *base;
+
     DL_FOREACH(img->layers, layer) {
         base = img_get_layer(img, layer->base_id);
         if (base && layer->base_mesh_key != mesh_get_key(base->mesh)) {
             mesh_set(layer->mesh, base->mesh);
             mesh_move(layer->mesh, layer->mat);
             layer->base_mesh_key = mesh_get_key(base->mesh);
+        }
+        if (layer->shape) {
+            key = crc64(0, layer->mat, sizeof(layer->mat));
+            key = crc64(key, layer->shape, sizeof(layer->shape));
+            if (key != layer->shape_key) {
+                painter.mode = MODE_OVER;
+                painter.shape = layer->shape;
+                painter.box = &goxel.image->box;
+                vec4_set(painter.color, 255, 255, 255, 255);
+                mesh_clear(layer->mesh);
+                mesh_op(layer->mesh, &painter, layer->mat);
+                layer->shape_key = key;
+            }
         }
     }
 }
@@ -210,6 +226,19 @@ layer_t *image_add_layer(image_t *img)
     img = img ?: goxel.image;
     layer = layer_new(img, "unnamed");
     layer->visible = true;
+    DL_APPEND(img->layers, layer);
+    img->active_layer = layer;
+    return layer;
+}
+
+layer_t *image_add_shape_layer(image_t *img)
+{
+    layer_t *layer;
+    img = img ?: goxel.image;
+    layer = layer_new(img, "shape");
+    layer->visible = true;
+    layer->shape = &shape_sphere;
+    mat4_iscale(layer->mat, 4, 4, 4);
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
     return layer;
@@ -662,5 +691,12 @@ ACTION_REGISTER(img_image_layer_to_mesh,
     .help = "Turn an image layer into a mesh",
     .cfunc = image_image_layer_to_mesh,
     .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_new_shape_layer,
+    .help = "Add a new shape layer to the image",
+    .cfunc = image_add_shape_layer,
+    .csig = "vp",
     .flags = ACTION_TOUCH_IMAGE,
 )
