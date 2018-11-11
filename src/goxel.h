@@ -1911,6 +1911,15 @@ void cycles_release(void);
 void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
                    float *progress, bool force_restart);
 
+// Section: box_edit
+/*
+ * Function: gox_edit
+ * Render a box that can be edited with the mouse.
+ *
+ * This is used for the move and selection tools.
+ */
+int box_edit(float box[4][4], float transf[4][4], int flags, bool *first);
+
 // Section: tests
 
 /* Function: tests_run
