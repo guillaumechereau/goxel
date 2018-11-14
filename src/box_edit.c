@@ -20,6 +20,7 @@
 
 typedef struct data
 {
+    int snap;
     float box[4][4];
     float transf[4][4];
     int snap_face;
@@ -54,7 +55,7 @@ static int on_move(gesture3d_t *gest, void *user)
 
     if (gest->type == GESTURE_HOVER) {
         goxel_set_help_text("Drag to move face");
-        if (curs->snaped != SNAP_LAYER_OUT) return GESTURE_FAILED;
+        if (curs->snaped != data->snap) return GESTURE_FAILED;
         data->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
@@ -99,9 +100,16 @@ static int on_move(gesture3d_t *gest, void *user)
     return 0;
 }
 
-int box_edit(float box[4][4], float transf[4][4], int flags, bool *first)
+int box_edit(int snap, float transf[4][4], bool *first)
 {
     cursor_t *curs = &goxel.cursor;
+    float box[4][4];
+
+    assert (snap == SNAP_LAYER_OUT); // Selection not implemented yet.
+    if (snap == SNAP_LAYER_OUT) {
+        curs->snap_mask = SNAP_LAYER_OUT;
+        mesh_get_box(goxel.image->active_layer->mesh, true, box);
+    }
 
     if (!g_data.gesture.type) {
         g_data.gesture = (gesture3d_t) {
@@ -109,6 +117,7 @@ int box_edit(float box[4][4], float transf[4][4], int flags, bool *first)
             .callback = on_move,
         };
     }
+    g_data.snap = snap;
     mat4_copy(box, g_data.box);
     gesture3d(&g_data.gesture, curs, &g_data);
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);

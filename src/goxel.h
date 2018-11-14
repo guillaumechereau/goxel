@@ -1917,8 +1917,17 @@ void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
  * Render a box that can be edited with the mouse.
  *
  * This is used for the move and selection tools.
+ * Still a bit experimental.  In theory we should be able to edit any box,
+ * but because of the snap mechanism, we can only edit the layer or selection
+ * for the moment.
+ *
+ * Parameters:
+ *   snap   - SNAP_LAYER_OUT for layer edit, SNAP_SELECTION_OUT for selection
+ *            edit.
+ *   transf - Receive the output transformation.
+ *   first  - Set to true if the edit is the first one.
  */
-int box_edit(float box[4][4], float transf[4][4], int flags, bool *first);
+int box_edit(int snap, float transf[4][4], bool *first);
 
 // Section: tests
 

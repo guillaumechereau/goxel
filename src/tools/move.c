@@ -49,18 +49,13 @@ static void do_move(layer_t *layer, const float mat[4][4])
 
 static int iter(tool_t *tool, const float viewport[4])
 {
-    float transf[4][4], box[4][4];
+    float transf[4][4];
     bool first;
     layer_t *layer = goxel.image->active_layer;
-    cursor_t *curs = &goxel.cursor;
-    curs->snap_mask = SNAP_LAYER_OUT;
-
-    mesh_get_box(layer->mesh, true, box);
-    if (box_edit(box, transf, 0, &first)) {
+    if (box_edit(SNAP_LAYER_OUT, transf, &first)) {
         if (first) image_history_push(goxel.image);
         do_move(layer, transf);
     }
-
     return 0;
 }
 
