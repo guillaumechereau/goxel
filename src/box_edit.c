@@ -21,11 +21,12 @@
 typedef struct data
 {
     int snap;
+    int mode; // 0: move, 1: resize.
     float box[4][4];
     float transf[4][4];
     int snap_face;
     gesture3d_t gesture;
-    int state; // 0 init, 1 first change, 2 following changes.
+    int state; // 0: init, 1: snaped, 2: first change, 3: following changes.
 } data_t;
 
 static data_t g_data = {};
@@ -44,18 +45,30 @@ static int get_face(const float n[3])
     return -1;
 }
 
+static void get_transf(const float src[4][4], const float dst[4][4],
+                       float out[4][4])
+{
+    mat4_invert(src, out);
+    mat4_mul(dst, out, out);
+}
+
 static int on_move(gesture3d_t *gest, void *user)
 {
     data_t *data = (void*)user;
     float face_plane[4][4];
     cursor_t *curs = gest->cursor;
-    float n[3], pos[3], d[3], ofs[3], v[3];
+    float n[3], pos[3], d[3], ofs[3], v[3], box[4][4];
 
+    mat4_set_identity(data->transf);
     if (box_is_null(data->box)) return GESTURE_FAILED;
 
     if (gest->type == GESTURE_HOVER) {
         goxel_set_help_text("Drag to move face");
-        if (curs->snaped != data->snap) return GESTURE_FAILED;
+        if (curs->snaped != data->snap) {
+            data->state = 0;
+            return GESTURE_FAILED;
+        }
+        data->state = 1; // Snaped.
         data->snap_face = get_face(curs->normal);
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
@@ -65,13 +78,14 @@ static int on_move(gesture3d_t *gest, void *user)
             gest->type = GESTURE_DRAG;
             vec3_normalize(face_plane[0], v);
             plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
-            data->state = 0;
+            data->state = 2; // First change.
         }
         return 0;
     }
     if (gest->type == GESTURE_DRAG) {
         goxel_set_help_text("Drag to move face");
 
+        data->state = 3;
         curs->snap_offset = 0;
         curs->snap_mask &= ~SNAP_ROUNDED;
         mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
@@ -83,14 +97,17 @@ static int on_move(gesture3d_t *gest, void *user)
         pos[0] = round(pos[0]);
         pos[1] = round(pos[1]);
         pos[2] = round(pos[2]);
-        vec3_add(data->box[3], face_plane[2], d);
-        vec3_sub(pos, d, ofs);
-        vec3_project(ofs, n, ofs);
-        vec3_iadd(data->box[3], ofs);
-
-        mat4_set_identity(data->transf);
-        mat4_itranslate(data->transf, ofs[0], ofs[1], ofs[2]);
-
+        if (data->mode == 1) { // Resize
+            box_move_face(data->box, data->snap_face, pos, box);
+            get_transf(data->box, box, data->transf);
+        } else { // Move
+            vec3_add(data->box[3], face_plane[2], d);
+            vec3_sub(pos, d, ofs);
+            vec3_project(ofs, n, ofs);
+            vec3_iadd(data->box[3], ofs);
+            mat4_set_identity(data->transf);
+            mat4_itranslate(data->transf, ofs[0], ofs[1], ofs[2]);
+        }
         if (gest->state == GESTURE_END) {
             gest->type = GESTURE_HOVER;
             mat4_copy(plane_null, goxel.tool_plane);
@@ -100,15 +117,19 @@ static int on_move(gesture3d_t *gest, void *user)
     return 0;
 }
 
-int box_edit(int snap, float transf[4][4], bool *first)
+int box_edit(int snap, int mode, float transf[4][4], bool *first)
 {
     cursor_t *curs = &goxel.cursor;
     float box[4][4];
+    int ret;
 
-    assert (snap == SNAP_LAYER_OUT); // Selection not implemented yet.
     if (snap == SNAP_LAYER_OUT) {
         curs->snap_mask = SNAP_LAYER_OUT;
         mesh_get_box(goxel.image->active_layer->mesh, true, box);
+    }
+    if (snap == SNAP_SELECTION_OUT) {
+        curs->snap_mask |= SNAP_SELECTION_OUT;
+        mat4_copy(goxel.selection, box);
     }
 
     if (!g_data.gesture.type) {
@@ -118,12 +139,20 @@ int box_edit(int snap, float transf[4][4], bool *first)
         };
     }
     g_data.snap = snap;
+    g_data.mode = mode;
     mat4_copy(box, g_data.box);
     gesture3d(&g_data.gesture, curs, &g_data);
+    ret = g_data.state;
+
+    if (    g_data.gesture.type == GESTURE_DRAG &&
+            !(curs->flags & CURSOR_PRESSED)) {
+        g_data.gesture.type = GESTURE_HOVER;
+        mat4_copy(plane_null, goxel.tool_plane);
+    }
+
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
-    if (mat4_equal(g_data.box, box)) return 0;
     if (transf) mat4_copy(g_data.transf, transf);
-    g_data.state = g_data.state == 0 ? 1 : 2;
-    if (first) *first = g_data.state == 1;
-    return 1;
+    if (first) *first = g_data.state == 2;
+    if (g_data.state == 2) g_data.state = 3;
+    return ret;
 }

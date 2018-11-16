@@ -36,7 +36,6 @@ typedef struct {
     struct {
         gesture3d_t hover;
         gesture3d_t drag;
-        gesture3d_t resize;
     } gestures;
 
 } tool_selection_t;
@@ -87,20 +86,6 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
 }
 
 
-// Get the face index from the normal.
-// XXX: used in a few other places!
-static int get_face(const float n[3])
-{
-    int f;
-    const int *n2;
-    for (f = 0; f < 6; f++) {
-        n2 = FACES_NORMALS[f];
-        if (vec3_dot(n, VEC(n2[0], n2[1], n2[2])) > 0.5)
-            return f;
-    }
-    return -1;
-}
-
 static int on_hover(gesture3d_t *gest, void *user)
 {
     float box[4][4];
@@ -110,65 +95,6 @@ static int on_hover(gesture3d_t *gest, void *user)
     goxel_set_help_text("Click and drag to set selection.");
     get_box(curs->pos, curs->pos, curs->normal, 0, goxel.plane, box);
     render_box(&goxel.rend, box, box_color, EFFECT_WIREFRAME);
-    return 0;
-}
-
-static int on_resize(gesture3d_t *gest, void *user)
-{
-    float face_plane[4][4];
-    cursor_t *curs = gest->cursor;
-    tool_selection_t *tool = user;
-    float n[3], pos[3], v[3];
-
-    if (box_is_null(goxel.selection)) return GESTURE_FAILED;
-
-    if (gest->type == GESTURE_HOVER) {
-        goxel_set_help_text("Drag to move face");
-        if (curs->snaped != SNAP_SELECTION_OUT) return GESTURE_FAILED;
-        tool->snap_face = get_face(curs->normal);
-        curs->snap_offset = 0;
-        curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(goxel.selection, FACES_MATS[tool->snap_face],
-                 face_plane);
-        render_img(&goxel.rend, NULL, face_plane, EFFECT_NO_SHADING);
-        if (curs->flags & CURSOR_PRESSED) {
-            gest->type = GESTURE_DRAG;
-            vec3_normalize(face_plane[0], v);
-            plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
-        }
-        return 0;
-    }
-    if (gest->type == GESTURE_DRAG) {
-        goxel_set_help_text("Drag to move face");
-        curs->snap_offset = 0;
-        curs->snap_mask &= ~SNAP_ROUNDED;
-        mat4_mul(goxel.selection, FACES_MATS[tool->snap_face],
-                 face_plane);
-
-        vec3_normalize(face_plane[2], n);
-        vec3_sub(curs->pos, goxel.tool_plane[3], v);
-        vec3_project(v, n, v);
-        vec3_add(goxel.tool_plane[3], v, pos);
-        pos[0] = round(pos[0]);
-        pos[1] = round(pos[1]);
-        pos[2] = round(pos[2]);
-        if (g_drag_mode == DRAG_RESIZE) {
-            box_move_face(goxel.selection, tool->snap_face, pos,
-                          goxel.selection);
-        } else {
-            float d[3], ofs[3];
-            vec3_add(goxel.selection[3], face_plane[2], d);
-            vec3_sub(pos, d, d);
-            vec3_project(d, n, ofs);
-            vec3_iadd(goxel.selection[3], ofs);
-        }
-
-        if (gest->state == GESTURE_END) {
-            gest->type = GESTURE_HOVER;
-            mat4_copy(plane_null, goxel.tool_plane);
-        }
-        return 0;
-    }
     return 0;
 }
 
@@ -211,6 +137,8 @@ static int on_drag(gesture3d_t *gest, void *user)
 // XXX: this is very close to tool_shape_iter.
 static int iter(tool_t *tool, const float viewport[4])
 {
+    float transf[4][4];
+
     tool_selection_t *selection = (tool_selection_t*)tool;
     cursor_t *curs = &goxel.cursor;
     curs->snap_mask |= SNAP_ROUNDED;
@@ -227,15 +155,16 @@ static int iter(tool_t *tool, const float viewport[4])
             .type = GESTURE_DRAG,
             .callback = on_drag,
         };
-        selection->gestures.resize = (gesture3d_t) {
-            .type = GESTURE_HOVER,
-            .callback = on_resize,
-        };
     }
     selection->gestures.drag.type = (!selection->adjust) ?
         GESTURE_DRAG : GESTURE_HOVER;
 
-    if (gesture3d(&selection->gestures.resize, curs, selection)) goto end;
+    if (box_edit(SNAP_SELECTION_OUT, g_drag_mode == DRAG_RESIZE ? 1 : 0,
+                 transf, NULL)) {
+        mat4_mul(transf, goxel.selection, goxel.selection);
+        return 0;
+    }
+
     if (gesture3d(&selection->gestures.drag, curs, selection)) goto end;
     if (gesture3d(&selection->gestures.hover, curs, selection)) goto end;
 

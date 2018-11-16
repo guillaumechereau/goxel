@@ -52,7 +52,7 @@ static int iter(tool_t *tool, const float viewport[4])
     float transf[4][4];
     bool first;
     layer_t *layer = goxel.image->active_layer;
-    if (box_edit(SNAP_LAYER_OUT, transf, &first)) {
+    if (box_edit(SNAP_LAYER_OUT, 0, transf, &first)) {
         if (first) image_history_push(goxel.image);
         do_move(layer, transf);
     }

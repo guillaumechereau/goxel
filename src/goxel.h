@@ -1924,10 +1924,11 @@ void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
  * Parameters:
  *   snap   - SNAP_LAYER_OUT for layer edit, SNAP_SELECTION_OUT for selection
  *            edit.
+ *   mode   - 0: move, 1: resize.
  *   transf - Receive the output transformation.
  *   first  - Set to true if the edit is the first one.
  */
-int box_edit(int snap, float transf[4][4], bool *first);
+int box_edit(int snap, int mode, float transf[4][4], bool *first);
 
 // Section: tests
 
