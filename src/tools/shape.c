@@ -24,6 +24,7 @@ typedef struct {
     float  start_pos[3];
     mesh_t *mesh_orig;
     bool   adjust;
+    bool   planar; // Stay on the original plane.
 
     struct {
         gesture3d_t drag;
@@ -95,7 +96,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = user;
     mesh_t *layer_mesh = goxel.image->active_layer->mesh;
-    float box[4][4];
+    float box[4][4], pos[3];
     cursor_t *curs = gest->cursor;
 
     if (shape->adjust) return GESTURE_FAILED;
@@ -104,6 +105,10 @@ static int on_drag(gesture3d_t *gest, void *user)
         mesh_set(shape->mesh_orig, layer_mesh);
         vec3_copy(curs->pos, shape->start_pos);
         image_history_push(goxel.image);
+        if (shape->planar) {
+            vec3_addk(curs->pos, curs->normal, -curs->snap_offset, pos);
+            plane_from_normal(goxel.tool_plane, pos, curs->normal);
+        }
     }
 
     goxel_set_help_text("Drag.");
@@ -119,6 +124,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         goxel.tool_mesh = NULL;
         goxel_update_meshes(-1);
         shape->adjust = goxel.tool_shape_two_steps;
+        mat4_copy(plane_null, goxel.tool_plane);
     }
     return 0;
 }
@@ -196,10 +202,12 @@ static int iter(tool_t *tool, const float viewport[4])
 
 static int gui(tool_t *tool)
 {
+    tool_shape_t *tool_shape = (void*)tool;
     tool_gui_smoothness();
     if (!DEFINED(GOXEL_MOBILE))
         gui_checkbox("Two steps", &goxel.tool_shape_two_steps,
                      "Second click set the height");
+    gui_checkbox("Planar", &tool_shape->planar, "Stay on original plane");
     tool_gui_snap();
     tool_gui_shape();
     tool_gui_symmetry();
