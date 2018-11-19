@@ -245,7 +245,13 @@ layer_t *image_add_shape_layer(image_t *img)
     layer->visible = true;
     layer->shape = &shape_sphere;
     vec4_copy(goxel.painter.color, layer->color);
-    mat4_iscale(layer->mat, 4, 4, 4);
+    // If the selection is on use it, otherwise center it in the image.
+    if (!box_is_null(goxel.selection)) {
+        mat4_copy(goxel.selection, layer->mat);
+    } else {
+        vec3_copy(img->box[3], layer->mat[3]);
+        mat4_iscale(layer->mat, 4, 4, 4);
+    }
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
     return layer;
