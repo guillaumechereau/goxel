@@ -130,11 +130,12 @@ void image_update(image_t *img)
         if (layer->shape) {
             key = crc64(0, layer->mat, sizeof(layer->mat));
             key = crc64(key, layer->shape, sizeof(layer->shape));
+            key = crc64(key, layer->color, sizeof(layer->color));
             if (key != layer->shape_key) {
                 painter.mode = MODE_OVER;
                 painter.shape = layer->shape;
                 painter.box = &goxel.image->box;
-                vec4_set(painter.color, 255, 255, 255, 255);
+                vec4_copy(layer->color, painter.color);
                 mesh_clear(layer->mesh);
                 mesh_op(layer->mesh, &painter, layer->mat);
                 layer->shape_key = key;
@@ -158,6 +159,8 @@ static uint64_t layer_get_key(const layer_t *layer)
     key = crc64(key, &layer->name, sizeof(layer->name));
     key = crc64(key, &layer->box, sizeof(layer->box));
     key = crc64(key, &layer->mat, sizeof(layer->mat));
+    key = crc64(key, &layer->shape, sizeof(layer->shape));
+    key = crc64(key, &layer->color, sizeof(layer->color));
     return key;
 }
 
@@ -238,6 +241,7 @@ layer_t *image_add_shape_layer(image_t *img)
     layer = layer_new(img, "shape");
     layer->visible = true;
     layer->shape = &shape_sphere;
+    vec4_copy(goxel.painter.color, layer->color);
     mat4_iscale(layer->mat, 4, 4, 4);
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;

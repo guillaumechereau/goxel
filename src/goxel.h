@@ -1503,6 +1503,7 @@ struct layer {
     // For shape layers.
     const shape_t *shape;
     uint64_t    shape_key;
+    uint8_t     color[4];
 };
 
 typedef struct image image_t;

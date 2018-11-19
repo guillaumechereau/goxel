@@ -630,6 +630,8 @@ static void layers_panel(void)
     layer_t *layer;
     int i = 0, icon, bbox[2][3];
     bool current, visible, bounded;
+    uint64_t key;
+
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->layers, layer) {
         current = goxel.image->active_layer == layer;
@@ -705,7 +707,11 @@ static void layers_panel(void)
     }
 
     if (layer->shape) {
-        if (tool_gui_shape(&layer->shape)) goxel_update_meshes(-1);
+        key = image_get_key(goxel.image);
+        tool_gui_shape(&layer->shape);
+        gui_color("##color", layer->color);
+        // XXX: this should be automatic.
+        if (image_get_key(goxel.image) != key) goxel_update_meshes(-1);
     }
 }
 
