@@ -355,6 +355,7 @@ void image_merge_visible_layers(image_t *img)
     img = img ?: goxel.image;
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
+        image_unclone_layer(img, layer);
         if (last) {
             mesh_merge(layer->mesh, last->mesh, MODE_OVER, NULL);
             DL_DELETE(img->layers, last);
