@@ -95,6 +95,9 @@ static layer_t *layer_copy(layer_t *other)
     layer->id = other->id;
     layer->base_id = other->base_id;
     layer->base_mesh_key = other->base_mesh_key;
+    layer->shape = other->shape;
+    layer->shape_key = other->shape_key;
+    memcpy(layer->color, other->color, sizeof(layer->color));
     return layer;
 }
 
