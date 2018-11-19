@@ -69,7 +69,10 @@ static int on_hover(gesture3d_t *gest, void *user)
     data->snap_face = get_face(curs->normal);
     curs->snap_offset = 0;
     curs->snap_mask &= ~SNAP_ROUNDED;
+    // Render a white box on the side.
+    // XXX: replace that with something better like an arrow.
     mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
+    mat4_itranslate(face_plane, 0, 0, 0.001);
     render_img(&goxel.rend, NULL, face_plane, EFFECT_NO_SHADING);
     return 0;
 }
