@@ -23,6 +23,7 @@ typedef struct data
     int snap;
     int mode; // 0: move, 1: resize.
     float box[4][4];
+    float start_box[4][4];
     float transf[4][4];
     int snap_face;
     struct {
@@ -90,6 +91,7 @@ static int on_drag(gesture3d_t *gest, void *user)
             data->state = 0;
             return GESTURE_FAILED;
         }
+        mat4_copy(data->box, data->start_box);
         data->state = 2;
         data->snap_face = get_face(curs->normal);
         mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
@@ -103,7 +105,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     curs->snap_offset = 0;
     curs->snap_mask &= ~SNAP_ROUNDED;
 
-    mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
+    mat4_mul(data->start_box, FACES_MATS[data->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
     vec3_sub(curs->pos, goxel.tool_plane[3], v);
     vec3_project(v, n, v);
@@ -113,7 +115,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     pos[2] = round(pos[2]);
 
     if (data->mode == 1) { // Resize
-        box_move_face(data->box, data->snap_face, pos, box);
+        box_move_face(data->start_box, data->snap_face, pos, box);
+        if (box_get_volume(box) == 0) return 0;
         get_transf(data->box, box, data->transf);
     } else { // Move
         vec3_add(data->box[3], face_plane[2], d);
