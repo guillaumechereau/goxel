@@ -516,7 +516,7 @@ void image_clear_layer(layer_t *layer, const float box[4][4])
 
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)
 {
-    return !layer->base_id && !layer->image;
+    return !layer->base_id && !layer->image && !layer->shape;
 }
 
 /*
