@@ -708,6 +708,7 @@ static void layers_panel(void)
 
     if (layer->shape) {
         key = image_get_key(goxel.image);
+        tool_gui_drag_mode(&goxel.tool_drag_mode);
         tool_gui_shape(&layer->shape);
         gui_color("##color", layer->color);
         // XXX: this should be automatic.

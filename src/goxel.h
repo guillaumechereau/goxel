@@ -1693,6 +1693,7 @@ typedef struct goxel
     // Some state for the tool iter functions.
     float      tool_plane[4][4];
     bool       tool_shape_two_steps; // Param of the shape tool.
+    int        tool_drag_mode; // 0: move, 1: resize.
 
     float      selection[4][4];   // The selection box.
 
