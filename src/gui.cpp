@@ -636,7 +636,7 @@ static void layers_panel(void)
     DL_FOREACH(goxel.image->layers, layer) {
         current = goxel.image->active_layer == layer;
         visible = layer->visible;
-        icon = layer->base_id ? ICON_LINK : -1;
+        icon = layer->base_id ? ICON_LINK : layer->shape ? ICON_SHAPE : -1;
         layer_item(i, icon, &visible, &current,
                    layer->name, sizeof(layer->name));
         if (current && goxel.image->active_layer != layer) {

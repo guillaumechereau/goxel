@@ -797,6 +797,7 @@ enum {
 
     ICON_SETTINGS = 33,
     ICON_CLOUD = 34,
+    ICON_SHAPE = 35,
 
     ICON_TOOLS = 41,
     ICON_PALETTE = 42,
