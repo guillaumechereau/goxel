@@ -134,7 +134,7 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) gui_same_line();
 }
 
-int tool_gui_shape(void)
+int tool_gui_shape(const shape_t **shape)
 {
     struct {
         const char  *name;
@@ -145,19 +145,21 @@ int tool_gui_shape(void)
         {"Cube", &shape_cube, ICON_SHAPE_CUBE},
         {"Cylinder", &shape_cylinder, ICON_SHAPE_CYLINDER},
     };
-    int i;
+    shape = shape ?: &goxel.painter.shape;
+    int i, ret = 0;
     bool v;
     gui_text("Shape");
     gui_group_begin(NULL);
     for (i = 0; i < (int)ARRAY_SIZE(shapes); i++) {
-        v = goxel.painter.shape == shapes[i].shape;
+        v = *shape == shapes[i].shape;
         if (gui_selectable_icon(shapes[i].name, &v, shapes[i].icon)) {
-            goxel.painter.shape = shapes[i].shape;
+            *shape = shapes[i].shape;
+            ret = 1;
         }
         auto_grid(ARRAY_SIZE(shapes), i, 4);
     }
     gui_group_end();
-    return 0;
+    return ret;
 }
 
 int tool_gui_radius(void)

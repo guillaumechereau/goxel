@@ -1640,7 +1640,7 @@ int tool_iter(tool_t *tool, const float viewport[4]);
 int tool_gui(tool_t *tool);
 
 int tool_gui_snap(void);
-int tool_gui_shape(void);
+int tool_gui_shape(const shape_t **shape);
 int tool_gui_radius(void);
 int tool_gui_smoothness(void);
 int tool_gui_color(void);

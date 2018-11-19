@@ -209,7 +209,7 @@ static int gui(tool_t *tool)
                      "Second click set the height");
     gui_checkbox("Planar", &tool_shape->planar, "Stay on original plane");
     tool_gui_snap();
-    tool_gui_shape();
+    tool_gui_shape(NULL);
     tool_gui_symmetry();
     return 0;
 }
