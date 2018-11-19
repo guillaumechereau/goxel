@@ -136,6 +136,9 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
     if (snap == SNAP_LAYER_OUT) {
         curs->snap_mask = SNAP_LAYER_OUT;
         mesh_get_box(goxel.image->active_layer->mesh, true, box);
+        // Fix problem with shape layer box.
+        if (goxel.image->active_layer->shape)
+            mat4_copy(goxel.image->active_layer->mat, box);
     }
     if (snap == SNAP_SELECTION_OUT) {
         curs->snap_mask |= SNAP_SELECTION_OUT;
