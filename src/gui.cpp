@@ -677,6 +677,9 @@ static void layers_panel(void)
         mesh_crop(layer->mesh, goxel.image->box);
         goxel_update_meshes(-1);
     }
+    if (layer->shape)
+        gui_action_button("img_unclone_layer", "To mesh", 1, "");
+
     if (gui_action_button("img_new_shape_layer", "New Shape Layer", 1, "")) {
         action_exec2("tool_set_move", "");
     }

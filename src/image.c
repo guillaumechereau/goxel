@@ -333,6 +333,7 @@ void image_unclone_layer(image_t *img, layer_t *layer)
     img = img ?: goxel.image;
     layer = layer ?: img->active_layer;
     layer->base_id = 0;
+    layer->shape = NULL;
 }
 
 void image_select_parent_layer(image_t *img, layer_t *layer)
