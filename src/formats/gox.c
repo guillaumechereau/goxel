@@ -83,6 +83,13 @@ typedef struct {
 
 #define CHUNK_BUFF_SIZE (1 << 20) // 1 MiB max buffer size!
 
+// XXX: should be something in goxel.h
+static const shape_t *SHAPES[] = {
+    &shape_sphere,
+    &shape_cube,
+    &shape_cylinder,
+};
+
 typedef struct {
     char     type[4];
     int      length;
@@ -275,14 +282,14 @@ void save_to_file(const char *path, bool with_preview)
     DL_FOREACH(goxel.image->layers, layer) {
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
-        if (!layer->base_id) {
+        if (!layer->base_id && !layer->shape) {
             iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
             while (mesh_iter(&iter, bpos)) {
                 nb_blocks++;
             }
         }
         chunk_write_int32(&c, out, nb_blocks);
-        if (!layer->base_id) {
+        if (!layer->base_id && !layer->shape) {
             iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
             while (mesh_iter(&iter, bpos)) {
                 mesh_get_block_data(layer->mesh, &iter, bpos, &uid);
@@ -310,6 +317,12 @@ void save_to_file(const char *path, bool with_preview)
         if (!box_is_null(layer->box))
             chunk_write_dict_value(&c, out, "box", &layer->box,
                                    sizeof(layer->box));
+        if (layer->shape) {
+            chunk_write_dict_value(&c, out, "shape", layer->shape->id,
+                               strlen(layer->shape->id));
+            chunk_write_dict_value(&c, out, "color", layer->color,
+                                sizeof(layer->color));
+        }
 
         chunk_write_finish(&c, out);
     }
@@ -476,6 +489,18 @@ int load_from_file(const char *path)
                     memcpy(&layer->base_id, dict_value, dict_value_size);
                 if (strcmp(dict_key, "box") == 0)
                     memcpy(&layer->box, dict_value, dict_value_size);
+
+                if (strcmp(dict_key, "shape") == 0) {
+                    for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
+                        if (strcmp(SHAPES[i]->id, dict_value) == 0) {
+                            layer->shape = SHAPES[i];
+                            break;
+                        }
+                    }
+                }
+                if (strcmp(dict_key, "color") == 0) {
+                    memcpy(layer->color, dict_value, dict_value_size);
+                }
             }
         } else if (strncmp(c.type, "CAMR", 4) == 0) {
             camera = camera_new("unnamed");
