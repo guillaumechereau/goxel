@@ -1501,7 +1501,7 @@ struct layer {
     int         base_id;
     uint64_t    base_mesh_key;
     // For shape layers.
-    shape_t     *shape;
+    const shape_t *shape;
     uint64_t    shape_key;
 };
 

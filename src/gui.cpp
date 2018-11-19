@@ -703,6 +703,10 @@ static void layers_panel(void)
     if (bounded) {
         if (gui_bbox(layer->box)) goxel_update_meshes(-1);
     }
+
+    if (layer->shape) {
+        if (tool_gui_shape(&layer->shape)) goxel_update_meshes(-1);
+    }
 }
 
 static void view_panel(void)
