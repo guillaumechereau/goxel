@@ -219,3 +219,26 @@ int tool_gui_symmetry(void)
     gui_group_end();
     return 0;
 }
+
+int tool_gui_drag_mode(int *mode)
+{
+    float w;
+    int ret = 0;
+    bool b;
+
+    w = gui_get_avail_width() / 2.0 - 1;
+    gui_group_begin("Drag mode");
+    b = *mode == 0;
+    if (gui_selectable("Move", &b, NULL, w)) {
+        *mode = 0;
+        ret = 1;
+    }
+    gui_same_line();
+    b = *mode == 1;
+    if (gui_selectable("Resize", &b, NULL, w)) {
+        *mode = 1;
+        ret = 1;
+    }
+    gui_group_end();
+    return ret;
+}

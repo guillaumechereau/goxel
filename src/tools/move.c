@@ -18,9 +18,14 @@
 
 #include "goxel.h"
 
+enum {
+    DRAG_MOVE = 0,
+    DRAG_RESIZE,
+};
 
 typedef struct {
     tool_t tool;
+    int drag_mode;
 } tool_move_t;
 
 static void do_move(layer_t *layer, const float mat[4][4])
@@ -51,8 +56,9 @@ static int iter(tool_t *tool, const float viewport[4])
 {
     float transf[4][4];
     bool first;
+    tool_move_t *move = (void*)tool;
     layer_t *layer = goxel.image->active_layer;
-    if (box_edit(SNAP_LAYER_OUT, 0, transf, &first)) {
+    if (box_edit(SNAP_LAYER_OUT, move->drag_mode, transf, &first)) {
         if (first) image_history_push(goxel.image);
         do_move(layer, transf);
     }
@@ -62,11 +68,17 @@ static int iter(tool_t *tool, const float viewport[4])
 static int gui(tool_t *tool)
 {
     layer_t *layer;
-    float mat[4][4] = MAT4_IDENTITY;
+    float mat[4][4] = MAT4_IDENTITY, v;
     int i;
-    double v;
+    tool_move_t *move = (void*)tool;
 
     layer = goxel.image->active_layer;
+    if (layer->shape) {
+        tool_gui_drag_mode(&move->drag_mode);
+    } else {
+        move->drag_mode = DRAG_MOVE;
+    }
+
     gui_group_begin(NULL);
     i = 0;
     if (gui_input_int("Move X", &i, 0, 0))
