@@ -138,6 +138,7 @@
 		F0A160051E962F1300C6EF33 /* wavefront.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FFB1E962F1300C6EF33 /* wavefront.c */; };
 		F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160061E962F4600C6EF33 /* marchingcube.c */; };
 		F0A160091E962F4600C6EF33 /* mustache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160071E962F4600C6EF33 /* mustache.c */; };
+		F0A91AE721B18817009C3BB7 /* box_edit.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A91AE621B18817009C3BB7 /* box_edit.c */; };
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
 		F0C4F1421F308976002E73C5 /* gui_settings.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C4F1411F308976002E73C5 /* gui_settings.c */; };
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
@@ -444,6 +445,7 @@
 		F0A15FFB1E962F1300C6EF33 /* wavefront.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wavefront.c; sourceTree = "<group>"; };
 		F0A160061E962F4600C6EF33 /* marchingcube.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = marchingcube.c; sourceTree = "<group>"; };
 		F0A160071E962F4600C6EF33 /* mustache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mustache.c; sourceTree = "<group>"; };
+		F0A91AE621B18817009C3BB7 /* box_edit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box_edit.c; sourceTree = "<group>"; };
 		F0AE90F51C8EE01200C29080 /* assets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = assets.c; sourceTree = "<group>"; };
 		F0C4F1411F308976002E73C5 /* gui_settings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gui_settings.c; sourceTree = "<group>"; };
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
@@ -857,6 +859,7 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F0A91AE621B18817009C3BB7 /* box_edit.c */,
 				F0F14C6620AF282E0006E575 /* imgui.cpp */,
 				F01452C42070FC51007F0106 /* utils_gl.c */,
 				F057B4A7204EF13900E2A63F /* cycles.cpp */,
@@ -1095,6 +1098,7 @@
 				F07DEA111BD0F31500BAA1AD /* texture.c in Sources */,
 				F057B3B6204EEDD000E2A63F /* kernel_split_sse3.cpp in Sources */,
 				F057B375204EEDD000E2A63F /* bvh2.cpp in Sources */,
+				F0A91AE721B18817009C3BB7 /* box_edit.c in Sources */,
 				F0EEB7E41C8EC27C004AB676 /* action.c in Sources */,
 				F037D5D61EA6069A00C96D10 /* shape.c in Sources */,
 				F057B435204EEDD000E2A63F /* attribute.cpp in Sources */,
