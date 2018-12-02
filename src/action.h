@@ -4,6 +4,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include "lua.h"
+
 // #### Action #################
 
 // We support some basic reflexion of functions.  We do this by registering the
@@ -17,21 +19,6 @@
 
 // XXX: this is still pretty experimental.  This might change in the future.
 
-typedef struct astack astack_t;
-
-astack_t *stack_create(void);
-void      stack_delete(astack_t *s);
-
-void  stack_clear(astack_t *s);
-int   stack_size(const astack_t *s);
-char  stack_type(const astack_t *s, int i);
-void  stack_push_i(astack_t *s, int i);
-void  stack_push_p(astack_t *s, void *p);
-void  stack_push_b(astack_t *s, bool b);
-int   stack_get_i(const astack_t *s, int i);
-void *stack_get_p(const astack_t *s, int i);
-bool  stack_get_b(const astack_t *s, int i);
-void  stack_pop(astack_t *s);
 
 enum {
     ACTION_TOUCH_IMAGE          = 1 << 0,  // Push the undo history.
@@ -49,7 +36,7 @@ struct action {
     const char      *default_shortcut;
     char            shortcut[8];    // Can be changed at runtime.
     int             icon;           // Optional icon id.
-    int             (*func)(const action_t *a, astack_t *s);
+    int             (*func)(const action_t *a, lua_State *l);
     void            *data;
 
     // cfunc and csig can be used to directly call any function.
