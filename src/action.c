@@ -58,10 +58,11 @@ void actions_iter(int (*f)(action_t *action, void *user), void *user)
 
 static const void *topointer(lua_State *l, int idx)
 {
+    if (lua_isstring(l, idx))
+        return lua_tostring(l, idx);
     if (lua_islightuserdata(l, idx))
         return lua_topointer(l, idx);
-    else
-        return *(void**)lua_touserdata(l, idx);
+    return *(void**)lua_touserdata(l, idx);
 }
 
 // The default action function will try to call the action cfunc.
