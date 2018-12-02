@@ -1686,6 +1686,7 @@ void goxel_import_image_plane(const char *path);
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
+
 // #############################
 
 void save_to_file(const char *path, bool with_preview);
@@ -1862,6 +1863,15 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first);
 /* Function: tests_run
  * Run all the unit tests */
 void tests_run(void);
+
+// Section: script
+
+/*
+ * Function: script_run
+ * Run a lua script from a file.
+ */
+int script_run(const char *filename);
+
 
 
 #endif // GOXEL_H
