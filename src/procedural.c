@@ -649,6 +649,31 @@ int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter)
     return 0;
 }
 
+static void proc_run(const char *txt, mesh_t *mesh)
+{
+    gox_proc_t proc = {};
+    painter_t painter = (painter_t) {
+        .shape = &shape_cube,
+        .mode = MODE_INTERSECT,
+        .color = {255, 255, 255, 255},
+    };
+    if (proc_parse(txt, &proc)) {
+        LOG_E("Cannot run prog");
+        return;
+    }
+    proc_start(&proc, NULL);
+    while (proc.state == PROC_RUNNING) {
+        proc_iter(&proc, mesh, &painter);
+    }
+    proc_release(&proc);
+}
+
+ACTION_REGISTER(proc_run,
+    .help = "run a procedural program",
+    .cfunc = proc_run,
+    .csig = "vpp",
+)
+
 // The actual parser code come here, generated from procedural.leg
 
 #ifdef __GNUC__
