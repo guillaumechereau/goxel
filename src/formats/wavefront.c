@@ -205,6 +205,16 @@ static void export_as_obj(const char *path)
     wavefront_export(goxel.layers_mesh, path);
 }
 
+ACTION_REGISTER(mesh_export_as_obj,
+    .help = "Export the mesh as a wavefront obj file",
+    .cfunc = wavefront_export,
+    .csig = "vpp",
+    .file_format = {
+        .name = "obj",
+        .ext = "*.obj\0",
+    },
+)
+
 ACTION_REGISTER(export_as_obj,
     .help = "Export the image as a wavefront obj file",
     .cfunc = export_as_obj,
@@ -222,6 +232,16 @@ static void export_as_ply(const char *path)
     if (!path) return;
     ply_export(goxel.layers_mesh, path);
 }
+
+ACTION_REGISTER(mesh_export_as_ply,
+    .help = "Export the mesh as a ply file",
+    .cfunc = ply_export,
+    .csig = "vpp",
+    .file_format = {
+        .name = "ply",
+        .ext = "*.ply\0",
+    },
+)
 
 ACTION_REGISTER(export_as_ply,
     .help = "Save the image as a ply file",
