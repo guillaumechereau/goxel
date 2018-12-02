@@ -36,6 +36,7 @@
 #include "utarray.h"
 #include "noc_file_dialog.h"
 #include "block_def.h"
+#include "luagoxel.h"
 #include "mesh.h"
 #include "theme.h"
 #include <float.h>

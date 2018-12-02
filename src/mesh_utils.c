@@ -517,6 +517,20 @@ uint64_t mesh_crc64(const mesh_t *mesh)
     return ret;
 }
 
+static int l_mesh_set_at(const action_t *action, lua_State *l)
+{
+    int pos[3];
+    uint8_t color[4];
+    mesh_t *mesh;
+
+    mesh = luaG_checkpointer(l, 1, "mesh");
+    luaG_checkpos(l, 2, pos);
+    luaG_checkcolor(l, 3, color);
+
+    mesh_set_at(mesh, NULL, pos, color);
+    return 0;
+}
+
 ACTION_REGISTER(mesh_new,
     .help = "Create a new empty mesh",
     .cfunc = mesh_new,
@@ -528,4 +542,9 @@ ACTION_REGISTER(mesh_delete,
     .help = "delete a mesh",
     .cfunc = mesh_delete,
     .csig = "vp",
+)
+
+ACTION_REGISTER(mesh_set_at,
+    .help = "set a mesh voxel value",
+    .func = l_mesh_set_at,
 )
