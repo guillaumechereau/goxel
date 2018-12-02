@@ -439,7 +439,7 @@ static void gui_init(const inputs_t *inputs)
 
 void gui_release(void)
 {
-    ImGui::DestroyContext();
+    if (gui) ImGui::DestroyContext();
 }
 
 // XXX: Move this somewhere else.

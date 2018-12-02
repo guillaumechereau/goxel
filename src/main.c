@@ -238,6 +238,7 @@ int main(int argc, char **argv)
     }
     start_main_loop(loop_function);
 end:
+    glfwTerminate();
     goxel_release();
     return ret;
 }
