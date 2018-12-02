@@ -56,11 +56,19 @@ void actions_iter(int (*f)(action_t *action, void *user), void *user)
     }
 }
 
+static const void *topointer(lua_State *l, int idx)
+{
+    if (lua_islightuserdata(l, idx))
+        return lua_topointer(l, idx);
+    else
+        return *(void**)lua_touserdata(l, idx);
+}
+
 // The default action function will try to call the action cfunc.
 static int default_function(const action_t *a, lua_State *l)
 {
     int i;
-    void (*func)() = a->cfunc;
+    void *p;
     assert(a->cfunc);
     assert(a->csig);
 
@@ -73,34 +81,54 @@ static int default_function(const action_t *a, lua_State *l)
         }
     }
 
+    // XXX: clean this up.
     if (strcmp(a->csig, "v") == 0) {
+        void (*func)(void) = a->cfunc;
         func();
     } else if (strcmp(a->csig, "vp") == 0) {
-        func(lua_topointer(l, 1));
+        void (*func)(const void *) = a->cfunc;
+        func(topointer(l, 1));
     } else if (strcmp(a->csig, "vpp") == 0) {
-        func(lua_topointer(l, 1),
-             lua_topointer(l, 2));
+        void (*func)(const void *, const void *) = a->cfunc;
+        func(topointer(l, 1),
+             topointer(l, 2));
     } else if (strcmp(a->csig, "vpi") == 0) {
-        func(lua_topointer(l, 1),
-             lua_topointer(l, 2));
+        void (*func)(const void *, int) = a->cfunc;
+        func(topointer(l, 1),
+             lua_tointeger(l, 2));
     } else if (strcmp(a->csig, "vppp") == 0) {
-        func(lua_topointer(l, 1),
-             lua_topointer(l, 2),
-             lua_topointer(l, 3));
+        void (*func)(const void *, const void *, const void *) = a->cfunc;
+        func(topointer(l, 1),
+             topointer(l, 2),
+             topointer(l, 3));
     } else if (strcmp(a->csig, "vppi") == 0) {
-        func(lua_topointer(l, 1),
-             lua_topointer(l, 2),
+        void (*func)(const void *, const void *, int) = a->cfunc;
+        func(topointer(l, 1),
+             topointer(l, 2),
              lua_tointeger(l, 3));
     } else if (strcmp(a->csig, "vpii") == 0) {
-        func(lua_topointer(l, 1),
+        void (*func)(const void *, int, int) = a->cfunc;
+        func(topointer(l, 1),
              lua_tointeger(l, 2),
              lua_tointeger(l, 3));
+    } else if (strcmp(a->csig, "p") == 0) {
+        void *(*func)(void) = a->cfunc;
+        p = func();
+        lua_pushlightuserdata(l, p);
     } else {
         LOG_E("Cannot handle sig '%s'", a->csig);
         assert(false);
     }
 
-    return 0;
+    // The C function returned an object that need to be associated with
+    // a class.
+    if (a->cret_class) {
+        *(void**)lua_newuserdata(l, sizeof(p)) = (void*)lua_topointer(l, -2);
+        luaL_getmetatable(l, a->cret_class);
+        lua_setmetatable(l, -2);
+    }
+
+    return a->csig[0] == 'v' ? 0 : 1;
 }
 
 int action_execv(const action_t *action, const char *sig, va_list ap)
@@ -173,4 +201,11 @@ int action_exec(const action_t *action, const char *sig, ...)
     ret = action_execv(action, sig, ap);
     va_end(ap);
     return ret;
+}
+
+int action_exec_lua(const action_t *action, lua_State *l)
+{
+    int (*func)(const action_t *a, lua_State *l);
+    func = action->func ?: default_function;
+    return func(action, l);
 }

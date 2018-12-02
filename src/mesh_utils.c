@@ -516,3 +516,16 @@ uint64_t mesh_crc64(const mesh_t *mesh)
     }
     return ret;
 }
+
+ACTION_REGISTER(mesh_new,
+    .help = "Create a new empty mesh",
+    .cfunc = mesh_new,
+    .csig = "p",
+    .cret_class = "mesh",
+)
+
+ACTION_REGISTER(mesh_delete,
+    .help = "delete a mesh",
+    .cfunc = mesh_delete,
+    .csig = "vp",
+)

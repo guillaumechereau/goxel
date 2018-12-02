@@ -42,6 +42,7 @@ struct action {
     // cfunc and csig can be used to directly call any function.
     void            *cfunc;
     const char      *csig;
+    const char      *cret_class;
 
     // Used for export / import actions.
     struct {
@@ -52,6 +53,7 @@ struct action {
 
 void action_register(const action_t *action);
 action_t *action_get(const char *id);
+int action_exec_lua(const action_t *action, lua_State *l);
 int action_exec(const action_t *action, const char *sig, ...);
 int action_execv(const action_t *action, const char *sig, va_list ap);
 void actions_iter(int (*f)(action_t *action, void *user), void *user);
