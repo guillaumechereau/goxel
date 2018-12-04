@@ -1871,7 +1871,7 @@ void tests_run(void);
  * Function: script_run
  * Run a lua script from a file.
  */
-int script_run(const char *filename);
+int script_run(const char *filename, int argc, const char **argv);
 
 
 

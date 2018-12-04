@@ -40,11 +40,11 @@ static void add_globals(lua_State *l)
  * Function: script_run
  * Run a lua script from a file.
  */
-int script_run(const char *filename)
+int script_run(const char *filename, int argc, const char **argv)
 {
     lua_State *l;
     char *script;
-    int ret = 0;
+    int ret = 0, i;
 
     script = read_file(filename, 0);
     if (!script) {
@@ -54,6 +54,16 @@ int script_run(const char *filename)
     l = luaL_newstate();
     luaL_openlibs(l);
     add_globals(l);
+
+    // Put the arguments.
+    lua_newtable(l);
+    for (i = 0; i < argc; i++) {
+        lua_pushnumber(l, i + 1);
+        lua_pushstring(l, argv[i]);
+        lua_rawset(l, -3);
+    }
+    lua_setglobal(l, "arg");
+
     luaL_loadstring(l, script);
     if (lua_pcall(l, 0, 0, 0)) {
         fprintf(stderr, "ERROR:\n%s\n", lua_tostring(l, -1));

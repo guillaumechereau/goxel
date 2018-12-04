@@ -42,6 +42,8 @@ typedef struct
     char *input;
     char *export;
     char *script;
+    int script_args_nb;
+    const char *script_args[32];
     float scale;
 } args_t;
 
@@ -78,6 +80,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         args->script = arg;
         break;
     case ARGP_KEY_ARG:
+        if (args->script) {
+            args->script_args[args->script_args_nb++] = arg;
+            break;
+        }
         if (state->arg_num >= 1)
             argp_usage(state);
         args->input = arg;
@@ -236,7 +242,7 @@ int main(int argc, char **argv)
         action_exec2("import", "p", args.input);
 
     if (args.script) {
-        script_run(args.script);
+        script_run(args.script, args.script_args_nb, args.script_args);
         goto end;
     }
 
