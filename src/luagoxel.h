@@ -32,5 +32,8 @@ void *luaG_checkpointer(lua_State *l, int idx, const char *type);
 
 int luaG_checkpos(lua_State *l, int idx, int pos[3]);
 int luaG_checkcolor(lua_State *l, int idx, uint8_t color[4]);
+int luaG_checkaabb(lua_State *l, int idx, int aabb[2][3]);
+
+void luaG_newintarray(lua_State *l, int n, const int *v);
 
 #endif

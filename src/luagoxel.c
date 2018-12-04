@@ -58,3 +58,22 @@ int luaG_checkcolor(lua_State *l, int idx, uint8_t color[4])
     lua_pop(l, 1);
     return 0;
 }
+
+int luaG_checkaabb(lua_State *l, int idx, int aabb[2][3])
+{
+    luaG_checkpos(l, idx, aabb[1]);
+    aabb[0][0] = 0;
+    aabb[0][1] = 0;
+    aabb[0][2] = 0;
+    return 0;
+}
+
+void luaG_newintarray(lua_State *l, int n, const int *v)
+{
+    int i;
+    lua_newtable(l);
+    for (i = 0; i < n; i++) {
+        lua_pushinteger(l, v[i]);
+        lua_rawseti(l, -2, i + 1);
+    }
+}

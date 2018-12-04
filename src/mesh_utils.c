@@ -531,6 +531,28 @@ static int l_mesh_set_at(const action_t *action, lua_State *l)
     return 0;
 }
 
+static int l_mesh_fill(const action_t *action, lua_State *l)
+{
+    int aabb[2][3], pos[3];
+    uint8_t c[4];
+    mesh_t *mesh;
+
+    mesh = luaG_checkpointer(l, 1, "mesh");
+    luaG_checkaabb(l, 2, aabb);
+    for (pos[2] = aabb[0][2]; pos[2] < aabb[1][2]; pos[2]++)
+    for (pos[1] = aabb[0][1]; pos[1] < aabb[1][1]; pos[1]++)
+    for (pos[0] = aabb[0][0]; pos[0] < aabb[1][0]; pos[0]++) {
+        lua_pushvalue(l, 3);
+        luaG_newintarray(l, 3, pos);
+        luaG_newintarray(l, 3, aabb[1]);
+        lua_call(l, 2, 1);
+        luaG_checkcolor(l, -1, c);
+        mesh_set_at(mesh, NULL, pos, c);
+        lua_pop(l, 1);
+    }
+    return 0;
+}
+
 ACTION_REGISTER(mesh_new,
     .help = "Create a new empty mesh",
     .cfunc = mesh_new,
@@ -547,4 +569,9 @@ ACTION_REGISTER(mesh_delete,
 ACTION_REGISTER(mesh_set_at,
     .help = "set a mesh voxel value",
     .func = l_mesh_set_at,
+)
+
+ACTION_REGISTER(mesh_fill,
+    .help = "Fill a mesh",
+    .func = l_mesh_fill,
 )
