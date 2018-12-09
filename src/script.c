@@ -13,27 +13,41 @@ static int l_action_func(lua_State *l)
     return action_exec_lua(a, l);
 }
 
-static int add_action(action_t *action, void *user)
+static int l_index(lua_State *l)
 {
-    lua_State *l = user;
+    const char *name, *key;
+    char buf[128];
+    action_t *action;
+
+    lua_getmetatable(l, 1);
+    lua_getfield(l, -1, "name");
+    name = luaL_checkstring(l, -1);
+    key = luaL_checkstring(l, 2);
+    sprintf(buf, "%s_%s", name, key);
+    action = action_get(buf);
     lua_pushstring(l, action->id);
     lua_pushcclosure(l, l_action_func, 1);
-    lua_setglobal(l, action->id);
-    return 0;
+    return 1;
 }
 
 static void add_globals(lua_State *l)
 {
-    actions_iter(add_action, l);
-
     // Create metatable for mesh.
-    luaL_newmetatable(l, "mesh");
+    luaL_newmetatable(l, "Mesh");
+    lua_pushstring(l, "mesh");
+    lua_setfield(l, -2, "name");
+    lua_pushcfunction(l, l_index);
+    lua_setfield(l, -2, "__index");
 
-    lua_getglobal(l, "mesh_new");
-    lua_setfield(l, -2, "__new");
+    lua_pushstring(l, "mesh_new");
+    lua_pushcclosure(l, l_action_func, 1);
+    lua_setfield(l, -2, "new");
 
-    lua_getglobal(l, "mesh_delete");
+    lua_pushstring(l, "mesh_delete");
+    lua_pushcclosure(l, l_action_func, 1);
     lua_setfield(l, -2, "__gc");
+
+    lua_setglobal(l, "Mesh");
 }
 
 /*

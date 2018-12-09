@@ -537,7 +537,7 @@ static int l_mesh_fill(const action_t *action, lua_State *l)
     uint8_t c[4];
     mesh_t *mesh;
 
-    mesh = luaG_checkpointer(l, 1, "mesh");
+    mesh = luaG_checkpointer(l, 1, "Mesh");
     luaG_checkaabb(l, 2, aabb);
     for (pos[2] = aabb[0][2]; pos[2] < aabb[1][2]; pos[2]++)
     for (pos[1] = aabb[0][1]; pos[1] < aabb[1][1]; pos[1]++)
@@ -557,7 +557,7 @@ ACTION_REGISTER(mesh_new,
     .help = "Create a new empty mesh",
     .cfunc = mesh_new,
     .csig = "p",
-    .cret_class = "mesh",
+    .cret_class = "Mesh",
 )
 
 ACTION_REGISTER(mesh_delete,
