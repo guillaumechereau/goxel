@@ -557,16 +557,28 @@ static int l_mesh_save(const action_t *action, lua_State *l)
 {
     const char *path, *type;
     char buf[128];
+    mesh_t *mesh;
+    image_t *img;
+    layer_t *layer;
 
-    luaG_checkpointer(l, 1, "Mesh");
+    mesh = luaG_checkpointer(l, 1, "Mesh");
     path = luaL_checkstring(l, 2);
     type = strrchr(path, '.');
     if (!type) luaL_error(l, "file has no extension: %s", path);
     type++;
     sprintf(buf, "mesh_export_as_%s", type);
     action = action_get(buf);
-    if (action) action_exec_lua(action, l);
-    else luaL_error(l, "Cannot find a save function for type %s", type);
+    if (action)
+        return action_exec_lua(action, l);
+    if (strcmp(type, "gox") == 0) {
+        img = image_new();
+        layer = image_add_layer(img);
+        mesh_set(layer->mesh, mesh);
+        save_to_file(img, path, true);
+        image_delete(img);
+        return 0;
+    }
+    luaL_error(l, "Cannot find a save function for type %s", type);
     return 0;
 }
 
