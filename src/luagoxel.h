@@ -21,6 +21,7 @@
 
 #include <stdint.h>
 
+#include "lauxlib.h"
 #include "lua.h"
 
 /*

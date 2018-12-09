@@ -553,6 +553,23 @@ static int l_mesh_fill(const action_t *action, lua_State *l)
     return 0;
 }
 
+static int l_mesh_save(const action_t *action, lua_State *l)
+{
+    const char *path, *type;
+    char buf[128];
+
+    luaG_checkpointer(l, 1, "Mesh");
+    path = luaL_checkstring(l, 2);
+    type = strrchr(path, '.');
+    if (!type) luaL_error(l, "file has no extension: %s", path);
+    type++;
+    sprintf(buf, "mesh_export_as_%s", type);
+    action = action_get(buf);
+    if (action) action_exec_lua(action, l);
+    else luaL_error(l, "Cannot find a save function for type %s", type);
+    return 0;
+}
+
 ACTION_REGISTER(mesh_new,
     .help = "Create a new empty mesh",
     .cfunc = mesh_new,
@@ -574,4 +591,9 @@ ACTION_REGISTER(mesh_set_at,
 ACTION_REGISTER(mesh_fill,
     .help = "Fill a mesh",
     .func = l_mesh_fill,
+)
+
+ACTION_REGISTER(mesh_save,
+    .help = "Save a mesh to a file",
+    .func = l_mesh_save,
 )
