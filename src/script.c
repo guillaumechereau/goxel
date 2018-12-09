@@ -39,16 +39,27 @@ static void add_globals(lua_State *l)
     lua_setfield(l, -2, "name");
     lua_pushcfunction(l, l_index);
     lua_setfield(l, -2, "__index");
-
     lua_pushstring(l, "mesh_new");
     lua_pushcclosure(l, l_action_func, 1);
     lua_setfield(l, -2, "new");
-
     lua_pushstring(l, "mesh_delete");
     lua_pushcclosure(l, l_action_func, 1);
     lua_setfield(l, -2, "__gc");
-
     lua_setglobal(l, "Mesh");
+
+    // Create metatable for proc.
+    luaL_newmetatable(l, "Proc");
+    lua_pushstring(l, "proc");
+    lua_setfield(l, -2, "name");
+    lua_pushcfunction(l, l_index);
+    lua_setfield(l, -2, "__index");
+    lua_pushstring(l, "proc_new");
+    lua_pushcclosure(l, l_action_func, 1);
+    lua_setfield(l, -2, "new");
+    lua_pushstring(l, "proc_delete");
+    lua_pushcclosure(l, l_action_func, 1);
+    lua_setfield(l, -2, "__gc");
+    lua_setglobal(l, "Proc");
 }
 
 /*

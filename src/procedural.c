@@ -649,29 +649,57 @@ int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter)
     return 0;
 }
 
-static void proc_run(const char *txt, mesh_t *mesh)
+static int l_proc_run(const action_t *action, lua_State *l)
 {
-    gox_proc_t proc = {};
+    gox_proc_t *proc;
+    mesh_t *mesh;
     painter_t painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
     };
-    if (proc_parse(txt, &proc)) {
-        LOG_E("Cannot run prog");
-        return;
+    proc = luaG_checkpointer(l, 1, "Proc");
+    mesh = luaG_checkpointer(l, 2, "Mesh");
+    proc_start(proc, NULL);
+    while (proc->state == PROC_RUNNING) {
+        proc_iter(proc, mesh, &painter);
     }
-    proc_start(&proc, NULL);
-    while (proc.state == PROC_RUNNING) {
-        proc_iter(&proc, mesh, &painter);
-    }
-    proc_release(&proc);
+    return 0;
 }
 
+static gox_proc_t *proc_new(const char *code)
+{
+    gox_proc_t *proc;
+    proc = calloc(1, sizeof(*proc));
+    if (proc_parse(code, proc)) {
+        free(proc);
+        return NULL;
+    }
+    return proc;
+}
+
+static void proc_delete(gox_proc_t *proc)
+{
+    proc_release(proc);
+    free(proc);
+}
+
+ACTION_REGISTER(proc_new,
+    .help = "Create a new procedural prog",
+    .cfunc = proc_new,
+    .csig = "pp",
+    .cret_class = "Proc",
+)
+
+ACTION_REGISTER(proc_delete,
+    .help = "Delete a procedural prog",
+    .cfunc = proc_delete,
+    .csig = "vp",
+)
+
 ACTION_REGISTER(proc_run,
-    .help = "run a procedural program",
-    .cfunc = proc_run,
-    .csig = "vpp",
+    .help = "Run a procedural prog",
+    .func = l_proc_run,
 )
 
 // The actual parser code come here, generated from procedural.leg
