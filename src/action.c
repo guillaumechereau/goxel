@@ -40,11 +40,14 @@ void action_register(const action_t *action)
     HASH_ADD_KEYPTR(hh, g_actions, action->id, strlen(action->id), item);
 }
 
-action_t *action_get(const char *id)
+action_t *action_get(const char *id, bool assert_exists)
 {
     action_hash_item_t *item;
     HASH_FIND_STR(g_actions, id, item);
-    if (!item) LOG_W("Cannot find action %s", id);
+    if (!item && assert_exists) {
+        LOG_E("Cannot find action %s", id);
+        assert(false);
+    }
     return item ? &item->action : NULL;
 }
 

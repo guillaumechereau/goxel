@@ -8,8 +8,8 @@ static int l_action_func(lua_State *l)
 {
     action_t *a;
     const char *id = lua_tostring(l, lua_upvalueindex(1));
-    a = action_get(id);
-    assert(a);
+    a = action_get(id, false);
+    if (!a) luaL_error(l, "Cannot find action %s", id);
     return action_exec_lua(a, l);
 }
 
@@ -24,7 +24,8 @@ static int l_index(lua_State *l)
     name = luaL_checkstring(l, -1);
     key = luaL_checkstring(l, 2);
     sprintf(buf, "%s_%s", name, key);
-    action = action_get(buf);
+    action = action_get(buf, false);
+    if (!action) luaL_error(l, "cannot find action %s", buf);
     lua_pushstring(l, action->id);
     lua_pushcclosure(l, l_action_func, 1);
     return 1;

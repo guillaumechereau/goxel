@@ -52,7 +52,7 @@ struct action {
 };
 
 void action_register(const action_t *action);
-action_t *action_get(const char *id);
+action_t *action_get(const char *id, bool assert_exists);
 int action_exec_lua(const action_t *action, lua_State *l);
 int action_exec(const action_t *action, const char *sig, ...);
 int action_execv(const action_t *action, const char *sig, va_list ap);
@@ -60,7 +60,7 @@ void actions_iter(int (*f)(action_t *action, void *user), void *user);
 
 // Convenience macro to call action_exec directly from an action id.
 #define action_exec2(id, sig, ...) \
-    action_exec(action_get(id), sig, ##__VA_ARGS__)
+    action_exec(action_get(id, true), sig, ##__VA_ARGS__)
 
 
 // Convenience macro to register an action from anywere in a c file.

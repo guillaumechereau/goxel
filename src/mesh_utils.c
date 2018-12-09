@@ -567,7 +567,7 @@ static int l_mesh_save(const action_t *action, lua_State *l)
     if (!type) luaL_error(l, "file has no extension: %s", path);
     type++;
     sprintf(buf, "mesh_export_as_%s", type);
-    action = action_get(buf);
+    action = action_get(buf, false);
     if (action)
         return action_exec_lua(action, l);
     if (strcmp(type, "gox") == 0) {
