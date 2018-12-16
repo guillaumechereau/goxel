@@ -1857,6 +1857,15 @@ void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
  */
 int box_edit(int snap, int mode, float transf[4][4], bool *first);
 
+// Section: script
+
+/*
+ * Function: script_run
+ * Run a js script from a file.
+ */
+int script_run(const char *filename);
+
+
 // Section: tests
 
 /* Function: tests_run

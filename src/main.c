@@ -41,11 +41,14 @@ typedef struct
 {
     char *input;
     char *export;
+    char *script;
     float scale;
 } args_t;
 
 #ifndef NO_ARGP
 #include <argp.h>
+
+#define OPT_SCRIPT 1
 
 const char *argp_program_version = "goxel " GOXEL_VERSION_STR;
 const char *argp_program_bug_address = "<guillaume@noctua-software.com>";
@@ -54,6 +57,7 @@ static char args_doc[] = "[INPUT]";
 static struct argp_option options[] = {
     {"export",   'e', "FILENAME", 0, "Export the model to a file" },
     {"scale",    's', "FLOAT", 0, "Set UI scale (for retina display)"},
+    {"script",   OPT_SCRIPT, "FILENAME", 0, "Run a script and exit"},
     {},
 };
 
@@ -69,6 +73,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
         break;
     case 's':
         args->scale = atof(arg);
+        break;
+    case OPT_SCRIPT:
+        args->script = arg;
         break;
     case ARGP_KEY_ARG:
         if (state->arg_num >= 1)
@@ -227,6 +234,12 @@ int main(int argc, char **argv)
 
     if (args.input)
         action_exec2("import", "p", args.input);
+
+    if (args.script) {
+        script_run(args.script);
+        goto end;
+    }
+
     if (args.export) {
         if (!args.input) {
             LOG_E("trying to export an empty image");
