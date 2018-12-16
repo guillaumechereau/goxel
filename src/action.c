@@ -115,7 +115,7 @@ static int default_function(const action_t *a, duk_context *ctx)
         assert(false);
     }
 
-    return 0;
+    return a->csig[0] == 'v' ? 0 : 1;
 }
 
 int action_execv(const action_t *action, const char *sig, va_list ap)
@@ -188,4 +188,11 @@ int action_exec(const action_t *action, const char *sig, ...)
     ret = action_execv(action, sig, ap);
     va_end(ap);
     return ret;
+}
+
+int action_exec_duk(const action_t *action, duk_context *ctx)
+{
+    int (*func)(const action_t *a, duk_context *ctx);
+    func = action->func ?: default_function;
+    return func(action, ctx);
 }

@@ -516,3 +516,95 @@ uint64_t mesh_crc64(const mesh_t *mesh)
     }
     return ret;
 }
+
+static int a_mesh_set_at(const action_t *action, duk_context *ctx)
+{
+    int pos[3];
+    uint8_t color[4];
+    mesh_t *mesh;
+
+    mesh = duk_to_pointer(ctx, 0);
+    duk_to_pos(ctx, 1, pos);
+    duk_to_color(ctx, 2, color);
+    mesh_set_at(mesh, NULL, pos, color);
+    return 0;
+}
+
+static int a_mesh_fill(const action_t *action, duk_context *ctx)
+{
+    int aabb[2][3], pos[3];
+    uint8_t c[4];
+    mesh_t *mesh;
+
+    mesh = duk_to_pointer(ctx, 0);
+    duk_to_aabb(ctx, 1, aabb);
+    for (pos[2] = aabb[0][2]; pos[2] < aabb[1][2]; pos[2]++)
+    for (pos[1] = aabb[0][1]; pos[1] < aabb[1][1]; pos[1]++)
+    for (pos[0] = aabb[0][0]; pos[0] < aabb[1][0]; pos[0]++) {
+        duk_dup(ctx, 2); // Push the function.
+        duk_push_intarray(ctx, 3, pos);
+        duk_push_intarray(ctx, 3, aabb[1]);
+        duk_call(ctx, 2);
+        duk_to_color(ctx, -1, c);
+        mesh_set_at(mesh, NULL, pos, c);
+        duk_pop(ctx);
+    }
+    return 0;
+}
+
+static int a_mesh_save(const action_t *action, duk_context *ctx)
+{
+    const char *path, *type;
+    char buf[128];
+    mesh_t *mesh;
+    image_t *img;
+    layer_t *layer;
+
+    mesh = duk_to_pointer(ctx, 0);
+    path = duk_to_string(ctx, 1);
+    type = strrchr(path, '.');
+    if (!type)
+        return duk_generic_error(ctx, "file has no extension: %s", path);
+    type++;
+    sprintf(buf, "mesh_export_as_%s", type);
+    action = action_get(buf);
+    if (action)
+        return action_exec_duk(action, ctx);
+    if (strcmp(type, "gox") == 0) {
+        img = image_new();
+        layer = image_add_layer(img);
+        mesh_set(layer->mesh, mesh);
+        save_to_file(img, path, true);
+        image_delete(img);
+        return 0;
+    }
+    return duk_generic_error(ctx,
+            "Cannot find a save function for type %s", type);
+}
+
+ACTION_REGISTER(mesh_new,
+    .help = "Create a new empty mesh",
+    .cfunc = mesh_new,
+    .csig = "p",
+)
+
+ACTION_REGISTER(mesh_delete,
+    .help = "delete a mesh",
+    .cfunc = mesh_delete,
+    .csig = "vp",
+)
+
+ACTION_REGISTER(mesh_set_at,
+    .help = "set a mesh voxel value",
+    .func = a_mesh_set_at,
+)
+
+ACTION_REGISTER(mesh_fill,
+    .help = "Fill a mesh from a function",
+    .func = a_mesh_fill,
+)
+
+ACTION_REGISTER(mesh_save,
+    .help = "Save a mesh to a file",
+    .func = a_mesh_save,
+)

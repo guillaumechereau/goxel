@@ -1688,7 +1688,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
 // #############################
 
-void save_to_file(const char *path, bool with_preview);
+void save_to_file(const image_t *img, const char *path, bool with_preview);
 int load_from_file(const char *path);
 
 // Iter info of a gox file, without actually reading it.
@@ -1864,6 +1864,11 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first);
  * Run a js script from a file.
  */
 int script_run(const char *filename);
+
+void duk_to_pos(duk_context *ctx, int idx, int pos[3]);
+void duk_to_color(duk_context *ctx, int idx, uint8_t color[4]);
+void duk_to_aabb(duk_context *ctx, int idx, int aabb[2][3]);
+void duk_push_intarray(duk_context *ctx, int len, const int *v);
 
 
 // Section: tests
