@@ -128,14 +128,6 @@ static int default_function(const action_t *a, lua_State *l)
         assert(false);
     }
 
-    // The C function returned an object that need to be associated with
-    // a class.
-    if (a->cret_class) {
-        *(void**)lua_newuserdata(l, sizeof(p)) = (void*)lua_topointer(l, -2);
-        luaL_getmetatable(l, a->cret_class);
-        lua_setmetatable(l, -2);
-    }
-
     return a->csig[0] == 'v' ? 0 : 1;
 }
 

@@ -37,6 +37,7 @@ TYPES = {
     "wav":   { "text": False },
     "ini":   { "text": True },
     "glsl":  { "text": True },
+    "lua":   { "text": True },
 }
 GROUPS = ['fonts', 'icons', 'images', 'other', 'palettes', 'progs',
           'shaders', 'sounds', 'themes']

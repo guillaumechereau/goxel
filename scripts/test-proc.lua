@@ -24,7 +24,7 @@ shape main {
 }
 ]=]
 
-mesh = Mesh.new()
-proc = Proc.new(code)
+mesh = Mesh:new()
+proc = Proc:new(code)
 proc:run(mesh)
 mesh:save('./out.gox')

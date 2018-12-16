@@ -2,7 +2,7 @@
 -- Run it from command line like that:
 --   ./goxel --script ./scripts/test.lua
 
-mesh = Mesh.new()
+mesh = Mesh:new()
 mesh:fill({64, 64, 64}, function(pos, size)
     x = pos[1] / size[1] - 0.5
     y = pos[2] / size[2] - 0.5

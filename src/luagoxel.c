@@ -24,9 +24,15 @@
 
 void *luaG_checkpointer(lua_State *l, int narg, const char *type)
 {
-    void **p;
-    p = luaL_checkudata(l, narg, type);
-    return p ? *p : NULL;
+    void *ret;
+    if (lua_islightuserdata(l, narg))
+        return (void*)lua_topointer(l, narg);
+    luaL_checktype(l, narg, LUA_TTABLE);
+    lua_pushstring(l, "data");
+    lua_rawget(l, narg);
+    ret = (void*)lua_topointer(l, -1);
+    lua_pop(l, -1);
+    return ret;
 }
 
 int luaG_checkpos(lua_State *l, int idx, int pos[3])

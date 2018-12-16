@@ -537,7 +537,7 @@ static int l_mesh_fill(const action_t *action, lua_State *l)
     uint8_t c[4];
     mesh_t *mesh;
 
-    mesh = luaG_checkpointer(l, 1, "Mesh");
+    mesh = (void*)lua_topointer(l, 1);
     luaG_checkaabb(l, 2, aabb);
     for (pos[2] = aabb[0][2]; pos[2] < aabb[1][2]; pos[2]++)
     for (pos[1] = aabb[0][1]; pos[1] < aabb[1][1]; pos[1]++)
@@ -561,7 +561,7 @@ static int l_mesh_save(const action_t *action, lua_State *l)
     image_t *img;
     layer_t *layer;
 
-    mesh = luaG_checkpointer(l, 1, "Mesh");
+    mesh = luaG_checkpointer(l, 1, "mesh");
     path = luaL_checkstring(l, 2);
     type = strrchr(path, '.');
     if (!type) luaL_error(l, "file has no extension: %s", path);
@@ -586,7 +586,6 @@ ACTION_REGISTER(mesh_new,
     .help = "Create a new empty mesh",
     .cfunc = mesh_new,
     .csig = "p",
-    .cret_class = "Mesh",
 )
 
 ACTION_REGISTER(mesh_delete,

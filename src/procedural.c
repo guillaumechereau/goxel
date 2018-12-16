@@ -658,8 +658,8 @@ static int l_proc_run(const action_t *action, lua_State *l)
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
     };
-    proc = luaG_checkpointer(l, 1, "Proc");
-    mesh = luaG_checkpointer(l, 2, "Mesh");
+    proc = luaG_checkpointer(l, 1, "proc");
+    mesh = luaG_checkpointer(l, 2, "mesh");
     proc_start(proc, NULL);
     while (proc->state == PROC_RUNNING) {
         proc_iter(proc, mesh, &painter);
@@ -688,7 +688,6 @@ ACTION_REGISTER(proc_new,
     .help = "Create a new procedural prog",
     .cfunc = proc_new,
     .csig = "pp",
-    .cret_class = "Proc",
 )
 
 ACTION_REGISTER(proc_delete,
