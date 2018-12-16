@@ -121,6 +121,9 @@ sources += glob.glob('ext_src/inih/*.c')
 env.Append(CPPPATH=['ext_src/inih'])
 env.Append(CFLAGS='-DINI_HANDLER_LINENO=1')
 
+sources += glob.glob('ext_src/duktape/*.c')
+env.Append(CPPPATH=['ext_src/duktape'])
+
 if sound:
     env.Append(LIBS='openal')
     env.Append(CCFLAGS='-DSOUND=1')
