@@ -19,7 +19,7 @@
 #include "goxel.h"
 
 
-static int tool_set_action(const action_t *a, astack_t *s)
+static int tool_set_action(const action_t *a, lua_State *l)
 {
     if (goxel.tool_mesh) {
         mesh_delete(goxel.tool_mesh);

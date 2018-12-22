@@ -216,7 +216,7 @@ static void chunk_write_all(FILE *out, const char *type,
     write_int32(out, 0);        // CRC XXX: todo.
 }
 
-void save_to_file(const char *path, bool with_preview)
+void save_to_file(const image_t *img, const char *path, bool with_preview)
 {
     // XXX: remove all empty blocks before saving.
     LOG_I("Save to %s", path);
@@ -230,6 +230,7 @@ void save_to_file(const char *path, bool with_preview)
     camera_t *camera;
     mesh_iterator_t iter;
 
+    img = img ?: goxel.image;
     out = fopen(path, "wb");
     if (!out) {
         LOG_E("Cannot save to %s: %s", path, strerror(errno));
@@ -240,9 +241,8 @@ void save_to_file(const char *path, bool with_preview)
 
     // Write image info.
     chunk_write_start(&c, out, "IMG ");
-    if (!box_is_null(goxel.image->box))
-        chunk_write_dict_value(&c, out, "box", &goxel.image->box,
-                               sizeof(goxel.image->box));
+    if (!box_is_null(img->box))
+        chunk_write_dict_value(&c, out, "box", &img->box, sizeof(img->box));
     chunk_write_finish(&c, out);
 
     if (with_preview) {
@@ -256,7 +256,7 @@ void save_to_file(const char *path, bool with_preview)
 
     // Add all the blocks data into the hash table.
     index = 0;
-    DL_FOREACH(goxel.image->layers, layer) {
+    DL_FOREACH(img->layers, layer) {
         iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
         while (mesh_iter(&iter, bpos)) {
             mesh_get_block_data(layer->mesh, &iter, bpos, &uid);
@@ -279,7 +279,7 @@ void save_to_file(const char *path, bool with_preview)
     }
 
     // Write all the layers.
-    DL_FOREACH(goxel.image->layers, layer) {
+    DL_FOREACH(img->layers, layer) {
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
         if (!layer->base_id && !layer->shape) {
@@ -328,7 +328,7 @@ void save_to_file(const char *path, bool with_preview)
     }
 
     // Write all the cameras.
-    DL_FOREACH(goxel.image->cameras, camera) {
+    DL_FOREACH(img->cameras, camera) {
         chunk_write_start(&c, out, "CAMR");
         chunk_write_dict_value(&c, out, "name", camera->name,
                                strlen(camera->name));
@@ -340,7 +340,7 @@ void save_to_file(const char *path, bool with_preview)
                                sizeof(camera->ofs));
         chunk_write_dict_value(&c, out, "ortho", &camera->ortho,
                                sizeof(camera->ortho));
-        if (camera == goxel.image->active_camera)
+        if (camera == img->active_camera)
             chunk_write_dict_value(&c, out, "active", NULL, 0);
 
         chunk_write_finish(&c, out);
@@ -593,7 +593,7 @@ static void save_as(const char *path, bool with_preview)
         goxel.image->path = strdup(path);
         goxel.image->saved_key = image_get_key(goxel.image);
     }
-    save_to_file(goxel.image->path, with_preview);
+    save_to_file(goxel.image, goxel.image->path, with_preview);
 }
 
 ACTION_REGISTER(save_as,

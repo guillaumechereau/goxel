@@ -439,7 +439,7 @@ static void gui_init(const inputs_t *inputs)
 
 void gui_release(void)
 {
-    ImGui::DestroyContext();
+    if (gui) ImGui::DestroyContext();
 }
 
 // XXX: Move this somewhere else.
@@ -521,7 +521,7 @@ static void tools_panel(void)
         sprintf(label, "%s", values[i].name);
         if (values[i].tool_id) {
             sprintf(action_id, "tool_set_%s", values[i].tool_id);
-            action = action_get(action_id);
+            action = action_get(action_id, true);
             assert(action);
             if (*action->shortcut)
                 sprintf(label, "%s (%s)", values[i].name, action->shortcut);
@@ -1129,7 +1129,7 @@ static int export_menu_action_callback(action_t *a, void *user)
 
 static bool render_menu_item(const char *id, const char *label, bool enabled)
 {
-    const action_t *action = action_get(id);
+    const action_t *action = action_get(id, true);
     assert(action);
     if (ImGui::MenuItem(label, action->shortcut, false, enabled)) {
         action_exec(action, "");
@@ -1681,14 +1681,14 @@ bool gui_action_button(const char *id, const char *label, float size,
     const action_t *action;
     va_list ap;
 
-    action = action_get(id);
+    action = action_get(id, true);
     assert(action);
     PushID(action->id);
     ret = gui_button(label, size, action->icon);
-    if (IsItemHovered()) goxel_set_help_text(action_get(id)->help);
+    if (IsItemHovered()) goxel_set_help_text(action_get(id, true)->help);
     if (ret) {
         va_start(ap, sig);
-        action_execv(action_get(id), sig, ap);
+        action_execv(action_get(id, true), sig, ap);
         va_end(ap);
     }
     PopID();
@@ -1698,7 +1698,7 @@ bool gui_action_button(const char *id, const char *label, float size,
 bool gui_action_checkbox(const char *id, const char *label)
 {
     bool b;
-    const action_t *action = action_get(id);
+    const action_t *action = action_get(id, true);
     action_exec(action, ">b", &b);
     if (ImGui::Checkbox(label, &b)) {
         action_exec(action, "b", b);

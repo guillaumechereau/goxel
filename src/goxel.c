@@ -1072,7 +1072,7 @@ ACTION_REGISTER(past,
 #define HS2 (M_SQRT2 / 2.0)
 
 
-static int view_default(const action_t *a, astack_t *s)
+static int view_default(const action_t *a, lua_State *l)
 {
     quat_set_identity(goxel.camera.rot);
     quat_irotate(goxel.camera.rot, -M_PI / 4, 1, 0, 0);
@@ -1081,7 +1081,7 @@ static int view_default(const action_t *a, astack_t *s)
     return 0;
 }
 
-static int view_set(const action_t *a, astack_t *s)
+static int view_set(const action_t *a, lua_State *l)
 {
     quat_copy(a->data, goxel.camera.rot);
     goxel_update_meshes(-1);
