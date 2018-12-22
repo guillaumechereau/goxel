@@ -70,7 +70,7 @@ static char* find_chars_or_comment(const char* s, const char* chars)
 /* Version of strncpy that ensures dest (size bytes) is null-terminated. */
 static char* strncpy0(char* dest, const char* src, size_t size)
 {
-    strncpy(dest, src, size);
+    strncpy(dest, src, size - 1);
     dest[size - 1] = '\0';
     return dest;
 }
@@ -82,8 +82,14 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
     /* Uses a fair bit of stack (use heap instead if you need to) */
 #if INI_USE_STACK
     char line[INI_MAX_LINE];
+    int max_line = INI_MAX_LINE;
 #else
     char* line;
+    int max_line = INI_INITIAL_ALLOC;
+#endif
+#if INI_ALLOW_REALLOC && !INI_USE_STACK
+    char* new_line;
+    int offset;
 #endif
     char section[MAX_SECTION] = "";
     char prev_name[MAX_NAME] = "";
@@ -96,7 +102,7 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
     int error = 0;
 
 #if !INI_USE_STACK
-    line = (char*)malloc(INI_MAX_LINE);
+    line = (char*)malloc(INI_INITIAL_ALLOC);
     if (!line) {
         return -2;
     }
@@ -109,7 +115,27 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
 #endif
 
     /* Scan through stream line by line */
-    while (reader(line, INI_MAX_LINE, stream) != NULL) {
+    while (reader(line, max_line, stream) != NULL) {
+#if INI_ALLOW_REALLOC && !INI_USE_STACK
+        offset = strlen(line);
+        while (offset == max_line - 1 && line[offset - 1] != '\n') {
+            max_line *= 2;
+            if (max_line > INI_MAX_LINE)
+                max_line = INI_MAX_LINE;
+            new_line = realloc(line, max_line);
+            if (!new_line) {
+                free(line);
+                return -2;
+            }
+            line = new_line;
+            if (reader(line + offset, max_line - offset, stream) == NULL)
+                break;
+            if (max_line >= INI_MAX_LINE)
+                break;
+            offset += strlen(line + offset);
+        }
+#endif
+
         lineno++;
 
         start = line;
@@ -122,9 +148,8 @@ int ini_parse_stream(ini_reader reader, void* stream, ini_handler handler,
 #endif
         start = lskip(rstrip(start));
 
-        if (*start == ';' || *start == '#') {
-            /* Per Python configparser, allow both ; and # comments at the
-               start of a line */
+        if (strchr(INI_START_COMMENT_PREFIXES, *start)) {
+            /* Start-of-line comment */
         }
 #if INI_ALLOW_MULTILINE
         else if (*prev_name && *start && start > line) {
