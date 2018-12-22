@@ -608,21 +608,27 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
     // handle keyboard rotations
     if (!capture_keys) return;
-    if (inputs->keys[KEY_LEFT])
+    if (inputs->keys[KEY_LEFT]) {
         quat_irotate(goxel.camera.rot, 0.05, 0, 0, +1);
-    if (inputs->keys[KEY_RIGHT])
+        quat_normalize(goxel.camera.rot, goxel.camera.rot);
+    }
+    if (inputs->keys[KEY_RIGHT]) {
         quat_irotate(goxel.camera.rot, 0.05, 0, 0, -1);
+        quat_normalize(goxel.camera.rot, goxel.camera.rot);
+    }
     if (inputs->keys[KEY_UP]) {
         quat_conjugate(goxel.camera.rot, q);
         quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
         quat_irotate(goxel.camera.rot, -0.05,
                      x_axis[0], x_axis[1], x_axis[2]);
+        quat_normalize(goxel.camera.rot, goxel.camera.rot);
     }
     if (inputs->keys[KEY_DOWN]) {
         quat_conjugate(goxel.camera.rot, q);
         quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
         quat_irotate(goxel.camera.rot, +0.05,
                      x_axis[0], x_axis[1], x_axis[2]);
+        quat_normalize(goxel.camera.rot, goxel.camera.rot);
     }
     // C: recenter the view:
     // XXX: this should be an action!
