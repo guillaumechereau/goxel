@@ -98,6 +98,7 @@ if target_os == 'posix':
 if target_os == 'msys':
     env.Append(CCFLAGS='-DNO_ARGP')
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
+                         '-Wno-unused-function',
                          '-DFREE_WINDOWS'])
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32',
                      'z', 'tre', 'intl', 'iconv'],
