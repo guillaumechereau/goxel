@@ -25,7 +25,6 @@ debug = int(ARGUMENTS.get('debug', 1))
 profile = int(ARGUMENTS.get('profile', 0))
 werror = int(ARGUMENTS.get("werror", 1))
 clang = int(ARGUMENTS.get("clang", 0))
-argp_standalone = int(ARGUMENTS.get("argp_standalone", 0))
 cycles = int(ARGUMENTS.get('cycles', 1))
 sound = False
 
@@ -88,15 +87,12 @@ if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
 # Linux compilation support.
 if target_os == 'posix':
     env.Append(LIBS=['GL', 'm', 'z'])
-    if not conf.CheckDeclaration('__GLIBC__', includes='#include <features.h>'):
-        env.Append(LIBS=['argp'])
     # Note: add '--static' to link with all the libs needed by glfw3.
     env.ParseConfig('pkg-config --libs glfw3')
     env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
 
 # Windows compilation support.
 if target_os == 'msys':
-    env.Append(CCFLAGS='-DNO_ARGP')
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
                          '-Wno-unused-function',
                          '-DFREE_WINDOWS'])
@@ -111,7 +107,7 @@ if target_os == 'msys':
 if target_os == 'darwin':
     sources += glob.glob('src/*.m')
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
-    env.Append(LIBS=['m', 'z', 'argp', 'glfw3', 'objc'])
+    env.Append(LIBS=['m', 'z', 'glfw3', 'objc'])
 
 # Add external libs.
 env.Append(CPPPATH=['ext_src/uthash'])
@@ -128,10 +124,6 @@ env.Append(CPPPATH=['ext_src/lua'])
 if sound:
     env.Append(LIBS='openal')
     env.Append(CCFLAGS='-DSOUND=1')
-
-if argp_standalone:
-    env.Append(LIBS='argp')
-
 
 # Cycles rendering support.
 if cycles:

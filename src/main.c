@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include <getopt.h>
 
 #ifdef GLES2
 #   define GLFW_INCLUDE_ES2
@@ -47,58 +48,44 @@ typedef struct
     float scale;
 } args_t;
 
-#ifndef NO_ARGP
-#include <argp.h>
-
 #define OPT_SCRIPT 1
 
-const char *argp_program_version = "goxel " GOXEL_VERSION_STR;
-const char *argp_program_bug_address = "<guillaume@noctua-software.com>";
-static char doc[] = "A 3D voxels editor";
-static char args_doc[] = "[INPUT]";
-static struct argp_option options[] = {
-    {"export",   'e', "FILENAME", 0, "Export the model to a file" },
-    {"scale",    's', "FLOAT", 0, "Set UI scale (for retina display)"},
-    {"script",   OPT_SCRIPT, "FILENAME", 0, "Run a script and exit"},
-    {},
-};
-
-/* Parse a single option. */
-static error_t parse_opt(int key, char *arg, struct argp_state *state)
+static void parse_options(int argc, char **argv, args_t *args)
 {
-    args_t *args = state->input;
-
-    switch (key)
-    {
-    case 'e':
-        args->export = arg;
-        break;
-    case 's':
-        args->scale = atof(arg);
-        break;
-    case OPT_SCRIPT:
-        args->script = arg;
-        break;
-    case ARGP_KEY_ARG:
-        if (args->script) {
-            args->script_args[args->script_args_nb++] = arg;
+    int c, option_index;
+    static struct option long_options[] = {
+        {"export", required_argument, 0, 'e'},
+        {"scale", required_argument, 0, 's'},
+        {"script", required_argument, 0, OPT_SCRIPT},
+        {NULL, 0, NULL, 0}
+    };
+    while (true) {
+        c = getopt_long(argc, argv, "e:s:", long_options, &option_index);
+        if (c == -1) break;
+        switch (c) {
+        case 'e':
+            args->export = optarg;
             break;
+        case 's':
+            args->scale = atof(optarg);
+            break;
+        case OPT_SCRIPT:
+            args->script = optarg;
+            break;
+        case '?':
+            exit(-1);
         }
-        if (state->arg_num >= 1)
-            argp_usage(state);
-        args->input = arg;
-        break;
-    case ARGP_KEY_END:
-        break;
-    default:
-        return ARGP_ERR_UNKNOWN;
     }
-    return 0;
+    if (optind < argc) {
+        if (args->script) {
+            while (optind < argc)
+                args->script_args[args->script_args_nb++] = argv[optind++];
+        } else {
+            args->input = argv[optind];
+        }
+    }
 }
 
-/* Our argp parser. */
-static struct argp argp = { options, parse_opt, args_doc, doc };
-#endif
 
 static void loop_function(void) {
 
@@ -209,10 +196,8 @@ int main(int argc, char **argv)
 
     // Setup sys callbacks.
     sys_callbacks.set_window_title = set_window_title;
+    parse_options(argc, argv, &args);
 
-#ifndef NO_ARGP
-    argp_parse (&argp, argc, argv, 0, 0, &args);
-#endif
     g_scale = args.scale;
 
     glfwInit();
