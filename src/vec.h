@@ -687,4 +687,13 @@ DECL void quat_to_eul2(const float q[4], int order, float e1[3], float e2[3])
 
 void eul_to_quat(const float e[3], int order, float out[4]);
 
+DECL void quat_normalize(const float q[4], float out[4])
+{
+    float n = sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+    out[0] = q[0] / n;
+    out[1] = q[1] / n;
+    out[2] = q[2] / n;
+    out[3] = q[3] / n;
+}
+
 #endif // VEC_H_
