@@ -160,9 +160,9 @@
 		F08182A021BFC44400F36289 /* ldo.c in Sources */ = {isa = PBXBuildFile; fileRef = F081827E21BFC44400F36289 /* ldo.c */; };
 		F08182A221BFC45900F36289 /* script.c in Sources */ = {isa = PBXBuildFile; fileRef = F08182A121BFC45900F36289 /* script.c */; };
 		F08182A521BFC49E00F36289 /* luagoxel.c in Sources */ = {isa = PBXBuildFile; fileRef = F08182A421BFC49E00F36289 /* luagoxel.c */; };
-		F08182A721BFC4C300F36289 /* box_edit.c in Sources */ = {isa = PBXBuildFile; fileRef = F08182A621BFC4C300F36289 /* box_edit.c */; };
 		F097B3F31F0C97DB00A3622B /* gesture.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F11F0C97DB00A3622B /* gesture.c */; };
 		F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F21F0C97DB00A3622B /* gesture3d.c */; };
+		F09FFC5721CE161400B6976A /* box_edit.c in Sources */ = {isa = PBXBuildFile; fileRef = F09FFC5621CE161400B6976A /* box_edit.c */; };
 		F0A15FFC1E962F1300C6EF33 /* dicom.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF21E962F1300C6EF33 /* dicom.c */; };
 		F0A15FFD1E962F1300C6EF33 /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF31E962F1300C6EF33 /* png.c */; };
 		F0A15FFE1E962F1300C6EF33 /* povray.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF41E962F1300C6EF33 /* povray.c */; };
@@ -174,7 +174,6 @@
 		F0A160051E962F1300C6EF33 /* wavefront.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FFB1E962F1300C6EF33 /* wavefront.c */; };
 		F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160061E962F4600C6EF33 /* marchingcube.c */; };
 		F0A160091E962F4600C6EF33 /* mustache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160071E962F4600C6EF33 /* mustache.c */; };
-		F0A91AE721B18817009C3BB7 /* box_edit.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A91AE621B18817009C3BB7 /* box_edit.c */; };
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
 		F0C4F1421F308976002E73C5 /* gui_settings.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C4F1411F308976002E73C5 /* gui_settings.c */; };
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
@@ -528,9 +527,9 @@
 		F08182A121BFC45900F36289 /* script.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = script.c; sourceTree = "<group>"; };
 		F08182A321BFC49E00F36289 /* luagoxel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = luagoxel.h; sourceTree = "<group>"; };
 		F08182A421BFC49E00F36289 /* luagoxel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = luagoxel.c; sourceTree = "<group>"; };
-		F08182A621BFC4C300F36289 /* box_edit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box_edit.c; sourceTree = "<group>"; };
 		F097B3F11F0C97DB00A3622B /* gesture.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gesture.c; sourceTree = "<group>"; };
 		F097B3F21F0C97DB00A3622B /* gesture3d.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gesture3d.c; sourceTree = "<group>"; };
+		F09FFC5621CE161400B6976A /* box_edit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box_edit.c; sourceTree = "<group>"; };
 		F0A15FF21E962F1300C6EF33 /* dicom.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dicom.c; sourceTree = "<group>"; };
 		F0A15FF31E962F1300C6EF33 /* png.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = png.c; sourceTree = "<group>"; };
 		F0A15FF41E962F1300C6EF33 /* povray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = povray.c; sourceTree = "<group>"; };
@@ -542,7 +541,6 @@
 		F0A15FFB1E962F1300C6EF33 /* wavefront.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wavefront.c; sourceTree = "<group>"; };
 		F0A160061E962F4600C6EF33 /* marchingcube.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = marchingcube.c; sourceTree = "<group>"; };
 		F0A160071E962F4600C6EF33 /* mustache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mustache.c; sourceTree = "<group>"; };
-		F0A91AE621B18817009C3BB7 /* box_edit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box_edit.c; sourceTree = "<group>"; };
 		F0AE90F51C8EE01200C29080 /* assets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = assets.c; sourceTree = "<group>"; };
 		F0C4F1411F308976002E73C5 /* gui_settings.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gui_settings.c; sourceTree = "<group>"; };
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
@@ -955,7 +953,7 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
-				F08182A621BFC4C300F36289 /* box_edit.c */,
+				F09FFC5621CE161400B6976A /* box_edit.c */,
 				F08182A421BFC49E00F36289 /* luagoxel.c */,
 				F08182A321BFC49E00F36289 /* luagoxel.h */,
 				F08182A121BFC45900F36289 /* script.c */,
@@ -1170,7 +1168,7 @@
 		F07DE9C71BD0F03900BAA1AD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = "Noctua Software Limited";
 				TargetAttributes = {
 					F07DE9CE1BD0F03900BAA1AD = {
@@ -1256,6 +1254,7 @@
 				F057B3B9204EEDD000E2A63F /* kernel_sse3.cpp in Sources */,
 				F081828421BFC44400F36289 /* lobject.c in Sources */,
 				F06C683C1D2EAECC00887FCE /* camera.c in Sources */,
+				F09FFC5721CE161400B6976A /* box_edit.c in Sources */,
 				F057B38D204EEDD000E2A63F /* device_cpu.cpp in Sources */,
 				F057B448204EEDD000E2A63F /* particles.cpp in Sources */,
 				F057B3AA204EEDD000E2A63F /* filter_avx.cpp in Sources */,
@@ -1277,7 +1276,6 @@
 				F07DEA111BD0F31500BAA1AD /* texture.c in Sources */,
 				F057B3B6204EEDD000E2A63F /* kernel_split_sse3.cpp in Sources */,
 				F057B375204EEDD000E2A63F /* bvh2.cpp in Sources */,
-				F0A91AE721B18817009C3BB7 /* box_edit.c in Sources */,
 				F0EEB7E41C8EC27C004AB676 /* action.c in Sources */,
 				F081828921BFC44400F36289 /* lstrlib.c in Sources */,
 				F037D5D61EA6069A00C96D10 /* shape.c in Sources */,
@@ -1292,7 +1290,6 @@
 				F081828521BFC44400F36289 /* lmathlib.c in Sources */,
 				F057B3A9204EEDD000E2A63F /* filter.cpp in Sources */,
 				F081829F21BFC44400F36289 /* ltm.c in Sources */,
-				F08182A721BFC4C300F36289 /* box_edit.c in Sources */,
 				F057B454204EEDD000E2A63F /* subd_split.cpp in Sources */,
 				F07DEA0F1BD0F31500BAA1AD /* shape.c in Sources */,
 				F081829A21BFC44400F36289 /* lapi.c in Sources */,
@@ -1422,12 +1419,14 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -1474,12 +1473,14 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
