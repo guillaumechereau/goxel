@@ -574,6 +574,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          bool capture_keys)
 {
     float x_axis[4], q[4], p[3], n[3];
+    painter_t painter = goxel.painter;
     gesture_t *gests[] = {&goxel.gestures.drag,
                           &goxel.gestures.pan,
                           &goxel.gestures.rotate,
@@ -587,13 +588,19 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     // Need to set the cursor snap mask to default because the tool might
     // change it.
     goxel.cursor.snap_mask = goxel.snap_mask;
-    goxel.painter.box = !box_is_null(goxel.image->active_layer->box) ?
+    painter.box = !box_is_null(goxel.image->active_layer->box) ?
                          &goxel.image->active_layer->box :
                          !box_is_null(goxel.image->box) ?
                          &goxel.image->box : NULL;
+    // Swap OVER/SUB modes.
+    if (inputs->keys[' ']) {
+        if (goxel.painter.mode == MODE_SUB) painter.mode = MODE_OVER;
+        if (goxel.painter.mode == MODE_OVER) painter.mode = MODE_SUB;
+    }
 
-    if (!goxel.no_edit)
-        tool_iter(goxel.tool, viewport);
+    if (!goxel.no_edit) {
+        tool_iter(goxel.tool, &painter, viewport);
+    }
 
     if (inputs->mouse_wheel) {
         goxel.camera.dist /= pow(1.1, inputs->mouse_wheel);

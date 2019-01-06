@@ -51,7 +51,8 @@ static void do_move(layer_t *layer, const float mat[4][4])
     goxel_update_meshes(-1);
 }
 
-static int iter(tool_t *tool, const float viewport[4])
+static int iter(tool_t *tool, const painter_t *painter,
+                const float viewport[4])
 {
     float transf[4][4];
     bool first;

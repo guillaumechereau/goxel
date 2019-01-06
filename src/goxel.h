@@ -1540,7 +1540,8 @@ typedef struct tool tool_t;
 struct tool {
     int id;
     const char *action_id;
-    int (*iter_fn)(tool_t *tool, const float viewport[4]);
+    int (*iter_fn)(tool_t *tool, const painter_t *painter,
+                   const float viewport[4]);
     int (*gui_fn)(tool_t *tool);
     const char *default_shortcut;
     int state; // XXX: to be removed I guess.
@@ -1559,7 +1560,7 @@ struct tool {
     }
 
 void tool_register_(const tool_t *tool);
-int tool_iter(tool_t *tool, const float viewport[4]);
+int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4]);
 int tool_gui(tool_t *tool);
 
 int tool_gui_snap(void);

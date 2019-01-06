@@ -22,7 +22,8 @@ typedef struct {
     tool_t tool;
 } tool_plane_t;
 
-static int iter(tool_t *tool, const float viewport[4])
+static int iter(tool_t *tool, const painter_t *painter,
+                const float viewport[4])
 {
     cursor_t *curs = &goxel.cursor;
     curs->snap_mask = SNAP_MESH;

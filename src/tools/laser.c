@@ -32,9 +32,10 @@ typedef struct {
 
 static int on_drag(gesture3d_t *gest, void *user)
 {
-    tool_laser_t *laser = (tool_laser_t*)user;
+    tool_laser_t *laser = (tool_laser_t*)USER_GET(user, 0);
+    painter_t painter = *(painter_t*)USER_GET(user, 1);
+
     mesh_t *mesh = goxel.image->active_layer->mesh;
-    painter_t painter = goxel.painter;
     painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
     vec4_set(painter.color, 255, 255, 255, 255);
@@ -51,7 +52,8 @@ static int on_drag(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int iter(tool_t *tool, const float viewport[4])
+static int iter(tool_t *tool, const painter_t *painter,
+                const float viewport[4])
 {
     tool_laser_t *laser = (tool_laser_t*)tool;
     cursor_t *curs = &goxel.cursor;
@@ -85,7 +87,7 @@ static int iter(tool_t *tool, const float viewport[4])
         render_box(&goxel.rend, laser->box, NULL, EFFECT_WIREFRAME);
     }
 
-    gesture3d(&laser->gestures.drag, curs, laser);
+    gesture3d(&laser->gestures.drag, curs, USER_PASS(laser, painter));
 
     return tool->state;
 }

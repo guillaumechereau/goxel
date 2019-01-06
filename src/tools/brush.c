@@ -110,8 +110,8 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
 
 static int on_drag(gesture3d_t *gest, void *user)
 {
-    tool_brush_t *brush = (tool_brush_t*)user;
-    painter_t painter2;
+    tool_brush_t *brush = USER_GET(user, 0);
+    painter_t painter = *(painter_t*)USER_GET(user, 1);
     float box[4][4];
     cursor_t *curs = gest->cursor;
     bool shift = curs->flags & CURSOR_SHIFT;
@@ -127,22 +127,21 @@ static int on_drag(gesture3d_t *gest, void *user)
         mesh_clear(brush->mesh);
 
         if (shift) {
-            painter2 = goxel.painter;
-            painter2.shape = &shape_cylinder;
-            painter2.mode = MODE_MAX;
+            painter.shape = &shape_cylinder;
+            painter.mode = MODE_MAX;
             get_box(brush->start_pos, curs->pos, curs->normal, r, NULL, box);
-            mesh_op(brush->mesh, &painter2, box);
+            mesh_op(brush->mesh, &painter, box);
         }
     }
 
+    painter = *(painter_t*)USER_GET(user, 1);
     if (    (gest->state == GESTURE_UPDATE) &&
-            (check_can_skip(brush, curs, goxel.painter.mode))) {
+            (check_can_skip(brush, curs, painter.mode))) {
         return 0;
     }
 
-    painter2 = goxel.painter;
-    painter2.mode = MODE_MAX;
-    vec4_set(painter2.color, 255, 255, 255, 255);
+    painter.mode = MODE_MAX;
+    vec4_set(painter.color, 255, 255, 255, 255);
 
     // Render several times if the space between the current pos
     // and the last pos is larger than the size of the tool shape.
@@ -151,13 +150,13 @@ static int on_drag(gesture3d_t *gest, void *user)
     for (i = 0; i < nb; i++) {
         vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos);
         get_box(pos, NULL, curs->normal, r, NULL, box);
-        mesh_op(brush->mesh, &painter2, box);
+        mesh_op(brush->mesh, &painter, box);
     }
 
+    painter = *(painter_t*)USER_GET(user, 1);
     if (!goxel.tool_mesh) goxel.tool_mesh = mesh_new();
     mesh_set(goxel.tool_mesh, brush->mesh_orig);
-    mesh_merge(goxel.tool_mesh, brush->mesh, goxel.painter.mode,
-               goxel.painter.color);
+    mesh_merge(goxel.tool_mesh, brush->mesh, painter.mode, painter.color);
     goxel_update_meshes(MESH_RENDER);
     vec3_copy(curs->pos, brush->start_pos);
     brush->last_op.mesh_key = mesh_get_key(goxel.tool_mesh);
@@ -176,7 +175,8 @@ static int on_drag(gesture3d_t *gest, void *user)
 static int on_hover(gesture3d_t *gest, void *user)
 {
     mesh_t *mesh = goxel.image->active_layer->mesh;
-    tool_brush_t *brush = (tool_brush_t*)user;
+    tool_brush_t *brush = USER_GET(user, 0);
+    const painter_t *painter = USER_GET(user, 1);
     cursor_t *curs = gest->cursor;
     float box[4][4];
     bool shift = curs->flags & CURSOR_SHIFT;
@@ -191,14 +191,14 @@ static int on_hover(gesture3d_t *gest, void *user)
     if (shift)
         render_line(&goxel.rend, brush->start_pos, curs->pos, NULL);
 
-    if (goxel.tool_mesh && check_can_skip(brush, curs, goxel.painter.mode))
+    if (goxel.tool_mesh && check_can_skip(brush, curs, painter->mode))
         return 0;
 
     get_box(curs->pos, NULL, curs->normal, goxel.tool_radius, NULL, box);
 
     if (!goxel.tool_mesh) goxel.tool_mesh = mesh_new();
     mesh_set(goxel.tool_mesh, mesh);
-    mesh_op(goxel.tool_mesh, &goxel.painter, box);
+    mesh_op(goxel.tool_mesh, painter, box);
     goxel_update_meshes(MESH_RENDER);
 
     brush->last_op.mesh_key = mesh_get_key(mesh);
@@ -207,7 +207,8 @@ static int on_hover(gesture3d_t *gest, void *user)
 }
 
 
-static int iter(tool_t *tool, const float viewport[4])
+static int iter(tool_t *tool, const painter_t *painter,
+                const float viewport[4])
 {
     tool_brush_t *brush = (tool_brush_t*)tool;
     cursor_t *curs = &goxel.cursor;
@@ -232,10 +233,10 @@ static int iter(tool_t *tool, const float viewport[4])
     }
 
     curs->snap_offset = goxel.snap_offset * goxel.tool_radius +
-        ((goxel.painter.mode == MODE_OVER) ? 0.5 : -0.5);
+        ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
-    gesture3d(&brush->gestures.hover, curs, brush);
-    gesture3d(&brush->gestures.drag, curs, brush);
+    gesture3d(&brush->gestures.hover, curs, USER_PASS(brush, painter));
+    gesture3d(&brush->gestures.drag, curs, USER_PASS(brush, painter));
 
     return tool->state;
 }

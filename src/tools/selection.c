@@ -135,7 +135,8 @@ static int on_drag(gesture3d_t *gest, void *user)
 }
 
 // XXX: this is very close to tool_shape_iter.
-static int iter(tool_t *tool, const float viewport[4])
+static int iter(tool_t *tool, const painter_t *painter,
+                const float viewport[4])
 {
     float transf[4][4];
 

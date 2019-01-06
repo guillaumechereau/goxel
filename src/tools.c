@@ -71,7 +71,7 @@ static gesture3d_t g_pick_color_gesture = {
     .buttons = CURSOR_CTRL,
 };
 
-int tool_iter(tool_t *tool, const float viewport[4])
+int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
 {
     assert(tool);
     if (    (tool->flags & TOOL_REQUIRE_CAN_EDIT) &&
@@ -79,7 +79,7 @@ int tool_iter(tool_t *tool, const float viewport[4])
         goxel_set_help_text("Cannot edit this layer");
         return 0;
     }
-    tool->state = tool->iter_fn(tool, viewport);
+    tool->state = tool->iter_fn(tool, painter, viewport);
 
     if (tool->flags & TOOL_ALLOW_PICK_COLOR)
         gesture3d(&g_pick_color_gesture, &goxel.cursor, NULL);

@@ -24,7 +24,8 @@ typedef struct {
 } tool_pick_color_t;
 
 
-int tool_color_picker_iter(tool_t *tool, const float viewport[4])
+int tool_color_picker_iter(tool_t *tool, const painter_t *painter,
+                           const float viewport[4])
 {
     uint8_t color[4];
     mesh_t *mesh = goxel.layers_mesh;

@@ -47,7 +47,7 @@ typedef struct {
 } tool_procedural_t;
 
 
-static int iter(tool_t *tool, const float viewport[4])
+static int iter(tool_t *tool, const painter_t *painter, const float viewport[4])
 {
     float box[4][4];
     gox_proc_t *proc = &((tool_procedural_t*)tool)->proc;
