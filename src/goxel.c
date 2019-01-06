@@ -597,6 +597,9 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
         if (goxel.painter.mode == MODE_SUB) painter.mode = MODE_OVER;
         if (goxel.painter.mode == MODE_OVER) painter.mode = MODE_SUB;
     }
+    // Only apply smoothness for paint mode, that is we don't support
+    // semi 'transparent' voxels anymore.
+    if (painter.mode != MODE_PAINT) painter.smoothness = 0;
 
     if (!goxel.no_edit) {
         tool_iter(goxel.tool, &painter, viewport);
