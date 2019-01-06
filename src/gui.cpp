@@ -344,6 +344,7 @@ static void init_ImGui(const inputs_t *inputs)
     io.KeyMap[ImGuiKey_Backspace]   = KEY_BACKSPACE;
     io.KeyMap[ImGuiKey_Enter]       = KEY_ENTER;
     io.KeyMap[ImGuiKey_Escape]      = KEY_ESCAPE;
+    io.KeyMap[ImGuiKey_Space]       = ' ';
     io.KeyMap[ImGuiKey_A]           = 'A';
     io.KeyMap[ImGuiKey_C]           = 'C';
     io.KeyMap[ImGuiKey_V]           = 'V';
