@@ -1491,14 +1491,6 @@ void gui_iter(const inputs_t *inputs)
         action_exec2("layer_clear", "");
 
     if (!io.WantCaptureKeyboard) {
-
-        // Handle space key toggle over/sub modes.
-        if (    ImGui::IsKeyPressed(' ', false) &&
-                goxel.painter.mode == MODE_OVER)
-            goxel.painter.mode = MODE_SUB;
-        if (ImGui::IsKeyReleased(' ') && goxel.painter.mode == MODE_SUB)
-            goxel.painter.mode = MODE_OVER;
-
         float last_tool_radius = goxel.tool_radius;
         if (isCharPressed('[')) goxel.tool_radius -= 0.5;
         if (isCharPressed(']')) goxel.tool_radius += 0.5;
