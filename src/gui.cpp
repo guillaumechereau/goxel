@@ -475,13 +475,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    // XXX: 8 here means 'export' panel.  Need to use an enum or find a
-    // better way!
-    if (gui->current_panel == 8 && goxel.render_task.status) {
-        goxel_render_export_view(view->rect);
-    } else {
-        goxel_render_view(view->rect);
-    }
+    goxel_render_view(view->rect);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
@@ -901,7 +895,6 @@ static void render_panel(void)
 {
     int i;
     int maxsize;
-    const char *path;
     typeof(goxel.render_task) *task = &goxel.render_task;
 
     goxel.no_edit = task->status || gui->popup_count;
@@ -920,16 +913,21 @@ static void render_panel(void)
         goxel.image->export_width = gui->view.rect[2];
         goxel.image->export_height = gui->view.rect[3];
     }
+    /*
     if (gui_button("Set output", 1, 0)) {
         path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "png\0*.png\0", NULL,
                                     "untitled.png");
         if (path) strcpy(goxel.render_task.output, path);
     }
+    */
     gui_group_end();
 
+    /*
     if (*goxel.render_task.output)
         gui_text("%s", goxel.render_task.output);
+    */
 
+    /*
     if (task->status == 0 && gui_button("Render", 0, 0)) task->status = 1;
     if (task->status == 1 && gui_button("Cancel", 0, 0)) task->status = 0;
     if (task->status == 2 && gui_button("Restart", 0, 0)) {
@@ -941,6 +939,7 @@ static void render_panel(void)
     if (goxel.render_task.status) {
         gui_text("%d/100", (int)(goxel.render_task.progress * 100));
     }
+    */
 
 }
 

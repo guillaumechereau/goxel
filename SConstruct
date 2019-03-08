@@ -25,7 +25,6 @@ debug = int(ARGUMENTS.get('debug', 1))
 profile = int(ARGUMENTS.get('profile', 0))
 werror = int(ARGUMENTS.get("werror", 1))
 clang = int(ARGUMENTS.get("clang", 0))
-cycles = int(ARGUMENTS.get('cycles', 1))
 sound = False
 
 if os.environ.get('CC') == 'clang': clang = 1
@@ -38,16 +37,10 @@ if clang:
     env.Replace(CC='clang', CXX='clang++')
 
 # Asan & Ubsan (need to come first).
-# Cycles doesn't like libasan with clang, so we only use it on
-# C code with clang.
 if debug and target_os == 'posix':
-    if not clang:
-        env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
-                   LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
-                   LIBS=['asan', 'ubsan'])
-    else:
-        env.Append(CFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
-                   LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'])
+    env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
+               LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
+               LIBS=['asan', 'ubsan'])
 
 
 # Global compilation flags.
@@ -125,47 +118,6 @@ env.Append(CPPPATH=['ext_src/lua'])
 if sound:
     env.Append(LIBS='openal')
     env.Append(CCFLAGS='-DSOUND=1')
-
-# Cycles rendering support.
-if cycles:
-    sources += glob.glob('ext_src/cycles/src/util/*.cpp')
-    sources = [x for x in sources if not x.endswith('util_view.cpp')]
-    sources += glob.glob('ext_src/cycles/src/bvh/*.cpp')
-    sources += glob.glob('ext_src/cycles/src/render/*.cpp')
-    sources += glob.glob('ext_src/cycles/src/graph/*.cpp')
-    sources = [x for x in sources if not x.endswith('node_xml.cpp')]
-
-    sources += glob.glob('ext_src/cycles/src/device/device.cpp')
-    sources += glob.glob('ext_src/cycles/src/device/device_cpu.cpp')
-    sources += glob.glob('ext_src/cycles/src/device/device_memory.cpp')
-    sources += glob.glob('ext_src/cycles/src/device/device_denoising.cpp')
-    sources += glob.glob('ext_src/cycles/src/device/device_split_kernel.cpp')
-    sources += glob.glob('ext_src/cycles/src/device/device_task.cpp')
-
-    sources += glob.glob('ext_src/cycles/src/kernel/kernels/cpu/*.cpp')
-    sources += glob.glob('ext_src/cycles/src/subd/*.cpp')
-
-    env.Append(CPPPATH=['ext_src/cycles/src'])
-    env.Append(CPPPATH=['ext_src/cycles/third_party/atomic'])
-    env.Append(CPPFLAGS=[
-        '-DCYCLES_STD_UNORDERED_MAP',
-        '-DCCL_NAMESPACE_BEGIN=namespace ccl {',
-        '-DCCL_NAMESPACE_END=}',
-        '-DWITH_CUDA_DYNLOAD',
-        '-DWITHOUT_OPENIMAGEIO',
-        '-DWITH_GLEW_MX',
-        '-DWITH_CYCLES',
-    ])
-    # Try to improve compilation speed on linux.
-    if not clang: env.Append(CPPFLAGS='-fno-var-tracking-assignments')
-    # Seems to fix a crash on windows and i386 targets!
-    if target_os == 'msys':
-        env.Append(CXXFLAGS='-msse2 -fno-tree-slp-vectorize')
-        env.Append(CXXFLAGS='-O3')
-    env.Append(CPPFLAGS=['-Wno-sign-compare', '-Wno-strict-aliasing',
-                         '-Wno-uninitialized'])
-    if clang:
-        env.Append(CPPFLAGS=['-Wno-overloaded-virtual'])
 
 # Append external environment flags
 env.Append(
