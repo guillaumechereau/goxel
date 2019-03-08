@@ -50,7 +50,7 @@ if debug and target_os == 'posix':
 env.Append(
     CFLAGS=['-std=gnu99', '-Wall',
             '-Wno-unknow-pragma', '-Wno-unknown-warning-option'],
-    CXXFLAGS=['-std=gnu++11', '-Wall', '-Wno-narrowing',
+    CXXFLAGS=['-std=gnu++17', '-Wall', '-Wno-narrowing',
               '-Wno-class-memaccess']
 )
 
