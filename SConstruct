@@ -113,7 +113,8 @@ env.Append(CPPPATH=['ext_src/inih'])
 env.Append(CFLAGS='-DINI_HANDLER_LINENO=1')
 
 sources += glob.glob('ext_src/lua/*.c')
-env.Append(CPPPATH=['ext_src/lua'])
+env.Append(CPPPATH='ext_src/lua',
+           CFLAGS='-DLUA_USE_POSIX')
 
 if sound:
     env.Append(LIBS='openal')
