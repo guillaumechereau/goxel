@@ -475,7 +475,11 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    goxel_render_view(view->rect);
+    bool render_mode;
+    // XXX: 8 here means 'export' panel.  Need to use an enum or find a
+    // better way!
+    render_mode = gui->current_panel == 8 && goxel.render_task.status;
+    goxel_render_view(view->rect, render_mode);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
@@ -927,7 +931,6 @@ static void render_panel(void)
         gui_text("%s", goxel.render_task.output);
     */
 
-    /*
     if (task->status == 0 && gui_button("Render", 0, 0)) task->status = 1;
     if (task->status == 1 && gui_button("Cancel", 0, 0)) task->status = 0;
     if (task->status == 2 && gui_button("Restart", 0, 0)) {
@@ -935,12 +938,9 @@ static void render_panel(void)
         task->progress = 0;
         task->force_restart = true;
     }
-
     if (goxel.render_task.status) {
         gui_text("%d/100", (int)(goxel.render_task.progress * 100));
     }
-    */
-
 }
 
 static void image_panel(void)

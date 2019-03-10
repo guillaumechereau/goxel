@@ -677,11 +677,56 @@ static void render_export_viewport(const float viewport[4])
     render_rect(&goxel.rend, plane, EFFECT_STRIP);
 }
 
-void goxel_render_view(const float viewport[4])
+static void render_pathtrace_view(const float viewport[4])
+{
+    typeof(goxel.render_task) *task = &goxel.render_task;
+    float a, mat[4][4];
+    uint8_t *ibuf;
+    int i;
+    int rect[4] = {(int)viewport[0],
+                   (int)(goxel.screen_size[1] - viewport[1] - viewport[3]),
+                   (int)viewport[2],
+                   (int)viewport[3]};
+
+    // Recreate the buffer if needed.
+    if (    !task->buf ||
+            task->w != goxel.image->export_width ||
+            task->h != goxel.image->export_height) {
+        free(task->buf);
+        task->w = goxel.image->export_width;
+        task->h = goxel.image->export_height;
+        task->buf = calloc(task->w * task->h, 4 * sizeof(float));
+    }
+    pathtrace_iter(task->buf, task->w, task->h, &task->progress,
+                   task->force_restart);
+    task->force_restart = false;
+
+    // Render the buffer.
+    mat4_set_identity(mat);
+    a = 1.0 * task->w / task->h / rect[2] * rect[3];
+    mat4_iscale(mat, min(a, 1.f), -min(1.f / a, 1.f), 1);
+
+    ibuf = malloc(task->w * task->h * 4);
+    for (i = 0; i < task->w * task->h * 4; i++) {
+        ibuf[i] = clamp(task->buf[i] * 255, 0, 255);
+    }
+
+    render_img2(&goxel.rend, ibuf, task->w, task->h, 4, mat,
+                EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
+    render_submit(&goxel.rend, rect, goxel.back_color);
+    free(ibuf);
+}
+
+void goxel_render_view(const float viewport[4], bool render_mode)
 {
     layer_t *layer;
     renderer_t *rend = &goxel.rend;
     const uint8_t layer_box_color[4] = {128, 128, 255, 255};
+
+    if (render_mode) {
+        render_pathtrace_view(viewport);
+        return;
+    }
 
     goxel.camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel.camera);
