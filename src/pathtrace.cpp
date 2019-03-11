@@ -122,6 +122,9 @@ static bool sync_mesh(int w, int h, bool force)
     key = crc64(key, (const uint8_t*)&force, sizeof(force));
     if (key == g_state.key) return false;
 
+    trace_image_async_stop(g_state.trace_futures, g_state.trace_queue,
+                           g_state.trace_options);
+
     g_state.key = key;
     g_state.scene = {};
     g_state.lights = {};
@@ -203,7 +206,7 @@ static void sync(int w, int h, bool force)
 {
     bool mesh_changed, cam_changed;
     mesh_changed = sync_mesh(w, h, force);
-    cam_changed = sync_camera(w, h, &goxel.camera, force);
+    cam_changed = sync_camera(w, h, &goxel.camera, force || mesh_changed);
 
     if (mesh_changed) {
         sync_light();
