@@ -198,7 +198,7 @@ static void sync_light(void)
     g_state.scene.shapes.push_back(shape);
     instance.shape = g_state.scene.shapes.size() - 1;
     instance.name = shape.name;
-    instance.frame = make_translation_frame<float>({0, 0, 100});
+    instance.frame = make_translation_frame<float>({50, 20, 100});
     g_state.scene.instances.push_back(instance);
 }
 
