@@ -244,45 +244,6 @@ static void sync(int w, int h, bool force)
                                 g_state.trace_futures, g_state.trace_sample,
                                 g_state.trace_queue, g_state.trace_options);
     }
-
-    /*
-    uint64_t key = mesh_get_key(goxel.render_mesh);
-    if (key == g_state.key) return;
-    g_state.key = key;
-
-    LOG_I("Load scene %d %d", w, h);
-    try {
-        load_scene("/home/guillaume/src/yocto-gl/tests/basic-al.json",
-                   g_state.scene);
-    } catch (const std::exception& e) {
-        return;
-    }
-
-    // tesselate
-    tesselate_shapes(g_state.scene);
-
-    // add components
-    add_missing_cameras(g_state.scene);
-    add_missing_names(g_state.scene);
-    print_validation_errors(g_state.scene);
-
-    // build bvh
-    build_scene_bvh(g_state.scene, g_state.bvh);
-
-    // init renderer
-    init_trace_lights(g_state.lights, g_state.scene);
-
-    // fix renderer type if no lights
-    if (g_state.lights.instances.empty() && g_state.lights.environments.empty() &&
-        is_trace_sampler_lit(g_state.trace_options)) {
-        printf("no lights presents, switching to eyelight shader\n");
-        g_state.trace_options.sampler_type = trace_sampler_type::eyelight;
-    }
-
-    g_state.image = image4f({w, h});
-
-    init_trace_state(g_state.state, {w, h}, g_state.trace_options.random_seed);
-    */
 }
 
 /*
@@ -302,16 +263,8 @@ void pathtrace_iter(float *buf, int w, int h, float *progress,
 {
     g_state.trace_options.image_size = {w, h};
     sync(w, h, force_restart);
-
-    /*
-    trace_image_samples(g_state.image, g_state.state, g_state.scene,
-                        g_state.bvh, g_state.lights,
-                        g_state.current_sample++,
-                        g_state.trace_options);
-    */
     assert(g_state.display.size()[0] == w);
     assert(g_state.display.size()[1] == h);
     tonemap_image(g_state.display, g_state.image, 0, false, true);
-
     memcpy(buf, g_state.display.data(), w * h * 4 * sizeof(float));
 }
