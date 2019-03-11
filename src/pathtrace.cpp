@@ -265,6 +265,20 @@ void pathtrace_iter(float *buf, int w, int h, float *progress,
     sync(w, h, force_restart);
     assert(g_state.display.size()[0] == w);
     assert(g_state.display.size()[1] == h);
-    tonemap_image(g_state.display, g_state.image, 0, false, true);
-    memcpy(buf, g_state.display.data(), w * h * 4 * sizeof(float));
+
+    auto region = image_region{};
+    int size = 0;
+    int i, j;
+    while (g_state.trace_queue.try_pop(region)) {
+        tonemap_image_region(g_state.display, region, g_state.image,
+                0, false, true);
+        for (i = region.min[1]; i < region.max[1]; i++)
+        for (j = region.min[0]; j < region.max[0]; j++) {
+            memcpy(&buf[(i * w + j) * 4],
+                   g_state.display.data() + (i * w + j),
+                   4 * sizeof(float));
+        }
+        size += region.size().x * region.size().y;
+        if (size >= g_state.image.size().x * g_state.image.size().y) break;
+    }
 }
