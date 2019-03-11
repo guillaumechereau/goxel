@@ -58,7 +58,7 @@ static void blit(const uint8_t *src, int src_w, int src_h, int bpp,
     }
 }
 
-static void texture_set_data(texture_t *tex,
+void texture_set_data(texture_t *tex,
         const uint8_t *data, int w, int h, int bpp)
 {
     uint8_t *buff0 = NULL;

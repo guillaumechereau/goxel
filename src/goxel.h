@@ -675,6 +675,8 @@ void texture_save_to_file(const texture_t *tex, const char *path);
 
 texture_t *texture_copy(texture_t *tex);
 void texture_delete(texture_t *tex);
+void texture_set_data(texture_t *tex,
+                      const uint8_t *data, int w, int h, int bpp);
 // #############################
 
 
@@ -1653,6 +1655,7 @@ typedef struct goxel
         char output[1024];  // Output path.
         float progress;
         bool force_restart;
+        texture_t *texture;
     } render_task;
 
     // Used to check if the active mesh changed to play tick sound.

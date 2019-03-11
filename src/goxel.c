@@ -696,6 +696,8 @@ static void render_pathtrace_view(const float viewport[4])
         task->w = goxel.image->export_width;
         task->h = goxel.image->export_height;
         task->buf = calloc(task->w * task->h, 4 * sizeof(float));
+        texture_delete(task->texture);
+        task->texture = texture_new_surface(task->w, task->h, 0);
     }
     pathtrace_iter(task->buf, task->w, task->h, &task->progress,
                    task->force_restart);
@@ -704,15 +706,15 @@ static void render_pathtrace_view(const float viewport[4])
     // Render the buffer.
     mat4_set_identity(mat);
     a = 1.0 * task->w / task->h / rect[2] * rect[3];
-    mat4_iscale(mat, min(a, 1.f), -min(1.f / a, 1.f), 1);
+    mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
 
     ibuf = malloc(task->w * task->h * 4);
     for (i = 0; i < task->w * task->h * 4; i++) {
         ibuf[i] = clamp(task->buf[i] * 255, 0, 255);
     }
-
-    render_img2(&goxel.rend, ibuf, task->w, task->h, 4, mat,
-                EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
+    texture_set_data(task->texture, ibuf, task->w, task->h, 4);
+    render_img(&goxel.rend, task->texture, mat,
+               EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
     render_submit(&goxel.rend, rect, goxel.back_color);
     free(ibuf);
 }
