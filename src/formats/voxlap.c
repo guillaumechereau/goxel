@@ -187,12 +187,18 @@ static int kvx_import(const char *path)
                 memcpy(cube[AT(x, y, z + i, w, h, d)], palette[color], 4);
             }
             nb -= len + 3;
-            // Fill
+
+            /* KVX format only saves the visible voxels.  Since we have the
+             * face information, we can fill the gaps ourself between
+             * top visible and bottom visible voxels.
+             * Note: this should be an option.  */
             if (visface & 0x10) lastz = z + len;
             if (visface & 0x20) {
-                for (i = lastz; i < z; i++)
-                    if (cube[AT(x, y, i, w, h, d)][3] == 0)
+                for (i = lastz; i < z; i++) {
+                    if (cube[AT(x, y, i, w, h, d)][3] == 0) {
                         memcpy(cube[AT(x, y, i, w, h, d)], palette[color], 4);
+                    }
+                }
             }
         }
     }
