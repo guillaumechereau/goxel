@@ -124,6 +124,7 @@ static bool sync_mesh(int w, int h, bool force)
 
     g_state.key = key;
     g_state.scene = {};
+    g_state.lights = {};
 
     // The mesh has changed, regenerates the scene.
     iter = mesh_get_iterator(mesh,
@@ -175,14 +176,26 @@ static void sync_light(void)
 {
     yocto_shape shape;
     yocto_instance instance;
+    yocto_material material;
+    float d = 100;
+    float ke = 20;
+
+    material.name = "light";
+    material.emission = {ke * d * d, ke * d * d, ke * d * d};
+    g_state.scene.materials.push_back(material);
 
     shape.name = "light";
-    shape.positions.push_back({0, 0, 100});
-    shape.radius.push_back(1);
-    shape.points.push_back(0);
+    shape.positions.push_back({0, 0, 0});
+    shape.positions.push_back({1, 0, 0});
+    shape.positions.push_back({1, 1, 0});
+
+    shape.triangles.push_back({0, 1, 2});
+    shape.material = g_state.scene.materials.size() - 1;
+
     g_state.scene.shapes.push_back(shape);
     instance.shape = g_state.scene.shapes.size() - 1;
     instance.name = shape.name;
+    instance.frame = make_translation_frame<float>({0, 0, 100});
     g_state.scene.instances.push_back(instance);
 }
 
