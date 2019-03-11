@@ -16,6 +16,12 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Support for KVX format, used by the Build engine (Shadow Warrior/Blood)
+ * and KV6 format, used by Voxlap, Evaldraw.
+ * From the great Ken Silvemans.
+ */
+
 #include "goxel.h"
 
 #define READ(type, file) \
