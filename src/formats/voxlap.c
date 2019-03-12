@@ -24,8 +24,31 @@
 
 #include "goxel.h"
 
+/*
+ * Structure that represents a single voxel and visible faces.
+ * Used as an intermediate structure for export.
+ */
+typedef struct {
+    int pos[3];
+    int color;
+    int vis;
+} voxel_t;
+
+/*
+ * Structure that represents a single slab, for export.
+ */
+typedef struct {
+    int     pos[3];         // Starting top position.
+    uint8_t len;            // Number of voxels in the slab.
+    uint8_t vis;            // Visible faces.
+    uint8_t colors[256];    // Colors from top to bottom.
+} slab_t;
+
+
 #define READ(type, file) \
     ({ type v; size_t r = fread(&v, sizeof(v), 1, file); (void)r; v;})
+#define WRITE(type, v, file) \
+    ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
 #define raise(msg) do { \
         LOG_E(msg); \
@@ -222,6 +245,223 @@ end:
     return ret;
 }
 
+
+static int get_color_index(uint8_t v[4], uint8_t (*palette)[4])
+{
+    const uint8_t *c;
+    int i, dist, best = -1, best_dist = 1024;
+    for (i = 1; i < 256; i++) {
+        c = palette[i];
+        dist = abs((int)c[0] - (int)v[0]) +
+               abs((int)c[1] - (int)v[1]) +
+               abs((int)c[2] - (int)v[2]);
+        if (dist == 0) return i;
+        if (dist < best_dist) {
+            best_dist = dist;
+            best = i;
+        }
+    }
+    return best;
+}
+
+// Sort the voxels as they appear in the slabs.
+static int voxel_cmp(const void *a_, const void *b_)
+{
+    const voxel_t *a = (void*)a_;
+    const voxel_t *b = (void*)b_;
+    return cmp(a->pos[0], b->pos[0]) ?:
+           cmp(a->pos[1], b->pos[1]) ?:
+           cmp(a->pos[2], b->pos[2]);
+}
+
+/*
+ * Attempt to add a voxel into a slab, return true for success.
+ */
+static bool slab_append(slab_t *slab, voxel_t *vox)
+{
+    if (slab->vis & 32) return false; // Slab already finished.
+    if (slab->len == 255) return false; // No more space.
+
+    if (slab->len == 0) {
+        memcpy(slab->pos, vox->pos, sizeof(slab->pos));
+        slab->vis = vox->vis;
+    }
+
+    if (    vox->pos[0] != slab->pos[0] ||
+            vox->pos[1] != slab->pos[1] ||
+            vox->pos[2] != slab->pos[2] + slab->len)
+        return false;
+
+    // All the vertical faces should have the same visibility.
+    if ((vox->vis & 15) != (slab->vis & 15)) return false;
+    slab->vis |= (vox->vis & 32); // Add bottom face if needed.
+    slab->colors[slab->len++] = vox->color;
+    return true;
+}
+
+
+static void kvx_export(const mesh_t *mesh, const char *path)
+{
+    FILE *file;
+    uint8_t (*palette)[4];
+    mesh_iterator_t iter;
+    mesh_accessor_t acc;
+    uint8_t v[4];
+    float box[4][4];
+    int size[3], orig[3], x, y, i;
+    UT_array *slabs;
+    UT_array *voxels;
+    slab_t *slab;
+    voxel_t voxel, *vox;
+    uint32_t ofs;
+    uint32_t *xoffsets;
+    uint32_t *xyoffsets;
+
+    UT_icd voxel_icd = {sizeof(voxel_t), NULL, NULL, NULL};
+    UT_icd slab_icd = {sizeof(slab_t), NULL, NULL, NULL};
+
+    mat4_copy(goxel.image->box, box);
+    if (box_is_null(box)) mesh_get_box(mesh, true, box);
+    size[0] = box[0][0] * 2;
+    size[1] = box[1][1] * 2;
+    size[2] = box[2][2] * 2;
+    orig[0] = box[3][0] - box[0][0];
+    orig[1] = box[3][1] - box[1][1];
+    orig[2] = box[3][2] - box[2][2];
+
+    file = fopen(path, "wb");
+    // Generates the palette.
+    palette = calloc(256, sizeof(*palette));
+    quantization_gen_palette(mesh, 256, (void*)(palette));
+
+    // Iter the voxels and only keep the visible ones, plus the visible
+    // faces mask.  Put them all into an array.
+    utarray_new(voxels, &voxel_icd);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
+    acc = mesh_get_accessor(mesh);
+
+    while (mesh_iter(&iter, voxel.pos)) {
+        mesh_get_at(mesh, &iter, voxel.pos, v);
+        if (v[3] < 127) continue;
+        // Compute visible face mask.
+        voxel.vis = 0;
+        #define vis_test(x, y, z) \
+            (mesh_get_alpha_at(mesh, &acc, (int[]){voxel.pos[0] + (x), \
+                                                   voxel.pos[1] + (y), \
+                                                   voxel.pos[2] + (z)}) < 127)
+        if (vis_test(-1,  0,  0)) voxel.vis |= 1;
+        if (vis_test(+1,  0,  0)) voxel.vis |= 2;
+        if (vis_test( 0, -1,  0)) voxel.vis |= 4;
+        if (vis_test( 0, +1,  0)) voxel.vis |= 8;
+        if (vis_test( 0,  0, -1)) voxel.vis |= 16;
+        if (vis_test( 0,  0, +1)) voxel.vis |= 32;
+
+        #undef vis_test
+        if (!voxel.vis) continue; // No visible faces.
+        voxel.color = get_color_index(v, palette);
+        voxel.pos[0] -= orig[0];
+        voxel.pos[1] -= orig[1];
+        voxel.pos[2] -= orig[2];
+        assert(voxel.pos[0] >= 0);
+        assert(voxel.pos[1] >= 0);
+        assert(voxel.pos[2] >= 0);
+        utarray_push_back(voxels, &voxel);
+    }
+
+    // Sort the voxels by xy columns in order they will be in the slabs.
+    utarray_sort(voxels, voxel_cmp);
+
+    // Iter the voxels and generates the slabs array.
+    utarray_new(slabs, &slab_icd);
+    utarray_extend_back(slabs); // Add an initial slab.
+    for (vox = (void*)utarray_front(voxels); vox;
+         vox = (void*)utarray_next(voxels, vox))
+    {
+        slab = (void*)utarray_back(slabs);
+        if (slab_append(slab, vox)) continue;
+        // Finished a slab, create a new one.
+        utarray_extend_back(slabs); // Add a new slab.
+        slab = (void*)utarray_back(slabs);
+        slab_append(slab, vox);     // Always works.
+    }
+
+    // Compute xoffsets and xyoffsetx.
+    // Can we do it in a simpler way?
+    xoffsets = calloc(size[0] + 1, sizeof(*xoffsets));
+    xyoffsets = calloc(size[0] * (size[1] + 1), sizeof(*xyoffsets));
+    ofs = (size[0] + 1) * 4 + size[0] * (size[1] + 1) * 2;
+    xoffsets[0] = ofs;
+
+    ofs = (size[0] + 1) * 4 + size[0] * (size[1] + 1) * 2;
+    slab = (void*)utarray_front(slabs);
+    for (x = 0; x < size[0]; x++) {
+        while (slab && slab->pos[0] <= x) {
+            ofs += 3 + slab->len;
+            slab = (void*)utarray_next(slabs, slab);
+        }
+        xoffsets[x + 1] = ofs;
+    }
+
+    ofs = (size[0] + 1) * 4 + size[0] * (size[1] + 1) * 2;
+    slab = (void*)utarray_front(slabs);
+    for (x = 0; x < size[0]; x++) {
+        xyoffsets[x * (size[1] + 1)] = 0;
+        for (y = 0; y < size[1]; y++) {
+            while (slab && slab->pos[0] <= x && slab->pos[1] <= y) {
+                ofs += 3 + slab->len;
+                slab = (void*)utarray_next(slabs, slab);
+            }
+            xyoffsets[x * (size[1] + 1) + y + 1] = ofs - xoffsets[x];
+        }
+    }
+
+    // Now we have all the data ready to be saved.
+    WRITE(uint32_t, utarray_len(voxels), file);
+    WRITE(uint32_t, size[0], file);
+    WRITE(uint32_t, size[1], file);
+    WRITE(uint32_t, size[2], file);
+    WRITE(int32_t, size[0] / 2, file);
+    WRITE(int32_t, size[1] / 2, file);
+    WRITE(int32_t, size[2] / 2, file);
+
+    for (i = 0; i < size[0] + 1; i++)
+        WRITE(uint32_t, xoffsets[i], file);
+    for (i = 0; i < size[0] * (size[1] + 1); i++)
+        WRITE(uint16_t, xyoffsets[i], file);
+
+    for (slab = (void*)utarray_front(slabs); slab;
+         slab = (void*)utarray_next(slabs, slab))
+    {
+        assert(slab->pos[2] >= 0);
+        assert(slab->pos[2] + slab->len - 1 < size[2]);
+        WRITE(uint8_t, slab->pos[2], file);
+        WRITE(uint8_t, slab->len, file);
+        WRITE(uint8_t, slab->vis, file);
+        fwrite(slab->colors, 1, slab->len, file);
+    }
+
+    for (i = 0; i < 256; i++) {
+        WRITE(uint8_t, palette[i][0] / 4, file);
+        WRITE(uint8_t, palette[i][1] / 4, file);
+        WRITE(uint8_t, palette[i][2] / 4, file);
+    }
+
+    utarray_free(slabs);
+    utarray_free(voxels);
+    free(xoffsets);
+    free(xyoffsets);
+    free(palette);
+    fclose(file);
+}
+
+static void export_as_kvx(const char *path)
+{
+    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                    "kvx\0*.kvx\0", NULL, "untitled.kvx");
+    if (!path) return;
+    kvx_export(goxel.layers_mesh, path);
+}
+
 ACTION_REGISTER(import_kv6,
     .help = "Import a slab kv6 image",
     .cfunc = kv6_import,
@@ -239,5 +479,15 @@ ACTION_REGISTER(import_kvx,
     .file_format = {
         .name = "kvx",
         .ext = "*.kvx\0"
+    },
+)
+
+ACTION_REGISTER(export_as_kvx,
+    .help = "Save the image as a slab kvx image",
+    .cfunc = export_as_kvx,
+    .csig = "vp",
+    .file_format = {
+        .name = "kvx",
+        .ext = "*.kvx\0",
     },
 )
