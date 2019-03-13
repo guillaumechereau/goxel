@@ -232,8 +232,11 @@ static int kvx_import(const char *path)
         }
     }
 
+    bbox_from_aabb(goxel.image->box, (int[2][3]){{0, 0, 0}, {w, h, d}});
+    bbox_from_aabb(goxel.image->active_layer->box,
+                   (int[2][3]){{0, 0, 0}, {w, h, d}});
     mesh_blit(goxel.image->active_layer->mesh, (uint8_t*)cube,
-              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
+              0, 0, 0, w, h, d, NULL);
     goxel_update_meshes(-1);
 
 end:
@@ -322,6 +325,7 @@ static void kvx_export(const mesh_t *mesh, const char *path)
 
     mat4_copy(goxel.image->box, box);
     if (box_is_null(box)) mesh_get_box(mesh, true, box);
+
     size[0] = box[0][0] * 2;
     size[1] = box[1][1] * 2;
     size[2] = box[2][2] * 2;
@@ -337,7 +341,8 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     // Iter the voxels and only keep the visible ones, plus the visible
     // faces mask.  Put them all into an array.
     utarray_new(voxels, &voxel_icd);
-    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
+    iter = mesh_get_box_iterator(
+            mesh, box, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
     acc = mesh_get_accessor(mesh);
 
     while (mesh_iter(&iter, voxel.pos)) {
@@ -351,10 +356,10 @@ static void kvx_export(const mesh_t *mesh, const char *path)
                                                    voxel.pos[2] + (z)}) < 127)
         if (vis_test(-1,  0,  0)) voxel.vis |= 1;
         if (vis_test(+1,  0,  0)) voxel.vis |= 2;
-        if (vis_test( 0, -1,  0)) voxel.vis |= 4;
-        if (vis_test( 0, +1,  0)) voxel.vis |= 8;
-        if (vis_test( 0,  0, -1)) voxel.vis |= 16;
-        if (vis_test( 0,  0, +1)) voxel.vis |= 32;
+        if (vis_test( 0, +1,  0)) voxel.vis |= 4;
+        if (vis_test( 0, -1,  0)) voxel.vis |= 8;
+        if (vis_test( 0,  0, +1)) voxel.vis |= 16;
+        if (vis_test( 0,  0, -1)) voxel.vis |= 32;
 
         #undef vis_test
         if (!voxel.vis) continue; // No visible faces.
@@ -362,9 +367,13 @@ static void kvx_export(const mesh_t *mesh, const char *path)
         voxel.pos[0] -= orig[0];
         voxel.pos[1] -= orig[1];
         voxel.pos[2] -= orig[2];
-        assert(voxel.pos[0] >= 0);
-        assert(voxel.pos[1] >= 0);
-        assert(voxel.pos[2] >= 0);
+
+        voxel.pos[1] = size[1] - voxel.pos[1] - 1;
+        voxel.pos[2] = size[2] - voxel.pos[2] - 1;
+
+        assert(voxel.pos[0] >= 0 && voxel.pos[0] < size[0]);
+        assert(voxel.pos[1] >= 0 && voxel.pos[1] < size[1]);
+        assert(voxel.pos[2] >= 0 && voxel.pos[2] < size[2]);
         utarray_push_back(voxels, &voxel);
     }
 
@@ -433,6 +442,7 @@ static void kvx_export(const mesh_t *mesh, const char *path)
          slab = (void*)utarray_next(slabs, slab))
     {
         assert(slab->pos[2] >= 0);
+        assert(slab->pos[2] <= 255);
         assert(slab->pos[2] + slab->len - 1 < size[2]);
         WRITE(uint8_t, slab->pos[2], file);
         WRITE(uint8_t, slab->len, file);
