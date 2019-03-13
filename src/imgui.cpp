@@ -21,9 +21,19 @@
  * in the Scons file.
  */
 
+// Prevent warnings with gcc.
+#ifndef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_INCLUDE_IMGUI_USER_INL
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 #include "../ext_src/imgui/imgui.cpp"
 #include "../ext_src/imgui/imgui_draw.cpp"
+
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif
