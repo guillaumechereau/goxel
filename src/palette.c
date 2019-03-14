@@ -18,6 +18,32 @@
 
 #include "goxel.h"
 
+/*
+ * Function: palette_search
+ * Search a given color in a palette
+ *
+ * Parameters:
+ *   palette    - A palette.
+ *   col        - The color we are looking for.
+ *   exact      - If set to true, return -1 if no color is found, else
+ *                return the closest color.
+ *
+ * Return:
+ *   The index of the color in the palette.
+ */
+int palette_search(const palette_t *palette, const uint8_t col[4],
+                   bool exact)
+{
+    int i;
+    assert(exact); // For the moment.
+    for (i = 0; i < palette->size; i++) {
+        if (memcmp(col, palette->entries[i].color, 4) == 0)
+            return i;
+    }
+    return -1;
+}
+
+
 // Parse a gimp palette.
 // XXX: we don't check for buffer overflow!
 static int parse_gpl(const char *data, char *name, int *columns,

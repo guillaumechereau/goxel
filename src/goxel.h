@@ -1156,6 +1156,22 @@ void palette_load_all(palette_t **list);
 void quantization_gen_palette(const mesh_t *mesh, int nb,
                               uint8_t (*palette)[4]);
 
+/*
+ * Function: palette_search
+ * Search a given color in a palette
+ *
+ * Parameters:
+ *   palette    - A palette.
+ *   col        - The color we are looking for.
+ *   exact      - If set to true, return -1 if no color is found, else
+ *                return the closest color.
+ *
+ * Return:
+ *   The index of the color in the palette.
+ */
+int palette_search(const palette_t *palette, const uint8_t col[4],
+                   bool exact);
+
 // #############################
 
 

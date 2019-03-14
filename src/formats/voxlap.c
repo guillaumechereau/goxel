@@ -249,16 +249,17 @@ end:
 }
 
 
-static int get_color_index(uint8_t v[4], uint8_t (*palette)[4])
+static int get_color_index(uint8_t v[4], uint8_t (*palette)[4], bool exact)
 {
     const uint8_t *c;
     int i, dist, best = -1, best_dist = 1024;
-    for (i = 1; i < 256; i++) {
+    for (i = 1; i < 255; i++) {
         c = palette[i];
         dist = abs((int)c[0] - (int)v[0]) +
                abs((int)c[1] - (int)v[1]) +
                abs((int)c[2] - (int)v[2]);
         if (dist == 0) return i;
+        if (exact) continue;
         if (dist < best_dist) {
             best_dist = dist;
             best = i;
@@ -311,7 +312,7 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     mesh_accessor_t acc;
     uint8_t v[4];
     float box[4][4];
-    int size[3], orig[3], x, y, i;
+    int pos[3], size[3], orig[3], x, y, i;
     UT_array *slabs;
     UT_array *voxels;
     slab_t *slab;
@@ -319,6 +320,7 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     uint32_t ofs;
     uint32_t *xoffsets;
     uint32_t *xyoffsets;
+    bool use_current_palette = false;
 
     UT_icd voxel_icd = {sizeof(voxel_t), NULL, NULL, NULL};
     UT_icd slab_icd = {sizeof(slab_t), NULL, NULL, NULL};
@@ -334,9 +336,30 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     orig[2] = box[3][2] - box[2][2];
 
     file = fopen(path, "wb");
-    // Generates the palette.
+
+    // If the current palette is enough to export the model, use it, else
+    // create a palette.
+    if (goxel.palette->size == 256) {
+        use_current_palette = true;
+        iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
+        while (mesh_iter(&iter, pos)) {
+            mesh_get_at(mesh, &iter, pos, v);
+            if (v[3] < 127) continue;
+            if (palette_search(goxel.palette, v, true) < 0) {
+                use_current_palette = false;
+                break;
+            }
+        }
+    }
     palette = calloc(256, sizeof(*palette));
-    quantization_gen_palette(mesh, 256, (void*)(palette));
+    if (use_current_palette) {
+        LOG_I("Using the current palette");
+        for (i = 0; i < 256; i++) {
+            memcpy(palette[i], goxel.palette->entries[i].color, 4);
+        }
+    } else {
+        quantization_gen_palette(mesh, 256, (void*)(palette));
+    }
 
     // Iter the voxels and only keep the visible ones, plus the visible
     // faces mask.  Put them all into an array.
@@ -363,7 +386,7 @@ static void kvx_export(const mesh_t *mesh, const char *path)
 
         #undef vis_test
         if (!voxel.vis) continue; // No visible faces.
-        voxel.color = get_color_index(v, palette);
+        voxel.color = get_color_index(v, palette, false);
         voxel.pos[0] -= orig[0];
         voxel.pos[1] -= orig[1];
         voxel.pos[2] -= orig[2];
