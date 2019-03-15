@@ -364,13 +364,19 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     // Iter the voxels and only keep the visible ones, plus the visible
     // faces mask.  Put them all into an array.
     utarray_new(voxels, &voxel_icd);
-    iter = mesh_get_box_iterator(
-            mesh, box, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
     acc = mesh_get_accessor(mesh);
 
     while (mesh_iter(&iter, voxel.pos)) {
         mesh_get_at(mesh, &iter, voxel.pos, v);
         if (v[3] < 127) continue;
+
+        // XXX: we should be able to use box iterator instead of this,
+        // but for some reason it doesn't work!
+        if (!bbox_contains_vec(box,
+                    (float[]){voxel.pos[0], voxel.pos[1], voxel.pos[2]}))
+            continue;
+
         // Compute visible face mask.
         voxel.vis = 0;
         #define vis_test(x, y, z) \
