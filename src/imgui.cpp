@@ -24,7 +24,9 @@
 // Prevent warnings with gcc.
 #ifndef __clang__
 #pragma GCC diagnostic push
+#if __GNUC__ >= 8
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
