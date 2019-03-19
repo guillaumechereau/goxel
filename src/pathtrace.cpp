@@ -200,6 +200,23 @@ static void sync_light(void)
     instance.name = shape.name;
     instance.frame = make_translation_frame<float>({50, 20, 100});
     g_state.scene.instances.push_back(instance);
+
+
+    auto &scene = g_state.scene;
+    auto texture     = yocto_texture{};
+    texture.name     = "<sky>";
+    texture.filename = "textures/sky.hdr";
+    texture.hdr_image.resize({1024, 512});
+    float turbidity = 3;
+    bool has_sun = false;
+    make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun);
+    scene.textures.push_back(texture);
+    auto environment             = yocto_environment{};
+    environment.name             = "<sky>";
+    environment.emission         = {1, 1, 1};
+    environment.emission_texture = (int)scene.textures.size() - 1;
+    environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
+    scene.environments.push_back(environment);
 }
 
 static void sync(int w, int h, bool force)
@@ -211,7 +228,7 @@ static void sync(int w, int h, bool force)
     if (mesh_changed) {
         sync_light();
         // tesselate_shapes(g_state.scene); ?
-        // add_sky_environment(g_state.scene);
+
         add_missing_materials(g_state.scene);
         add_missing_names(g_state.scene);
         update_transforms(g_state.scene);
@@ -269,9 +286,11 @@ void pathtrace_iter(float *buf, int w, int h, float *progress,
     auto region = image_region{};
     int size = 0;
     int i, j;
+    float exposure = 1.0;
+
     while (g_state.trace_queue.try_pop(region)) {
         tonemap_image_region(g_state.display, region, g_state.image,
-                0, false, true);
+                exposure, false, true);
         for (i = region.min[1]; i < region.max[1]; i++)
         for (j = region.min[0]; j < region.max[0]; j++) {
             memcpy(&buf[(i * w + j) * 4],
