@@ -41,10 +41,14 @@ static void texture_create_empty(texture_t *tex)
     GL(glGenTextures(1, &tex->tex));
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
-    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                       GL_LINEAR));
-    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                       GL_LINEAR));
+    if (!(tex->flags & TF_NEAREST)) {
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+            (tex->flags & TF_MIPMAP)? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR));
+    } else {
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    }
     GL(glTexImage2D(GL_TEXTURE_2D, 0, tex->format, tex->tex_w, tex->tex_h,
             0, tex->format, GL_UNSIGNED_BYTE, NULL));
 }
@@ -70,17 +74,7 @@ void texture_set_data(texture_t *tex,
         data = buff0;
     }
 
-    GL(glGenTextures(1, &tex->tex));
-    GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
-    if (!(tex->flags & TF_NEAREST)) {
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-            (tex->flags & TF_MIPMAP)? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR));
-    } else {
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    }
     GL(glTexImage2D(GL_TEXTURE_2D, 0, tex->format, tex->tex_w, tex->tex_h,
                 0, tex->format, data_type, data));
     free(buff0);
