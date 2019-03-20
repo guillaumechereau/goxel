@@ -49,7 +49,6 @@ static struct {
     trace_state state;
     trace_lights lights;
     trace_image_options trace_options;
-    int current_sample;
     atomic<int> trace_sample;
     vector<future<void>> trace_futures;
     concurrent_queue<image_region> trace_queue;
@@ -256,6 +255,9 @@ static void sync(int w, int h, bool force)
         init_trace_state(g_state.state, {w, h});
 
         g_state.trace_options.cancel_flag = &g_state.trace_stop;
+        // g_state.trace_options.run_serially = true;
+        g_state.trace_sample = 0;
+        g_state.trace_stop = false;
         trace_image_async_start(g_state.image, g_state.state, g_state.scene,
                                 g_state.bvh, g_state.lights,
                                 g_state.trace_futures, g_state.trace_sample,
@@ -300,4 +302,5 @@ void pathtrace_iter(float *buf, int w, int h, float *progress,
         size += region.size().x * region.size().y;
         if (size >= g_state.image.size().x * g_state.image.size().y) break;
     }
+    *progress = (float)g_state.trace_sample / g_state.trace_options.num_samples;
 }
