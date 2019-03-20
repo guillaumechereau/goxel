@@ -41,10 +41,14 @@ static void texture_create_empty(texture_t *tex)
     GL(glGenTextures(1, &tex->tex));
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
-    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                       GL_LINEAR));
-    GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                       GL_LINEAR));
+    if (!(tex->flags & TF_NEAREST)) {
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+            (tex->flags & TF_MIPMAP)? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR));
+    } else {
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+    }
     GL(glTexImage2D(GL_TEXTURE_2D, 0, tex->format, tex->tex_w, tex->tex_h,
             0, tex->format, GL_UNSIGNED_BYTE, NULL));
 }
@@ -61,30 +65,17 @@ static void blit(const uint8_t *src, int src_w, int src_h, int bpp,
 static void texture_set_data(texture_t *tex,
         const uint8_t *data, int w, int h, int bpp)
 {
-    uint8_t *buff0 = NULL;
-    int data_type = GL_UNSIGNED_BYTE;
-
+    uint8_t *buf = NULL;
+    assert(tex->tex);
     if (!is_pow2(w) || !is_pow2(h)) {
-        buff0 = calloc(bpp, tex->tex_w * tex->tex_h);
-        blit(data, w, h, bpp, buff0, tex->tex_w, tex->tex_h);
-        data = buff0;
+        buf = calloc(bpp, tex->tex_w * tex->tex_h);
+        blit(data, w, h, bpp, buf, tex->tex_w, tex->tex_h);
+        data = buf;
     }
-
-    GL(glGenTextures(1, &tex->tex));
-    GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
-    if (!(tex->flags & TF_NEAREST)) {
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-            (tex->flags & TF_MIPMAP)? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR));
-    } else {
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-        GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-    }
     GL(glTexImage2D(GL_TEXTURE_2D, 0, tex->format, tex->tex_w, tex->tex_h,
-                0, tex->format, data_type, data));
-    free(buff0);
-
+                0, tex->format, GL_UNSIGNED_BYTE, data));
+    free(buf);
     if (tex->flags & TF_MIPMAP)
         GL(glGenerateMipmap(GL_TEXTURE_2D));
 }
