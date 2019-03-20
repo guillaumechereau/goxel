@@ -932,7 +932,10 @@ static void render_panel(void)
     */
 
     if (task->status == 0 && gui_button("Render", 0, 0)) task->status = 1;
-    if (task->status == 1 && gui_button("Cancel", 0, 0)) task->status = 0;
+    if (task->status == 1 && gui_button("Cancel", 0, 0)) {
+        pathtrace_stop();
+        task->status = 0;
+    }
     if (task->status == 2 && gui_button("Restart", 0, 0)) {
         task->status = 1;
         task->progress = 0;
