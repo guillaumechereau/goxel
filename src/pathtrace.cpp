@@ -53,6 +53,7 @@ static struct {
     vector<future<void>> trace_futures;
     concurrent_queue<image_region> trace_queue;
     atomic<bool> trace_stop;
+    float exposure;
 } g_state = {};
 
 static yocto_shape create_shape_for_block(
@@ -218,7 +219,7 @@ static void sync_light(void)
     scene.environments.push_back(environment);
 }
 
-static void sync(int w, int h, bool force)
+static bool sync(int w, int h, bool force)
 {
     bool mesh_changed, cam_changed;
     mesh_changed = sync_mesh(w, h, force);
@@ -263,6 +264,30 @@ static void sync(int w, int h, bool force)
                                 g_state.trace_futures, g_state.trace_sample,
                                 g_state.trace_queue, g_state.trace_options);
     }
+    return mesh_changed || cam_changed;
+}
+
+static void make_preview(float *buf, int w, int h)
+{
+    auto preview_options = g_state.trace_options;
+    int preview_ratio = 8;
+    image4f preview;
+
+    preview_options.image_size /= preview_ratio;
+    preview_options.num_samples = 1;
+    preview = trace_image(g_state.scene, g_state.bvh, g_state.lights,
+                          preview_options);
+    tonemap_image(preview, preview, g_state.exposure, false, true);
+
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h; j++) {
+            int pi = clamp(i / preview_ratio, 0, preview.size().y - 1);
+            int pj = clamp(j / preview_ratio, 0, preview.size().x - 1);
+            memcpy(&buf[(i * w + j) * 4],
+                   preview.data() + (pi * preview.size().x + pj),
+                   4 * sizeof(float));
+        }
+    }
 }
 
 /*
@@ -280,19 +305,26 @@ static void sync(int w, int h, bool force)
 void pathtrace_iter(float *buf, int w, int h, float *progress,
                     bool force_restart)
 {
+    bool changed;
+
     g_state.trace_options.image_size = {w, h};
-    sync(w, h, force_restart);
+    changed = sync(w, h, force_restart);
     assert(g_state.display.size()[0] == w);
     assert(g_state.display.size()[1] == h);
 
     auto region = image_region{};
     int size = 0;
     int i, j;
-    float exposure = 1.0;
+
+    if (changed) {
+        make_preview(buf, w, h);
+        *progress = 0;
+        return;
+    }
 
     while (g_state.trace_queue.try_pop(region)) {
         tonemap_image_region(g_state.display, region, g_state.image,
-                exposure, false, true);
+                g_state.exposure, false, true);
         for (i = region.min[1]; i < region.max[1]; i++)
         for (j = region.min[0]; j < region.max[0]; j++) {
             memcpy(&buf[(i * w + j) * 4],
