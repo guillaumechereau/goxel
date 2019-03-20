@@ -16,7 +16,7 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef __GNUC__
+#ifndef __clang__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -29,7 +29,7 @@
 // For debug.
 #include "../ext_src/yocto/yocto_sceneio.h"
 
-#ifdef __GNUC__
+#ifndef __clang__
 #pragma GCC diagnostic pop
 #endif
 

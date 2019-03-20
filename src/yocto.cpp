@@ -21,7 +21,7 @@
  * that we keeps a clean build system.
  */
 
-#ifdef __GNUC__
+#ifndef __clang__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
@@ -37,6 +37,6 @@
 #include "../ext_src/yocto/yocto_shape.cpp"
 #include "../ext_src/yocto/yocto_trace.cpp"
 
-#ifdef __GNUC__
+#ifndef __clang__
 #pragma GCC diagnostic pop
 #endif
