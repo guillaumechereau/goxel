@@ -823,6 +823,10 @@ float sample_environment_direction_pdf(const yocto_scene& scene,
         auto i    = (int)(texcoord.x * size.x);
         auto j    = (int)(texcoord.y * size.y);
         auto idx  = j * size.x + i;
+
+        // Guillaume: hack to fix a crash.
+        if (idx >= elements_cdf.size()) idx = 0;
+
         auto prob = sample_discrete_distribution_pdf(elements_cdf, idx) /
                     elements_cdf.back();
         auto angle = (2 * pif / size.x) * (pif / size.y) *
