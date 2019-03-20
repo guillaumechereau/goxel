@@ -1861,6 +1861,11 @@ void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
 void pathtrace_iter(float *buf, int w, int h, float *progress,
                     bool force_restart);
 
+/*
+ * Stop the pathtrace thread if it is running.
+ */
+void pathtrace_stop(void);
+
 // Section: box_edit
 /*
  * Function: gox_edit

@@ -364,6 +364,7 @@ void goxel_reset(void)
 
 void goxel_release(void)
 {
+    pathtrace_stop();
     gui_release();
 }
 

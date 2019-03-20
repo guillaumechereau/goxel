@@ -304,3 +304,13 @@ void pathtrace_iter(float *buf, int w, int h, float *progress,
     }
     *progress = (float)g_state.trace_sample / g_state.trace_options.num_samples;
 }
+
+
+/*
+ * Stop the pathtrace thread if it is running.
+ */
+void pathtrace_stop(void)
+{
+    trace_image_async_stop(
+        g_state.trace_futures, g_state.trace_queue, g_state.trace_options);
+}
