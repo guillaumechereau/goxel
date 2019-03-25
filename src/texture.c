@@ -18,7 +18,6 @@
 
 
 #include "goxel.h"
-#include <stdarg.h>
 
 // Return the next power of 2 larger or equal to x.
 static int next_pow2(int x)
