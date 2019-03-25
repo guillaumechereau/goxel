@@ -36,7 +36,10 @@ typedef struct {
     bool force_restart;
     texture_t *texture;
     pathtracer_internal_t *p;
-    int world;
+    struct {
+        int type;
+        float energy;
+    } world;
 } pathtracer_t;
 
 /*

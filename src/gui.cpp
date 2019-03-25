@@ -947,7 +947,9 @@ static void render_panel(void)
     }
 
     gui_separator();
-    gui_combo("World", &pt->world, WORLD_LABELS, ARRAY_SIZE(WORLD_LABELS));
+    gui_combo("World", &pt->world.type, WORLD_LABELS,
+              ARRAY_SIZE(WORLD_LABELS));
+    gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
 }
 
 static void image_panel(void)

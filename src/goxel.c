@@ -360,6 +360,10 @@ void goxel_reset(void)
     render_get_default_settings(0, NULL, &goxel.rend.settings);
 
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
+
+    goxel.pathtracer = (pathtracer_t) {
+        .world = {.energy = 1},
+    };
 }
 
 void goxel_release(void)

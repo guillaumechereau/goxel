@@ -184,7 +184,7 @@ static bool sync_camera(pathtracer_t *pt, int w, int h,
 
 static bool sync_world(pathtracer_t *pt, bool force)
 {
-    uint64_t key;
+    uint64_t key = 0;
     pathtracer_internal_t *p = pt->p;
     yocto_scene &scene = p->scene;
     auto texture = yocto_texture{};
@@ -192,7 +192,8 @@ static bool sync_world(pathtracer_t *pt, bool force)
     float turbidity = 3;
     bool has_sun = false;
 
-    key = crc64(0, &pt->world, sizeof(pt->world));
+    key = crc64(key, &pt->world.type, sizeof(pt->world.type));
+    key = crc64(key, &pt->world.energy, sizeof(pt->world.energy));
     if (!force && key == p->world_key) return false;
     p->world_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
@@ -202,7 +203,7 @@ static bool sync_world(pathtracer_t *pt, bool force)
     texture.name = "<world>";
     texture.filename = "textures/uniform.hdr";
 
-    switch (pt->world) {
+    switch (pt->world.type) {
     case PT_WORLD_NONE:
         return true;
     case PT_WORLD_SKY:
@@ -215,7 +216,7 @@ static bool sync_world(pathtracer_t *pt, bool force)
     }
     scene.textures.push_back(texture);
     environment.name = "<world>";
-    environment.emission = {1, 1, 1};
+    environment.emission = vec3f{1, 1, 1} * pt->world.energy;
     environment.emission_texture = (int)scene.textures.size() - 1;
     environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
     scene.environments.push_back(environment);
