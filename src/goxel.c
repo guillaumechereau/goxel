@@ -364,7 +364,7 @@ void goxel_reset(void)
 
 void goxel_release(void)
 {
-    pathtracer_stop();
+    pathtracer_stop(&goxel.pathtracer);
     gui_release();
 }
 
@@ -700,9 +700,7 @@ static void render_pathtrace_view(const float viewport[4])
         texture_delete(pt->texture);
         pt->texture = texture_new_surface(pt->w, pt->h, 0);
     }
-    pathtracer_iter(pt->buf, pt->w, pt->h, &pt->progress,
-                    pt->force_restart);
-    pt->force_restart = false;
+    pathtracer_iter(pt);
 
     // Render the buffer.
     mat4_set_identity(mat);

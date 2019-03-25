@@ -295,30 +295,25 @@ static void make_preview(float *buf, int w, int h)
  * Iter the rendering process of the current mesh.
  *
  * Parameters:
- *   buf            - A RGBA image buffer.
- *   w              - Width of the image buffer.
- *   h              - Height of the image buffer.
- *   progress       - Rendering progress.
- *   force_restart  - Restart the rendering even if the image of view did
- *                    not change.
+ *   pt     - A pathtracer instance.
  */
-void pathtracer_iter(float *buf, int w, int h, float *progress,
-                     bool force_restart)
+void pathtracer_iter(pathtracer_t *pt)
 {
     bool changed;
 
-    g_state.trace_options.image_size = {w, h};
-    changed = sync(w, h, force_restart);
-    assert(g_state.display.size()[0] == w);
-    assert(g_state.display.size()[1] == h);
+    g_state.trace_options.image_size = {pt->w, pt->h};
+    changed = sync(pt->w, pt->h, pt->force_restart);
+    pt->force_restart = false;
+    assert(g_state.display.size()[0] == pt->w);
+    assert(g_state.display.size()[1] == pt->h);
 
     auto region = image_region{};
     int size = 0;
     int i, j;
 
     if (changed) {
-        make_preview(buf, w, h);
-        *progress = 0;
+        make_preview(pt->buf, pt->w, pt->h);
+        pt->progress = 0;
         return;
     }
 
@@ -327,21 +322,22 @@ void pathtracer_iter(float *buf, int w, int h, float *progress,
                 g_state.exposure, false, true);
         for (i = region.min[1]; i < region.max[1]; i++)
         for (j = region.min[0]; j < region.max[0]; j++) {
-            memcpy(&buf[(i * w + j) * 4],
-                   g_state.display.data() + (i * w + j),
+            memcpy(&pt->buf[(i * pt->w + j) * 4],
+                   g_state.display.data() + (i * pt->w + j),
                    4 * sizeof(float));
         }
         size += region.size().x * region.size().y;
         if (size >= g_state.image.size().x * g_state.image.size().y) break;
     }
-    *progress = (float)g_state.trace_sample / g_state.trace_options.num_samples;
+    pt->progress = (float)g_state.trace_sample /
+                   g_state.trace_options.num_samples;
 }
 
 
 /*
  * Stop the pathtracer thread if it is running.
  */
-void pathtracer_stop(void)
+void pathtracer_stop(pathtracer_t *pt)
 {
     trace_image_async_stop(
         g_state.trace_futures, g_state.trace_queue, g_state.trace_options);

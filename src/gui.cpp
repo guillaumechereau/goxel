@@ -933,7 +933,7 @@ static void render_panel(void)
 
     if (pt->status == 0 && gui_button("Render", 0, 0)) pt->status = 1;
     if (pt->status == 1 && gui_button("Cancel", 0, 0)) {
-        pathtracer_stop();
+        pathtracer_stop(pt);
         pt->status = 0;
     }
     if (pt->status == 2 && gui_button("Restart", 0, 0)) {

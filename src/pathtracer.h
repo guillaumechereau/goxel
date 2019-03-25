@@ -34,17 +34,11 @@ typedef struct {
  * Iter the rendering process of the current mesh.
  *
  * Parameters:
- *   buf            - A RGBA image buffer.
- *   w              - Width of the image buffer.
- *   h              - Height of the image buffer.
- *   progress       - Rendering progress.
- *   force_restart  - Restart the rendering even if the image of view did
- *                    not change.
+ *   pt     - A pathtracer instance.
  */
-void pathtracer_iter(float *buf, int w, int h, float *progress,
-                     bool force_restart);
+void pathtracer_iter(pathtracer_t *pt);
 
 /*
  * Stop the pathtracer thread if it is running.
  */
-void pathtracer_stop(void);
+void pathtracer_stop(pathtracer_t *pt);
