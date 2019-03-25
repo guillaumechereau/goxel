@@ -274,8 +274,9 @@ static bool sync(pathtracer_t *pt, int w, int h, bool force)
 
 static void make_preview(pathtracer_t *pt)
 {
+    int i, j, pi, pj;
     pathtracer_internal_t *p = pt->p;
-    auto preview_options = p->trace_options;
+    trace_image_options preview_options = p->trace_options;
     int preview_ratio = 8;
     image4f preview;
 
@@ -285,10 +286,10 @@ static void make_preview(pathtracer_t *pt)
                           preview_options);
     tonemap_image(preview, preview, p->exposure, false, true);
 
-    for (int i = 0; i < pt->w; i++) {
-        for (int j = 0; j < pt->h; j++) {
-            int pi = clamp(i / preview_ratio, 0, preview.size().y - 1);
-            int pj = clamp(j / preview_ratio, 0, preview.size().x - 1);
+    for (i = 0; i < pt->w; i++) {
+        for (j = 0; j < pt->h; j++) {
+            pi = clamp(i / preview_ratio, 0, preview.size().y - 1);
+            pj = clamp(j / preview_ratio, 0, preview.size().x - 1);
             memcpy(&pt->buf[(i * pt->w + j) * 4],
                    preview.data() + (pi * preview.size().x + pj),
                    4 * sizeof(float));
@@ -307,6 +308,8 @@ void pathtracer_iter(pathtracer_t *pt)
 {
     pathtracer_internal_t *p;
     bool changed;
+    int i, j, size = 0;
+    image_region region = image_region{};
 
     if (!pt->p) pt->p = new pathtracer_internal_t();
     p = pt->p;
@@ -315,10 +318,6 @@ void pathtracer_iter(pathtracer_t *pt)
     pt->force_restart = false;
     assert(p->display.size()[0] == pt->w);
     assert(p->display.size()[1] == pt->h);
-
-    auto region = image_region{};
-    int size = 0;
-    int i, j;
 
     if (changed) {
         make_preview(pt);
