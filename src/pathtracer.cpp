@@ -187,6 +187,10 @@ static bool sync_world(pathtracer_t *pt, bool force)
     uint64_t key;
     pathtracer_internal_t *p = pt->p;
     yocto_scene &scene = p->scene;
+    auto texture = yocto_texture{};
+    auto environment = yocto_environment{};
+    float turbidity = 3;
+    bool has_sun = false;
 
     key = crc64(0, &pt->world, sizeof(pt->world));
     if (!force && key == p->world_key) return false;
@@ -195,23 +199,27 @@ static bool sync_world(pathtracer_t *pt, bool force)
 
     scene.environments = {};
     scene.textures = {};
+    texture.name = "<world>";
+    texture.filename = "textures/uniform.hdr";
 
-    if (pt->world == PT_WORLD_SKY) {
-        auto texture = yocto_texture{};
-        auto environment = yocto_environment{};
-        float turbidity = 3;
-        bool has_sun = false;
-        texture.name = "<sky>";
-        texture.filename = "textures/sky.hdr";
+    switch (pt->world) {
+    case PT_WORLD_NONE:
+        return true;
+    case PT_WORLD_SKY:
         texture.hdr_image.resize({1024, 512});
         make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun);
-        scene.textures.push_back(texture);
-        environment.name = "<sky>";
-        environment.emission = {1, 1, 1};
-        environment.emission_texture = (int)scene.textures.size() - 1;
-        environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
-        scene.environments.push_back(environment);
+        break;
+    case PT_WORLD_UNIFORM:
+        texture.hdr_image = {{64, 64}, {0.5, 0.5, 0.5, 1.0}};
+        break;
     }
+    scene.textures.push_back(texture);
+    environment.name = "<world>";
+    environment.emission = {1, 1, 1};
+    environment.emission_texture = (int)scene.textures.size() - 1;
+    environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
+    scene.environments.push_back(environment);
+
     return true;
 }
 
