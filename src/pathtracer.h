@@ -18,6 +18,12 @@
 
 #include "texture.h"
 
+enum {
+    PT_WORLD_NONE = 0,
+    PT_WORLD_UNIFORM,
+    PT_WORLD_SKY,
+};
+
 typedef struct pathtracer_internal pathtracer_internal_t;
 
 // Hold info about the cycles rendering task.
@@ -30,6 +36,7 @@ typedef struct {
     bool force_restart;
     texture_t *texture;
     pathtracer_internal_t *p;
+    int world;
 } pathtracer_t;
 
 /*

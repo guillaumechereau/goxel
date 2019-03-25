@@ -900,6 +900,7 @@ static void render_panel(void)
     int i;
     int maxsize;
     pathtracer_t *pt = &goxel.pathtracer;
+    const char *WORLD_LABELS[] = { "None", "Uniform", "Sky" };
 
     goxel.no_edit = pt->status || gui->popup_count;
 
@@ -944,6 +945,9 @@ static void render_panel(void)
     if (pt->status) {
         gui_text("%d/100", (int)(pt->progress * 100));
     }
+
+    gui_separator();
+    gui_combo("World", &pt->world, WORLD_LABELS, ARRAY_SIZE(WORLD_LABELS));
 }
 
 static void image_panel(void)

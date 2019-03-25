@@ -40,8 +40,13 @@ extern "C" {
 using namespace yocto;
 
 struct pathtracer_internal {
-    uint64_t key;
+
+    // Different hash keys to quickly check for state changes.
+    uint64_t mesh_key;
     uint64_t camera_key;
+    uint64_t world_key;
+    uint64_t light_key;
+
     yocto_scene scene;
     bvh_scene bvh;
     image4f image;
@@ -121,12 +126,10 @@ static bool sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     key = crc64(key, (const uint8_t*)&goxel.rend.settings.effects,
                      sizeof(goxel.rend.settings.effects));
     key = crc64(key, (const uint8_t*)&force, sizeof(force));
-    if (key == p->key) return false;
+    if (!force && key == p->mesh_key) return false;
+    p->mesh_key = key;
+    trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
-    trace_image_async_stop(p->trace_futures, p->trace_queue,
-                           p->trace_options);
-
-    p->key = key;
     p->scene = {};
     p->lights = {};
 
@@ -163,6 +166,7 @@ static bool sync_camera(pathtracer_t *pt, int w, int h,
     key = crc64(key, (uint8_t*)&h, sizeof(h));
     if (!force && key == p->camera_key) return false;
     p->camera_key = key;
+    trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
     cam->frame =
         make_translation_frame<float>({-goxel.camera.ofs[0],
@@ -178,14 +182,52 @@ static bool sync_camera(pathtracer_t *pt, int w, int h,
     return true;
 }
 
-static void sync_light(pathtracer_t *pt)
+static bool sync_world(pathtracer_t *pt, bool force)
 {
+    uint64_t key;
+    pathtracer_internal_t *p = pt->p;
+    yocto_scene &scene = p->scene;
+
+    key = crc64(0, &pt->world, sizeof(pt->world));
+    if (!force && key == p->world_key) return false;
+    p->world_key = key;
+    trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
+
+    scene.environments = {};
+    scene.textures = {};
+
+    auto texture     = yocto_texture{};
+    texture.name     = "<sky>";
+    texture.filename = "textures/sky.hdr";
+    texture.hdr_image.resize({1024, 512});
+    float turbidity = 3;
+    bool has_sun = false;
+    make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun);
+    scene.textures.push_back(texture);
+    auto environment             = yocto_environment{};
+    environment.name             = "<sky>";
+    environment.emission         = {1, 1, 1};
+    environment.emission_texture = (int)scene.textures.size() - 1;
+    environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
+    scene.environments.push_back(environment);
+    return true;
+}
+
+static bool sync_light(pathtracer_t *pt, bool force)
+{
+
+    uint64_t key;
     pathtracer_internal_t *p = pt->p;
     yocto_shape shape;
     yocto_instance instance;
     yocto_material material;
     float d = 100;
     float ke = 20;
+
+    key = crc64(0, &pt->world, sizeof(pt->world));
+    if (!force && key == p->light_key) return false;
+    p->light_key = key;
+    trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
     material.name = "light";
     material.emission = {ke * d * d, ke * d * d, ke * d * d};
@@ -205,47 +247,30 @@ static void sync_light(pathtracer_t *pt)
     instance.frame = make_translation_frame<float>({50, 20, 100});
     p->scene.instances.push_back(instance);
 
-
-    auto &scene = p->scene;
-    auto texture     = yocto_texture{};
-    texture.name     = "<sky>";
-    texture.filename = "textures/sky.hdr";
-    texture.hdr_image.resize({1024, 512});
-    float turbidity = 3;
-    bool has_sun = false;
-    make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun);
-    scene.textures.push_back(texture);
-    auto environment             = yocto_environment{};
-    environment.name             = "<sky>";
-    environment.emission         = {1, 1, 1};
-    environment.emission_texture = (int)scene.textures.size() - 1;
-    environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
-    scene.environments.push_back(environment);
+    return true;
 }
 
 static bool sync(pathtracer_t *pt, int w, int h, bool force)
 {
-    bool mesh_changed, cam_changed;
-    mesh_changed = sync_mesh(pt, w, h, force);
-    cam_changed = sync_camera(pt, w, h, &goxel.camera, force || mesh_changed);
     pathtracer_internal_t *p = pt->p;
 
-    if (mesh_changed) {
-        sync_light(pt);
-        // tesselate_shapes(p->scene); ?
+    if (sync_mesh(pt, w, h, force)) force = true;
+    if (sync_world(pt, force)) force = true;
+    if (sync_light(pt, force)) force = true;
+    if (sync_camera(pt, w, h, &goxel.camera, force)) force = true;
 
+    if (force) {
+        // tesselate_shapes(p->scene); ?
         add_missing_materials(p->scene);
         add_missing_names(p->scene);
         update_transforms(p->scene);
-
         // Update BVH.
         p->bvh = {};
         build_scene_bvh(p->scene, p->bvh);
-
         init_trace_lights(p->lights, p->scene);
     }
 
-    if (mesh_changed || cam_changed) {
+    if (force) {
         if (p->lights.instances.empty() &&
                 p->lights.environments.empty()) {
             p->trace_options.sampler_type = trace_sampler_type::eyelight;
@@ -269,7 +294,7 @@ static bool sync(pathtracer_t *pt, int w, int h, bool force)
                                 p->trace_futures, p->trace_sample,
                                 p->trace_queue, p->trace_options);
     }
-    return mesh_changed || cam_changed;
+    return force;
 }
 
 static void make_preview(pathtracer_t *pt)
