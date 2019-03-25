@@ -39,6 +39,14 @@ extern "C" {
 
 using namespace yocto;
 
+enum {
+    CHANGE_MESH         = 1 << 0,
+    CHANGE_WORLD        = 1 << 1,
+    CHANGE_LIGHT        = 1 << 2,
+    CHANGE_CAMERA       = 1 << 3,
+    CHANGE_FORCE        = 1 << 4,
+};
+
 struct pathtracer_internal {
 
     // Different hash keys to quickly check for state changes.
@@ -109,7 +117,7 @@ end:
     return shape;
 }
 
-static bool sync_mesh(pathtracer_t *pt, int w, int h, bool force)
+static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
 {
     uint64_t key;
     mesh_iterator_t iter;
@@ -126,7 +134,7 @@ static bool sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     key = crc64(key, (const uint8_t*)&goxel.rend.settings.effects,
                      sizeof(goxel.rend.settings.effects));
     key = crc64(key, (const uint8_t*)&force, sizeof(force));
-    if (!force && key == p->mesh_key) return false;
+    if (!force && key == p->mesh_key) return 0;
     p->mesh_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
@@ -147,11 +155,11 @@ static bool sync_mesh(pathtracer_t *pt, int w, int h, bool force)
         p->scene.instances.push_back(instance);
     }
 
-    return true;
+    return CHANGE_MESH;
 }
 
-static bool sync_camera(pathtracer_t *pt, int w, int h,
-                        const camera_t *camera, bool force)
+static int sync_camera(pathtracer_t *pt, int w, int h,
+                       const camera_t *camera, bool force)
 {
     pathtracer_internal_t *p = pt->p;
     yocto_camera *cam;
@@ -164,7 +172,7 @@ static bool sync_camera(pathtracer_t *pt, int w, int h,
     key = crc64(key, (uint8_t*)camera->proj_mat, sizeof(camera->proj_mat));
     key = crc64(key, (uint8_t*)&w, sizeof(w));
     key = crc64(key, (uint8_t*)&h, sizeof(h));
-    if (!force && key == p->camera_key) return false;
+    if (!force && key == p->camera_key) return 0;
     p->camera_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
@@ -179,10 +187,10 @@ static bool sync_camera(pathtracer_t *pt, int w, int h,
     set_camera_perspective(*cam, goxel.camera.fovy / 180 * M_PI, (float)w / h,
                            goxel.camera.dist);
 
-    return true;
+    return CHANGE_CAMERA;
 }
 
-static bool sync_world(pathtracer_t *pt, bool force)
+static int sync_world(pathtracer_t *pt, bool force)
 {
     uint64_t key = 0;
     pathtracer_internal_t *p = pt->p;
@@ -194,7 +202,7 @@ static bool sync_world(pathtracer_t *pt, bool force)
 
     key = crc64(key, &pt->world.type, sizeof(pt->world.type));
     key = crc64(key, &pt->world.energy, sizeof(pt->world.energy));
-    if (!force && key == p->world_key) return false;
+    if (!force && key == p->world_key) return 0;
     p->world_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
@@ -221,10 +229,10 @@ static bool sync_world(pathtracer_t *pt, bool force)
     environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
     scene.environments.push_back(environment);
 
-    return true;
+    return CHANGE_WORLD;
 }
 
-static bool sync_light(pathtracer_t *pt, bool force)
+static int sync_light(pathtracer_t *pt, bool force)
 {
 
     uint64_t key;
@@ -236,7 +244,7 @@ static bool sync_light(pathtracer_t *pt, bool force)
     float ke = 20;
 
     key = crc64(0, &pt->world, sizeof(pt->world));
-    if (!force && key == p->light_key) return false;
+    if (!force && key == p->light_key) return 0;
     p->light_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
@@ -258,30 +266,38 @@ static bool sync_light(pathtracer_t *pt, bool force)
     instance.frame = make_translation_frame<float>({50, 20, 100});
     p->scene.instances.push_back(instance);
 
-    return true;
+    return CHANGE_LIGHT;
 }
 
-static bool sync(pathtracer_t *pt, int w, int h, bool force)
+static int sync(pathtracer_t *pt, int w, int h, bool force)
 {
     pathtracer_internal_t *p = pt->p;
+    int changes = 0;
 
-    if (sync_mesh(pt, w, h, force)) force = true;
-    if (sync_world(pt, force)) force = true;
-    if (sync_light(pt, force)) force = true;
-    if (sync_camera(pt, w, h, &goxel.camera, force)) force = true;
+    if (force) changes |= CHANGE_FORCE;
 
-    if (force) {
+    changes |= sync_mesh(pt, w, h, changes);
+    changes |= sync_world(pt, changes);
+    changes |= sync_light(pt, changes);
+    changes |= sync_camera(pt, w, h, &goxel.camera, changes);
+
+    if (changes) {
         // tesselate_shapes(p->scene); ?
         add_missing_materials(p->scene);
         add_missing_names(p->scene);
         update_transforms(p->scene);
-        // Update BVH.
+    }
+
+    // Update BVH if needed.
+    if (changes & (CHANGE_MESH | CHANGE_LIGHT)) {
         p->bvh = {};
         build_scene_bvh(p->scene, p->bvh);
+    }
+    if (changes & CHANGE_LIGHT) {
         init_trace_lights(p->lights, p->scene);
     }
 
-    if (force) {
+    if (changes) {
         if (p->lights.instances.empty() &&
                 p->lights.environments.empty()) {
             p->trace_options.sampler_type = trace_sampler_type::eyelight;
@@ -305,7 +321,7 @@ static bool sync(pathtracer_t *pt, int w, int h, bool force)
                                 p->trace_futures, p->trace_sample,
                                 p->trace_queue, p->trace_options);
     }
-    return force;
+    return changes;
 }
 
 static void make_preview(pathtracer_t *pt)
@@ -343,19 +359,18 @@ static void make_preview(pathtracer_t *pt)
 void pathtracer_iter(pathtracer_t *pt)
 {
     pathtracer_internal_t *p;
-    bool changed;
-    int i, j, size = 0;
+    int changes, i, j, size = 0;
     image_region region = image_region{};
 
     if (!pt->p) pt->p = new pathtracer_internal_t();
     p = pt->p;
     p->trace_options.image_size = {pt->w, pt->h};
-    changed = sync(pt, pt->w, pt->h, pt->force_restart);
+    changes = sync(pt, pt->w, pt->h, pt->force_restart);
     pt->force_restart = false;
     assert(p->display.size()[0] == pt->w);
     assert(p->display.size()[1] == pt->h);
 
-    if (changed) {
+    if (changes & CHANGE_CAMERA) {
         make_preview(pt);
         pt->progress = 0;
         return;
