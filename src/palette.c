@@ -18,6 +18,32 @@
 
 #include "goxel.h"
 
+/*
+ * Function: palette_search
+ * Search a given color in a palette
+ *
+ * Parameters:
+ *   palette    - A palette.
+ *   col        - The color we are looking for.
+ *   exact      - If set to true, return -1 if no color is found, else
+ *                return the closest color.
+ *
+ * Return:
+ *   The index of the color in the palette.
+ */
+int palette_search(const palette_t *palette, const uint8_t col[4],
+                   bool exact)
+{
+    int i;
+    assert(exact); // For the moment.
+    for (i = 0; i < palette->size; i++) {
+        if (memcmp(col, palette->entries[i].color, 4) == 0)
+            return i;
+    }
+    return -1;
+}
+
+
 // Parse a gimp palette.
 // XXX: we don't check for buffer overflow!
 static int parse_gpl(const char *data, char *name, int *columns,
@@ -56,6 +82,23 @@ static int parse_gpl(const char *data, char *name, int *columns,
     return nb;
 }
 
+/*
+ * Function: parse_dat
+ * Parse a Build engine (duke2d, blood...) palette
+ */
+static int parse_dat(const uint8_t *data, int len, palette_entry_t *entries)
+{
+    int i;
+    if (len < 768) return -1;
+    for (i = 0; i < 256; i++) {
+        entries[i].color[0] = data[i * 3 + 0] * 4;
+        entries[i].color[1] = data[i * 3 + 1] * 4;
+        entries[i].color[2] = data[i * 3 + 2] * 4;
+        entries[i].color[3] = 255;
+    }
+    return 256;
+}
+
 
 static int on_palette(int i, const char *path, void *user)
 {
@@ -75,14 +118,35 @@ static int on_palette2(const char *dir, const char *name, void *user)
 {
     palette_t **list = user;
     char *data, *path;
+    int size, err = 0;
     palette_t *pal;
+
+    if (!str_endswith(name, ".gpl") && !str_endswith(name, ".dat"))
+        return 0;
+
     asprintf(&path, "%s/%s", dir, name);
     pal = calloc(1, sizeof(*pal));
-    data = read_file(path, NULL);
-    pal->size = parse_gpl(data, pal->name, &pal->columns, NULL);
-    pal->entries = calloc(pal->size, sizeof(*pal->entries));
-    parse_gpl(data, NULL, NULL, pal->entries);
+    data = read_file(path, &size);
+    if (str_endswith(name, ".gpl")) {
+        pal->size = parse_gpl(data, pal->name, &pal->columns, NULL);
+        pal->entries = calloc(pal->size, sizeof(*pal->entries));
+        err = parse_gpl(data, NULL, NULL, pal->entries);
+    }
+    else if (str_endswith(name, ".dat")) {
+        snprintf(pal->name, sizeof(pal->name), "%s", name);
+        pal->size = 256;
+        pal->entries = calloc(pal->size, sizeof(*pal->entries));
+        err = parse_dat((void*)data, size, pal->entries);
+    }
+
+    if (err < 0) {
+        LOG_E("Cannot parse palette %s", path);
+        free(pal);
+        goto end;
+    }
+
     DL_APPEND(*list, pal);
+end:
     free(path);
     free(data);
     return 0;

@@ -150,7 +150,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 let paths = NSSearchPathForDirectoriesInDomains(
                     .applicationSupportDirectory, .userDomainMask, true)
                 if paths.count > 0 {
-                    mySelf.userDirectory = paths[0].cString(using: .utf8)
+                    mySelf.userDirectory = (paths[0] + "/Goxel").cString(using: .utf8);
                 }
             }
             return UnsafePointer(mySelf.userDirectory)

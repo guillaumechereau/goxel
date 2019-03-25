@@ -129,16 +129,18 @@ static void export(const mesh_t *mesh, const char *path, bool ply)
         fprintf(out, "property float x\n");
         fprintf(out, "property float y\n");
         fprintf(out, "property float z\n");
-        fprintf(out, "property uchar red\n");
-        fprintf(out, "property uchar green\n");
-        fprintf(out, "property uchar blue\n");
+        fprintf(out, "property float red\n");
+        fprintf(out, "property float green\n");
+        fprintf(out, "property float blue\n");
         fprintf(out, "element face %d\n", utarray_len(lines_f));
-        fprintf(out, "property list uchar int vertex_index\n");
+        fprintf(out, "property list uchar int vertex_indices\n");
         fprintf(out, "end_header\n");
         while( (line_ptr = (line_t*)utarray_next(lines_v, line_ptr))) {
-            fprintf(out, "%g %g %g %d %d %d\n",
+            fprintf(out, "%g %g %g %f %f %f\n",
                     line_ptr->v[0], line_ptr->v[1], line_ptr->v[2],
-                    line_ptr->c[0], line_ptr->c[1], line_ptr->c[2]);
+                    line_ptr->c[0] / 255.,
+                    line_ptr->c[1] / 255.,
+                    line_ptr->c[2] / 255.);
         }
         while( (line_ptr = (line_t*)utarray_next(lines_f, line_ptr))) {
             if (size == 4) {
