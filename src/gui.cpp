@@ -900,7 +900,6 @@ static void render_panel(void)
     int i;
     int maxsize;
     pathtracer_t *pt = &goxel.pathtracer;
-    const char *WORLD_LABELS[] = { "None", "Uniform", "Sky" };
 
     goxel.no_edit = pt->status || gui->popup_count;
 
@@ -946,10 +945,19 @@ static void render_panel(void)
         gui_text("%d/100", (int)(pt->progress * 100));
     }
 
-    gui_separator();
-    gui_combo("World", &pt->world.type, WORLD_LABELS,
-              ARRAY_SIZE(WORLD_LABELS));
-    gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
+    if (gui_collapsing_header("World")) {
+        gui_group_begin(NULL);
+        gui_selectable_toggle("None", &pt->world.type, PT_WORLD_NONE,
+                              NULL, -1);
+        gui_selectable_toggle("Uniform", &pt->world.type, PT_WORLD_UNIFORM,
+                              NULL, -1);
+        gui_selectable_toggle("Sky", &pt->world.type, PT_WORLD_SKY,
+                              NULL, -1);
+        gui_group_end();
+        if (pt->world.type) {
+            gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
+        }
+    }
 }
 
 static void image_panel(void)
@@ -1777,6 +1785,17 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
 {
     return _selectable(name, v, tooltip, w, -1);
+}
+
+bool gui_selectable_toggle(const char *name, int *v, int set_v,
+                           const char *tooltip, float w)
+{
+    bool b = *v == set_v;
+    if (gui_selectable(name, &b, tooltip, w)) {
+        if (b) *v = set_v;
+        return true;
+    }
+    return false;
 }
 
 bool gui_selectable_icon(const char *name, bool *v, int icon)

@@ -1701,6 +1701,8 @@ bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...);
 bool gui_action_checkbox(const char *id, const char *label);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
+bool gui_selectable_toggle(const char *name, int *v, int set_v,
+                           const char *tooltip, float w);
 bool gui_selectable_icon(const char *name, bool *v, int icon);
 bool gui_color(const char *label, uint8_t color[4]);
 bool gui_input_text(const char *label, char *buf, int size);
