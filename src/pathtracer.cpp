@@ -196,20 +196,22 @@ static bool sync_world(pathtracer_t *pt, bool force)
     scene.environments = {};
     scene.textures = {};
 
-    auto texture     = yocto_texture{};
-    texture.name     = "<sky>";
-    texture.filename = "textures/sky.hdr";
-    texture.hdr_image.resize({1024, 512});
-    float turbidity = 3;
-    bool has_sun = false;
-    make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun);
-    scene.textures.push_back(texture);
-    auto environment             = yocto_environment{};
-    environment.name             = "<sky>";
-    environment.emission         = {1, 1, 1};
-    environment.emission_texture = (int)scene.textures.size() - 1;
-    environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
-    scene.environments.push_back(environment);
+    if (pt->world == PT_WORLD_SKY) {
+        auto texture = yocto_texture{};
+        auto environment = yocto_environment{};
+        float turbidity = 3;
+        bool has_sun = false;
+        texture.name = "<sky>";
+        texture.filename = "textures/sky.hdr";
+        texture.hdr_image.resize({1024, 512});
+        make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun);
+        scene.textures.push_back(texture);
+        environment.name = "<sky>";
+        environment.emission = {1, 1, 1};
+        environment.emission_texture = (int)scene.textures.size() - 1;
+        environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
+        scene.environments.push_back(environment);
+    }
     return true;
 }
 
@@ -377,4 +379,5 @@ void pathtracer_stop(pathtracer_t *pt)
     trace_image_async_stop(
         p->trace_futures, p->trace_queue, p->trace_options);
     delete p;
+    pt->p = nullptr;
 }
