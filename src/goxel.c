@@ -364,7 +364,7 @@ void goxel_reset(void)
 
 void goxel_release(void)
 {
-    pathtrace_stop();
+    pathtracer_stop();
     gui_release();
 }
 
@@ -680,7 +680,7 @@ static void render_export_viewport(const float viewport[4])
 
 static void render_pathtrace_view(const float viewport[4])
 {
-    typeof(goxel.render_task) *task = &goxel.render_task;
+    pathtracer_t *pt = &goxel.pathtracer;
     float a, mat[4][4];
     uint8_t *ibuf;
     int i;
@@ -690,31 +690,31 @@ static void render_pathtrace_view(const float viewport[4])
                    (int)viewport[3]};
 
     // Recreate the buffer if needed.
-    if (    !task->buf ||
-            task->w != goxel.image->export_width ||
-            task->h != goxel.image->export_height) {
-        free(task->buf);
-        task->w = goxel.image->export_width;
-        task->h = goxel.image->export_height;
-        task->buf = calloc(task->w * task->h, 4 * sizeof(float));
-        texture_delete(task->texture);
-        task->texture = texture_new_surface(task->w, task->h, 0);
+    if (    !pt->buf ||
+            pt->w != goxel.image->export_width ||
+            pt->h != goxel.image->export_height) {
+        free(pt->buf);
+        pt->w = goxel.image->export_width;
+        pt->h = goxel.image->export_height;
+        pt->buf = calloc(pt->w * pt->h, 4 * sizeof(float));
+        texture_delete(pt->texture);
+        pt->texture = texture_new_surface(pt->w, pt->h, 0);
     }
-    pathtrace_iter(task->buf, task->w, task->h, &task->progress,
-                   task->force_restart);
-    task->force_restart = false;
+    pathtracer_iter(pt->buf, pt->w, pt->h, &pt->progress,
+                    pt->force_restart);
+    pt->force_restart = false;
 
     // Render the buffer.
     mat4_set_identity(mat);
-    a = 1.0 * task->w / task->h / rect[2] * rect[3];
+    a = 1.0 * pt->w / pt->h / rect[2] * rect[3];
     mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
 
-    ibuf = malloc(task->w * task->h * 4);
-    for (i = 0; i < task->w * task->h * 4; i++) {
-        ibuf[i] = clamp(task->buf[i] * 255, 0, 255);
+    ibuf = malloc(pt->w * pt->h * 4);
+    for (i = 0; i < pt->w * pt->h * 4; i++) {
+        ibuf[i] = clamp(pt->buf[i] * 255, 0, 255);
     }
-    texture_set_data(task->texture, ibuf, task->w, task->h, 4);
-    render_img(&goxel.rend, task->texture, mat,
+    texture_set_data(pt->texture, ibuf, pt->w, pt->h, 4);
+    render_img(&goxel.rend, pt->texture, mat,
                EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
     render_submit(&goxel.rend, rect, goxel.back_color);
     free(ibuf);

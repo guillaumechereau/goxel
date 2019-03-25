@@ -478,7 +478,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     bool render_mode;
     // XXX: 8 here means 'export' panel.  Need to use an enum or find a
     // better way!
-    render_mode = gui->current_panel == 8 && goxel.render_task.status;
+    render_mode = gui->current_panel == 8 && goxel.pathtracer.status;
     goxel_render_view(view->rect, render_mode);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
@@ -899,9 +899,9 @@ static void render_panel(void)
 {
     int i;
     int maxsize;
-    typeof(goxel.render_task) *task = &goxel.render_task;
+    pathtracer_t *pt = &goxel.pathtracer;
 
-    goxel.no_edit = task->status || gui->popup_count;
+    goxel.no_edit = pt->status || gui->popup_count;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
@@ -931,18 +931,18 @@ static void render_panel(void)
         gui_text("%s", goxel.render_task.output);
     */
 
-    if (task->status == 0 && gui_button("Render", 0, 0)) task->status = 1;
-    if (task->status == 1 && gui_button("Cancel", 0, 0)) {
-        pathtrace_stop();
-        task->status = 0;
+    if (pt->status == 0 && gui_button("Render", 0, 0)) pt->status = 1;
+    if (pt->status == 1 && gui_button("Cancel", 0, 0)) {
+        pathtracer_stop();
+        pt->status = 0;
     }
-    if (task->status == 2 && gui_button("Restart", 0, 0)) {
-        task->status = 1;
-        task->progress = 0;
-        task->force_restart = true;
+    if (pt->status == 2 && gui_button("Restart", 0, 0)) {
+        pt->status = 1;
+        pt->progress = 0;
+        pt->force_restart = true;
     }
-    if (goxel.render_task.status) {
-        gui_text("%d/100", (int)(goxel.render_task.progress * 100));
+    if (pt->status) {
+        gui_text("%d/100", (int)(pt->progress * 100));
     }
 }
 

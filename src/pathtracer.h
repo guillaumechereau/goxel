@@ -1,0 +1,50 @@
+/* Goxel 3D voxels editor
+ *
+ * copyright (c) 2019 Guillaume Chereau <guillaume@noctua-software.com>
+ *
+ * Goxel is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+
+ * Goxel is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+
+ * You should have received a copy of the GNU General Public License along with
+ * goxel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "texture.h"
+
+// Hold info about the cycles rendering task.
+typedef struct {
+    int status;         // 0: stopped, 1: running, 2: finished.
+    float *buf;         // RGBA buffer.
+    int w, h;           // Size of the buffer.
+    char output[1024];  // Output path.
+    float progress;
+    bool force_restart;
+    texture_t *texture;
+} pathtracer_t;
+
+/*
+ * Function: pathtracer_iter
+ * Iter the rendering process of the current mesh.
+ *
+ * Parameters:
+ *   buf            - A RGBA image buffer.
+ *   w              - Width of the image buffer.
+ *   h              - Height of the image buffer.
+ *   progress       - Rendering progress.
+ *   force_restart  - Restart the rendering even if the image of view did
+ *                    not change.
+ */
+void pathtracer_iter(float *buf, int w, int h, float *progress,
+                     bool force_restart);
+
+/*
+ * Stop the pathtracer thread if it is running.
+ */
+void pathtracer_stop(void);

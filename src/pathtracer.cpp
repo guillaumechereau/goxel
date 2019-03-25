@@ -291,7 +291,7 @@ static void make_preview(float *buf, int w, int h)
 }
 
 /*
- * Function: pathtrace_iter
+ * Function: pathtracer_iter
  * Iter the rendering process of the current mesh.
  *
  * Parameters:
@@ -302,8 +302,8 @@ static void make_preview(float *buf, int w, int h)
  *   force_restart  - Restart the rendering even if the image of view did
  *                    not change.
  */
-void pathtrace_iter(float *buf, int w, int h, float *progress,
-                    bool force_restart)
+void pathtracer_iter(float *buf, int w, int h, float *progress,
+                     bool force_restart)
 {
     bool changed;
 
@@ -339,9 +339,9 @@ void pathtrace_iter(float *buf, int w, int h, float *progress,
 
 
 /*
- * Stop the pathtrace thread if it is running.
+ * Stop the pathtracer thread if it is running.
  */
-void pathtrace_stop(void)
+void pathtracer_stop(void)
 {
     trace_image_async_stop(
         g_state.trace_futures, g_state.trace_queue, g_state.trace_options);

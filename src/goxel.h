@@ -40,6 +40,8 @@
 #include "mesh.h"
 #include "texture.h"
 #include "theme.h"
+#include "pathtracer.h"
+
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -1620,16 +1622,7 @@ typedef struct goxel
         gesture_t pinch;
     } gestures;
 
-    // Hold info about the cycles rendering task.
-    struct {
-        int status;         // 0: stopped, 1: running, 2: finished.
-        float *buf;         // RGBA buffer.
-        int w, h;           // Size of the buffer.
-        char output[1024];  // Output path.
-        float progress;
-        bool force_restart;
-        texture_t *texture;
-    } render_task;
+    pathtracer_t pathtracer;
 
     // Used to check if the active mesh changed to play tick sound.
     uint64_t    last_mesh_key;
@@ -1816,28 +1809,6 @@ void cycles_init(void);
 void cycles_release(void);
 void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
                    float *progress, bool force_restart);
-
-// Section path tracer
-
-/*
- * Function: pathtrace_iter
- * Iter the rendering process of the current mesh.
- *
- * Parameters:
- *   buf            - A RGBA image buffer.
- *   w              - Width of the image buffer.
- *   h              - Height of the image buffer.
- *   progress       - Rendering progress.
- *   force_restart  - Restart the rendering even if the image of view did
- *                    not change.
- */
-void pathtrace_iter(float *buf, int w, int h, float *progress,
-                    bool force_restart);
-
-/*
- * Stop the pathtrace thread if it is running.
- */
-void pathtrace_stop(void);
 
 // Section: box_edit
 /*
