@@ -39,7 +39,7 @@ extern "C" {
 
 using namespace yocto;
 
-static struct {
+struct pathtracer_internal {
     uint64_t key;
     uint64_t camera_key;
     yocto_scene scene;
@@ -54,7 +54,7 @@ static struct {
     concurrent_queue<image_region> trace_queue;
     atomic<bool> trace_stop;
     float exposure;
-} g_state = {};
+};
 
 static yocto_shape create_shape_for_block(
         const mesh_t *mesh, const int block_pos[3])
@@ -104,7 +104,7 @@ end:
     return shape;
 }
 
-static bool sync_mesh(int w, int h, bool force)
+static bool sync_mesh(pathtracer_t *pt, int w, int h, bool force)
 {
     uint64_t key;
     mesh_iterator_t iter;
@@ -112,6 +112,7 @@ static bool sync_mesh(int w, int h, bool force)
     int block_pos[3];
     yocto_shape shape;
     yocto_instance instance;
+    pathtracer_internal_t *p = pt->p;
 
     key = mesh_get_key(goxel.render_mesh);
     key = crc64(key, goxel.back_color, sizeof(goxel.back_color));
@@ -120,14 +121,14 @@ static bool sync_mesh(int w, int h, bool force)
     key = crc64(key, (const uint8_t*)&goxel.rend.settings.effects,
                      sizeof(goxel.rend.settings.effects));
     key = crc64(key, (const uint8_t*)&force, sizeof(force));
-    if (key == g_state.key) return false;
+    if (key == p->key) return false;
 
-    trace_image_async_stop(g_state.trace_futures, g_state.trace_queue,
-                           g_state.trace_options);
+    trace_image_async_stop(p->trace_futures, p->trace_queue,
+                           p->trace_options);
 
-    g_state.key = key;
-    g_state.scene = {};
-    g_state.lights = {};
+    p->key = key;
+    p->scene = {};
+    p->lights = {};
 
     // The mesh has changed, regenerates the scene.
     iter = mesh_get_iterator(mesh,
@@ -135,31 +136,33 @@ static bool sync_mesh(int w, int h, bool force)
     while (mesh_iter(&iter, block_pos)) {
         shape = create_shape_for_block(mesh, block_pos);
         if (shape.positions.empty()) continue;
-        g_state.scene.shapes.push_back(shape);
+        p->scene.shapes.push_back(shape);
         instance.name = shape.name;
-        instance.shape = g_state.scene.shapes.size() - 1;
+        instance.shape = p->scene.shapes.size() - 1;
         instance.frame = make_translation_frame<float>({
                 block_pos[0], block_pos[1], block_pos[2]});
-        g_state.scene.instances.push_back(instance);
+        p->scene.instances.push_back(instance);
     }
 
     return true;
 }
 
-static bool sync_camera(int w, int h, const camera_t *camera, bool force)
+static bool sync_camera(pathtracer_t *pt, int w, int h,
+                        const camera_t *camera, bool force)
 {
+    pathtracer_internal_t *p = pt->p;
     yocto_camera *cam;
     uint64_t key;
 
-    add_missing_cameras(g_state.scene);
-    cam = &g_state.scene.cameras[0];
+    add_missing_cameras(p->scene);
+    cam = &p->scene.cameras[0];
 
     key = crc64(0, (uint8_t*)camera->view_mat, sizeof(camera->view_mat));
     key = crc64(key, (uint8_t*)camera->proj_mat, sizeof(camera->proj_mat));
     key = crc64(key, (uint8_t*)&w, sizeof(w));
     key = crc64(key, (uint8_t*)&h, sizeof(h));
-    if (!force && key == g_state.camera_key) return false;
-    g_state.camera_key = key;
+    if (!force && key == p->camera_key) return false;
+    p->camera_key = key;
 
     cam->frame =
         make_translation_frame<float>({-goxel.camera.ofs[0],
@@ -175,8 +178,9 @@ static bool sync_camera(int w, int h, const camera_t *camera, bool force)
     return true;
 }
 
-static void sync_light(void)
+static void sync_light(pathtracer_t *pt)
 {
+    pathtracer_internal_t *p = pt->p;
     yocto_shape shape;
     yocto_instance instance;
     yocto_material material;
@@ -185,7 +189,7 @@ static void sync_light(void)
 
     material.name = "light";
     material.emission = {ke * d * d, ke * d * d, ke * d * d};
-    g_state.scene.materials.push_back(material);
+    p->scene.materials.push_back(material);
 
     shape.name = "light";
     shape.positions.push_back({0, 0, 0});
@@ -193,16 +197,16 @@ static void sync_light(void)
     shape.positions.push_back({1, 1, 0});
 
     shape.triangles.push_back({0, 1, 2});
-    shape.material = g_state.scene.materials.size() - 1;
+    shape.material = p->scene.materials.size() - 1;
 
-    g_state.scene.shapes.push_back(shape);
-    instance.shape = g_state.scene.shapes.size() - 1;
+    p->scene.shapes.push_back(shape);
+    instance.shape = p->scene.shapes.size() - 1;
     instance.name = shape.name;
     instance.frame = make_translation_frame<float>({50, 20, 100});
-    g_state.scene.instances.push_back(instance);
+    p->scene.instances.push_back(instance);
 
 
-    auto &scene = g_state.scene;
+    auto &scene = p->scene;
     auto texture     = yocto_texture{};
     texture.name     = "<sky>";
     texture.filename = "textures/sky.hdr";
@@ -219,71 +223,73 @@ static void sync_light(void)
     scene.environments.push_back(environment);
 }
 
-static bool sync(int w, int h, bool force)
+static bool sync(pathtracer_t *pt, int w, int h, bool force)
 {
     bool mesh_changed, cam_changed;
-    mesh_changed = sync_mesh(w, h, force);
-    cam_changed = sync_camera(w, h, &goxel.camera, force || mesh_changed);
+    mesh_changed = sync_mesh(pt, w, h, force);
+    cam_changed = sync_camera(pt, w, h, &goxel.camera, force || mesh_changed);
+    pathtracer_internal_t *p = pt->p;
 
     if (mesh_changed) {
-        sync_light();
-        // tesselate_shapes(g_state.scene); ?
+        sync_light(pt);
+        // tesselate_shapes(p->scene); ?
 
-        add_missing_materials(g_state.scene);
-        add_missing_names(g_state.scene);
-        update_transforms(g_state.scene);
+        add_missing_materials(p->scene);
+        add_missing_names(p->scene);
+        update_transforms(p->scene);
 
         // Update BVH.
-        g_state.bvh = {};
-        build_scene_bvh(g_state.scene, g_state.bvh);
+        p->bvh = {};
+        build_scene_bvh(p->scene, p->bvh);
 
-        init_trace_lights(g_state.lights, g_state.scene);
+        init_trace_lights(p->lights, p->scene);
     }
 
     if (mesh_changed || cam_changed) {
-        if (g_state.lights.instances.empty() &&
-                g_state.lights.environments.empty()) {
-            g_state.trace_options.sampler_type = trace_sampler_type::eyelight;
+        if (p->lights.instances.empty() &&
+                p->lights.environments.empty()) {
+            p->trace_options.sampler_type = trace_sampler_type::eyelight;
         }
-        g_state.trace_options.image_size = {w, h};
+        p->trace_options.image_size = {w, h};
 
-        g_state.image = image4f({w, h});
-        g_state.display = image4f({w, h});
+        p->image = image4f({w, h});
+        p->display = image4f({w, h});
 
-        trace_image_async_stop(g_state.trace_futures, g_state.trace_queue,
-                               g_state.trace_options);
+        trace_image_async_stop(p->trace_futures, p->trace_queue,
+                               p->trace_options);
 
-        init_trace_state(g_state.state, {w, h});
+        init_trace_state(p->state, {w, h});
 
-        g_state.trace_options.cancel_flag = &g_state.trace_stop;
-        // g_state.trace_options.run_serially = true;
-        g_state.trace_sample = 0;
-        g_state.trace_stop = false;
-        trace_image_async_start(g_state.image, g_state.state, g_state.scene,
-                                g_state.bvh, g_state.lights,
-                                g_state.trace_futures, g_state.trace_sample,
-                                g_state.trace_queue, g_state.trace_options);
+        p->trace_options.cancel_flag = &p->trace_stop;
+        // p->trace_options.run_serially = true;
+        p->trace_sample = 0;
+        p->trace_stop = false;
+        trace_image_async_start(p->image, p->state, p->scene,
+                                p->bvh, p->lights,
+                                p->trace_futures, p->trace_sample,
+                                p->trace_queue, p->trace_options);
     }
     return mesh_changed || cam_changed;
 }
 
-static void make_preview(float *buf, int w, int h)
+static void make_preview(pathtracer_t *pt)
 {
-    auto preview_options = g_state.trace_options;
+    pathtracer_internal_t *p = pt->p;
+    auto preview_options = p->trace_options;
     int preview_ratio = 8;
     image4f preview;
 
     preview_options.image_size /= preview_ratio;
     preview_options.num_samples = 1;
-    preview = trace_image(g_state.scene, g_state.bvh, g_state.lights,
+    preview = trace_image(p->scene, p->bvh, p->lights,
                           preview_options);
-    tonemap_image(preview, preview, g_state.exposure, false, true);
+    tonemap_image(preview, preview, p->exposure, false, true);
 
-    for (int i = 0; i < w; i++) {
-        for (int j = 0; j < h; j++) {
+    for (int i = 0; i < pt->w; i++) {
+        for (int j = 0; j < pt->h; j++) {
             int pi = clamp(i / preview_ratio, 0, preview.size().y - 1);
             int pj = clamp(j / preview_ratio, 0, preview.size().x - 1);
-            memcpy(&buf[(i * w + j) * 4],
+            memcpy(&pt->buf[(i * pt->w + j) * 4],
                    preview.data() + (pi * preview.size().x + pj),
                    4 * sizeof(float));
         }
@@ -299,38 +305,41 @@ static void make_preview(float *buf, int w, int h)
  */
 void pathtracer_iter(pathtracer_t *pt)
 {
+    pathtracer_internal_t *p;
     bool changed;
 
-    g_state.trace_options.image_size = {pt->w, pt->h};
-    changed = sync(pt->w, pt->h, pt->force_restart);
+    if (!pt->p) pt->p = new pathtracer_internal_t();
+    p = pt->p;
+    p->trace_options.image_size = {pt->w, pt->h};
+    changed = sync(pt, pt->w, pt->h, pt->force_restart);
     pt->force_restart = false;
-    assert(g_state.display.size()[0] == pt->w);
-    assert(g_state.display.size()[1] == pt->h);
+    assert(p->display.size()[0] == pt->w);
+    assert(p->display.size()[1] == pt->h);
 
     auto region = image_region{};
     int size = 0;
     int i, j;
 
     if (changed) {
-        make_preview(pt->buf, pt->w, pt->h);
+        make_preview(pt);
         pt->progress = 0;
         return;
     }
 
-    while (g_state.trace_queue.try_pop(region)) {
-        tonemap_image_region(g_state.display, region, g_state.image,
-                g_state.exposure, false, true);
+    while (p->trace_queue.try_pop(region)) {
+        tonemap_image_region(p->display, region, p->image,
+                p->exposure, false, true);
         for (i = region.min[1]; i < region.max[1]; i++)
         for (j = region.min[0]; j < region.max[0]; j++) {
             memcpy(&pt->buf[(i * pt->w + j) * 4],
-                   g_state.display.data() + (i * pt->w + j),
+                   p->display.data() + (i * pt->w + j),
                    4 * sizeof(float));
         }
         size += region.size().x * region.size().y;
-        if (size >= g_state.image.size().x * g_state.image.size().y) break;
+        if (size >= p->image.size().x * p->image.size().y) break;
     }
-    pt->progress = (float)g_state.trace_sample /
-                   g_state.trace_options.num_samples;
+    pt->progress = (float)p->trace_sample /
+                   p->trace_options.num_samples;
 }
 
 
@@ -339,6 +348,9 @@ void pathtracer_iter(pathtracer_t *pt)
  */
 void pathtracer_stop(pathtracer_t *pt)
 {
+    pathtracer_internal_t *p = pt->p;
+    if (!p) return;
     trace_image_async_stop(
-        g_state.trace_futures, g_state.trace_queue, g_state.trace_options);
+        p->trace_futures, p->trace_queue, p->trace_options);
+    delete p;
 }

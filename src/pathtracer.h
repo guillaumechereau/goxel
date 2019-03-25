@@ -18,6 +18,8 @@
 
 #include "texture.h"
 
+typedef struct pathtracer_internal pathtracer_internal_t;
+
 // Hold info about the cycles rendering task.
 typedef struct {
     int status;         // 0: stopped, 1: running, 2: finished.
@@ -27,6 +29,7 @@ typedef struct {
     float progress;
     bool force_restart;
     texture_t *texture;
+    pathtracer_internal_t *p;
 } pathtracer_t;
 
 /*
