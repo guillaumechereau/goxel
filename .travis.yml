@@ -12,7 +12,7 @@ matrix:
       #      compiler: gcc
     - os: linux
       sudo: required
-      dist: trusty
+      dist: xenial
       compiler: clang
     - os: osx
       osx_image: xcode9.2
