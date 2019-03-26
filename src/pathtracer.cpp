@@ -265,8 +265,10 @@ static int sync_light(pathtracer_t *pt, bool force)
     yocto_shape *shape;
     yocto_instance *instance;
     yocto_material *material;
-    float d = 1000000; // Large enough to be considered at infinity.
-    float ke = 20;
+    // Large enough to be considered at infinity, but not enough to produce
+    // rendering effects.
+    const float d = 10000;
+    const float ke = 20;
     float light_dir[3];
 
     render_get_light_dir(&goxel.rend, light_dir);
