@@ -32,6 +32,8 @@
 #include <cstdio>
 #include <iterator>
 
+using std::size;
+
 #define YOCTO_EMBREE 0
 
 #include "../ext_src/yocto/ext/ArHosekSkyModel.cpp"
