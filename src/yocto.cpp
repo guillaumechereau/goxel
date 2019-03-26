@@ -32,7 +32,16 @@
 #include <cstdio>
 #include <iterator>
 
-using std::size;
+// Attempt to fix a bug with clang 7.0.0 C++17 support.
+#if __cplusplus < 201703L
+template <typename C>
+constexpr auto size(const C& c) noexcept(noexcept(c.size()))
+    -> decltype(c.size())
+{
+        return c.size();
+}
+#endif
+
 
 #define YOCTO_EMBREE 0
 
