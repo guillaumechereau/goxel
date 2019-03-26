@@ -30,16 +30,17 @@
 
 #include <cstddef>
 #include <cstdio>
-#include <iterator>
+#include <vector>
 
-// Attempt to fix a bug with clang 7.0.0 C++17 support.
-#if __cplusplus < 201703L
-template <typename C>
-constexpr auto size(const C& c) noexcept(noexcept(c.size()))
-    -> decltype(c.size())
-{
-        return c.size();
+// Attempt to fix a bug with clang.
+#ifdef __clang__
+namespace std {
+template<class T>
+static int size(const vector<T> &x) {
+    return x.size();
 }
+}
+
 #endif
 
 
