@@ -28,6 +28,9 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
+#include <cstddef>
+#include <cstdio>
+
 #define YOCTO_EMBREE 0
 
 #include "../ext_src/yocto/ext/ArHosekSkyModel.cpp"
