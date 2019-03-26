@@ -22,12 +22,14 @@
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
+#include <cstddef>
+#include <cstdio>
+
+#define YOCTO_EMBREE 0
+
 #include "../ext_src/yocto/yocto_bvh.h"
 #include "../ext_src/yocto/yocto_scene.h"
 #include "../ext_src/yocto/yocto_trace.h"
-
-// For debug.
-#include "../ext_src/yocto/yocto_sceneio.h"
 
 #ifndef __clang__
 #pragma GCC diagnostic pop
