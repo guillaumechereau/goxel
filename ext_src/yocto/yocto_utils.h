@@ -480,7 +480,7 @@ inline bool load_text(const string& filename, string& str) {
     auto length = ftell(fs);
     fseek(fs, 0, SEEK_SET);
     str.resize(length);
-    auto ok = fread(str.data(), 1, length, fs) == length;
+    auto ok = fread((void*)str.data(), 1, length, fs) == length;
     fclose(fs);
     return ok;
 }
@@ -503,7 +503,7 @@ inline bool load_binary(const string& filename, vector<byte>& data) {
     auto length = ftell(fs);
     fseek(fs, 0, SEEK_SET);
     data.resize(length);
-    auto ok = fread(data.data(), 1, length, fs) == length;
+    auto ok = fread((void*)data.data(), 1, length, fs) == length;
     fclose(fs);
     return ok;
 }
