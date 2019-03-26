@@ -30,6 +30,7 @@
 
 #include <cstddef>
 #include <cstdio>
+#include <iterator>
 
 #define YOCTO_EMBREE 0
 
