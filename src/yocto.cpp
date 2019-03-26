@@ -34,13 +34,10 @@
 
 // Attempt to fix a bug with clang.
 #ifdef __clang__
-namespace std {
 template<class T>
-static int size(const vector<T> &x) {
+static int size(const std::vector<T> &x) {
     return x.size();
 }
-}
-
 #endif
 
 
