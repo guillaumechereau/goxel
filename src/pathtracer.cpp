@@ -69,6 +69,31 @@ struct pathtracer_internal {
     float exposure;
 };
 
+
+/*
+ * Get a item from a list by name or create a new one if it doesn't exists
+ */
+template <class T>
+static T* getdefault(vector<T> &list, const string &name)
+{
+    for (T &value : list) {
+        if (value.name == name) return &value;
+    }
+    list.push_back(T{});
+    list.back().name = name;
+    return &list.back();
+}
+
+/*
+ * Return the index of an item in a list.
+ */
+template <class T>
+static int getindex(const vector<T> &list, const T* elem)
+{
+    return elem - &list.front();
+}
+
+
 static yocto_shape create_shape_for_block(
         const mesh_t *mesh, const int block_pos[3])
 {
@@ -235,36 +260,39 @@ static int sync_world(pathtracer_t *pt, bool force)
 static int sync_light(pathtracer_t *pt, bool force)
 {
 
-    uint64_t key;
+    uint64_t key = 0;
     pathtracer_internal_t *p = pt->p;
-    yocto_shape shape;
-    yocto_instance instance;
-    yocto_material material;
-    float d = 100;
+    yocto_shape *shape;
+    yocto_instance *instance;
+    yocto_material *material;
+    float d = 1000000; // Large enough to be considered at infinity.
     float ke = 20;
+    float light_dir[3];
 
-    key = crc64(0, &pt->world, sizeof(pt->world));
+    render_get_light_dir(&goxel.rend, light_dir);
+    key = crc64(key, &pt->world, sizeof(pt->world));
+    key = crc64(key, light_dir, sizeof(light_dir));
+
     if (!force && key == p->light_key) return 0;
     p->light_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
-    material.name = "light";
-    material.emission = {ke * d * d, ke * d * d, ke * d * d};
-    p->scene.materials.push_back(material);
+    material = getdefault(p->scene.materials, "<light>");
+    material->emission = {ke * d * d, ke * d * d, ke * d * d};
 
-    shape.name = "light";
-    shape.positions.push_back({0, 0, 0});
-    shape.positions.push_back({1, 0, 0});
-    shape.positions.push_back({1, 1, 0});
+    shape = getdefault(p->scene.shapes, "<light>");
+    shape->positions = {};
+    shape->triangles = {};
+    shape->positions.push_back({0, 0, 0});
+    shape->positions.push_back({1, 0, 0});
+    shape->positions.push_back({1, 1, 0});
+    shape->triangles.push_back({0, 1, 2});
+    shape->material = getindex(p->scene.materials, material);
 
-    shape.triangles.push_back({0, 1, 2});
-    shape.material = p->scene.materials.size() - 1;
-
-    p->scene.shapes.push_back(shape);
-    instance.shape = p->scene.shapes.size() - 1;
-    instance.name = shape.name;
-    instance.frame = make_translation_frame<float>({50, 20, 100});
-    p->scene.instances.push_back(instance);
+    instance = getdefault(p->scene.instances, "<light>");
+    instance->shape = getindex(p->scene.shapes, shape);
+    instance->frame = make_translation_frame<float>(
+            {light_dir[0] * d, light_dir[1] * d, light_dir[2] * d});
 
     return CHANGE_LIGHT;
 }
