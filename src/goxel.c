@@ -362,7 +362,7 @@ void goxel_reset(void)
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
 
     goxel.pathtracer = (pathtracer_t) {
-        .world = {.energy = 1},
+        .world = {.energy = 1, .color = {127, 127, 127, 255}}
     };
 }
 

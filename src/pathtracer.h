@@ -39,6 +39,7 @@ typedef struct {
     struct {
         int type;
         float energy;
+        uint8_t color[4];
     } world;
 } pathtracer_t;
 

@@ -956,6 +956,7 @@ static void render_panel(void)
         gui_group_end();
         if (pt->world.type) {
             gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
+            gui_color_small("Color", pt->world.color);
         }
     }
 }
@@ -1841,6 +1842,23 @@ bool gui_color(const char *label, uint8_t color[4])
         ImGui::SameLine();
         ImGui::Text("%s", label);
     }
+    ImGui::PopID();
+    return false;
+}
+
+bool gui_color_small(const char *label, uint8_t color[4])
+{
+    ImVec4 c = color;
+    ImGui::PushID(label);
+    ImGui::ColorButton(label, c);
+    if (ImGui::BeginPopupContextItem("color context menu", 0)) {
+        color_edit("##edit", color, NULL);
+        if (ImGui::Button("Close"))
+            ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
+    ImGui::SameLine();
+    ImGui::Text("%s", label);
     ImGui::PopID();
     return false;
 }

@@ -227,9 +227,11 @@ static int sync_world(pathtracer_t *pt, bool force)
     auto environment = yocto_environment{};
     float turbidity = 3;
     bool has_sun = false;
+    vec4f color;
 
     key = crc64(key, &pt->world.type, sizeof(pt->world.type));
     key = crc64(key, &pt->world.energy, sizeof(pt->world.energy));
+    key = crc64(key, &pt->world.color, sizeof(pt->world.color));
     if (!force && key == p->world_key) return 0;
     p->world_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
@@ -239,15 +241,21 @@ static int sync_world(pathtracer_t *pt, bool force)
     texture.name = "<world>";
     texture.filename = "textures/uniform.hdr";
 
+    color[0] = pt->world.color[0] / 255.f;
+    color[1] = pt->world.color[1] / 255.f;
+    color[2] = pt->world.color[2] / 255.f;
+    color[3] = 1.0;
+
     switch (pt->world.type) {
     case PT_WORLD_NONE:
         return true;
     case PT_WORLD_SKY:
         texture.hdr_image.resize({1024, 512});
-        make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun);
+        make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun,
+                          1.0f, 0, {color.x, color.y, color.z});
         break;
     case PT_WORLD_UNIFORM:
-        texture.hdr_image = {{64, 64}, {0.5, 0.5, 0.5, 1.0}};
+        texture.hdr_image = {{64, 64}, color};
         break;
     }
     scene.textures.push_back(texture);
