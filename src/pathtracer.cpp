@@ -163,6 +163,7 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     key = crc64(key, (const uint8_t*)&h, sizeof(h));
     key = crc64(key, (const uint8_t*)&goxel.rend.settings.effects,
                      sizeof(goxel.rend.settings.effects));
+    key = crc64(key, &pt->floor.type, sizeof(pt->floor.type));
     key = crc64(key, (const uint8_t*)&force, sizeof(force));
     if (!force && key == p->mesh_key) return 0;
     p->mesh_key = key;
@@ -202,6 +203,8 @@ static int sync_floor(pathtracer_t *pt, bool force)
     if (!force && key == p->floor_key) return 0;
     p->floor_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
+
+    if (pt->floor.type == PT_FLOOR_NONE) return CHANGE_FLOOR;
 
     color[0] = pt->floor.color[0] / 255.f;
     color[1] = pt->floor.color[1] / 255.f;

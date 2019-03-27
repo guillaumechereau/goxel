@@ -24,6 +24,11 @@ enum {
     PT_WORLD_SKY,
 };
 
+enum {
+    PT_FLOOR_NONE = 0,
+    PT_FLOOR_PLANE,
+};
+
 typedef struct pathtracer_internal pathtracer_internal_t;
 
 // Hold info about the cycles rendering task.
@@ -42,6 +47,7 @@ typedef struct {
         uint8_t color[4];
     } world;
     struct {
+        int type;
         uint8_t color[4];
         float diffuse;
         float specular;

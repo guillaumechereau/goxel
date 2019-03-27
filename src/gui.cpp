@@ -963,6 +963,12 @@ static void render_panel(void)
     }
     if (gui_collapsing_header("Floor")) {
         gui_push_id("floor");
+        gui_group_begin(NULL);
+        gui_selectable_toggle("None", &pt->floor.type, PT_FLOOR_NONE,
+                              NULL, -1);
+        gui_selectable_toggle("Plane", &pt->floor.type, PT_FLOOR_PLANE,
+                              NULL, -1);
+        gui_group_end();
         gui_color_small("Color", pt->floor.color);
         gui_input_float("Diffuse", &pt->floor.diffuse, 0.1, 0, 1, "%.1f");
         gui_input_float("Specular", &pt->floor.specular, 0.01, 0, 1, "%.3f");
