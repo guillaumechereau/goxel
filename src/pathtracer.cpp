@@ -247,7 +247,7 @@ static int sync_world(pathtracer_t *pt, bool force)
     case PT_WORLD_NONE:
         return true;
     case PT_WORLD_SKY:
-        texture->hdr_image.resize({1024, 512});
+        texture->hdr_image.resize({512, 256});
         make_sunsky_image(texture->hdr_image, pif / 4, turbidity, has_sun,
                           1.0f, 0, {color.x, color.y, color.z});
         break;
