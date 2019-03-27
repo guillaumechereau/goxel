@@ -969,6 +969,12 @@ static void render_panel(void)
         gui_selectable_toggle("Plane", &pt->floor.type, PT_FLOOR_PLANE,
                               NULL, -1);
         gui_group_end();
+
+        gui_group_begin("size");
+        gui_input_int("x", &pt->floor.size[0], 1, 2048);
+        gui_input_int("y", &pt->floor.size[1], 1, 2048);
+        gui_group_end();
+
         gui_color_small("Color", pt->floor.color);
         gui_input_float("Diffuse", &pt->floor.diffuse, 0.1, 0, 1, "%.1f");
         gui_input_float("Specular", &pt->floor.specular, 0.01, 0, 1, "%.3f");

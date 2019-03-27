@@ -49,6 +49,7 @@ typedef struct {
     struct {
         int type;
         uint8_t color[4];
+        int size[2];
         float diffuse;
         float specular;
         float transmission;

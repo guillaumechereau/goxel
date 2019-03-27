@@ -369,6 +369,7 @@ void goxel_reset(void)
         },
         .floor = {
             .color = {157, 172, 157, 255},
+            .size = {64, 64},
             .diffuse = 0.2,
             .specular = 0,
             .transmission = 0,

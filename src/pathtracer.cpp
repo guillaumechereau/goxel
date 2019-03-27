@@ -198,6 +198,7 @@ static int sync_floor(pathtracer_t *pt, bool force)
     int i;
     yocto_material *material;
     vec4f color;
+    float pos[3] = {0, 0, 0};
 
     key = crc64(key, &pt->floor, sizeof(pt->floor));
     if (!force && key == p->floor_key) return 0;
@@ -210,6 +211,12 @@ static int sync_floor(pathtracer_t *pt, bool force)
     color[1] = pt->floor.color[1] / 255.f;
     color[2] = pt->floor.color[2] / 255.f;
     color[3] = 1.0;
+
+    if (!box_is_null(goxel.image->box)) {
+        pos[0] = goxel.image->box[3][0];
+        pos[1] = goxel.image->box[3][1];
+        pos[2] = goxel.image->box[3][2] - goxel.image->box[2][2];
+    }
 
     material = getdefault(p->scene.materials, "<floor>");
     material->diffuse = vec3f(pt->floor.diffuse);
@@ -229,7 +236,9 @@ static int sync_floor(pathtracer_t *pt, bool force)
     shape->material = getindex(p->scene.materials, material);
     instance = getdefault(p->scene.instances, "<floor>");
     instance->shape = getindex(p->scene.shapes, shape);
-    instance->frame = make_scaling_frame<float>({100, 100, 1});
+    instance->frame = make_translation_frame<float>({pos[0], pos[1], pos[2]}) *
+                      make_scaling_frame<float>({
+                              pt->floor.size[0], pt->floor.size[1], 1});
     return CHANGE_FLOOR;
 }
 
