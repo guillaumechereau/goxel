@@ -41,6 +41,12 @@ typedef struct {
         float energy;
         uint8_t color[4];
     } world;
+    struct {
+        uint8_t color[4];
+        float diffuse;
+        float specular;
+        float transmission;
+    } floor;
 } pathtracer_t;
 
 /*

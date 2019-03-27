@@ -48,6 +48,7 @@ enum {
     CHANGE_LIGHT        = 1 << 2,
     CHANGE_CAMERA       = 1 << 3,
     CHANGE_FORCE        = 1 << 4,
+    CHANGE_FLOOR        = 1 << 5,
 };
 
 struct pathtracer_internal {
@@ -57,6 +58,7 @@ struct pathtracer_internal {
     uint64_t camera_key;
     uint64_t world_key;
     uint64_t light_key;
+    uint64_t floor_key;
 
     yocto_scene scene;
     bvh_scene bvh;
@@ -186,6 +188,48 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     return CHANGE_MESH;
 }
 
+static int sync_floor(pathtracer_t *pt, bool force)
+{
+    pathtracer_internal_t *p = pt->p;
+    uint64_t key = 0;
+    yocto_shape *shape;
+    yocto_instance *instance;
+    int i;
+    yocto_material *material;
+    vec4f color;
+
+    key = crc64(key, &pt->floor, sizeof(pt->floor));
+    if (!force && key == p->floor_key) return 0;
+    p->floor_key = key;
+    trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
+
+    color[0] = pt->floor.color[0] / 255.f;
+    color[1] = pt->floor.color[1] / 255.f;
+    color[2] = pt->floor.color[2] / 255.f;
+    color[3] = 1.0;
+
+    material = getdefault(p->scene.materials, "<floor>");
+    material->diffuse = vec3f(pt->floor.diffuse);
+    material->specular = vec3f(pt->floor.specular);
+
+    shape = getdefault(p->scene.shapes, "<floor>");
+    shape->positions = {};
+    shape->colors = {};
+    shape->normals = {};
+    shape->quads = {};
+    for (i = 0; i < 4; i++) {
+        shape->positions.push_back({i % 2 - 0.5, i / 2 - 0.5, 0});
+        shape->normals.push_back({0, 0, 1});
+        shape->colors.push_back(color);
+    }
+    shape->quads.push_back({0, 1, 3, 2});
+    shape->material = getindex(p->scene.materials, material);
+    instance = getdefault(p->scene.instances, "<floor>");
+    instance->shape = getindex(p->scene.shapes, shape);
+    instance->frame = make_scaling_frame<float>({100, 100, 1});
+    return CHANGE_FLOOR;
+}
+
 static int sync_camera(pathtracer_t *pt, int w, int h,
                        const camera_t *camera, bool force)
 {
@@ -313,19 +357,20 @@ static int sync(pathtracer_t *pt, int w, int h, bool force)
     if (force) changes |= CHANGE_FORCE;
 
     changes |= sync_mesh(pt, w, h, changes);
+    changes |= sync_floor(pt, changes);
     changes |= sync_world(pt, changes);
     changes |= sync_light(pt, changes);
     changes |= sync_camera(pt, w, h, &goxel.camera, changes);
 
     if (changes) {
-        // tesselate_shapes(p->scene); ?
+        // tesselate_shapes(p->scene); // ?
         add_missing_materials(p->scene);
         add_missing_names(p->scene);
         update_transforms(p->scene);
     }
 
     // Update BVH if needed.
-    if (changes & (CHANGE_MESH | CHANGE_LIGHT)) {
+    if (changes & (CHANGE_MESH | CHANGE_LIGHT | CHANGE_FLOOR)) {
         p->bvh = {};
         build_scene_bvh(p->scene, p->bvh);
     }

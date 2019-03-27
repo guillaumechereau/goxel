@@ -946,6 +946,7 @@ static void render_panel(void)
     }
 
     if (gui_collapsing_header("World")) {
+        gui_push_id("world");
         gui_group_begin(NULL);
         gui_selectable_toggle("None", &pt->world.type, PT_WORLD_NONE,
                               NULL, -1);
@@ -958,6 +959,14 @@ static void render_panel(void)
             gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
             gui_color_small("Color", pt->world.color);
         }
+        gui_pop_id();
+    }
+    if (gui_collapsing_header("Floor")) {
+        gui_push_id("floor");
+        gui_color_small("Color", pt->floor.color);
+        gui_input_float("Diffuse", &pt->floor.diffuse, 0.1, 0, 1, "%.1f");
+        gui_input_float("Specular", &pt->floor.specular, 0.01, 0, 1, "%.3f");
+        gui_pop_id();
     }
 }
 
