@@ -222,9 +222,8 @@ static int sync_world(pathtracer_t *pt, bool force)
 {
     uint64_t key = 0;
     pathtracer_internal_t *p = pt->p;
-    yocto_scene &scene = p->scene;
-    auto texture = yocto_texture{};
-    auto environment = yocto_environment{};
+    yocto_texture *texture;
+    yocto_environment *environment;
     float turbidity = 3;
     bool has_sun = false;
     vec4f color;
@@ -236,10 +235,8 @@ static int sync_world(pathtracer_t *pt, bool force)
     p->world_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
-    scene.environments = {};
-    scene.textures = {};
-    texture.name = "<world>";
-    texture.filename = "textures/uniform.hdr";
+    texture = getdefault(p->scene.textures, "<world>");
+    texture->filename = "textures/uniform.hdr";
 
     color[0] = pt->world.color[0] / 255.f;
     color[1] = pt->world.color[1] / 255.f;
@@ -250,20 +247,18 @@ static int sync_world(pathtracer_t *pt, bool force)
     case PT_WORLD_NONE:
         return true;
     case PT_WORLD_SKY:
-        texture.hdr_image.resize({1024, 512});
-        make_sunsky_image(texture.hdr_image, pif / 4, turbidity, has_sun,
+        texture->hdr_image.resize({1024, 512});
+        make_sunsky_image(texture->hdr_image, pif / 4, turbidity, has_sun,
                           1.0f, 0, {color.x, color.y, color.z});
         break;
     case PT_WORLD_UNIFORM:
-        texture.hdr_image = {{64, 64}, color};
+        texture->hdr_image = {{64, 64}, color};
         break;
     }
-    scene.textures.push_back(texture);
-    environment.name = "<world>";
-    environment.emission = vec3f{1, 1, 1} * pt->world.energy;
-    environment.emission_texture = (int)scene.textures.size() - 1;
-    environment.frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
-    scene.environments.push_back(environment);
+    environment = getdefault(p->scene.environments, "<world>");
+    environment->emission = vec3f{1, 1, 1} * pt->world.energy;
+    environment->emission_texture = getindex(p->scene.textures, texture);
+    environment->frame = make_rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
 
     return CHANGE_WORLD;
 }
