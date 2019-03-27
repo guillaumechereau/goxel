@@ -431,8 +431,8 @@ static void make_preview(pathtracer_t *pt)
                           preview_options);
     tonemap_image(preview, preview, p->exposure, false, true);
 
-    for (i = 0; i < pt->w; i++) {
-        for (j = 0; j < pt->h; j++) {
+    for (i = 0; i < pt->h; i++) {
+        for (j = 0; j < pt->w; j++) {
             pi = clamp(i / preview_ratio, 0, preview.size().y - 1);
             pj = clamp(j / preview_ratio, 0, preview.size().x - 1);
             memcpy(&pt->buf[(i * pt->w + j) * 4],
