@@ -475,7 +475,11 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     view_t *view = (view_t*)cmd->UserCallbackData;
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    goxel_render_view(view->rect);
+    bool render_mode;
+    // XXX: 8 here means 'export' panel.  Need to use an enum or find a
+    // better way!
+    render_mode = gui->current_panel == 8 && goxel.pathtracer.status;
+    goxel_render_view(view->rect, render_mode);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
@@ -895,9 +899,11 @@ static void render_panel(void)
 {
     int i;
     int maxsize;
-    typeof(goxel.render_task) *task = &goxel.render_task;
+    pathtracer_t *pt = &goxel.pathtracer;
+    const char *path;
 
-    goxel.no_edit = task->status || gui->popup_count;
+    auto_adjust_panel_size(200);
+    goxel.no_edit = pt->status || gui->popup_count;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
@@ -913,34 +919,75 @@ static void render_panel(void)
         goxel.image->export_width = gui->view.rect[2];
         goxel.image->export_height = gui->view.rect[3];
     }
-    /*
     if (gui_button("Set output", 1, 0)) {
         path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "png\0*.png\0", NULL,
                                     "untitled.png");
-        if (path) strcpy(goxel.render_task.output, path);
+        if (path)
+            snprintf(pt->output, sizeof(pt->output), "%s", path);
     }
-    */
     gui_group_end();
+    if (*pt->output) gui_text("%s", pt->output);
 
-    /*
-    if (*goxel.render_task.output)
-        gui_text("%s", goxel.render_task.output);
-    */
+    gui_input_int("Samples", &pt->num_samples, 1, 10000);
 
-    /*
-    if (task->status == 0 && gui_button("Render", 0, 0)) task->status = 1;
-    if (task->status == 1 && gui_button("Cancel", 0, 0)) task->status = 0;
-    if (task->status == 2 && gui_button("Restart", 0, 0)) {
-        task->status = 1;
-        task->progress = 0;
-        task->force_restart = true;
+    if (pt->status == PT_STOPPED && gui_button("Start", 1, 0))
+        pt->status = PT_RUNNING;
+    if (pt->status == PT_RUNNING && gui_button("Stop", 1, 0)) {
+        pathtracer_stop(pt);
+        pt->status = PT_STOPPED;
+    }
+    if (pt->status == PT_FINISHED && gui_button("Restart", 1, 0)) {
+        pt->status = PT_RUNNING;
+        pt->progress = 0;
+        pt->force_restart = true;
+    }
+    if (pt->status) {
+        gui_text("%d/100", (int)(pt->progress * 100));
     }
 
-    if (goxel.render_task.status) {
-        gui_text("%d/100", (int)(goxel.render_task.progress * 100));
+    if (gui_collapsing_header("World")) {
+        gui_push_id("world");
+        gui_group_begin(NULL);
+        gui_selectable_toggle("None", &pt->world.type, PT_WORLD_NONE,
+                              NULL, -1);
+        gui_selectable_toggle("Uniform", &pt->world.type, PT_WORLD_UNIFORM,
+                              NULL, -1);
+        gui_selectable_toggle("Sky", &pt->world.type, PT_WORLD_SKY,
+                              NULL, -1);
+        gui_group_end();
+        if (pt->world.type) {
+            gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
+            gui_color_small("Color", pt->world.color);
+        }
+        gui_pop_id();
     }
-    */
+    if (gui_collapsing_header("Floor")) {
+        gui_push_id("floor");
+        gui_group_begin(NULL);
+        gui_selectable_toggle("None", &pt->floor.type, PT_FLOOR_NONE,
+                              NULL, -1);
+        gui_selectable_toggle("Plane", &pt->floor.type, PT_FLOOR_PLANE,
+                              NULL, -1);
+        gui_group_end();
 
+        gui_group_begin("size");
+        gui_input_int("x", &pt->floor.size[0], 1, 2048);
+        gui_input_int("y", &pt->floor.size[1], 1, 2048);
+        gui_group_end();
+
+        gui_color_small("Color", pt->floor.color);
+        gui_input_float("Diffuse", &pt->floor.diffuse, 0.1, 0, 1, "%.1f");
+        gui_input_float("Specular", &pt->floor.specular, 0.01, 0, 1, "%.3f");
+        gui_pop_id();
+    }
+    if (gui_collapsing_header("Light")) {
+        gui_group_begin("Light");
+        gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
+        gui_angle("Yaw", &goxel.rend.light.yaw, 0, 360);
+        gui_checkbox("Fixed", &goxel.rend.light.fixed, NULL);
+        gui_input_float("Energy", &pt->light.energy, 0.1, 0, 10, "%.1f");
+        gui_group_end();
+    }
 }
 
 static void image_panel(void)

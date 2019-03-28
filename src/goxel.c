@@ -360,10 +360,30 @@ void goxel_reset(void)
     render_get_default_settings(0, NULL, &goxel.rend.settings);
 
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
+
+    goxel.pathtracer = (pathtracer_t) {
+        .num_samples = 512,
+        .world = {
+            .type = PT_WORLD_UNIFORM,
+            .energy = 1,
+            .color = {127, 127, 127, 255}
+        },
+        .floor = {
+            .color = {157, 172, 157, 255},
+            .size = {64, 64},
+            .diffuse = 0.2,
+            .specular = 0,
+            .transmission = 0,
+        },
+        .light = {
+            .energy = 1,
+        },
+    };
 }
 
 void goxel_release(void)
 {
+    pathtracer_stop(&goxel.pathtracer);
     gui_release();
 }
 
@@ -677,11 +697,48 @@ static void render_export_viewport(const float viewport[4])
     render_rect(&goxel.rend, plane, EFFECT_STRIP);
 }
 
-void goxel_render_view(const float viewport[4])
+static void render_pathtrace_view(const float viewport[4])
+{
+    pathtracer_t *pt = &goxel.pathtracer;
+    float a, mat[4][4];
+    int rect[4] = {(int)viewport[0],
+                   (int)(goxel.screen_size[1] - viewport[1] - viewport[3]),
+                   (int)viewport[2],
+                   (int)viewport[3]};
+
+    // Recreate the buffer if needed.
+    if (    !pt->buf ||
+            pt->w != goxel.image->export_width ||
+            pt->h != goxel.image->export_height) {
+        free(pt->buf);
+        pt->w = goxel.image->export_width;
+        pt->h = goxel.image->export_height;
+        pt->buf = calloc(pt->w * pt->h, 4);
+        texture_delete(pt->texture);
+        pt->texture = texture_new_surface(pt->w, pt->h, 0);
+    }
+    pathtracer_iter(pt);
+
+    // Render the buffer.
+    mat4_set_identity(mat);
+    a = 1.0 * pt->w / pt->h / rect[2] * rect[3];
+    mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
+    texture_set_data(pt->texture, pt->buf, pt->w, pt->h, 4);
+    render_img(&goxel.rend, pt->texture, mat,
+               EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
+    render_submit(&goxel.rend, rect, goxel.back_color);
+}
+
+void goxel_render_view(const float viewport[4], bool render_mode)
 {
     layer_t *layer;
     renderer_t *rend = &goxel.rend;
     const uint8_t layer_box_color[4] = {128, 128, 255, 255};
+
+    if (render_mode) {
+        render_pathtrace_view(viewport);
+        return;
+    }
 
     goxel.camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel.camera);

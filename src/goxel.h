@@ -40,6 +40,8 @@
 #include "mesh.h"
 #include "texture.h"
 #include "theme.h"
+#include "pathtracer.h"
+
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -1620,15 +1622,7 @@ typedef struct goxel
         gesture_t pinch;
     } gestures;
 
-    // Hold info about the cycles rendering task.
-    struct {
-        int status;         // 0: stopped, 1: running, 2: finished.
-        uint8_t *buf;       // RGBA buffer.
-        int w, h;           // Size of the buffer.
-        char output[1024];  // Output path.
-        float progress;
-        bool force_restart;
-    } render_task;
+    pathtracer_t pathtracer;
 
     // Used to check if the active mesh changed to play tick sound.
     uint64_t    last_mesh_key;
@@ -1644,7 +1638,7 @@ void goxel_release(void);
 void goxel_reset(void);
 int goxel_iter(inputs_t *inputs);
 void goxel_render(void);
-void goxel_render_view(const float viewport[4]);
+void goxel_render_view(const float viewport[4], bool render_mode);
 void goxel_render_export_view(const float viewport[4]);
 // Called by the gui when the mouse hover a 3D view.
 // XXX: change the name since we also call it when the mouse get out of
