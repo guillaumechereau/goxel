@@ -49,6 +49,7 @@ enum {
     CHANGE_CAMERA       = 1 << 3,
     CHANGE_FORCE        = 1 << 4,
     CHANGE_FLOOR        = 1 << 5,
+    CHANGE_OPTIONS      = 1 << 6,
 };
 
 struct pathtracer_internal {
@@ -59,6 +60,7 @@ struct pathtracer_internal {
     uint64_t world_key;
     uint64_t light_key;
     uint64_t floor_key;
+    uint64_t options_key;
 
     yocto_scene scene;
     bvh_scene bvh;
@@ -363,6 +365,18 @@ static int sync_light(pathtracer_t *pt, bool force)
     return CHANGE_LIGHT;
 }
 
+static int sync_options(pathtracer_t *pt, bool force)
+{
+    uint64_t key = 0;
+    pathtracer_internal_t *p = pt->p;
+    key = crc64(key, &pt->num_samples, sizeof(pt->num_samples));
+    if (!force && key == p->options_key) return 0;
+    p->options_key = key;
+    trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
+    p->trace_options.num_samples = pt->num_samples;
+    return CHANGE_OPTIONS;
+}
+
 static int sync(pathtracer_t *pt, int w, int h, bool force)
 {
     pathtracer_internal_t *p = pt->p;
@@ -375,9 +389,9 @@ static int sync(pathtracer_t *pt, int w, int h, bool force)
     changes |= sync_world(pt, changes);
     changes |= sync_light(pt, changes);
     changes |= sync_camera(pt, w, h, &goxel.camera, changes);
+    changes |= sync_options(pt, changes);
 
     if (changes) {
-        // tesselate_shapes(p->scene); // ?
         add_missing_materials(p->scene);
         add_missing_names(p->scene);
         update_transforms(p->scene);
@@ -398,7 +412,6 @@ static int sync(pathtracer_t *pt, int w, int h, bool force)
             p->trace_options.sampler_type = trace_sampler_type::eyelight;
         }
         p->trace_options.image_size = {w, h};
-
         p->image = image4f({w, h});
         p->display = image4f({w, h});
 

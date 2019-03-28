@@ -362,6 +362,7 @@ void goxel_reset(void)
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
 
     goxel.pathtracer = (pathtracer_t) {
+        .num_samples = 512,
         .world = {
             .type = PT_WORLD_UNIFORM,
             .energy = 1,

@@ -901,6 +901,7 @@ static void render_panel(void)
     int maxsize;
     pathtracer_t *pt = &goxel.pathtracer;
 
+    auto_adjust_panel_size(200);
     goxel.no_edit = pt->status || gui->popup_count;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
@@ -925,6 +926,7 @@ static void render_panel(void)
     }
     */
     gui_group_end();
+    gui_input_int("Samples", &pt->num_samples, 1, 10000);
 
     /*
     if (*goxel.render_task.output)
