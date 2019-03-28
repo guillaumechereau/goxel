@@ -36,7 +36,7 @@ class GoxNSOpenGLView: NSOpenGLView {
     
     func appDelegate () -> AppDelegate
     {
-        return NSApplication.shared().delegate as! AppDelegate
+        return NSApplication.shared.delegate as! AppDelegate
     }
     
     override var acceptsFirstResponder: Bool {
@@ -128,7 +128,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Set fullscreen.
-        if let screen = NSScreen.main() {
+        if let screen = NSScreen.main {
             window.setFrame(screen.visibleFrame, display: true, animate: true)
         }
         timer = Timer(timeInterval: 1.0 / 60.0,
@@ -136,7 +136,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             selector: #selector(AppDelegate.onTimer(_:)),
             userInfo: nil,
             repeats: true)
-        RunLoop.current.add(timer, forMode: RunLoopMode.defaultRunLoopMode)
+        RunLoop.current.add(timer, forMode: RunLoop.Mode.default)
 
         sys_callbacks.user = Unmanaged.passUnretained(self).toOpaque()
         sys_callbacks.set_window_title = { (user, title) in
@@ -182,7 +182,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         glFlush()
         view.openGLContext?.flushBuffer()
         if r == 1 {
-            NSApplication.shared().terminate(nil)
+            NSApplication.shared.terminate(nil)
         }
     }
 }
