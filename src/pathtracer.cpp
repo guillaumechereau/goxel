@@ -183,7 +183,7 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
         p->scene.shapes.push_back(shape);
         instance.name = shape.name;
         instance.shape = p->scene.shapes.size() - 1;
-        instance.frame = make_translation_frame>(vec3f(
+        instance.frame = make_translation_frame(vec3f(
                                 block_pos[0], block_pos[1], block_pos[2]));
         p->scene.instances.push_back(instance);
     }
