@@ -1119,6 +1119,7 @@ static bool about_popup(void *data)
         Text("Libraries:");
         BulletText("dear imgui (https://github.com/ocornut/imgui)");
         BulletText("stb (https://github.com/nothings/stb)");
+        BulletText("yocto-gl (https://github.com/xelatihy/yocto-gl)");
         BulletText("uthash (https://troydhanson.github.io/uthash/)");
         BulletText("inih (https://github.com/benhoyt/inih)");
 
