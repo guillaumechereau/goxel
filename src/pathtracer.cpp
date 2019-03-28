@@ -136,12 +136,12 @@ static yocto_shape create_shape_for_block(
     // Set primitives (quads or triangles) data.
     if (size == 4) {
         shape.quads.resize(nb);
-        for (i = 0; i < nb; i++) {
+        for (i = 0; i < nb; i++)
             shape.quads[i] = {i * 4 + 0, i * 4 + 1, i * 4 + 2, i * 4 + 3};
-        }
     } else {
-        // TODO
-        assert(false);
+        shape.triangles.resize(nb);
+        for (i = 0; i < nb; i++)
+            shape.triangles[i] = {i * 3 + 0, i * 3 + 1, i * 3 + 2};
     }
 
 end:
