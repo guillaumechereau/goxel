@@ -183,8 +183,8 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
         p->scene.shapes.push_back(shape);
         instance.name = shape.name;
         instance.shape = p->scene.shapes.size() - 1;
-        instance.frame = make_translation_frame<float>({
-                block_pos[0], block_pos[1], block_pos[2]});
+        instance.frame = make_translation_frame>(vec3f(
+                                block_pos[0], block_pos[1], block_pos[2]));
         p->scene.instances.push_back(instance);
     }
 
@@ -230,7 +230,7 @@ static int sync_floor(pathtracer_t *pt, bool force)
     shape->normals = {};
     shape->quads = {};
     for (i = 0; i < 4; i++) {
-        shape->positions.push_back({i % 2 - 0.5, i / 2 - 0.5, 0});
+        shape->positions.push_back({i % 2 - 0.5f, i / 2 - 0.5f, 0.f});
         shape->normals.push_back({0, 0, 1});
         shape->colors.push_back(color);
     }
@@ -239,8 +239,8 @@ static int sync_floor(pathtracer_t *pt, bool force)
     instance = getdefault(p->scene.instances, "<floor>");
     instance->shape = getindex(p->scene.shapes, shape);
     instance->frame = make_translation_frame<float>({pos[0], pos[1], pos[2]}) *
-                      make_scaling_frame<float>({
-                              pt->floor.size[0], pt->floor.size[1], 1});
+                      make_scaling_frame(
+                        vec3f(pt->floor.size[0], pt->floor.size[1], 1.f));
     return CHANGE_FLOOR;
 }
 
