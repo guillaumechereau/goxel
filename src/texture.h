@@ -16,6 +16,9 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef TEXTURE_H
+#define TEXTURE_H
+
 #include <stdint.h>
 
 enum {
@@ -57,3 +60,5 @@ void texture_save_to_file(const texture_t *tex, const char *path);
 
 texture_t *texture_copy(texture_t *tex);
 void texture_delete(texture_t *tex);
+
+#endif // TEXTURE_H
