@@ -330,17 +330,19 @@ static int sync_light(pathtracer_t *pt, bool force)
     // Large enough to be considered at infinity, but not enough to produce
     // rendering effects.
     const float d = 10000;
-    const float ke = 20;
+    float ke;
     float light_dir[3];
 
     render_get_light_dir(&goxel.rend, light_dir);
     key = crc64(key, &pt->world, sizeof(pt->world));
+    key = crc64(key, &pt->light, sizeof(pt->light));
     key = crc64(key, light_dir, sizeof(light_dir));
 
     if (!force && key == p->light_key) return 0;
     p->light_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
+    ke = pt->light.energy * 20;
     material = getdefault(p->scene.materials, "<light>");
     material->emission = {ke * d * d, ke * d * d, ke * d * d};
 

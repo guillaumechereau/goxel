@@ -54,6 +54,9 @@ typedef struct {
         float specular;
         float transmission;
     } floor;
+    struct {
+        float energy;
+    } light;
 } pathtracer_t;
 
 /*

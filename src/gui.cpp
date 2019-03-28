@@ -980,6 +980,14 @@ static void render_panel(void)
         gui_input_float("Specular", &pt->floor.specular, 0.01, 0, 1, "%.3f");
         gui_pop_id();
     }
+    if (gui_collapsing_header("Light")) {
+        gui_group_begin("Light");
+        gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
+        gui_angle("Yaw", &goxel.rend.light.yaw, 0, 360);
+        gui_checkbox("Fixed", &goxel.rend.light.fixed, NULL);
+        gui_input_float("Energy", &pt->light.energy, 0.1, 0, 10, "%.1f");
+        gui_group_end();
+    }
 }
 
 static void image_panel(void)
