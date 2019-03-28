@@ -701,8 +701,6 @@ static void render_pathtrace_view(const float viewport[4])
 {
     pathtracer_t *pt = &goxel.pathtracer;
     float a, mat[4][4];
-    uint8_t *ibuf;
-    int i;
     int rect[4] = {(int)viewport[0],
                    (int)(goxel.screen_size[1] - viewport[1] - viewport[3]),
                    (int)viewport[2],
@@ -715,7 +713,7 @@ static void render_pathtrace_view(const float viewport[4])
         free(pt->buf);
         pt->w = goxel.image->export_width;
         pt->h = goxel.image->export_height;
-        pt->buf = calloc(pt->w * pt->h, 4 * sizeof(float));
+        pt->buf = calloc(pt->w * pt->h, 4);
         texture_delete(pt->texture);
         pt->texture = texture_new_surface(pt->w, pt->h, 0);
     }
@@ -725,16 +723,10 @@ static void render_pathtrace_view(const float viewport[4])
     mat4_set_identity(mat);
     a = 1.0 * pt->w / pt->h / rect[2] * rect[3];
     mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
-
-    ibuf = malloc(pt->w * pt->h * 4);
-    for (i = 0; i < pt->w * pt->h * 4; i++) {
-        ibuf[i] = clamp(pt->buf[i] * 255, 0, 255);
-    }
-    texture_set_data(pt->texture, ibuf, pt->w, pt->h, 4);
+    texture_set_data(pt->texture, pt->buf, pt->w, pt->h, 4);
     render_img(&goxel.rend, pt->texture, mat,
                EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
     render_submit(&goxel.rend, rect, goxel.back_color);
-    free(ibuf);
 }
 
 void goxel_render_view(const float viewport[4], bool render_mode)

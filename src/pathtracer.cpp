@@ -439,6 +439,7 @@ static void make_preview(pathtracer_t *pt)
     trace_image_options preview_options = p->trace_options;
     int preview_ratio = 8;
     image4f preview;
+    vec4b v;
 
     preview_options.image_size /= preview_ratio;
     preview_options.num_samples = 1;
@@ -450,9 +451,8 @@ static void make_preview(pathtracer_t *pt)
         for (j = 0; j < pt->w; j++) {
             pi = clamp(i / preview_ratio, 0, preview.size().y - 1);
             pj = clamp(j / preview_ratio, 0, preview.size().x - 1);
-            memcpy(&pt->buf[(i * pt->w + j) * 4],
-                   preview.data() + (pi * preview.size().x + pj),
-                   4 * sizeof(float));
+            v = float_to_byte(preview[{pj, pi}]);
+            memcpy(&pt->buf[(i * pt->w + j) * 4], &v, 4);
         }
     }
 }
@@ -469,6 +469,7 @@ void pathtracer_iter(pathtracer_t *pt)
     pathtracer_internal_t *p;
     int changes, i, j, size = 0;
     image_region region = image_region{};
+    vec4b v;
 
     if (!pt->p) pt->p = new pathtracer_internal_t();
     p = pt->p;
@@ -489,9 +490,8 @@ void pathtracer_iter(pathtracer_t *pt)
                 p->exposure, false, true);
         for (i = region.min[1]; i < region.max[1]; i++)
         for (j = region.min[0]; j < region.max[0]; j++) {
-            memcpy(&pt->buf[(i * pt->w + j) * 4],
-                   p->display.data() + (i * pt->w + j),
-                   4 * sizeof(float));
+            v = float_to_byte(p->display[{j, i}]);
+            memcpy(&pt->buf[(i * pt->w + j) * 4], &v, 4);
         }
         size += region.size().x * region.size().y;
         if (size >= p->image.size().x * p->image.size().y) break;

@@ -40,7 +40,7 @@ typedef struct pathtracer_internal pathtracer_internal_t;
 // Hold info about the cycles rendering task.
 typedef struct {
     int status;
-    float *buf;         // RGBA buffer.
+    uint8_t *buf;       // RGBA buffer.
     int w, h;           // Size of the buffer.
     char output[1024];  // Output path.
     float progress;
