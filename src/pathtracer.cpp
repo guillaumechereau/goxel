@@ -502,6 +502,9 @@ void pathtracer_iter(pathtracer_t *pt)
     if (pt->status != PT_FINISHED &&
             p->trace_sample == p->trace_options.num_samples) {
         pt->status = PT_FINISHED;
+        if (*pt->output) {
+            img_write(pt->buf, pt->w, pt->h, 4, pt->output);
+        }
     }
 }
 
