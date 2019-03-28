@@ -61,4 +61,7 @@ void texture_save_to_file(const texture_t *tex, const char *path);
 texture_t *texture_copy(texture_t *tex);
 void texture_delete(texture_t *tex);
 
+void texture_set_data(texture_t *tex,
+                      const uint8_t *data, int w, int h, int bpp);
+
 #endif // TEXTURE_H
