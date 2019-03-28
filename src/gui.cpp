@@ -900,6 +900,7 @@ static void render_panel(void)
     int i;
     int maxsize;
     pathtracer_t *pt = &goxel.pathtracer;
+    const char *path;
 
     auto_adjust_panel_size(200);
     goxel.no_edit = pt->status || gui->popup_count;
@@ -918,28 +919,25 @@ static void render_panel(void)
         goxel.image->export_width = gui->view.rect[2];
         goxel.image->export_height = gui->view.rect[3];
     }
-    /*
     if (gui_button("Set output", 1, 0)) {
         path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "png\0*.png\0", NULL,
                                     "untitled.png");
-        if (path) strcpy(goxel.render_task.output, path);
+        if (path)
+            snprintf(pt->output, sizeof(pt->output), "%s", path);
     }
-    */
     gui_group_end();
+    if (*pt->output) gui_text("%s", pt->output);
+
     gui_input_int("Samples", &pt->num_samples, 1, 10000);
 
-    /*
-    if (*goxel.render_task.output)
-        gui_text("%s", goxel.render_task.output);
-    */
-
-    if (pt->status == 0 && gui_button("Render", 0, 0)) pt->status = 1;
-    if (pt->status == 1 && gui_button("Cancel", 0, 0)) {
+    if (pt->status == PT_STOPPED && gui_button("Start", 1, 0))
+        pt->status = PT_RUNNING;
+    if (pt->status == PT_RUNNING && gui_button("Stop", 1, 0)) {
         pathtracer_stop(pt);
-        pt->status = 0;
+        pt->status = PT_STOPPED;
     }
-    if (pt->status == 2 && gui_button("Restart", 0, 0)) {
-        pt->status = 1;
+    if (pt->status == PT_FINISHED && gui_button("Restart", 1, 0)) {
+        pt->status = PT_RUNNING;
         pt->progress = 0;
         pt->force_restart = true;
     }

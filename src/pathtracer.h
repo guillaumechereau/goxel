@@ -29,11 +29,17 @@ enum {
     PT_FLOOR_PLANE,
 };
 
+enum {
+    PT_STOPPED = 0,
+    PT_RUNNING,
+    PT_FINISHED,
+};
+
 typedef struct pathtracer_internal pathtracer_internal_t;
 
 // Hold info about the cycles rendering task.
 typedef struct {
-    int status;         // 0: stopped, 1: running, 2: finished.
+    int status;
     float *buf;         // RGBA buffer.
     int w, h;           // Size of the buffer.
     char output[1024];  // Output path.

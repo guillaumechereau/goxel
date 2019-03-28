@@ -498,6 +498,11 @@ void pathtracer_iter(pathtracer_t *pt)
     }
     pt->progress = (float)p->trace_sample /
                    p->trace_options.num_samples;
+
+    if (pt->status != PT_FINISHED &&
+            p->trace_sample == p->trace_options.num_samples) {
+        pt->status = PT_FINISHED;
+    }
 }
 
 
