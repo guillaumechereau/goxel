@@ -1490,7 +1490,6 @@ void gui_iter(const inputs_t *inputs)
     render_top_bar();
 
     goxel.no_edit = false; // Set depending on what panel is selected.
-    goxel.use_cycles = false;  // Also set depending on the panel.
     render_left_panel();
     ImGui::SameLine();
 

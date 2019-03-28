@@ -1574,7 +1574,6 @@ typedef struct goxel
 
     camera_t   camera;
 
-    bool       use_cycles; // Render with cycles.
     uint8_t    back_color[4];
     uint8_t    grid_color[4];
     uint8_t    image_box_color[4];
@@ -1806,12 +1805,6 @@ void sound_iter(void);
 
 bool sound_is_enabled(void);
 void sound_set_enabled(bool v);
-
-// Section: cycles
-void cycles_init(void);
-void cycles_release(void);
-void cycles_render(uint8_t *buffer, int *w, int *h, const camera_t *cam,
-                   float *progress, bool force_restart);
 
 // Section: box_edit
 /*
