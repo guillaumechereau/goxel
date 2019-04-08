@@ -29,9 +29,9 @@ typedef struct {
 
 static void do_move(layer_t *layer, const float mat[4][4])
 {
-    float m[4][4];
+    float m[4][4] = MAT4_IDENTITY;
 
-    mat4_set_identity(m);
+    if (mat4_equal(mat, mat4_identity)) return;
     // Change referential to the mesh origin.
     // XXX: maybe this should be done in mesh_move directy??
     mat4_itranslate(m, -0.5, -0.5, -0.5);
