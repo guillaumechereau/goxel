@@ -47,6 +47,7 @@
 #include "system.h"
 
 #include "utils/cache.h"
+#include "utils/crc64.h"
 #include "utils/gl.h"
 #include "utils/vec.h"
 
@@ -372,20 +373,6 @@ bool str_startswith(const char *s1, const char *s2);
 void unproject(const float win[3], const float model[4][4],
                const float proj[4][4], const float viewport[4],
                float out[3]);
-
-/*
- * Function: crc64
- * Compute crc64 hash
- *
- * Parameters:
- *   crc    - Initial crc value.
- *   s      - Data pointer.
- *   len    - Data size.
- *
- * Return:
- *   The new crc64 value.
- */
-uint64_t crc64(uint64_t crc, const void *s, uint64_t len);
 
 // #############################
 
