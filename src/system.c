@@ -16,7 +16,8 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+#include "system.h"
+
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -38,16 +39,16 @@ sys_callbacks_t sys_callbacks = {};
 
 static const char *get_user_dir(void *user)
 {
-    static char *ret = NULL;
+    static char ret[PATH_MAX] = "";
     const char *home;
-    if (!ret) {
+    if (!*ret) {
         home = getenv("XDG_CONFIG_HOME");
         if (home) {
-            asprintf(&ret, "%s/goxel", home);
+            snprintf(ret, sizeof(ret), "%s/goxel", home);
         } else {
             home = getenv("HOME");
             if (!home) home = getpwuid(getuid())->pw_dir;
-            asprintf(&ret, "%s/.config/goxel", home);
+            snprintf(ret, sizeof(ret), "%s/.config/goxel", home);
         }
     }
     return ret;
@@ -172,7 +173,7 @@ int sys_make_dir(const char *path)
     return 0;
 }
 
-GLuint sys_get_screen_framebuffer(void)
+int sys_get_screen_framebuffer(void)
 {
     return 0;
 }
