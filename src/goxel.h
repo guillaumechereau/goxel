@@ -824,35 +824,6 @@ bool image_layer_can_edit(const image_t *img, const layer_t *layer);
  */
 uint64_t image_get_key(const image_t *img);
 
-// ##### Procedural rendering ########################
-
-// The possible states of the procedural program.
-enum {
-    PROC_INIT,
-    PROC_PARSE_ERROR,
-    PROC_READY,
-    PROC_RUNNING,
-    PROC_DONE,
-};
-
-typedef struct proc {
-    struct proc_node *prog; // AST of the program.
-    struct proc_ctx  *ctxs; // Rendering stack during execution.
-    int              state;
-    int              frame; // Rendering frame.
-    bool             in_frame; // Set if the current frame is not finished.
-    struct {
-        char         *str;  // Set in case of parsing or execution error.
-        int          line;
-    } error;
-} gox_proc_t;
-
-int proc_parse(const char *txt, gox_proc_t *proc);
-void proc_release(gox_proc_t *proc);
-int proc_start(gox_proc_t *proc, const float box[4][4]);
-int proc_stop(gox_proc_t *proc);
-int proc_iter(gox_proc_t *proc, mesh_t *mesh, const painter_t *painter);
-
 // Represent a 3d cursor.
 // The program keeps track of two cursors, that are then used by the tools.
 

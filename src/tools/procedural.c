@@ -16,6 +16,7 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "procedural.h"
 #include "goxel.h"
 
 enum {

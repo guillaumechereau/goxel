@@ -19,6 +19,7 @@
 // Procedural rendering inspired by ContextFree.org.
 // Need to write a doc about it.
 
+#include "procedural.h"
 #include "goxel.h"
 #include <stdarg.h>
 
