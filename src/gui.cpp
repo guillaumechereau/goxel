@@ -130,7 +130,8 @@ typedef struct gui_t {
 
     int     current_panel;
     view_t  view;
-    int     min_panel_size;
+    float   panel_width;
+    int     panel_adjust_w; // Adjust size for scrollbar.
     struct {
         gesture_t drag;
         gesture_t hover;
@@ -151,15 +152,6 @@ typedef struct gui_t {
 } gui_t;
 
 static gui_t *gui = NULL;
-
-// Notify the gui that we want the panel size to be at least as large as
-// the last item.
-static void auto_adjust_panel_size(float w = 0) {
-    if (w == 0) w = ImGui::GetItemRectMax().x;
-    ImGuiStyle& style = ImGui::GetStyle();
-    if (ImGui::GetScrollMaxY() > 0) w += style.ScrollbarSize;
-    gui->min_panel_size = max(gui->min_panel_size, w);
-}
 
 static void on_click(void) {
     if (DEFINED(GUI_SOUND))
@@ -433,6 +425,7 @@ static void gui_init(const inputs_t *inputs)
     gui->gestures.drag.callback = on_gesture;
     gui->gestures.hover.type = GESTURE_HOVER;
     gui->gestures.hover.callback = on_gesture;
+    gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
 
     g_tex_icons = texture_new_image("asset://data/images/icons.png", 0);
     GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
@@ -531,7 +524,6 @@ static void tools_panel(void)
         auto_grid(nb, i, GUI_TOOLS_COLUMNS_NB);
     }
     gui_group_end();
-    auto_adjust_panel_size();
 
     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
     if (gui_collapsing_header("Tool Options"))
@@ -649,7 +641,6 @@ static void layers_panel(void)
             goxel_update_meshes(-1);
         }
         i++;
-        auto_adjust_panel_size();
     }
     gui_group_end();
     gui_action_button("img_new_layer", NULL, 0, "");
@@ -659,7 +650,6 @@ static void layers_panel(void)
     gui_action_button("img_move_layer_up", NULL, 0, "");
     ImGui::SameLine();
     gui_action_button("img_move_layer_down", NULL, 0, "");
-    auto_adjust_panel_size();
 
     gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
@@ -684,7 +674,6 @@ static void layers_panel(void)
     }
 
     gui_group_end();
-    auto_adjust_panel_size();
 
     if (layer->base_id) {
         gui_group_begin(NULL);
@@ -806,7 +795,6 @@ static void palette_panel(void)
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
         render_palette_entry(p->entries[i].color, goxel.painter.color);
-        auto_adjust_panel_size();
         if ((i + 1) % nb_col && i != p->size - 1) ImGui::SameLine();
         ImGui::PopID();
     }
@@ -829,8 +817,7 @@ static void material_advanced_panel(void)
     if (gui_input_float(#name, &v, 0.1, min, max, NULL)) { \
         v = clamp(v, min, max); \
         goxel.rend.settings.name = v; \
-    } \
-    auto_adjust_panel_size();
+    }
 
     MAT_FLOAT(ambient, 0, 1);
     MAT_FLOAT(diffuse, 0, 1);
@@ -851,7 +838,6 @@ static void material_advanced_panel(void)
             (unsigned int*)&goxel.rend.settings.effects, EFFECT_MARCHING_CUBES)) {
         goxel.rend.settings.smoothness = 1;
     }
-    auto_adjust_panel_size();
     if (goxel.rend.settings.effects & EFFECT_MARCHING_CUBES)
         ImGui::CheckboxFlags("Flat",
             (unsigned int*)&goxel.rend.settings.effects, EFFECT_FLAT);
@@ -902,7 +888,6 @@ static void render_panel(void)
     pathtracer_t *pt = &goxel.pathtracer;
     const char *path;
 
-    auto_adjust_panel_size(200);
     goxel.no_edit = pt->status || gui->popup_count;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
@@ -1009,7 +994,6 @@ static void image_panel(void)
         }
     }
     if (bounded) gui_bbox(*box);
-    auto_adjust_panel_size();
 }
 
 static void cameras_panel(void)
@@ -1029,7 +1013,6 @@ static void cameras_panel(void)
             }
         }
         i++;
-        auto_adjust_panel_size();
     }
     gui_group_end();
     gui_action_button("img_new_camera", NULL, 0, "");
@@ -1039,7 +1022,6 @@ static void cameras_panel(void)
     gui_action_button("img_move_camera_up", NULL, 0, "");
     ImGui::SameLine();
     gui_action_button("img_move_camera_down", NULL, 0, "");
-    auto_adjust_panel_size();
 
     cam = &goxel.camera;
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
@@ -1336,10 +1318,13 @@ static void render_left_panel(void)
     };
     ImDrawList* draw_list;
 
-    left_pane_width = gui->current_panel ? max(168, gui->min_panel_size) :
-                        theme->sizes.icons_height + 4;
-    gui->min_panel_size = 0;
+    left_pane_width = (gui->current_panel ? gui->panel_width : 0) +
+                       gui->panel_adjust_w + theme->sizes.icons_height + 4;
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
+    gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
+
+    // Small hack to adjust the size if the scrolling bar is visible.
+    gui->panel_adjust_w = left_pane_width - ImGui::GetContentRegionAvailWidth();
 
     ImGui::BeginGroup();
     draw_list = ImGui::GetWindowDrawList();
@@ -1641,7 +1626,6 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
-    const theme_t *theme = theme_get();
     bool self_group = false, ret;
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
@@ -1658,11 +1642,6 @@ bool gui_input_float(const char *label, float *v, float step,
     ret = ImGui::GoxInputFloat(label, v, step, minv, maxv, format);
     if (ret) on_click();
     if (self_group) gui_group_end();
-
-    // Empirical panel size required to render this element.
-    auto_adjust_panel_size(
-            ImGui::CalcTextSize(label).x +
-            theme->sizes.item_height * 4);
     return ret;
 }
 
@@ -1983,7 +1962,6 @@ bool gui_input_text_multiline(const char *label, char *buf, int size,
     style.Colors[ImGuiCol_FrameBg].w = 0.5;
     ret = InputTextMultiline(label, buf, size, ImVec2(width, height));
     style.Colors[ImGuiCol_FrameBg] = col;
-    auto_adjust_panel_size();
     return ret;
 }
 
@@ -2126,6 +2104,11 @@ void gui_floating_icon(int icon)
     draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
             pos, pos + ImVec2(32, 32),
             uv0, uv1, get_icon_color(icon, 0));
+}
+
+void gui_request_panel_width(float width)
+{
+    gui->panel_width = width;
 }
 
 }

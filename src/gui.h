@@ -27,9 +27,19 @@
 
 #include "inputs.h"
 
+#ifndef GUI_PANEL_WIDTH_NORMAL
+#   define GUI_PANEL_WIDTH_NORMAL 190
+#endif
+
+#ifndef GUI_PANEL_WIDTH_LARGE
+#   define GUI_PANEL_WIDTH_LARGE 400
+#endif
+
 void gui_release(void);
 void gui_iter(const inputs_t *inputs);
 void gui_render(void);
+
+void gui_request_panel_width(float width);
 
 // Gui widgets:
 bool gui_collapsing_header(const char *label);

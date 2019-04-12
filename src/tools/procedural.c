@@ -152,6 +152,7 @@ static int gui(tool_t *tool)
     const char *dir_path;
     char *path;
 
+    gui_request_panel_width(GUI_PANEL_WIDTH_LARGE);
     if (!p->initialized) {
         p->initialized = true;
         strcpy(p->prog_buff, "shape main {\n    cube[s 3]\n}");
@@ -166,7 +167,7 @@ static int gui(tool_t *tool)
     proc = &p->proc;
 
     if (gui_input_text_multiline("", p->prog_buff,
-                                 ARRAY_SIZE(p->prog_buff), 300, 400)) {
+                                 ARRAY_SIZE(p->prog_buff), -1, 400)) {
         p->timer = 0;
         proc_parse(p->prog_buff, proc);
     }
