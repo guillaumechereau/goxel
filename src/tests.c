@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#include "utils/b64.h"
+
 #define TEST(cond) \
     do { \
         if (!(cond)) { \
