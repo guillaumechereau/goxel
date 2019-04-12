@@ -24,6 +24,7 @@ void gui_image_panel(void);
 void gui_cameras_panel(void);
 void gui_palette_panel(void);
 void gui_material_panel(void);
+void gui_tools_panel(void);
 }
 
 #ifndef typeof
@@ -43,10 +44,6 @@ void gui_material_panel(void);
 
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
-
-#ifndef GUI_TOOLS_COLUMNS_NB
-#   define GUI_TOOLS_COLUMNS_NB 4
-#endif
 
 extern "C" {
     bool gui_settings_popup(void *data);
@@ -484,53 +481,6 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) gui_same_line();
 }
 
-static void tools_panel(void)
-{
-    const struct {
-        int         tool;
-        const char  *tool_id;
-        const char  *name;
-        int         icon;
-    } values[] = {
-        {TOOL_BRUSH,        "brush",     "Brush",        ICON_TOOL_BRUSH},
-        {TOOL_SHAPE,        "shape",     "Shape",        ICON_TOOL_SHAPE},
-        {TOOL_LASER,        "laser",     "Laser",        ICON_TOOL_LASER},
-        {TOOL_SET_PLANE,    "plane",     "Plane",        ICON_TOOL_PLANE},
-        {TOOL_MOVE,         "move",      "Move",         ICON_TOOL_MOVE},
-        {TOOL_PICK_COLOR,   "pick_color","Pick Color",   ICON_TOOL_PICK},
-        {TOOL_SELECTION,    "selection", "Selection",    ICON_TOOL_SELECTION},
-        {TOOL_EXTRUDE,      "extrude",   "Extrude",      ICON_TOOL_EXTRUDE},
-        {TOOL_PROCEDURAL,   "procedural","Procedural",   ICON_TOOL_PROCEDURAL},
-    };
-    const int nb = ARRAY_SIZE(values);
-    int i;
-    bool v;
-    char action_id[64];
-    char label[64];
-    const action_t *action = NULL;
-
-    gui_group_begin(NULL);
-    for (i = 0; i < nb; i++) {
-        v = goxel.tool->id == values[i].tool;
-        sprintf(label, "%s", values[i].name);
-        if (values[i].tool_id) {
-            sprintf(action_id, "tool_set_%s", values[i].tool_id);
-            action = action_get(action_id, true);
-            assert(action);
-            if (*action->shortcut)
-                sprintf(label, "%s (%s)", values[i].name, action->shortcut);
-        }
-        if (gui_selectable_icon(label, &v, values[i].icon)) {
-            action_exec(action, "");
-        }
-        auto_grid(nb, i, GUI_TOOLS_COLUMNS_NB);
-    }
-    gui_group_end();
-
-    if (gui_collapsing_header("Tool Options", true))
-        tool_gui(goxel.tool);
-}
-
 
 static void view_panel(void)
 {
@@ -925,7 +875,7 @@ static void render_left_panel(void)
         void (*fn)(void);
     } PANELS[] = {
         {NULL},
-        {"Tools", ICON_TOOLS, tools_panel},
+        {"Tools", ICON_TOOLS, gui_tools_panel},
         {"Palette", ICON_PALETTE, gui_palette_panel},
         {"Layers", ICON_LAYERS, gui_layers_panel},
         {"View", ICON_VIEW, view_panel},
