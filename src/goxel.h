@@ -45,6 +45,7 @@
 #include "shape.h"
 #include "system.h"
 
+#include "utils/cache.h"
 #include "utils/gl.h"
 #include "utils/vec.h"
 
@@ -1371,26 +1372,6 @@ const void *assets_get(const char *url, int *size);
 // If f returns not 0, the asset is skipped.
 int assets_list(const char *url, void *user,
                 int (*f)(int i, const char *path, void *user));
-
-// ####### Cache manager #########################
-// Allow to cache blocks merge operations.
-typedef struct cache cache_t;
-// Create a new cache with a given max size (in byte).
-cache_t *cache_create(int size);
-// Add an item into the cache.
-// Inputs:
-//  key, keylen     Define the unique key for the cache item.
-//  data            Pointer to the item data.  The cache takes ownership.
-//  cost            Cost of the data used to compute the cache usage.
-//                  It doesn't have to be the size.
-//  delfunc         Function that the cache can use to free the data.
-void cache_add(cache_t *cache, const void *key, int keylen, void *data,
-               int cost, int (*delfunc)(void *data));
-// Return an item from the cache.
-// Returns
-//  The data owned by the cache, or NULL if no item with this key is in
-//  the cache.
-void *cache_get(cache_t *cache, const void *key, int keylen);
 
 // ####### Sound #################################
 void sound_init(void);

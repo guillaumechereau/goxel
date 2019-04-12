@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2017 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2019 Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -16,7 +16,10 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+#include "cache.h"
+#include "uthash.h"
+
+#include <assert.h>
 
 typedef struct item item_t;
 struct item {

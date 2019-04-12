@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+
 #include <limits.h>
 
 #define N BLOCK_SIZE
