@@ -20,6 +20,7 @@
 #define INPUTS_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // A finger touch or mouse click state.
 // `down` represent each button in the mouse.  For touch events only the
