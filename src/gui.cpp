@@ -25,6 +25,7 @@ void gui_cameras_panel(void);
 void gui_palette_panel(void);
 void gui_material_panel(void);
 void gui_tools_panel(void);
+void gui_view_panel(void);
 }
 
 #ifndef typeof
@@ -481,33 +482,6 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) gui_same_line();
 }
 
-
-static void view_panel(void)
-{
-    // XXX: I don't like to use this array.
-    const struct {
-        uint8_t    *color;
-        const char *label;
-    } COLORS[] = {
-        {goxel.back_color, "Back color"},
-        {goxel.grid_color, "Grid color"},
-        {goxel.image_box_color, "Box color"},
-    };
-    int i;
-
-    gui_group_begin("Light");
-    gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
-    gui_angle("Yaw", &goxel.rend.light.yaw, 0, 360);
-    gui_checkbox("Fixed", &goxel.rend.light.fixed, NULL);
-    gui_group_end();
-
-    for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
-        gui_color_small(COLORS[i].label, COLORS[i].color);
-    }
-    gui_checkbox("Hide box", &goxel.hide_box, NULL);
-
-}
-
 static void render_panel(void)
 {
     int i;
@@ -866,7 +840,7 @@ static void render_left_panel(void)
         {"Tools", ICON_TOOLS, gui_tools_panel},
         {"Palette", ICON_PALETTE, gui_palette_panel},
         {"Layers", ICON_LAYERS, gui_layers_panel},
-        {"View", ICON_VIEW, view_panel},
+        {"View", ICON_VIEW, gui_view_panel},
         {"Material", ICON_MATERIAL, gui_material_panel},
         {"Cameras", ICON_CAMERA, gui_cameras_panel},
         {"Image", ICON_IMAGE, gui_image_panel},
