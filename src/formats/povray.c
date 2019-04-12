@@ -19,6 +19,7 @@
 // Povray export support.
 
 #include "goxel.h"
+#include "utils/mustache.h"
 
 static void export_as_pov(const char *path, int w, int h)
 {

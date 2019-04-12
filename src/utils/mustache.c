@@ -16,7 +16,18 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+#ifndef _GNU_SOURCE
+#   define _GNU_SOURCE
+#endif
+
+#include "mustache.h"
+#include "utlist.h"
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef WIN32
 #    include <tre/regex.h>
 #else
@@ -70,10 +81,15 @@ mustache_t *mustache_add_list(mustache_t *m, const char *key)
 void mustache_add_str(mustache_t *m, const char *key, const char *fmt, ...)
 {
     va_list args;
+    int r;
     mustache_t *ret;
+
     ret = create_(m, key, M_TYPE_STR);
     va_start(args, fmt);
-    if (fmt) vasprintf(&ret->s, fmt, args);
+    if (fmt) {
+        r = vasprintf(&ret->s, fmt, args);
+        (void)r; // Ignore errors.
+    }
     va_end(args);
 }
 
@@ -178,7 +194,8 @@ int mustache_render(const mustache_t *m, const char *templ, char *out)
         key[len] = '\0';
         mustache_add_str(tree, key, NULL);
         if (key[0] == '/') {
-            asprintf(&tree->s, "%.*s", (int)(templ - tree->s), tree->s);
+            r = asprintf(&tree->s, "%.*s", (int)(templ - tree->s), tree->s);
+            (void)r; // Ignore errors.
             tree = tree->parent;
         }
         templ += matches[0].rm_eo;
