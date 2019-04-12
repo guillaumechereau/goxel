@@ -47,6 +47,7 @@
 #include "texture.h"
 #include "theme.h"
 #include "pathtracer.h"
+#include "render.h"
 #include "shape.h"
 #include "system.h"
 
@@ -485,101 +486,6 @@ enum {
 // The block size can only be 16.
 #define BLOCK_SIZE 16
 #define VOXEL_TEXTURE_SIZE 8
-
-
-// #### Renderer ###############
-
-enum {
-    EFFECT_RENDER_POS       = 1 << 1,
-    EFFECT_SMOOTH           = 1 << 2,
-    EFFECT_BORDERS          = 1 << 3,
-    EFFECT_BORDERS_ALL      = 1 << 4,
-    EFFECT_SEMI_TRANSPARENT = 1 << 5,
-    EFFECT_SEE_BACK         = 1 << 6,
-    EFFECT_MARCHING_CUBES   = 1 << 7,
-    EFFECT_SHADOW_MAP       = 1 << 8,
-    EFFECT_FLAT             = 1 << 9,
-
-    // For render box.
-    EFFECT_NO_SHADING       = 1 << 10,
-    EFFECT_STRIP            = 1 << 11,
-    EFFECT_WIREFRAME        = 1 << 12,
-    EFFECT_GRID             = 1 << 13,
-
-    EFFECT_PROJ_SCREEN      = 1 << 14, // Image project in screen.
-    EFFECT_ANTIALIASING     = 1 << 15,
-};
-
-typedef struct {
-    float ambient;
-    float diffuse;
-    float specular;
-    float shininess;
-    float smoothness;
-    float shadow;
-    int   effects;
-    float border_shadow;
-} render_settings_t;
-
-typedef struct renderer renderer_t;
-typedef struct render_item_t render_item_t;
-struct renderer
-{
-    float view_mat[4][4];
-    float proj_mat[4][4];
-    int    fbo;     // The renderer target framebuffer.
-    float  scale;   // For retina display.
-
-    struct {
-        float  pitch;
-        float  yaw;
-        bool   fixed;       // If set, then the light moves with the view.
-        float  intensity;
-    } light;
-
-    render_settings_t settings;
-
-    render_item_t    *items;
-};
-
-void render_init(void);
-void render_deinit(void);
-void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects);
-void render_grid(renderer_t *rend, const float plane[4][4],
-                 const uint8_t color[4], const float clip_box[4][4]);
-void render_line(renderer_t *rend, const float a[3], const float b[3],
-                 const uint8_t color[4]);
-void render_box(renderer_t *rend, const float box[4][4],
-                const uint8_t color[4], int effects);
-void render_sphere(renderer_t *rend, const float mat[4][4]);
-void render_img(renderer_t *rend, texture_t *tex, const float mat[4][4],
-                int efffects);
-
-/*
- * Function: render_img2
- * Render an image directly from it's pixel data.
- *
- * XXX: this is experimental: eventually I think we should remove render_img
- * and only user render_img2 (renamed to render_img).
- */
-void render_img2(renderer_t *rend,
-                 const uint8_t *data, int w, int h, int bpp,
-                 const float mat[4][4], int effects);
-
-void render_rect(renderer_t *rend, const float plane[4][4], int effects);
-// Flushes all the queued render items.  Actually calls opengl.
-//  rect: the viewport rect (passed to glViewport).
-//  clear_color: clear the screen with this first.
-void render_submit(renderer_t *rend, const int rect[4],
-                   const uint8_t clear_color[4]);
-int render_get_default_settings(int i, char **name, render_settings_t *out);
-// Compute the light direction in the model coordinates (toward the light)
-void render_get_light_dir(const renderer_t *rend, float out[3]);
-
-// Ugly function that return the position of the block at a given id
-// when the mesh is rendered with render_mesh.
-void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
-                          int id, int pos[3]);
 
 
 /* ##############################
