@@ -83,7 +83,7 @@ bool gui_settings_popup(void *data)
     gui_same_line();
     if (gui_button("Save", 0, 0)) theme_save();
 #endif
-    if (gui_collapsing_header("Shortcuts")) {
+    if (gui_collapsing_header("Shortcuts", false)) {
         gui_columns(2);
         gui_separator();
         actions_iter(shortcut_callback, NULL);

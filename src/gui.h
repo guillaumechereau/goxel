@@ -42,7 +42,7 @@ void gui_render(void);
 void gui_request_panel_width(float width);
 
 // Gui widgets:
-bool gui_collapsing_header(const char *label);
+bool gui_collapsing_header(const char *label, bool default_opened);
 void gui_text(const char *label, ...);
 bool gui_button(const char *label, float w, int icon);
 bool gui_button_right(const char *label, int icon);

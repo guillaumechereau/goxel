@@ -526,8 +526,7 @@ static void tools_panel(void)
     }
     gui_group_end();
 
-    ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
-    if (gui_collapsing_header("Tool Options"))
+    if (gui_collapsing_header("Tool Options", true))
         tool_gui(goxel.tool);
 }
 
@@ -645,8 +644,7 @@ static void material_panel(void)
             goxel.rend.settings.shadow = clamp(v, 0, 1);
         }
     }
-    ImGui::SetNextTreeNodeOpen(false, ImGuiCond_Once);
-    if (gui_collapsing_header("Render Advanced"))
+    if (gui_collapsing_header("Render Advanced", false))
         material_advanced_panel();
 }
 
@@ -699,7 +697,7 @@ static void render_panel(void)
         gui_text("%d/100", (int)(pt->progress * 100));
     }
 
-    if (gui_collapsing_header("World")) {
+    if (gui_collapsing_header("World", false)) {
         gui_push_id("world");
         gui_group_begin(NULL);
         gui_selectable_toggle("None", &pt->world.type, PT_WORLD_NONE,
@@ -715,7 +713,7 @@ static void render_panel(void)
         }
         gui_pop_id();
     }
-    if (gui_collapsing_header("Floor")) {
+    if (gui_collapsing_header("Floor", false)) {
         gui_push_id("floor");
         gui_group_begin(NULL);
         gui_selectable_toggle("None", &pt->floor.type, PT_FLOOR_NONE,
@@ -734,7 +732,7 @@ static void render_panel(void)
         gui_input_float("Specular", &pt->floor.specular, 0.01, 0, 1, "%.3f");
         gui_pop_id();
     }
-    if (gui_collapsing_header("Light")) {
+    if (gui_collapsing_header("Light", false)) {
         gui_group_begin("Light");
         gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
         gui_angle("Yaw", &goxel.rend.light.yaw, 0, 360);
@@ -790,8 +788,7 @@ static bool about_popup(void *data)
     Text("GPL 3 License");
     Text("http://guillaumechereau.github.io/goxel");
 
-    SetNextTreeNodeOpen(true, ImGuiCond_Once);
-    if (gui_collapsing_header("Credits")) {
+    if (gui_collapsing_header("Credits", true)) {
         Text("Code:");
         BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
         BulletText("Dustin Willis Webber <dustin.webber@gmail.com>");
@@ -1761,8 +1758,10 @@ void gui_alert(const char *title, const char *msg)
     gui_open_popup(title, 0, msg ? strdup(msg) : NULL, alert_popup);
 }
 
-bool gui_collapsing_header(const char *label)
+bool gui_collapsing_header(const char *label, bool default_opened)
 {
+    if (default_opened)
+        ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
     return ImGui::CollapsingHeader(label);
 }
 
