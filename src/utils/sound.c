@@ -25,7 +25,7 @@
  * This is disabled by default.
  */
 
-#include "goxel.h"
+#include "sound.h"
 
 #ifdef SOUND
 

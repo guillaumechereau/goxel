@@ -55,6 +55,7 @@
 #include "utils/crc64.h"
 #include "utils/gl.h"
 #include "utils/vec.h"
+#include "utils/sound.h"
 
 #include <float.h>
 #include <stdbool.h>
@@ -997,14 +998,6 @@ void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
 
 void wavefront_export(const mesh_t *mesh, const char *path);
 void ply_export(const mesh_t *mesh, const char *path);
-
-// ####### Sound #################################
-void sound_init(void);
-void sound_play(const char *sound, float volume, float pitch);
-void sound_iter(void);
-
-bool sound_is_enabled(void);
-void sound_set_enabled(bool v);
 
 // Section: box_edit
 /*
