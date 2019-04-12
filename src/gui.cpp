@@ -372,7 +372,7 @@ static bool color_edit(const char *name, uint8_t color[4],
                         ImGuiColorEditFlags_NoSidePreview |
                         ImGuiColorEditFlags_NoSmallPreview |
                         ImGuiColorEditFlags_NoAlpha);
-    ImGui::SameLine();
+    gui_same_line();
     ImGui::BeginGroup();
     ImGui::Text("Current");
     ImGui::ColorButton("##current", col, ImGuiColorEditFlags_NoPicker,
@@ -479,7 +479,7 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 // XXX: better replace this by something more automatic.
 static void auto_grid(int nb, int i, int col)
 {
-    if ((i + 1) % col != 0) ImGui::SameLine();
+    if ((i + 1) % col != 0) gui_same_line();
 }
 
 static void tools_panel(void)
@@ -569,7 +569,7 @@ static bool layer_item(int i, int icon, bool *visible, bool *edit,
             *visible = !*visible;
             ret = true;
         }
-        ImGui::SameLine();
+        gui_same_line();
     }
 
     if (edit_name != name) {
@@ -644,11 +644,11 @@ static void layers_panel(void)
     }
     gui_group_end();
     gui_action_button("img_new_layer", NULL, 0, "");
-    ImGui::SameLine();
+    gui_same_line();
     gui_action_button("img_del_layer", NULL, 0, "");
-    ImGui::SameLine();
+    gui_same_line();
     gui_action_button("img_move_layer_up", NULL, 0, "");
-    ImGui::SameLine();
+    gui_same_line();
     gui_action_button("img_move_layer_down", NULL, 0, "");
 
     gui_group_begin(NULL);
@@ -737,7 +737,7 @@ static void view_panel(void)
                 ImGui::CloseCurrentPopup();
             ImGui::EndPopup();
         }
-        ImGui::SameLine();
+        gui_same_line();
         ImGui::Text("%s", COLORS[i].label);
         ImGui::PopID();
     }
@@ -795,7 +795,7 @@ static void palette_panel(void)
     for (i = 0; i < p->size; i++) {
         ImGui::PushID(i);
         render_palette_entry(p->entries[i].color, goxel.painter.color);
-        if ((i + 1) % nb_col && i != p->size - 1) ImGui::SameLine();
+        if ((i + 1) % nb_col && i != p->size - 1) gui_same_line();
         ImGui::PopID();
     }
 }
@@ -1016,11 +1016,11 @@ static void cameras_panel(void)
     }
     gui_group_end();
     gui_action_button("img_new_camera", NULL, 0, "");
-    ImGui::SameLine();
+    gui_same_line();
     gui_action_button("img_del_camera", NULL, 0, "");
-    ImGui::SameLine();
+    gui_same_line();
     gui_action_button("img_move_camera_up", NULL, 0, "");
-    ImGui::SameLine();
+    gui_same_line();
     gui_action_button("img_move_camera_down", NULL, 0, "");
 
     cam = &goxel.camera;
@@ -1036,9 +1036,9 @@ static void cameras_panel(void)
     ImGui::Checkbox("Ortho", &cam->ortho);
 
     gui_group_begin("Set");
-    gui_action_button("view_left", "left", 0.5, ""); ImGui::SameLine();
+    gui_action_button("view_left", "left", 0.5, ""); gui_same_line();
     gui_action_button("view_right", "right", 1.0, "");
-    gui_action_button("view_front", "front", 0.5, ""); ImGui::SameLine();
+    gui_action_button("view_front", "front", 0.5, ""); gui_same_line();
     gui_action_button("view_top", "top", 1.0, "");
     gui_action_button("view_default", "default", 1.0, "");
     gui_group_end();
@@ -1340,7 +1340,7 @@ static void render_left_panel(void)
     }
     ImGui::EndGroup();
     if (gui->current_panel) {
-        ImGui::SameLine();
+        gui_same_line();
         ImGui::BeginGroup();
         goxel.show_export_viewport = false;
         ImGui::PushID("panel");
@@ -1472,7 +1472,7 @@ void gui_iter(const inputs_t *inputs)
 
     goxel.no_edit = false; // Set depending on what panel is selected.
     render_left_panel();
-    ImGui::SameLine();
+    gui_same_line();
 
     render_popups(0);
 
@@ -1842,7 +1842,7 @@ bool gui_color(const char *label, uint8_t color[4])
         ImGui::EndPopup();
     }
     if (label && label[0] != '#') {
-        ImGui::SameLine();
+        gui_same_line();
         ImGui::Text("%s", label);
     }
     ImGui::PopID();
@@ -1860,7 +1860,7 @@ bool gui_color_small(const char *label, uint8_t color[4])
             ImGui::CloseCurrentPopup();
         ImGui::EndPopup();
     }
-    ImGui::SameLine();
+    gui_same_line();
     ImGui::Text("%s", label);
     ImGui::PopID();
     return false;
