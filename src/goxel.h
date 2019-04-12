@@ -30,6 +30,7 @@
 #endif
 
 #include "action.h"
+#include "assets.h"
 #include "utlist.h"
 #include "uthash.h"
 #include "utarray.h"
@@ -1360,18 +1361,6 @@ void gui_popup_body_end(void);
 
 void wavefront_export(const mesh_t *mesh, const char *path);
 void ply_export(const mesh_t *mesh, const char *path);
-
-// ##### Assets manager ########################
-// All the assets are saved in binary directly in the code, using
-// tool/create_assets.py.
-
-const void *assets_get(const char *url, int *size);
-
-// List all the assets in a given asset dir.
-// Return the number of assets.
-// If f returns not 0, the asset is skipped.
-int assets_list(const char *url, void *user,
-                int (*f)(int i, const char *path, void *user));
 
 // ####### Sound #################################
 void sound_init(void);
