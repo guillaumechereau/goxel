@@ -20,6 +20,9 @@
  * Some extra mesh functions, not part of the core mesh code.
  */
 
+#ifndef MESH_UTILS_H
+#define MESH_UTILS_H
+
 #include "shape.h"
 
 /*
@@ -183,3 +186,4 @@ void mesh_crop(mesh_t *mesh, const float box[4][4]);
  */
 uint64_t mesh_crc64(const mesh_t *mesh);
 
+#endif // MESH_UTILS_H
