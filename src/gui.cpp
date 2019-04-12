@@ -494,7 +494,6 @@ static void view_panel(void)
         {goxel.image_box_color, "Box color"},
     };
     int i;
-    ImVec4 c;
 
     gui_group_begin("Light");
     gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
@@ -503,18 +502,7 @@ static void view_panel(void)
     gui_group_end();
 
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
-        ImGui::PushID(COLORS[i].label);
-        c = COLORS[i].color;
-        ImGui::ColorButton(COLORS[i].label, c);
-        if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-            color_edit("##edit", COLORS[i].color, NULL);
-            if (ImGui::Button("Close"))
-                ImGui::CloseCurrentPopup();
-            ImGui::EndPopup();
-        }
-        gui_same_line();
-        ImGui::Text("%s", COLORS[i].label);
-        ImGui::PopID();
+        gui_color_small(COLORS[i].label, COLORS[i].color);
     }
     gui_checkbox("Hide box", &goxel.hide_box, NULL);
 
