@@ -20,6 +20,8 @@ extern "C" {
 #include "goxel.h"
 
 void gui_layers_panel(void);
+void gui_image_panel(void);
+void gui_cameras_panel(void);
 }
 
 #ifndef typeof
@@ -800,75 +802,6 @@ static void render_panel(void)
     }
 }
 
-static void image_panel(void)
-{
-    bool bounded;
-    image_t *image = goxel.image;
-    int bbox[2][3];
-    float (*box)[4][4] = &image->box;
-
-    bounded = !box_is_null(*box);
-    if (gui_checkbox("Bounded", &bounded, NULL)) {
-        if (bounded) {
-            mesh_get_bbox(goxel.layers_mesh, bbox, true);
-            if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
-            bbox_from_aabb(*box, bbox);
-        } else {
-            mat4_copy(mat4_zero, *box);
-            goxel.snap_mask |= SNAP_PLANE;
-        }
-    }
-    if (bounded) gui_bbox(*box);
-}
-
-static void cameras_panel(void)
-{
-    camera_t *cam;
-    int i = 0;
-    bool current;
-    gui_group_begin(NULL);
-    DL_FOREACH(goxel.image->cameras, cam) {
-        current = goxel.image->active_camera == cam;
-        if (gui_layer_item(i, -1, NULL, &current, cam->name, sizeof(cam->name))) {
-            if (current) {
-                camera_set(&goxel.camera, cam);
-                goxel.image->active_camera = cam;
-            } else {
-                goxel.image->active_camera = NULL;
-            }
-        }
-        i++;
-    }
-    gui_group_end();
-    gui_action_button("img_new_camera", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("img_del_camera", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("img_move_camera_up", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("img_move_camera_down", NULL, 0, "");
-
-    cam = &goxel.camera;
-    gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
-
-    gui_group_begin("Offset");
-    gui_input_float("x", &cam->ofs[0], 1.0, 0, 0, NULL);
-    gui_input_float("y", &cam->ofs[1], 1.0, 0, 0, NULL);
-    gui_input_float("z", &cam->ofs[2], 1.0, 0, 0, NULL);
-    gui_group_end();
-
-    gui_quat("Rotation", cam->rot);
-    gui_checkbox("Ortho", &cam->ortho, NULL);
-
-    gui_group_begin("Set");
-    gui_action_button("view_left", "left", 0.5, ""); gui_same_line();
-    gui_action_button("view_right", "right", 1.0, "");
-    gui_action_button("view_front", "front", 0.5, ""); gui_same_line();
-    gui_action_button("view_top", "top", 1.0, "");
-    gui_action_button("view_default", "default", 1.0, "");
-    gui_group_end();
-}
-
 static void debug_panel(void)
 {
     gui_text("FPS: %d", (int)round(goxel.fps));
@@ -1136,8 +1069,8 @@ static void render_left_panel(void)
         {"Layers", ICON_LAYERS, gui_layers_panel},
         {"View", ICON_VIEW, view_panel},
         {"Material", ICON_MATERIAL, material_panel},
-        {"Cameras", ICON_CAMERA, cameras_panel},
-        {"Image", ICON_IMAGE, image_panel},
+        {"Cameras", ICON_CAMERA, gui_cameras_panel},
+        {"Image", ICON_IMAGE, gui_image_panel},
         {"Render", ICON_RENDER, render_panel},
         {"Debug", ICON_DEBUG, debug_panel},
     };
