@@ -805,7 +805,7 @@ static void material_advanced_panel(void)
     float v;
     ImVec4 c;
 
-    ImGui::PushID("render_advanced");
+    gui_push_id("render_advanced");
     gui_group_begin(NULL);
     v = goxel.rend.settings.border_shadow;
     if (gui_input_float("bshadow", &v, 0.1, 0.0, 1.0, NULL)) {
@@ -841,8 +841,7 @@ static void material_advanced_panel(void)
     if (goxel.rend.settings.effects & EFFECT_MARCHING_CUBES)
         ImGui::CheckboxFlags("Flat",
             (unsigned int*)&goxel.rend.settings.effects, EFFECT_FLAT);
-
-    ImGui::PopID();
+    gui_pop_id();
 }
 
 
@@ -983,7 +982,7 @@ static void image_panel(void)
     float (*box)[4][4] = &image->box;
 
     bounded = !box_is_null(*box);
-    if (ImGui::Checkbox("Bounded", &bounded)) {
+    if (gui_checkbox("Bounded", &bounded, NULL)) {
         if (bounded) {
             mesh_get_bbox(goxel.layers_mesh, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
@@ -1033,7 +1032,7 @@ static void cameras_panel(void)
     gui_group_end();
 
     gui_quat("Rotation", cam->rot);
-    ImGui::Checkbox("Ortho", &cam->ortho);
+    gui_checkbox("Ortho", &cam->ortho, NULL);
 
     gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); gui_same_line();
@@ -1046,7 +1045,7 @@ static void cameras_panel(void)
 
 static void debug_panel(void)
 {
-    ImGui::Text("FPS: %d", (int)round(goxel.fps));
+    gui_text("FPS: %d", (int)round(goxel.fps));
     if (!DEFINED(GLES2))
         gui_checkbox("Show wireframe", &goxel.show_wireframe, NULL);
 }
