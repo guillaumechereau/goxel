@@ -16,7 +16,36 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+#include "shape.h"
+
+#include <math.h>
+
+static float min(float x, float y)
+{
+    return x < y ? x : y;
+}
+
+static float max(float x, float y)
+{
+    return x > y ? x : y;
+}
+
+static float max3(float x, float y, float z)
+{
+    return max(x, max(y, z));
+}
+
+static float vec2_norm(const float v[static 2])
+{
+    return v[0] * v[0] + v[1] * v[1];
+}
+
+static float vec3_norm(const float v[static 3])
+{
+    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+}
+
+#define VEC(...) ((float[]){__VA_ARGS__})
 
 shape_t shape_sphere;
 shape_t shape_cube;
