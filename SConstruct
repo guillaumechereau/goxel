@@ -68,10 +68,13 @@ if profile or debug:
     env.Append(CCFLAGS='-g')
 
 env.Append(CPPPATH=['src'])
+env.Append(CCFLAGS='-include config.h')
 
-sources = glob.glob('src/*.c') + glob.glob('src/*.cpp') + \
-          glob.glob('src/formats/*.c') + \
-          glob.glob('src/tools/*.c')
+sources = (glob.glob('src/*.c') +
+           glob.glob('src/*.cpp') +
+           glob.glob('src/formats/*.c') +
+           glob.glob('src/tools/*.c') +
+           glob.glob('src/utils/*.c'))
 
 # Check for libpng.
 if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):

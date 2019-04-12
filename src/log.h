@@ -48,4 +48,7 @@ enum {
 #define LOG_W(msg, ...) LOG(GOX_LOG_WARN,    msg, ##__VA_ARGS__)
 #define LOG_E(msg, ...) LOG(GOX_LOG_ERROR,   msg, ##__VA_ARGS__)
 
+void dolog(int level, const char *msg,
+           const char *func, const char *file, int line, ...);
+
 #endif // LOG_H

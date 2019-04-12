@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2018 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2019 Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -16,7 +16,15 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+#include "utils/gl.h"
+
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+#ifndef LOG_E
+#   define LOG_E(...)
+#endif
 
 static const char* get_gl_error_text(int code) {
     switch (code) {

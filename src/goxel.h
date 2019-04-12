@@ -44,6 +44,8 @@
 #include "pathtracer.h"
 #include "system.h"
 
+#include "utils/gl.h"
+
 #include <float.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -110,47 +112,6 @@
 #else
 #   define KEEPALIVE
 #endif
-
-// #### Include OpenGL #########
-#define GL_GLEXT_PROTOTYPES
-#ifdef WIN32
-#    include <windows.h>
-#    include "GL/glew.h"
-#endif
-#ifdef __APPLE__
-#   include "TargetConditionals.h"
-#   if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-#       define GLES2 1
-#       include <OPenGLES/ES2/gl.h>
-#       include <OpenGLES/ES2/glext.h>
-#   else
-#       include <OpenGL/gl.h>
-#   endif
-#else
-#   ifdef GLES2
-#       include <GLES2/gl2.h>
-#       include <GLES2/gl2ext.h>
-#   else
-#       include <GL/gl.h>
-#   endif
-#endif
-// #############################
-
-
-
-// #### GL macro ###############
-#if DEBUG
-#  define GL(line) ({                                                   \
-       line;                                                            \
-       if (gl_check_errors(__FILE__, __LINE__)) assert(false);          \
-   })
-#else
-#  define GL(line) line
-#endif
-// #############################
-
-
-
 
 // ####### Section: Utils ################################################
 
@@ -344,10 +305,6 @@ static inline void set_flag(int *x, int flag, bool v)
  */
 char *read_file(const char *path, int *size);
 
-// Used internally by the LOG macro
-void dolog(int level, const char *msg,
-           const char *func, const char *file, int line, ...);
-
 /*
  * Function: img_read
  * Read an image from a file.
@@ -478,44 +435,6 @@ uint64_t crc64(uint64_t crc, const void *s, uint64_t len);
 // top.
 #include "box.h"
 #include "plane.h"
-
-// ######### Section: GL utils ############################
-
-int gl_check_errors(const char *file, int line);
-
-/*
- * Function: gl_has_extension
- * Check whether an OpenGL extension is available.
- */
-bool gl_has_extension(const char *extension);
-
-/*
- * Function: gl_create_prog
- * Helper function to create an OpenGL program.
- */
-int gl_create_prog(const char *vertex_shader, const char *fragment_shader,
-                   const char *include);
-
-/*
- * Function: gl_create_prog
- * Helper function to delete an OpenGL program.
- */
-void gl_delete_prog(int prog);
-
-/*
- * Function: gl_gen_fbo
- * Helper function to generate an OpenGL framebuffer object with an
- * associated texture.
- *
- * Parameters:
- *   w          - Width of the fbo.
- *   h          - Height of the fbo.
- *   format     - GL_RGBA or GL_DEPTH_COMPONENT.
- *   out_fbo    - The created fbo.
- *   out_tex    - The created texture.
- */
-int gl_gen_fbo(int w, int h, GLenum format, int msaa,
-               GLuint *out_fbo, GLuint *out_tex);
 
 
 // #### Dialogs ################
