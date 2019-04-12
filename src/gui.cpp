@@ -22,6 +22,7 @@ extern "C" {
 void gui_layers_panel(void);
 void gui_image_panel(void);
 void gui_cameras_panel(void);
+void gui_palette_panel(void);
 }
 
 #ifndef typeof
@@ -44,10 +45,6 @@ void gui_cameras_panel(void);
 
 #ifndef GUI_TOOLS_COLUMNS_NB
 #   define GUI_TOOLS_COLUMNS_NB 4
-#endif
-
-#ifndef GUI_PALETTE_COLUMNS_NB
-#   define GUI_PALETTE_COLUMNS_NB 8
 #endif
 
 extern "C" {
@@ -573,61 +570,6 @@ static void view_panel(void)
 
 }
 
-static bool render_palette_entry(const uint8_t color[4], uint8_t target[4])
-{
-    bool ret;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    const theme_t *theme = theme_get();
-
-    ImGui::PushStyleColor(ImGuiCol_Button, color);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-    ret = ImGui::Button("", ImVec2(theme->sizes.item_height,
-                                   theme->sizes.item_height));
-    if (memcmp(color, target, 4) == 0) {
-        draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                           0xFFFFFFFF, 0, 0, 1);
-    }
-    ImGui::PopStyleColor(2);
-    if (ret) {
-        on_click();
-        memcpy(target, color, 4);
-    }
-    return ret;
-}
-
-
-static void palette_panel(void)
-{
-    palette_t *p;
-    int i, current, nb = 0, nb_col = GUI_PALETTE_COLUMNS_NB;
-    const char **names;
-
-    DL_COUNT(goxel.palettes, p, nb);
-    names = (const char**)calloc(nb, sizeof(*names));
-
-    i = 0;
-    DL_FOREACH(goxel.palettes, p) {
-        if (p == goxel.palette) current = i;
-        names[i++] = p->name;
-    }
-    ImGui::PushItemWidth(-1);
-    if (gui_combo("##palettes", &current, names, nb)) {
-        goxel.palette = goxel.palettes;
-        for (i = 0; i < current; i++) goxel.palette = goxel.palette->next;
-    }
-    ImGui::PopItemWidth();
-    free(names);
-
-    p = goxel.palette;
-
-    for (i = 0; i < p->size; i++) {
-        ImGui::PushID(i);
-        render_palette_entry(p->entries[i].color, goxel.painter.color);
-        if ((i + 1) % nb_col && i != p->size - 1) gui_same_line();
-        ImGui::PopID();
-    }
-}
-
 static void material_advanced_panel(void)
 {
     float v;
@@ -1065,7 +1007,7 @@ static void render_left_panel(void)
     } PANELS[] = {
         {NULL},
         {"Tools", ICON_TOOLS, tools_panel},
-        {"Palette", ICON_PALETTE, palette_panel},
+        {"Palette", ICON_PALETTE, gui_palette_panel},
         {"Layers", ICON_LAYERS, gui_layers_panel},
         {"View", ICON_VIEW, view_panel},
         {"Material", ICON_MATERIAL, material_panel},
@@ -1724,12 +1666,14 @@ bool gui_combo(const char *label, int *v, const char **names, int nb)
     bool ret;
     float font_size = ImGui::GetFontSize();
 
+    ImGui::PushItemWidth(-1);
     PushStyleVar(ImGuiStyleVar_ItemSpacing,
                  ImVec2(0, (theme->sizes.item_height - font_size) / 2));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WIDGET, INNER, 0));
     ret = Combo(label, v, names, nb);
     PopStyleVar();
     PopStyleColor();
+    ImGui::PopItemWidth();
     return ret;
 }
 
@@ -1938,5 +1882,28 @@ bool gui_is_key_down(int key)
 {
     return ImGui::IsKeyDown(key);
 }
+
+bool gui_palette_entry(const uint8_t color[4], uint8_t target[4])
+{
+    bool ret;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    const theme_t *theme = theme_get();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, color);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
+    ret = ImGui::Button("", ImVec2(theme->sizes.item_height,
+                                   theme->sizes.item_height));
+    if (memcmp(color, target, 4) == 0) {
+        draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                           0xFFFFFFFF, 0, 0, 1);
+    }
+    ImGui::PopStyleColor(2);
+    if (ret) {
+        on_click();
+        memcpy(target, color, 4);
+    }
+    return ret;
+}
+
 
 }
