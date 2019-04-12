@@ -49,6 +49,7 @@ bool gui_button_right(const char *label, int icon);
 void gui_group_begin(const char *label);
 void gui_group_end(void);
 bool gui_checkbox(const char *label, bool *v, const char *hint);
+bool gui_checkbox_flag(const char *label, int *v, int flag, const char *hint);
 bool gui_input_int(const char *label, int *v, int minv, int maxv);
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);

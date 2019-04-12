@@ -597,19 +597,20 @@ static void material_advanced_panel(void)
 #undef MAT_FLOAT
     gui_group_end();
 
-    ImGui::CheckboxFlags("Borders",
-            (unsigned int*)&goxel.rend.settings.effects, EFFECT_BORDERS);
-    ImGui::CheckboxFlags("Borders all",
-            (unsigned int*)&goxel.rend.settings.effects, EFFECT_BORDERS_ALL);
-    ImGui::CheckboxFlags("See back",
-            (unsigned int*)&goxel.rend.settings.effects, EFFECT_SEE_BACK);
-    if (ImGui::CheckboxFlags("Marching Cubes",
-            (unsigned int*)&goxel.rend.settings.effects, EFFECT_MARCHING_CUBES)) {
+    gui_checkbox_flag("Borders",
+            &goxel.rend.settings.effects, EFFECT_BORDERS, NULL);
+    gui_checkbox_flag("Borders all",
+            &goxel.rend.settings.effects, EFFECT_BORDERS_ALL, NULL);
+    gui_checkbox_flag("See back",
+            &goxel.rend.settings.effects, EFFECT_SEE_BACK, NULL);
+    if (gui_checkbox_flag("Marching Cubes",
+                &goxel.rend.settings.effects, EFFECT_MARCHING_CUBES, NULL)) {
         goxel.rend.settings.smoothness = 1;
     }
-    if (goxel.rend.settings.effects & EFFECT_MARCHING_CUBES)
-        ImGui::CheckboxFlags("Flat",
-            (unsigned int*)&goxel.rend.settings.effects, EFFECT_FLAT);
+    if (goxel.rend.settings.effects & EFFECT_MARCHING_CUBES) {
+        gui_checkbox_flag("Flat", &goxel.rend.settings.effects, EFFECT_FLAT,
+                          NULL);
+    }
     gui_pop_id();
 }
 
@@ -1584,6 +1585,19 @@ bool gui_checkbox(const char *label, bool *v, const char *hint)
     return ret;
 }
 
+bool gui_checkbox_flag(const char *label, int *v, int flag, const char *hint)
+{
+    bool ret, b;
+    b = (*v) & flag;
+    ret = gui_checkbox(label, &b, hint);
+    if (ret) {
+        if (b) *v |= flag;
+        else   *v &= ~flag;
+    }
+    return ret;
+}
+
+
 bool gui_button(const char *label, float size, int icon)
 {
     bool ret;
@@ -1903,6 +1917,5 @@ bool gui_palette_entry(const uint8_t color[4], uint8_t target[4])
     }
     return ret;
 }
-
 
 }
