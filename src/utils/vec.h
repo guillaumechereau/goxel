@@ -65,20 +65,20 @@ DECL void vec2_set(float v[2], float x, float y)
     v[1] = y;
 }
 
-DECL void vec3_set(float v[3], float x, float y, float z)
-{
-    v[0] = x;
-    v[1] = y;
-    v[2] = z;
-}
+/*
+ * Macro: vec3_set
+ * Set a 3 sized array values.
+ */
+#define vec3_set(v, x, y, z) do { \
+    (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); } while(0)
 
-DECL void vec4_set(float v[4], float x, float y, float z, float w)
-{
-    v[0] = x;
-    v[1] = y;
-    v[2] = z;
-    v[3] = w;
-}
+
+/*
+ * Macro: vec4_set
+ * Set a 4 sized array values.
+ */
+#define vec4_set(v, x, y, z, w) do { \
+    (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
 
 DECL void vec2_copy(const float a[2], float out[2])
 {
@@ -93,13 +93,13 @@ DECL void vec3_copy(const float a[3], float out[3])
     out[2] = a[2];
 }
 
-DECL void vec4_copy(const float a[4], float out[4])
-{
-    out[0] = a[0];
-    out[1] = a[1];
-    out[2] = a[2];
-    out[3] = a[3];
-}
+/*
+ * Macro: vec4_copy
+ * Copy a 4 sized array into an other one.
+ */
+#define vec4_copy(a, b) do { \
+        (b)[0] = (a)[0]; (b)[1] = (a)[1]; (b)[2] = (a)[2]; (b)[3] = (a)[3]; \
+    } while (0)
 
 DECL bool vec2_equal(const float a[2], const float b[2])
 {
@@ -110,6 +110,16 @@ DECL bool vec3_equal(const float a[3], const float b[3])
 {
     return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
 }
+
+/*
+ * Macro: vec4_equal
+ * Test whether two 4 sized vectors are equal.
+ */
+#define vec4_equal(a, b) ({ \
+        (a)[0] == (b)[0] && \
+        (a)[1] == (b)[1] && \
+        (a)[2] == (b)[2] && \
+        (a)[3] == (b)[3]; })
 
 DECL void vec3_add(const float a[3], const float b[3], float out[3])
 {

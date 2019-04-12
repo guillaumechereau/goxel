@@ -30,7 +30,6 @@
 #endif
 
 #include "action.h"
-#include "vec.h"
 #include "utlist.h"
 #include "uthash.h"
 #include "utarray.h"
@@ -45,6 +44,7 @@
 #include "system.h"
 
 #include "utils/gl.h"
+#include "utils/vec.h"
 
 #include <float.h>
 #include <stdbool.h>
@@ -152,38 +152,6 @@
  * }
  */
 #define USER_GET(var, n) (((void**)var)[n])
-
-/*
- * Macro: vec3_set
- * Set a 3 sized array values.
- */
-#define vec3_set(v, x, y, z) do { \
-    (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); } while(0)
-
-/*
- * Macro: vec4_set
- * Set a 4 sized array values.
- */
-#define vec4_set(v, x, y, z, w) do { \
-    (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
-
-/*
- * Macro: vec4_copy
- * Copy a 4 sized array into an other one.
- */
-#define vec4_copy(a, b) do { \
-        (b)[0] = (a)[0]; (b)[1] = (a)[1]; (b)[2] = (a)[2]; (b)[3] = (a)[3]; \
-    } while (0)
-
-/*
- * Macro: vec4_equal
- * Test whether two 4 sized vectors are equal.
- */
-#define vec4_equal(a, b) ({ \
-        (a)[0] == (b)[0] && \
-        (a)[1] == (b)[1] && \
-        (a)[2] == (b)[2] && \
-        (a)[3] == (b)[3]; })
 
 /* Define: DR2D
  * Convertion ratio from radian to degree. */
