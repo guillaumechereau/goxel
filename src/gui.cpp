@@ -18,6 +18,8 @@
 
 extern "C" {
 #include "goxel.h"
+
+void gui_layers_panel(void);
 }
 
 #ifndef typeof
@@ -530,182 +532,6 @@ static void tools_panel(void)
         tool_gui(goxel.tool);
 }
 
-static void toggle_layer_only_visible(layer_t *layer)
-{
-    layer_t *other;
-    bool others_all_invisible = true;
-    DL_FOREACH(goxel.image->layers, other) {
-        if (other == layer) continue;
-        if (other->visible) {
-            others_all_invisible = false;
-            break;
-        }
-    }
-    DL_FOREACH(goxel.image->layers, other)
-        other->visible = others_all_invisible;
-    layer->visible = true;
-}
-
-static bool layer_item(int i, int icon, bool *visible, bool *edit,
-                       char *name, int len)
-{
-    const theme_t *theme = theme_get();
-    bool ret = false;
-    bool edit_ = *edit;
-    static char *edit_name = NULL;
-    static bool start_edit;
-    float font_size = ImGui::GetFontSize();
-    ImVec2 center;
-    ImVec2 uv0, uv1;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
-    ImGui::PushID(i);
-    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *edit));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            color_lighten(COLOR(WIDGET, INNER, *edit), 1.2));
-    if (visible) {
-        if (gui_selectable_icon("##visible", &edit_,
-                *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
-            *visible = !*visible;
-            ret = true;
-        }
-        gui_same_line();
-    }
-
-    if (edit_name != name) {
-        ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
-        if (icon != -1) {
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                    ImVec2(theme->sizes.icons_height / 1.5, 0));
-        }
-        if (ImGui::Button(name, ImVec2(-1, theme->sizes.icons_height))) {
-            *edit = true;
-            ret = true;
-        }
-        if (icon != -1) ImGui::PopStyleVar();
-        if (icon > 0) {
-            center = ImGui::GetItemRectMin() +
-                ImVec2(theme->sizes.icons_height / 2 / 1.5,
-                       theme->sizes.icons_height / 2);
-            uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
-            uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
-            draw_list->AddImage(
-                    (void*)(intptr_t)g_tex_icons->tex,
-                    center - ImVec2(12, 12),
-                    center + ImVec2(12, 12),
-                    uv0, uv1, get_icon_color(icon, 0));
-        }
-        ImGui::PopStyleVar();
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-            edit_name = name;
-            start_edit = true;
-        }
-    } else {
-        if (start_edit) ImGui::SetKeyboardFocusHere();
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                            ImVec2(theme->sizes.item_padding_h,
-                            (theme->sizes.icons_height - font_size) / 2));
-        ImGui::InputText("##name_edit", name, len,
-                         ImGuiInputTextFlags_AutoSelectAll);
-        if (!start_edit && !ImGui::IsItemActive()) edit_name = NULL;
-        start_edit = false;
-        ImGui::PopStyleVar();
-    }
-    ImGui::PopStyleColor(2);
-    ImGui::PopID();
-    return ret;
-}
-
-static void layers_panel(void)
-{
-    layer_t *layer;
-    int i = 0, icon, bbox[2][3];
-    bool current, visible, bounded;
-    uint64_t key;
-
-    gui_group_begin(NULL);
-    DL_FOREACH(goxel.image->layers, layer) {
-        current = goxel.image->active_layer == layer;
-        visible = layer->visible;
-        icon = layer->base_id ? ICON_LINK : layer->shape ? ICON_SHAPE : -1;
-        layer_item(i, icon, &visible, &current,
-                   layer->name, sizeof(layer->name));
-        if (current && goxel.image->active_layer != layer) {
-            goxel.image->active_layer = layer;
-            goxel_update_meshes(-1);
-        }
-        if (visible != layer->visible) {
-            layer->visible = visible;
-            if (ImGui::IsKeyDown(KEY_LEFT_SHIFT))
-                toggle_layer_only_visible(layer);
-            goxel_update_meshes(-1);
-        }
-        i++;
-    }
-    gui_group_end();
-    gui_action_button("img_new_layer", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("img_del_layer", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("img_move_layer_up", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("img_move_layer_down", NULL, 0, "");
-
-    gui_group_begin(NULL);
-    gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
-    gui_action_button("img_clone_layer", "Clone", 1, "");
-    gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
-
-    layer = goxel.image->active_layer;
-    bounded = !box_is_null(layer->box);
-    if (bounded && gui_button("Crop to box", 1, 0)) {
-        mesh_crop(layer->mesh, layer->box);
-        goxel_update_meshes(-1);
-    }
-    if (!box_is_null(goxel.image->box) && gui_button("Crop to image", 1, 0)) {
-        mesh_crop(layer->mesh, goxel.image->box);
-        goxel_update_meshes(-1);
-    }
-    if (layer->shape)
-        gui_action_button("img_unclone_layer", "To mesh", 1, "");
-
-    if (gui_action_button("img_new_shape_layer", "New Shape Layer", 1, "")) {
-        action_exec2("tool_set_move", "");
-    }
-
-    gui_group_end();
-
-    if (layer->base_id) {
-        gui_group_begin(NULL);
-        gui_action_button("img_unclone_layer", "Unclone", 1, "");
-        gui_action_button("img_select_parent_layer", "Select parent", 1, "");
-        gui_group_end();
-    }
-    if (layer->image) {
-        gui_action_button("img_image_layer_to_mesh", "To Mesh", 1, "");
-    }
-    if (!layer->shape && ImGui::Checkbox("Bounded", &bounded)) {
-        if (bounded) {
-            mesh_get_bbox(layer->mesh, bbox, true);
-            if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
-            bbox_from_aabb(layer->box, bbox);
-        } else {
-            mat4_copy(mat4_zero, layer->box);
-        }
-    }
-    if (bounded) {
-        if (gui_bbox(layer->box)) goxel_update_meshes(-1);
-    }
-
-    if (layer->shape) {
-        key = image_get_key(goxel.image);
-        tool_gui_drag_mode(&goxel.tool_drag_mode);
-        tool_gui_shape(&layer->shape);
-        gui_color("##color", layer->color);
-        // XXX: this should be automatic.
-        if (image_get_key(goxel.image) != key) goxel_update_meshes(-1);
-    }
-}
 
 static void view_panel(void)
 {
@@ -1003,7 +829,7 @@ static void cameras_panel(void)
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->cameras, cam) {
         current = goxel.image->active_camera == cam;
-        if (layer_item(i, -1, NULL, &current, cam->name, sizeof(cam->name))) {
+        if (gui_layer_item(i, -1, NULL, &current, cam->name, sizeof(cam->name))) {
             if (current) {
                 camera_set(&goxel.camera, cam);
                 goxel.image->active_camera = cam;
@@ -1307,7 +1133,7 @@ static void render_left_panel(void)
         {NULL},
         {"Tools", ICON_TOOLS, tools_panel},
         {"Palette", ICON_PALETTE, palette_panel},
-        {"Layers", ICON_LAYERS, layers_panel},
+        {"Layers", ICON_LAYERS, gui_layers_panel},
         {"View", ICON_VIEW, view_panel},
         {"Material", ICON_MATERIAL, material_panel},
         {"Cameras", ICON_CAMERA, cameras_panel},
@@ -2103,6 +1929,81 @@ void gui_floating_icon(int icon)
 void gui_request_panel_width(float width)
 {
     gui->panel_width = width;
+}
+
+bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
+                    char *name, int len)
+{
+    const theme_t *theme = theme_get();
+    bool ret = false;
+    bool edit_ = *edit;
+    static char *edit_name = NULL;
+    static bool start_edit;
+    float font_size = ImGui::GetFontSize();
+    ImVec2 center;
+    ImVec2 uv0, uv1;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImGui::PushID(i);
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *edit));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+            color_lighten(COLOR(WIDGET, INNER, *edit), 1.2));
+    if (visible) {
+        if (gui_selectable_icon("##visible", &edit_,
+                *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
+            *visible = !*visible;
+            ret = true;
+        }
+        gui_same_line();
+    }
+
+    if (edit_name != name) {
+        ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
+        if (icon != -1) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                    ImVec2(theme->sizes.icons_height / 1.5, 0));
+        }
+        if (ImGui::Button(name, ImVec2(-1, theme->sizes.icons_height))) {
+            *edit = true;
+            ret = true;
+        }
+        if (icon != -1) ImGui::PopStyleVar();
+        if (icon > 0) {
+            center = ImGui::GetItemRectMin() +
+                ImVec2(theme->sizes.icons_height / 2 / 1.5,
+                       theme->sizes.icons_height / 2);
+            uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
+            uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
+            draw_list->AddImage(
+                    (void*)(intptr_t)g_tex_icons->tex,
+                    center - ImVec2(12, 12),
+                    center + ImVec2(12, 12),
+                    uv0, uv1, get_icon_color(icon, 0));
+        }
+        ImGui::PopStyleVar();
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
+            edit_name = name;
+            start_edit = true;
+        }
+    } else {
+        if (start_edit) ImGui::SetKeyboardFocusHere();
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                            ImVec2(theme->sizes.item_padding_h,
+                            (theme->sizes.icons_height - font_size) / 2));
+        ImGui::InputText("##name_edit", name, len,
+                         ImGuiInputTextFlags_AutoSelectAll);
+        if (!start_edit && !ImGui::IsItemActive()) edit_name = NULL;
+        start_edit = false;
+        ImGui::PopStyleVar();
+    }
+    ImGui::PopStyleColor(2);
+    ImGui::PopID();
+    return ret;
+}
+
+bool gui_is_key_down(int key)
+{
+    return ImGui::IsKeyDown(key);
 }
 
 }

@@ -74,7 +74,8 @@ sources = (glob.glob('src/*.c') +
            glob.glob('src/*.cpp') +
            glob.glob('src/formats/*.c') +
            glob.glob('src/tools/*.c') +
-           glob.glob('src/utils/*.c'))
+           glob.glob('src/utils/*.c') +
+           glob.glob('src/gui/*.c'))
 
 # Check for libpng.
 if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
