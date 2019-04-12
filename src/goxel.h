@@ -36,6 +36,8 @@
 #include "utarray.h"
 #include "noc_file_dialog.h"
 #include "block_def.h"
+#include "gui.h"
+#include "inputs.h"
 #include "log.h"
 #include "luagoxel.h"
 #include "mesh.h"
@@ -751,29 +753,6 @@ enum {
     SNAP_ROUNDED        = 1 << 8, // Round the result.
 };
 
-// A finger touch or mouse click state.
-// `down` represent each button in the mouse.  For touch events only the
-// first element is set.
-typedef struct {
-    float   pos[2];
-    bool    down[3];
-} touch_t;
-
-typedef struct inputs
-{
-    int         window_size[2];
-    float       scale;
-    bool        keys[512]; // Table of all the pressed keys.
-    uint32_t    chars[16];
-    touch_t     touches[4];
-    float       mouse_wheel;
-    int         framebuffer; // Screen framebuffer
-} inputs_t;
-
-// Conveniance function to add a char in the inputs.
-void inputs_insert_char(inputs_t *inputs, uint32_t c);
-
-
 /* #########################################
  * Section: Mouse gestures
  * Detect 2d mouse or touch gestures.
@@ -1253,82 +1232,6 @@ int gox_iter_infos(const char *path,
 // #### Colors functions #######
 void hsl_to_rgb(const uint8_t hsl[3], uint8_t rgb[3]);
 void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
-
-/* ################################
- * Section: Gui
- */
-
-void gui_release(void);
-void gui_iter(const inputs_t *inputs);
-void gui_render(void);
-
-// Gui widgets:
-bool gui_collapsing_header(const char *label);
-void gui_text(const char *label, ...);
-bool gui_button(const char *label, float w, int icon);
-bool gui_button_right(const char *label, int icon);
-void gui_group_begin(const char *label);
-void gui_group_end(void);
-bool gui_checkbox(const char *label, bool *v, const char *hint);
-bool gui_input_int(const char *label, int *v, int minv, int maxv);
-bool gui_input_float(const char *label, float *v, float step,
-                     float minv, float maxv, const char *format);
-bool gui_angle(const char *id, float *v, int vmin, int vmax);
-bool gui_bbox(float box[4][4]);
-bool gui_quat(const char *label, float q[4]);
-bool gui_action_button(const char *id, const char *label, float size,
-                       const char *sig, ...);
-bool gui_action_checkbox(const char *id, const char *label);
-bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
-bool gui_selectable_toggle(const char *name, int *v, int set_v,
-                           const char *tooltip, float w);
-bool gui_selectable_icon(const char *name, bool *v, int icon);
-bool gui_color(const char *label, uint8_t color[4]);
-bool gui_color_small(const char *label, uint8_t color[4]);
-bool gui_input_text(const char *label, char *buf, int size);
-bool gui_input_text_multiline(const char *label, char *buf, int size,
-                              float width, float height);
-void gui_input_text_multiline_highlight(int line);
-bool gui_combo(const char *label, int *v, const char **names, int nb);
-
-float gui_get_avail_width(void);
-void gui_same_line(void);
-void gui_enabled_begin(bool enabled);
-void gui_enabled_end(void);
-// Add an icon in top left corner of last item.
-void gui_floating_icon(int icon);
-
-void gui_alert(const char *title, const char *msg);
-
-void gui_columns(int count);
-void gui_next_column(void);
-void gui_separator(void);
-
-void gui_push_id(const char *id);
-void gui_pop_id(void);
-
-enum {
-    GUI_POPUP_FULL      = 1 << 0,
-    GUI_POPUP_RESIZE    = 1 << 1,
-};
-
-
-/*
- * Function: gui_open_popup
- * Open a modal popup.
- *
- * Parameters:
- *    title - The title of the popup.
- *    flags - Union of <GUI_POPUP_FLAGS> values.
- *    data  - Data passed to the popup.  It will be automatically released
- *            by the gui.
- *    func  - The popup function, that render the popup gui.  Should return
- *            true to close the popup.
- */
-void gui_open_popup(const char *title, int flags, void *data,
-                    bool (*func)(void *data));
-void gui_popup_body_begin(void);
-void gui_popup_body_end(void);
 
 // #############################
 
