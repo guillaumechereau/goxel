@@ -21,6 +21,17 @@
 
 typedef struct gesture3d gesture3d_t;
 
+// Represent a 3d cursor.
+// The program keeps track of two cursors, that are then used by the tools.
+enum {
+    // The state flags of the cursor.
+    CURSOR_PRESSED      = 1 << 0,
+    CURSOR_SHIFT        = 1 << 1,
+    CURSOR_CTRL         = 1 << 2,
+
+    CURSOR_OUT          = 1 << 3, // Outside of sensing area.
+};
+
 typedef struct cursor {
     float  pos[3];
     float  normal[3];

@@ -824,18 +824,6 @@ bool image_layer_can_edit(const image_t *img, const layer_t *layer);
  */
 uint64_t image_get_key(const image_t *img);
 
-// Represent a 3d cursor.
-// The program keeps track of two cursors, that are then used by the tools.
-
-enum {
-    // The state flags of the cursor.
-    CURSOR_PRESSED      = 1 << 0,
-    CURSOR_SHIFT        = 1 << 1,
-    CURSOR_CTRL         = 1 << 2,
-
-    CURSOR_OUT          = 1 << 3, // Outside of sensing area.
-};
-
 enum {
     // Tools flags.
     TOOL_REQUIRE_CAN_EDIT = 1 << 0, // Set to tools that can edit the layer.
