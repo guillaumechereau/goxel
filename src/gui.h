@@ -41,6 +41,8 @@ void gui_render(void);
 
 void gui_request_panel_width(float width);
 
+void gui_get_view_rect(float rect[4]);
+
 // Gui widgets:
 bool gui_collapsing_header(const char *label, bool default_opened);
 void gui_text(const char *label, ...);
