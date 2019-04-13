@@ -489,7 +489,7 @@ static void render_panel(void)
     pathtracer_t *pt = &goxel.pathtracer;
     const char *path;
 
-    goxel.no_edit = pt->status || gui->popup_count;
+    goxel.no_edit |= pt->status;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
@@ -1001,7 +1001,7 @@ void gui_iter(const inputs_t *inputs)
     render_menu();
     render_top_bar();
 
-    goxel.no_edit = false; // Set depending on what panel is selected.
+    goxel.no_edit = gui->popup_count;
     render_left_panel();
     gui_same_line();
 
