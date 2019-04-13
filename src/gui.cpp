@@ -27,6 +27,7 @@ void gui_material_panel(void);
 void gui_tools_panel(void);
 void gui_view_panel(void);
 void gui_render_panel(void);
+void gui_debug_panel(void);
 }
 
 #ifndef typeof
@@ -483,13 +484,6 @@ static void auto_grid(int nb, int i, int col)
     if ((i + 1) % col != 0) gui_same_line();
 }
 
-static void debug_panel(void)
-{
-    gui_text("FPS: %d", (int)round(goxel.fps));
-    if (!DEFINED(GLES2))
-        gui_checkbox("Show wireframe", &goxel.show_wireframe, NULL);
-}
-
 static void import_image_plane(void)
 {
     const char *path;
@@ -752,7 +746,7 @@ static void render_left_panel(void)
         {"Cameras", ICON_CAMERA, gui_cameras_panel},
         {"Image", ICON_IMAGE, gui_image_panel},
         {"Render", ICON_RENDER, gui_render_panel},
-        {"Debug", ICON_DEBUG, debug_panel},
+        {"Debug", ICON_DEBUG, gui_debug_panel},
     };
 
     left_pane_width = (gui->current_panel ? gui->panel_width : 0) +
