@@ -28,8 +28,11 @@ void gui_tools_panel(void);
 void gui_view_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
+
 bool gui_settings_popup(void *data);
 bool gui_about_popup(void *data);
+
+void gui_top_bar(void);
 }
 
 #ifndef typeof
@@ -476,12 +479,6 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
-// XXX: better replace this by something more automatic.
-static void auto_grid(int nb, int i, int col)
-{
-    if ((i + 1) % col != 0) gui_same_line();
-}
-
 static void import_image_plane(void)
 {
     const char *path;
@@ -654,45 +651,6 @@ static bool render_tab(const char *label, int icon, bool *v)
 
     ImGui::PopID();
     return ret;
-}
-
-static int render_mode_select(void)
-{
-    int i;
-    bool v;
-    struct {
-        int        mode;
-        const char *name;
-        int        icon;
-    } values[] = {
-        {MODE_OVER,   "Add",  ICON_MODE_ADD},
-        {MODE_SUB,    "Sub",  ICON_MODE_SUB},
-        {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
-    };
-    gui_group_begin(NULL);
-    for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
-        v = goxel.painter.mode == values[i].mode;
-        if (gui_selectable_icon(values[i].name, &v, values[i].icon)) {
-            goxel.painter.mode = values[i].mode;
-        }
-        auto_grid(ARRAY_SIZE(values), i, 4);
-    }
-    gui_group_end();
-    return 0;
-}
-
-
-static void render_top_bar(void)
-{
-    gui_action_button("undo", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("redo", NULL, 0, "");
-    gui_same_line();
-    gui_action_button("layer_clear", NULL, 0, "");
-    gui_same_line();
-    render_mode_select();
-    gui_same_line();
-    gui_color("##color", goxel.painter.color);
 }
 
 static void render_left_panel(void)
@@ -868,7 +826,7 @@ void gui_iter(const inputs_t *inputs)
     ImGui::Begin("Goxel", NULL, window_flags);
 
     render_menu();
-    render_top_bar();
+    gui_top_bar();
 
     goxel.no_edit = gui->popup_count;
     render_left_panel();
