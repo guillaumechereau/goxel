@@ -28,6 +28,7 @@ void gui_tools_panel(void);
 void gui_view_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
+bool gui_settings_popup(void *data);
 }
 
 #ifndef typeof
@@ -47,10 +48,6 @@ void gui_debug_panel(void);
 
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
-
-extern "C" {
-    bool gui_settings_popup(void *data);
-}
 
 static inline ImVec4 color_lighten(ImVec4 c, float k)
 {
