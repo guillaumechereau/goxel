@@ -29,6 +29,7 @@ void gui_view_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
 bool gui_settings_popup(void *data);
+bool gui_about_popup(void *data);
 }
 
 #ifndef typeof
@@ -511,36 +512,6 @@ static bool shift_alpha_popup(void *data)
     return false;
 }
 
-static bool about_popup(void *data)
-{
-    using namespace ImGui;
-    Text("Goxel " GOXEL_VERSION_STR);
-    Text("Copyright © 2015-2017 Guillaume Chereau");
-    Text("<guillaume@noctua-software.com>");
-    Text("GPL 3 License");
-    Text("http://guillaumechereau.github.io/goxel");
-
-    if (gui_collapsing_header("Credits", true)) {
-        Text("Code:");
-        BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
-        BulletText("Dustin Willis Webber <dustin.webber@gmail.com>");
-        BulletText("Pablo Hugo Reda <pabloreda@gmail.com>");
-        BulletText("Othelarian (https://github.com/othelarian)");
-
-        Text("Libraries:");
-        BulletText("dear imgui (https://github.com/ocornut/imgui)");
-        BulletText("stb (https://github.com/nothings/stb)");
-        BulletText("yocto-gl (https://github.com/xelatihy/yocto-gl)");
-        BulletText("uthash (https://troydhanson.github.io/uthash/)");
-        BulletText("inih (https://github.com/benhoyt/inih)");
-
-        Text("Design:");
-        BulletText("Guillaume Chereau <guillaume@noctua-software.com>");
-        BulletText("Michal (https://github.com/YarlBoro)");
-    }
-    return gui_button("OK", 0, 0);
-}
-
 static bool alert_popup(void *data)
 {
     if (data) gui_text((const char *)data);
@@ -644,7 +615,7 @@ static void render_menu(void)
     }
     if (ImGui::BeginMenu("Help")) {
         if (ImGui::MenuItem("About"))
-            gui_open_popup("About", 0, NULL, about_popup);
+            gui_open_popup("About", 0, NULL, gui_about_popup);
         ImGui::EndMenu();
     }
     ImGui::EndMenuBar();
