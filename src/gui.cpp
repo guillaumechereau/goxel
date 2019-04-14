@@ -29,10 +29,9 @@ void gui_view_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
 
-bool gui_settings_popup(void *data);
-bool gui_about_popup(void *data);
-
+void gui_menu(void);
 void gui_top_bar(void);
+bool gui_shift_alpha_popup(void *data);
 }
 
 #ifndef typeof
@@ -479,36 +478,6 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
-static void import_image_plane(void)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-            "png\0*.png\0jpg\0*.jpg;*.jpeg\0", NULL, NULL);
-    if (!path) return;
-    goxel_import_image_plane(path);
-}
-
-static bool shift_alpha_popup(void *data)
-{
-    static int v = 0;
-    static mesh_t *original_mesh = NULL;
-    mesh_t *mesh;
-    mesh = goxel.image->active_layer->mesh;
-    if (!original_mesh)
-        original_mesh = mesh_copy(mesh);
-    if (ImGui::InputInt("shift", &v, 1)) {
-        mesh_set(mesh, original_mesh);
-        mesh_shift_alpha(mesh, v);
-        goxel_update_meshes(-1);
-    }
-    if (ImGui::Button("OK")) {
-        mesh_delete(original_mesh);
-        original_mesh = NULL;
-        return true;
-    }
-    return false;
-}
-
 static bool alert_popup(void *data)
 {
     if (data) gui_text((const char *)data);
@@ -538,21 +507,27 @@ static int check_action_shortcut(action_t *action, void *user)
     return 0;
 }
 
-static int import_menu_action_callback(action_t *a, void *user)
+bool gui_shift_alpha_popup(void *data)
 {
-    if (!a->file_format.name) return 0;
-    if (!str_startswith(a->id, "import_")) return 0;
-    if (ImGui::MenuItem(a->file_format.name)) action_exec(a, "");
-    return 0;
+    static int v = 0;
+    static mesh_t *original_mesh = NULL;
+    mesh_t *mesh;
+    mesh = goxel.image->active_layer->mesh;
+    if (!original_mesh)
+        original_mesh = mesh_copy(mesh);
+    if (ImGui::InputInt("shift", &v, 1)) {
+        mesh_set(mesh, original_mesh);
+        mesh_shift_alpha(mesh, v);
+        goxel_update_meshes(-1);
+    }
+    if (ImGui::Button("OK")) {
+        mesh_delete(original_mesh);
+        original_mesh = NULL;
+        return true;
+    }
+    return false;
 }
 
-static int export_menu_action_callback(action_t *a, void *user)
-{
-    if (!a->file_format.name) return 0;
-    if (!str_startswith(a->id, "export_")) return 0;
-    if (ImGui::MenuItem(a->file_format.name)) action_exec(a, "");
-    return 0;
-}
 
 static void render_menu(void)
 {
@@ -560,50 +535,7 @@ static void render_menu(void)
     ImGui::PushStyleColor(ImGuiCol_Text, COLOR(MENU, TEXT, 0));
 
     if (!ImGui::BeginMenuBar()) return;
-    if (gui_menu_begin("File")) {
-        gui_menu_item("save", "Save",
-                image_get_key(goxel.image) != goxel.image->saved_key);
-        gui_menu_item("save_as", "Save as", true);
-        gui_menu_item("open", "Open", true);
-        if (gui_menu_begin("Import...")) {
-            if (gui_menu_item(NULL, "image plane", true))
-                import_image_plane();
-            actions_iter(import_menu_action_callback, NULL);
-            gui_menu_end();
-        }
-        if (gui_menu_begin("Export As..")) {
-            actions_iter(export_menu_action_callback, NULL);
-            gui_menu_end();
-        }
-        gui_menu_item("quit", "Quit", true);
-        gui_menu_end();
-    }
-    if (gui_menu_begin("Edit")) {
-        gui_menu_item("layer_clear", "Clear", true);
-        gui_menu_item("undo", "Undo", true);
-        gui_menu_item("redo", "Redo", true);
-        gui_menu_item("copy", "Copy", true);
-        gui_menu_item("past", "Past", true);
-        if (gui_menu_item(NULL, "Shift Alpha", true))
-            gui_open_popup("Shift Alpha", 0, NULL, shift_alpha_popup);
-        if (gui_menu_item(NULL, "Settings", true))
-            gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
-                           NULL, gui_settings_popup);
-        gui_menu_end();
-    }
-    if (gui_menu_begin("View")) {
-        gui_menu_item("view_left", "Left", true);
-        gui_menu_item("view_right", "Right", true);
-        gui_menu_item("view_front", "Front", true);
-        gui_menu_item("view_top", "Top", true);
-        gui_menu_item("view_default", "Default", true);
-        gui_menu_end();
-    }
-    if (gui_menu_begin("Help")) {
-        if (gui_menu_item(NULL, "About", true))
-            gui_open_popup("About", 0, NULL, gui_about_popup);
-        gui_menu_end();
-    }
+    gui_menu();
     ImGui::EndMenuBar();
     ImGui::PopStyleColor(2);
 }
