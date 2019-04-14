@@ -554,66 +554,55 @@ static int export_menu_action_callback(action_t *a, void *user)
     return 0;
 }
 
-static bool render_menu_item(const char *id, const char *label, bool enabled)
-{
-    const action_t *action = action_get(id, true);
-    assert(action);
-    if (ImGui::MenuItem(label, action->shortcut, false, enabled)) {
-        action_exec(action, "");
-        return true;
-    }
-    return false;
-}
-
 static void render_menu(void)
 {
     ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(MENU, INNER, 0));
     ImGui::PushStyleColor(ImGuiCol_Text, COLOR(MENU, TEXT, 0));
 
     if (!ImGui::BeginMenuBar()) return;
-    if (ImGui::BeginMenu("File")) {
-        render_menu_item("save", "Save",
+    if (gui_menu_begin("File")) {
+        gui_menu_item("save", "Save",
                 image_get_key(goxel.image) != goxel.image->saved_key);
-        render_menu_item("save_as", "Save as", true);
-        render_menu_item("open", "Open", true);
-        if (ImGui::BeginMenu("Import...")) {
-            if (ImGui::MenuItem("image plane")) import_image_plane();
+        gui_menu_item("save_as", "Save as", true);
+        gui_menu_item("open", "Open", true);
+        if (gui_menu_begin("Import...")) {
+            if (gui_menu_item(NULL, "image plane", true))
+                import_image_plane();
             actions_iter(import_menu_action_callback, NULL);
-            ImGui::EndMenu();
+            gui_menu_end();
         }
-        if (ImGui::BeginMenu("Export As..")) {
+        if (gui_menu_begin("Export As..")) {
             actions_iter(export_menu_action_callback, NULL);
-            ImGui::EndMenu();
+            gui_menu_end();
         }
-        render_menu_item("quit", "Quit", true);
-        ImGui::EndMenu();
+        gui_menu_item("quit", "Quit", true);
+        gui_menu_end();
     }
-    if (ImGui::BeginMenu("Edit")) {
-        if (ImGui::MenuItem("Clear", "Delete"))
-            action_exec2("layer_clear", "");
-        render_menu_item("undo", "Undo", true);
-        render_menu_item("redo", "Redo", true);
-        render_menu_item("copy", "Copy", true);
-        render_menu_item("past", "Past", true);
-        if (ImGui::MenuItem("Shift Alpha"))
+    if (gui_menu_begin("Edit")) {
+        gui_menu_item("layer_clear", "Clear", true);
+        gui_menu_item("undo", "Undo", true);
+        gui_menu_item("redo", "Redo", true);
+        gui_menu_item("copy", "Copy", true);
+        gui_menu_item("past", "Past", true);
+        if (gui_menu_item(NULL, "Shift Alpha", true))
             gui_open_popup("Shift Alpha", 0, NULL, shift_alpha_popup);
-        if (ImGui::MenuItem("Settings"))
+        if (gui_menu_item(NULL, "Settings", true))
             gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
                            NULL, gui_settings_popup);
-        ImGui::EndMenu();
+        gui_menu_end();
     }
-    if (ImGui::BeginMenu("View")) {
-        render_menu_item("view_left", "Left", true);
-        render_menu_item("view_right", "Right", true);
-        render_menu_item("view_front", "Front", true);
-        render_menu_item("view_top", "Top", true);
-        render_menu_item("view_default", "Default", true);
-        ImGui::EndMenu();
+    if (gui_menu_begin("View")) {
+        gui_menu_item("view_left", "Left", true);
+        gui_menu_item("view_right", "Right", true);
+        gui_menu_item("view_front", "Front", true);
+        gui_menu_item("view_top", "Top", true);
+        gui_menu_item("view_default", "Default", true);
+        gui_menu_end();
     }
-    if (ImGui::BeginMenu("Help")) {
-        if (ImGui::MenuItem("About"))
+    if (gui_menu_begin("Help")) {
+        if (gui_menu_item(NULL, "About", true))
             gui_open_popup("About", 0, NULL, gui_about_popup);
-        ImGui::EndMenu();
+        gui_menu_end();
     }
     ImGui::EndMenuBar();
     ImGui::PopStyleColor(2);
@@ -1582,5 +1571,30 @@ void gui_get_view_rect(float rect[4])
 {
     memcpy(rect, gui->view.rect, sizeof(gui->view.rect));
 }
+
+bool gui_menu_begin(const char *label)
+{
+    return ImGui::BeginMenu(label);
+}
+
+void gui_menu_end(void)
+{
+    return ImGui::EndMenu();
+}
+
+bool gui_menu_item(const char *action, const char *label, bool enabled)
+{
+    const action_t *a = NULL;
+    if (action) {
+        a = action_get(action, true);
+        assert(a);
+    }
+    if (ImGui::MenuItem(label, a ? a->shortcut : NULL, false, enabled)) {
+        if (a) action_exec(a, "");
+        return true;
+    }
+    return false;
+}
+
 
 }

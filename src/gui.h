@@ -118,5 +118,8 @@ void gui_open_popup(const char *title, int flags, void *data,
 void gui_popup_body_begin(void);
 void gui_popup_body_end(void);
 
+bool gui_menu_begin(const char *label);
+void gui_menu_end(void);
+bool gui_menu_item(const char *action, const char *label, bool enabled);
 
 #endif // GUI_H

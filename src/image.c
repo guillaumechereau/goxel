@@ -586,6 +586,7 @@ ACTION_REGISTER(layer_clear,
     .csig = "vpp",
     .icon = ICON_DELETE,
     .flags = ACTION_TOUCH_IMAGE,
+    .default_shortcut = "Delete",
 )
 
 ACTION_REGISTER(img_new_layer,
