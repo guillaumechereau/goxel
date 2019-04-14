@@ -45,6 +45,7 @@
 #include "mesh.h"
 #include "mesh_utils.h"
 #include "model3d.h"
+#include "palette.h"
 #include "texture.h"
 #include "theme.h"
 #include "pathtracer.h"
@@ -490,46 +491,9 @@ enum {
 #define VOXEL_TEXTURE_SIZE 8
 
 
-// #### Palette ################
-
-typedef struct {
-    uint8_t  color[4];
-    char     name[32];
-} palette_entry_t;
-
-typedef struct palette palette_t;
-struct palette {
-    palette_t *next, *prev; // For the global list of palettes.
-    char    name[128];
-    int     columns;
-    int     size;
-    palette_entry_t *entries;
-};
-
-// Load all the available palettes into a list.
-void palette_load_all(palette_t **list);
-
 // Generate an optimal palette whith a fixed number of colors from a mesh.
 void quantization_gen_palette(const mesh_t *mesh, int nb,
                               uint8_t (*palette)[4]);
-
-/*
- * Function: palette_search
- * Search a given color in a palette
- *
- * Parameters:
- *   palette    - A palette.
- *   col        - The color we are looking for.
- *   exact      - If set to true, return -1 if no color is found, else
- *                return the closest color.
- *
- * Return:
- *   The index of the color in the palette.
- */
-int palette_search(const palette_t *palette, const uint8_t col[4],
-                   bool exact);
-
-// #############################
 
 
 // #### Goxel : core object ####
