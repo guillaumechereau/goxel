@@ -32,6 +32,7 @@
 #include "action.h"
 #include "assets.h"
 #include "camera.h"
+#include "image.h"
 #include "utlist.h"
 #include "uthash.h"
 #include "utarray.h"
@@ -532,64 +533,6 @@ enum {
     SNAP_ROUNDED        = 1 << 8, // Round the result.
 };
 
-
-typedef struct history history_t;
-
-typedef struct layer layer_t;
-struct layer {
-    layer_t     *next, *prev;
-    mesh_t      *mesh;
-    int         id;         // Uniq id in the image (for clones).
-    bool        visible;
-    char        name[256];  // 256 chars max.
-    float       box[4][4];  // Bounding box.
-    float       mat[4][4];
-    // For 2d image layers.
-    texture_t   *image;
-    // For clone layers:
-    int         base_id;
-    uint64_t    base_mesh_key;
-    // For shape layers.
-    const shape_t *shape;
-    uint64_t    shape_key;
-    uint8_t     color[4];
-};
-
-typedef struct image image_t;
-struct image {
-    layer_t *layers;
-    layer_t *active_layer;
-    camera_t *cameras;
-    camera_t *active_camera;
-    float    box[4][4];
-
-    // For saving.
-    char     *path;
-    int      export_width;
-    int      export_height;
-    uint64_t saved_key;     // image_get_key() value of saved file.
-
-    image_t *history;
-    image_t *history_next, *history_prev;
-};
-
-image_t *image_new(void);
-void image_delete(image_t *img);
-layer_t *image_add_layer(image_t *img);
-void image_delete_layer(image_t *img, layer_t *layer);
-void image_move_layer(image_t *img, layer_t *layer, int d);
-layer_t *image_duplicate_layer(image_t *img, layer_t *layer);
-void image_merge_visible_layers(image_t *img);
-void image_history_push(image_t *img);
-void image_undo(image_t *img);
-void image_redo(image_t *img);
-bool image_layer_can_edit(const image_t *img, const layer_t *layer);
-
-/*
- * Function: image_get_key
- * Return a value that is guarantied to change when the image change.
- */
-uint64_t image_get_key(const image_t *img);
 
 enum {
     // Tools flags.
