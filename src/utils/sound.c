@@ -25,7 +25,14 @@
  * This is disabled by default.
  */
 
+#ifndef SOUND_H
+#define SOUND_H
+
 #include "sound.h"
+
+#include "uthash.h"
+
+#include <assert.h>
 
 #ifdef SOUND
 
@@ -85,7 +92,8 @@ typedef struct {
 static int wav_read(sound_source_t *source, void *out, int size)
 {
     wav_t *wav = source->data;
-    size = min(size, wav->size - wav->pos);
+    if (wav->size - wav->pos < size)
+        size = wav->size - wav->pos;
     if (out)
         memcpy(out, wav->buffer + wav->pos, size);
     wav->pos += size;
@@ -106,12 +114,10 @@ static void wav_delete(sound_source_t *source)
     free(source);
 }
 
-static sound_source_t *wav_create(const char *path)
+static sound_source_t *wav_create(const char *data)
 {
     sound_source_t *ret = calloc(1, sizeof(*ret));
     wav_t *wav = calloc(1, sizeof(*wav));
-    const char *data;
-    data = assets_get(path, NULL);
     assert(data);
     ret->size = wav->size = *(uint32_t*)(data + 40);
     ret->rate = *(uint32_t*)(data + 24);
@@ -126,28 +132,26 @@ static sound_source_t *wav_create(const char *path)
     return ret;
 }
 
-static sound_t *sound_get(const char *name)
+void sound_register(const char *name, const char *wav)
 {
     sound_t *sound;
-    char *path;
 
     HASH_FIND_STR(g_sounds, name, sound);
-    if (!sound) {
-        sound = calloc(1, sizeof(*sound));
-        asprintf(&path, "asset://data/sounds/%s.wav", name);
-        sound->source = wav_create(path);
-        free(path);
-        assert(sound->source);
-        sound->backend = sound_backend_create(sound->source);
-        HASH_ADD_KEYPTR(hh, g_sounds, name, strlen(name), sound);
-    }
-    return sound;
+    assert(!sound);
+
+    sound = calloc(1, sizeof(*sound));
+    sound->source = wav_create(wav);
+    assert(sound->source);
+    sound->backend = sound_backend_create(sound->source);
+    HASH_ADD_KEYPTR(hh, g_sounds, name, strlen(name), sound);
 }
 
 void sound_play(const char *name, float volume, float pitch)
 {
+    sound_t *sound;
     if (!g_enabled) return;
-    sound_t *sound = sound_get(name);
+    HASH_FIND_STR(g_sounds, name, sound);
+    assert(sound);
     sound->source->reset(sound->source);
     sound_backend_stop_sound(sound);
     sound->state = 1;
@@ -176,3 +180,5 @@ bool sound_is_enabled(void) { return false; }
 void sound_set_enabled(bool v) {}
 
 #endif
+
+#endif // SOUND_H
