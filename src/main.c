@@ -151,8 +151,11 @@ static void start_main_loop(void (*func)(void))
 static void load_icon(GLFWimage *image, const char *path)
 {
     uint8_t *img;
-    int w, h, bpp = 0;
-    img = img_read(path, &w, &h, &bpp);
+    int w, h, bpp = 0, size;
+    const void *data;
+    data = assets_get(path, &size);
+    assert(data);
+    img = img_read_from_mem(data, size, &w, &h, &bpp);
     assert(img);
     assert(bpp == 4);
     image->width = w;
