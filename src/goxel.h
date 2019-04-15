@@ -458,26 +458,6 @@ void quantization_gen_palette(const mesh_t *mesh, int nb,
 
 // #### Goxel : core object ####
 
-// Key id, same as GLFW for convenience.
-enum {
-    KEY_ESCAPE      = 256,
-    KEY_ENTER       = 257,
-    KEY_TAB         = 258,
-    KEY_BACKSPACE   = 259,
-    KEY_DELETE      = 261,
-    KEY_RIGHT       = 262,
-    KEY_LEFT        = 263,
-    KEY_DOWN        = 264,
-    KEY_UP          = 265,
-    KEY_PAGE_UP     = 266,
-    KEY_PAGE_DOWN   = 267,
-    KEY_HOME        = 268,
-    KEY_END         = 269,
-    KEY_LEFT_SHIFT  = 340,
-    KEY_RIGHT_SHIFT = 344,
-    KEY_CONTROL     = 341,
-};
-
 // Flags to set where the mouse snap.  In order of priority.
 enum {
     SNAP_IMAGE_BOX      = 1 << 0,
