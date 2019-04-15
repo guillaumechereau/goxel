@@ -25,7 +25,7 @@
 #ifndef MODEL3D_H
 #define MODEL3D_H
 
-#include "texture.h"
+#include "utils/texture.h"
 
 /*
  * Type: model_vertex_t

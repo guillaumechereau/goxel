@@ -48,7 +48,6 @@
 #include "mesh_utils.h"
 #include "model3d.h"
 #include "palette.h"
-#include "texture.h"
 #include "theme.h"
 #include "pathtracer.h"
 #include "render.h"
@@ -60,6 +59,7 @@
 #include "utils/gl.h"
 #include "utils/vec.h"
 #include "utils/sound.h"
+#include "utils/texture.h"
 
 #include <float.h>
 #include <stdbool.h>
@@ -278,6 +278,11 @@ static inline void set_flag(int *x, int flag, bool v)
 {
     v ? (*x |= flag) : (*x &= ~flag);
 }
+
+/*
+ * Extra texture creation function from a path, that can also be an asset.
+ */
+texture_t *texture_new_image(const char *path, int flags);
 
 /*
  * Function: read_file

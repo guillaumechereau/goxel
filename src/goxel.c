@@ -22,6 +22,29 @@
 // The global goxel instance.
 goxel_t goxel = {};
 
+texture_t *texture_new_image(const char *path, int flags)
+{
+    char *data;
+    uint8_t *img;
+    bool need_to_free = false;
+    int size;
+    int w, h, bpp = 0;
+    texture_t *tex;
+
+    if (str_startswith(path, "asset://")) {
+        data = (char*)assets_get(path, &size);
+    } else {
+        data = read_file(path, &size);
+        need_to_free = true;
+    }
+    img = img_read_from_mem(data, size, &w, &h, &bpp);
+    tex = texture_new_from_buf(img, w, h, bpp, flags);
+    tex->path = strdup(path);
+    free(img);
+    if (need_to_free) free(data);
+    return tex;
+}
+
 static void unpack_pos_data(uint32_t v, int pos[3], int *face,
                             int *cube_id)
 {

@@ -20,8 +20,8 @@
 #define IMAGE_H
 
 #include "mesh.h"
-#include "texture.h"
 #include "shape.h"
+#include "utils/texture.h"
 
 #include <stdint.h>
 #include <stdbool.h>

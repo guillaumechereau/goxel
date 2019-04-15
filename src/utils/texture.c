@@ -17,7 +17,13 @@
  */
 
 
-#include "goxel.h"
+#include "texture.h"
+
+#include "utils/gl.h"
+
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Return the next power of 2 larger or equal to x.
 static int next_pow2(int x)
@@ -77,31 +83,6 @@ void texture_set_data(texture_t *tex,
     free(buf);
     if (tex->flags & TF_MIPMAP)
         GL(glGenerateMipmap(GL_TEXTURE_2D));
-}
-
-texture_t *texture_new_image(const char *path, int flags)
-{
-    texture_t *tex;
-    uint8_t *img;
-    int w, h, bpp = 0;
-    img = img_read(path, &w, &h, &bpp);
-    if (!img) {
-        LOG_W("Cannot open image '%s'", path);
-        return NULL;
-    }
-    tex = calloc(1, sizeof(*tex));
-    tex->path = strdup(path);
-    tex->tex_w = next_pow2(w);
-    tex->tex_h = next_pow2(h);
-    tex->w = w;
-    tex->h = h;
-    tex->flags = TF_HAS_TEX | flags;
-    tex->format = (int[]){0, 0, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA}[bpp];
-    texture_create_empty(tex);
-    texture_set_data(tex, img, w, h, bpp);
-    free(img);
-    tex->ref = 1;
-    return tex;
 }
 
 texture_t *texture_new_from_buf(const uint8_t *data,
@@ -198,6 +179,7 @@ void texture_get_data(const texture_t *tex, int w, int h, int bpp,
     free(tmp);
 }
 
+/*
 void texture_save_to_file(const texture_t *tex, const char *path)
 {
     uint8_t *data;
@@ -210,3 +192,4 @@ void texture_save_to_file(const texture_t *tex, const char *path)
     img_write(data, w, h, 4, path);
     free(data);
 }
+*/

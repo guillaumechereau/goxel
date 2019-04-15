@@ -16,7 +16,7 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "texture.h"
+#include "utils/texture.h"
 
 enum {
     PT_WORLD_NONE = 0,

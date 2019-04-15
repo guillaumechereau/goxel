@@ -20,6 +20,7 @@
 #define TEXTURE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 enum {
     TF_DEPTH    = 1 << 0,
@@ -49,14 +50,12 @@ struct texture {
     uint32_t framebuffer, depth, stencil;
 };
 
-texture_t *texture_new_image(const char *path, int flags);
 texture_t *texture_new_from_buf(const uint8_t *data,
                                 int w, int h, int bpp, int flags);
 texture_t *texture_new_surface(int w, int h, int flags);
 texture_t *texture_new_buffer(int w, int h, int flags);
 void texture_get_data(const texture_t *tex, int w, int h, int bpp,
                       uint8_t *buf);
-void texture_save_to_file(const texture_t *tex, const char *path);
 
 texture_t *texture_copy(texture_t *tex);
 void texture_delete(texture_t *tex);
