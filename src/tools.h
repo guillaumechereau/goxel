@@ -19,6 +19,9 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 
+#include "shape.h"
+#include "mesh_utils.h"
+
 enum {
     TOOL_NONE = 0,
     TOOL_BRUSH,
