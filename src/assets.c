@@ -31,7 +31,7 @@ const void *assets_get(const char *url, int *size)
     int i;
     if (str_startswith(url, "asset://")) url += 8; // Skip asset://
     for (i = 0; ASSETS[i].path; i++) {
-        if (str_equ(ASSETS[i].path, url)) {
+        if (strcmp(ASSETS[i].path, url) == 0) {
             if (size) *size = ASSETS[i].size;
             return ASSETS[i].data;
         }

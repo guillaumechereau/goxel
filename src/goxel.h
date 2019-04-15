@@ -325,14 +325,6 @@ int unix_to_dtf(double t, int *iy, int *im, int *id, int *h, int *m, int *s);
 int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
 
 /*
- * Function: str_equ
- * Return whether two strings are equal.
- */
-static inline bool str_equ(const char *s1, const char *s2) {
-    return strcmp(s1, s2) == 0;
-}
-
-/*
  * Function: str_endswith
  * Return whether a string ends with an other one.
  */

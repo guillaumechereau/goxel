@@ -130,6 +130,14 @@ struct proc_ctx {
     bool        last;   // Mark the end of a frame.
 };
 
+/*
+ * Function: str_equ
+ * Return whether two strings are equal.
+ */
+static inline bool str_equ(const char *s1, const char *s2) {
+    return strcmp(s1, s2) == 0;
+}
+
 // Move a value toward a target.  If v is positive, move the value toward
 // range of v.  If v is negative move the value toward 0 of -v.
 // For example:
