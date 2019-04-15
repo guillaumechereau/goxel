@@ -21,6 +21,16 @@
 
 #include "utils/vec.h"
 
+static float min(float x, float y)
+{
+    return x < y ? x : y;
+}
+
+static float max(float x, float y)
+{
+    return x > y ? x : y;
+}
+
 // A Box is represented as the 4x4 matrix that transforms the unit cube into
 // the box.
 

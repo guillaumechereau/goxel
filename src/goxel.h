@@ -62,6 +62,9 @@
 #include "utils/vec.h"
 #include "utils/sound.h"
 #include "utils/texture.h"
+#include "utils/box.h"
+#include "utils/plane.h"
+
 
 #include <float.h>
 #include <stdbool.h>
@@ -360,11 +363,6 @@ void unproject(const float win[3], const float model[4][4],
                float out[3]);
 
 // #############################
-
-// XXX: I should clean up a but the code of vec.h so that I can put those on
-// top.
-#include "box.h"
-#include "plane.h"
 
 
 // #### Dialogs ################
