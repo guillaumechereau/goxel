@@ -110,10 +110,6 @@ env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
 
-sources += glob.glob('ext_src/inih/*.c')
-env.Append(CPPPATH=['ext_src/inih'])
-env.Append(CFLAGS='-DINI_HANDLER_LINENO=1')
-
 if sound:
     env.Append(LIBS='openal')
     env.Append(CCFLAGS='-DSOUND=1')

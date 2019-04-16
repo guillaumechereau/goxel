@@ -17,7 +17,8 @@
  */
 
 #include "goxel.h"
-#include "ini.h"
+
+#include "utils/ini.h"
 
 theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT] = {
     [THEME_GROUP_BASE] = {

@@ -17,7 +17,8 @@
  */
 
 #include "goxel.h"
-#include "ini.h"
+
+#include "utils/ini.h"
 
 static int shortcut_callback(action_t *action, void *user)
 {
