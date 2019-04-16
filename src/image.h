@@ -60,6 +60,7 @@ struct image {
     char     *path;
     int      export_width;
     int      export_height;
+    bool     export_transparent_background;
     uint64_t saved_key;     // image_get_key() value of saved file.
 
     image_t *history;
