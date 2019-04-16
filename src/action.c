@@ -17,7 +17,8 @@
  */
 
 #include "goxel.h"
-#include "lauxlib.h"
+
+#include "../ext_src/lua/lauxlib.h"
 
 typedef struct {
     UT_hash_handle  hh;

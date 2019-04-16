@@ -18,9 +18,40 @@
 
 #include "luagoxel.h"
 
-#include "goxel.h"
-
-#include "lauxlib.h"
+// Include all lua sources here.
+#include "../ext_src/lua/lapi.c"
+#include "../ext_src/lua/lauxlib.c"
+#include "../ext_src/lua/lbaselib.c"
+#include "../ext_src/lua/lbitlib.c"
+#include "../ext_src/lua/lcode.c"
+#include "../ext_src/lua/lcorolib.c"
+#include "../ext_src/lua/lctype.c"
+#include "../ext_src/lua/ldblib.c"
+#include "../ext_src/lua/ldebug.c"
+#include "../ext_src/lua/ldo.c"
+#include "../ext_src/lua/ldump.c"
+#include "../ext_src/lua/lfunc.c"
+#include "../ext_src/lua/lgc.c"
+#include "../ext_src/lua/linit.c"
+#include "../ext_src/lua/liolib.c"
+#include "../ext_src/lua/llex.c"
+#include "../ext_src/lua/lmathlib.c"
+#include "../ext_src/lua/lmem.c"
+#include "../ext_src/lua/loadlib.c"
+#include "../ext_src/lua/lobject.c"
+#include "../ext_src/lua/lopcodes.c"
+#include "../ext_src/lua/loslib.c"
+#include "../ext_src/lua/lparser.c"
+#include "../ext_src/lua/lstate.c"
+#include "../ext_src/lua/lstring.c"
+#include "../ext_src/lua/lstrlib.c"
+#include "../ext_src/lua/ltable.c"
+#include "../ext_src/lua/ltablib.c"
+#include "../ext_src/lua/ltm.c"
+#include "../ext_src/lua/lundump.c"
+#include "../ext_src/lua/lutf8lib.c"
+#include "../ext_src/lua/lvm.c"
+#include "../ext_src/lua/lzio.c"
 
 void *luaG_checkpointer(lua_State *l, int narg, const char *type)
 {

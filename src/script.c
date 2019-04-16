@@ -1,8 +1,8 @@
 #include "goxel.h"
 
-#include "lauxlib.h"
-#include "lua.h"
-#include "lualib.h"
+#include "../ext_src/lua/lauxlib.h"
+#include "../ext_src/lua/lua.h"
+#include "../ext_src/lua/lualib.h"
 
 
 static int l_goxel_call(lua_State *l)

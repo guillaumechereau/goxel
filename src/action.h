@@ -22,7 +22,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-#include "lua.h"
+#include "luagoxel.h"
 
 // #### Action #################
 
