@@ -694,11 +694,14 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 KEEPALIVE
 void goxel_render(void)
 {
+    uint8_t color[4];
+    theme_get_color(THEME_GROUP_BASE, THEME_COLOR_BACKGROUND, false, color);
     GL(glViewport(0, 0, goxel.screen_size[0] * goxel.screen_scale,
                         goxel.screen_size[1] * goxel.screen_scale));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel.rend.fbo));
-    GL(glClearColor(0, 0, 0, 1));
+    GL(glClearColor(color[0] / 255., color[1] / 255., color[2] / 255., 1));
     GL(glStencilMask(0xFF));
+    GL(glDisable(GL_SCISSOR_TEST));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                GL_STENCIL_BUFFER_BIT));
     gui_render();
