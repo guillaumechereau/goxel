@@ -31,47 +31,46 @@
 
 #include "action.h"
 #include "assets.h"
-#include "camera.h"
-#include "image.h"
-#include "utlist.h"
-#include "uthash.h"
-#include "utarray.h"
-#include "noc_file_dialog.h"
 #include "block_def.h"
+#include "camera.h"
 #include "gesture.h"
 #include "gesture3d.h"
 #include "gui.h"
+#include "image.h"
 #include "inputs.h"
 #include "log.h"
 #include "luagoxel.h"
 #include "mesh.h"
 #include "mesh_utils.h"
 #include "model3d.h"
+#include "noc_file_dialog.h"
 #include "palette.h"
-#include "theme.h"
 #include "pathtracer.h"
 #include "render.h"
 #include "shape.h"
-#include "tools.h"
 #include "system.h"
+#include "theme.h"
+#include "tools.h"
+#include "utarray.h"
+#include "uthash.h"
+#include "utlist.h"
 
+#include "utils/box.h"
 #include "utils/cache.h"
 #include "utils/crc64.h"
 #include "utils/gl.h"
 #include "utils/img.h"
-#include "utils/vec.h"
+#include "utils/plane.h"
 #include "utils/sound.h"
 #include "utils/texture.h"
-#include "utils/box.h"
-#include "utils/plane.h"
-
+#include "utils/vec.h"
 
 #include <float.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define GOXEL_VERSION_STR "0.8.3"
 #ifndef GOXEL_DEFAULT_THEME
