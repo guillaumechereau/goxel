@@ -16,7 +16,24 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+#include "color.h"
+
+#include <math.h>
+#include <string.h>
+
+static float min3(float x, float y, float z)
+{
+    if (y < x) x = y;
+    if (z < x) x = z;
+    return x;
+}
+
+static float max3(float x, float y, float z)
+{
+    if (y > x) x = y;
+    if (z > x) x = z;
+    return x;
+}
 
 static void hsl_to_rgb_f(const float hsl[3], float rgb[3])
 {
@@ -40,8 +57,8 @@ static void rgb_to_hsl_f(const float rgb[3], float hsl[3])
 {
     float h = 0, s, v, m, c, l;
     const float r = rgb[0], g = rgb[1], b = rgb[2];
-    v = max(max(r, g), b);
-    m = min(min(r, g), b);
+    v = max3(r, g, b);
+    m = min3(r, g, b);
     l = (v + m) / 2;
     c = v - m;
     if (c == 0) {

@@ -21,6 +21,9 @@
 
 #include "procedural.h"
 #include "goxel.h"
+
+#include "utils/color.h"
+
 #include <stdarg.h>
 
 // Amount of time (s) after which we force stop a rendering iteration.

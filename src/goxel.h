@@ -582,11 +582,6 @@ int gox_iter_infos(const char *path,
                                    void *value, void *user),
                    void *user);
 
-
-// #### Colors functions #######
-void hsl_to_rgb(const uint8_t hsl[3], uint8_t rgb[3]);
-void rgb_to_hsl(const uint8_t rgb[3], uint8_t hsl[3]);
-
 // #############################
 
 void wavefront_export(const mesh_t *mesh, const char *path);
