@@ -57,6 +57,7 @@ static char *read_file(const char *path, int *size)
     int size_default;
 
     size = size ?: &size_default; // Allow to pass NULL as size;
+    *size = 0;
     file = fopen(path, "rb");
     if (!file) return NULL;
     fseek(file, 0, SEEK_END);
