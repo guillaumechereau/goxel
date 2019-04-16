@@ -103,7 +103,6 @@
 #define DEFINED___(_, v, ...) v
 // #############################
 
-
 // CHECK is similar to an assert, but the condition is tested even in release
 // mode.
 #if DEBUG
@@ -353,16 +352,12 @@ void unproject(const float win[3], const float model[4][4],
                const float proj[4][4], const float viewport[4],
                float out[3]);
 
-// #############################
-
-
 // #### Dialogs ################
 enum {
     DIALOG_FLAG_SAVE    = 1 << 0,
     DIALOG_FLAG_OPEN    = 1 << 1,
     DIALOG_FLAG_DIR     = 1 << 2,
 };
-
 
 // All the icons positions inside icon.png (as Y*8 + X + 1).
 enum {
@@ -433,17 +428,14 @@ enum {
     MESH_RENDER = 1 << 2,
 };
 
-
 // #### Block ##################
 // The block size can only be 16.
 #define BLOCK_SIZE 16
 #define VOXEL_TEXTURE_SIZE 8
 
-
 // Generate an optimal palette whith a fixed number of colors from a mesh.
 void quantization_gen_palette(const mesh_t *mesh, int nb,
                               uint8_t (*palette)[4]);
-
 
 // #### Goxel : core object ####
 
@@ -569,9 +561,6 @@ void goxel_import_image_plane(const char *path);
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
-
-// #############################
-
 void save_to_file(const image_t *img, const char *path, bool with_preview);
 int load_from_file(const char *path);
 
@@ -581,8 +570,6 @@ int gox_iter_infos(const char *path,
                    int (*callback)(const char *attr, int size,
                                    void *value, void *user),
                    void *user);
-
-// #############################
 
 void wavefront_export(const mesh_t *mesh, const char *path);
 void ply_export(const mesh_t *mesh, const char *path);

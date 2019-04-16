@@ -193,5 +193,3 @@ int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8)
     if (*in16) err = -1;
     return err;
 }
-
-
