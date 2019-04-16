@@ -60,6 +60,15 @@ typedef struct inputs
     touch_t     touches[4];
     float       mouse_wheel;
     int         framebuffer; // Screen framebuffer
+
+    // Screen safe margins, used for iOS only.
+    struct {
+        int top;
+        int bottom;
+        int left;
+        int right;
+    } safe_margins;
+
 } inputs_t;
 
 // Conveniance function to add a char in the inputs.
