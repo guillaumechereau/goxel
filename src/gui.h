@@ -46,6 +46,7 @@ void gui_get_view_rect(float rect[4]);
 // Gui widgets:
 bool gui_collapsing_header(const char *label, bool default_opened);
 void gui_text(const char *label, ...);
+void gui_text_wrapped(const char *label, ...);
 bool gui_button(const char *label, float w, int icon);
 bool gui_button_right(const char *label, int icon);
 void gui_group_begin(const char *label);

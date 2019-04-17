@@ -1078,6 +1078,16 @@ void gui_text(const char *label, ...)
     va_end(args);
 }
 
+void gui_text_wrapped(const char *label, ...)
+{
+    va_list args;
+    ImGui::PushTextWrapPos(0);
+    va_start(args, label);
+    TextV(label, args);
+    va_end(args);
+    ImGui::PopTextWrapPos();
+}
+
 void gui_same_line(void)
 {
     SameLine();
