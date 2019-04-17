@@ -20,7 +20,6 @@
 
 bool gui_settings_popup(void *data);
 bool gui_about_popup(void *data);
-bool gui_shift_alpha_popup(void *data);
 
 static void import_image_plane(void)
 {
@@ -73,8 +72,6 @@ void gui_menu(void)
         gui_menu_item("redo", "Redo", true);
         gui_menu_item("copy", "Copy", true);
         gui_menu_item("past", "Past", true);
-        if (gui_menu_item(NULL, "Shift Alpha", true))
-            gui_open_popup("Shift Alpha", 0, NULL, gui_shift_alpha_popup);
         if (gui_menu_item(NULL, "Settings", true))
             gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
                            NULL, gui_settings_popup);

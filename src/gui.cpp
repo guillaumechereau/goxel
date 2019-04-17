@@ -32,7 +32,6 @@ void gui_export_panel(void);
 
 void gui_menu(void);
 void gui_top_bar(void);
-bool gui_shift_alpha_popup(void *data);
 }
 
 #ifndef typeof
@@ -507,28 +506,6 @@ static int check_action_shortcut(action_t *action, void *user)
     }
     return 0;
 }
-
-bool gui_shift_alpha_popup(void *data)
-{
-    static int v = 0;
-    static mesh_t *original_mesh = NULL;
-    mesh_t *mesh;
-    mesh = goxel.image->active_layer->mesh;
-    if (!original_mesh)
-        original_mesh = mesh_copy(mesh);
-    if (ImGui::InputInt("shift", &v, 1)) {
-        mesh_set(mesh, original_mesh);
-        mesh_shift_alpha(mesh, v);
-        goxel_update_meshes(-1);
-    }
-    if (ImGui::Button("OK")) {
-        mesh_delete(original_mesh);
-        original_mesh = NULL;
-        return true;
-    }
-    return false;
-}
-
 
 static void render_menu(void)
 {
