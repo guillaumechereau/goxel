@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#ifndef GUI_CUSTOM_TOPBAR
+
 // XXX: better replace this by something more automatic.
 static void auto_grid(int nb, int i, int col)
 {
@@ -62,3 +64,4 @@ void gui_top_bar(void)
     gui_color("##color", goxel.painter.color);
 }
 
+#endif // GUI_CUSTOM_TOPBAR
