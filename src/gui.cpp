@@ -28,6 +28,7 @@ void gui_tools_panel(void);
 void gui_view_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
+void gui_export_panel(void);
 
 void gui_menu(void);
 void gui_top_bar(void);
@@ -593,6 +594,7 @@ static void render_left_panel(void)
         {"Cameras", ICON_CAMERA, gui_cameras_panel},
         {"Image", ICON_IMAGE, gui_image_panel},
         {"Render", ICON_RENDER, gui_render_panel},
+        {"Export", ICON_EXPORT, gui_export_panel},
         {"Debug", ICON_DEBUG, gui_debug_panel},
     };
 
