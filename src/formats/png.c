@@ -34,6 +34,28 @@ static void export_as_png(const char *path, int w, int h)
     free(buf);
 }
 
+static void export_gui(void) {
+    int maxsize, i;
+    float view_rect[4];
+
+    GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
+    maxsize /= 2; // Because png export already double it.
+    goxel.show_export_viewport = true;
+    gui_group_begin(NULL);
+    i = goxel.image->export_width;
+    if (gui_input_int("w", &i, 1, maxsize))
+        goxel.image->export_width = clamp(i, 1, maxsize);
+    i = goxel.image->export_height;
+    if (gui_input_int("h", &i, 1, maxsize))
+        goxel.image->export_height = clamp(i, 1, maxsize);
+    if (gui_button("Fit screen", 1, 0)) {
+        gui_get_view_rect(view_rect);
+        goxel.image->export_width = view_rect[2];
+        goxel.image->export_height = view_rect[3];
+    }
+    gui_group_end();
+}
+
 ACTION_REGISTER(export_as_png,
     .help = "Export the image as a png file",
     .cfunc = export_as_png,
@@ -41,5 +63,6 @@ ACTION_REGISTER(export_as_png,
     .file_format = {
         .name = "png",
         .ext = "*.png\0",
+        .export_gui = export_gui,
     },
 )

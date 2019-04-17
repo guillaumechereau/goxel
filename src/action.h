@@ -65,6 +65,7 @@ struct action {
     struct {
         const char  *name;
         const char  *ext;
+        void        (*export_gui)(void);
     } file_format;
 };
 

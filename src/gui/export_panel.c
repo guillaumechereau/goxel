@@ -21,30 +21,7 @@
 typedef struct {
     const char *name;
     const char *action;
-    void (*gui)(void);
 } format_t;
-
-static void png_gui(void) {
-    int maxsize, i;
-    float view_rect[4];
-
-    GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
-    maxsize /= 2; // Because png export already double it.
-    goxel.show_export_viewport = true;
-    gui_group_begin(NULL);
-    i = goxel.image->export_width;
-    if (gui_input_int("w", &i, 1, maxsize))
-        goxel.image->export_width = clamp(i, 1, maxsize);
-    i = goxel.image->export_height;
-    if (gui_input_int("h", &i, 1, maxsize))
-        goxel.image->export_height = clamp(i, 1, maxsize);
-    if (gui_button("Fit screen", 1, 0)) {
-        gui_get_view_rect(view_rect);
-        goxel.image->export_width = view_rect[2];
-        goxel.image->export_height = view_rect[3];
-    }
-    gui_group_end();
-}
 
 /* XXX: hardcoded list for the moment, but would be better to get it
  * automatically from the actions.  The problem is that it has to be sorted
@@ -52,7 +29,7 @@ static void png_gui(void) {
 static const format_t FORMATS[] = {
     {"Wavefront (.obj)", "export_as_obj"},
     {"Stanford (.pny)", "export_as_ply"},
-    {"Png", "export_as_png", png_gui},
+    {"Png", "export_as_png"},
     {"Magica voxel (.vox)", "export_as_vox"},
     {"Qubicle (.qb)", "export_as_qubicle"},
     {"Slab (.kvx)", "export_as_kvx"},
@@ -67,13 +44,15 @@ void gui_export_panel(void)
     static int format = 0;
     const char *names[ARRAY_SIZE(FORMATS)];
     int i;
+    action_t *action;
+
     for (i = 0; i < ARRAY_SIZE(FORMATS); i++) names[i] = FORMATS[i].name;
     gui_text("Export as");
     gui_combo("Export as", &format, names, ARRAY_SIZE(FORMATS));
-    if (FORMATS[format].gui) {
-        FORMATS[format].gui();
-    }
-    if (gui_button("Export", 1, 0)) {
-        action_exec2(FORMATS[format].action, "");
-    }
+    action = action_get(FORMATS[format].action, true);
+
+    if (action->file_format.export_gui)
+        action->file_format.export_gui();
+    if (gui_button("Export", 1, 0))
+        action_exec(action, "");
 }
