@@ -478,6 +478,7 @@ void pathtracer_iter(pathtracer_t *pt)
     pt->force_restart = false;
     assert(p->display.size()[0] == pt->w);
     assert(p->display.size()[1] == pt->h);
+    if (changes) pt->status = PT_RUNNING;
 
     if (changes & CHANGE_CAMERA) {
         make_preview(pt);
