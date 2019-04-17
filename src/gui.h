@@ -115,6 +115,7 @@ enum {
  */
 void gui_open_popup(const char *title, int flags, void *data,
                     bool (*func)(void *data));
+void gui_on_popup_closed(void (*func)(void));
 void gui_popup_body_begin(void);
 void gui_popup_body_end(void);
 
