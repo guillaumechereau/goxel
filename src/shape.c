@@ -37,12 +37,12 @@ static float max3(float x, float y, float z)
 
 static float vec2_norm(const float v[static 2])
 {
-    return v[0] * v[0] + v[1] * v[1];
+    return sqrt(v[0] * v[0] + v[1] * v[1]);
 }
 
 static float vec3_norm(const float v[static 3])
 {
-    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+    return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
 #define VEC(...) ((float[]){__VA_ARGS__})
