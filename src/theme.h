@@ -118,7 +118,6 @@ typedef struct {
 #define THEME_SIZES(X) \
     X(item_height) \
     X(icons_height) \
-    X(icons_button_size) \
     X(item_padding_h) \
     X(item_rounding) \
     X(item_spacing_h) \

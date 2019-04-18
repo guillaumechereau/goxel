@@ -79,7 +79,6 @@ static theme_t g_base_theme = {
     .sizes = {
         .item_height = 18,
         .icons_height = 32,
-        .icons_button_size = 32,
         .item_padding_h = 4,
         .item_rounding = 4,
         .item_spacing_h = 4,

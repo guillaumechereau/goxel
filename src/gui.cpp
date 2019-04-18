@@ -1104,7 +1104,7 @@ bool gui_color(const char *label, uint8_t color[4])
     ImVec2 size;
     const theme_t *theme = theme_get();
 
-    size.x = size.y = theme->sizes.icons_button_size;
+    size.x = size.y = theme->sizes.icons_height;
     ImGui::PushID(label);
     if (ImGui::ColorButton(label, color, 0, size))
         memcpy(backup_color, color, 4);
@@ -1187,8 +1187,8 @@ bool gui_button(const char *label, float size, int icon)
                          theme->sizes.item_height);
     if (size == -1) button_size.x = GetContentRegionAvailWidth();
     if (size == 0 && (label == NULL || label[0] == '#')) {
-        button_size.x = theme->sizes.icons_button_size;
-        button_size.y = theme->sizes.icons_button_size;
+        button_size.x = theme->sizes.icons_height;
+        button_size.y = theme->sizes.icons_height;
     }
     if (size == 0 && label && label[0] != '#') {
         w = CalcTextSize(label, NULL, true).x +
