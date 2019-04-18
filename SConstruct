@@ -69,12 +69,12 @@ if profile or debug:
 env.Append(CPPPATH=['src'])
 env.Append(CCFLAGS='-include config.h')
 
-sources = (glob.glob('src/*.c') +
-           glob.glob('src/*.cpp') +
-           glob.glob('src/formats/*.c') +
-           glob.glob('src/tools/*.c') +
-           glob.glob('src/utils/*.c') +
-           glob.glob('src/gui/*.c'))
+# Get all the c and c++ files in src, recursively.
+sources = []
+for root, dirnames, filenames in os.walk('src'):
+    for filename in filenames:
+        if filename.endswith('.c') or filename.endswith('.cpp'):
+            sources.append(os.path.join(root, filename))
 
 # Check for libpng.
 if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
