@@ -25,6 +25,10 @@
 extern "C" {
 #endif
 
+#ifndef _GNU_SOURCE
+#   define _GNU_SOURCE
+#endif
+
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
 
