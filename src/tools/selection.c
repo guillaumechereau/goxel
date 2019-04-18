@@ -31,7 +31,6 @@ typedef struct {
 
     int     snap_face;
     float   start_pos[3];
-    bool    adjust;
 
     struct {
         gesture3d_t hover;
@@ -102,35 +101,13 @@ static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_selection_t *tool = user;
     cursor_t *curs = gest->cursor;
-    float pos[3], v[3];
 
-    if (!tool->adjust) {
-        if (gest->state == GESTURE_BEGIN)
-            vec3_copy(curs->pos, tool->start_pos);
-        curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
-
-        goxel_set_help_text("Drag.");
-        get_box(tool->start_pos, curs->pos, curs->normal,
-                0, goxel.plane, goxel.selection);
-        if (gest->state == GESTURE_END) tool->adjust = true;
-    } else {
-        goxel_set_help_text("Adjust height.");
-        if (gest->state == GESTURE_BEGIN)
-            plane_from_normal(goxel.tool_plane, curs->pos, goxel.plane[0]);
-        vec3_sub(curs->pos, goxel.tool_plane[3], v);
-        vec3_project(v, goxel.plane[2], v);
-        vec3_add(goxel.tool_plane[3], v, pos);
-        pos[0] = round(pos[0] - 0.5) + 0.5;
-        pos[1] = round(pos[1] - 0.5) + 0.5;
-        pos[2] = round(pos[2] - 0.5) + 0.5;
-        get_box(tool->start_pos, pos, curs->normal, 0,
-                goxel.plane, goxel.selection);
-        if (gest->state == GESTURE_END) {
-            tool->adjust = false;
-            mat4_copy(plane_null, goxel.tool_plane);
-            return GESTURE_FAILED;
-        }
-    }
+    if (gest->state == GESTURE_BEGIN)
+        vec3_copy(curs->pos, tool->start_pos);
+    curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
+    goxel_set_help_text("Drag.");
+    get_box(tool->start_pos, curs->pos, curs->normal,
+            0, goxel.plane, goxel.selection);
     return 0;
 }
 
@@ -157,9 +134,6 @@ static int iter(tool_t *tool, const painter_t *painter,
             .callback = on_drag,
         };
     }
-    selection->gestures.drag.type = (!selection->adjust) ?
-        GESTURE_DRAG : GESTURE_HOVER;
-
     if (box_edit(SNAP_SELECTION_OUT, g_drag_mode == DRAG_RESIZE ? 1 : 0,
                  transf, NULL)) {
         mat4_mul(transf, goxel.selection, goxel.selection);
