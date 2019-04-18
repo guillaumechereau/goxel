@@ -357,10 +357,6 @@ static void init_ImGui(const inputs_t *inputs)
     }
 
     load_fonts_texture();
-
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.WindowRounding = 0;
-    style.WindowPadding = ImVec2(4, 4);
 }
 
 static bool color_edit(const char *name, uint8_t color[4],
@@ -698,8 +694,11 @@ void gui_iter(const inputs_t *inputs)
                                theme->sizes.item_spacing_v);
     style.ItemInnerSpacing = ImVec2(theme->sizes.item_inner_spacing_h, 0);
     style.ScrollbarSize = theme->sizes.item_height;
+    style.GrabMinSize = theme->sizes.item_height;
     style.WindowBorderSize = 0;
     style.ChildBorderSize = 0;
+    style.WindowRounding = 0;
+    style.WindowPadding = ImVec2(4, 4);
 
     style.Colors[ImGuiCol_WindowBg] = COLOR(BASE, BACKGROUND, 0);
     style.Colors[ImGuiCol_PopupBg] = ImVec4(0.38, 0.38, 0.38, 1.0);
