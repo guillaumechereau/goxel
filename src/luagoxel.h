@@ -27,6 +27,14 @@
 #define LUA_USE_POSIX
 
 #include <stdint.h>
+#include <stdlib.h>
+
+#ifndef HAS_SYSTEM
+#   define HAS_SYSTEM 1
+#endif
+#if !HAS_SYSTEM
+#   define system(x) -1
+#endif
 
 #include "../ext_src/lua/lauxlib.h"
 #include "../ext_src/lua/lua.h"
