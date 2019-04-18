@@ -125,6 +125,8 @@ typedef struct {
     GLuint u_proj_mat_l;
 } prog_t;
 
+typedef typeof(((inputs_t*)0)->safe_margins) margins_t;
+
 typedef struct gui_t {
     prog_t  prog;
     GLuint  array_buffer;
@@ -141,6 +143,7 @@ typedef struct gui_t {
     bool    mouse_in_view;
     bool    capture_mouse;
     int     group;
+    margins_t margins;
 
     struct {
         const char *title;
@@ -671,6 +674,7 @@ void gui_iter(const inputs_t *inputs)
                                         goxel.screen_scale);
     io.DeltaTime = 1.0 / 60;
     if (inputs) {
+        gui->margins = inputs->safe_margins;
         gesture_update(2, gestures, inputs, display_rect, gui);
         io.MouseWheel = inputs->mouse_wheel;
 
@@ -721,8 +725,10 @@ void gui_iter(const inputs_t *inputs)
                                     ImGuiWindowFlags_MenuBar |
                                     ImGuiWindowFlags_NoCollapse;
 
-    ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y));
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(
+        io.DisplaySize.x - (gui->margins.left + gui->margins.right),
+        io.DisplaySize.y - gui->margins.top));
+    ImGui::SetNextWindowPos(ImVec2(gui->margins.left, gui->margins.top));
     ImGui::Begin("Goxel", NULL, window_flags);
 
     render_menu();
