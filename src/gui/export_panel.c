@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#ifndef GUI_CUSTOM_EXPORT_PANEL
+
 typedef struct {
     const char *name;
     const char *action;
@@ -56,3 +58,5 @@ void gui_export_panel(void)
     if (gui_button("Export", 1, 0))
         action_exec(action, "");
 }
+
+#endif // GUI_CUSTOM_EXPORT_PANEL
