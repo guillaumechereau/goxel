@@ -37,10 +37,11 @@ TYPES = {
     "wav":   { "text": False },
     "ini":   { "text": True },
     "glsl":  { "text": True },
+    "gox":   { "text": False },
     "lua":   { "text": True },
 }
 GROUPS = ['fonts', 'icons', 'images', 'other', 'palettes', 'progs',
-          'shaders', 'sounds', 'themes']
+          'shaders', 'sounds', 'themes', 'samples']
 TEMPLATE = '{{.path = "{path}", .size = {size}, .data =\n{data}\n}},'
 File = namedtuple('File', 'path name data size')
 
@@ -110,11 +111,13 @@ def create_file(f):
 
 
 for group in GROUPS:
-    out = open("src/assets/%s.inl" % group, "w")
-    print >>out, HEADER
     files = []
     for f in list_files(group):
         files.append(create_file(f))
+    if not files:
+        continue
+    out = open("src/assets/%s.inl" % group, "w")
+    print >>out, HEADER
     for f in files:
         print >>out, TEMPLATE.format(**f._asdict())
     print >>out, "\n\n"
