@@ -182,7 +182,7 @@ void sys_set_window_title(const char *title)
 {
     static char buf[1024] = {};
     if (strcmp(buf, title) == 0) return;
-    strncpy(buf, title, sizeof(buf));
+    snprintf(buf, sizeof(buf), "%s", title);
     if (sys_callbacks.set_window_title)
         sys_callbacks.set_window_title(sys_callbacks.user, title);
 }
