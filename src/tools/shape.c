@@ -206,6 +206,7 @@ static int iter(tool_t *tool, const painter_t *painter,
 static int gui(tool_t *tool)
 {
     tool_shape_t *tool_shape = (void*)tool;
+    tool_gui_color();
     tool_gui_smoothness();
     if (!DEFINED(GOXEL_MOBILE))
         gui_checkbox("Two steps", &goxel.tool_shape_two_steps,
