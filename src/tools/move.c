@@ -110,6 +110,11 @@ static int gui(tool_t *tool)
     if (gui_button("flip Z", -1, 0)) mat4_iscale(mat,  1,  1, -1);
     gui_group_end();
 
+    gui_group_begin(NULL);
+    if (gui_button("Scale up",   -1, 0)) mat4_iscale(mat, 2, 2, 2);
+    if (gui_button("Scale down", -1, 0)) mat4_iscale(mat, 0.5, 0.5, 0.5);
+    gui_group_end();
+
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
         image_history_push(goxel.image);
         do_move(layer, mat);
