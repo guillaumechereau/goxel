@@ -74,8 +74,7 @@ static layer_t *layer_new(const image_t *img, const char *name)
 {
     layer_t *layer;
     layer = calloc(1, sizeof(*layer));
-    // XXX: potential bug here.
-    strncpy(layer->name, name, sizeof(layer->name));
+    strncpy(layer->name, name, sizeof(layer->name) - 1);
     layer->mesh = mesh_new();
     mat4_set_identity(layer->mat);
     layer->id = img_get_new_id(img);
