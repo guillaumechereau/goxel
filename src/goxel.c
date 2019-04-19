@@ -633,6 +633,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          &goxel.image->active_layer->box :
                          !box_is_null(goxel.image->box) ?
                          &goxel.image->box : NULL;
+    // Only paint mode support alpha.
+    if (painter.mode != MODE_PAINT) painter.color[3] = 255;
     // Swap OVER/SUB modes.
     if (inputs->keys[' ']) {
         if (goxel.painter.mode == MODE_SUB) painter.mode = MODE_OVER;

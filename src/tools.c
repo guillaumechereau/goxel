@@ -185,13 +185,12 @@ int tool_gui_smoothness(void)
 
 int tool_gui_color(void)
 {
-    int alpha = goxel.painter.color[3];
+    float alpha;
     gui_color_small("Color", goxel.painter.color);
     if (goxel.painter.mode == MODE_PAINT) {
-        if (gui_input_int("Alpha", &alpha, 0, 255))
-            goxel.painter.color[3] = alpha;
-    } else {
-        goxel.painter.color[3] = 255;
+        alpha = goxel.painter.color[3] / 255.;
+        if (gui_input_float("Alpha", &alpha, 0.1, 0, 1, "%.1f"))
+            goxel.painter.color[3] = alpha * 255;
     }
     return 0;
 }
