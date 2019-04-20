@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
+#include <stdio.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024

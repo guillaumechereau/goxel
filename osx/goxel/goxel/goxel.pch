@@ -29,4 +29,6 @@
 #define WITHOUT_OPENIMAGEIO
 #define WITH_GLEW_MX
 
+#include "config.h"
+
 #endif /* goxel_pch */
