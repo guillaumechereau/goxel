@@ -25,7 +25,8 @@ class GoxNSOpenGLView: NSOpenGLView {
             NSOpenGLPixelFormatAttribute(NSOpenGLPFAStencilSize), 8,
             0
         ]
-        
+
+        self.wantsBestResolutionOpenGLSurface = true
         let format = NSOpenGLPixelFormat(attributes: attr)
         let context = NSOpenGLContext(format: format!, share: nil)
         
@@ -174,7 +175,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         glClear(GLbitfield(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT))
         self.inputs.window_size = (Int32(self.view.frame.size.width),
                                    Int32(self.view.frame.size.height))
-        self.inputs.scale = 1.0 // XXX: add support for retina screen!
+        self.inputs.scale = Float(window.backingScaleFactor)
         r = goxel_iter(&self.inputs)
         goxel_render()
         self.inputs.mouse_wheel = 0
