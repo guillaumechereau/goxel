@@ -22,14 +22,21 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform mat4 u_model;
 
-uniform float u_MetallicFactor;
-uniform float u_RoughnessFactor;
-uniform vec4 u_BaseColorFactor;
+uniform float u_MetallicFactor = 1.0;
+uniform float u_RoughnessFactor = 1.0;
+uniform vec4 u_BaseColorFactor = vec4(1.0, 1.0, 1.0, 1.0);
 
 uniform vec3 u_Camera;
-uniform Light u_Lights[LIGHT_COUNT];
-uniform float u_Exposure;
-uniform float u_Gamma;
+
+uniform Light u_Lights[LIGHT_COUNT] = {{
+    vec3(0.0, -1.0, 1.0),
+    vec3(1.0, 1.0, 1.0),
+    1.0,
+    vec2(0.0, 0.0)
+}};
+
+uniform float u_Exposure = 1.0;
+uniform float u_Gamma = 2.2;
 
 uniform lowp float u_pos_scale;
 
@@ -39,7 +46,7 @@ const float M_PI = 3.141592653589793;
 #ifdef VERTEX_SHADER
 
 attribute vec4 a_pos;
-attribute vec4 a_normal;
+attribute vec3 a_normal;
 attribute vec3 a_Color;
 
 void main()

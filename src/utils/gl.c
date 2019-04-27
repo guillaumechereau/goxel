@@ -65,9 +65,9 @@ static int compile_shader(int shader, const char *code,
     char *log;
     // Common header we add to all the shaders.
 #ifndef GLES2
-    const char *pre = "#define highp\n#define mediump\n#define lowp\n";
+    const char *pre = "#version 120\n#define highp\n#define mediump\n#define lowp\n";
 #else
-    const char *pre = "";
+    const char *pre = "#version 120\n";
 #endif
     const char *sources[] = {pre, include1, include2, code};
     assert(code);
