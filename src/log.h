@@ -29,6 +29,14 @@ enum {
     GOX_LOG_ERROR   = 6,
 };
 
+#ifndef DEBUG
+#   if !defined(NDEBUG)
+#       define DEBUG 1
+#   else
+#       define DEBUG 0
+#   endif
+#endif
+
 #ifndef LOG_LEVEL
 #   if DEBUG
 #       define LOG_LEVEL GOX_LOG_DEBUG
