@@ -18,8 +18,9 @@ varying vec3 v_Position;
 varying vec3 v_Color;
 varying vec3 v_Normal;
 
-uniform mat4 u_ViewProjectionMatrix;
-uniform mat4 u_ModelMatrix;
+uniform mat4 u_proj;
+uniform mat4 u_view;
+uniform mat4 u_model;
 
 uniform vec3 u_SpecularFactor;
 uniform vec4 u_DiffuseFactor;
@@ -29,23 +30,25 @@ uniform Light u_Lights[LIGHT_COUNT];
 uniform float u_Exposure;
 uniform float u_Gamma;
 
+uniform lowp float u_pos_scale;
+
 const float M_PI = 3.141592653589793;
 
 
 #ifdef VERTEX_SHADER
 
-attribute vec4 a_Position;
-attribute vec4 a_Normal;
+attribute vec4 a_pos;
+attribute vec4 a_normal;
 attribute vec3 a_Color;
 
 void main()
 {
-    vec4 pos = u_ModelMatrix * a_Position;
+    vec4 pos = u_model * a_pos * u_pos_scale;
     v_Position = vec3(pos.xyz) / pos.w;
-    v_Normal = a_Normal;
+    v_Normal = a_normal;
     v_UVCoord1 = vec2(0.0, 0.0);
     v_Color = a_Color;
-    gl_Position = u_ViewProjectionMatrix * pos;
+    gl_Position = u_proj * u_view * pos;
 }
 
 #endif
