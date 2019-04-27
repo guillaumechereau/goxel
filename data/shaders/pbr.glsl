@@ -22,9 +22,10 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform mat4 u_model;
 
-uniform vec3 u_SpecularFactor;
-uniform vec4 u_DiffuseFactor;
-uniform float u_GlossinessFactor;
+uniform float u_MetallicFactor;
+uniform float u_RoughnessFactor;
+uniform vec4 u_BaseColorFactor;
+
 uniform vec3 u_Camera;
 uniform Light u_Lights[LIGHT_COUNT];
 uniform float u_Exposure;
@@ -235,14 +236,13 @@ void main()
     vec3 specularColor= vec3(0.0);
     vec3 f0 = vec3(0.04);
 
-    f0 = u_SpecularFactor;
-    perceptualRoughness = 1.0 - u_GlossinessFactor;
-    baseColor = u_DiffuseFactor;
+    metallic = u_MetallicFactor;
+    perceptualRoughness = u_RoughnessFactor;
+    // The albedo may be defined from a base texture or a flat color
+    baseColor = u_BaseColorFactor;
     baseColor *= getVertexColor();
-    // f0 = specular
-    specularColor = f0;
-    float oneMinusSpecularStrength = 1.0 - max(max(f0.r, f0.g), f0.b);
-    diffuseColor = baseColor.rgb * oneMinusSpecularStrength;
+    diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
+    specularColor = mix(f0, baseColor.rgb, metallic);
 
     baseColor.a = 1.0;
 
