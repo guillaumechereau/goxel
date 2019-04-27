@@ -418,7 +418,7 @@ static render_item_t *get_item_for_block(
     block_item_key_t key = {};
 
     // For the moment we always compute the smooth normal no mater what.
-    effects |= EFFECT_SMOOTH;
+    // effects |= EFFECT_SMOOTH;
 
     memset(&key, 0, sizeof(key)); // Just to be sure!
     key.effects = effects & effects_mask;
@@ -621,7 +621,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         prog = get_prog("asset://data/shaders/mesh.glsl",
                          shadow ? "#define SHADOW" : NULL);
         // TEST
-        get_prog("asset://data/shaders/pbr.glsl", NULL);
+        prog = get_prog("asset://data/shaders/pbr.glsl", NULL);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
@@ -669,8 +669,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     GL(glUniform1f(prog->u_occlusion_l, rend->settings.border_shadow));
 
     // XXX: not sure about that.
-    float camera_pos[3];
-    mat4_mul_vec3(rend->view_mat, VEC(0, 0, 0), camera_pos);
+    float tmp[4][4], camera_pos[3];
+    mat4_invert(rend->view_mat, tmp);
+    mat4_mul_vec3(tmp, VEC(0, 0, 0), camera_pos);
     GL(glUniform3fv(prog->u_camera_l, 1, camera_pos));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
@@ -1082,5 +1083,6 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             break;
     }
     if (DEFINED(GOXEL_NO_SHADOW)) out->shadow = 0;
+    out->shadow = 0;
     return 5;
 }

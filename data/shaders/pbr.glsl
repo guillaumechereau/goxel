@@ -22,14 +22,14 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform mat4 u_model;
 
-uniform float u_MetallicFactor = 1.0;
-uniform float u_RoughnessFactor = 1.0;
+uniform float u_MetallicFactor = 0.5;
+uniform float u_RoughnessFactor = 0.5;
 uniform vec4 u_BaseColorFactor = vec4(1.0, 1.0, 1.0, 1.0);
 
 uniform vec3 u_camera;
 
 uniform Light u_Lights[LIGHT_COUNT] = {{
-    vec3(0.0, -1.0, 1.0),
+    vec3(0.2, 0.1, -1.0),
     vec3(1.0, 1.0, 1.0),
     1.0,
     vec2(0.0, 0.0)
@@ -38,24 +38,25 @@ uniform Light u_Lights[LIGHT_COUNT] = {{
 uniform float u_Exposure = 1.0;
 uniform float u_Gamma = 2.2;
 
-uniform lowp float u_pos_scale;
+uniform lowp float u_pos_scale = 1.0;
 
 const float M_PI = 3.141592653589793;
 
 
 #ifdef VERTEX_SHADER
 
-attribute vec4 a_pos;
+attribute vec3 a_pos;
 attribute vec3 a_normal;
-attribute vec3 a_color;
+attribute vec4 a_color;
+
 
 void main()
 {
-    vec4 pos = u_model * a_pos * u_pos_scale;
+    vec4 pos = u_model * vec4(a_pos, 1.0) * u_pos_scale;
     v_Position = vec3(pos.xyz) / pos.w;
-    v_Normal = a_normal;
+    v_Normal = normalize(a_normal);
     v_UVCoord1 = vec2(0.0, 0.0);
-    v_Color = a_color;
+    v_Color = a_color.rgb;
     gl_Position = u_proj * u_view * pos;
 }
 
@@ -98,6 +99,8 @@ vec2 getNormalUV()
 // or from the interpolated mesh normal and tangent attributes.
 vec3 getNormal()
 {
+    // return v_Normal;
+
     vec2 UV = getNormalUV();
 
     // Retrieve the tangent space matrix
@@ -249,6 +252,7 @@ void main()
     baseColor = u_BaseColorFactor;
     baseColor *= getVertexColor();
     diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
+
     specularColor = mix(f0, baseColor.rgb, metallic);
 
     baseColor.a = 1.0;
@@ -291,6 +295,9 @@ void main()
     float ao = 1.0;
     // regular shading
     gl_FragColor = vec4(toneMap(color), baseColor.a);
+    // gl_FragColor = vec4(color, 1.0);
+    // gl_FragColor = vec4(diffuseColor, 1.0);
+
 }
 
 #endif
