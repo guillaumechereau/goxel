@@ -26,7 +26,7 @@ uniform float u_MetallicFactor = 1.0;
 uniform float u_RoughnessFactor = 1.0;
 uniform vec4 u_BaseColorFactor = vec4(1.0, 1.0, 1.0, 1.0);
 
-uniform vec3 u_Camera;
+uniform vec3 u_camera;
 
 uniform Light u_Lights[LIGHT_COUNT] = {{
     vec3(0.0, -1.0, 1.0),
@@ -47,7 +47,7 @@ const float M_PI = 3.141592653589793;
 
 attribute vec4 a_pos;
 attribute vec3 a_normal;
-attribute vec3 a_Color;
+attribute vec3 a_color;
 
 void main()
 {
@@ -55,7 +55,7 @@ void main()
     v_Position = vec3(pos.xyz) / pos.w;
     v_Normal = a_normal;
     v_UVCoord1 = vec2(0.0, 0.0);
-    v_Color = a_Color;
+    v_Color = a_color;
     gl_Position = u_proj * u_view * pos;
 }
 
@@ -280,7 +280,7 @@ void main()
 
     vec3 color = vec3(0.0, 0.0, 0.0);
     vec3 normal = getNormal();
-    vec3 view = normalize(u_Camera - v_Position);
+    vec3 view = normalize(u_camera - v_Position);
 
     for (int i = 0; i < LIGHT_COUNT; ++i)
     {
