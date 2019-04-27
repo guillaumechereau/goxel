@@ -351,7 +351,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                 out[vi].normal[1] = n[1] * 64;
                 out[vi].normal[2] = n[2] * 64;
                 // XXX: this shouldn't matter.
-                memset(out[vi].bshadow_uv, 0, sizeof(out[vi].bshadow_uv));
+                memset(out[vi].occlusion_uv, 0, sizeof(out[vi].occlusion_uv));
                 memset(out[vi].bump_uv, 0, sizeof(out[vi].bump_uv));
             }
             nb_tri_tot++;

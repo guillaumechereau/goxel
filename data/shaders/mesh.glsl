@@ -32,15 +32,15 @@ uniform lowp float u_m_spe; // Specular light coef.
 uniform lowp float u_m_shi; // Specular light shininess.
 uniform lowp float u_m_smo; // Smoothness.
 
-uniform mediump sampler2D u_bshadow_tex;
+uniform mediump sampler2D u_occlusion_tex;
 uniform mediump sampler2D u_bump_tex;
-uniform mediump float     u_bshadow;
+uniform mediump float     u_occlusion;
 uniform mediump sampler2D u_shadow_tex;
 uniform mediump float     u_shadow_k;
 
 varying highp   vec3 v_pos;
 varying lowp    vec4 v_color;
-varying mediump vec2 v_bshadow_uv;
+varying mediump vec2 v_occlusion_uv;
 varying mediump vec2 v_uv;
 varying mediump vec2 v_bump_uv;
 varying mediump vec3 v_normal;
@@ -52,7 +52,7 @@ varying mediump vec4 v_shadow_coord;
 attribute highp   vec3 a_pos;
 attribute mediump vec3 a_normal;
 attribute lowp    vec4 a_color;
-attribute mediump vec2 a_bshadow_uv;
+attribute mediump vec2 a_occlusion_uv;
 attribute mediump vec2 a_bump_uv;   // bump tex base coordinates [0,255]
 attribute mediump vec2 a_uv;        // uv coordinates [0,1]
 
@@ -60,7 +60,7 @@ void main()
 {
     v_normal = a_normal;
     v_color = a_color;
-    v_bshadow_uv = (a_bshadow_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
+    v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_pos = a_pos * u_pos_scale;
     v_uv = a_uv;
     v_bump_uv = a_bump_uv;
@@ -78,7 +78,7 @@ mediump vec2 uv, bump_uv;
 mediump vec3 n, s, r, v, bump;
 mediump float s_dot_n;
 lowp float l_amb, l_dif, l_spe;
-lowp float bshadow;
+lowp float occlusion;
 lowp float visibility;
 lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
 int i;
@@ -103,13 +103,13 @@ void main()
     l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);
     l_spe = s_dot_n > 0.0 ? l_spe : 0.0;
 
-    bshadow = texture2D(u_bshadow_tex, v_bshadow_uv).r;
-    bshadow = sqrt(bshadow);
-    bshadow = mix(1.0, bshadow, u_bshadow);
+    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;
+    occlusion = sqrt(occlusion);
+    occlusion = mix(1.0, occlusion, u_occlusion);
     gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     gl_FragColor.rgb += (l_dif + l_amb) * u_l_int * v_color.rgb;
     gl_FragColor.rgb += l_spe * u_l_int * vec3(1.0);
-    gl_FragColor.rgb *= bshadow;
+    gl_FragColor.rgb *= occlusion;
 
     // Shadow map.
     #ifdef SHADOW

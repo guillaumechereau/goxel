@@ -102,8 +102,8 @@ typedef struct {
     GLint u_m_spe_l;
     GLint u_m_shi_l;
     GLint u_m_smo_l;
-    GLint u_bshadow_tex_l;
-    GLint u_bshadow_l;
+    GLint u_occlusion_tex_l;
+    GLint u_occlusion_l;
     GLint u_bump_tex_l;
     GLint u_pos_scale_l;
     GLint u_shadow_mvp_l;
@@ -140,7 +140,7 @@ static const struct {
     {"a_pos_data",      2, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
     {"a_uv",            2, GL_UNSIGNED_BYTE,   true,  OFFSET(uv)},
     {"a_bump_uv",       2, GL_UNSIGNED_BYTE,   false, OFFSET(bump_uv)},
-    {"a_bshadow_uv",    2, GL_UNSIGNED_BYTE,   false, OFFSET(bshadow_uv)},
+    {"a_occlusion_uv",  2, GL_UNSIGNED_BYTE,   false, OFFSET(occlusion_uv)},
 };
 
 /*
@@ -312,8 +312,8 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
     UNIFORM(u_m_spe);
     UNIFORM(u_m_shi);
     UNIFORM(u_m_smo);
-    UNIFORM(u_bshadow_tex);
-    UNIFORM(u_bshadow);
+    UNIFORM(u_occlusion_tex);
+    UNIFORM(u_occlusion);
     UNIFORM(u_bump_tex);
     UNIFORM(u_pos_scale);
     UNIFORM(u_shadow_mvp);
@@ -321,7 +321,7 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
     UNIFORM(u_shadow_tex);
     UNIFORM(u_block_id);
 #undef UNIFORM
-    GL(glUniform1i(prog->u_bshadow_tex_l, 0));
+    GL(glUniform1i(prog->u_occlusion_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
     GL(glUniform1i(prog->u_shadow_tex_l, 2));
 }
@@ -652,7 +652,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
 
     GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, (float*)rend->proj_mat));
     GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, (float*)rend->view_mat));
-    GL(glUniform1i(prog->u_bshadow_tex_l, 0));
+    GL(glUniform1i(prog->u_occlusion_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
     GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir));
     GL(glUniform1f(prog->u_l_int_l, rend->light.intensity));
@@ -661,7 +661,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     GL(glUniform1f(prog->u_m_spe_l, rend->settings.specular));
     GL(glUniform1f(prog->u_m_shi_l, rend->settings.shininess));
     GL(glUniform1f(prog->u_m_smo_l, rend->settings.smoothness));
-    GL(glUniform1f(prog->u_bshadow_l, rend->settings.border_shadow));
+    GL(glUniform1f(prog->u_occlusion_l, rend->settings.border_shadow));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));
