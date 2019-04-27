@@ -617,6 +617,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         shadow = rend->settings.shadow;
         prog = get_prog("asset://data/shaders/mesh.glsl",
                          shadow ? "#define SHADOW" : NULL);
+        // TEST
+        get_prog("asset://data/shaders/pbr.glsl", NULL);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
