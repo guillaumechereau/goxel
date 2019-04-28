@@ -221,54 +221,41 @@ static void init_border_texture(void)
 }
 
 static void bump_img_fill(uint8_t (*data)[3], int x, int y, int w, int h,
-                          const uint8_t v[3])
+                          const float n[3])
 {
-    int i, j;
+    int i, j, k;
+    float nn[3];
+    vec3_normalize(n, nn);
     for (j = y; j < y + h; j++) {
         for (i = x; i < x + w; i++) {
-            memcpy(data[j * 256 + i], v, 3);
+            for (k = 0; k < 3; k++) {
+                data[j * 256 + i][k] = (nn[k] + 1) * 127;
+            }
         }
     }
 }
 
-static void bump_neighbor_value(int f, int e, uint8_t out[3])
-{
-    assert(e >= 0 && e < 4);
-    assert(f >= 0 && f < 6);
-    const int *n0, *n1;
-    n0 = FACES_NORMALS[f];
-    n1 = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
-    out[0] = (int)(n0[0] + n1[0]) * 127 / 2 + 127;
-    out[1] = (int)(n0[1] + n1[1]) * 127 / 2 + 127;
-    out[2] = (int)(n0[2] + n1[2]) * 127 / 2 + 127;
-}
-
 static void set_bump_block(uint8_t (*data)[3], int bx, int by, int f, int mask)
 {
-    const uint8_t v[3] = {127 + FACES_NORMALS[f][0] * 127,
-                          127 + FACES_NORMALS[f][1] * 127,
-                          127 + FACES_NORMALS[f][2] * 127};
-    uint8_t nv[3];
+    const float v[3] = {0, 0, 1};
+    float nv[3];
     bump_img_fill(data, bx * 16, by * 16, 16, 16, v);
     if (mask & 1) {
-        bump_neighbor_value(f, 0, nv);
-        bump_img_fill(data, bx * 16, by * 16, 16, 1, nv);
-    }
-    if (mask & 2) {
-        bump_neighbor_value(f, 1, nv);
+        vec3_set(nv, +1, 0, 1);
         bump_img_fill(data, bx * 16 + 15, by * 16, 1, 16, nv);
     }
     if (mask & 4) {
-        bump_neighbor_value(f, 2, nv);
+        vec3_set(nv, -1, 0, 1);
+        bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
+    }
+    if (mask & 2) {
+        vec3_set(nv, 0, 1, 1);
         bump_img_fill(data, bx * 16, by * 16 + 15, 16, 1, nv);
     }
     if (mask & 8) {
-        bump_neighbor_value(f, 3, nv);
-        bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
+        vec3_set(nv, 0, -1, 1);
+        bump_img_fill(data, bx * 16, by * 16, 16, 1, nv);
     }
-
-    uint8_t n[3] = {127, 127, 255};
-    bump_img_fill(data, bx * 16, by * 16, 16, 16, n);
 }
 
 static void init_bump_texture(void)
@@ -279,6 +266,7 @@ static void init_bump_texture(void)
     for (i = 0; i < 256; i++) {
         f = (i / 16) % 6;
         mask = i % 16;
+        f = 3;
         set_bump_block(data, i % 16, i / 16, f, mask);
     }
     GL(glGenTextures(1, &g_bump_tex));
@@ -288,6 +276,8 @@ static void init_bump_texture(void)
     GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256,
                     0, GL_RGB, GL_UNSIGNED_BYTE, data));
+
+    img_write((void*)data, 256, 256, 3, "/tmp/normals.png");
     free(data);
 }
 

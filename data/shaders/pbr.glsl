@@ -34,7 +34,7 @@ uniform vec4 u_BaseColorFactor = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec3 u_camera;
 
 uniform Light u_Lights[LIGHT_COUNT] = {{
-    vec3(0.2, 0.1, -1.0),
+    vec3(0.3, 0.1, -1.0),
     vec3(1.0, 1.0, 1.0),
     2.0,
     vec2(0.0, 0.0)
@@ -79,7 +79,7 @@ void main()
     vec4 pos = u_model * vec4(a_pos, 1.0) * u_pos_scale;
     v_Position = vec3(pos.xyz) / pos.w;
 
-    vec4 tangent = vec4(normalize(a_tangent), 0.0);
+    vec4 tangent = vec4(normalize(a_tangent), 1.0);
     vec3 normalW = normalize(vec3(u_normal_matrix * vec4(getNormal().xyz, 0.0)));
     vec3 tangentW = normalize(vec3(u_model * vec4(tangent.xyz, 0.0)));
     vec3 bitangentW = cross(normalW, tangentW) * tangent.w;

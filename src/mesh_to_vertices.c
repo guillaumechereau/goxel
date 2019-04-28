@@ -275,7 +275,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                 // For testing:
                 // This put a border bump on all the edges of the voxel.
                 out[nb * 4 + i].bump_uv[0] = borders_mask * 16;
-                out[nb * 4 + i].bump_uv[1] = f * 16;
+                out[nb * 4 + i].bump_uv[1] = 0;
                 out[nb * 4 + i].pos_data = get_pos_data(x, y, z, f);
             }
             nb++;
