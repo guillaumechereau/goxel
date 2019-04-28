@@ -45,6 +45,10 @@ uniform sampler2D u_occlusion_tex;
 uniform int u_OcclusionUVSet = 1;
 uniform float u_OcclusionStrength = 0.5;
 
+uniform sampler2D u_bump_tex;
+// uniform sampler2D u_NormalSampler;
+uniform float u_NormalScale = 1.0;
+
 const float M_PI = 3.141592653589793;
 
 
@@ -55,13 +59,16 @@ attribute vec3 a_normal;
 attribute vec4 a_color;
 attribute vec2 a_occlusion_uv;
 
+attribute vec2 a_uv;
+attribute vec2 a_bump_uv;
+
 
 void main()
 {
     vec4 pos = u_model * vec4(a_pos, 1.0) * u_pos_scale;
     v_Position = vec3(pos.xyz) / pos.w;
     v_Normal = normalize(a_normal);
-    v_UVCoord1 = vec2(0.0, 0.0);
+    v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
     v_UVCoord2 = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_Color = a_color.rgb;
     gl_Position = u_proj * u_view * pos;
@@ -106,8 +113,6 @@ vec2 getNormalUV()
 // or from the interpolated mesh normal and tangent attributes.
 vec3 getNormal()
 {
-    // return v_Normal;
-
     vec2 UV = getNormalUV();
 
     // Retrieve the tangent space matrix
@@ -120,8 +125,13 @@ vec3 getNormal()
     t = normalize(t - ng * dot(ng, t));
     vec3 b = normalize(cross(ng, t));
     mat3 tbn = mat3(t, b, ng);
+
+    /*
     // The tbn matrix is linearly interpolated, so we need to re-normalize
     vec3 n = normalize(tbn[2].xyz);
+    */
+    vec3 n = texture2D(u_bump_tex, UV).rgb;
+    n = normalize(tbn * ((2.0 * n - 1.0) * vec3(u_NormalScale, u_NormalScale, 1.0)));
 
     return n;
 }

@@ -265,6 +265,9 @@ static void set_bump_block(uint8_t (*data)[3], int bx, int by, int f, int mask)
         bump_neighbor_value(f, 3, nv);
         bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
     }
+
+    uint8_t n[3] = {127, 127, 255};
+    bump_img_fill(data, bx * 16, by * 16, 16, 16, n);
 }
 
 static void init_bump_texture(void)
