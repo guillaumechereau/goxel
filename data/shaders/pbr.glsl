@@ -14,6 +14,7 @@ struct Light
 };
 
 varying vec2 v_UVCoord1;
+varying vec2 v_UVCoord2;
 varying vec3 v_Position;
 varying vec3 v_Color;
 varying vec3 v_Normal;
@@ -40,6 +41,10 @@ uniform float u_Gamma = 2.2;
 
 uniform lowp float u_pos_scale = 1.0;
 
+uniform sampler2D u_occlusion_tex;
+uniform int u_OcclusionUVSet = 1;
+uniform float u_OcclusionStrength = 0.5;
+
 const float M_PI = 3.141592653589793;
 
 
@@ -48,6 +53,7 @@ const float M_PI = 3.141592653589793;
 attribute vec3 a_pos;
 attribute vec3 a_normal;
 attribute vec4 a_color;
+attribute vec2 a_occlusion_uv;
 
 
 void main()
@@ -56,6 +62,7 @@ void main()
     v_Position = vec3(pos.xyz) / pos.w;
     v_Normal = normalize(a_normal);
     v_UVCoord1 = vec2(0.0, 0.0);
+    v_UVCoord2 = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_Color = a_color.rgb;
     gl_Position = u_proj * u_view * pos;
 }
@@ -214,6 +221,13 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal, ve
     return vec3(0.0, 0.0, 0.0);
 }
 
+vec2 getOcclusionUV()
+{
+    vec3 uv = vec3(v_UVCoord1, 1.0);
+    uv.xy = u_OcclusionUVSet < 1 ? v_UVCoord1 : v_UVCoord2;
+    return uv.xy;
+}
+
 vec3 applyDirectionalLight(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)
 {
     vec3 pointToLight = -light.direction;
@@ -248,6 +262,7 @@ void main()
 
     metallic = u_MetallicFactor;
     perceptualRoughness = u_RoughnessFactor;
+
     // The albedo may be defined from a base texture or a flat color
     baseColor = u_BaseColorFactor;
     baseColor *= getVertexColor();
@@ -293,6 +308,11 @@ void main()
     }
 
     float ao = 1.0;
+
+    // Apply optional PBR terms for additional (optional) shading
+    ao = texture2D(u_occlusion_tex,  getOcclusionUV()).r;
+    color = mix(color, color * ao, u_OcclusionStrength);
+
     // regular shading
     gl_FragColor = vec4(toneMap(color), baseColor.a);
     // gl_FragColor = vec4(color, 1.0);
