@@ -57,6 +57,7 @@ typedef struct voxel_vertex
 {
     uint8_t  pos[3]                     __attribute__((aligned(4)));
     int8_t   normal[3]                  __attribute__((aligned(4)));
+    int8_t   tangent[3]                 __attribute__((aligned(4)));
     uint8_t  color[4]                   __attribute__((aligned(4)));
     uint16_t pos_data                   __attribute__((aligned(4)));
     uint8_t  uv[2]                      __attribute__((aligned(4)));

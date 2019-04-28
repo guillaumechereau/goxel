@@ -39,11 +39,21 @@ static bool block_is_face_visible(uint32_t neighboors_mask, int f)
 
 static void block_get_normal(uint32_t neighboors_mask,
                              const uint8_t neighboors[27], int f,
-                             bool smooth, int8_t out[3])
+                             bool smooth, int8_t out[3], int8_t tangent[3])
 {
     int x, y, z, i = 0;
     int sx = 0, sy = 0, sz = 0;
     int smax;
+
+
+    // XXX: use face matrix instead.
+    tangent[0] = (VERTICES_POSITIONS[FACES_VERTICES[f][1]][0] -
+                  VERTICES_POSITIONS[FACES_VERTICES[f][0]][0]);
+    tangent[1] = (VERTICES_POSITIONS[FACES_VERTICES[f][1]][1] -
+                  VERTICES_POSITIONS[FACES_VERTICES[f][0]][1]);
+    tangent[2] = (VERTICES_POSITIONS[FACES_VERTICES[f][1]][2] -
+                  VERTICES_POSITIONS[FACES_VERTICES[f][0]][2]);
+
     if (!smooth) {
         out[0] = FACES_NORMALS[f][0];
         out[1] = FACES_NORMALS[f][1];
@@ -213,7 +223,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
     uint8_t shadow_mask, borders_mask;
     const int ts = VOXEL_TEXTURE_SIZE;
     uint8_t *data, neighboors[27], v[4];
-    int8_t normal[3];
+    int8_t normal[3], tangent[3];
     int pos[3];
     const int *vpos;
 
@@ -244,7 +254,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
         for (f = 0; f < 6; f++) {
             if (!block_is_face_visible(neighboors_mask, f)) continue;
             block_get_normal(neighboors_mask, neighboors, f,
-                             effects & EFFECT_SMOOTH, normal);
+                             effects & EFFECT_SMOOTH, normal, tangent);
             shadow_mask = block_get_shadow_mask(neighboors_mask, f);
             borders_mask = block_get_border_mask(neighboors_mask, f, effects);
             for (i = 0; i < 4; i++) {
@@ -253,6 +263,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                 out[nb * 4 + i].pos[1] = y + vpos[1];
                 out[nb * 4 + i].pos[2] = z + vpos[2];
                 memcpy(out[nb * 4 + i].normal, normal, sizeof(normal));
+                memcpy(out[nb * 4 + i].tangent, tangent, sizeof(tangent));
                 memcpy(out[nb * 4 + i].color, v, sizeof(v));
                 out[nb * 4 + i].color[3] = out[nb * 4 + i].color[3] ? 255 : 0;
                 out[nb * 4 + i].occlusion_uv[0] =

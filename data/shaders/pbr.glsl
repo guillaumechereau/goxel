@@ -17,11 +17,15 @@ varying vec2 v_UVCoord1;
 varying vec2 v_UVCoord2;
 varying vec3 v_Position;
 varying vec3 v_Color;
-varying vec3 v_Normal;
+varying mat3 v_TBN;
 
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform mat4 u_model;
+uniform mat4 u_normal_matrix = mat4(1.0, 0.0, 0.0, 0.0,
+                                    0.0, 1.0, 0.0, 0.0,
+                                    0.0, 0.0, 1.0, 0.0,
+                                    0.0, 0.0, 0.0, 1.0);
 
 uniform float u_MetallicFactor = 0.0;
 uniform float u_RoughnessFactor = 0.0;
@@ -56,18 +60,31 @@ const float M_PI = 3.141592653589793;
 
 attribute vec3 a_pos;
 attribute vec3 a_normal;
+attribute vec3 a_tangent;
 attribute vec4 a_color;
 attribute vec2 a_occlusion_uv;
 
 attribute vec2 a_uv;
 attribute vec2 a_bump_uv;
 
+vec4 getNormal()
+{
+    vec4 normal = vec4(a_normal, 0.0);
+    return normalize(normal);
+}
+
 
 void main()
 {
     vec4 pos = u_model * vec4(a_pos, 1.0) * u_pos_scale;
     v_Position = vec3(pos.xyz) / pos.w;
-    v_Normal = normalize(a_normal);
+
+    vec4 tangent = vec4(normalize(a_tangent), 0.0);
+    vec3 normalW = normalize(vec3(u_normal_matrix * vec4(getNormal().xyz, 0.0)));
+    vec3 tangentW = normalize(vec3(u_model * vec4(tangent.xyz, 0.0)));
+    vec3 bitangentW = cross(normalW, tangentW) * tangent.w;
+    v_TBN = mat3(tangentW, bitangentW, normalW);
+
     v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
     v_UVCoord2 = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_Color = a_color.rgb;
@@ -114,25 +131,9 @@ vec2 getNormalUV()
 vec3 getNormal()
 {
     vec2 UV = getNormalUV();
-
-    // Retrieve the tangent space matrix
-    vec3 pos_dx = dFdx(v_Position);
-    vec3 pos_dy = dFdy(v_Position);
-    vec3 tex_dx = dFdx(vec3(UV, 0.0));
-    vec3 tex_dy = dFdy(vec3(UV, 0.0));
-    vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);
-    vec3 ng = normalize(v_Normal);
-    t = normalize(t - ng * dot(ng, t));
-    vec3 b = normalize(cross(ng, t));
-    mat3 tbn = mat3(t, b, ng);
-
-    /*
-    // The tbn matrix is linearly interpolated, so we need to re-normalize
-    vec3 n = normalize(tbn[2].xyz);
-    */
+    mat3 tbn = v_TBN;
     vec3 n = texture2D(u_bump_tex, UV).rgb;
     n = normalize(tbn * ((2.0 * n - 1.0) * vec3(u_NormalScale, u_NormalScale, 1.0)));
-
     return n;
 }
 
