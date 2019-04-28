@@ -22,8 +22,8 @@ uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform mat4 u_model;
 
-uniform float u_MetallicFactor = 0.5;
-uniform float u_RoughnessFactor = 0.5;
+uniform float u_MetallicFactor = 0.0;
+uniform float u_RoughnessFactor = 0.0;
 uniform vec4 u_BaseColorFactor = vec4(1.0, 1.0, 1.0, 1.0);
 
 uniform vec3 u_camera;
@@ -31,7 +31,7 @@ uniform vec3 u_camera;
 uniform Light u_Lights[LIGHT_COUNT] = {{
     vec3(0.2, 0.1, -1.0),
     vec3(1.0, 1.0, 1.0),
-    1.0,
+    2.0,
     vec2(0.0, 0.0)
 }};
 
