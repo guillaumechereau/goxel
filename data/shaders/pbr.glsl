@@ -22,14 +22,11 @@ varying mat3 v_TBN;
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform mat4 u_model;
-uniform mat4 u_normal_matrix = mat4(1.0, 0.0, 0.0, 0.0,
-                                    0.0, 1.0, 0.0, 0.0,
-                                    0.0, 0.0, 1.0, 0.0,
-                                    0.0, 0.0, 0.0, 1.0);
+uniform mat4 u_normal_matrix;
 
-uniform float u_MetallicFactor = 0.0;
-uniform float u_RoughnessFactor = 0.5;
-uniform vec4 u_BaseColorFactor = vec4(1.0, 1.0, 1.0, 1.0);
+uniform float u_metallic_factor;
+uniform float u_roughness_factor;
+uniform vec4 u_base_color_factor;
 
 uniform vec3 u_camera;
 
@@ -40,18 +37,18 @@ uniform Light u_Lights[LIGHT_COUNT] = {{
     vec2(0.0, 0.0)
 }};
 
-uniform float u_Exposure = 1.0;
-uniform float u_Gamma = 2.2;
+uniform float u_exposure;
+uniform float u_gamma;
 
-uniform lowp float u_pos_scale = 1.0;
+uniform lowp float u_pos_scale;
 
 uniform sampler2D u_occlusion_tex;
-uniform int u_OcclusionUVSet = 1;
-uniform float u_OcclusionStrength = 0.5;
+uniform int u_occlusion_uv_set;
+uniform float u_occlusion_strength;
 
 uniform sampler2D u_bump_tex;
 // uniform sampler2D u_NormalSampler;
-uniform float u_NormalScale = 1.0;
+uniform float u_normal_scale;
 uniform sampler2D u_brdf_lut;
 
 const float M_PI = 3.141592653589793;
@@ -134,7 +131,7 @@ vec3 getNormal()
     vec2 UV = getNormalUV();
     mat3 tbn = v_TBN;
     vec3 n = texture2D(u_bump_tex, UV).rgb;
-    n = normalize(tbn * ((2.0 * n - 1.0) * vec3(u_NormalScale, u_NormalScale, 1.0)));
+    n = normalize(tbn * ((2.0 * n - 1.0) * vec3(u_normal_scale, u_normal_scale, 1.0)));
     return n;
 }
 
@@ -236,7 +233,7 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal, ve
 vec2 getOcclusionUV()
 {
     vec3 uv = vec3(v_UVCoord1, 1.0);
-    uv.xy = u_OcclusionUVSet < 1 ? v_UVCoord1 : v_UVCoord2;
+    uv.xy = u_occlusion_uv_set < 1 ? v_UVCoord1 : v_UVCoord2;
     return uv.xy;
 }
 
@@ -251,12 +248,12 @@ vec3 applyDirectionalLight(Light light, MaterialInfo materialInfo, vec3 normal, 
 // see https://www.teamten.com/lawrence/graphics/gamma/
 vec3 gammaCorrection(vec3 color)
 {
-    return pow(color, vec3(1.0 / u_Gamma));
+    return pow(color, vec3(1.0 / u_gamma));
 }
 
 vec3 toneMap(vec3 color)
 {
-    color *= u_Exposure;
+    color *= u_exposure;
     return gammaCorrection(color);
 }
 
@@ -292,11 +289,11 @@ void main()
     vec3 specularColor= vec3(0.0);
     vec3 f0 = vec3(0.04);
 
-    metallic = u_MetallicFactor;
-    perceptualRoughness = u_RoughnessFactor;
+    metallic = u_metallic_factor;
+    perceptualRoughness = u_roughness_factor;
 
     // The albedo may be defined from a base texture or a flat color
-    baseColor = u_BaseColorFactor;
+    baseColor = u_base_color_factor;
     baseColor *= getVertexColor();
     diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
 
@@ -345,7 +342,7 @@ void main()
 
     // Apply optional PBR terms for additional (optional) shading
     ao = texture2D(u_occlusion_tex,  getOcclusionUV()).r;
-    color = mix(color, color * ao, u_OcclusionStrength);
+    color = mix(color, color * ao, u_occlusion_strength);
 
     // regular shading
     gl_FragColor = vec4(toneMap(color), baseColor.a);

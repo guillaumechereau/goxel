@@ -95,6 +95,8 @@ typedef struct {
     GLint u_model_l;
     GLint u_view_l;
     GLint u_proj_l;
+    GLint u_normal_matrix_l;
+
     GLint u_l_dir_l;
     GLint u_l_int_l;
     GLint u_m_amb_l;
@@ -112,7 +114,15 @@ typedef struct {
     GLint u_block_id_l;
     GLint u_brdf_lut_l;
 
+    GLint u_metallic_factor_l;
+    GLint u_roughness_factor_l;
+    GLint u_base_color_factor_l;
     GLint u_camera_l;
+    GLint u_exposure_l;
+    GLint u_gamma_l;
+    GLint u_occlusion_uv_set_l;
+    GLint u_occlusion_strength_l;
+    GLint u_normal_scale_l;
 } prog_t;
 
 // Static list of programs.  Need to be big enough for all the possible
@@ -303,6 +313,7 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
     UNIFORM(u_model);
     UNIFORM(u_view);
     UNIFORM(u_proj);
+    UNIFORM(u_normal_matrix);
     UNIFORM(u_l_dir);
     UNIFORM(u_l_int);
     UNIFORM(u_m_amb);
@@ -319,7 +330,15 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
     UNIFORM(u_shadow_tex);
     UNIFORM(u_block_id);
     UNIFORM(u_camera);
+    UNIFORM(u_metallic_factor);
+    UNIFORM(u_roughness_factor);
+    UNIFORM(u_base_color_factor);
     UNIFORM(u_brdf_lut);
+    UNIFORM(u_exposure);
+    UNIFORM(u_gamma);
+    UNIFORM(u_occlusion_uv_set);
+    UNIFORM(u_occlusion_strength);
+    UNIFORM(u_normal_scale);
 #undef UNIFORM
     GL(glUniform1i(prog->u_occlusion_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
@@ -675,6 +694,16 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     mat4_invert(rend->view_mat, tmp);
     mat4_mul_vec3(tmp, VEC(0, 0, 0), camera_pos);
     GL(glUniform3fv(prog->u_camera_l, 1, camera_pos));
+
+    GL(glUniform1f(prog->u_normal_scale_l, 1.0));
+    GL(glUniform1f(prog->u_metallic_factor_l, 0.0));
+    GL(glUniform1f(prog->u_roughness_factor_l, 0.5));
+    GL(glUniform4fv(prog->u_base_color_factor_l, 1, VEC(1.0, 1.0, 1.0, 1.0)));
+    GL(glUniformMatrix4fv(prog->u_normal_matrix_l, 1, 0, (float*)mat4_identity));
+    GL(glUniform1f(prog->u_exposure_l, 1.0));
+    GL(glUniform1f(prog->u_gamma_l, 2.2));
+    GL(glUniform1i(prog->u_occlusion_uv_set_l, 1));
+    GL(glUniform1f(prog->u_occlusion_strength_l, 0.5));
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));
