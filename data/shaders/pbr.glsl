@@ -30,12 +30,13 @@ uniform vec4 u_base_color_factor;
 
 uniform vec3 u_camera;
 
-uniform Light u_Lights[LIGHT_COUNT] = {{
+uniform Light u_Lights[LIGHT_COUNT]; /* = {{
     vec3(0.3, 0.1, -1.0),
     vec3(1.0, 1.0, 1.0),
     2.0,
     vec2(0.0, 0.0)
 }};
+*/
 
 uniform float u_exposure;
 uniform float u_gamma;
@@ -332,7 +333,12 @@ void main()
 
     for (int i = 0; i < LIGHT_COUNT; ++i)
     {
-        Light light = u_Lights[i];
+        Light light = Light(
+            vec3(0.3, 0.1, -1.0),
+            vec3(1.0, 1.0, 1.0),
+            2.0,
+            vec2(0.0, 0.0)
+        );
         color += applyDirectionalLight(light, materialInfo, normal, view);
     }
 
