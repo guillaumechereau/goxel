@@ -277,7 +277,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/pbr.glsl", .size = 11833, .data =
+{.path = "data/shaders/pbr.glsl", .size = 11829, .data =
     "\n"
     "// Just a test.  Based on the glTF 2 PBR shader.\n"
     "\n"
@@ -332,6 +332,7 @@
     "uniform sampler2D u_bump_tex;\n"
     "// uniform sampler2D u_NormalSampler;\n"
     "uniform float u_NormalScale = 1.0;\n"
+    "uniform sampler2D u_brdf_lut;\n"
     "\n"
     "const float M_PI = 3.141592653589793;\n"
     "\n"
@@ -545,8 +546,7 @@
     "    vec3 reflection = normalize(reflect(-v, n));\n"
     "    vec2 brdfSamplePoint = clamp(vec2(NdotV, materialInfo.perceptualRoughness), vec2(0.0, 0.0), vec2(1.0, 1.0));\n"
     "    // retrieve a scale and bias to F0. See [1], Figure 3\n"
-    "    // vec2 brdf = texture2D(u_brdfLUT, brdfSamplePoint).rg;\n"
-    "    vec2 brdf = vec2(0.5, 0.5);\n"
+    "    vec2 brdf = texture2D(u_brdf_lut, brdfSamplePoint).rg;\n"
     "\n"
     "    // vec4 diffuseSample = textureCube(u_DiffuseEnvSampler, n);\n"
     "    // vec4 specularSample = textureCube(u_SpecularEnvSampler, reflection);\n"

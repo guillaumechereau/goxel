@@ -52,6 +52,7 @@ uniform float u_OcclusionStrength = 0.5;
 uniform sampler2D u_bump_tex;
 // uniform sampler2D u_NormalSampler;
 uniform float u_NormalScale = 1.0;
+uniform sampler2D u_brdf_lut;
 
 const float M_PI = 3.141592653589793;
 
@@ -265,8 +266,7 @@ vec3 getIBLContribution(MaterialInfo materialInfo, vec3 n, vec3 v)
     vec3 reflection = normalize(reflect(-v, n));
     vec2 brdfSamplePoint = clamp(vec2(NdotV, materialInfo.perceptualRoughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
     // retrieve a scale and bias to F0. See [1], Figure 3
-    // vec2 brdf = texture2D(u_brdfLUT, brdfSamplePoint).rg;
-    vec2 brdf = vec2(0.5, 0.5);
+    vec2 brdf = texture2D(u_brdf_lut, brdfSamplePoint).rg;
 
     // vec4 diffuseSample = textureCube(u_DiffuseEnvSampler, n);
     // vec4 specularSample = textureCube(u_SpecularEnvSampler, reflection);

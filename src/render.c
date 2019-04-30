@@ -110,6 +110,7 @@ typedef struct {
     GLint u_shadow_k_l;
     GLint u_shadow_tex_l;
     GLint u_block_id_l;
+    GLint u_brdf_lut_l;
 
     GLint u_camera_l;
 } prog_t;
@@ -125,6 +126,7 @@ static GLuint g_border_tex;
 static GLuint g_bump_tex;
 static GLuint g_shadow_map_fbo;
 static texture_t *g_shadow_map; // XXX: the fbo should be part of the tex.
+static texture_t *g_brdf_lut_tex;
 
 #define OFFSET(n) offsetof(voxel_vertex_t, n)
 
@@ -317,10 +319,12 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
     UNIFORM(u_shadow_tex);
     UNIFORM(u_block_id);
     UNIFORM(u_camera);
+    UNIFORM(u_brdf_lut);
 #undef UNIFORM
     GL(glUniform1i(prog->u_occlusion_tex_l, 0));
     GL(glUniform1i(prog->u_bump_tex_l, 1));
     GL(glUniform1i(prog->u_shadow_tex_l, 2));
+    GL(glUniform1i(prog->u_brdf_lut_l, 3));
 }
 
 static prog_t *get_prog(const char *path, const char *include)
@@ -361,6 +365,7 @@ void render_init()
     free(index_array);
     init_border_texture();
     init_bump_texture();
+    g_brdf_lut_tex = texture_new_image("asset://data/images/brdf_lut.png", 0);
 
     // XXX: pick the proper memory size according to what is available.
     g_items_cache = cache_create(RENDER_CACHE_SIZE);
@@ -648,6 +653,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         GL(glUniform1i(prog->u_shadow_tex_l, 2));
         GL(glUniform1f(prog->u_shadow_k_l, rend->settings.shadow));
     }
+
+    GL(glActiveTexture(GL_TEXTURE3));
+    GL(glBindTexture(GL_TEXTURE_2D, g_brdf_lut_tex->tex));
 
     GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, (float*)rend->proj_mat));
     GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, (float*)rend->view_mat));
