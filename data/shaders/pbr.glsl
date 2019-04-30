@@ -28,7 +28,7 @@ uniform mat4 u_normal_matrix = mat4(1.0, 0.0, 0.0, 0.0,
                                     0.0, 0.0, 0.0, 1.0);
 
 uniform float u_MetallicFactor = 0.0;
-uniform float u_RoughnessFactor = 0.0;
+uniform float u_RoughnessFactor = 0.5;
 uniform vec4 u_BaseColorFactor = vec4(1.0, 1.0, 1.0, 1.0);
 
 uniform vec3 u_camera;
@@ -259,6 +259,27 @@ vec3 toneMap(vec3 color)
     return gammaCorrection(color);
 }
 
+vec3 getIBLContribution(MaterialInfo materialInfo, vec3 n, vec3 v)
+{
+    float NdotV = clamp(dot(n, v), 0.0, 1.0);
+    vec3 reflection = normalize(reflect(-v, n));
+    vec2 brdfSamplePoint = clamp(vec2(NdotV, materialInfo.perceptualRoughness), vec2(0.0, 0.0), vec2(1.0, 1.0));
+    // retrieve a scale and bias to F0. See [1], Figure 3
+    // vec2 brdf = texture2D(u_brdfLUT, brdfSamplePoint).rg;
+    vec2 brdf = vec2(0.5, 0.5);
+
+    // vec4 diffuseSample = textureCube(u_DiffuseEnvSampler, n);
+    // vec4 specularSample = textureCube(u_SpecularEnvSampler, reflection);
+    vec4 diffuseSample = vec4(0.1, 0.1, 0.1, 1.0);
+    vec4 specularSample = vec4(0.1, 0.1, 0.1, 1.0);
+
+    vec3 diffuseLight = diffuseSample.rgb;
+    vec3 specularLight = specularSample.rgb;
+    vec3 diffuse = diffuseLight * materialInfo.diffuseColor;
+    vec3 specular = specularLight * (materialInfo.specularColor * brdf.x + brdf.y);
+    return diffuse + specular;
+}
+
 void main()
 {
     // Metallic and Roughness material properties are packed together
@@ -317,6 +338,8 @@ void main()
         Light light = u_Lights[i];
         color += applyDirectionalLight(light, materialInfo, normal, view);
     }
+
+    color += getIBLContribution(materialInfo, normal, view);
 
     float ao = 1.0;
 
