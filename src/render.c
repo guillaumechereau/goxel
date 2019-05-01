@@ -86,20 +86,12 @@ static model3d_t *g_grid_model;
 static model3d_t *g_rect_model;
 static model3d_t *g_wire_rect_model;
 
-typedef struct uniform {
-    char        name[64];
-    GLint       size;
-    GLenum      type;
-    GLint       loc;
-} uniform_t;
 
 typedef struct {
     // Those values are used as a key to identify the shader.
     const char *path;
     const char *include;
-
-    GLint prog;
-    uniform_t uniforms[32];
+    gl_shader_t *shader;
 } prog_t;
 
 // Static list of programs.  Need to be big enough for all the possible
@@ -153,50 +145,6 @@ static const struct {
  *  the 4 corners and the 4 edges => 8bit => 256 blocks.
  *
  */
-
-static bool gl_has_uniform(prog_t *prog, const char *name)
-{
-    uniform_t *uni;
-    for (uni = &prog->uniforms[0]; uni->size; uni++) {
-        if (strcmp(uni->name, name) == 0) return true;
-    }
-    return false;
-}
-
-static void gl_update_uniform(
-        prog_t *prog, const char *name, ...)
-{
-    uniform_t *uni;
-    va_list args;
-
-    for (uni = &prog->uniforms[0]; uni->size; uni++) {
-        if (strcmp(uni->name, name) == 0) break;
-    }
-    if (!uni->size) return; // No such uniform.
-
-    va_start(args, name);
-    switch (uni->type) {
-    case GL_INT:
-    case GL_SAMPLER_2D:
-        GL(glUniform1i(uni->loc, va_arg(args, int)));
-        break;
-    case GL_FLOAT:
-        GL(glUniform1f(uni->loc, va_arg(args, double)));
-        break;
-    case GL_FLOAT_VEC2:
-        GL(glUniform2fv(uni->loc, 1, va_arg(args, const float*)));
-        break;
-    case GL_FLOAT_VEC3:
-        GL(glUniform3fv(uni->loc, 1, va_arg(args, const float*)));
-        break;
-    case GL_FLOAT_MAT4:
-        GL(glUniformMatrix4fv(uni->loc, 1, 0, va_arg(args, const float*)));
-        break;
-    default:
-        assert(false);
-    }
-    va_end(args);
-}
 
 static void copy_color(const uint8_t in[4], uint8_t out[4])
 {
@@ -323,46 +271,39 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
 {
     char include_full[256];
     const char *code;
-    int attr, count, i;
-    uniform_t *uni;
+    int attr;
+    gl_shader_t *shader;
 
     sprintf(include_full, "#define VOXEL_TEXTURE_SIZE %d.0\n%s\n",
             VOXEL_TEXTURE_SIZE, include ?: "");
     code = assets_get(path, NULL);
     prog->path = path;
     prog->include = include;
-    prog->prog = gl_create_prog(code, code, include_full);
+    shader = gl_shader_create(code, code, include_full);
+    prog->shader = shader;
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
-        GL(glBindAttribLocation(prog->prog, attr, ATTRIBUTES[attr].name));
+        GL(glBindAttribLocation(shader->prog, attr, ATTRIBUTES[attr].name));
     }
-    GL(glLinkProgram(prog->prog));
-    GL(glUseProgram(prog->prog));
+    GL(glLinkProgram(shader->prog));
+    GL(glUseProgram(shader->prog));
 
-    GL(glGetProgramiv(prog->prog, GL_ACTIVE_UNIFORMS, &count));
-    for (i = 0; i < count; i++) {
-        uni = &prog->uniforms[i];
-        GL(glGetActiveUniform(prog->prog, i, sizeof(uni->name),
-                              NULL, &uni->size, &uni->type, uni->name));
-        GL(uni->loc = glGetUniformLocation(prog->prog, uni->name));
-    }
-
-    gl_update_uniform(prog, "u_occlusion_tex", 0);
-    gl_update_uniform(prog, "u_bump_tex", 1);
-    gl_update_uniform(prog, "u_shadow_tex", 2);
+    gl_update_uniform(shader, "u_occlusion_tex", 0);
+    gl_update_uniform(shader, "u_bump_tex", 1);
+    gl_update_uniform(shader, "u_shadow_tex", 2);
 }
 
-static prog_t *get_prog(const char *path, const char *include)
+static gl_shader_t *get_shader(const char *path, const char *include)
 {
     int i;
     prog_t *p = NULL;
     for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
         p = &g_progs[i];
         if (!p->path) break;
-        if (p->path == path && p->include == include) return p;
+        if (p->path == path && p->include == include) return p->shader;
     }
     assert(i < ARRAY_SIZE(g_progs));
     init_prog(p, path, include);
-    return p;
+    return p->shader;
 }
 
 void render_init()
@@ -405,8 +346,8 @@ void render_deinit(void)
 {
     int i;
     for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
-        if (g_progs[i].prog)
-            gl_delete_prog(g_progs[i].prog);
+        if (g_progs[i].shader)
+            gl_shader_delete(g_progs[i].shader);
     }
     memset(&g_progs, 0, sizeof(g_progs));
     GL(glDeleteBuffers(1, &g_index_buffer));
@@ -490,7 +431,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                           mesh_iterator_t *iter,
                           const int block_pos[3],
                           int block_id,
-                          int effects, prog_t *prog,
+                          int effects, gl_shader_t *shader,
                           const float model[4][4])
 {
     render_item_t *item;
@@ -501,12 +442,12 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     item = get_item_for_block(mesh, iter, block_pos, effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
-    if (gl_has_uniform(prog, "u_block_id")) {
+    if (gl_has_uniform(shader, "u_block_id")) {
         block_id_f[1] = ((block_id >> 8) & 0xff) / 255.0;
         block_id_f[0] = ((block_id >> 0) & 0xff) / 255.0;
-        gl_update_uniform(prog, "u_block_id", block_id_f);
+        gl_update_uniform(shader, "u_block_id", block_id_f);
     }
-    gl_update_uniform(prog, "u_pos_scale", 1.f / item->subdivide);
+    gl_update_uniform(shader, "u_pos_scale", 1.f / item->subdivide);
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glVertexAttribPointer(attr,
@@ -519,7 +460,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
 
     mat4_copy(model, block_model);
     mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
-    gl_update_uniform(prog, "u_model", block_model);
+    gl_update_uniform(shader, "u_model", block_model);
     if (item->size == 4) {
         // Use indexed triangles.
         GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -530,7 +471,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
 
 #ifndef GLES2
     if (effects & EFFECT_WIREFRAME) {
-        gl_update_uniform(prog, "u_m_amb", 0.0);
+        gl_update_uniform(shader, "u_m_amb", 0.0);
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
         if (item->size == 4)
             GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -538,7 +479,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         else
             GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-        gl_update_uniform(prog, "u_m_amb", rend->settings.ambient);
+        gl_update_uniform(shader, "u_m_amb", rend->settings.ambient);
     }
 #endif
 }
@@ -624,7 +565,7 @@ static void compute_shadow_map_box(
 static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
                          const float shadow_mvp[4][4])
 {
-    prog_t *prog;
+    gl_shader_t *shader;
     float model[4][4];
     int attr, block_pos[3], block_id;
     float light_dir[3];
@@ -635,13 +576,13 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     get_light_dir(rend, true, light_dir);
 
     if (effects & EFFECT_RENDER_POS)
-        prog = get_prog("asset://data/shaders/pos_data.glsl", NULL);
+        shader = get_shader("asset://data/shaders/pos_data.glsl", NULL);
     else if (effects & EFFECT_SHADOW_MAP)
-        prog = get_prog("asset://data/shaders/shadow_map.glsl", NULL);
+        shader = get_shader("asset://data/shaders/shadow_map.glsl", NULL);
     else {
         shadow = rend->settings.shadow;
-        prog = get_prog("asset://data/shaders/mesh.glsl",
-                         shadow ? "#define SHADOW" : NULL);
+        shader = get_shader("asset://data/shaders/mesh.glsl",
+                            shadow ? "#define SHADOW" : NULL);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
@@ -664,29 +605,29 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         GL(glBlendColor(0.75, 0.75, 0.75, 0.75));
     }
 
-    GL(glUseProgram(prog->prog));
+    GL(glUseProgram(shader->prog));
 
     if (shadow) {
         assert(shadow_mvp);
         GL(glActiveTexture(GL_TEXTURE2));
         GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
-        gl_update_uniform(prog, "u_shadow_mvp", shadow_mvp);
-        gl_update_uniform(prog, "u_shadow_tex", 2);
-        gl_update_uniform(prog, "u_shadow_k", rend->settings.shadow);
+        gl_update_uniform(shader, "u_shadow_mvp", shadow_mvp);
+        gl_update_uniform(shader, "u_shadow_tex", 2);
+        gl_update_uniform(shader, "u_shadow_k", rend->settings.shadow);
     }
 
-    gl_update_uniform(prog, "u_proj", rend->proj_mat);
-    gl_update_uniform(prog, "u_view", rend->view_mat);
-    gl_update_uniform(prog, "u_occlusion_tex", 0);
-    gl_update_uniform(prog, "u_bump_tex", 1);
-    gl_update_uniform(prog, "u_l_dir", light_dir);
-    gl_update_uniform(prog, "u_l_int", rend->light.intensity);
-    gl_update_uniform(prog, "u_m_amb", rend->settings.ambient);
-    gl_update_uniform(prog, "u_m_dif", rend->settings.diffuse);
-    gl_update_uniform(prog, "u_m_spe", rend->settings.specular);
-    gl_update_uniform(prog, "u_m_shi", rend->settings.shininess);
-    gl_update_uniform(prog, "u_m_smo", rend->settings.smoothness);
-    gl_update_uniform(prog, "u_occlusion", rend->settings.border_shadow);
+    gl_update_uniform(shader, "u_proj", rend->proj_mat);
+    gl_update_uniform(shader, "u_view", rend->view_mat);
+    gl_update_uniform(shader, "u_occlusion_tex", 0);
+    gl_update_uniform(shader, "u_bump_tex", 1);
+    gl_update_uniform(shader, "u_l_dir", light_dir);
+    gl_update_uniform(shader, "u_l_int", rend->light.intensity);
+    gl_update_uniform(shader, "u_m_amb", rend->settings.ambient);
+    gl_update_uniform(shader, "u_m_dif", rend->settings.diffuse);
+    gl_update_uniform(shader, "u_m_spe", rend->settings.specular);
+    gl_update_uniform(shader, "u_m_shi", rend->settings.shininess);
+    gl_update_uniform(shader, "u_m_smo", rend->settings.smoothness);
+    gl_update_uniform(shader, "u_occlusion", rend->settings.border_shadow);
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));
@@ -698,7 +639,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, block_pos)) {
         render_block_(rend, mesh, &iter, block_pos,
-                      block_id++, effects, prog, model);
+                      block_id++, effects, shader, model);
     }
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glDisableVertexAttribArray(attr));
@@ -965,7 +906,7 @@ static void render_shadow_map(renderer_t *rend, float shadow_mvp[4][4])
 
 static void render_background(renderer_t *rend, const uint8_t col[4])
 {
-    prog_t *prog;
+    gl_shader_t *shader;
     typedef struct {
         int8_t  pos[3]       __attribute__((aligned(4)));
         float   color[4]     __attribute__((aligned(4)));
@@ -990,8 +931,8 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     vertices[2] = (vertex_t){{+1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
     vertices[3] = (vertex_t){{-1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
 
-    prog = get_prog("asset://data/shaders/background.glsl", NULL);
-    GL(glUseProgram(prog->prog));
+    shader = get_shader("asset://data/shaders/background.glsl", NULL);
+    GL(glUseProgram(shader->prog));
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
     GL(glBindBuffer(GL_ARRAY_BUFFER, g_background_array_buffer));

@@ -64,6 +64,18 @@
 #  define GL(line) line
 #endif
 
+typedef struct gl_uniform {
+    char        name[64];
+    GLint       size;
+    GLenum      type;
+    GLint       loc;
+} gl_uniform_t;
+
+typedef struct gl_shader {
+    GLint           prog;
+    gl_uniform_t    uniforms[32];
+} gl_shader_t;
+
 
 int gl_check_errors(const char *file, int line);
 
@@ -101,5 +113,12 @@ void gl_delete_prog(int prog);
 int gl_gen_fbo(int w, int h, GLenum format, int msaa,
                GLuint *out_fbo, GLuint *out_tex);
 
+
+gl_shader_t *gl_shader_create(const char *vert, const char *frag,
+                              const char *include);
+void gl_shader_delete(gl_shader_t *shader);
+
+bool gl_has_uniform(gl_shader_t *shader, const char *name);
+void gl_update_uniform(gl_shader_t *shader, const char *name, ...);
 
 #endif // GL_H

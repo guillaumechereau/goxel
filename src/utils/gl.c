@@ -19,6 +19,7 @@
 #include "utils/gl.h"
 
 #include <assert.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -232,4 +233,72 @@ bool gl_has_extension(const char *ext)
     const char *str;
     GL(str = (const char*)glGetString(GL_EXTENSIONS));
     return strstr(str, ext);
+}
+
+gl_shader_t *gl_shader_create(const char *vert, const char *frag,
+                              const char *include)
+{
+    gl_shader_t *shader = calloc(1, sizeof(*shader));
+    int i, count;
+    gl_uniform_t *uni;
+
+    shader->prog = gl_create_prog(vert, frag, include);
+    GL(glGetProgramiv(shader->prog, GL_ACTIVE_UNIFORMS, &count));
+    for (i = 0; i < count; i++) {
+        uni = &shader->uniforms[i];
+        GL(glGetActiveUniform(shader->prog, i, sizeof(uni->name),
+                              NULL, &uni->size, &uni->type, uni->name));
+        GL(uni->loc = glGetUniformLocation(shader->prog, uni->name));
+    }
+    return shader;
+}
+
+void gl_shader_delete(gl_shader_t *shader)
+{
+    if (!shader) return;
+    gl_delete_prog(shader->prog);
+    free(shader);
+}
+
+bool gl_has_uniform(gl_shader_t *shader, const char *name)
+{
+    gl_uniform_t *uni;
+    for (uni = &shader->uniforms[0]; uni->size; uni++) {
+        if (strcmp(uni->name, name) == 0) return true;
+    }
+    return false;
+}
+
+void gl_update_uniform(gl_shader_t *shader, const char *name, ...)
+{
+    gl_uniform_t *uni;
+    va_list args;
+
+    for (uni = &shader->uniforms[0]; uni->size; uni++) {
+        if (strcmp(uni->name, name) == 0) break;
+    }
+    if (!uni->size) return; // No such uniform.
+
+    va_start(args, name);
+    switch (uni->type) {
+    case GL_INT:
+    case GL_SAMPLER_2D:
+        GL(glUniform1i(uni->loc, va_arg(args, int)));
+        break;
+    case GL_FLOAT:
+        GL(glUniform1f(uni->loc, va_arg(args, double)));
+        break;
+    case GL_FLOAT_VEC2:
+        GL(glUniform2fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_VEC3:
+        GL(glUniform3fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_MAT4:
+        GL(glUniformMatrix4fv(uni->loc, 1, 0, va_arg(args, const float*)));
+        break;
+    default:
+        assert(false);
+    }
+    va_end(args);
 }
