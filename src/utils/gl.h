@@ -86,19 +86,6 @@ int gl_check_errors(const char *file, int line);
 bool gl_has_extension(const char *extension);
 
 /*
- * Function: gl_create_prog
- * Helper function to create an OpenGL program.
- */
-int gl_create_prog(const char *vertex_shader, const char *fragment_shader,
-                   const char *include);
-
-/*
- * Function: gl_create_prog
- * Helper function to delete an OpenGL program.
- */
-void gl_delete_prog(int prog);
-
-/*
  * Function: gl_gen_fbo
  * Helper function to generate an OpenGL framebuffer object with an
  * associated texture.

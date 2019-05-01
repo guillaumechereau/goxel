@@ -89,8 +89,9 @@ static int compile_shader(int shader, const char *code,
     return 0;
 }
 
-int gl_create_prog(const char *vertex_shader_code,
-                   const char *fragment_shader_code, const char *include)
+static int gl_create_prog(const char *vertex_shader_code,
+                          const char *fragment_shader_code,
+                          const char *include)
 {
     int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     include = include ? : "";
@@ -121,7 +122,7 @@ int gl_create_prog(const char *vertex_shader_code,
     return prog;
 }
 
-void gl_delete_prog(int prog)
+static void gl_delete_prog(int prog)
 {
     int i;
     GLuint shaders[2];
