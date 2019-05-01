@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 4792, .data =
+{.path = "data/shaders/mesh.glsl", .size = 4859, .data =
     "/*\n"
     " * I followed those name conventions.  All the vectors are expressed in eye\n"
     " * coordinates.\n"
@@ -109,6 +109,9 @@
     "attribute mediump vec2 a_occlusion_uv;\n"
     "attribute mediump vec2 a_bump_uv;   // bump tex base coordinates [0,255]\n"
     "attribute mediump vec2 a_uv;        // uv coordinates [0,1]\n"
+    "\n"
+    "// Must match the value in goxel.h\n"
+    "#define VOXEL_TEXTURE_SIZE 8.0\n"
     "\n"
     "void main()\n"
     "{\n"

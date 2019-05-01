@@ -59,6 +59,9 @@ attribute mediump vec2 a_occlusion_uv;
 attribute mediump vec2 a_bump_uv;   // bump tex base coordinates [0,255]
 attribute mediump vec2 a_uv;        // uv coordinates [0,1]
 
+// Must match the value in goxel.h
+#define VOXEL_TEXTURE_SIZE 8.0
+
 void main()
 {
     v_color = a_color;

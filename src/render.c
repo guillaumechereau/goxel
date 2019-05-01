@@ -266,8 +266,7 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
     int attr;
     gl_shader_t *shader;
 
-    sprintf(include_full, "#define VOXEL_TEXTURE_SIZE %d.0\n%s\n",
-            VOXEL_TEXTURE_SIZE, include ?: "");
+    sprintf(include_full, "%s\n", include ?: "");
     code = assets_get(path, NULL);
     prog->path = path;
     prog->include = include;
