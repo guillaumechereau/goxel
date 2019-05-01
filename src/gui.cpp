@@ -114,21 +114,16 @@ typedef struct {
     float  rect[4];
 } view_t;
 
-typedef struct {
-    GLuint prog;
-
-    GLuint a_pos_l;
-    GLuint a_tex_pos_l;
-    GLuint a_color_l;
-
-    GLuint u_tex_l;
-    GLuint u_proj_mat_l;
-} prog_t;
+enum {
+    A_POS_LOC = 0,
+    A_TEX_POS_LOC,
+    A_COLOR_LOC,
+};
 
 typedef typeof(((inputs_t*)0)->safe_margins) margins_t;
 
 typedef struct gui_t {
-    prog_t  prog;
+    gl_shader_t *shader;
     GLuint  array_buffer;
     GLuint  index_buffer;
 
@@ -185,23 +180,6 @@ static uint32_t get_icon_color(int icon, bool selected)
             ImGui::GetColorU32(COLOR(WIDGET, TEXT, selected)) : 0xFFFFFFFF;
 }
 
-static void init_prog(prog_t *p)
-{
-    p->prog = gl_create_prog(VSHADER, FSHADER, NULL);
-    GL(glUseProgram(p->prog));
-#define UNIFORM(x) p->x##_l = glGetUniformLocation(p->prog, #x);
-#define ATTRIB(x) p->x##_l = glGetAttribLocation(p->prog, #x)
-    UNIFORM(u_proj_mat);
-    UNIFORM(u_tex);
-    ATTRIB(a_pos);
-    ATTRIB(a_tex_pos);
-    ATTRIB(a_color);
-#undef ATTRIB
-#undef UNIFORM
-    GL(glUniform1i(p->u_tex_l, 0));
-}
-
-
 static void render_prepare_context(void)
 {
     #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
@@ -225,22 +203,23 @@ static void render_prepare_context(void)
         { 0.0f,			0.0f,			-1.0f,		0.0f },
         { -1.0f,		1.0f,			0.0f,		1.0f },
     };
-    GL(glUseProgram(gui->prog.prog));
-    GL(glUniformMatrix4fv(gui->prog.u_proj_mat_l, 1, 0, &ortho_projection[0][0]));
+    GL(glUseProgram(gui->shader->prog));
+    gl_update_uniform(gui->shader, "u_tex", 0);
+    gl_update_uniform(gui->shader, "u_proj_mat", ortho_projection);
 
     GL(glBindBuffer(GL_ARRAY_BUFFER, gui->array_buffer));
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gui->index_buffer));
     // This could probably be done only at init time.
-    GL(glEnableVertexAttribArray(gui->prog.a_pos_l));
-    GL(glEnableVertexAttribArray(gui->prog.a_tex_pos_l));
-    GL(glEnableVertexAttribArray(gui->prog.a_color_l));
-    GL(glVertexAttribPointer(gui->prog.a_pos_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(A_POS_LOC));
+    GL(glEnableVertexAttribArray(A_TEX_POS_LOC));
+    GL(glEnableVertexAttribArray(A_COLOR_LOC));
+    GL(glVertexAttribPointer(A_POS_LOC, 2, GL_FLOAT, false,
                              sizeof(ImDrawVert),
                              (void*)OFFSETOF(ImDrawVert, pos)));
-    GL(glVertexAttribPointer(gui->prog.a_tex_pos_l, 2, GL_FLOAT, false,
+    GL(glVertexAttribPointer(A_TEX_POS_LOC, 2, GL_FLOAT, false,
                              sizeof(ImDrawVert),
                              (void*)OFFSETOF(ImDrawVert, uv)));
-    GL(glVertexAttribPointer(gui->prog.a_color_l, 4, GL_UNSIGNED_BYTE,
+    GL(glVertexAttribPointer(A_COLOR_LOC, 4, GL_UNSIGNED_BYTE,
                              true, sizeof(ImDrawVert),
                              (void*)OFFSETOF(ImDrawVert, col)));
     #undef OFFSETOF
@@ -418,7 +397,12 @@ static int on_gesture(const gesture_t *gest, void *user)
 static void gui_init(const inputs_t *inputs)
 {
     gui = (gui_t*)calloc(1, sizeof(*gui));
-    init_prog(&gui->prog);
+
+    gui->shader = gl_shader_create(VSHADER, FSHADER, NULL);
+    GL(glBindAttribLocation(gui->shader->prog, A_POS_LOC, "a_pos"));
+    GL(glBindAttribLocation(gui->shader->prog, A_TEX_POS_LOC, "a_tex_pos"));
+    GL(glBindAttribLocation(gui->shader->prog, A_COLOR_LOC, "a_color"));
+
     GL(glGenBuffers(1, &gui->array_buffer));
     GL(glGenBuffers(1, &gui->index_buffer));
     init_ImGui(inputs);
