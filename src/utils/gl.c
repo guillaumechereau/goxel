@@ -294,6 +294,9 @@ void gl_update_uniform(gl_shader_t *shader, const char *name, ...)
     case GL_FLOAT_VEC3:
         GL(glUniform3fv(uni->loc, 1, va_arg(args, const float*)));
         break;
+    case GL_FLOAT_VEC4:
+        GL(glUniform4fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
     case GL_FLOAT_MAT4:
         GL(glUniformMatrix4fv(uni->loc, 1, 0, va_arg(args, const float*)));
         break;
