@@ -112,8 +112,8 @@ static yocto_shape create_shape_for_block(
                 BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
                 sizeof(*vertices));
     nb = mesh_generate_vertices(mesh, block_pos,
-                                goxel.rend.settings.effects, vertices,
-                                &size, &subdivide);
+                                goxel.rend.settings.effects,
+                                vertices, &size, &subdivide);
     if (!nb) goto end;
 
     // Set vertices data.

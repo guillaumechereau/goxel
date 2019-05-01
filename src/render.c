@@ -118,6 +118,8 @@ static const struct {
 } ATTRIBUTES[] = {
     {"a_pos",           3, GL_UNSIGNED_BYTE,   false, OFFSET(pos)},
     {"a_normal",        3, GL_BYTE,            false, OFFSET(normal)},
+    {"a_tangent",       3, GL_BYTE,            false, OFFSET(tangent)},
+    {"a_gradient",      3, GL_BYTE,            false, OFFSET(gradient)},
     {"a_color",         4, GL_UNSIGNED_BYTE,   true,  OFFSET(color)},
     {"a_pos_data",      2, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
     {"a_uv",            2, GL_UNSIGNED_BYTE,   true,  OFFSET(uv)},
@@ -200,62 +202,52 @@ static void init_border_texture(void)
 }
 
 static void bump_img_fill(uint8_t (*data)[3], int x, int y, int w, int h,
-                          const uint8_t v[3])
+                          const float n[3])
 {
-    int i, j;
+    int i, j, k;
+    float nn[3];
+    vec3_normalize(n, nn);
     for (j = y; j < y + h; j++) {
         for (i = x; i < x + w; i++) {
-            memcpy(data[j * 256 + i], v, 3);
+            for (k = 0; k < 3; k++) {
+                data[j * 256 + i][k] = (nn[k] + 1) * 127;
+            }
         }
     }
 }
 
-static void bump_neighbor_value(int f, int e, uint8_t out[3])
+static void set_bump_block(uint8_t (*data)[3], int bx, int by, int mask)
 {
-    assert(e >= 0 && e < 4);
-    assert(f >= 0 && f < 6);
-    const int *n0, *n1;
-    n0 = FACES_NORMALS[f];
-    n1 = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
-    out[0] = (int)(n0[0] + n1[0]) * 127 / 2 + 127;
-    out[1] = (int)(n0[1] + n1[1]) * 127 / 2 + 127;
-    out[2] = (int)(n0[2] + n1[2]) * 127 / 2 + 127;
-}
-
-static void set_bump_block(uint8_t (*data)[3], int bx, int by, int f, int mask)
-{
-    const uint8_t v[3] = {127 + FACES_NORMALS[f][0] * 127,
-                          127 + FACES_NORMALS[f][1] * 127,
-                          127 + FACES_NORMALS[f][2] * 127};
-    uint8_t nv[3];
+    const float v[3] = {0, 0, 1};
+    float nv[3];
     bump_img_fill(data, bx * 16, by * 16, 16, 16, v);
     if (mask & 1) {
-        bump_neighbor_value(f, 0, nv);
-        bump_img_fill(data, bx * 16, by * 16, 16, 1, nv);
-    }
-    if (mask & 2) {
-        bump_neighbor_value(f, 1, nv);
+        vec3_set(nv, +1, 0, 1);
         bump_img_fill(data, bx * 16 + 15, by * 16, 1, 16, nv);
     }
     if (mask & 4) {
-        bump_neighbor_value(f, 2, nv);
+        vec3_set(nv, -1, 0, 1);
+        bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
+    }
+    if (mask & 2) {
+        vec3_set(nv, 0, 1, 1);
         bump_img_fill(data, bx * 16, by * 16 + 15, 16, 1, nv);
     }
     if (mask & 8) {
-        bump_neighbor_value(f, 3, nv);
-        bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
+        vec3_set(nv, 0, -1, 1);
+        bump_img_fill(data, bx * 16, by * 16, 16, 1, nv);
     }
 }
 
 static void init_bump_texture(void)
 {
     uint8_t (*data)[3];
-    int i, f, mask;
+    int i, mask;
+    // XXX: we can make the texture 256 x 16 now!
     data = calloc(1, 256 * 256 * 3);
     for (i = 0; i < 256; i++) {
-        f = (i / 16) % 6;
         mask = i % 16;
-        set_bump_block(data, i % 16, i / 16, f, mask);
+        set_bump_block(data, i % 16, i / 16, mask);
     }
     GL(glGenTextures(1, &g_bump_tex));
     GL(glActiveTexture(GL_TEXTURE0));
@@ -370,18 +362,15 @@ static render_item_t *get_item_for_block(
         const mesh_t *mesh,
         mesh_iterator_t *iter,
         const int block_pos[3],
-        int effects)
+        int effects, float smoothness)
 {
     render_item_t *item;
     const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
-                             EFFECT_MARCHING_CUBES | EFFECT_SMOOTH |
+                             EFFECT_MARCHING_CUBES |
                              EFFECT_FLAT;
     uint64_t block_data_id;
     int p[3], i, x, y, z;
     block_item_key_t key = {};
-
-    // For the moment we always compute the smooth normal no mater what.
-    effects |= EFFECT_SMOOTH;
 
     memset(&key, 0, sizeof(key)); // Just to be sure!
     key.effects = effects & effects_mask;
@@ -439,7 +428,8 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     int attr;
     float block_id_f[2];
 
-    item = get_item_for_block(mesh, iter, block_pos, effects);
+    item = get_item_for_block(mesh, iter, block_pos, effects,
+                              rend->settings.smoothness);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
     if (gl_has_uniform(shader, "u_block_id")) {
@@ -942,8 +932,8 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     GL(glEnableVertexAttribArray(0));
     GL(glVertexAttribPointer(0, 3, GL_BYTE, false, sizeof(vertex_t),
                              (void*)(intptr_t)offsetof(vertex_t, pos)));
-    GL(glEnableVertexAttribArray(2));
-    GL(glVertexAttribPointer(2, 4, GL_FLOAT, false, sizeof(vertex_t),
+    GL(glEnableVertexAttribArray(4));
+    GL(glVertexAttribPointer(4, 4, GL_FLOAT, false, sizeof(vertex_t),
                              (void*)(intptr_t)offsetof(vertex_t, color)));
     GL(glDepthMask(false));
     GL(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0));

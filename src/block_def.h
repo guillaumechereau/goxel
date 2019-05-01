@@ -58,12 +58,12 @@ static const int FACES_OPPOSITES[6] = {
 
 // face index + edge -> neighbor face index.
 static const int FACES_NEIGHBORS[6][4] = {
-    {2, 4, 3, 5},
-    {2, 5, 3, 4},
-    {5, 1, 4, 0},
+    {4, 3, 5, 2},
+    {5, 3, 4, 2},
     {4, 1, 5, 0},
-    {2, 1, 3, 0},
-    {0, 3, 1, 2},
+    {1, 5, 0, 4},
+    {1, 3, 0, 2},
+    {3, 1, 2, 0},
 };
 
 // vertex index -> vertex position
@@ -92,6 +92,15 @@ static const int FACES_NORMALS[6][3] = {
     { 0,  0, +1},
     { 1,  0,  0},
     {-1,  0,  0},
+};
+
+static const int FACES_TANGENTS[6][3] = {
+    {+1,  0,  0},
+    {-1,  0,  0},
+    { 0, +1,  0},
+    { 0, +1,  0},
+    { 0, +1,  0},
+    { 0,  0, +1},
 };
 
 // Matrices of transformation: unity plane => cube face plane.

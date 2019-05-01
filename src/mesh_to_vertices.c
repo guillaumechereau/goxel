@@ -37,19 +37,24 @@ static bool block_is_face_visible(uint32_t neighboors_mask, int f)
     return !(MASKS[f] & neighboors_mask);
 }
 
-static void block_get_normal(uint32_t neighboors_mask,
-                             const uint8_t neighboors[27], int f,
-                             bool smooth, int8_t out[3])
+static void block_get_normal(int f, int8_t normal[3], int8_t tangent[3])
+{
+    normal[0] = FACES_NORMALS[f][0];
+    normal[1] = FACES_NORMALS[f][1];
+    normal[2] = FACES_NORMALS[f][2];
+    tangent[0] = FACES_TANGENTS[f][0];
+    tangent[1] = FACES_TANGENTS[f][1];
+    tangent[2] = FACES_TANGENTS[f][2];
+}
+
+static void block_get_gradient(uint32_t neighboors_mask,
+                               const uint8_t neighboors[27], int f,
+                               int8_t gradient[3])
 {
     int x, y, z, i = 0;
     int sx = 0, sy = 0, sz = 0;
     int smax;
-    if (!smooth) {
-        out[0] = FACES_NORMALS[f][0];
-        out[1] = FACES_NORMALS[f][1];
-        out[2] = FACES_NORMALS[f][2];
-        return;
-    }
+
     for (z = -1; z <= +1; z++)
     for (y = -1; y <= +1; y++)
     for (x = -1; x <= +1; x++) {
@@ -61,15 +66,15 @@ static void block_get_normal(uint32_t neighboors_mask,
         i++;
     }
     if (sx == 0 && sy == 0 && sz == 0) {
-        out[0] = FACES_NORMALS[f][0];
-        out[1] = FACES_NORMALS[f][1];
-        out[2] = FACES_NORMALS[f][2];
+        gradient[0] = FACES_NORMALS[f][0];
+        gradient[1] = FACES_NORMALS[f][1];
+        gradient[2] = FACES_NORMALS[f][2];
         return;
     }
     smax = max(abs(sx), max(abs(sy), abs(sz)));
-    out[0] = sx * 127 / smax;
-    out[1] = sy * 127 / smax;
-    out[2] = sz * 127 / smax;
+    gradient[0] = sx * 127 / smax;
+    gradient[1] = sy * 127 / smax;
+    gradient[2] = sz * 127 / smax;
 }
 
 static bool block_get_edge_border(uint32_t neighboors_mask, int f, int e)
@@ -213,7 +218,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
     uint8_t shadow_mask, borders_mask;
     const int ts = VOXEL_TEXTURE_SIZE;
     uint8_t *data, neighboors[27], v[4];
-    int8_t normal[3];
+    int8_t normal[3], tangent[3], gradient[3];
     int pos[3];
     const int *vpos;
 
@@ -243,8 +248,8 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
         neighboors_mask = get_neighboors(data, pos, neighboors);
         for (f = 0; f < 6; f++) {
             if (!block_is_face_visible(neighboors_mask, f)) continue;
-            block_get_normal(neighboors_mask, neighboors, f,
-                             effects & EFFECT_SMOOTH, normal);
+            block_get_normal(f, normal, tangent);
+            block_get_gradient(neighboors_mask, neighboors, f, gradient);
             shadow_mask = block_get_shadow_mask(neighboors_mask, f);
             borders_mask = block_get_border_mask(neighboors_mask, f, effects);
             for (i = 0; i < 4; i++) {
@@ -253,6 +258,8 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                 out[nb * 4 + i].pos[1] = y + vpos[1];
                 out[nb * 4 + i].pos[2] = z + vpos[2];
                 memcpy(out[nb * 4 + i].normal, normal, sizeof(normal));
+                memcpy(out[nb * 4 + i].tangent, tangent, sizeof(tangent));
+                memcpy(out[nb * 4 + i].gradient, gradient, sizeof(gradient));
                 memcpy(out[nb * 4 + i].color, v, sizeof(v));
                 out[nb * 4 + i].color[3] = out[nb * 4 + i].color[3] ? 255 : 0;
                 out[nb * 4 + i].occlusion_uv[0] =
@@ -264,7 +271,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                 // For testing:
                 // This put a border bump on all the edges of the voxel.
                 out[nb * 4 + i].bump_uv[0] = borders_mask * 16;
-                out[nb * 4 + i].bump_uv[1] = f * 16;
+                out[nb * 4 + i].bump_uv[1] = 0;
                 out[nb * 4 + i].pos_data = get_pos_data(x, y, z, f);
             }
             nb++;

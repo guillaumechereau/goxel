@@ -42,15 +42,18 @@ varying highp   vec3 v_pos;
 varying lowp    vec4 v_color;
 varying mediump vec2 v_occlusion_uv;
 varying mediump vec2 v_uv;
-varying mediump vec2 v_bump_uv;
-varying mediump vec3 v_normal;
 varying mediump vec4 v_shadow_coord;
+varying mediump mat3 v_TBN;
+varying mediump vec2 v_UVCoord1;
+varying mediump vec3 v_gradient;
 
 #ifdef VERTEX_SHADER
 
 /************************************************************************/
 attribute highp   vec3 a_pos;
 attribute mediump vec3 a_normal;
+attribute mediump vec3 a_tangent;
+attribute mediump vec3 a_gradient;
 attribute lowp    vec4 a_color;
 attribute mediump vec2 a_occlusion_uv;
 attribute mediump vec2 a_bump_uv;   // bump tex base coordinates [0,255]
@@ -58,14 +61,21 @@ attribute mediump vec2 a_uv;        // uv coordinates [0,1]
 
 void main()
 {
-    v_normal = a_normal;
     v_color = a_color;
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_pos = a_pos * u_pos_scale;
     v_uv = a_uv;
-    v_bump_uv = a_bump_uv;
     gl_Position = u_proj * u_view * u_model * vec4(v_pos, 1.0);
     v_shadow_coord = (u_shadow_mvp * u_model * vec4(v_pos, 1.0));
+
+    mediump vec4 tangent = vec4(normalize(a_tangent), 1.0);
+    mediump vec3 normalW = normalize(a_normal);
+    mediump vec3 tangentW = normalize(vec3(u_model * vec4(tangent.xyz, 0.0)));
+    mediump vec3 bitangentW = cross(normalW, tangentW) * tangent.w;
+    v_TBN = mat3(tangentW, bitangentW, normalW);
+
+    v_gradient = a_gradient;
+    v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
 }
 /************************************************************************/
 
@@ -74,25 +84,30 @@ void main()
 #ifdef FRAGMENT_SHADER
 
 /************************************************************************/
-mediump vec2 uv, bump_uv;
-mediump vec3 n, s, r, v, bump;
-mediump float s_dot_n;
-lowp float l_amb, l_dif, l_spe;
-lowp float occlusion;
-lowp float visibility;
-lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
-int i;
+mediump vec3 getNormal()
+{
+    mediump mat3 tbn = v_TBN;
+    mediump vec3 n = texture2D(u_bump_tex, v_UVCoord1).rgb;
+    n = tbn * (2.0 * n - 1.0); // XXX: add normal scale uniform.
+    n = mix(normalize(n), normalize(v_gradient), u_m_smo);
+    return normalize(n);
+}
 
 void main()
 {
+    mediump vec2 uv, bump_uv;
+    mediump vec3 n, s, r, v, bump;
+    mediump float s_dot_n;
+    lowp float l_amb, l_dif, l_spe;
+    lowp float occlusion;
+    lowp float visibility;
+    lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
+    int i;
+
     // clamp uv so to prevent overflow with multismapling.
     uv = clamp(v_uv, 0.0, 1.0);
     s = u_l_dir;
-    n = normalize((u_view * u_model * vec4(v_normal, 0.0)).xyz);
-    bump_uv = (v_bump_uv + 0.5 + uv * 15.0) / 256.0;
-    bump = texture2D(u_bump_tex, bump_uv).xyz - 0.5;
-    bump = normalize((u_view * u_model * vec4(bump, 0.0)).xyz);
-    n = mix(bump, n, u_m_smo);
+    n = normalize((u_view * vec4(getNormal(), 0.0)).xyz);
     s_dot_n = dot(s, n);
     l_dif = u_m_dif * max(0.0, s_dot_n);
     l_amb = u_m_amb;
