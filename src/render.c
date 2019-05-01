@@ -19,6 +19,8 @@
 
 #include "goxel.h"
 
+#include "shader_cache.h"
+
 #ifndef RENDER_CACHE_SIZE
 #   define RENDER_CACHE_SIZE (1 * GB)
 #endif
@@ -85,19 +87,6 @@ static model3d_t *g_sphere_model;
 static model3d_t *g_grid_model;
 static model3d_t *g_rect_model;
 static model3d_t *g_wire_rect_model;
-
-
-typedef struct {
-    // Those values are used as a key to identify the shader.
-    const char *path;
-    const char *include;
-    gl_shader_t *shader;
-} prog_t;
-
-// Static list of programs.  Need to be big enough for all the possible
-// shaders we are going to use.
-static prog_t g_progs[5] = {};
-
 
 static GLuint g_index_buffer;
 static GLuint g_background_array_buffer;
@@ -259,42 +248,17 @@ static void init_bump_texture(void)
     free(data);
 }
 
-static void init_prog(prog_t *prog, const char *path, const char *include)
+static void shader_init(gl_shader_t *shader)
 {
-    char include_full[256];
-    const char *code;
     int attr;
-    gl_shader_t *shader;
-
-    sprintf(include_full, "%s\n", include ?: "");
-    code = assets_get(path, NULL);
-    prog->path = path;
-    prog->include = include;
-    shader = gl_shader_create(code, code, include_full);
-    prog->shader = shader;
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glBindAttribLocation(shader->prog, attr, ATTRIBUTES[attr].name));
     }
     GL(glLinkProgram(shader->prog));
     GL(glUseProgram(shader->prog));
-
     gl_update_uniform(shader, "u_occlusion_tex", 0);
     gl_update_uniform(shader, "u_bump_tex", 1);
     gl_update_uniform(shader, "u_shadow_tex", 2);
-}
-
-static gl_shader_t *get_shader(const char *path, const char *include)
-{
-    int i;
-    prog_t *p = NULL;
-    for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
-        p = &g_progs[i];
-        if (!p->path) break;
-        if (p->path == path && p->include == include) return p->shader;
-    }
-    assert(i < ARRAY_SIZE(g_progs));
-    init_prog(p, path, include);
-    return p->shader;
 }
 
 void render_init()
@@ -335,12 +299,6 @@ void render_init()
 
 void render_deinit(void)
 {
-    int i;
-    for (i = 0; i < ARRAY_SIZE(g_progs); i++) {
-        if (g_progs[i].shader)
-            gl_shader_delete(g_progs[i].shader);
-    }
-    memset(&g_progs, 0, sizeof(g_progs));
     GL(glDeleteBuffers(1, &g_index_buffer));
     g_index_buffer = 0;
 }
@@ -565,13 +523,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     get_light_dir(rend, true, light_dir);
 
     if (effects & EFFECT_RENDER_POS)
-        shader = get_shader("asset://data/shaders/pos_data.glsl", NULL);
+        shader = shader_get("pos_data", NULL, shader_init);
     else if (effects & EFFECT_SHADOW_MAP)
-        shader = get_shader("asset://data/shaders/shadow_map.glsl", NULL);
+        shader = shader_get("shadow_map", NULL, shader_init);
     else {
         shadow = rend->settings.shadow;
-        shader = get_shader("asset://data/shaders/mesh.glsl",
-                            shadow ? "#define SHADOW" : NULL);
+        shader = shader_get("mesh", shadow ? "SHADOW\0" : NULL, shader_init);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
@@ -920,7 +877,7 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     vertices[2] = (vertex_t){{+1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
     vertices[3] = (vertex_t){{-1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
 
-    shader = get_shader("asset://data/shaders/background.glsl", NULL);
+    shader = shader_get("background", NULL, shader_init);
     GL(glUseProgram(shader->prog));
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
