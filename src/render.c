@@ -86,30 +86,20 @@ static model3d_t *g_grid_model;
 static model3d_t *g_rect_model;
 static model3d_t *g_wire_rect_model;
 
+typedef struct uniform {
+    char        name[64];
+    GLint       size;
+    GLenum      type;
+    GLint       loc;
+} uniform_t;
+
 typedef struct {
     // Those values are used as a key to identify the shader.
     const char *path;
     const char *include;
 
     GLint prog;
-    GLint u_model_l;
-    GLint u_view_l;
-    GLint u_proj_l;
-    GLint u_l_dir_l;
-    GLint u_l_int_l;
-    GLint u_m_amb_l;
-    GLint u_m_dif_l;
-    GLint u_m_spe_l;
-    GLint u_m_shi_l;
-    GLint u_m_smo_l;
-    GLint u_occlusion_tex_l;
-    GLint u_occlusion_l;
-    GLint u_bump_tex_l;
-    GLint u_pos_scale_l;
-    GLint u_shadow_mvp_l;
-    GLint u_shadow_k_l;
-    GLint u_shadow_tex_l;
-    GLint u_block_id_l;
+    uniform_t uniforms[32];
 } prog_t;
 
 // Static list of programs.  Need to be big enough for all the possible
@@ -163,6 +153,50 @@ static const struct {
  *  the 4 corners and the 4 edges => 8bit => 256 blocks.
  *
  */
+
+static bool gl_has_uniform(prog_t *prog, const char *name)
+{
+    uniform_t *uni;
+    for (uni = &prog->uniforms[0]; uni->size; uni++) {
+        if (strcmp(uni->name, name) == 0) return true;
+    }
+    return false;
+}
+
+static void gl_update_uniform(
+        prog_t *prog, const char *name, ...)
+{
+    uniform_t *uni;
+    va_list args;
+
+    for (uni = &prog->uniforms[0]; uni->size; uni++) {
+        if (strcmp(uni->name, name) == 0) break;
+    }
+    if (!uni->size) return; // No such uniform.
+
+    va_start(args, name);
+    switch (uni->type) {
+    case GL_INT:
+    case GL_SAMPLER_2D:
+        GL(glUniform1i(uni->loc, va_arg(args, int)));
+        break;
+    case GL_FLOAT:
+        GL(glUniform1f(uni->loc, va_arg(args, double)));
+        break;
+    case GL_FLOAT_VEC2:
+        GL(glUniform2fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_VEC3:
+        GL(glUniform3fv(uni->loc, 1, va_arg(args, const float*)));
+        break;
+    case GL_FLOAT_MAT4:
+        GL(glUniformMatrix4fv(uni->loc, 1, 0, va_arg(args, const float*)));
+        break;
+    default:
+        assert(false);
+    }
+    va_end(args);
+}
 
 static void copy_color(const uint8_t in[4], uint8_t out[4])
 {
@@ -289,7 +323,9 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
 {
     char include_full[256];
     const char *code;
-    int attr;
+    int attr, count, i;
+    uniform_t *uni;
+
     sprintf(include_full, "#define VOXEL_TEXTURE_SIZE %d.0\n%s\n",
             VOXEL_TEXTURE_SIZE, include ?: "");
     code = assets_get(path, NULL);
@@ -301,29 +337,18 @@ static void init_prog(prog_t *prog, const char *path, const char *include)
     }
     GL(glLinkProgram(prog->prog));
     GL(glUseProgram(prog->prog));
-#define UNIFORM(x) GL(prog->x##_l = glGetUniformLocation(prog->prog, #x))
-    UNIFORM(u_model);
-    UNIFORM(u_view);
-    UNIFORM(u_proj);
-    UNIFORM(u_l_dir);
-    UNIFORM(u_l_int);
-    UNIFORM(u_m_amb);
-    UNIFORM(u_m_dif);
-    UNIFORM(u_m_spe);
-    UNIFORM(u_m_shi);
-    UNIFORM(u_m_smo);
-    UNIFORM(u_occlusion_tex);
-    UNIFORM(u_occlusion);
-    UNIFORM(u_bump_tex);
-    UNIFORM(u_pos_scale);
-    UNIFORM(u_shadow_mvp);
-    UNIFORM(u_shadow_k);
-    UNIFORM(u_shadow_tex);
-    UNIFORM(u_block_id);
-#undef UNIFORM
-    GL(glUniform1i(prog->u_occlusion_tex_l, 0));
-    GL(glUniform1i(prog->u_bump_tex_l, 1));
-    GL(glUniform1i(prog->u_shadow_tex_l, 2));
+
+    GL(glGetProgramiv(prog->prog, GL_ACTIVE_UNIFORMS, &count));
+    for (i = 0; i < count; i++) {
+        uni = &prog->uniforms[i];
+        GL(glGetActiveUniform(prog->prog, i, sizeof(uni->name),
+                              NULL, &uni->size, &uni->type, uni->name));
+        GL(uni->loc = glGetUniformLocation(prog->prog, uni->name));
+    }
+
+    gl_update_uniform(prog, "u_occlusion_tex", 0);
+    gl_update_uniform(prog, "u_bump_tex", 1);
+    gl_update_uniform(prog, "u_shadow_tex", 2);
 }
 
 static prog_t *get_prog(const char *path, const char *include)
@@ -476,12 +501,12 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     item = get_item_for_block(mesh, iter, block_pos, effects);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
-    if (prog->u_block_id_l != -1) {
+    if (gl_has_uniform(prog, "u_block_id")) {
         block_id_f[1] = ((block_id >> 8) & 0xff) / 255.0;
         block_id_f[0] = ((block_id >> 0) & 0xff) / 255.0;
-        GL(glUniform2fv(prog->u_block_id_l, 1, block_id_f));
+        gl_update_uniform(prog, "u_block_id", block_id_f);
     }
-    GL(glUniform1f(prog->u_pos_scale_l, 1.f / item->subdivide));
+    gl_update_uniform(prog, "u_pos_scale", 1.f / item->subdivide);
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
         GL(glVertexAttribPointer(attr,
@@ -494,7 +519,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
 
     mat4_copy(model, block_model);
     mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
-    GL(glUniformMatrix4fv(prog->u_model_l, 1, 0, (float*)block_model));
+    gl_update_uniform(prog, "u_model", block_model);
     if (item->size == 4) {
         // Use indexed triangles.
         GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -505,7 +530,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
 
 #ifndef GLES2
     if (effects & EFFECT_WIREFRAME) {
-        GL(glUniform1f(prog->u_m_amb_l, 0));
+        gl_update_uniform(prog, "u_m_amb", 0.0);
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
         if (item->size == 4)
             GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -513,7 +538,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         else
             GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-        GL(glUniform1f(prog->u_m_amb_l, rend->settings.ambient));
+        gl_update_uniform(prog, "u_m_amb", rend->settings.ambient);
     }
 #endif
 }
@@ -645,23 +670,23 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         assert(shadow_mvp);
         GL(glActiveTexture(GL_TEXTURE2));
         GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
-        GL(glUniformMatrix4fv(prog->u_shadow_mvp_l, 1, 0, (float*)shadow_mvp));
-        GL(glUniform1i(prog->u_shadow_tex_l, 2));
-        GL(glUniform1f(prog->u_shadow_k_l, rend->settings.shadow));
+        gl_update_uniform(prog, "u_shadow_mvp", shadow_mvp);
+        gl_update_uniform(prog, "u_shadow_tex", 2);
+        gl_update_uniform(prog, "u_shadow_k", rend->settings.shadow);
     }
 
-    GL(glUniformMatrix4fv(prog->u_proj_l, 1, 0, (float*)rend->proj_mat));
-    GL(glUniformMatrix4fv(prog->u_view_l, 1, 0, (float*)rend->view_mat));
-    GL(glUniform1i(prog->u_occlusion_tex_l, 0));
-    GL(glUniform1i(prog->u_bump_tex_l, 1));
-    GL(glUniform3fv(prog->u_l_dir_l, 1, light_dir));
-    GL(glUniform1f(prog->u_l_int_l, rend->light.intensity));
-    GL(glUniform1f(prog->u_m_amb_l, rend->settings.ambient));
-    GL(glUniform1f(prog->u_m_dif_l, rend->settings.diffuse));
-    GL(glUniform1f(prog->u_m_spe_l, rend->settings.specular));
-    GL(glUniform1f(prog->u_m_shi_l, rend->settings.shininess));
-    GL(glUniform1f(prog->u_m_smo_l, rend->settings.smoothness));
-    GL(glUniform1f(prog->u_occlusion_l, rend->settings.border_shadow));
+    gl_update_uniform(prog, "u_proj", rend->proj_mat);
+    gl_update_uniform(prog, "u_view", rend->view_mat);
+    gl_update_uniform(prog, "u_occlusion_tex", 0);
+    gl_update_uniform(prog, "u_bump_tex", 1);
+    gl_update_uniform(prog, "u_l_dir", light_dir);
+    gl_update_uniform(prog, "u_l_int", rend->light.intensity);
+    gl_update_uniform(prog, "u_m_amb", rend->settings.ambient);
+    gl_update_uniform(prog, "u_m_dif", rend->settings.diffuse);
+    gl_update_uniform(prog, "u_m_spe", rend->settings.specular);
+    gl_update_uniform(prog, "u_m_shi", rend->settings.shininess);
+    gl_update_uniform(prog, "u_m_smo", rend->settings.smoothness);
+    gl_update_uniform(prog, "u_occlusion", rend->settings.border_shadow);
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));
