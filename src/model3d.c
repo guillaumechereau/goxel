@@ -18,58 +18,15 @@
 
 #include "goxel.h"
 
-typedef struct {
-    GLint prog;
-    GLint a_pos_l;
-    GLint a_color_l;
-    GLint a_normal_l;
-    GLint a_uv_l;
-    GLint u_color_l;
-    GLint u_model_l;
-    GLint u_view_l;
-    GLint u_proj_l;
-    GLint u_clip_l;
-    GLint u_tex_l;
-    GLint u_uv_scale_l;
-    GLint u_strip_l;
-    GLint u_time_l;
-    GLint u_grid_alpha_l;
+enum {
+    A_POS_LOC = 0,
+    A_COLOR_LOC = 1,
+    A_NORMAL_LOC = 2,
+    A_UV_LOC = 3,
+};
 
-    GLint u_l_dir_l;
-    GLint u_l_diff_l;
-    GLint u_l_emit_l;
-} prog_t;
-
-static prog_t prog;
+static gl_shader_t *g_shader = NULL;
 static texture_t *g_white_tex = NULL;
-
-static void init_prog(prog_t *prog, const char *vshader, const char *fshader)
-{
-    prog->prog = gl_create_prog(vshader, fshader, NULL);
-#define UNIFORM(x) GL(prog->x##_l = glGetUniformLocation(prog->prog, #x))
-#define ATTRIB(x)  GL(prog->x##_l = glGetAttribLocation(prog->prog, #x))
-    ATTRIB(a_pos);
-    ATTRIB(a_color);
-    ATTRIB(a_normal);
-    ATTRIB(a_uv);
-    UNIFORM(u_color);
-    UNIFORM(u_model);
-    UNIFORM(u_view);
-    UNIFORM(u_proj);
-    UNIFORM(u_clip);
-    UNIFORM(u_tex);
-    UNIFORM(u_uv_scale);
-    UNIFORM(u_strip);
-    UNIFORM(u_time);
-    UNIFORM(u_grid_alpha);
-    UNIFORM(u_l_dir);
-    UNIFORM(u_l_diff);
-    UNIFORM(u_l_emit);
-#undef ATTRIB
-#undef UNIFORM
-    GL(glUseProgram(prog->prog));
-    GL(glUniform1i(prog->u_tex_l, 0));
-}
 
 static texture_t *create_white_tex(void)
 {
@@ -90,7 +47,13 @@ void model3d_init(void)
 {
     const char *shader;
     shader = assets_get("asset://data/shaders/model3d.glsl", NULL);
-    init_prog(&prog, shader, shader);
+    g_shader = gl_shader_create(shader, shader, NULL);
+    GL(glUseProgram(g_shader->prog));
+    GL(glBindAttribLocation(g_shader->prog, A_POS_LOC, "a_pos"));
+    GL(glBindAttribLocation(g_shader->prog, A_COLOR_LOC, "a_color"));
+    GL(glBindAttribLocation(g_shader->prog, A_NORMAL_LOC, "a_normal"));
+    GL(glBindAttribLocation(g_shader->prog, A_UV_LOC, "a_uv"));
+    gl_update_uniform(g_shader, "u_tex", 0);
     g_white_tex = create_white_tex();
 }
 
@@ -299,11 +262,11 @@ void model3d_render(model3d_t *model3d,
     float grid_alpha;
 
     copy_color(color, c);
-    GL(glUseProgram(prog.prog));
-    GL(glUniformMatrix4fv(prog.u_model_l, 1, 0, (float*)model));
-    GL(glUniformMatrix4fv(prog.u_view_l, 1, 0, (float*)view));
-    GL(glUniformMatrix4fv(prog.u_proj_l, 1, 0, (float*)proj));
-    GL(glEnableVertexAttribArray(prog.a_pos_l));
+    GL(glUseProgram(g_shader->prog));
+    gl_update_uniform(g_shader, "u_model", model);
+    gl_update_uniform(g_shader, "u_view", view);
+    gl_update_uniform(g_shader, "u_proj", proj);
+    GL(glEnableVertexAttribArray(A_POS_LOC));
     GL(glEnable(GL_BLEND));
     GL(glEnable(GL_DEPTH_TEST));
     GL(glDepthFunc(GL_LESS));
@@ -315,15 +278,15 @@ void model3d_render(model3d_t *model3d,
     if (!model3d->solid) GL(glDepthMask(false));
 
     vec4_set(cf, c[0] / 255.0, c[1] / 255.0, c[2] / 255.0, c[3] / 255.0);
-    GL(glUniform4fv(prog.u_color_l, 1, cf));
-    GL(glUniform1f(prog.u_strip_l, effects & EFFECT_STRIP ? 1.0 : 0.0));
-    GL(glUniform1f(prog.u_time_l, 0)); // No moving strip effects.
+    gl_update_uniform(g_shader, "u_color", cf);
+    gl_update_uniform(g_shader, "u_strip", effects & EFFECT_STRIP ? 1.0 : 0.0);
+    gl_update_uniform(g_shader, "u_time", 0.0); // No moving strip effects.
 
     tex = tex ?: g_white_tex;
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, tex->tex));
-    GL(glUniform2f(prog.u_uv_scale_l, (float)tex->w / tex->tex_w,
-                                      (float)tex->h / tex->tex_h));
+    gl_update_uniform(g_shader, "u_uv_scale",
+            VEC((float)tex->w / tex->tex_w, (float)tex->h / tex->tex_h));
 
     if (model3d->dirty) {
         if (!model3d->vertex_buffer)
@@ -335,42 +298,43 @@ void model3d_render(model3d_t *model3d,
         model3d->dirty = false;
     }
     GL(glBindBuffer(GL_ARRAY_BUFFER, model3d->vertex_buffer));
-    GL(glEnableVertexAttribArray(prog.a_pos_l));
-    GL(glVertexAttribPointer(prog.a_pos_l, 3, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(A_POS_LOC));
+    GL(glVertexAttribPointer(A_POS_LOC, 3, GL_FLOAT, false,
             sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, pos)));
-    GL(glEnableVertexAttribArray(prog.a_color_l));
-    GL(glVertexAttribPointer(prog.a_color_l, 4, GL_UNSIGNED_BYTE, true,
+    GL(glEnableVertexAttribArray(A_COLOR_LOC));
+    GL(glVertexAttribPointer(A_COLOR_LOC, 4, GL_UNSIGNED_BYTE, true,
             sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, color)));
-    GL(glEnableVertexAttribArray(prog.a_uv_l));
-    GL(glVertexAttribPointer(prog.a_uv_l, 2, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(A_UV_LOC));
+    GL(glVertexAttribPointer(A_UV_LOC, 2, GL_FLOAT, false,
             sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, uv)));
-    GL(glEnableVertexAttribArray(prog.a_normal_l));
-    GL(glVertexAttribPointer(prog.a_normal_l, 3, GL_FLOAT, false,
+    GL(glEnableVertexAttribArray(A_NORMAL_LOC));
+    GL(glVertexAttribPointer(A_NORMAL_LOC, 3, GL_FLOAT, false,
             sizeof(*model3d->vertices), (void*)offsetof(model_vertex_t, normal)));
 
-    GL(glUniform1f(prog.u_l_emit_l, 1.0f));
-    GL(glUniform1f(prog.u_l_diff_l, 0.0f));
+    gl_update_uniform(g_shader, "u_l_emit", 1.0);
+    gl_update_uniform(g_shader, "u_l_diff", 0.0);
 
     if (clip_box && !box_is_null(clip_box)) mat4_invert(clip_box, clip);
-    GL(glUniformMatrix4fv(prog.u_clip_l, 1, 0, (float*)clip));
+    gl_update_uniform(g_shader, "u_clip", clip);
 
     grid_alpha = (effects & EFFECT_GRID) ? 0.05 : 0.0;
-    GL(glUniform1f(prog.u_grid_alpha_l, grid_alpha));
+    gl_update_uniform(g_shader, "u_grid_alpha", grid_alpha);
 
     if (model3d->solid) {
         if (light && (!(effects & EFFECT_NO_SHADING))) {
             vec3_copy(light, light_dir);
             if (effects & EFFECT_SEE_BACK) vec3_imul(light_dir, -1);
-            GL(glUniform3fv(prog.u_l_dir_l, 1, light_dir));
-            GL(glUniform1f(prog.u_l_emit_l, 0.2f));
-            GL(glUniform1f(prog.u_l_diff_l, 0.8f));
+            gl_update_uniform(g_shader, "u_l_dir", light_dir);
+            gl_update_uniform(g_shader, "u_l_emit", 0.2);
+            gl_update_uniform(g_shader, "u_l_diff", 0.8);
+
         }
         GL(glDrawArrays(GL_TRIANGLES, 0, model3d->nb_vertices));
     } else {
         GL(glDrawArrays(GL_LINES, 0, model3d->nb_vertices));
     }
-    GL(glDisableVertexAttribArray(prog.a_pos_l));
-    GL(glDisableVertexAttribArray(prog.a_color_l));
+    GL(glDisableVertexAttribArray(A_POS_LOC));
+    GL(glDisableVertexAttribArray(A_COLOR_LOC));
     GL(glCullFace(GL_BACK));
     GL(glDepthMask(true));
 }
