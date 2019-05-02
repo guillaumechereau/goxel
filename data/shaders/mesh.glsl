@@ -31,10 +31,10 @@ uniform lowp    float u_l_int;
 uniform lowp    float u_l_amb; // Ambient light coef.
 
 // Material parameters
-uniform lowp float u_m_dif; // Diffuse light coef.
-uniform lowp float u_m_spe; // Specular light coef.
-uniform lowp float u_m_glo; // Glossiness.
-uniform lowp float u_m_smo; // Smoothness.
+uniform lowp float u_m_metallic;
+uniform lowp float u_m_roughness;
+uniform lowp float u_m_smoothness;
+uniform lowp vec4  u_m_base_color;
 
 uniform mediump sampler2D u_occlusion_tex;
 uniform mediump sampler2D u_bump_tex;
@@ -73,7 +73,7 @@ void main()
     vec4 pos = u_model * vec4(a_pos, 1.0) * u_pos_scale;
     v_Position = vec3(pos.xyz) / pos.w;
 
-    v_color = a_color;
+    v_color = pow(a_color.rgba, vec4(2.2));
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_uv = a_uv;
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
@@ -151,23 +151,26 @@ mediump vec3 getNormal()
     mediump mat3 tbn = v_TBN;
     mediump vec3 n = texture2D(u_bump_tex, v_UVCoord1).rgb;
     n = tbn * (2.0 * n - 1.0); // XXX: add normal scale uniform.
-    n = mix(normalize(n), normalize(v_gradient), u_m_smo);
+    n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
     return normalize(n);
 }
 
 MaterialInfo getMaterialInfo()
 {
-    vec4 baseColor = vec4(u_m_dif);
+    float metallic = u_m_metallic;
+    float perceptualRoughness = u_m_roughness;
+
+    vec3 f0 = vec3(0.04);
+    vec4 baseColor = u_m_base_color;
     baseColor *= v_color;
-    vec3 f0 = vec3(u_m_spe);
-    float perceptualRoughness = 1.0 - u_m_glo;
-    vec3 specularColor = f0;
-    vec3 specularEnvironmentR0 = specularColor.rgb;
-    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
-    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
+    vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
+    vec3 specularColor = mix(f0, baseColor.rgb, metallic);
+    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);
+    metallic = clamp(metallic, 0.0, 1.0);
     float alphaRoughness = perceptualRoughness * perceptualRoughness;
-    float oneMinusSpecularStrength = 1.0 - max(max(f0.r, f0.g), f0.b);
-    vec3 diffuseColor = baseColor.rgb * oneMinusSpecularStrength;
+    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
+    vec3 specularEnvironmentR0 = specularColor.rgb;
+    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
 
     return MaterialInfo(
         perceptualRoughness,
@@ -276,13 +279,19 @@ vec3 applyDirectionalLight(Light light, MaterialInfo materialInfo,
     return light.intensity * light.color * shade;
 }
 
+vec3 toneMap(vec3 color)
+{
+    // color *= u_exposure;
+    return pow(color, vec3(1.0 / 2.2));
+}
+
 void main()
 {
     MaterialInfo materialInfo = getMaterialInfo();
     vec3 normal = getNormal();
     vec3 view = normalize(u_camera - v_Position);
 
-    Light light = Light(-u_l_dir, u_l_int * 5.0, vec3(1.0), 0.0);
+    Light light = Light(-u_l_dir, u_l_int * 5.0, vec3(1.0, 1.0, 1.0), 0.0);
 
     vec3 color = vec3(0.0);
     color += applyDirectionalLight(light, materialInfo, normal, view);
@@ -295,7 +304,7 @@ void main()
     occlusion = mix(1.0, occlusion, u_occlusion);
     color *= occlusion;
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(toneMap(color), 1.0);
 }
 
 #endif

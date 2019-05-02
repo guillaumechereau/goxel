@@ -37,9 +37,8 @@ static void material_advanced_panel(void)
     }
 
     MAT_FLOAT(ambient, 0, 1);
-    MAT_FLOAT(diffuse, 0, 1);
-    MAT_FLOAT(specular, 0, 1);
-    MAT_FLOAT(glossiness, 0, 1);
+    MAT_FLOAT(metallic, 0, 1);
+    MAT_FLOAT(roughness, 0, 1);
     MAT_FLOAT(smoothness, 0, 1);
 
 #undef MAT_FLOAT

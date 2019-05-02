@@ -569,10 +569,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     gl_update_uniform(shader, "u_l_dir", light_dir);
     gl_update_uniform(shader, "u_l_int", rend->light.intensity);
     gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
-    gl_update_uniform(shader, "u_m_dif", rend->settings.diffuse);
-    gl_update_uniform(shader, "u_m_spe", rend->settings.specular);
-    gl_update_uniform(shader, "u_m_glo", rend->settings.glossiness);
-    gl_update_uniform(shader, "u_m_smo", rend->settings.smoothness);
+
+    gl_update_uniform(shader, "u_m_metallic", rend->settings.metallic);
+    gl_update_uniform(shader, "u_m_roughness", rend->settings.roughness);
+    gl_update_uniform(shader, "u_m_smoothness", rend->settings.smoothness);
+    gl_update_uniform(shader, "u_m_base_color", rend->settings.base_color);
+
     gl_update_uniform(shader, "u_occlusion", rend->settings.border_shadow);
 
     mat4_invert(rend->view_mat, camera);
@@ -950,10 +952,12 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
     *out = (render_settings_t) {
         .border_shadow = 0.4,
         .ambient = 0.3,
-        .diffuse = 0.6,
-        .specular = 0.2,
-        .glossiness = 0.2,
+
+        .metallic = 0.2,
+        .roughness = 0.5,
+        .base_color = {1, 1, 1, 1},
         .smoothness = 0.0,
+
         .effects = EFFECT_BORDERS,
         .shadow = 0.3,
     };
