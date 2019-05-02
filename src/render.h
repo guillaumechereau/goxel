@@ -46,7 +46,7 @@ typedef struct {
     float ambient;
     float diffuse;
     float specular;
-    float shininess;
+    float glossiness;
     float smoothness;
     float shadow;
     int   effects;

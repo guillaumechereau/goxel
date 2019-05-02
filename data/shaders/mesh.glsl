@@ -1,25 +1,29 @@
-/*
- * I followed those name conventions.  All the vectors are expressed in eye
- * coordinates.
+/* Goxel 3D voxels editor
  *
- *         reflection         light source
+ * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>
  *
- *               r              s
- *                 ^         ^
- *                  \   n   /
- *  eye              \  ^  /
- *     v  <....       \ | /
- *              -----__\|/
- *                  ----+----
- *
- *
+ * Goxel is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later
+ * version.
+
+ * Goxel is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+
+ * You should have received a copy of the GNU General Public License along with
+ * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+// Some of the algos come from glTF Sampler, under Apache Licence V2.
 
 uniform highp mat4  u_model;
 uniform highp mat4  u_view;
 uniform highp mat4  u_proj;
 uniform highp mat4  u_shadow_mvp;
 uniform lowp  float u_pos_scale;
+uniform highp vec3  u_camera;
 
 // Light parameters
 uniform lowp    vec3  u_l_dir;
@@ -29,7 +33,7 @@ uniform lowp    float u_l_int;
 uniform lowp float u_m_amb; // Ambient light coef.
 uniform lowp float u_m_dif; // Diffuse light coef.
 uniform lowp float u_m_spe; // Specular light coef.
-uniform lowp float u_m_shi; // Specular light shininess.
+uniform lowp float u_m_glo; // Glossiness.
 uniform lowp float u_m_smo; // Smoothness.
 
 uniform mediump sampler2D u_occlusion_tex;
@@ -38,7 +42,7 @@ uniform mediump float     u_occlusion;
 uniform mediump sampler2D u_shadow_tex;
 uniform mediump float     u_shadow_k;
 
-varying highp   vec3 v_pos;
+varying highp   vec3 v_Position;
 varying lowp    vec4 v_color;
 varying mediump vec2 v_occlusion_uv;
 varying mediump vec2 v_uv;
@@ -46,6 +50,8 @@ varying mediump vec4 v_shadow_coord;
 varying mediump mat3 v_TBN;
 varying mediump vec2 v_UVCoord1;
 varying mediump vec3 v_gradient;
+
+const float M_PI = 3.141592653589793;
 
 #ifdef VERTEX_SHADER
 
@@ -64,12 +70,14 @@ attribute mediump vec2 a_uv;        // uv coordinates [0,1]
 
 void main()
 {
+    vec4 pos = u_model * vec4(a_pos, 1.0) * u_pos_scale;
+    v_Position = vec3(pos.xyz) / pos.w;
+
     v_color = a_color;
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
-    v_pos = a_pos * u_pos_scale;
     v_uv = a_uv;
-    gl_Position = u_proj * u_view * u_model * vec4(v_pos, 1.0);
-    v_shadow_coord = (u_shadow_mvp * u_model * vec4(v_pos, 1.0));
+    gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
+    v_shadow_coord = u_shadow_mvp * vec4(v_Position, 1.0);
 
     mediump vec4 tangent = vec4(normalize(a_tangent), 1.0);
     mediump vec3 normalW = normalize(a_normal);
@@ -80,11 +88,62 @@ void main()
     v_gradient = a_gradient;
     v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
 }
-/************************************************************************/
 
 #endif
 
 #ifdef FRAGMENT_SHADER
+
+struct Light
+{
+    vec3    direction;
+    float   intensity;
+    vec3    color;
+    float   padding;
+};
+
+struct MaterialInfo
+{
+    float perceptualRoughness;   // roughness value
+    vec3 reflectance0;           // full reflectance color
+    float alphaRoughness;        // roughness mapped to a more linear change
+    vec3 diffuseColor;           // color contribution from diffuse lighting
+    vec3 reflectance90;          // reflectance color at grazing angle
+    vec3 specularColor;          // color contribution from specular lighting
+};
+
+struct AngularInfo
+{
+    float NdotL;    // cos angle between normal and light direction
+    float NdotV;    // cos angle between normal and view direction
+    float NdotH;    // cos angle between normal and half vector
+    float LdotH;    // cos angle between light direction and half vector
+    float VdotH;    // cos angle between view direction and half vector
+    vec3  padding;
+};
+
+AngularInfo getAngularInfo(vec3 pointToLight, vec3 normal, vec3 view)
+{
+    // Standard one-letter names
+    vec3 n = normalize(normal);           // Outward direction of surface point
+    vec3 v = normalize(view);             // Direction from surface point to view
+    vec3 l = normalize(pointToLight);     // Direction from surface point to light
+    vec3 h = normalize(l + v);            // Direction of the vector between l and v
+
+    float NdotL = clamp(dot(n, l), 0.0, 1.0);
+    float NdotV = clamp(dot(n, v), 0.0, 1.0);
+    float NdotH = clamp(dot(n, h), 0.0, 1.0);
+    float LdotH = clamp(dot(l, h), 0.0, 1.0);
+    float VdotH = clamp(dot(v, h), 0.0, 1.0);
+
+    return AngularInfo(
+        NdotL,
+        NdotV,
+        NdotH,
+        LdotH,
+        VdotH,
+        vec3(0, 0, 0)
+    );
+}
 
 /************************************************************************/
 mediump vec3 getNormal()
@@ -96,59 +155,147 @@ mediump vec3 getNormal()
     return normalize(n);
 }
 
-void main()
+MaterialInfo getMaterialInfo()
 {
-    mediump vec2 uv, bump_uv;
-    mediump vec3 n, s, r, v, bump;
-    mediump float s_dot_n;
-    lowp float l_amb, l_dif, l_spe;
-    lowp float occlusion;
-    lowp float visibility;
-    lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
-    int i;
+    vec4 baseColor = vec4(u_m_dif);
+    baseColor *= v_color;
+    vec3 f0 = vec3(u_m_spe);
+    float perceptualRoughness = 1.0 - u_m_glo;
+    vec3 specularColor = f0;
+    vec3 specularEnvironmentR0 = specularColor.rgb;
+    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
+    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
+    float alphaRoughness = perceptualRoughness * perceptualRoughness;
+    float oneMinusSpecularStrength = 1.0 - max(max(f0.r, f0.g), f0.b);
+    vec3 diffuseColor = baseColor.rgb * oneMinusSpecularStrength;
 
-    // clamp uv so to prevent overflow with multismapling.
-    uv = clamp(v_uv, 0.0, 1.0);
-    s = u_l_dir;
-    n = normalize((u_view * vec4(getNormal(), 0.0)).xyz);
-    s_dot_n = dot(s, n);
-    l_dif = u_m_dif * max(0.0, s_dot_n);
-    l_amb = u_m_amb;
+    return MaterialInfo(
+        perceptualRoughness,
+        specularEnvironmentR0,
+        alphaRoughness,
+        diffuseColor,
+        specularEnvironmentR90,
+        specularColor
+    );
+}
+// The following equation models the Fresnel reflectance term of the spec
+// equation (aka F()) Implementation of fresnel from [4], Equation 15
+vec3 specularReflection(MaterialInfo materialInfo, AngularInfo angularInfo)
+{
+    return materialInfo.reflectance0 +
+            (materialInfo.reflectance90 - materialInfo.reflectance0) *
+            pow(clamp(1.0 - angularInfo.VdotH, 0.0, 1.0), 5.0);
+}
 
-    // Specular light.
-    v = normalize(-(u_view * u_model * vec4(v_pos, 1.0)).xyz);
-    r = reflect(-s, n);
-    l_spe = u_m_spe * pow(max(dot(r, v), 0.0), u_m_shi);
-    l_spe = s_dot_n > 0.0 ? l_spe : 0.0;
+// Smith Joint GGX
+// Note: Vis = G / (4 * NdotL * NdotV)
+// see Eric Heitz. 2014. Understanding the Masking-Shadowing Function in
+// Microfacet-Based BRDFs. Journal of Computer Graphics Techniques, 3 see
+// Real-Time Rendering. Page 331 to 336.
+float visibilityOcclusion(MaterialInfo materialInfo, AngularInfo angularInfo)
+{
+    float NdotL = angularInfo.NdotL;
+    float NdotV = angularInfo.NdotV;
+    float alphaRoughnessSq = materialInfo.alphaRoughness *
+                             materialInfo.alphaRoughness;
+    float GGXV = NdotL * sqrt(
+            NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+    float GGXL = NdotV * sqrt(
+            NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+    return 0.5 / (GGXV + GGXL);
+}
 
-    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;
-    occlusion = sqrt(occlusion);
-    occlusion = mix(1.0, occlusion, u_occlusion);
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    gl_FragColor.rgb += (l_dif + l_amb) * u_l_int * v_color.rgb;
-    gl_FragColor.rgb += l_spe * u_l_int * vec3(1.0);
-    gl_FragColor.rgb *= occlusion;
+// The following equation(s) model the distribution of microfacet normals
+// across the area being drawn (aka D()) Implementation from "Average
+// Irregularity Representation of a Roughened Surface for Ray Reflection" by T.
+// S. Trowbridge, and K. P. Reitz Follows the distribution function recommended
+// in the SIGGRAPH 2013 course notes from EPIC Games [1], Equation 3.
+float microfacetDistribution(MaterialInfo materialInfo, AngularInfo angularInfo)
+{
+    float alphaRoughnessSq = materialInfo.alphaRoughness *
+                             materialInfo.alphaRoughness;
+    float f = (angularInfo.NdotH * alphaRoughnessSq - angularInfo.NdotH) *
+              angularInfo.NdotH + 1.0;
+    return alphaRoughnessSq / (M_PI * f * f);
+}
+
+vec3 diffuse(MaterialInfo materialInfo)
+{
+    return materialInfo.diffuseColor / M_PI;
+}
+
+vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal,
+                   vec3 view)
+{
+    AngularInfo angularInfo = getAngularInfo(pointToLight, normal, view);
+    // If one of the dot products is larger than zero, no division by zero can
+    // happen. Avoids black borders.
+    if (angularInfo.NdotL <= 0.0 && angularInfo.NdotV <= 0.0)
+        return vec3(0.0, 0.0, 0.0);
+
+    // Calculate the shading terms for the microfacet specular shading model
+    vec3 F = specularReflection(materialInfo, angularInfo);
+    float Vis = visibilityOcclusion(materialInfo, angularInfo);
+    float D = microfacetDistribution(materialInfo, angularInfo);
+
+    // Calculation of analytical lighting contribution
+    vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);
+    vec3 specContrib = F * Vis * D;
+
+    // Obtain final intensity as reflectance (BRDF) scaled by the energy of
+    // the light (cosine law)
+    vec3 ret = angularInfo.NdotL * (diffuseContrib + specContrib);
 
     // Shadow map.
-    #ifdef SHADOW
-    visibility = 1.0;
+#ifdef SHADOW
+    lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
+    float visibility = 1.0;
     mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
-    lowp float bias = 0.005 * tan(acos(clamp(s_dot_n, 0.0, 1.0)));
+    lowp float bias = 0.005 * tan(acos(clamp(angularInfo.NdotL, 0.0, 1.0)));
     bias = clamp(bias, 0.0, 0.015);
     shadow_coord.z -= bias;
     PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;
     PS[1] = vec2(+0.94558609, -0.76890725) / 1024.0;
     PS[2] = vec2(-0.09418410, -0.92938870) / 1024.0;
     PS[3] = vec2(+0.34495938, +0.29387760) / 1024.0;
-    for (i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++)
         if (texture2D(u_shadow_tex, v_shadow_coord.xy +
            PS[i]).z < shadow_coord.z) visibility -= 0.2;
-    if (s_dot_n <= 0.0) visibility = 0.5;
-    gl_FragColor.rgb *= mix(1.0, visibility, u_shadow_k);
-    #endif
+    if (angularInfo.NdotL <= 0.0) visibility = 0.5;
+    ret *= mix(1.0, visibility, u_shadow_k);
+#endif // SHADOW
 
+    return ret;
 }
 
-/************************************************************************/
+vec3 applyDirectionalLight(Light light, MaterialInfo materialInfo,
+                           vec3 normal, vec3 view)
+{
+    vec3 pointToLight = -light.direction;
+    vec3 shade = getPointShade(pointToLight, materialInfo, normal, view);
+    return light.intensity * light.color * shade;
+}
+
+void main()
+{
+    MaterialInfo materialInfo = getMaterialInfo();
+    vec3 normal = getNormal();
+    vec3 view = normalize(u_camera - v_Position);
+
+    Light light = Light(-u_l_dir, u_l_int * 5.0, vec3(1.0), 0.0);
+
+    vec3 color = vec3(0.0);
+    color += applyDirectionalLight(light, materialInfo, normal, view);
+
+    color += u_m_amb * v_color.rgb;
+
+    lowp float occlusion;
+    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;
+    occlusion = sqrt(occlusion);
+    occlusion = mix(1.0, occlusion, u_occlusion);
+    color *= occlusion;
+
+    gl_FragColor = vec4(color, 1.0);
+}
 
 #endif

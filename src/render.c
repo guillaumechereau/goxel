@@ -513,7 +513,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
                          const float shadow_mvp[4][4])
 {
     gl_shader_t *shader;
-    float model[4][4];
+    float model[4][4], camera[4][4];
     int attr, block_pos[3], block_id;
     float light_dir[3];
     bool shadow = false;
@@ -571,9 +571,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     gl_update_uniform(shader, "u_m_amb", rend->settings.ambient);
     gl_update_uniform(shader, "u_m_dif", rend->settings.diffuse);
     gl_update_uniform(shader, "u_m_spe", rend->settings.specular);
-    gl_update_uniform(shader, "u_m_shi", rend->settings.shininess);
+    gl_update_uniform(shader, "u_m_glo", rend->settings.glossiness);
     gl_update_uniform(shader, "u_m_smo", rend->settings.smoothness);
     gl_update_uniform(shader, "u_occlusion", rend->settings.border_shadow);
+
+    mat4_invert(rend->view_mat, camera);
+    gl_update_uniform(shader, "u_camera", camera[3]);
 
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glEnableVertexAttribArray(attr));
@@ -948,8 +951,8 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
         .border_shadow = 0.4,
         .ambient = 0.3,
         .diffuse = 0.6,
-        .specular = 0.1,
-        .shininess = 2.0,
+        .specular = 0.2,
+        .glossiness = 0.2,
         .smoothness = 0.0,
         .effects = EFFECT_BORDERS,
         .shadow = 0.3,
