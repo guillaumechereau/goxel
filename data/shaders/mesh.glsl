@@ -28,9 +28,9 @@ uniform highp vec3  u_camera;
 // Light parameters
 uniform lowp    vec3  u_l_dir;
 uniform lowp    float u_l_int;
+uniform lowp    float u_l_amb; // Ambient light coef.
 
 // Material parameters
-uniform lowp float u_m_amb; // Ambient light coef.
 uniform lowp float u_m_dif; // Diffuse light coef.
 uniform lowp float u_m_spe; // Specular light coef.
 uniform lowp float u_m_glo; // Glossiness.
@@ -287,7 +287,7 @@ void main()
     vec3 color = vec3(0.0);
     color += applyDirectionalLight(light, materialInfo, normal, view);
 
-    color += u_m_amb * v_color.rgb;
+    color += u_l_amb * v_color.rgb;
 
     lowp float occlusion;
     occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;

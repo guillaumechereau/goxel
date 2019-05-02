@@ -418,7 +418,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
 
 #ifndef GLES2
     if (effects & EFFECT_WIREFRAME) {
-        gl_update_uniform(shader, "u_m_amb", 0.0);
+        gl_update_uniform(shader, "u_l_amb", 0.0);
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
         if (item->size == 4)
             GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -426,7 +426,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         else
             GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
         GL(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-        gl_update_uniform(shader, "u_m_amb", rend->settings.ambient);
+        gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
     }
 #endif
 }
@@ -568,7 +568,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     gl_update_uniform(shader, "u_bump_tex", 1);
     gl_update_uniform(shader, "u_l_dir", light_dir);
     gl_update_uniform(shader, "u_l_int", rend->light.intensity);
-    gl_update_uniform(shader, "u_m_amb", rend->settings.ambient);
+    gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
     gl_update_uniform(shader, "u_m_dif", rend->settings.diffuse);
     gl_update_uniform(shader, "u_m_spe", rend->settings.specular);
     gl_update_uniform(shader, "u_m_glo", rend->settings.glossiness);

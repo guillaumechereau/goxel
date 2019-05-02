@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 10683, .data =
+{.path = "data/shaders/mesh.glsl", .size = 10686, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -79,9 +79,9 @@
     "// Light parameters\n"
     "uniform lowp    vec3  u_l_dir;\n"
     "uniform lowp    float u_l_int;\n"
+    "uniform lowp    float u_l_amb; // Ambient light coef.\n"
     "\n"
     "// Material parameters\n"
-    "uniform lowp float u_m_amb; // Ambient light coef.\n"
     "uniform lowp float u_m_dif; // Diffuse light coef.\n"
     "uniform lowp float u_m_spe; // Specular light coef.\n"
     "uniform lowp float u_m_glo; // Glossiness.\n"
@@ -338,7 +338,7 @@
     "    vec3 color = vec3(0.0);\n"
     "    color += applyDirectionalLight(light, materialInfo, normal, view);\n"
     "\n"
-    "    color += u_m_amb * v_color.rgb;\n"
+    "    color += u_l_amb * v_color.rgb;\n"
     "\n"
     "    lowp float occlusion;\n"
     "    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;\n"
