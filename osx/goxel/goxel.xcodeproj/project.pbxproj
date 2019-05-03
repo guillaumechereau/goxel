@@ -81,6 +81,7 @@
 		F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160061E962F4600C6EF33 /* marchingcube.c */; };
 		F0ACA2A12271ACD400376C82 /* gltf.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A02271ACD300376C82 /* gltf.c */; };
 		F0ACA2A42271ACEA00376C82 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A32271ACEA00376C82 /* json.c */; };
+		F0ACA2A8227BF2A300376C82 /* shader_cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A7227BF2A300376C82 /* shader_cache.c */; };
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
 		F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */; };
@@ -198,6 +199,8 @@
 		F0ACA2A02271ACD300376C82 /* gltf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltf.c; sourceTree = "<group>"; };
 		F0ACA2A22271ACEA00376C82 /* json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json.h; sourceTree = "<group>"; };
 		F0ACA2A32271ACEA00376C82 /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = json.c; sourceTree = "<group>"; };
+		F0ACA2A6227BF2A300376C82 /* shader_cache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_cache.h; sourceTree = "<group>"; };
+		F0ACA2A7227BF2A300376C82 /* shader_cache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader_cache.c; sourceTree = "<group>"; };
 		F0AE90F51C8EE01200C29080 /* assets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = assets.c; sourceTree = "<group>"; };
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
 		F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noc_file_dialog.h; sourceTree = "<group>"; };
@@ -336,6 +339,8 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F0ACA2A7227BF2A300376C82 /* shader_cache.c */,
+				F0ACA2A6227BF2A300376C82 /* shader_cache.h */,
 				F00FC31E226B2FCF0002F251 /* gui */,
 				F00FC2F8226B2F7B0002F251 /* utils */,
 				F03B4385224CCDDF00798CAB /* pathtracer.cpp */,
@@ -585,6 +590,7 @@
 				F07DEA131BD0F31500BAA1AD /* utils.c in Sources */,
 				F07DEA041BD0F31500BAA1AD /* goxel.c in Sources */,
 				F0A15FFF1E962F1300C6EF33 /* qubicle.c in Sources */,
+				F0ACA2A8227BF2A300376C82 /* shader_cache.c in Sources */,
 				F037D5D21EA6069A00C96D10 /* move.c in Sources */,
 				F06C683D1D2EAECC00887FCE /* quantization.c in Sources */,
 				F00FC336226B2FCF0002F251 /* debug_panel.c in Sources */,
