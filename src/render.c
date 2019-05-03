@@ -528,7 +528,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         shader = shader_get("shadow_map", NULL, shader_init);
     else {
         shadow = rend->settings.shadow;
-        shader = shader_get("mesh", shadow ? "SHADOW\0" : NULL, shader_init);
+        shader_define_t defines[] = {{"SHADOW", shadow}, {}};
+        shader = shader_get("mesh", defines, shader_init);
     }
 
     GL(glEnable(GL_DEPTH_TEST));

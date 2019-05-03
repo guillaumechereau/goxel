@@ -19,45 +19,55 @@
 
 #include "goxel.h"
 
+#include "shader_cache.h"
+
 typedef struct {
-    const char *name;
-    const char *defines;
+    char key[256];
     gl_shader_t *shader;
 } shader_t;
 
 static shader_t g_shaders[5] = {};
 
-gl_shader_t *shader_get(const char *name, const char *defines,
+gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
                         void (*on_created)(gl_shader_t *s))
 {
     int i;
     shader_t *s = NULL;
     const char *code;
+    char key[256];
     char path[128];
     char pre[256] = {};
+    const shader_define_t *define;
 
+
+    // Create the key of the form:
+    // <name>_define1_define2
+    strcpy(key, name);
+    for (define = defines; define && define->name; define++) {
+        if (define->set) {
+            strcat(key, "_");
+            strcat(key, define->name);
+        }
+    }
 
     for (i = 0; i < ARRAY_SIZE(g_shaders); i++) {
         s = &g_shaders[i];
-        if (!s->name) break;
-        if (s->name == name && s->defines == defines)
+        if (!*s->key) break;
+        if (strcmp(s->key, key) == 0)
             return s->shader;
     }
     assert(i < ARRAY_SIZE(g_shaders));
-    s->name = name;
-    s->defines = defines;
+    strcpy(s->key, key);
 
     sprintf(path, "asset://data/shaders/%s.glsl", name);
     code = assets_get(path, NULL);
     assert(code);
 
-    while (defines && *defines) {
-        sprintf(pre + strlen(pre), "#define %s\n", defines);
-        defines += strlen(defines);
+    for (define = defines; define && define->name; define++) {
+        if (define->set)
+            sprintf(pre + strlen(pre), "#define %s\n", define->name);
     }
-
     s->shader = gl_shader_create(code, code, pre);
-
     if (on_created) on_created(s->shader);
     return s->shader;
 }
