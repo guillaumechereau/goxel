@@ -402,6 +402,7 @@ static void gui_init(const inputs_t *inputs)
     GL(glBindAttribLocation(gui->shader->prog, A_POS_LOC, "a_pos"));
     GL(glBindAttribLocation(gui->shader->prog, A_TEX_POS_LOC, "a_tex_pos"));
     GL(glBindAttribLocation(gui->shader->prog, A_COLOR_LOC, "a_color"));
+    GL(glLinkProgram(gui->shader->prog));
 
     GL(glGenBuffers(1, &gui->array_buffer));
     GL(glGenBuffers(1, &gui->index_buffer));

@@ -53,6 +53,7 @@ void model3d_init(void)
     GL(glBindAttribLocation(g_shader->prog, A_COLOR_LOC, "a_color"));
     GL(glBindAttribLocation(g_shader->prog, A_NORMAL_LOC, "a_normal"));
     GL(glBindAttribLocation(g_shader->prog, A_UV_LOC, "a_uv"));
+    GL(glLinkProgram(g_shader->prog));
     gl_update_uniform(g_shader, "u_tex", 0);
     g_white_tex = create_white_tex();
 }
