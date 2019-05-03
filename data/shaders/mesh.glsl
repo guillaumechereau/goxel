@@ -271,7 +271,7 @@ void main()
     vec3 specularColor = mix(f0, baseColor.rgb, metallic);
 
 #ifdef MATERIAL_UNLIT
-    gl_FragColor = vec4(pow(baseColor.rgb, 1.0 / 2.2), baseColor.a);
+    gl_FragColor = vec4(pow(baseColor.rgb, vec3(1.0 / 2.2)), baseColor.a);
     return;
 #endif
 

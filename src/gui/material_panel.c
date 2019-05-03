@@ -44,6 +44,8 @@ static void material_advanced_panel(void)
 #undef MAT_FLOAT
     gui_group_end();
 
+    gui_checkbox_flag("Unlit",
+            &goxel.rend.settings.effects, EFFECT_UNLIT, NULL);
     gui_checkbox_flag("Borders",
             &goxel.rend.settings.effects, EFFECT_BORDERS, NULL);
     gui_checkbox_flag("Borders all",

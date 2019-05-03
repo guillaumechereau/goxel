@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 10937, .data =
+{.path = "data/shaders/mesh.glsl", .size = 10943, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -322,7 +322,7 @@
     "    vec3 specularColor = mix(f0, baseColor.rgb, metallic);\n"
     "\n"
     "#ifdef MATERIAL_UNLIT\n"
-    "    gl_FragColor = vec4(pow(baseColor.rgb, 1.0 / 2.2), baseColor.a);\n"
+    "    gl_FragColor = vec4(pow(baseColor.rgb, vec3(1.0 / 2.2)), baseColor.a);\n"
     "    return;\n"
     "#endif\n"
     "\n"

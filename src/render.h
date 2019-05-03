@@ -40,6 +40,7 @@ enum {
 
     EFFECT_PROJ_SCREEN      = 1 << 14, // Image project in screen.
     EFFECT_ANTIALIASING     = 1 << 15,
+    EFFECT_UNLIT            = 1 << 16,
 };
 
 typedef struct {
