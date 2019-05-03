@@ -155,32 +155,6 @@ mediump vec3 getNormal()
     return normalize(n);
 }
 
-MaterialInfo getMaterialInfo()
-{
-    float metallic = u_m_metallic;
-    float perceptualRoughness = u_m_roughness;
-
-    vec3 f0 = vec3(0.04);
-    vec4 baseColor = u_m_base_color;
-    baseColor *= v_color;
-    vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
-    vec3 specularColor = mix(f0, baseColor.rgb, metallic);
-    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);
-    metallic = clamp(metallic, 0.0, 1.0);
-    float alphaRoughness = perceptualRoughness * perceptualRoughness;
-    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
-    vec3 specularEnvironmentR0 = specularColor.rgb;
-    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
-
-    return MaterialInfo(
-        perceptualRoughness,
-        specularEnvironmentR0,
-        alphaRoughness,
-        diffuseColor,
-        specularEnvironmentR90,
-        specularColor
-    );
-}
 // The following equation models the Fresnel reflectance term of the spec
 // equation (aka F()) Implementation of fresnel from [4], Equation 15
 vec3 specularReflection(MaterialInfo materialInfo, AngularInfo angularInfo)
@@ -287,7 +261,36 @@ vec3 toneMap(vec3 color)
 
 void main()
 {
-    MaterialInfo materialInfo = getMaterialInfo();
+    float metallic = u_m_metallic;
+    float perceptualRoughness = u_m_roughness;
+
+    vec3 f0 = vec3(0.04);
+    vec4 baseColor = u_m_base_color;
+    baseColor *= v_color;
+    vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
+    vec3 specularColor = mix(f0, baseColor.rgb, metallic);
+
+#ifdef MATERIAL_UNLIT
+    gl_FragColor = vec4(pow(baseColor.rgb, 1.0 / 2.2), baseColor.a);
+    return;
+#endif
+
+    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);
+    metallic = clamp(metallic, 0.0, 1.0);
+    float alphaRoughness = perceptualRoughness * perceptualRoughness;
+    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
+    vec3 specularEnvironmentR0 = specularColor.rgb;
+    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
+
+    MaterialInfo materialInfo = MaterialInfo(
+        perceptualRoughness,
+        specularEnvironmentR0,
+        alphaRoughness,
+        diffuseColor,
+        specularEnvironmentR90,
+        specularColor
+    );
+
     vec3 normal = getNormal();
     vec3 view = normalize(u_camera - v_Position);
 
