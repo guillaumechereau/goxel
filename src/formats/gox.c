@@ -323,6 +323,8 @@ void save_to_file(const image_t *img, const char *path, bool with_preview)
             chunk_write_dict_value(&c, out, "color", layer->color,
                                 sizeof(layer->color));
         }
+        chunk_write_dict_value(&c, out, "visible", &layer->visible,
+                               sizeof(layer->visible));
 
         chunk_write_finish(&c, out);
     }
@@ -500,6 +502,9 @@ int load_from_file(const char *path)
                 }
                 if (strcmp(dict_key, "color") == 0) {
                     memcpy(layer->color, dict_value, dict_value_size);
+                }
+                if (strcmp(dict_key, "visible") == 0) {
+                    memcpy(&layer->visible, dict_value, dict_value_size);
                 }
             }
         } else if (strncmp(c.type, "CAMR", 4) == 0) {
