@@ -97,3 +97,11 @@ Then to build:
 
     make release
 
+
+Contributing
+------------
+
+In order for your contribution to Goxel to be accepted, you have to sign the
+[Goxel Contributor License Agreement (CLA)](doc/cla/sign-cla.md).  This is
+mostly to allow me to distribute the mobile branch goxel under a non GPL
+licence.
