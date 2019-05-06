@@ -26,7 +26,7 @@ typedef struct {
     gl_shader_t *shader;
 } shader_t;
 
-static shader_t g_shaders[5] = {};
+static shader_t g_shaders[16] = {};
 
 gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
                         void (*on_created)(gl_shader_t *s))
