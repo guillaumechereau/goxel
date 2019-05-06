@@ -972,7 +972,7 @@ void render_submit(renderer_t *rend, const int rect[4],
 
 int render_get_default_settings(int i, char **name, render_settings_t *out)
 {
-    if (!out) return 6;
+    if (!out) return 5;
 
     *out = (render_settings_t) {
         .occlusion_strength = 0.4,
@@ -1012,5 +1012,5 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             break;
     }
     if (DEFINED(GOXEL_NO_SHADOW)) out->shadow = 0;
-    return 4;
+    return 5;
 }
