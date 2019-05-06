@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 10957, .data =
+{.path = "data/shaders/mesh.glsl", .size = 10975, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -89,7 +89,7 @@
     "\n"
     "uniform mediump sampler2D u_occlusion_tex;\n"
     "uniform mediump sampler2D u_bump_tex;\n"
-    "uniform mediump float     u_occlusion;\n"
+    "uniform mediump float     u_occlusion_strength;\n"
     "uniform mediump sampler2D u_shadow_tex;\n"
     "uniform mediump float     u_shadow_strength;\n"
     "\n"
@@ -355,7 +355,7 @@
     "    lowp float occlusion;\n"
     "    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;\n"
     "    occlusion = sqrt(occlusion);\n"
-    "    occlusion = mix(1.0, occlusion, u_occlusion);\n"
+    "    occlusion = mix(1.0, occlusion, u_occlusion_strength);\n"
     "    color *= occlusion;\n"
     "\n"
     "    gl_FragColor = vec4(toneMap(color), 1.0);\n"

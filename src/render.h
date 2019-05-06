@@ -54,7 +54,7 @@ typedef struct {
 
     float shadow;
     int   effects;
-    float border_shadow;
+    float occlusion_strength;
 } render_settings_t;
 
 typedef struct renderer renderer_t;

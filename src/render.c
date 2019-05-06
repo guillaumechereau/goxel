@@ -580,7 +580,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     gl_update_uniform(shader, "u_m_smoothness", rend->settings.smoothness);
     gl_update_uniform(shader, "u_m_base_color", rend->settings.base_color);
 
-    gl_update_uniform(shader, "u_occlusion", rend->settings.border_shadow);
+    gl_update_uniform(shader, "u_occlusion_strength",
+                      rend->settings.occlusion_strength);
 
     mat4_invert(rend->view_mat, camera);
     gl_update_uniform(shader, "u_camera", camera[3]);
@@ -955,7 +956,7 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
     if (!out) return 6;
 
     *out = (render_settings_t) {
-        .border_shadow = 0.4,
+        .occlusion_strength = 0.4,
         .ambient = 0.3,
 
         .metallic = 0.2,
@@ -982,7 +983,7 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             if (name) *name = "Smooth";
             out->effects = 0;
             out->smoothness = 1;
-            out->border_shadow = 0;
+            out->occlusion_strength = 0;
             out->shadow = 0;
             break;
         case 4:

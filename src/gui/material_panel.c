@@ -24,10 +24,10 @@ static void material_advanced_panel(void)
 
     gui_push_id("render_advanced");
     gui_group_begin(NULL);
-    v = goxel.rend.settings.border_shadow;
-    if (gui_input_float("bshadow", &v, 0.1, 0.0, 1.0, NULL)) {
+    v = goxel.rend.settings.occlusion_strength;
+    if (gui_input_float("occlusion", &v, 0.1, 0.0, 1.0, NULL)) {
         v = clamp(v, 0, 1); \
-        goxel.rend.settings.border_shadow = v;
+        goxel.rend.settings.occlusion_strength = v;
     }
 #define MAT_FLOAT(name, min, max) \
     v = goxel.rend.settings.name;  \
