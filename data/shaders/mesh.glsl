@@ -24,6 +24,7 @@ uniform highp mat4  u_proj;
 uniform highp mat4  u_shadow_mvp;
 uniform lowp  float u_pos_scale;
 uniform highp vec3  u_camera;
+uniform highp float u_z_ofs; // Used for line rendering.
 
 // Light parameters
 uniform lowp    vec3  u_l_dir;
@@ -83,6 +84,7 @@ void main()
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_uv = a_uv;
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
+    gl_Position.z += u_z_ofs;
     v_shadow_coord = u_shadow_mvp * vec4(v_Position, 1.0);
 
 #ifdef HAS_TANGENTS

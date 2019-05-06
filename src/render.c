@@ -415,22 +415,21 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
     gl_update_uniform(shader, "u_model", block_model);
     if (item->size == 4) {
-        // Use indexed triangles.
         GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
                           GL_UNSIGNED_SHORT, 0));
-
         if (effects & EFFECT_GRID) {
             gl_update_uniform(shader, "u_l_amb", 0.0);
             gl_update_uniform(shader, "u_m_base_color",
                               VEC(0.1, 0.1, 0.1, 0.1));
+            gl_update_uniform(shader, "u_z_ofs", -0.001);
             GL(glDrawElements(GL_LINES, item->nb_elements * 8,
                               GL_UNSIGNED_SHORT,
                               (void*)(uintptr_t)(BATCH_QUAD_COUNT * 6 * 2)));
             gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
             gl_update_uniform(shader, "u_m_base_color",
                               rend->settings.base_color);
+            gl_update_uniform(shader, "u_z_ofs", 0.0);
         }
-
     } else {
         GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
     }

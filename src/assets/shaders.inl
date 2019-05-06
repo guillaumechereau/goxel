@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 11164, .data =
+{.path = "data/shaders/mesh.glsl", .size = 11251, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -75,6 +75,7 @@
     "uniform highp mat4  u_shadow_mvp;\n"
     "uniform lowp  float u_pos_scale;\n"
     "uniform highp vec3  u_camera;\n"
+    "uniform highp float u_z_ofs; // Used for line rendering.\n"
     "\n"
     "// Light parameters\n"
     "uniform lowp    vec3  u_l_dir;\n"
@@ -134,6 +135,7 @@
     "    v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);\n"
     "    v_uv = a_uv;\n"
     "    gl_Position = u_proj * u_view * vec4(v_Position, 1.0);\n"
+    "    gl_Position.z += u_z_ofs;\n"
     "    v_shadow_coord = u_shadow_mvp * vec4(v_Position, 1.0);\n"
     "\n"
     "#ifdef HAS_TANGENTS\n"
