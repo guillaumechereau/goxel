@@ -353,6 +353,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                 // XXX: this shouldn't matter.
                 memset(out[vi].occlusion_uv, 0, sizeof(out[vi].occlusion_uv));
                 memset(out[vi].bump_uv, 0, sizeof(out[vi].bump_uv));
+                memset(out[vi].gradient, 0, sizeof(out[vi].gradient));
             }
             nb_tri_tot++;
         }

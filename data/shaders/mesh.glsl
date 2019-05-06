@@ -47,9 +47,15 @@ varying lowp    vec4 v_color;
 varying mediump vec2 v_occlusion_uv;
 varying mediump vec2 v_uv;
 varying mediump vec4 v_shadow_coord;
-varying mediump mat3 v_TBN;
 varying mediump vec2 v_UVCoord1;
 varying mediump vec3 v_gradient;
+
+#ifdef HAS_TANGENTS
+varying mediump mat3 v_TBN;
+#else
+varying mediump vec3 v_Normal;
+#endif
+
 
 const float M_PI = 3.141592653589793;
 
@@ -79,11 +85,15 @@ void main()
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
     v_shadow_coord = u_shadow_mvp * vec4(v_Position, 1.0);
 
+#ifdef HAS_TANGENTS
     mediump vec4 tangent = vec4(normalize(a_tangent), 1.0);
     mediump vec3 normalW = normalize(a_normal);
     mediump vec3 tangentW = normalize(vec3(u_model * vec4(tangent.xyz, 0.0)));
     mediump vec3 bitangentW = cross(normalW, tangentW) * tangent.w;
     v_TBN = mat3(tangentW, bitangentW, normalW);
+#else
+    v_Normal = normalize(a_normal);
+#endif
 
     v_gradient = a_gradient;
     v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
@@ -148,11 +158,15 @@ AngularInfo getAngularInfo(vec3 pointToLight, vec3 normal, vec3 view)
 /************************************************************************/
 mediump vec3 getNormal()
 {
+#ifdef HAS_TANGENTS
     mediump mat3 tbn = v_TBN;
     mediump vec3 n = texture2D(u_bump_tex, v_UVCoord1).rgb;
     n = tbn * (2.0 * n - 1.0); // XXX: add normal scale uniform.
     n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
     return normalize(n);
+#else
+    return v_Normal;
+#endif
 }
 
 // The following equation models the Fresnel reflectance term of the spec

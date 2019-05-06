@@ -550,6 +550,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         shader_define_t defines[] = {
             {"SHADOW", shadow},
             {"MATERIAL_UNLIT", rend->settings.effects & EFFECT_UNLIT},
+            {"HAS_TANGENTS", !(rend->settings.effects & EFFECT_MARCHING_CUBES)},
             {}
         };
         shader = shader_get("mesh", defines, shader_init);
