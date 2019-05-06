@@ -121,7 +121,7 @@
     "\n"
     "void main()\n"
     "{\n"
-    "    vec4 pos = u_model * vec4(a_pos, 1.0) * u_pos_scale;\n"
+    "    vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);\n"
     "    v_Position = vec3(pos.xyz) / pos.w;\n"
     "\n"
     "    v_color = pow(a_color.rgba, vec4(2.2));\n"
