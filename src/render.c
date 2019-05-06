@@ -564,7 +564,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         GL(glBindTexture(GL_TEXTURE_2D, g_shadow_map->tex));
         gl_update_uniform(shader, "u_shadow_mvp", shadow_mvp);
         gl_update_uniform(shader, "u_shadow_tex", 2);
-        gl_update_uniform(shader, "u_shadow_k", rend->settings.shadow);
+        gl_update_uniform(shader, "u_shadow_strength", rend->settings.shadow);
     }
 
     gl_update_uniform(shader, "u_proj", rend->proj_mat);

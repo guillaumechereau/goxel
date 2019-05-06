@@ -40,7 +40,7 @@ uniform mediump sampler2D u_occlusion_tex;
 uniform mediump sampler2D u_bump_tex;
 uniform mediump float     u_occlusion;
 uniform mediump sampler2D u_shadow_tex;
-uniform mediump float     u_shadow_k;
+uniform mediump float     u_shadow_strength;
 
 varying highp   vec3 v_Position;
 varying lowp    vec4 v_color;
@@ -239,7 +239,7 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal,
         if (texture2D(u_shadow_tex, v_shadow_coord.xy +
            PS[i]).z < shadow_coord.z) visibility -= 0.2;
     if (angularInfo.NdotL <= 0.0) visibility = 0.5;
-    ret *= mix(1.0, visibility, u_shadow_k);
+    ret *= mix(1.0, visibility, u_shadow_strength);
 #endif // SHADOW
 
     return ret;

@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 10943, .data =
+{.path = "data/shaders/mesh.glsl", .size = 10957, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -91,7 +91,7 @@
     "uniform mediump sampler2D u_bump_tex;\n"
     "uniform mediump float     u_occlusion;\n"
     "uniform mediump sampler2D u_shadow_tex;\n"
-    "uniform mediump float     u_shadow_k;\n"
+    "uniform mediump float     u_shadow_strength;\n"
     "\n"
     "varying highp   vec3 v_Position;\n"
     "varying lowp    vec4 v_color;\n"
@@ -290,7 +290,7 @@
     "        if (texture2D(u_shadow_tex, v_shadow_coord.xy +\n"
     "           PS[i]).z < shadow_coord.z) visibility -= 0.2;\n"
     "    if (angularInfo.NdotL <= 0.0) visibility = 0.5;\n"
-    "    ret *= mix(1.0, visibility, u_shadow_k);\n"
+    "    ret *= mix(1.0, visibility, u_shadow_strength);\n"
     "#endif // SHADOW\n"
     "\n"
     "    return ret;\n"
