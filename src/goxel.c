@@ -762,6 +762,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     layer_t *layer;
     renderer_t *rend = &goxel.rend;
     const uint8_t layer_box_color[4] = {128, 128, 255, 255};
+    int effects = 0;
 
     if (render_mode) {
         render_pathtrace_view(viewport);
@@ -771,8 +772,10 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     goxel.camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel.camera);
 
-    render_mesh(rend, goxel.render_mesh,
-                goxel.show_wireframe ? EFFECT_WIREFRAME : 0);
+    if (goxel.show_wireframe) effects |= EFFECT_WIREFRAME;
+    if (goxel.show_voxel_grid) effects |= EFFECT_GRID;
+    render_mesh(rend, goxel.render_mesh, effects);
+
     if (!box_is_null(goxel.image->active_layer->box))
         render_box(rend, goxel.image->active_layer->box,
                    layer_box_color, EFFECT_WIREFRAME);

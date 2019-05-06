@@ -263,20 +263,26 @@ static void shader_init(gl_shader_t *shader)
 
 void render_init()
 {
+    // 6 vertices (2 triangles) per face.
+    uint16_t *index_array = NULL;
+    int i;
+
     LOG_D("render init");
     GL(glGenBuffers(1, &g_index_buffer));
     GL(glGenBuffers(1, &g_background_array_buffer));
 
-    // 6 vertices (2 triangles) per face.
-    uint16_t *index_array = NULL;
-    int i;
-    index_array = calloc(BATCH_QUAD_COUNT * 6, sizeof(*index_array));
+    // Index buffer start with the quads, followed by the lines.
+    index_array = calloc(BATCH_QUAD_COUNT * (6 + 8), sizeof(*index_array));
     for (i = 0; i < BATCH_QUAD_COUNT * 6; i++) {
         index_array[i] = (i / 6) * 4 + ((int[]){0, 1, 2, 2, 3, 0})[i % 6];
     }
+    for (i = 0; i < BATCH_QUAD_COUNT * 8; i++) {
+        index_array[BATCH_QUAD_COUNT * 6 + i] =
+            (i / 8) * 4 + ((int[]){0, 1, 1, 2, 2, 3, 3, 0})[i % 8];
+    }
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
-    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, BATCH_QUAD_COUNT * 6 * 2,
+    GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, BATCH_QUAD_COUNT * (6 + 8) * 2,
                     index_array, GL_STATIC_DRAW));
 #ifndef GLES2
     GL(glEnable(GL_LINE_SMOOTH));
@@ -322,7 +328,7 @@ static render_item_t *get_item_for_block(
         int effects, float smoothness)
 {
     render_item_t *item;
-    const int effects_mask = EFFECT_BORDERS | EFFECT_BORDERS_ALL |
+    const int effects_mask = EFFECT_BORDERS |
                              EFFECT_MARCHING_CUBES |
                              EFFECT_FLAT;
     uint64_t block_data_id;
@@ -412,6 +418,19 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         // Use indexed triangles.
         GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
                           GL_UNSIGNED_SHORT, 0));
+
+        if (effects & EFFECT_GRID) {
+            gl_update_uniform(shader, "u_l_amb", 0.0);
+            gl_update_uniform(shader, "u_m_base_color",
+                              VEC(0.1, 0.1, 0.1, 0.1));
+            GL(glDrawElements(GL_LINES, item->nb_elements * 8,
+                              GL_UNSIGNED_SHORT,
+                              (void*)(uintptr_t)(BATCH_QUAD_COUNT * 6 * 2)));
+            gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
+            gl_update_uniform(shader, "u_m_base_color",
+                              rend->settings.base_color);
+        }
+
     } else {
         GL(glDrawArrays(GL_TRIANGLES, 0, item->nb_elements * item->size));
     }
@@ -790,7 +809,7 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
 
 static int item_sort_value(const render_item_t *a)
 {
-    if (a->effects & EFFECT_WIREFRAME) return 20;
+    if (a->effects & EFFECT_GRID) return 20;
     if (a->proj_screen)     return 10;
     switch (a->type) {
         case ITEM_MESH:     return 0;
@@ -972,30 +991,26 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
             if (name) *name = "Borders";
             break;
         case 1:
-            if (name) *name = "Cubes";
-            out->effects = EFFECT_BORDERS_ALL;
-            break;
-        case 2:
             if (name) *name = "Plain";
             out->effects = 0;
             break;
-        case 3:
+        case 2:
             if (name) *name = "Smooth";
             out->effects = 0;
             out->smoothness = 1;
             out->occlusion_strength = 0;
             out->shadow = 0;
             break;
-        case 4:
+        case 3:
             if (name) *name = "Half smooth";
             out->smoothness = 0.2;
             break;
-        case 5:
+        case 4:
             if (name) *name = "Marching";
             out->smoothness = 1.0;
             out->effects = EFFECT_MARCHING_CUBES | EFFECT_FLAT;
             break;
     }
     if (DEFINED(GOXEL_NO_SHADOW)) out->shadow = 0;
-    return 5;
+    return 4;
 }

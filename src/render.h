@@ -25,7 +25,6 @@
 enum {
     EFFECT_RENDER_POS       = 1 << 1,
     EFFECT_BORDERS          = 1 << 3,
-    EFFECT_BORDERS_ALL      = 1 << 4,
     EFFECT_SEMI_TRANSPARENT = 1 << 5,
     EFFECT_SEE_BACK         = 1 << 6,
     EFFECT_MARCHING_CUBES   = 1 << 7,

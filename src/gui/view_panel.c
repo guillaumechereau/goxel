@@ -41,4 +41,5 @@ void gui_view_panel(void)
         gui_color_small(COLORS[i].label, COLORS[i].color);
     }
     gui_checkbox("Hide box", &goxel.hide_box, NULL);
+    gui_checkbox("Voxel grid", &goxel.show_voxel_grid, NULL);
 }

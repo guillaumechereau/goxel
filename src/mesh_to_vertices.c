@@ -155,7 +155,6 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
     int e;
     int ret = 0;
     const int *n;
-    if (effects & EFFECT_BORDERS_ALL) return 15;
     if (!(effects & EFFECT_BORDERS)) return 0;
     for (e = 0; e < 4; e++) {
         n = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
