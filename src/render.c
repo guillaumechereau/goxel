@@ -415,9 +415,10 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
     gl_update_uniform(shader, "u_model", block_model);
     if (item->size == 4) {
-        GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
-                          GL_UNSIGNED_SHORT, 0));
-        if (effects & EFFECT_GRID) {
+        if (!(effects & EFFECT_GRID)) {
+            GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
+                              GL_UNSIGNED_SHORT, 0));
+        } else {
             gl_update_uniform(shader, "u_l_amb", 0.0);
             gl_update_uniform(shader, "u_m_base_color",
                               VEC(0.1, 0.1, 0.1, 0.1));
@@ -650,15 +651,25 @@ void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
 
 void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
 {
-    render_item_t *item = calloc(1, sizeof(*item));
+    render_item_t *item;
+    item = calloc(1, sizeof(*item));
     item->type = ITEM_MESH;
     item->mesh = mesh_copy(mesh);
     item->effects = effects | rend->settings.effects;
+    item->effects &= ~EFFECT_GRID;
     // With EFFECT_RENDER_POS we need to remove some effects.
     if (item->effects & EFFECT_RENDER_POS)
         item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK |
                            EFFECT_MARCHING_CUBES);
     DL_APPEND(rend->items, item);
+
+    if (effects & EFFECT_GRID) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_MESH;
+        item->mesh = mesh_copy(mesh);
+        item->effects = EFFECT_GRID | EFFECT_BORDERS;
+        DL_APPEND(rend->items, item);
+    }
 }
 
 static void render_model_item(renderer_t *rend, const render_item_t *item)
