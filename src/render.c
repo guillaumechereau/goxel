@@ -1007,26 +1007,22 @@ int render_get_default_settings(int i, char **name, render_settings_t *out)
     *out = (render_settings_t) {
         .occlusion_strength = 0.4,
         .ambient = 0.3,
-
         .metallic = 0.2,
         .roughness = 0.5,
         .base_color = {1, 1, 1, 1},
         .smoothness = 0.0,
-
-        .effects = EFFECT_BORDERS,
         .shadow = 0.3,
     };
     switch (i) {
         case 0:
-            if (name) *name = "Borders";
+            if (name) *name = "Plain";
             break;
         case 1:
-            if (name) *name = "Plain";
-            out->effects = 0;
+            if (name) *name = "Border";
+            out->effects = EFFECT_BORDERS;
             break;
         case 2:
             if (name) *name = "Smooth";
-            out->effects = 0;
             out->smoothness = 1;
             out->occlusion_strength = 0;
             out->shadow = 0;
