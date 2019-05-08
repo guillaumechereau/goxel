@@ -92,7 +92,6 @@ void gui_material_panel(void)
             goxel.rend.settings.shadow = clamp(v, 0, 1);
         }
     }
-    if (gui_collapsing_header("Render Advanced", false))
-        material_advanced_panel();
+    material_advanced_panel();
 }
 
