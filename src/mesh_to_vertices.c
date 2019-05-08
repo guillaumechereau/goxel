@@ -153,13 +153,17 @@ static uint8_t block_get_border_mask(uint32_t neighboors_mask,
 {
 #define M(x, y, z) (1 << ((x + 1) + (y + 1) * 3 + (z + 1) * 9))
     int e;
-    int ret = 0;
-    const int *n;
+    uint8_t ret = 0;
+    const int *n, *t;
     if (!(effects & EFFECT_BORDERS)) return 0;
     for (e = 0; e < 4; e++) {
-        n = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
-        if (!(neighboors_mask & M(n[0], n[1], n[2])))
-            ret |= 1 << e;
+        n = FACES_NORMALS[f];
+        t = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
+        if (neighboors_mask & M(n[0] + t[0], n[1] + t[1], n[2] + t[2])) {
+            ret |= 2 << (2 * e);
+        } else if (!(neighboors_mask & M(t[0], t[1], t[2]))) {
+            ret |= 1 << (2 * e);
+        }
     }
     return ret;
 #undef M
@@ -269,8 +273,8 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
                 out[nb * 4 + i].uv[1] = VERTICE_UV[i][1] * 255;
                 // For testing:
                 // This put a border bump on all the edges of the voxel.
-                out[nb * 4 + i].bump_uv[0] = borders_mask * 16;
-                out[nb * 4 + i].bump_uv[1] = 0;
+                out[nb * 4 + i].bump_uv[0] = (borders_mask % 16) * 16;
+                out[nb * 4 + i].bump_uv[1] = (borders_mask / 16) * 16;
                 out[nb * 4 + i].pos_data = get_pos_data(x, y, z, f);
             }
             nb++;

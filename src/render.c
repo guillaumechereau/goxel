@@ -190,7 +190,7 @@ static void init_border_texture(void)
                     0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data));
 }
 
-static void set_bump_block(uint8_t (*data)[3], int bx, int by, int mask)
+static void set_bump_block(uint8_t (*data)[3], int bx, int by, uint8_t mask)
 {
     float v[3];
     int y, x, k;
@@ -198,10 +198,14 @@ static void set_bump_block(uint8_t (*data)[3], int bx, int by, int mask)
     for (y = 0; y < 16; y++)
     for (x = 0; x < 16; x++) {
         vec3_set(v, 0, 0, 1);
-        if ((mask & 1) && x == 15) vec2_add(v, VEC( 1,  0), v);
-        if ((mask & 2) && y == 15) vec2_add(v, VEC( 0,  1), v);
-        if ((mask & 4) && x ==  0) vec2_add(v, VEC(-1,  0), v);
-        if ((mask & 8) && y ==  0) vec2_add(v, VEC( 0, -1), v);
+        if ((mask &   1) && x == 15) vec2_add(v, VEC( 1,  0), v);
+        if ((mask &   2) && x == 15) vec2_add(v, VEC(-1,  0), v);
+        if ((mask &   4) && y == 15) vec2_add(v, VEC( 0,  1), v);
+        if ((mask &   8) && y == 15) vec2_add(v, VEC( 0, -1), v);
+        if ((mask &  16) && x ==  0) vec2_add(v, VEC(-1,  0), v);
+        if ((mask &  32) && x ==  0) vec2_add(v, VEC( 1,  0), v);
+        if ((mask &  64) && y ==  0) vec2_add(v, VEC( 0, -1), v);
+        if ((mask & 128) && y ==  0) vec2_add(v, VEC( 0, +1), v);
         vec3_normalize(v, v);
         for (k = 0; k < 3; k++) {
             data[(by * 16 + y) * 256 + bx * 16 + x][k] =
@@ -210,15 +214,47 @@ static void set_bump_block(uint8_t (*data)[3], int bx, int by, int mask)
     }
 }
 
+/*
+ * The bump texture is an atlas of 256 16x16 rects for each combination
+ * of edge neighboor:
+ *
+ *  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+ *  | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |10 |11 |12 |13 |14 |15 |
+ *  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+ *  |16 |.. |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+ *  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+ *  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+ *
+ *
+ * If we index the edges of a face like that:
+ *
+ *  y
+ *  ^
+ *  |
+ *  +-----------+
+ *  |     1     |
+ *  |           |
+ *  |2         0|
+ *  |           |
+ *  |     3     |
+ *  +-----------+---> x
+ *
+ * The index in the atlas is the 8 bit concatenation of the mask for each edge:
+ * [e0, e1, e2, e3]
+ *
+ * With each edge mask a 2 bits value:
+ * 0 -> z =  0
+ * 1 -> z = +1
+ * 2 -> z = -1
+ *
+ */
 static void init_bump_texture(void)
 {
     uint8_t (*data)[3];
-    int i, mask;
-    // XXX: we can make the texture 256 x 16 now!
+    int i;
     data = calloc(1, 256 * 256 * 3);
     for (i = 0; i < 256; i++) {
-        mask = i % 16;
-        set_bump_block(data, i % 16, i / 16, mask);
+        set_bump_block(data, i % 16, i / 16, i);
     }
     GL(glGenTextures(1, &g_bump_tex));
     GL(glActiveTexture(GL_TEXTURE0));
