@@ -30,6 +30,7 @@ void gui_view_panel(void)
         {goxel.image_box_color, "Box color"},
     };
     int i;
+    bool v;
 
     gui_group_begin("Light");
     gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
@@ -41,5 +42,17 @@ void gui_view_panel(void)
         gui_color_small(COLORS[i].label, COLORS[i].color);
     }
     gui_checkbox("Hide box", &goxel.hide_box, NULL);
-    gui_checkbox("Voxel grid", &goxel.show_voxel_grid, NULL);
+
+    gui_group_begin("Effects");
+    v = goxel.view_effects & EFFECT_GRID;
+    if (gui_selectable("Grid", &v, NULL, -1)) {
+        set_flag(&goxel.view_effects, EFFECT_GRID, v);
+        if (v) set_flag(&goxel.view_effects, EFFECT_EDGES, false);
+    }
+    v = goxel.view_effects & EFFECT_EDGES;
+    if (gui_selectable("Edges", &v, NULL, -1)) {
+        set_flag(&goxel.view_effects, EFFECT_EDGES, v);
+        if (v) set_flag(&goxel.view_effects, EFFECT_GRID, false);
+    }
+    gui_group_end();
 }

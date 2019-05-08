@@ -772,8 +772,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     goxel.camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel.camera);
 
-    if (goxel.show_wireframe) effects |= EFFECT_WIREFRAME;
-    if (goxel.show_voxel_grid) effects |= EFFECT_GRID;
+    effects |= goxel.view_effects;
     render_mesh(rend, goxel.render_mesh, effects);
 
     if (!box_is_null(goxel.image->active_layer->box))

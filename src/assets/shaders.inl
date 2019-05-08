@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 11251, .data =
+{.path = "data/shaders/mesh.glsl", .size = 11387, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -328,6 +328,13 @@
     "\n"
     "void main()\n"
     "{\n"
+    "\n"
+    "#ifdef ONLY_EDGES\n"
+    "    mediump vec3 n = 2.0 * texture2D(u_bump_tex, v_UVCoord1).rgb - 1.0;\n"
+    "    if (n.z > 0.75)\n"
+    "        discard;\n"
+    "#endif\n"
+    "\n"
     "    float metallic = u_m_metallic;\n"
     "    float perceptualRoughness = u_m_roughness;\n"
     "\n"

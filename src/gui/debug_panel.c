@@ -21,7 +21,9 @@
 void gui_debug_panel(void)
 {
     gui_text("FPS: %d", (int)round(goxel.fps));
-    if (!DEFINED(GLES2))
-        gui_checkbox("Show wireframe", &goxel.show_wireframe, NULL);
+    if (!DEFINED(GLES2)) {
+        gui_checkbox_flag("Show wireframe", &goxel.view_effects,
+                          EFFECT_WIREFRAME, NULL);
+    }
 }
 

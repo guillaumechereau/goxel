@@ -433,7 +433,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
     mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
     gl_update_uniform(shader, "u_model", block_model);
     if (item->size == 4) {
-        if (!(effects & EFFECT_GRID)) {
+        if (!(effects & (EFFECT_GRID | EFFECT_EDGES))) {
             GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
                               GL_UNSIGNED_SHORT, 0));
         } else {
@@ -569,6 +569,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
             {"SHADOW", shadow},
             {"MATERIAL_UNLIT", rend->settings.effects & EFFECT_UNLIT},
             {"HAS_TANGENTS", !(rend->settings.effects & EFFECT_MARCHING_CUBES)},
+            {"ONLY_EDGES", (effects & EFFECT_EDGES)},
             {}
         };
         shader = shader_get("mesh", defines, shader_init);
@@ -674,18 +675,18 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
     item->type = ITEM_MESH;
     item->mesh = mesh_copy(mesh);
     item->effects = effects | rend->settings.effects;
-    item->effects &= ~EFFECT_GRID;
+    item->effects &= ~(EFFECT_GRID | EFFECT_EDGES);
     // With EFFECT_RENDER_POS we need to remove some effects.
     if (item->effects & EFFECT_RENDER_POS)
         item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK |
                            EFFECT_MARCHING_CUBES);
     DL_APPEND(rend->items, item);
 
-    if (effects & EFFECT_GRID) {
+    if (effects & (EFFECT_GRID | EFFECT_EDGES)) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_MESH;
         item->mesh = mesh_copy(mesh);
-        item->effects = EFFECT_GRID | EFFECT_BORDERS;
+        item->effects = effects | EFFECT_BORDERS;
         DL_APPEND(rend->items, item);
     }
 }

@@ -277,6 +277,13 @@ vec3 toneMap(vec3 color)
 
 void main()
 {
+
+#ifdef ONLY_EDGES
+    mediump vec3 n = 2.0 * texture2D(u_bump_tex, v_UVCoord1).rgb - 1.0;
+    if (n.z > 0.75)
+        discard;
+#endif
+
     float metallic = u_m_metallic;
     float perceptualRoughness = u_m_roughness;
 
