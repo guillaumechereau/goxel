@@ -121,6 +121,12 @@ DECL bool vec3_equal(const float a[3], const float b[3])
         (a)[2] == (b)[2] && \
         (a)[3] == (b)[3]; })
 
+DECL void vec2_add(const float a[2], const float b[2], float out[2])
+{
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+}
+
 DECL void vec3_add(const float a[3], const float b[3], float out[3])
 {
     out[0] = a[0] + b[0];
