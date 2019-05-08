@@ -381,6 +381,7 @@ void goxel_reset(void)
         .intensity = 1.
     };
     render_get_default_settings(0, NULL, &goxel.rend.settings);
+    goxel.view_effects = EFFECT_EDGES;
 
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
 
