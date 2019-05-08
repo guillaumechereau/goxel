@@ -439,7 +439,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         } else {
             gl_update_uniform(shader, "u_l_amb", 0.0);
             gl_update_uniform(shader, "u_m_base_color",
-                              VEC(0.1, 0.1, 0.1, 0.1));
+                              VEC(0.2, 0.2, 0.2, 0.2));
             gl_update_uniform(shader, "u_z_ofs", -0.001);
             GL(glDrawElements(GL_LINES, item->nb_elements * 8,
                               GL_UNSIGNED_SHORT,
@@ -567,7 +567,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
         shadow = rend->settings.shadow;
         shader_define_t defines[] = {
             {"SHADOW", shadow},
-            {"MATERIAL_UNLIT", rend->settings.effects & EFFECT_UNLIT},
+            {"MATERIAL_UNLIT", (rend->settings.effects & EFFECT_UNLIT) ||
+                               (effects & (EFFECT_GRID | EFFECT_EDGES))},
             {"HAS_TANGENTS", !(rend->settings.effects & EFFECT_MARCHING_CUBES)},
             {"ONLY_EDGES", (effects & EFFECT_EDGES)},
             {}
