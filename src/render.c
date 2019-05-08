@@ -275,7 +275,7 @@ static void shader_init(gl_shader_t *shader)
     GL(glLinkProgram(shader->prog));
     GL(glUseProgram(shader->prog));
     gl_update_uniform(shader, "u_occlusion_tex", 0);
-    gl_update_uniform(shader, "u_bump_tex", 1);
+    gl_update_uniform(shader, "u_normal_sampler", 1);
     gl_update_uniform(shader, "u_shadow_tex", 2);
 }
 
@@ -346,9 +346,7 @@ static render_item_t *get_item_for_block(
         int effects, float smoothness)
 {
     render_item_t *item;
-    const int effects_mask = EFFECT_BORDERS |
-                             EFFECT_MARCHING_CUBES |
-                             EFFECT_FLAT;
+    const int effects_mask = EFFECT_MARCHING_CUBES | EFFECT_FLAT;
     uint64_t block_data_id;
     int p[3], i, x, y, z;
     block_item_key_t key = {};
@@ -610,7 +608,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     gl_update_uniform(shader, "u_proj", rend->proj_mat);
     gl_update_uniform(shader, "u_view", rend->view_mat);
     gl_update_uniform(shader, "u_occlusion_tex", 0);
-    gl_update_uniform(shader, "u_bump_tex", 1);
+    gl_update_uniform(shader, "u_normal_sampler", 1);
+    gl_update_uniform(shader, "u_normal_scale",
+                      effects & EFFECT_BORDERS ? 0.25 : 0.0);
     gl_update_uniform(shader, "u_l_dir", light_dir);
     gl_update_uniform(shader, "u_l_int", rend->light.intensity);
     gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);

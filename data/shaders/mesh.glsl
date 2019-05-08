@@ -37,8 +37,10 @@ uniform lowp float u_m_roughness;
 uniform lowp float u_m_smoothness;
 uniform lowp vec4  u_m_base_color;
 
+uniform mediump sampler2D u_normal_sampler;
+uniform lowp    float     u_normal_scale;
+
 uniform mediump sampler2D u_occlusion_tex;
-uniform mediump sampler2D u_bump_tex;
 uniform mediump float     u_occlusion_strength;
 uniform mediump sampler2D u_shadow_tex;
 uniform mediump float     u_shadow_strength;
@@ -162,8 +164,8 @@ mediump vec3 getNormal()
 {
 #ifdef HAS_TANGENTS
     mediump mat3 tbn = v_TBN;
-    mediump vec3 n = texture2D(u_bump_tex, v_UVCoord1).rgb;
-    n = tbn * (2.0 * n - 1.0); // XXX: add normal scale uniform.
+    mediump vec3 n = texture2D(u_normal_sampler, v_UVCoord1).rgb;
+    n = tbn * ((2.0 * n - 1.0) * vec3(u_normal_scale, u_normal_scale, 1.0));
     n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
     return normalize(n);
 #else
@@ -279,7 +281,7 @@ void main()
 {
 
 #ifdef ONLY_EDGES
-    mediump vec3 n = 2.0 * texture2D(u_bump_tex, v_UVCoord1).rgb - 1.0;
+    mediump vec3 n = 2.0 * texture2D(u_normal_sampler, v_UVCoord1).rgb - 1.0;
     if (n.z > 0.75)
         discard;
 #endif

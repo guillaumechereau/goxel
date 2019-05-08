@@ -148,14 +148,12 @@ static uint8_t block_get_shadow_mask(uint32_t neighboors_mask, int f)
     return ret;
 }
 
-static uint8_t block_get_border_mask(uint32_t neighboors_mask,
-                                     int f, int effects)
+static uint8_t block_get_border_mask(uint32_t neighboors_mask, int f)
 {
 #define M(x, y, z) (1 << ((x + 1) + (y + 1) * 3 + (z + 1) * 9))
     int e;
     uint8_t ret = 0;
     const int *n, *t;
-    if (!(effects & EFFECT_BORDERS)) return 0;
     for (e = 0; e < 4; e++) {
         n = FACES_NORMALS[f];
         t = FACES_NORMALS[FACES_NEIGHBORS[f][e]];
@@ -254,7 +252,7 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
             block_get_normal(f, normal, tangent);
             block_get_gradient(neighboors_mask, neighboors, f, gradient);
             shadow_mask = block_get_shadow_mask(neighboors_mask, f);
-            borders_mask = block_get_border_mask(neighboors_mask, f, effects);
+            borders_mask = block_get_border_mask(neighboors_mask, f);
             for (i = 0; i < 4; i++) {
                 vpos = VERTICES_POSITIONS[FACES_VERTICES[f][i]];
                 out[nb * 4 + i].pos[0] = x + vpos[0];
