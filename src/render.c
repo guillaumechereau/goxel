@@ -190,41 +190,23 @@ static void init_border_texture(void)
                     0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data));
 }
 
-static void bump_img_fill(uint8_t (*data)[3], int x, int y, int w, int h,
-                          const float n[3])
-{
-    int i, j, k;
-    float nn[3];
-    vec3_normalize(n, nn);
-    for (j = y; j < y + h; j++) {
-        for (i = x; i < x + w; i++) {
-            for (k = 0; k < 3; k++) {
-                data[j * 256 + i][k] = (nn[k] + 1) * 127;
-            }
-        }
-    }
-}
-
 static void set_bump_block(uint8_t (*data)[3], int bx, int by, int mask)
 {
-    const float v[3] = {0, 0, 1};
-    float nv[3];
-    bump_img_fill(data, bx * 16, by * 16, 16, 16, v);
-    if (mask & 1) {
-        vec3_set(nv, +1, 0, 1);
-        bump_img_fill(data, bx * 16 + 15, by * 16, 1, 16, nv);
-    }
-    if (mask & 4) {
-        vec3_set(nv, -1, 0, 1);
-        bump_img_fill(data, bx * 16, by * 16, 1, 16, nv);
-    }
-    if (mask & 2) {
-        vec3_set(nv, 0, 1, 1);
-        bump_img_fill(data, bx * 16, by * 16 + 15, 16, 1, nv);
-    }
-    if (mask & 8) {
-        vec3_set(nv, 0, -1, 1);
-        bump_img_fill(data, bx * 16, by * 16, 16, 1, nv);
+    float v[3];
+    int y, x, k;
+
+    for (y = 0; y < 16; y++)
+    for (x = 0; x < 16; x++) {
+        vec3_set(v, 0, 0, 1);
+        if ((mask & 1) && x == 15) vec2_add(v, VEC( 1,  0), v);
+        if ((mask & 2) && y == 15) vec2_add(v, VEC( 0,  1), v);
+        if ((mask & 4) && x ==  0) vec2_add(v, VEC(-1,  0), v);
+        if ((mask & 8) && y ==  0) vec2_add(v, VEC( 0, -1), v);
+        vec3_normalize(v, v);
+        for (k = 0; k < 3; k++) {
+            data[(by * 16 + y) * 256 + bx * 16 + x][k] =
+                mix(0, 255, (v[k] / 2 + 0.5));
+        }
     }
 }
 
