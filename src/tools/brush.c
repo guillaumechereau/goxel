@@ -129,6 +129,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         if (shift) {
             painter.shape = &shape_cylinder;
             painter.mode = MODE_MAX;
+            vec4_set(painter.color, 255, 255, 255, 255);
             get_box(brush->start_pos, curs->pos, curs->normal, r, NULL, box);
             mesh_op(brush->mesh, &painter, box);
         }
