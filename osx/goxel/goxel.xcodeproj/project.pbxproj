@@ -47,6 +47,7 @@
 		F03B4388224CCDDF00798CAB /* yocto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F03B4386224CCDDF00798CAB /* yocto.cpp */; };
 		F06C683C1D2EAECC00887FCE /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C68391D2EAECC00887FCE /* camera.c */; };
 		F06C683D1D2EAECC00887FCE /* quantization.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C683A1D2EAECC00887FCE /* quantization.c */; };
+		F076EA362284162400B74F0C /* light_panel.c in Sources */ = {isa = PBXBuildFile; fileRef = F076EA352284162400B74F0C /* light_panel.c */; };
 		F07DE9D31BD0F03900BAA1AD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9D21BD0F03900BAA1AD /* AppDelegate.swift */; };
 		F07DE9D51BD0F03900BAA1AD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F07DE9D41BD0F03900BAA1AD /* Assets.xcassets */; };
 		F07DE9D81BD0F03900BAA1AD /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = F07DE9D61BD0F03900BAA1AD /* MainMenu.xib */; };
@@ -150,6 +151,7 @@
 		F03B4386224CCDDF00798CAB /* yocto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yocto.cpp; sourceTree = "<group>"; };
 		F06C68391D2EAECC00887FCE /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
 		F06C683A1D2EAECC00887FCE /* quantization.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = quantization.c; sourceTree = "<group>"; };
+		F076EA352284162400B74F0C /* light_panel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = light_panel.c; sourceTree = "<group>"; };
 		F07DE9CF1BD0F03900BAA1AD /* goxel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = goxel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F07DE9D21BD0F03900BAA1AD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F07DE9D41BD0F03900BAA1AD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -268,6 +270,7 @@
 		F00FC31E226B2FCF0002F251 /* gui */ = {
 			isa = PBXGroup;
 			children = (
+				F076EA352284162400B74F0C /* light_panel.c */,
 				F00FC31F226B2FCF0002F251 /* cameras_panel.c */,
 				F00FC320226B2FCF0002F251 /* material_panel.c */,
 				F00FC321226B2FCF0002F251 /* palette_panel.c */,
@@ -563,6 +566,7 @@
 				F07DEA0F1BD0F31500BAA1AD /* shape.c in Sources */,
 				F0A160011E962F1300C6EF33 /* txt.c in Sources */,
 				F07DEA091BD0F31500BAA1AD /* mesh.c in Sources */,
+				F076EA362284162400B74F0C /* light_panel.c in Sources */,
 				F0AE90F71C8EE01300C29080 /* assets.c in Sources */,
 				F00FC331226B2FCF0002F251 /* layers_panel.c in Sources */,
 				F00FC33A226B2FCF0002F251 /* tools_panel.c in Sources */,
