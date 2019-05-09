@@ -466,8 +466,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
 #endif
 }
 
-static void get_light_dir(const renderer_t *rend, bool model_view,
-                          float out[3])
+static void get_light_dir(const renderer_t *rend, float out[3])
 {
     float light_dir[4];
     float m[4][4];
@@ -483,14 +482,12 @@ static void get_light_dir(const renderer_t *rend, bool model_view,
         mat4_irotate(m, -M_PI / 4, 0, 0, 1);
         mat4_mul_vec4(m, light_dir, light_dir);
     }
-    if (model_view)
-        mat4_mul_vec4(rend->view_mat, light_dir, light_dir);
     vec3_copy(light_dir, out);
 }
 
 void render_get_light_dir(const renderer_t *rend, float out[3])
 {
-    get_light_dir(rend, false, out);
+    get_light_dir(rend, out);
 }
 
 // Compute the minimum projection box to use for the shadow map.
@@ -516,7 +513,7 @@ static void compute_shadow_map_box(
     mesh_iterator_t iter;
     float view_mat[4][4], light_dir[3];
 
-    get_light_dir(rend, false, light_dir);
+    get_light_dir(rend, light_dir);
     mat4_lookat(view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
     rect[0] = +FLT_MAX;
     rect[1] = -FLT_MAX;
@@ -555,7 +552,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     mesh_iterator_t iter;
 
     mat4_set_identity(model);
-    get_light_dir(rend, false, light_dir);
+    get_light_dir(rend, light_dir);
 
     if (effects & EFFECT_RENDER_POS)
         shader = shader_get("pos_data", NULL, shader_init);
@@ -709,7 +706,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     }
 
     if (!(item->effects & EFFECT_WIREFRAME))
-        get_light_dir(rend, false, light);
+        get_light_dir(rend, light);
 
     model3d_render(item->model3d,
                    item->mat, *view_mat, *proj_mat,
@@ -869,7 +866,7 @@ static void render_shadow_map(renderer_t *rend, float shadow_mvp[4][4])
                             {0.5, 0.5, 0.5, 1.0}};
     float ret[4][4];
     renderer_t srend = {};
-    get_light_dir(rend, false, light_dir);
+    get_light_dir(rend, light_dir);
     mat4_lookat(srend.view_mat, light_dir, VEC(0, 0, 0), VEC(0, 1, 0));
     mat4_ortho(srend.proj_mat,
                rect[0], rect[1], rect[2], rect[3], rect[4], rect[5]);
