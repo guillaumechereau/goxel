@@ -377,7 +377,7 @@ void goxel_reset(void)
     goxel.rend.light = (typeof(goxel.rend.light)) {
         .pitch = 20 * DD2R,
         .yaw = 120 * DD2R,
-        .intensity = 1.
+        .intensity = 2.0,
     };
     render_get_default_settings(0, NULL, &goxel.rend.settings);
     goxel.view_effects = EFFECT_EDGES;

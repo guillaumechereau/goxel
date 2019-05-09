@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 11460, .data =
+{.path = "data/shaders/mesh.glsl", .size = 11454, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -370,7 +370,7 @@
     "    vec3 normal = getNormal();\n"
     "    vec3 view = normalize(u_camera - v_Position);\n"
     "\n"
-    "    Light light = Light(-u_l_dir, u_l_int * 5.0, vec3(1.0, 1.0, 1.0), 0.0);\n"
+    "    Light light = Light(-u_l_dir, u_l_int, vec3(1.0, 1.0, 1.0), 0.0);\n"
     "\n"
     "    vec3 color = vec3(0.0);\n"
     "    color += applyDirectionalLight(light, materialInfo, normal, view);\n"

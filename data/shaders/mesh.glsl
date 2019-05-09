@@ -319,7 +319,7 @@ void main()
     vec3 normal = getNormal();
     vec3 view = normalize(u_camera - v_Position);
 
-    Light light = Light(-u_l_dir, u_l_int * 5.0, vec3(1.0, 1.0, 1.0), 0.0);
+    Light light = Light(-u_l_dir, u_l_int, vec3(1.0, 1.0, 1.0), 0.0);
 
     vec3 color = vec3(0.0);
     color += applyDirectionalLight(light, materialInfo, normal, view);
