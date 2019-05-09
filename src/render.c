@@ -555,7 +555,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     mesh_iterator_t iter;
 
     mat4_set_identity(model);
-    get_light_dir(rend, true, light_dir);
+    get_light_dir(rend, false, light_dir);
 
     if (effects & EFFECT_RENDER_POS)
         shader = shader_get("pos_data", NULL, shader_init);
