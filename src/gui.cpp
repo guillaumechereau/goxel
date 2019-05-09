@@ -24,6 +24,7 @@ void gui_image_panel(void);
 void gui_cameras_panel(void);
 void gui_palette_panel(void);
 void gui_material_panel(void);
+void gui_light_panel(void);
 void gui_tools_panel(void);
 void gui_view_panel(void);
 void gui_render_panel(void);
@@ -552,6 +553,7 @@ static void render_left_panel(void)
         {"Layers", ICON_LAYERS, gui_layers_panel},
         {"View", ICON_VIEW, gui_view_panel},
         {"Material", ICON_MATERIAL, gui_material_panel},
+        {"Light", ICON_LIGHT, gui_light_panel},
         {"Cameras", ICON_CAMERA, gui_cameras_panel},
         {"Image", ICON_IMAGE, gui_image_panel},
         {"Render", ICON_RENDER, gui_render_panel},

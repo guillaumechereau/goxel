@@ -32,12 +32,6 @@ void gui_view_panel(void)
     int i;
     bool v;
 
-    gui_group_begin("Light");
-    gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
-    gui_angle("Yaw", &goxel.rend.light.yaw, 0, 360);
-    gui_checkbox("Fixed", &goxel.rend.light.fixed, NULL);
-    gui_group_end();
-
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
         gui_color_small(COLORS[i].label, COLORS[i].color);
     }

@@ -36,7 +36,6 @@ static void material_advanced_panel(void)
         goxel.rend.settings.name = v; \
     }
 
-    MAT_FLOAT(ambient, 0, 1);
     MAT_FLOAT(metallic, 0, 1);
     MAT_FLOAT(roughness, 0, 1);
     MAT_FLOAT(smoothness, 0, 1);
@@ -66,7 +65,6 @@ void gui_material_panel(void)
 {
     int i, current = -1;
     int nb = render_get_default_settings(0, NULL, NULL);
-    float v;
     char *name;
     const char **names;
     render_settings_t settings;
@@ -86,12 +84,6 @@ void gui_material_panel(void)
     }
     free(names);
 
-    if (!DEFINED(GOXEL_NO_SHADOW)) {
-        v = goxel.rend.settings.shadow;
-        if (gui_input_float("shadow", &v, 0.1, 0, 0, NULL)) {
-            goxel.rend.settings.shadow = clamp(v, 0, 1);
-        }
-    }
     material_advanced_panel();
 }
 
