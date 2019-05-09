@@ -377,7 +377,6 @@ void goxel_reset(void)
     goxel.rend.light = (typeof(goxel.rend.light)) {
         .pitch = 10 * DD2R,
         .yaw = 120 * DD2R,
-        .fixed = true,
         .intensity = 1.
     };
     render_get_default_settings(0, NULL, &goxel.rend.settings);
