@@ -375,7 +375,7 @@ void goxel_reset(void)
                   goxel.painter.symmetry_origin);
 
     goxel.rend.light = (typeof(goxel.rend.light)) {
-        .pitch = 10 * DD2R,
+        .pitch = 20 * DD2R,
         .yaw = 120 * DD2R,
         .intensity = 1.
     };
