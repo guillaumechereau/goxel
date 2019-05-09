@@ -412,6 +412,7 @@ enum {
 
     ICON_VIEW = 49,
     ICON_MATERIAL = 50,
+    ICON_LIGHT = 51,
 };
 
 /*
