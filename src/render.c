@@ -437,7 +437,10 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         } else {
             gl_update_uniform(shader, "u_l_amb", 0.0);
             gl_update_uniform(shader, "u_m_base_color",
-                              VEC(0.2, 0.2, 0.2, 0.2));
+                              VEC(0.2 * rend->settings.base_color[0],
+                                  0.2 * rend->settings.base_color[1],
+                                  0.2 * rend->settings.base_color[2],
+                                  1.0));
             gl_update_uniform(shader, "u_z_ofs", -0.001);
             GL(glDrawElements(GL_LINES, item->nb_elements * 8,
                               GL_UNSIGNED_SHORT,

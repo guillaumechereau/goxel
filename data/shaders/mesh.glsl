@@ -324,7 +324,7 @@ void main()
     vec3 color = vec3(0.0);
     color += applyDirectionalLight(light, materialInfo, normal, view);
 
-    color += u_l_amb * v_color.rgb;
+    color += u_l_amb * baseColor.rgb;
 
     lowp float occlusion;
     occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;

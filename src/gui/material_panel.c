@@ -40,6 +40,7 @@ static void material_advanced_panel(void)
 
 #undef MAT_FLOAT
     gui_group_end();
+    gui_color_small_f4("Color", goxel.rend.settings.base_color);
     gui_pop_id();
 }
 

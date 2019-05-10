@@ -68,6 +68,7 @@ bool gui_selectable_toggle(const char *name, int *v, int set_v,
 bool gui_selectable_icon(const char *name, bool *v, int icon);
 bool gui_color(const char *label, uint8_t color[4]);
 bool gui_color_small(const char *label, uint8_t color[4]);
+bool gui_color_small_f4(const char *label, float color[4]);
 bool gui_input_text(const char *label, char *buf, int size);
 bool gui_input_text_multiline(const char *label, char *buf, int size,
                               float width, float height);

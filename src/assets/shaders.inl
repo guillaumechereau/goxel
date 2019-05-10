@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 11454, .data =
+{.path = "data/shaders/mesh.glsl", .size = 11456, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -375,7 +375,7 @@
     "    vec3 color = vec3(0.0);\n"
     "    color += applyDirectionalLight(light, materialInfo, normal, view);\n"
     "\n"
-    "    color += u_l_amb * v_color.rgb;\n"
+    "    color += u_l_amb * baseColor.rgb;\n"
     "\n"
     "    lowp float occlusion;\n"
     "    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;\n"

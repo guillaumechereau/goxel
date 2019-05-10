@@ -1126,6 +1126,20 @@ bool gui_color_small(const char *label, uint8_t color[4])
     return false;
 }
 
+bool gui_color_small_f4(const char *label, float color[4])
+{
+    uint8_t c[4] = {color[0] * 255,
+                    color[1] * 255,
+                    color[2] * 255,
+                    color[3] * 255};
+    bool ret = gui_color_small(label, c);
+    color[0] = c[0] / 255.;
+    color[1] = c[1] / 255.;
+    color[2] = c[2] / 255.;
+    color[3] = c[3] / 255.;
+    return ret;
+}
+
 bool gui_checkbox(const char *label, bool *v, const char *hint)
 {
     bool ret;
