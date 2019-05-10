@@ -108,7 +108,6 @@ void render_rect(renderer_t *rend, const float plane[4][4], int effects);
 //  clear_color: clear the screen with this first.
 void render_submit(renderer_t *rend, const int rect[4],
                    const uint8_t clear_color[4]);
-int render_get_default_settings(int i, char **name, render_settings_t *out);
 // Compute the light direction in the model coordinates (toward the light)
 void render_get_light_dir(const renderer_t *rend, float out[3]);
 

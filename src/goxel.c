@@ -379,7 +379,14 @@ void goxel_reset(void)
         .yaw = 120 * DD2R,
         .intensity = 2.0,
     };
-    render_get_default_settings(0, NULL, &goxel.rend.settings);
+    goxel.rend.settings = (render_settings_t) {
+        .occlusion_strength = 0.4,
+        .ambient = 0.3,
+        .metallic = 0.2,
+        .roughness = 0.5,
+        .base_color = {1, 1, 1, 1},
+        .shadow = 0.3,
+    };
     goxel.view_effects = EFFECT_EDGES;
 
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;

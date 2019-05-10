@@ -18,10 +18,9 @@
 
 #include "goxel.h"
 
-static void material_advanced_panel(void)
+void gui_material_panel(void)
 {
     float v;
-    gui_push_id("render_advanced");
     gui_group_begin(NULL);
     v = goxel.rend.settings.occlusion_strength;
     if (gui_input_float("occlusion", &v, 0.1, 0.0, 1.0, NULL)) {
@@ -41,33 +40,4 @@ static void material_advanced_panel(void)
 #undef MAT_FLOAT
     gui_group_end();
     gui_color_small_f4("Color", goxel.rend.settings.base_color);
-    gui_pop_id();
 }
-
-
-void gui_material_panel(void)
-{
-    int i, current = -1;
-    int nb = render_get_default_settings(0, NULL, NULL);
-    char *name;
-    const char **names;
-    render_settings_t settings;
-
-    names = (const char**)calloc(nb, sizeof(*names));
-    for (i = 0; i < nb; i++) {
-        render_get_default_settings(i, &name, &settings);
-        names[i] = name;
-        if (memcmp(&goxel.rend.settings, &settings,
-                         sizeof(settings)) == 0)
-            current = i;
-    }
-    gui_text("Presets:");
-    if (gui_combo("##Presets", &current, names, nb)) {
-        render_get_default_settings(current, NULL, &settings);
-        goxel.rend.settings = settings;
-    }
-    free(names);
-
-    material_advanced_panel();
-}
-
