@@ -21,7 +21,6 @@
 static void material_advanced_panel(void)
 {
     float v;
-
     gui_push_id("render_advanced");
     gui_group_begin(NULL);
     v = goxel.rend.settings.occlusion_strength;
@@ -38,25 +37,9 @@ static void material_advanced_panel(void)
 
     MAT_FLOAT(metallic, 0, 1);
     MAT_FLOAT(roughness, 0, 1);
-    MAT_FLOAT(smoothness, 0, 1);
 
 #undef MAT_FLOAT
     gui_group_end();
-
-    gui_checkbox_flag("Unlit",
-            &goxel.rend.settings.effects, EFFECT_UNLIT, NULL);
-    gui_checkbox_flag("Borders",
-            &goxel.rend.settings.effects, EFFECT_BORDERS, NULL);
-    gui_checkbox_flag("See back",
-            &goxel.rend.settings.effects, EFFECT_SEE_BACK, NULL);
-    if (gui_checkbox_flag("Marching Cubes",
-                &goxel.rend.settings.effects, EFFECT_MARCHING_CUBES, NULL)) {
-        goxel.rend.settings.smoothness = 1;
-    }
-    if (goxel.rend.settings.effects & EFFECT_MARCHING_CUBES) {
-        gui_checkbox_flag("Flat", &goxel.rend.settings.effects, EFFECT_FLAT,
-                          NULL);
-    }
     gui_pop_id();
 }
 
