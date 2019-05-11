@@ -840,6 +840,7 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
 
 static int item_sort_value(const render_item_t *a)
 {
+    if (a->effects & EFFECT_WIREFRAME) return 30;
     if (a->effects & EFFECT_GRID) return 20;
     if (a->proj_screen)     return 10;
     switch (a->type) {
