@@ -456,9 +456,9 @@ void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
     bool render_mode;
-    // XXX: 8 here means 'export' panel.  Need to use an enum or find a
+    // XXX: 9 here means 'export' panel.  Need to use an enum or find a
     // better way!
-    render_mode = gui->current_panel == 8 && goxel.pathtracer.status;
+    render_mode = gui->current_panel == 9 && goxel.pathtracer.status;
     goxel_render_view(view->rect, render_mode);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
