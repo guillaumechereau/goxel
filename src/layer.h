@@ -47,5 +47,6 @@ struct layer {
 layer_t *layer_new(const char *name);
 void layer_delete(layer_t *layer);
 uint32_t layer_get_key(const layer_t *layer);
+layer_t *layer_copy(layer_t *other);
 
 #endif // LAYER_H

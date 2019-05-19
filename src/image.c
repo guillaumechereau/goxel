@@ -72,25 +72,6 @@ static int img_get_new_id(const image_t *img)
     return id;
 }
 
-static layer_t *layer_copy(layer_t *other)
-{
-    layer_t *layer;
-    layer = calloc(1, sizeof(*layer));
-    memcpy(layer->name, other->name, sizeof(layer->name));
-    layer->visible = other->visible;
-    layer->mesh = mesh_copy(other->mesh);
-    layer->image = texture_copy(other->image);
-    mat4_copy(other->box, layer->box);
-    mat4_copy(other->mat, layer->mat);
-    layer->id = other->id;
-    layer->base_id = other->base_id;
-    layer->base_mesh_key = other->base_mesh_key;
-    layer->shape = other->shape;
-    layer->shape_key = other->shape_key;
-    memcpy(layer->color, other->color, sizeof(layer->color));
-    return layer;
-}
-
 static layer_t *layer_clone(layer_t *other)
 {
     int len;
