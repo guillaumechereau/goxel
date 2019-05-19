@@ -20,19 +20,35 @@
 
 void gui_material_panel(void)
 {
-    float v;
+    material_t *mat = NULL;
+    int i = 0;
+    bool is_current;
+
     gui_group_begin(NULL);
-#define MAT_FLOAT(name, min, max) \
-    v = goxel.material.name;  \
-    if (gui_input_float(#name, &v, 0.1, min, max, NULL)) { \
-        v = clamp(v, min, max); \
-        goxel.material.name = v; \
+    DL_FOREACH(goxel.image->materials, mat) {
+        is_current = goxel.image->active_material == mat;
+        if (gui_layer_item(i, -1, NULL, &is_current, mat->name,
+                           sizeof(mat->name))) {
+            if (is_current) {
+                goxel.image->active_material = mat;
+            } else {
+                goxel.image->active_material = NULL;
+            }
+        }
+        i++;
     }
+    gui_group_end();
 
-    MAT_FLOAT(metallic, 0, 1);
-    MAT_FLOAT(roughness, 0, 1);
+    gui_action_button("img_new_material", NULL, 0, "");
+    gui_same_line();
+    gui_action_button("img_del_material", NULL, 0, "");
 
-#undef MAT_FLOAT
+    mat = goxel.image->active_material;
+    if (!mat) return;
+
+    gui_group_begin(NULL);
+    gui_input_float("Metallic", &mat->metallic, 0.1, 0, 1, NULL);
+    gui_input_float("Roughness", &mat->roughness, 0.1, 0, 1, NULL);
     gui_group_end();
     gui_color_small_f4("Color", goxel.material.base_color);
 }

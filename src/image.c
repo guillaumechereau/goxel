@@ -118,6 +118,8 @@ void image_update(image_t *img)
     }
 }
 
+static material_t *image_add_material(image_t *img);
+
 image_t *image_new(void)
 {
     layer_t *layer;
@@ -126,6 +128,7 @@ image_t *image_new(void)
     bbox_from_aabb(img->box, aabb);
     img->export_width = 1024;
     img->export_height = 1024;
+    image_add_material(img); // Add one default material.
     layer = layer_new("background");
     layer->visible = true;
     layer->id = img_get_new_id(img);
@@ -158,6 +161,7 @@ static image_t *image_snap(image_t *other)
 
 
 static void image_delete_camera(image_t *img, camera_t *cam);
+static void image_delete_material(image_t *img, material_t *m);
 
 void image_delete(image_t *img)
 {
@@ -166,6 +170,9 @@ void image_delete(image_t *img)
     layer_t *layer, *layer_tmp;
     while (img->cameras)
         image_delete_camera(img, img->cameras);
+    while (img->materials)
+        image_delete_material(img, img->materials);
+
     free(img->path);
     hist = img->history;
     DL_FOREACH_SAFE2(hist, snap, snap_tmp, history_next) {
@@ -371,6 +378,26 @@ static void image_move_camera_down(image_t *img, camera_t *cam)
     image_move_camera(img, cam, -1);
 }
 
+static material_t *image_add_material(image_t *img)
+{
+    material_t *mat;
+    img = img ?: goxel.image;
+    mat = material_new("unnamed");
+    DL_APPEND(img->materials, mat);
+    img->active_material = mat;
+    return mat;
+}
+
+static void image_delete_material(image_t *img, material_t *mat)
+{
+    img = img ?: goxel.image;
+    mat = mat ?: img->active_material;
+    if (!mat) return;
+    DL_DELETE(img->materials, mat);
+    if (mat == img->active_material) img->active_material = NULL;
+    material_delete(mat);
+}
+
 void image_set(image_t *img, image_t *other)
 {
     layer_t *layer, *tmp, *other_layer;
@@ -489,12 +516,18 @@ uint32_t image_get_key(const image_t *img)
     uint32_t key = 0, k;
     layer_t *layer;
     camera_t *camera;
+    material_t *material;
+
     DL_FOREACH(img->layers, layer) {
         k = layer_get_key(layer);
         key = crc32(key, (void*)&k, sizeof(k));
     }
     DL_FOREACH(img->cameras, camera) {
         k = camera_get_key(camera);
+        key = crc32(key, (void*)&k, sizeof(k));
+    }
+    DL_FOREACH(img->materials, material) {
+        k = material_get_hash(material);
         key = crc32(key, (void*)&k, sizeof(k));
     }
     return key;
@@ -668,4 +701,20 @@ ACTION_REGISTER(img_new_shape_layer,
     .cfunc = image_add_shape_layer,
     .csig = "vp",
     .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_new_material,
+    .help = "Add a new material to the image",
+    .cfunc = image_add_material,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_ADD,
+)
+
+ACTION_REGISTER(img_del_material,
+    .help = "Delete a material",
+    .cfunc = image_delete_material,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
+    .icon = ICON_REMOVE,
 )

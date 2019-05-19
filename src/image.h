@@ -21,6 +21,7 @@
 
 #include "camera.h"
 #include "layer.h"
+#include "material.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -29,10 +30,16 @@ typedef struct history history_t;
 
 typedef struct image image_t;
 struct image {
+
     layer_t *layers;
     layer_t *active_layer;
+
     camera_t *cameras;
     camera_t *active_camera;
+
+    material_t *materials;
+    material_t *active_material;
+
     float    box[4][4];
 
     // For saving.
