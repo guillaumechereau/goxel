@@ -158,13 +158,13 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
 {
     uint32_t key;
     mesh_iterator_t iter;
-    mesh_t *mesh = goxel.render_mesh;
+    const mesh_t *mesh = goxel_get_layers_mesh();
     int block_pos[3];
     yocto_shape shape;
     yocto_instance instance;
     pathtracer_internal_t *p = pt->p;
 
-    key = mesh_get_key(goxel.render_mesh);
+    key = mesh_get_key(goxel_get_layers_mesh());
     key = crc32(key, goxel.back_color, sizeof(goxel.back_color));
     key = crc32(key, &w, sizeof(w));
     key = crc32(key, &h, sizeof(h));

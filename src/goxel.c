@@ -303,8 +303,6 @@ void goxel_init(void)
     sound_init();
     model3d_init();
 
-    goxel.render_mesh = mesh_new();
-
     // Load and set default palette.
     palette_load_all(&goxel.palettes);
     DL_FOREACH(goxel.palettes, goxel.palette) {
@@ -450,7 +448,7 @@ int goxel_iter(inputs_t *inputs)
     gui_iter(inputs);
 
     if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
-        mesh_key = mesh_get_key(goxel.render_mesh);
+        mesh_key = mesh_get_key(goxel_get_render_mesh());
         if (goxel.last_mesh_key != mesh_key) {
             if (goxel.last_mesh_key) {
                 pitch = goxel.painter.mode == MODE_OVER ? 1.0 :
@@ -781,7 +779,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     camera_update(&goxel.camera);
 
     effects |= goxel.view_effects;
-    render_mesh(rend, goxel.render_mesh, effects);
+    render_mesh(rend, goxel_get_render_mesh(), effects);
 
     if (!box_is_null(goxel.image->active_layer->box))
         render_box(rend, goxel.image->active_layer->box,
@@ -853,25 +851,36 @@ const mesh_t *goxel_get_layers_mesh(void)
     return goxel.layers_mesh_;
 }
 
-void goxel_update_meshes(int mask)
+const mesh_t *goxel_get_render_mesh(void)
 {
+    uint32_t key, k;
+    const mesh_t *mesh;
     layer_t *layer;
-    mesh_t *mesh;
 
-    image_update(goxel.image);
+    if (!goxel.tool_mesh)
+        return goxel_get_layers_mesh();
 
-    if ((mask & MESH_RENDER) && goxel.tool_mesh) {
-        mesh_clear(goxel.render_mesh);
+    key = mesh_get_key(goxel_get_layers_mesh());
+    k = mesh_get_key(goxel.tool_mesh);
+    key = crc32(key, (void*)&k, sizeof(k));
+    if (key != goxel.render_mesh_hash) {
+        image_update(goxel.image);
+        goxel.render_mesh_hash = key;
+        if (!goxel.render_mesh_) goxel.render_mesh_ = mesh_new();
+        mesh_clear(goxel.render_mesh_);
         DL_FOREACH(goxel.image->layers, layer) {
             if (!layer->visible) continue;
             mesh = layer->mesh;
             if (mesh == goxel.image->active_layer->mesh)
                 mesh = goxel.tool_mesh;
-            mesh_merge(goxel.render_mesh, mesh, MODE_OVER, NULL);
+            mesh_merge(goxel.render_mesh_, mesh, MODE_OVER, NULL);
         }
     }
-    if ((mask & MESH_RENDER) && !goxel.tool_mesh)
-        mesh_set(goxel.render_mesh, goxel_get_layers_mesh());
+    return goxel.render_mesh_;
+}
+
+void goxel_update_meshes(int mask)
+{
 }
 
 // Render the view into an RGB[A] buffer.

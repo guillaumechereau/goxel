@@ -461,10 +461,12 @@ typedef struct goxel
     // Tools can set this mesh and it will replace the current layer mesh
     // during render.
     mesh_t     *tool_mesh;
-    mesh_t     *render_mesh; // All the layers + tool mesh.
 
     mesh_t     *layers_mesh_;
     uint32_t   layers_mesh_hash;
+
+    mesh_t     *render_mesh_; // All the layers + tool mesh.
+    uint32_t   render_mesh_hash;
 
     struct     {
         mesh_t *mesh;
@@ -556,6 +558,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 void goxel_update_meshes(int mask);
 
 const mesh_t *goxel_get_layers_mesh(void);
+const mesh_t *goxel_get_render_mesh(void);
 
 void goxel_set_help_text(const char *msg, ...);
 void goxel_set_hint_text(const char *msg, ...);
