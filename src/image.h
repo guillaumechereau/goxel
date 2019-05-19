@@ -44,7 +44,7 @@ struct layer {
     uint64_t    base_mesh_key;
     // For shape layers.
     const shape_t *shape;
-    uint64_t    shape_key;
+    uint32_t    shape_key;
     uint8_t     color[4];
 };
 
