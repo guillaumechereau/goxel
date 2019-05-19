@@ -421,12 +421,6 @@ enum {
 #define ICON_COLORIZABLE_START 17
 #define ICON_COLORIZABLE_END   41
 
-// Mesh mask for goxel_update_meshes function.
-enum {
-    MESH_LAYERS = 1 << 0,
-    MESH_RENDER = 1 << 1,
-};
-
 // #### Block ##################
 // The block size can only be 16.
 #define BLOCK_SIZE 16
@@ -553,9 +547,6 @@ void goxel_render_export_view(const float viewport[4]);
 // the view.
 void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          bool capture_keys);
-
-// Recompute the meshes.  mask from MESH_ enum.
-void goxel_update_meshes(int mask);
 
 const mesh_t *goxel_get_layers_mesh(void);
 const mesh_t *goxel_get_render_mesh(void);

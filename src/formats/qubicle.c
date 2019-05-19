@@ -128,7 +128,6 @@ static void qubicle_import(const char *path)
             }
         }
     }
-    goxel_update_meshes(-1);
 }
 
 static void qubicle_export(const image_t *img, const char *path)

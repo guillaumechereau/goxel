@@ -358,8 +358,6 @@ void goxel_reset(void)
     vec4_set(goxel.grid_color, 19, 19, 19, 255);
     vec4_set(goxel.image_box_color, 204, 204, 255, 255);
 
-    goxel_update_meshes(-1);
-
     action_exec2("tool_set_brush", "");
     goxel.tool_radius = 0.5;
     goxel.painter = (painter_t) {
@@ -879,10 +877,6 @@ const mesh_t *goxel_get_render_mesh(void)
     return goxel.render_mesh_;
 }
 
-void goxel_update_meshes(int mask)
-{
-}
-
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 {
@@ -1065,7 +1059,6 @@ static void fill_selection(layer_t *layer)
     if (box_is_null(goxel.selection)) return;
     layer = layer ?: goxel.image->active_layer;
     mesh_op(layer->mesh, &goxel.painter, goxel.selection);
-    goxel_update_meshes(-1);
 }
 
 ACTION_REGISTER(fill_selection,
@@ -1137,14 +1130,12 @@ static int view_default(const action_t *a, lua_State *l)
     quat_set_identity(goxel.camera.rot);
     quat_irotate(goxel.camera.rot, -M_PI / 4, 1, 0, 0);
     quat_irotate(goxel.camera.rot, -M_PI / 4, 0, 0, 1);
-    goxel_update_meshes(-1);
     return 0;
 }
 
 static int view_set(const action_t *a, lua_State *l)
 {
     quat_copy(a->data, goxel.camera.rot);
-    goxel_update_meshes(-1);
     return 0;
 }
 

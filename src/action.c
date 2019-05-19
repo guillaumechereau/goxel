@@ -187,9 +187,6 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     }
 
     reentry--;
-    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
-        goxel_update_meshes(-1);
-    }
     lua_close(l);
     return 0;
 }

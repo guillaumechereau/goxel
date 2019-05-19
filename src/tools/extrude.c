@@ -137,13 +137,11 @@ static int on_drag(gesture3d_t *gest, void *user)
         mesh_merge(mesh, tmp_mesh, MODE_SUB, NULL);
     }
     mesh_delete(tmp_mesh);
-    goxel_update_meshes(MESH_RENDER);
 
 end:
     if (gest->state == GESTURE_END) {
         mesh_delete(tool->mesh);
         mat4_copy(plane_null, goxel.tool_plane);
-        goxel_update_meshes(-1);
     }
     return 0;
 }

@@ -48,7 +48,6 @@ static void do_move(layer_t *layer, const float mat[4][4])
             box_get_bbox(layer->box, layer->box);
         }
     }
-    goxel_update_meshes(-1);
 }
 
 static int iter(tool_t *tool, const painter_t *painter,

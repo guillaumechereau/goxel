@@ -551,7 +551,6 @@ int load_from_file(const char *path)
 
     goxel.image->path = strdup(path);
     goxel.image->saved_key = image_get_key(goxel.image);
-    goxel_update_meshes(-1);
     fclose(in);
 
     // Update plane, snap mask and camera pos not to confuse people.

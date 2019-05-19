@@ -117,13 +117,11 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (!goxel.tool_mesh) goxel.tool_mesh = mesh_new();
     mesh_set(goxel.tool_mesh, shape->mesh_orig);
     mesh_op(goxel.tool_mesh, painter, box);
-    goxel_update_meshes(MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
         mesh_set(layer_mesh, goxel.tool_mesh);
         mesh_delete(goxel.tool_mesh);
         goxel.tool_mesh = NULL;
-        goxel_update_meshes(-1);
         shape->adjust = goxel.tool_shape_two_steps;
         mat4_copy(plane_null, goxel.tool_plane);
     }
@@ -155,13 +153,11 @@ static int on_adjust(gesture3d_t *gest, void *user)
 
     mesh_set(mesh, shape->mesh_orig);
     mesh_op(mesh, painter, box);
-    goxel_update_meshes(MESH_RENDER);
 
     if (gest->state == GESTURE_END) {
         mat4_copy(plane_null, goxel.tool_plane);
         mesh_set(shape->mesh_orig, mesh);
         shape->adjust = false;
-        goxel_update_meshes(-1);
     }
 
     return 0;

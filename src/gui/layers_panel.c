@@ -40,7 +40,6 @@ void gui_layers_panel(void)
     layer_t *layer;
     int i = 0, icon, bbox[2][3];
     bool current, visible, bounded;
-    uint64_t key;
 
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->layers, layer) {
@@ -51,13 +50,11 @@ void gui_layers_panel(void)
                        layer->name, sizeof(layer->name));
         if (current && goxel.image->active_layer != layer) {
             goxel.image->active_layer = layer;
-            goxel_update_meshes(-1);
         }
         if (visible != layer->visible) {
             layer->visible = visible;
             if (gui_is_key_down(KEY_LEFT_SHIFT))
                 toggle_layer_only_visible(layer);
-            goxel_update_meshes(-1);
         }
         i++;
     }
@@ -79,11 +76,9 @@ void gui_layers_panel(void)
     bounded = !box_is_null(layer->box);
     if (bounded && gui_button("Crop to box", 1, 0)) {
         mesh_crop(layer->mesh, layer->box);
-        goxel_update_meshes(-1);
     }
     if (!box_is_null(goxel.image->box) && gui_button("Crop to image", 1, 0)) {
         mesh_crop(layer->mesh, goxel.image->box);
-        goxel_update_meshes(-1);
     }
     if (layer->shape)
         gui_action_button("img_unclone_layer", "To mesh", 1, "");
@@ -112,16 +107,10 @@ void gui_layers_panel(void)
             mat4_copy(mat4_zero, layer->box);
         }
     }
-    if (bounded) {
-        if (gui_bbox(layer->box)) goxel_update_meshes(-1);
-    }
 
     if (layer->shape) {
-        key = image_get_key(goxel.image);
         tool_gui_drag_mode(&goxel.tool_drag_mode);
         tool_gui_shape(&layer->shape);
         gui_color("##color", layer->color);
-        // XXX: this should be automatic.
-        if (image_get_key(goxel.image) != key) goxel_update_meshes(-1);
     }
 }
