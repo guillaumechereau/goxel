@@ -57,7 +57,6 @@
 
 #include "utils/box.h"
 #include "utils/cache.h"
-#include "utils/crc64.h"
 #include "utils/gl.h"
 #include "utils/img.h"
 #include "utils/plane.h"
