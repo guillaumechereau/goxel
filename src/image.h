@@ -61,7 +61,7 @@ struct image {
     int      export_width;
     int      export_height;
     bool     export_transparent_background;
-    uint64_t saved_key;     // image_get_key() value of saved file.
+    uint32_t saved_key;     // image_get_key() value of saved file.
 
     image_t *history;
     image_t *history_next, *history_prev;
@@ -83,6 +83,6 @@ bool image_layer_can_edit(const image_t *img, const layer_t *layer);
  * Function: image_get_key
  * Return a value that is guarantied to change when the image change.
  */
-uint64_t image_get_key(const image_t *img);
+uint32_t image_get_key(const image_t *img);
 
 #endif // IMAGE_H

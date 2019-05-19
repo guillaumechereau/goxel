@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#include <zlib.h> // For crc32
+
 /* History
     the images undo history is stored in a linked list.  Every time we call
     image_history_push, we add the current image snapshot in the list.
@@ -119,7 +121,7 @@ static layer_t *layer_clone(layer_t *other)
 void image_update(image_t *img)
 {
     painter_t painter = {};
-    uint64_t key;
+    uint32_t key;
     layer_t *layer, *base;
 
     DL_FOREACH(img->layers, layer) {
@@ -130,9 +132,9 @@ void image_update(image_t *img)
             layer->base_mesh_key = mesh_get_key(base->mesh);
         }
         if (layer->shape) {
-            key = crc64(0, layer->mat, sizeof(layer->mat));
-            key = crc64(key, layer->shape, sizeof(layer->shape));
-            key = crc64(key, layer->color, sizeof(layer->color));
+            key = crc32(0, (void*)layer->mat, sizeof(layer->mat));
+            key = crc32(key, (void*)layer->shape, sizeof(layer->shape));
+            key = crc32(key, (void*)layer->color, sizeof(layer->color));
             if (key != layer->shape_key) {
                 painter.mode = MODE_OVER;
                 painter.shape = layer->shape;
@@ -153,16 +155,16 @@ static void layer_delete(layer_t *layer)
     free(layer);
 }
 
-static uint64_t layer_get_key(const layer_t *layer)
+static uint32_t layer_get_key(const layer_t *layer)
 {
-    uint64_t key;
+    uint32_t key;
     key = mesh_get_key(layer->mesh);
-    key = crc64(key, &layer->visible, sizeof(layer->visible));
-    key = crc64(key, &layer->name, sizeof(layer->name));
-    key = crc64(key, &layer->box, sizeof(layer->box));
-    key = crc64(key, &layer->mat, sizeof(layer->mat));
-    key = crc64(key, &layer->shape, sizeof(layer->shape));
-    key = crc64(key, &layer->color, sizeof(layer->color));
+    key = crc32(key, (void*)&layer->visible, sizeof(layer->visible));
+    key = crc32(key, (void*)&layer->name, sizeof(layer->name));
+    key = crc32(key, (void*)&layer->box, sizeof(layer->box));
+    key = crc32(key, (void*)&layer->mat, sizeof(layer->mat));
+    key = crc32(key, (void*)&layer->shape, sizeof(layer->shape));
+    key = crc32(key, (void*)&layer->color, sizeof(layer->color));
     return key;
 }
 
@@ -530,18 +532,18 @@ bool image_layer_can_edit(const image_t *img, const layer_t *layer)
  * Function: image_get_key
  * Return a value that is garantied to change when the image change.
  */
-uint64_t image_get_key(const image_t *img)
+uint32_t image_get_key(const image_t *img)
 {
-    uint64_t key = 0, k;
+    uint32_t key = 0, k;
     layer_t *layer;
     camera_t *camera;
     DL_FOREACH(img->layers, layer) {
         k = layer_get_key(layer);
-        key = crc64(key, &k, sizeof(k));
+        key = crc32(key, (void*)&k, sizeof(k));
     }
     DL_FOREACH(img->cameras, camera) {
         k = camera_get_key(camera);
-        key = crc64(key, &k, sizeof(k));
+        key = crc32(key, (void*)&k, sizeof(k));
     }
     return key;
 }
