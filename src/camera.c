@@ -48,7 +48,7 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     int i;
     const int margin = 8 * BLOCK_SIZE;
     float vertices[8][3];
-    const mesh_t *mesh = goxel.layers_mesh;
+    const mesh_t *mesh = goxel_get_layers_mesh();
     mesh_iterator_t iter;
 
     if (!box_is_null(goxel.image->box)) {

@@ -21,7 +21,7 @@
 static void export_as_png_slices(const char *path)
 {
     float box[4][4];
-    mesh_t *mesh;
+    const mesh_t *mesh;
     int x, y, z, w, h, d, pos[3], start_pos[3];
     uint8_t c[4];
     uint8_t *img;
@@ -30,7 +30,7 @@ static void export_as_png_slices(const char *path)
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                    "png\0*.png\0", NULL, "untitled.png");
     if (!path) return;
-    mesh = goxel.layers_mesh;
+    mesh = goxel_get_layers_mesh();
     mat4_copy(goxel.image->box, box);
     if (box_is_null(box)) mesh_get_box(mesh, true, box);
     w = box[0][0] * 2;

@@ -48,7 +48,7 @@ void tool_register_(const tool_t *tool)
 static int pick_color_gesture(gesture3d_t *gest, void *user)
 {
     cursor_t *curs = &goxel.cursor;
-    mesh_t *mesh = goxel.layers_mesh;
+    const mesh_t *mesh = goxel_get_layers_mesh();
     int pi[3] = {floor(curs->pos[0]),
                  floor(curs->pos[1]),
                  floor(curs->pos[2])};

@@ -303,7 +303,6 @@ void goxel_init(void)
     sound_init();
     model3d_init();
 
-    goxel.layers_mesh = mesh_new();
     goxel.render_mesh = mesh_new();
 
     // Load and set default palette.
@@ -806,10 +805,10 @@ void goxel_render_view(const float viewport[4], bool render_mode)
         float b[4][4];
         uint8_t c[4];
         vec4_set(c, 0, 255, 0, 80);
-        mesh_get_box(goxel.layers_mesh, true, b);
+        mesh_get_box(goxel_get_layers_mesh(), true, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
         vec4_set(c, 0, 255, 255, 80);
-        mesh_get_box(goxel.layers_mesh, false, b);
+        mesh_get_box(goxel_get_layers_mesh(), false, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
     }
     if (goxel.snap_mask & SNAP_PLANE)
@@ -861,15 +860,6 @@ void goxel_update_meshes(int mask)
 
     image_update(goxel.image);
 
-    if (    (mask & MESH_LAYERS) ||
-            ((mask & MESH_RENDER) && !goxel.tool_mesh)) {
-        mesh_clear(goxel.layers_mesh);
-        DL_FOREACH(goxel.image->layers, layer) {
-            if (!layer->visible) continue;
-            mesh_merge(goxel.layers_mesh, layer->mesh, MODE_OVER, NULL);
-        }
-    }
-
     if ((mask & MESH_RENDER) && goxel.tool_mesh) {
         mesh_clear(goxel.render_mesh);
         DL_FOREACH(goxel.image->layers, layer) {
@@ -881,14 +871,14 @@ void goxel_update_meshes(int mask)
         }
     }
     if ((mask & MESH_RENDER) && !goxel.tool_mesh)
-        mesh_set(goxel.render_mesh, goxel.layers_mesh);
+        mesh_set(goxel.render_mesh, goxel_get_layers_mesh());
 }
 
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 {
     camera_t camera = goxel.camera;
-    mesh_t *mesh;
+    const mesh_t *mesh;
     texture_t *fbo;
     renderer_t rend = goxel.rend;
     int rect[4] = {0, 0, w * 2, h * 2};
@@ -897,7 +887,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     camera.aspect = (float)w / h;
     camera_update(&camera);
 
-    mesh = goxel.layers_mesh;
+    mesh = goxel_get_layers_mesh();
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
     mat4_copy(camera.view_mat, rend.view_mat);

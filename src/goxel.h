@@ -458,7 +458,6 @@ typedef struct goxel
     float      screen_scale;
     image_t    *image;
 
-    mesh_t     *layers_mesh; // All the layers combined.
     // Tools can set this mesh and it will replace the current layer mesh
     // during render.
     mesh_t     *tool_mesh;

@@ -28,7 +28,7 @@ void gui_image_panel(void)
     bounded = !box_is_null(*box);
     if (gui_checkbox("Bounded", &bounded, NULL)) {
         if (bounded) {
-            mesh_get_bbox(goxel.layers_mesh, bbox, true);
+            mesh_get_bbox(goxel_get_layers_mesh(), bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
             bbox_from_aabb(*box, bbox);
         } else {
