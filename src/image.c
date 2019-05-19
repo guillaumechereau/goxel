@@ -155,7 +155,7 @@ static void layer_delete(layer_t *layer)
     free(layer);
 }
 
-static uint32_t layer_get_key(const layer_t *layer)
+uint32_t layer_get_key(const layer_t *layer)
 {
     uint32_t key;
     key = mesh_get_key(layer->mesh);

@@ -67,6 +67,8 @@ struct image {
     image_t *history_next, *history_prev;
 };
 
+uint32_t layer_get_key(const layer_t *layer);
+
 image_t *image_new(void);
 void image_delete(image_t *img);
 layer_t *image_add_layer(image_t *img);

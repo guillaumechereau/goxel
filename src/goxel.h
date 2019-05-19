@@ -465,6 +465,10 @@ typedef struct goxel
     mesh_t     *tool_mesh;
     mesh_t     *render_mesh; // All the layers + tool mesh.
 
+    // The mesh used for mouse snapping, plus associated hash.
+    mesh_t     *pick_mesh;
+    uint32_t   pick_mesh_hash;
+
     struct     {
         mesh_t *mesh;
         float  box[4][4];
@@ -553,6 +557,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
 // Recompute the meshes.  mask from MESH_ enum.
 void goxel_update_meshes(int mask);
+
+const mesh_t *goxel_get_pick_mesh(void);
 
 void goxel_set_help_text(const char *msg, ...);
 void goxel_set_hint_text(const char *msg, ...);
