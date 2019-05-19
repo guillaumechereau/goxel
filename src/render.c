@@ -61,6 +61,7 @@ struct render_item_t
         mesh_t          *mesh;
         float           mat[4][4];
     };
+    material_t      material;
     uint8_t         color[4];
     float           clip_box[4][4];
     bool            proj_screen; // Render with a 2d proj.
@@ -399,6 +400,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                           mesh_iterator_t *iter,
                           const int block_pos[3],
                           int block_id,
+                          const material_t *material,
                           int effects, gl_shader_t *shader,
                           const float model[4][4])
 {
@@ -437,9 +439,9 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         } else {
             gl_update_uniform(shader, "u_l_amb", 0.0);
             gl_update_uniform(shader, "u_m_base_color",
-                              VEC(0.2 * goxel.material.base_color[0],
-                                  0.2 * goxel.material.base_color[1],
-                                  0.2 * goxel.material.base_color[2],
+                              VEC(0.2 * material->base_color[0],
+                                  0.2 * material->base_color[1],
+                                  0.2 * material->base_color[2],
                                   1.0));
             gl_update_uniform(shader, "u_z_ofs", -0.001);
             GL(glDrawElements(GL_LINES, item->nb_elements * 8,
@@ -447,7 +449,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                               (void*)(uintptr_t)(BATCH_QUAD_COUNT * 6 * 2)));
             gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
             gl_update_uniform(shader, "u_m_base_color",
-                              goxel.material.base_color);
+                              material->base_color);
             gl_update_uniform(shader, "u_z_ofs", 0.0);
         }
     } else {
@@ -544,7 +546,8 @@ static void compute_shadow_map_box(
     }
 }
 
-static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
+static void render_mesh_(renderer_t *rend, mesh_t *mesh,
+                         const material_t *material, int effects,
                          const float shadow_mvp[4][4])
 {
     gl_shader_t *shader;
@@ -615,9 +618,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     gl_update_uniform(shader, "u_l_int", rend->light.intensity);
     gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
 
-    gl_update_uniform(shader, "u_m_metallic", goxel.material.metallic);
-    gl_update_uniform(shader, "u_m_roughness", goxel.material.roughness);
-    gl_update_uniform(shader, "u_m_base_color", goxel.material.base_color);
+    gl_update_uniform(shader, "u_m_metallic", material->metallic);
+    gl_update_uniform(shader, "u_m_roughness", material->roughness);
+    gl_update_uniform(shader, "u_m_base_color", material->base_color);
     gl_update_uniform(shader, "u_m_smoothness", rend->settings.smoothness);
 
     gl_update_uniform(shader, "u_occlusion_strength",
@@ -636,7 +639,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, block_pos)) {
         render_block_(rend, mesh, &iter, block_pos,
-                      block_id++, effects, shader, model);
+                      block_id++, material, effects, shader, model);
     }
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glDisableVertexAttribArray(attr));
@@ -644,7 +647,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     if (effects & EFFECT_SEE_BACK) {
         effects &= ~EFFECT_SEE_BACK;
         effects |= EFFECT_SEMI_TRANSPARENT;
-        render_mesh_(rend, mesh, effects, shadow_mvp);
+        render_mesh_(rend, mesh, material, effects, shadow_mvp);
     }
 }
 
@@ -669,12 +672,14 @@ void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
     }
 }
 
-void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
+void render_mesh(renderer_t *rend, const mesh_t *mesh,
+                 const material_t *material, int effects)
 {
     render_item_t *item;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_MESH;
     item->mesh = mesh_copy(mesh);
+    if (material) item->material = *material;
     item->effects = effects | rend->settings.effects;
     item->effects &= ~(EFFECT_GRID | EFFECT_EDGES);
     // With EFFECT_RENDER_POS we need to remove some effects.
@@ -688,6 +693,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh, int effects)
         item->type = ITEM_MESH;
         item->mesh = mesh_copy(mesh);
         item->effects = effects | EFFECT_BORDERS;
+        if (material) item->material = *material;
         DL_APPEND(rend->items, item);
     }
 }
@@ -902,7 +908,7 @@ static void render_shadow_map(renderer_t *rend, float shadow_mvp[4][4])
         if (item->type == ITEM_MESH) {
             effects = (item->effects & EFFECT_MARCHING_CUBES);
             effects |= EFFECT_SHADOW_MAP;
-            render_mesh_(&srend, item->mesh, effects, NULL);
+            render_mesh_(&srend, item->mesh, &item->material, effects, NULL);
         }
     }
     mat4_copy(bias_mat, ret);
@@ -982,7 +988,8 @@ void render_submit(renderer_t *rend, const int rect[4],
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         switch (item->type) {
         case ITEM_MESH:
-            render_mesh_(rend, item->mesh, item->effects, shadow_mvp);
+            render_mesh_(rend, item->mesh, &item->material, item->effects,
+                         shadow_mvp);
             DL_DELETE(rend->items, item);
             mesh_delete(item->mesh);
             break;

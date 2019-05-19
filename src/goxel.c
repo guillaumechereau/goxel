@@ -184,7 +184,7 @@ static bool goxel_unproject_on_mesh(
     rend.settings.shadow = 0;
     rend.fbo = goxel.pick_fbo->framebuffer;
     rend.scale = 1;
-    render_mesh(&rend, mesh, EFFECT_RENDER_POS);
+    render_mesh(&rend, mesh, NULL, EFFECT_RENDER_POS);
     render_submit(&rend, rect, clear_color);
 
     x = round(pos[0] - view[0]);
@@ -782,7 +782,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
     for (layer = goxel_get_render_layers(true); layer; layer = layer->next) {
         if (layer->visible && layer->mesh)
-            render_mesh(rend, layer->mesh, effects);
+            render_mesh(rend, layer->mesh, &goxel.material, effects);
     }
 
     if (!box_is_null(goxel.image->active_layer->box))
@@ -945,7 +945,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     rend.fbo = fbo->framebuffer;
     rend.scale = 1.0;
 
-    render_mesh(&rend, mesh, 0);
+    render_mesh(&rend, mesh, &goxel.material, 0);
     render_submit(&rend, rect, (bpp == 3) ? goxel.back_color : NULL);
     tmp_buf = calloc(w * h * 4, bpp);
     texture_get_data(fbo, w * 2, h * 2, bpp, tmp_buf);
