@@ -20,6 +20,23 @@
 
 #include <zlib.h> // For crc32
 
+layer_t *layer_new(const char *name)
+{
+    layer_t *layer;
+    layer = calloc(1, sizeof(*layer));
+    strncpy(layer->name, name, sizeof(layer->name) - 1);
+    layer->mesh = mesh_new();
+    mat4_set_identity(layer->mat);
+    return layer;
+}
+
+void layer_delete(layer_t *layer)
+{
+    mesh_delete(layer->mesh);
+    texture_delete(layer->image);
+    free(layer);
+}
+
 uint32_t layer_get_key(const layer_t *layer)
 {
     uint32_t key;
@@ -32,5 +49,3 @@ uint32_t layer_get_key(const layer_t *layer)
     key = crc32(key, (void*)&layer->color, sizeof(layer->color));
     return key;
 }
-
-

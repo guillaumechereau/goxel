@@ -44,6 +44,8 @@ struct layer {
     uint8_t     color[4];
 };
 
+layer_t *layer_new(const char *name);
+void layer_delete(layer_t *layer);
 uint32_t layer_get_key(const layer_t *layer);
 
 #endif // LAYER_H

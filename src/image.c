@@ -72,17 +72,6 @@ static int img_get_new_id(const image_t *img)
     return id;
 }
 
-static layer_t *layer_new(const image_t *img, const char *name)
-{
-    layer_t *layer;
-    layer = calloc(1, sizeof(*layer));
-    strncpy(layer->name, name, sizeof(layer->name) - 1);
-    layer->mesh = mesh_new();
-    mat4_set_identity(layer->mat);
-    layer->id = img_get_new_id(img);
-    return layer;
-}
-
 static layer_t *layer_copy(layer_t *other)
 {
     layer_t *layer;
@@ -148,13 +137,6 @@ void image_update(image_t *img)
     }
 }
 
-static void layer_delete(layer_t *layer)
-{
-    mesh_delete(layer->mesh);
-    texture_delete(layer->image);
-    free(layer);
-}
-
 image_t *image_new(void)
 {
     layer_t *layer;
@@ -163,8 +145,9 @@ image_t *image_new(void)
     bbox_from_aabb(img->box, aabb);
     img->export_width = 1024;
     img->export_height = 1024;
-    layer = layer_new(img, "background");
+    layer = layer_new("background");
     layer->visible = true;
+    layer->id = img_get_new_id(img);
     DL_APPEND(img->layers, layer);
     DL_APPEND2(img->history, img, history_prev, history_next);
     img->active_layer = layer;
@@ -218,8 +201,9 @@ layer_t *image_add_layer(image_t *img)
 {
     layer_t *layer;
     img = img ?: goxel.image;
-    layer = layer_new(img, "unnamed");
+    layer = layer_new("unnamed");
     layer->visible = true;
+    layer->id = img_get_new_id(img);
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
     return layer;
@@ -229,7 +213,7 @@ layer_t *image_add_shape_layer(image_t *img)
 {
     layer_t *layer;
     img = img ?: goxel.image;
-    layer = layer_new(img, "shape");
+    layer = layer_new("shape");
     layer->visible = true;
     layer->shape = &shape_sphere;
     vec4_copy(goxel.painter.color, layer->color);
@@ -240,6 +224,7 @@ layer_t *image_add_shape_layer(image_t *img)
         vec3_copy(img->box[3], layer->mat[3]);
         mat4_iscale(layer->mat, 4, 4, 4);
     }
+    layer->id = img_get_new_id(img);
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
     return layer;
@@ -262,8 +247,9 @@ void image_delete_layer(image_t *img, layer_t *layer)
 
     layer_delete(layer);
     if (img->layers == NULL) {
-        layer = layer_new(img, "unnamed");
+        layer = layer_new("unnamed");
         layer->visible = true;
+        layer->id = img_get_new_id(img);
         DL_APPEND(img->layers, layer);
     }
     if (!img->active_layer) img->active_layer = img->layers->prev;
@@ -302,8 +288,8 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
     img = img ?: goxel.image;
     other = other ?: img->active_layer;
     layer = layer_copy(other);
-    layer->id = img_get_new_id(img);
     layer->visible = true;
+    layer->id = img_get_new_id(img);
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
     return layer;
@@ -315,8 +301,8 @@ layer_t *image_clone_layer(image_t *img, layer_t *other)
     img = img ?: goxel.image;
     other = other ?: img->active_layer;
     layer = layer_clone(other);
-    layer->id = img_get_new_id(img);
     layer->visible = true;
+    layer->id = img_get_new_id(img);
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
     return layer;
