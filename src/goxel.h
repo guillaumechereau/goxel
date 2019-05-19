@@ -487,7 +487,6 @@ typedef struct goxel
 
     texture_t  *pick_fbo;
     painter_t  painter;
-    material_t material;
     renderer_t rend;
 
     cursor_t   cursor;

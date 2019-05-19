@@ -19,6 +19,7 @@
 #ifndef LAYER_H
 #define LAYER_H
 
+#include "material.h"
 #include "mesh.h"
 #include "shape.h"
 #include "utils/texture.h"
@@ -28,6 +29,7 @@ typedef struct layer layer_t;
 struct layer {
     layer_t     *next, *prev;
     mesh_t      *mesh;
+    material_t  *material;
     int         id;         // Uniq id in the image (for clones).
     bool        visible;
     char        name[256];  // 256 chars max.

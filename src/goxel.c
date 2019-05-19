@@ -381,11 +381,6 @@ void goxel_reset(void)
         .ambient = 0.3,
         .shadow = 0.3,
     };
-    goxel.material = (material_t) {
-        .metallic = 0.2,
-        .roughness = 0.5,
-        .base_color = {1, 1, 1, 1},
-    };
     goxel.view_effects = EFFECT_EDGES;
 
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
@@ -782,7 +777,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
     for (layer = goxel_get_render_layers(true); layer; layer = layer->next) {
         if (layer->visible && layer->mesh)
-            render_mesh(rend, layer->mesh, &goxel.material, effects);
+            render_mesh(rend, layer->mesh, layer->material, effects);
     }
 
     if (!box_is_null(goxel.image->active_layer->box))
@@ -945,7 +940,8 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     rend.fbo = fbo->framebuffer;
     rend.scale = 1.0;
 
-    render_mesh(&rend, mesh, &goxel.material, 0);
+    // XXX: use goxel_get_render_layers!
+    render_mesh(&rend, mesh, NULL, 0);
     render_submit(&rend, rect, (bpp == 3) ? goxel.back_color : NULL);
     tmp_buf = calloc(w * h * 4, bpp);
     texture_get_data(fbo, w * 2, h * 2, bpp, tmp_buf);

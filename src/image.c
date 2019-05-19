@@ -80,6 +80,7 @@ static layer_t *layer_clone(layer_t *other)
     len = sizeof(layer->name) - 1 - strlen(" clone");
     snprintf(layer->name, sizeof(layer->name), "%.*s clone", len, other->name);
     layer->visible = other->visible;
+    layer->material = other->material;
     layer->mesh = mesh_copy(other->mesh);
     mat4_set_identity(layer->mat);
     layer->base_id = other->id;
@@ -118,7 +119,7 @@ void image_update(image_t *img)
     }
 }
 
-static material_t *image_add_material(image_t *img);
+static material_t *image_add_material(image_t *img, material_t *mat);
 
 image_t *image_new(void)
 {
@@ -128,10 +129,11 @@ image_t *image_new(void)
     bbox_from_aabb(img->box, aabb);
     img->export_width = 1024;
     img->export_height = 1024;
-    image_add_material(img); // Add one default material.
+    image_add_material(img, material_new("Default"));
     layer = layer_new("background");
     layer->visible = true;
     layer->id = img_get_new_id(img);
+    layer->material = img->active_material;
     DL_APPEND(img->layers, layer);
     DL_APPEND2(img->history, img, history_prev, history_next);
     img->active_layer = layer;
@@ -192,6 +194,7 @@ layer_t *image_add_layer(image_t *img)
     layer = layer_new("unnamed");
     layer->visible = true;
     layer->id = img_get_new_id(img);
+    layer->material = img->active_material;
     DL_APPEND(img->layers, layer);
     img->active_layer = layer;
     return layer;
@@ -378,11 +381,11 @@ static void image_move_camera_down(image_t *img, camera_t *cam)
     image_move_camera(img, cam, -1);
 }
 
-static material_t *image_add_material(image_t *img)
+static material_t *image_add_material(image_t *img, material_t *mat)
 {
-    material_t *mat;
     img = img ?: goxel.image;
-    mat = material_new("unnamed");
+    mat = mat ?: material_new("unnamed");
+    assert(!mat->prev);
     DL_APPEND(img->materials, mat);
     img->active_material = mat;
     return mat;
@@ -390,12 +393,16 @@ static material_t *image_add_material(image_t *img)
 
 static void image_delete_material(image_t *img, material_t *mat)
 {
+    layer_t *layer;
+
     img = img ?: goxel.image;
     mat = mat ?: img->active_material;
     if (!mat) return;
     DL_DELETE(img->materials, mat);
     if (mat == img->active_material) img->active_material = NULL;
     material_delete(mat);
+    DL_FOREACH(img->layers, layer)
+        if (layer->material == mat) layer->material = NULL;
 }
 
 void image_set(image_t *img, image_t *other)
@@ -706,7 +713,7 @@ ACTION_REGISTER(img_new_shape_layer,
 ACTION_REGISTER(img_new_material,
     .help = "Add a new material to the image",
     .cfunc = image_add_material,
-    .csig = "vp",
+    .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )

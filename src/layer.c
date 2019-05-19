@@ -47,6 +47,7 @@ uint32_t layer_get_key(const layer_t *layer)
     key = crc32(key, (void*)&layer->mat, sizeof(layer->mat));
     key = crc32(key, (void*)&layer->shape, sizeof(layer->shape));
     key = crc32(key, (void*)&layer->color, sizeof(layer->color));
+    key = crc32(key, (void*)&layer->material, sizeof(layer->material));
     return key;
 }
 
@@ -58,6 +59,7 @@ layer_t *layer_copy(layer_t *other)
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
     layer->image = texture_copy(other->image);
+    layer->material = other->material;
     mat4_copy(other->box, layer->box);
     mat4_copy(other->mat, layer->mat);
     layer->id = other->id;
