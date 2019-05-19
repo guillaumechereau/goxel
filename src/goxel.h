@@ -41,6 +41,7 @@
 #include "layer.h"
 #include "log.h"
 #include "luagoxel.h"
+#include "material.h"
 #include "mesh.h"
 #include "mesh_utils.h"
 #include "model3d.h"
@@ -445,12 +446,6 @@ enum {
 
     SNAP_ROUNDED        = 1 << 8, // Round the result.
 };
-
-typedef struct material {
-    float metallic;
-    float roughness;
-    float base_color[4];
-} material_t;
 
 typedef struct goxel
 {
