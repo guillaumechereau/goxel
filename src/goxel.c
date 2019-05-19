@@ -861,7 +861,7 @@ void goxel_update_meshes(int mask)
 
     image_update(goxel.image);
 
-    if (    (mask & MESH_LAYERS) || (mask & MESH_PICK) ||
+    if (    (mask & MESH_LAYERS) ||
             ((mask & MESH_RENDER) && !goxel.tool_mesh)) {
         mesh_clear(goxel.layers_mesh);
         DL_FOREACH(goxel.image->layers, layer) {

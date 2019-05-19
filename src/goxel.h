@@ -424,8 +424,7 @@ enum {
 // Mesh mask for goxel_update_meshes function.
 enum {
     MESH_LAYERS = 1 << 0,
-    MESH_PICK   = 1 << 1,
-    MESH_RENDER = 1 << 2,
+    MESH_RENDER = 1 << 1,
 };
 
 // #### Block ##################
