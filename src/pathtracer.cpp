@@ -40,6 +40,11 @@ extern "C" {
 #include "goxel.h"
 }
 
+#include <zlib.h> // For crc32
+
+#define crc32(v, p, s) crc32(v, (const uint8_t*)(p), s)
+
+
 using namespace yocto;
 
 enum {
@@ -151,7 +156,7 @@ end:
 
 static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
 {
-    uint64_t key;
+    uint32_t key;
     mesh_iterator_t iter;
     mesh_t *mesh = goxel.render_mesh;
     int block_pos[3];
@@ -160,13 +165,13 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     pathtracer_internal_t *p = pt->p;
 
     key = mesh_get_key(goxel.render_mesh);
-    key = crc64(key, goxel.back_color, sizeof(goxel.back_color));
-    key = crc64(key, (const uint8_t*)&w, sizeof(w));
-    key = crc64(key, (const uint8_t*)&h, sizeof(h));
-    key = crc64(key, (const uint8_t*)&goxel.rend.settings.effects,
+    key = crc32(key, goxel.back_color, sizeof(goxel.back_color));
+    key = crc32(key, &w, sizeof(w));
+    key = crc32(key, &h, sizeof(h));
+    key = crc32(key, &goxel.rend.settings.effects,
                      sizeof(goxel.rend.settings.effects));
-    key = crc64(key, &pt->floor.type, sizeof(pt->floor.type));
-    key = crc64(key, (const uint8_t*)&force, sizeof(force));
+    key = crc32(key, &pt->floor.type, sizeof(pt->floor.type));
+    key = crc32(key, &force, sizeof(force));
     if (!force && key == p->mesh_key) return 0;
     p->mesh_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
@@ -202,7 +207,7 @@ static int sync_floor(pathtracer_t *pt, bool force)
     vec4f color;
     float pos[3] = {0, 0, 0};
 
-    key = crc64(key, &pt->floor, sizeof(pt->floor));
+    key = crc32(key, &pt->floor, sizeof(pt->floor));
     if (!force && key == p->floor_key) return 0;
     p->floor_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
@@ -254,10 +259,10 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
     add_missing_cameras(p->scene);
     cam = &p->scene.cameras[0];
 
-    key = crc64(0, (uint8_t*)camera->view_mat, sizeof(camera->view_mat));
-    key = crc64(key, (uint8_t*)camera->proj_mat, sizeof(camera->proj_mat));
-    key = crc64(key, (uint8_t*)&w, sizeof(w));
-    key = crc64(key, (uint8_t*)&h, sizeof(h));
+    key = crc32(0, camera->view_mat, sizeof(camera->view_mat));
+    key = crc32(key, camera->proj_mat, sizeof(camera->proj_mat));
+    key = crc32(key, &w, sizeof(w));
+    key = crc32(key, &h, sizeof(h));
     if (!force && key == p->camera_key) return 0;
     p->camera_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
@@ -286,9 +291,9 @@ static int sync_world(pathtracer_t *pt, bool force)
     bool has_sun = false;
     vec4f color;
 
-    key = crc64(key, &pt->world.type, sizeof(pt->world.type));
-    key = crc64(key, &pt->world.energy, sizeof(pt->world.energy));
-    key = crc64(key, &pt->world.color, sizeof(pt->world.color));
+    key = crc32(key, &pt->world.type, sizeof(pt->world.type));
+    key = crc32(key, &pt->world.energy, sizeof(pt->world.energy));
+    key = crc32(key, &pt->world.color, sizeof(pt->world.color));
     if (!force && key == p->world_key) return 0;
     p->world_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
@@ -336,9 +341,9 @@ static int sync_light(pathtracer_t *pt, bool force)
     float light_dir[3];
 
     render_get_light_dir(&goxel.rend, light_dir);
-    key = crc64(key, &pt->world, sizeof(pt->world));
-    key = crc64(key, &pt->light, sizeof(pt->light));
-    key = crc64(key, light_dir, sizeof(light_dir));
+    key = crc32(key, &pt->world, sizeof(pt->world));
+    key = crc32(key, &pt->light, sizeof(pt->light));
+    key = crc32(key, light_dir, sizeof(light_dir));
 
     if (!force && key == p->light_key) return 0;
     p->light_key = key;
@@ -369,7 +374,7 @@ static int sync_options(pathtracer_t *pt, bool force)
 {
     uint64_t key = 0;
     pathtracer_internal_t *p = pt->p;
-    key = crc64(key, &pt->num_samples, sizeof(pt->num_samples));
+    key = crc32(key, &pt->num_samples, sizeof(pt->num_samples));
     if (!force && key == p->options_key) return 0;
     p->options_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
