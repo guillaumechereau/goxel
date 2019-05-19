@@ -19,6 +19,7 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#include "camera.h"
 #include "layer.h"
 
 #include <stdint.h>
