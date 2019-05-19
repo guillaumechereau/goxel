@@ -229,7 +229,7 @@ int goxel_unproject(const float viewport[4],
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(viewport, pos,
-                                        goxel_get_pick_mesh(), p, n);
+                                        goxel_get_layers_mesh(), p, n);
         }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(viewport, pos,
@@ -611,7 +611,7 @@ static int on_pinch(const gesture_t *gest, void *user)
     // Auto adjust the camera rotation position.
     if (gest->state == GESTURE_END) {
         if (goxel_unproject_on_mesh(gest->viewport, gest->pos,
-                                    goxel_get_pick_mesh(), p, n)) {
+                                    goxel_get_layers_mesh(), p, n)) {
             camera_set_target(&goxel.camera, p);
         }
     }
@@ -662,7 +662,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
         // Auto adjust the camera rotation position.
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
-                                    goxel_get_pick_mesh(), p, n)) {
+                                    goxel_get_layers_mesh(), p, n)) {
             camera_set_target(&goxel.camera, p);
         }
         return;
@@ -696,7 +696,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     // XXX: this should be an action!
     if (inputs->keys['C']) {
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
-                                    goxel_get_pick_mesh(), p, n)) {
+                                    goxel_get_layers_mesh(), p, n)) {
             camera_set_target(&goxel.camera, p);
         }
     }
@@ -830,7 +830,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
 void image_update(image_t *img);
 
-const mesh_t *goxel_get_pick_mesh(void)
+const mesh_t *goxel_get_layers_mesh(void)
 {
     uint32_t key = 0, k;
     layer_t *layer;
@@ -842,16 +842,16 @@ const mesh_t *goxel_get_pick_mesh(void)
         k = layer_get_key(layer);
         key = crc32(key, (void*)&k, sizeof(k));
     }
-    if (key != goxel.pick_mesh_hash) {
-        goxel.pick_mesh_hash = key;
-        if (!goxel.pick_mesh) goxel.pick_mesh = mesh_new();
-        mesh_clear(goxel.pick_mesh);
+    if (key != goxel.layers_mesh_hash) {
+        goxel.layers_mesh_hash = key;
+        if (!goxel.layers_mesh_) goxel.layers_mesh_ = mesh_new();
+        mesh_clear(goxel.layers_mesh_);
         DL_FOREACH(goxel.image->layers, layer) {
             if (!layer->visible) continue;
-            mesh_merge(goxel.pick_mesh, layer->mesh, MODE_OVER, NULL);
+            mesh_merge(goxel.layers_mesh_, layer->mesh, MODE_OVER, NULL);
         }
     }
-    return goxel.pick_mesh;
+    return goxel.layers_mesh_;
 }
 
 void goxel_update_meshes(int mask)
