@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#include <zlib.h> // For crc32.
+
 camera_t *camera_new(const char *name)
 {
     camera_t *cam = calloc(1, sizeof(*cam));
@@ -155,13 +157,13 @@ void camera_fit_box(camera_t *cam, const float box[4][4])
  * Function: camera_get_key
  * Return a value that is guarantied to change when the camera change.
  */
-uint64_t camera_get_key(const camera_t *cam)
+uint32_t camera_get_key(const camera_t *cam)
 {
-    uint64_t key = 0;
-    key = crc64(key, &cam->name, sizeof(cam->name));
-    key = crc64(key, &cam->ortho, sizeof(cam->ortho));
-    key = crc64(key, &cam->dist, sizeof(cam->dist));
-    key = crc64(key, &cam->rot, sizeof(cam->rot));
-    key = crc64(key, &cam->ofs, sizeof(cam->ofs));
+    uint32_t key = 0;
+    key = crc32(key, (void*)&cam->name, sizeof(cam->name));
+    key = crc32(key, (void*)&cam->ortho, sizeof(cam->ortho));
+    key = crc32(key, (void*)&cam->dist, sizeof(cam->dist));
+    key = crc32(key, (void*)&cam->rot, sizeof(cam->rot));
+    key = crc32(key, (void*)&cam->ofs, sizeof(cam->ofs));
     return key;
 }

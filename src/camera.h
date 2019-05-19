@@ -124,6 +124,6 @@ void camera_fit_box(camera_t *camera, const float box[4][4]);
  * Function: camera_get_key
  * Return a value that is guarantied to change when the camera change.
  */
-uint64_t camera_get_key(const camera_t *camera);
+uint32_t camera_get_key(const camera_t *camera);
 
 #endif // CAMERA_H
