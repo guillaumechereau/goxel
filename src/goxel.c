@@ -763,7 +763,7 @@ static void render_pathtrace_view(const float viewport[4])
 
 void goxel_render_view(const float viewport[4], bool render_mode)
 {
-    layer_t *layer;
+    const layer_t *layer;
     renderer_t *rend = &goxel.rend;
     const uint8_t layer_box_color[4] = {128, 128, 255, 255};
     int effects = 0;
@@ -777,7 +777,11 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     camera_update(&goxel.camera);
 
     effects |= goxel.view_effects;
-    render_mesh(rend, goxel_get_render_mesh(), effects);
+
+    for (layer = goxel_get_render_layers(true); layer; layer = layer->next) {
+        if (layer->visible && layer->mesh)
+            render_mesh(rend, layer->mesh, effects);
+    }
 
     if (!box_is_null(goxel.image->active_layer->box))
         render_box(rend, goxel.image->active_layer->box,
@@ -875,6 +879,47 @@ const mesh_t *goxel_get_render_mesh(void)
         }
     }
     return goxel.render_mesh_;
+}
+
+const layer_t *goxel_get_render_layers(bool with_tool_preview)
+{
+    uint32_t hash, k;
+    layer_t *l, *layer, *tmp;
+
+    hash = image_get_key(goxel.image);
+    if (with_tool_preview && goxel.tool_mesh) {
+        k = mesh_get_key(goxel.tool_mesh);
+        hash = crc32(hash, (void*)&k, sizeof(k));
+    }
+
+    if (hash != goxel.render_layers_hash) {
+        goxel.render_layers_hash = hash;
+        image_update(goxel.image);
+
+        DL_FOREACH_SAFE(goxel.render_layers, layer, tmp) {
+            DL_DELETE(goxel.render_layers, layer);
+            layer_delete(layer);
+        }
+
+        DL_FOREACH(goxel.image->layers, l) {
+            if (!l->mesh) continue;
+            layer = layer_copy(l);
+            if (    with_tool_preview && goxel.tool_mesh &&
+                    l->mesh == goxel.image->active_layer->mesh)
+            {
+                mesh_set(layer->mesh, goxel.tool_mesh);
+            }
+
+            if (goxel.render_layers) {
+                mesh_merge(goxel.render_layers->prev->mesh, layer->mesh,
+                           MODE_OVER, NULL);
+                layer_delete(layer);
+            } else {
+                DL_APPEND(goxel.render_layers, layer);
+            }
+        }
+    }
+    return goxel.render_layers;
 }
 
 // Render the view into an RGB[A] buffer.

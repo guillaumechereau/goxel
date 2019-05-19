@@ -463,6 +463,9 @@ typedef struct goxel
     mesh_t     *render_mesh_; // All the layers + tool mesh.
     uint32_t   render_mesh_hash;
 
+    layer_t    *render_layers;
+    uint32_t   render_layers_hash;
+
     struct     {
         mesh_t *mesh;
         float  box[4][4];
@@ -551,6 +554,20 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
 const mesh_t *goxel_get_layers_mesh(void);
 const mesh_t *goxel_get_render_mesh(void);
+
+/*
+ * Function: goxel_get_render_layers
+ * Compute merged current image layer list
+ *
+ * This returns a simplified list of layers from the current image where
+ * we merged as many layers as possible into a single one.
+ *
+ * It also can replace the current layer mesh with the tool preview.
+ *
+ * This is the function that should be used the get the actual list of layers
+ * to be rendered.
+ */
+const layer_t *goxel_get_render_layers(bool with_tool_preview);
 
 void goxel_set_help_text(const char *msg, ...);
 void goxel_set_hint_text(const char *msg, ...);
