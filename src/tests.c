@@ -28,7 +28,7 @@
         } \
     } while(0)
 
-static void test_file(const char *b64_data, uint64_t crc64)
+static void test_file(const char *b64_data, uint32_t crc32)
 {
     FILE *file;
     size_t data_size;
@@ -41,7 +41,7 @@ static void test_file(const char *b64_data, uint64_t crc64)
     fclose(file);
     free(data);
     action_exec2("import", "p", "/tmp/goxel_test.gox");
-    TEST(mesh_crc64(goxel.image->active_layer->mesh) == crc64);
+    TEST(mesh_crc32(goxel.image->active_layer->mesh) == crc32);
     image_delete(goxel.image);
     goxel.image = image_new();
     goxel_update_meshes(-1);
@@ -63,7 +63,7 @@ static void test_load_file_v2(void)
         "AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAA"
         "AAAAAAAAAAAAgD8CAAAAaWQEAAAAAQAAAAcAAABiYXNlX2lkBAAAAAAAAAAA"
         "AAAA";
-    test_file(b64_data, 0xb43e7829fd922ed7L);
+    test_file(b64_data, 0xf6aabf81);
 }
 
 static void test_load_file_v1_with_preview(void)
@@ -111,7 +111,7 @@ static void test_load_file_v1_with_preview(void)
         "bmFtZQoAAABiYWNrZ3JvdW5kAwAAAG1hdEAAAAAAAIA/AAAAAAAAAAAAAAAA"
         "AAAAAAAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAAAAA"
         "AIA/AgAAAGlkBAAAAAEAAAAHAAAAYmFzZV9pZAQAAAAAAAAAAAAAAA==";
-    test_file(b64_data, 0x255469049ce34e54L);
+    test_file(b64_data, 0x7e06d030);
 }
 
 static void test_load_corrupt(void)
