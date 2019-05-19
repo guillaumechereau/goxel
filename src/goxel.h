@@ -38,6 +38,7 @@
 #include "gui.h"
 #include "image.h"
 #include "inputs.h"
+#include "layer.h"
 #include "log.h"
 #include "luagoxel.h"
 #include "mesh.h"

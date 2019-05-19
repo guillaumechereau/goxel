@@ -19,34 +19,12 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include "mesh.h"
-#include "shape.h"
-#include "utils/texture.h"
+#include "layer.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
 typedef struct history history_t;
-
-typedef struct layer layer_t;
-struct layer {
-    layer_t     *next, *prev;
-    mesh_t      *mesh;
-    int         id;         // Uniq id in the image (for clones).
-    bool        visible;
-    char        name[256];  // 256 chars max.
-    float       box[4][4];  // Bounding box.
-    float       mat[4][4];
-    // For 2d image layers.
-    texture_t   *image;
-    // For clone layers:
-    int         base_id;
-    uint64_t    base_mesh_key;
-    // For shape layers.
-    const shape_t *shape;
-    uint32_t    shape_key;
-    uint8_t     color[4];
-};
 
 typedef struct image image_t;
 struct image {
@@ -66,8 +44,6 @@ struct image {
     image_t *history;
     image_t *history_next, *history_prev;
 };
-
-uint32_t layer_get_key(const layer_t *layer);
 
 image_t *image_new(void);
 void image_delete(image_t *img);

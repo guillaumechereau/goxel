@@ -155,19 +155,6 @@ static void layer_delete(layer_t *layer)
     free(layer);
 }
 
-uint32_t layer_get_key(const layer_t *layer)
-{
-    uint32_t key;
-    key = mesh_get_key(layer->mesh);
-    key = crc32(key, (void*)&layer->visible, sizeof(layer->visible));
-    key = crc32(key, (void*)&layer->name, sizeof(layer->name));
-    key = crc32(key, (void*)&layer->box, sizeof(layer->box));
-    key = crc32(key, (void*)&layer->mat, sizeof(layer->mat));
-    key = crc32(key, (void*)&layer->shape, sizeof(layer->shape));
-    key = crc32(key, (void*)&layer->color, sizeof(layer->color));
-    return key;
-}
-
 image_t *image_new(void)
 {
     layer_t *layer;
