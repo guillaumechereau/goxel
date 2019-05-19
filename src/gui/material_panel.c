@@ -22,16 +22,11 @@ void gui_material_panel(void)
 {
     float v;
     gui_group_begin(NULL);
-    v = goxel.rend.settings.occlusion_strength;
-    if (gui_input_float("occlusion", &v, 0.1, 0.0, 1.0, NULL)) {
-        v = clamp(v, 0, 1); \
-        goxel.rend.settings.occlusion_strength = v;
-    }
 #define MAT_FLOAT(name, min, max) \
-    v = goxel.rend.settings.name;  \
+    v = goxel.material.name;  \
     if (gui_input_float(#name, &v, 0.1, min, max, NULL)) { \
         v = clamp(v, min, max); \
-        goxel.rend.settings.name = v; \
+        goxel.material.name = v; \
     }
 
     MAT_FLOAT(metallic, 0, 1);
@@ -39,5 +34,5 @@ void gui_material_panel(void)
 
 #undef MAT_FLOAT
     gui_group_end();
-    gui_color_small_f4("Color", goxel.rend.settings.base_color);
+    gui_color_small_f4("Color", goxel.material.base_color);
 }

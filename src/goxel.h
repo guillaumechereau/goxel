@@ -446,6 +446,11 @@ enum {
     SNAP_ROUNDED        = 1 << 8, // Round the result.
 };
 
+typedef struct material {
+    float metallic;
+    float roughness;
+    float base_color[4];
+} material_t;
 
 typedef struct goxel
 {
@@ -487,6 +492,7 @@ typedef struct goxel
 
     texture_t  *pick_fbo;
     painter_t  painter;
+    material_t material;
     renderer_t rend;
 
     cursor_t   cursor;

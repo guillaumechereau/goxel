@@ -379,10 +379,12 @@ void goxel_reset(void)
     goxel.rend.settings = (render_settings_t) {
         .occlusion_strength = 0.4,
         .ambient = 0.3,
+        .shadow = 0.3,
+    };
+    goxel.material = (material_t) {
         .metallic = 0.2,
         .roughness = 0.5,
         .base_color = {1, 1, 1, 1},
-        .shadow = 0.3,
     };
     goxel.view_effects = EFFECT_EDGES;
 

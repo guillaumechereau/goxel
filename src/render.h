@@ -45,13 +45,7 @@ enum {
 
 typedef struct {
     float ambient;
-
-    // Material settings.
-    float metallic;
-    float roughness;
-    float base_color[4];
     float smoothness;
-
     float shadow;
     int   effects;
     float occlusion_strength;

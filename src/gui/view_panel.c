@@ -38,6 +38,11 @@ void gui_view_panel(void)
 
     gui_text("Effects");
 
+    if (gui_input_float("occlusion", &goxel.rend.settings.occlusion_strength,
+                        0.1, 0, 1, NULL)) {
+        goxel.rend.settings.occlusion_strength =
+            clamp(goxel.rend.settings.occlusion_strength, 0, 1);
+    }
     if (gui_input_float("Smoothness", &goxel.rend.settings.smoothness,
                         0.1, 0, 1, NULL)) {
         goxel.rend.settings.smoothness =

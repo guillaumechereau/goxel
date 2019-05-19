@@ -437,9 +437,9 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
         } else {
             gl_update_uniform(shader, "u_l_amb", 0.0);
             gl_update_uniform(shader, "u_m_base_color",
-                              VEC(0.2 * rend->settings.base_color[0],
-                                  0.2 * rend->settings.base_color[1],
-                                  0.2 * rend->settings.base_color[2],
+                              VEC(0.2 * goxel.material.base_color[0],
+                                  0.2 * goxel.material.base_color[1],
+                                  0.2 * goxel.material.base_color[2],
                                   1.0));
             gl_update_uniform(shader, "u_z_ofs", -0.001);
             GL(glDrawElements(GL_LINES, item->nb_elements * 8,
@@ -447,7 +447,7 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                               (void*)(uintptr_t)(BATCH_QUAD_COUNT * 6 * 2)));
             gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
             gl_update_uniform(shader, "u_m_base_color",
-                              rend->settings.base_color);
+                              goxel.material.base_color);
             gl_update_uniform(shader, "u_z_ofs", 0.0);
         }
     } else {
@@ -615,10 +615,10 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh, int effects,
     gl_update_uniform(shader, "u_l_int", rend->light.intensity);
     gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
 
-    gl_update_uniform(shader, "u_m_metallic", rend->settings.metallic);
-    gl_update_uniform(shader, "u_m_roughness", rend->settings.roughness);
+    gl_update_uniform(shader, "u_m_metallic", goxel.material.metallic);
+    gl_update_uniform(shader, "u_m_roughness", goxel.material.roughness);
+    gl_update_uniform(shader, "u_m_base_color", goxel.material.base_color);
     gl_update_uniform(shader, "u_m_smoothness", rend->settings.smoothness);
-    gl_update_uniform(shader, "u_m_base_color", rend->settings.base_color);
 
     gl_update_uniform(shader, "u_occlusion_strength",
                       rend->settings.occlusion_strength);
