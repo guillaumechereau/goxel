@@ -676,10 +676,17 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
                  const material_t *material, int effects)
 {
     render_item_t *item;
+    const material_t default_material = {
+        .metallic = 0.2,
+        .roughness = 0.5,
+        .base_color = {1, 1, 1, 1},
+    };
+
+    material = material ?: &default_material;
     item = calloc(1, sizeof(*item));
     item->type = ITEM_MESH;
     item->mesh = mesh_copy(mesh);
-    if (material) item->material = *material;
+    item->material = *material;
     item->effects = effects | rend->settings.effects;
     item->effects &= ~(EFFECT_GRID | EFFECT_EDGES);
     // With EFFECT_RENDER_POS we need to remove some effects.
@@ -693,7 +700,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
         item->type = ITEM_MESH;
         item->mesh = mesh_copy(mesh);
         item->effects = effects | EFFECT_BORDERS;
-        if (material) item->material = *material;
+        item->material = *material;
         DL_APPEND(rend->items, item);
     }
 }
