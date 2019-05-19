@@ -907,7 +907,9 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
                 mesh_set(layer->mesh, goxel.tool_mesh);
             }
 
-            if (goxel.render_layers) {
+            if (    goxel.render_layers &&
+                    goxel.render_layers->material == layer->material)
+            {
                 mesh_merge(goxel.render_layers->prev->mesh, layer->mesh,
                            MODE_OVER, NULL);
                 layer_delete(layer);
