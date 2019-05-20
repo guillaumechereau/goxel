@@ -1264,6 +1264,43 @@ bool gui_combo(const char *label, int *v, const char **names, int nb)
     return ret;
 }
 
+bool gui_combo_begin(const char *label, void *current)
+{
+    bool ret;
+    const theme_t *theme = theme_get();
+    float font_size = ImGui::GetFontSize();
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
+                        ImVec2(0, (theme->sizes.item_height - font_size) / 2));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WIDGET, INNER, 0));
+    ImGui::PushItemWidth(-1);
+    ret = ImGui::BeginCombo(label, (const char*)current);
+
+    if (!ret) {
+        ImGui::PopItemWidth();
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+    }
+    return ret;
+}
+
+void gui_combo_end(void)
+{
+    ImGui::EndCombo();
+    ImGui::PopItemWidth();
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
+}
+
+bool gui_combo_item(const char *label, bool is_selected)
+{
+    bool ret;
+    ret = ImGui::Selectable(label, is_selected);
+    if (is_selected)
+        ImGui::SetItemDefaultFocus();
+    return ret;
+}
+
 void gui_input_text_multiline_highlight(int line)
 {
     float h = ImGui::CalcTextSize("").y;
