@@ -38,6 +38,7 @@ static void toggle_layer_only_visible(layer_t *layer)
 void gui_layers_panel(void)
 {
     layer_t *layer;
+    material_t *material;
     int i = 0, icon, bbox[2][3];
     bool current, visible, bounded;
 
@@ -112,5 +113,14 @@ void gui_layers_panel(void)
         tool_gui_drag_mode(&goxel.tool_drag_mode);
         tool_gui_shape(&layer->shape);
         gui_color("##color", layer->color);
+    }
+
+    gui_text("Material");
+    if (gui_combo_begin("##material", layer->material)) {
+        DL_FOREACH(goxel.image->materials, material) {
+            if (gui_combo_item(material->name, material == layer->material))
+                layer->material = material;
+        }
+        gui_combo_end();
     }
 }
