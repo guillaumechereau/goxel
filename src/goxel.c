@@ -899,6 +899,7 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
         }
 
         DL_FOREACH(goxel.image->layers, l) {
+            if (!l->visible) continue;
             if (!l->mesh) continue;
             layer = layer_copy(l);
             if (    with_tool_preview && goxel.tool_mesh &&
