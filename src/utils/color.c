@@ -35,7 +35,7 @@ static float max3(float x, float y, float z)
     return x;
 }
 
-static void hsl_to_rgb_f(const float hsl[3], float rgb[3])
+void hsl_to_rgb_f(const float hsl[3], float rgb[3])
 {
     float r = 0, g = 0, b = 0, c, x, m;
     const float h = hsl[0] / 60, s = hsl[1], l = hsl[2];
@@ -53,7 +53,7 @@ static void hsl_to_rgb_f(const float hsl[3], float rgb[3])
     rgb[2] = b + m;
 }
 
-static void rgb_to_hsl_f(const float rgb[3], float hsl[3])
+void rgb_to_hsl_f(const float rgb[3], float hsl[3])
 {
     float h = 0, s, v, m, c, l;
     const float r = rgb[0], g = rgb[1], b = rgb[2];
