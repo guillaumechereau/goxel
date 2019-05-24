@@ -156,15 +156,21 @@ end:
 
 static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
 {
-    uint32_t key;
+    uint32_t key = 0, k;
     mesh_iterator_t iter;
-    const mesh_t *mesh = goxel_get_layers_mesh();
+    const mesh_t *mesh;
     int block_pos[3];
     yocto_shape shape;
     yocto_instance instance;
     pathtracer_internal_t *p = pt->p;
+    const layer_t *layers, *layer;
 
-    key = mesh_get_key(goxel_get_layers_mesh());
+    layers = goxel_get_render_layers(false);
+    DL_FOREACH(layers, layer) {
+        if (!layer->visible || !layer->mesh) continue;
+        k = mesh_get_key(layer->mesh);
+        key = crc32(key, &k, sizeof(k));
+    }
     key = crc32(key, goxel.back_color, sizeof(goxel.back_color));
     key = crc32(key, &w, sizeof(w));
     key = crc32(key, &h, sizeof(h));
@@ -173,24 +179,27 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     key = crc32(key, &pt->floor.type, sizeof(pt->floor.type));
     key = crc32(key, &force, sizeof(force));
     if (!force && key == p->mesh_key) return 0;
+
     p->mesh_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
-
     p->scene = {};
     p->lights = {};
 
-    // The mesh has changed, regenerates the scene.
-    iter = mesh_get_iterator(mesh,
-            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-    while (mesh_iter(&iter, block_pos)) {
-        shape = create_shape_for_block(mesh, block_pos);
-        if (shape.positions.empty()) continue;
-        p->scene.shapes.push_back(shape);
-        instance.name = shape.name;
-        instance.shape = p->scene.shapes.size() - 1;
-        instance.frame = make_translation_frame(vec3f(
-                                block_pos[0], block_pos[1], block_pos[2]));
-        p->scene.instances.push_back(instance);
+    DL_FOREACH(layers, layer) {
+        if (!layer->visible || !layer->mesh) continue;
+        mesh = layer->mesh;
+        iter = mesh_get_iterator(mesh,
+                        MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
+        while (mesh_iter(&iter, block_pos)) {
+            shape = create_shape_for_block(mesh, block_pos);
+            if (shape.positions.empty()) continue;
+            p->scene.shapes.push_back(shape);
+            instance.name = shape.name;
+            instance.shape = p->scene.shapes.size() - 1;
+            instance.frame = make_translation_frame(vec3f(
+                                    block_pos[0], block_pos[1], block_pos[2]));
+            p->scene.instances.push_back(instance);
+        }
     }
 
     return CHANGE_MESH;
