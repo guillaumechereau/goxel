@@ -27,6 +27,7 @@ struct material {
     float metallic;
     float roughness;
     float base_color[4];
+    float emission[3];
     material_t *next, *prev; // List of materials in an image.
 };
 

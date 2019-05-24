@@ -18,11 +18,15 @@
 
 #include "goxel.h"
 
+#include "utils/color.h"
+
 void gui_material_panel(void)
 {
     material_t *mat = NULL;
     int i = 0;
     bool is_current;
+    float base_color_hsl[3], emission_hsl[3];
+    float emission;
 
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->materials, mat) {
@@ -51,5 +55,17 @@ void gui_material_panel(void)
     gui_input_float("Roughness", &mat->roughness, 0.1, 0, 1, NULL);
     gui_group_end();
     gui_color_small_f3("Color", mat->base_color);
+
+    // Internally the material has an emission color independant of the
+    // base color, but for the moment the gui only allow to set a factor from
+    // the base color to keep is simple.
+    rgb_to_hsl_f(mat->base_color, base_color_hsl);
+    rgb_to_hsl_f(mat->emission, emission_hsl);
+    emission = base_color_hsl[2] ? emission_hsl[2] / base_color_hsl[2] : 0;
+    if (gui_input_float("Emission", &emission, 0.1, 0, 10, NULL)) {
+        base_color_hsl[2] *= emission;
+        hsl_to_rgb_f(base_color_hsl, mat->emission);
+    }
+
     gui_input_float("Opacity", &mat->base_color[3], 0.1, 0, 1, NULL);
 }

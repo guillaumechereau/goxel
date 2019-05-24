@@ -128,6 +128,7 @@ static int get_material_id(pathtracer_t *pt, const material_t *mat,
         m->opacity = mat->base_color[3];
         m->specular = {mat->metallic, mat->metallic, mat->metallic};
         m->roughness = mat->roughness;
+        m->emission = {mat->emission[0], mat->emission[1], mat->emission[2]};
     }
     return getindex(p->scene.materials, m);
 }
@@ -447,7 +448,7 @@ static int sync(pathtracer_t *pt, int w, int h, bool force)
         p->bvh = {};
         build_scene_bvh(p->scene, p->bvh);
     }
-    if (changes & CHANGE_LIGHT) {
+    if (changes & (CHANGE_LIGHT | CHANGE_MATERIAL)) {
         init_trace_lights(p->lights, p->scene);
     }
 
