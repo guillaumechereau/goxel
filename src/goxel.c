@@ -399,9 +399,6 @@ void goxel_reset(void)
             .specular = 0,
             .transmission = 0,
         },
-        .light = {
-            .energy = 1,
-        },
     };
 }
 

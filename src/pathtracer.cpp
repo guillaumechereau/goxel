@@ -55,6 +55,7 @@ enum {
     CHANGE_FORCE        = 1 << 4,
     CHANGE_FLOOR        = 1 << 5,
     CHANGE_OPTIONS      = 1 << 6,
+    CHANGE_MATERIAL     = 1 << 7,
 };
 
 struct pathtracer_internal {
@@ -86,11 +87,14 @@ struct pathtracer_internal {
  * Get a item from a list by name or create a new one if it doesn't exists
  */
 template <class T>
-static T* getdefault(vector<T> &list, const string &name)
+static T* getdefault(vector<T> &list, const string &name,
+                     bool *created=nullptr)
 {
+    if (created) *created = false;
     for (T &value : list) {
         if (value.name == name) return &value;
     }
+    if (created) *created = true;
     list.push_back(T{});
     list.back().name = name;
     return &list.back();
@@ -105,6 +109,28 @@ static int getindex(const vector<T> &list, const T* elem)
     return elem - &list.front();
 }
 
+static int get_material_id(pathtracer_t *pt, const material_t *mat,
+                           int *changed)
+{
+    char name[128];
+    pathtracer_internal_t *p = pt->p;
+    yocto_material *m;
+    bool created;
+
+    snprintf(name, sizeof(name), "<mat_%x>", material_get_hash(mat));
+    m = getdefault(p->scene.materials, name, &created);
+    if (created) {
+        *changed |= CHANGE_MATERIAL;
+        m->base_metallic = true;
+        m->diffuse = {mat->base_color[0],
+                      mat->base_color[1],
+                      mat->base_color[2]};
+        m->opacity = 1.0;
+        m->specular = {mat->metallic, mat->metallic, mat->metallic};
+        m->roughness = mat->roughness;
+    }
+    return getindex(p->scene.materials, m);
+}
 
 static yocto_shape create_shape_for_block(
         const mesh_t *mesh, const int block_pos[3])
@@ -159,7 +185,7 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     uint32_t key = 0, k;
     mesh_iterator_t iter;
     const mesh_t *mesh;
-    int block_pos[3];
+    int block_pos[3], i, changed = 0;
     yocto_shape shape;
     yocto_instance instance;
     pathtracer_internal_t *p = pt->p;
@@ -170,6 +196,8 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
         if (!layer->visible || !layer->mesh) continue;
         k = mesh_get_key(layer->mesh);
         key = crc32(key, &k, sizeof(k));
+        i = get_material_id(pt, layer->material, &changed);
+        key = crc32(key, &i, sizeof(i));
     }
     key = crc32(key, goxel.back_color, sizeof(goxel.back_color));
     key = crc32(key, &w, sizeof(w));
@@ -178,12 +206,13 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
                      sizeof(goxel.rend.settings.effects));
     key = crc32(key, &pt->floor.type, sizeof(pt->floor.type));
     key = crc32(key, &force, sizeof(force));
-    if (!force && key == p->mesh_key) return 0;
+    if (!force && key == p->mesh_key) return changed;
 
     p->mesh_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
     p->scene = {};
     p->lights = {};
+    changed |= CHANGE_MESH;
 
     DL_FOREACH(layers, layer) {
         if (!layer->visible || !layer->mesh) continue;
@@ -192,6 +221,7 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
                         MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
         while (mesh_iter(&iter, block_pos)) {
             shape = create_shape_for_block(mesh, block_pos);
+            shape.material = get_material_id(pt, layer->material, &changed);
             if (shape.positions.empty()) continue;
             p->scene.shapes.push_back(shape);
             instance.name = shape.name;
@@ -202,7 +232,7 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
         }
     }
 
-    return CHANGE_MESH;
+    return changed;
 }
 
 static int sync_floor(pathtracer_t *pt, bool force)
@@ -351,14 +381,15 @@ static int sync_light(pathtracer_t *pt, bool force)
 
     render_get_light_dir(&goxel.rend, light_dir);
     key = crc32(key, &pt->world, sizeof(pt->world));
-    key = crc32(key, &pt->light, sizeof(pt->light));
+    key = crc32(key, &goxel.rend.light.intensity,
+                sizeof(goxel.rend.light.intensity));
     key = crc32(key, light_dir, sizeof(light_dir));
 
     if (!force && key == p->light_key) return 0;
     p->light_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
-    ke = pt->light.energy * 20;
+    ke = goxel.rend.light.intensity;
     material = getdefault(p->scene.materials, "<light>");
     material->emission = {ke * d * d, ke * d * d, ke * d * d};
 
