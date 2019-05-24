@@ -51,4 +51,5 @@ void gui_material_panel(void)
     gui_input_float("Roughness", &mat->roughness, 0.1, 0, 1, NULL);
     gui_group_end();
     gui_color_small_f4("Color", mat->base_color);
+    gui_input_float("Opacity", &mat->base_color[3], 0.1, 0, 1, NULL);
 }

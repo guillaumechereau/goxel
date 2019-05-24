@@ -125,7 +125,7 @@ static int get_material_id(pathtracer_t *pt, const material_t *mat,
         m->diffuse = {mat->base_color[0],
                       mat->base_color[1],
                       mat->base_color[2]};
-        m->opacity = 1.0;
+        m->opacity = mat->base_color[3];
         m->specular = {mat->metallic, mat->metallic, mat->metallic};
         m->roughness = mat->roughness;
     }
