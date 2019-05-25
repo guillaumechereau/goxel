@@ -381,7 +381,6 @@ void goxel_reset(void)
         .ambient = 0.3,
         .shadow = 0.3,
     };
-    goxel.view_effects = EFFECT_EDGES;
 
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
 
