@@ -18,8 +18,6 @@
 
 #include "goxel.h"
 
-#include "utils/color.h"
-
 void gui_material_panel(void)
 {
     material_t *mat = NULL;
