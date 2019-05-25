@@ -23,7 +23,8 @@
 camera_t *camera_new(const char *name)
 {
     camera_t *cam = calloc(1, sizeof(*cam));
-    strncpy(cam->name, name, sizeof(cam->name) - 1);
+    if (name)
+        strncpy(cam->name, name, sizeof(cam->name) - 1);
     return cam;
 }
 

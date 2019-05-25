@@ -50,6 +50,48 @@
 
 */
 
+
+static bool material_name_exists(void *user, const char *name)
+{
+    const image_t *img = user;
+    const material_t *m;
+    DL_FOREACH(img->materials, m) {
+        if (strcasecmp(m->name, name) == 0) return true;
+    }
+    return false;
+}
+
+static bool layer_name_exists(void *user, const char *name)
+{
+    const image_t *img = user;
+    const layer_t *layer;
+    DL_FOREACH(img->layers, layer) {
+        if (strcasecmp(layer->name, name) == 0) return true;
+    }
+    return false;
+}
+
+static bool camera_name_exists(void *user, const char *name)
+{
+    const image_t *img = user;
+    const camera_t *cam;
+    DL_FOREACH(img->cameras, cam) {
+        if (strcasecmp(cam->name, name) == 0) return true;
+    }
+    return false;
+}
+
+static void make_uniq_name(
+        char *buf, int size, const char *base, void *user,
+        bool (*name_exists)(void *user, const char *name))
+{
+    int i;
+    for (i = 1; ; i++) {
+        snprintf(buf, size, "%s.%d", base, i);
+        if (!name_exists(user, buf)) break;
+    }
+}
+
 static layer_t *img_get_layer(const image_t *img, int id)
 {
     layer_t *layer;
@@ -129,8 +171,8 @@ image_t *image_new(void)
     bbox_from_aabb(img->box, aabb);
     img->export_width = 1024;
     img->export_height = 1024;
-    image_add_material(img, material_new("Default"));
-    layer = layer_new("background");
+    image_add_material(img, NULL);
+    layer = image_add_layer(img, NULL);
     layer->visible = true;
     layer->id = img_get_new_id(img);
     layer->material = img->active_material;
@@ -187,11 +229,14 @@ void image_delete(image_t *img)
     }
 }
 
-layer_t *image_add_layer(image_t *img)
+layer_t *image_add_layer(image_t *img, layer_t *layer)
 {
-    layer_t *layer;
     img = img ?: goxel.image;
-    layer = layer_new("unnamed");
+    if (!layer) {
+        layer = layer_new(NULL);
+        make_uniq_name(layer->name, sizeof(layer->name), "Layer", img,
+                       layer_name_exists);
+    }
     layer->visible = true;
     layer->id = img_get_new_id(img);
     layer->material = img->active_material;
@@ -332,11 +377,14 @@ void image_merge_visible_layers(image_t *img)
 }
 
 
-camera_t *image_add_camera(image_t *img)
+camera_t *image_add_camera(image_t *img, camera_t *cam)
 {
-    camera_t *cam;
     img = img ?: goxel.image;
-    cam = camera_new("unnamed");
+    if (!cam) {
+        cam = camera_new(NULL);
+        make_uniq_name(cam->name, sizeof(cam->name), "Camera", img,
+                       camera_name_exists);
+    }
     DL_APPEND(img->cameras, cam);
     img->active_camera = cam;
     return cam;
@@ -384,7 +432,11 @@ static void image_move_camera_down(image_t *img, camera_t *cam)
 static material_t *image_add_material(image_t *img, material_t *mat)
 {
     img = img ?: goxel.image;
-    mat = mat ?: material_new("unnamed");
+    if (!mat) {
+        mat = material_new(NULL);
+        make_uniq_name(mat->name, sizeof(mat->name), "Material", img,
+                       material_name_exists);
+    }
     assert(!mat->prev);
     DL_APPEND(img->materials, mat);
     img->active_material = mat;
@@ -585,7 +637,7 @@ ACTION_REGISTER(layer_clear,
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
     .cfunc = image_add_layer,
-    .csig = "vp",
+    .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )
@@ -660,7 +712,7 @@ ACTION_REGISTER(img_merge_visible_layers,
 ACTION_REGISTER(img_new_camera,
     .help = "Add a new camera to the image",
     .cfunc = image_add_camera,
-    .csig = "vp",
+    .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )

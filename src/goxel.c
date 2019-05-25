@@ -1005,7 +1005,7 @@ void goxel_import_image_plane(const char *path)
     tex = texture_new_image(path, TF_NEAREST);
     if (!tex) return;
     image_history_push(goxel.image);
-    layer = image_add_layer(goxel.image);
+    layer = image_add_layer(goxel.image, NULL);
     sprintf(layer->name, "img");
     layer->image = tex;
     mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);

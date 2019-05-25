@@ -68,7 +68,7 @@ static void qubicle_import(const char *path)
     mat_count = READ(uint32_t, file);
 
     for (i = 0; i < mat_count; i++) {
-        layer = image_add_layer(goxel.image);
+        layer = image_add_layer(goxel.image, NULL);
         iter = mesh_get_accessor(layer->mesh);
         memset(layer->name, 0, sizeof(layer->name));
         len = READ(uint8_t, file);

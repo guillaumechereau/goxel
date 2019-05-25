@@ -574,7 +574,7 @@ static int l_mesh_save(const action_t *action, lua_State *l)
         return action_exec_lua(action, l);
     if (strcmp(type, "gox") == 0) {
         img = image_new();
-        layer = image_add_layer(img);
+        layer = image_add_layer(img, NULL);
         mesh_set(layer->mesh, mesh);
         save_to_file(img, path, true);
         image_delete(img);

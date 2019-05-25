@@ -456,7 +456,7 @@ int load_from_file(const char *path)
             free(png);
 
         } else if (strncmp(c.type, "LAYR", 4) == 0) {
-            layer = image_add_layer(goxel.image);
+            layer = image_add_layer(goxel.image, NULL);
             nb_blocks = chunk_read_int32(&c, in);   assert(nb_blocks >= 0);
             for (i = 0; i < nb_blocks; i++) {
                 index = chunk_read_int32(&c, in);   assert(index >= 0);

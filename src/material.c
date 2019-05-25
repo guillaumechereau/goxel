@@ -27,7 +27,7 @@
 material_t *material_new(const char *name)
 {
     material_t *m = calloc(1, sizeof(*m));
-    snprintf(m->name, sizeof(m->name), "%s", name);
+    if (name) snprintf(m->name, sizeof(m->name), "%s", name);
     m->metallic = 0.2;
     m->roughness = 0.5;
     m->base_color[0] = 1;

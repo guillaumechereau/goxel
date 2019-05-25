@@ -24,7 +24,7 @@ layer_t *layer_new(const char *name)
 {
     layer_t *layer;
     layer = calloc(1, sizeof(*layer));
-    strncpy(layer->name, name, sizeof(layer->name) - 1);
+    if (name) strncpy(layer->name, name, sizeof(layer->name) - 1);
     layer->mesh = mesh_new();
     mat4_set_identity(layer->mat);
     return layer;
