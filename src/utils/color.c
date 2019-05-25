@@ -62,7 +62,9 @@ void rgb_to_hsl_f(const float rgb[3], float hsl[3])
     l = (v + m) / 2;
     c = v - m;
     if (c == 0) {
-        memset(hsl, 0, 3 * sizeof(float));
+        hsl[0] = 0;
+        hsl[1] = 0;
+        hsl[2] = l;
         return;
     }
     if      (v == r) {h = (g - b) / c + (g < b ? 6 : 0);}
