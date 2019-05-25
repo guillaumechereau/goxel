@@ -40,8 +40,11 @@ uniform lowp vec4  u_m_base_color;
 uniform mediump sampler2D u_normal_sampler;
 uniform lowp    float     u_normal_scale;
 
+#ifdef HAS_OCCLUSION_MAP
 uniform mediump sampler2D u_occlusion_tex;
 uniform mediump float     u_occlusion_strength;
+#endif
+
 uniform mediump sampler2D u_shadow_tex;
 uniform mediump float     u_shadow_strength;
 
@@ -326,11 +329,13 @@ void main()
 
     color += u_l_amb * baseColor.rgb;
 
+#ifdef HAS_OCCLUSION_MAP
     lowp float occlusion;
     occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;
     occlusion = sqrt(occlusion);
     occlusion = mix(1.0, occlusion, u_occlusion_strength);
     color *= occlusion;
+#endif
 
     gl_FragColor = vec4(toneMap(color), 1.0);
 }

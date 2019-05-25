@@ -572,6 +572,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
                                (effects & (EFFECT_GRID | EFFECT_EDGES))},
             {"HAS_TANGENTS", !(rend->settings.effects & EFFECT_MARCHING_CUBES)},
             {"ONLY_EDGES", (effects & EFFECT_EDGES)},
+            {"HAS_OCCLUSION_MAP", (rend->settings.occlusion_strength > 0)},
             {}
         };
         shader = shader_get("mesh", defines, shader_init);
