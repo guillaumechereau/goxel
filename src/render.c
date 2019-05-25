@@ -618,7 +618,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     gl_update_uniform(shader, "u_occlusion_tex", 0);
     gl_update_uniform(shader, "u_normal_sampler", 1);
     gl_update_uniform(shader, "u_normal_scale",
-                      effects & EFFECT_BORDERS ? 0.25 : 0.0);
+                      effects & EFFECT_BORDERS ? 0.5 : 0.0);
     gl_update_uniform(shader, "u_l_dir", light_dir);
     gl_update_uniform(shader, "u_l_int", rend->light.intensity);
     gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
