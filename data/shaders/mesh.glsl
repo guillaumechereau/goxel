@@ -36,6 +36,7 @@ uniform lowp float u_m_metallic;
 uniform lowp float u_m_roughness;
 uniform lowp float u_m_smoothness;
 uniform lowp vec4  u_m_base_color;
+uniform lowp vec3  u_m_emissive_factor;
 
 uniform mediump sampler2D u_normal_sampler;
 uniform lowp    float     u_normal_scale;
@@ -47,6 +48,7 @@ uniform mediump float     u_occlusion_strength;
 
 uniform mediump sampler2D u_shadow_tex;
 uniform mediump float     u_shadow_strength;
+
 
 varying highp   vec3 v_Position;
 varying lowp    vec4 v_color;
@@ -336,6 +338,8 @@ void main()
     occlusion = mix(1.0, occlusion, u_occlusion_strength);
     color *= occlusion;
 #endif
+
+    color += u_m_emissive_factor;
 
     gl_FragColor = vec4(toneMap(color), 1.0);
 }

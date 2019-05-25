@@ -622,6 +622,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     gl_update_uniform(shader, "u_m_metallic", material->metallic);
     gl_update_uniform(shader, "u_m_roughness", material->roughness);
     gl_update_uniform(shader, "u_m_base_color", material->base_color);
+    gl_update_uniform(shader, "u_m_emissive_factor", material->emission);
     gl_update_uniform(shader, "u_m_smoothness", rend->settings.smoothness);
 
     gl_update_uniform(shader, "u_occlusion_strength",
