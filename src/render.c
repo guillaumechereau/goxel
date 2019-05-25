@@ -553,7 +553,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     gl_shader_t *shader;
     float model[4][4], camera[4][4];
     int attr, block_pos[3], block_id;
-    float light_dir[3];
+    float light_dir[3], alpha;
     bool shadow = false;
     mesh_iterator_t iter;
 
@@ -592,10 +592,14 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
         GL(glCullFace(GL_FRONT));
         vec3_imul(light_dir, -0.5);
     }
-    if (effects & EFFECT_SEMI_TRANSPARENT) {
+
+    alpha = material->base_color[3];
+    if (effects & EFFECT_SEMI_TRANSPARENT) alpha *= 0.75;
+
+    if (alpha < 1) {
         GL(glEnable(GL_BLEND));
         GL(glBlendFunc(GL_CONSTANT_COLOR, GL_ONE_MINUS_CONSTANT_COLOR));
-        GL(glBlendColor(0.75, 0.75, 0.75, 0.75));
+        GL(glBlendColor(alpha, alpha, alpha, alpha));
     }
 
     GL(glUseProgram(shader->prog));
@@ -853,12 +857,13 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
     DL_APPEND(rend->items, item);
 }
 
-static int item_sort_value(const render_item_t *a)
+static float item_sort_value(const render_item_t *a)
 {
     if (a->effects & EFFECT_WIREFRAME) return 20;
     if (a->proj_screen)     return 10;
     switch (a->type) {
-        case ITEM_MESH:     return 0;
+        // XXX: probably need to sort mesh objects by distance too.
+        case ITEM_MESH:     return a->material.base_color[3] == 1 ? 0 : 0.5;
         case ITEM_MODEL3D:  return 1;
         case ITEM_GRID:     return 2;
         default:            return 0;
