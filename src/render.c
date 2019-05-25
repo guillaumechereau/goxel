@@ -178,8 +178,8 @@ static void init_border_texture(void)
         for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
             ay = mask / 16 * s + y;
             ax = mask % 16 * s + x;
-            data[ay * s * 16 + ax] = 255 * get_border_dist(
-                    (float)x / s + 0.5 / s, (float)y / s + 0.5 / s, mask);
+            data[ay * s * 16 + ax] = 255 * sqrt(get_border_dist(
+                    (float)x / s + 0.5 / s, (float)y / s + 0.5 / s, mask));
         }
     }
     GL(glGenTextures(1, &g_border_tex));

@@ -332,11 +332,9 @@ void main()
     color += u_l_amb * baseColor.rgb;
 
 #ifdef HAS_OCCLUSION_MAP
-    lowp float occlusion;
-    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;
-    occlusion = sqrt(occlusion);
-    occlusion = mix(1.0, occlusion, u_occlusion_strength);
-    color *= occlusion;
+    lowp float ao;
+    ao = texture2D(u_occlusion_tex, v_occlusion_uv).r;
+    color = mix(color, color * ao, u_occlusion_strength);
 #endif
 
     color += u_m_emissive_factor;

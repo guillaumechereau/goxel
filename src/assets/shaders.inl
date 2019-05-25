@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 11597, .data =
+{.path = "data/shaders/mesh.glsl", .size = 11525, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -383,11 +383,9 @@
     "    color += u_l_amb * baseColor.rgb;\n"
     "\n"
     "#ifdef HAS_OCCLUSION_MAP\n"
-    "    lowp float occlusion;\n"
-    "    occlusion = texture2D(u_occlusion_tex, v_occlusion_uv).r;\n"
-    "    occlusion = sqrt(occlusion);\n"
-    "    occlusion = mix(1.0, occlusion, u_occlusion_strength);\n"
-    "    color *= occlusion;\n"
+    "    lowp float ao;\n"
+    "    ao = texture2D(u_occlusion_tex, v_occlusion_uv).r;\n"
+    "    color = mix(color, color * ao, u_occlusion_strength);\n"
     "#endif\n"
     "\n"
     "    color += u_m_emissive_factor;\n"
