@@ -91,7 +91,7 @@ static model3d_t *g_wire_rect_model;
 
 static GLuint g_index_buffer;
 static GLuint g_background_array_buffer;
-static GLuint g_border_tex;
+static GLuint g_occlusion_tex;
 static GLuint g_bump_tex;
 static GLuint g_shadow_map_fbo;
 static texture_t *g_shadow_map; // XXX: the fbo should be part of the tex.
@@ -169,7 +169,7 @@ static float get_border_dist(float x, float y, int mask)
     return ret;
 }
 
-static void init_border_texture(void)
+static void init_occlusion_texture(void)
 {
     const int s = VOXEL_TEXTURE_SIZE;    // the individual tile size.
     uint8_t data[256 * s * s];
@@ -182,9 +182,9 @@ static void init_border_texture(void)
                     (float)x / s + 0.5 / s, (float)y / s + 0.5 / s, mask));
         }
     }
-    GL(glGenTextures(1, &g_border_tex));
+    GL(glGenTextures(1, &g_occlusion_tex));
     GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, g_border_tex));
+    GL(glBindTexture(GL_TEXTURE_2D, g_occlusion_tex));
     GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, s * 16, s * 16,
@@ -308,7 +308,7 @@ void render_init()
 #endif
 
     free(index_array);
-    init_border_texture();
+    init_occlusion_texture();
     init_bump_texture();
 
     // XXX: pick the proper memory size according to what is available.
@@ -583,7 +583,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     GL(glEnable(GL_CULL_FACE));
     GL(glCullFace(GL_BACK));
     GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, g_border_tex));
+    GL(glBindTexture(GL_TEXTURE_2D, g_occlusion_tex));
     GL(glActiveTexture(GL_TEXTURE1));
     GL(glBindTexture(GL_TEXTURE_2D, g_bump_tex));
     GL(glDisable(GL_BLEND));
