@@ -29,7 +29,7 @@ typedef struct layer layer_t;
 struct layer {
     layer_t     *next, *prev;
     mesh_t      *mesh;
-    material_t  *material;
+    const material_t  *material;
     int         id;         // Uniq id in the image (for clones).
     bool        visible;
     char        name[256];  // 256 chars max.
