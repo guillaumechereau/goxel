@@ -161,8 +161,6 @@ void image_update(image_t *img)
     }
 }
 
-static material_t *image_add_material(image_t *img, material_t *mat);
-
 image_t *image_new(void)
 {
     layer_t *layer;
@@ -205,7 +203,6 @@ static image_t *image_snap(image_t *other)
 
 
 static void image_delete_camera(image_t *img, camera_t *cam);
-static void image_delete_material(image_t *img, material_t *m);
 
 void image_delete(image_t *img)
 {
@@ -429,7 +426,7 @@ static void image_move_camera_down(image_t *img, camera_t *cam)
     image_move_camera(img, cam, -1);
 }
 
-static material_t *image_add_material(image_t *img, material_t *mat)
+material_t *image_add_material(image_t *img, material_t *mat)
 {
     img = img ?: goxel.image;
     if (!mat) {
@@ -443,7 +440,7 @@ static material_t *image_add_material(image_t *img, material_t *mat)
     return mat;
 }
 
-static void image_delete_material(image_t *img, material_t *mat)
+void image_delete_material(image_t *img, material_t *mat)
 {
     layer_t *layer;
 

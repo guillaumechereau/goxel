@@ -65,6 +65,9 @@ void image_undo(image_t *img);
 void image_redo(image_t *img);
 bool image_layer_can_edit(const image_t *img, const layer_t *layer);
 
+material_t *image_add_material(image_t *img, material_t *mat);
+void image_delete_material(image_t *img, material_t *mat);
+
 /*
  * Function: image_get_key
  * Return a value that is guarantied to change when the image change.
