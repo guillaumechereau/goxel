@@ -1263,7 +1263,7 @@ bool gui_combo(const char *label, int *v, const char **names, int nb)
     return ret;
 }
 
-bool gui_combo_begin(const char *label, void *current)
+bool gui_combo_begin(const char *label, const void *current)
 {
     bool ret;
     const theme_t *theme = theme_get();

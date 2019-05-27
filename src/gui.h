@@ -75,7 +75,7 @@ bool gui_input_text_multiline(const char *label, char *buf, int size,
 void gui_input_text_multiline_highlight(int line);
 
 bool gui_combo(const char *label, int *v, const char **names, int nb);
-bool gui_combo_begin(const char *label, void *current);
+bool gui_combo_begin(const char *label, const void *current);
 bool gui_combo_item(const char *label, bool selected);
 void gui_combo_end(void);
 
