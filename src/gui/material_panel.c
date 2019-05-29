@@ -51,7 +51,6 @@ void gui_material_panel(void)
     gui_input_float("Metallic", &mat->metallic, 0.1, 0, 1, NULL);
     gui_input_float("Roughness", &mat->roughness, 0.1, 0, 1, NULL);
     gui_group_end();
-    gui_color_small_f3("Color", mat->base_color);
 
     // Internally the material has an emission color independant of the
     // base color, but for the moment the gui only allow to set a factor from
@@ -61,6 +60,10 @@ void gui_material_panel(void)
                         mat->base_color[2]);
     emission_e = max3(mat->emission[0], mat->emission[1], mat->emission[2]);
     emission = base_color_e ? emission_e / base_color_e : 0;
+
+    if (gui_color_small_f3("Color", mat->base_color)) {
+        vec3_mul(mat->base_color, emission, mat->emission);
+    }
 
     if (gui_input_float("Emission", &emission, 0.1, 0, 10, NULL)) {
         vec3_mul(mat->base_color, emission, mat->emission);
