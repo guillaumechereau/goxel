@@ -1111,19 +1111,22 @@ bool gui_color(const char *label, uint8_t color[4])
 
 bool gui_color_small(const char *label, uint8_t color[4])
 {
+    uint8_t orig[4];
+    memcpy(orig, color, 4);
     ImVec4 c = color;
     ImGui::PushID(label);
     ImGui::ColorButton(label, c);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
         color_edit("##edit", color, NULL);
-        if (ImGui::Button("Close"))
+        if (ImGui::Button("Close")) {
             ImGui::CloseCurrentPopup();
+        }
         ImGui::EndPopup();
     }
     gui_same_line();
     ImGui::Text("%s", label);
     ImGui::PopID();
-    return false;
+    return memcmp(color, orig, 4) != 0;
 }
 
 bool gui_color_small_f3(const char *label, float color[3])
