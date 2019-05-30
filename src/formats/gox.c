@@ -376,12 +376,14 @@ void save_to_file(const image_t *img, const char *path, bool with_preview)
                                strlen(camera->name));
         chunk_write_dict_value(&c, out, "dist", &camera->dist,
                                sizeof(camera->dist));
-        chunk_write_dict_value(&c, out, "rot", &camera->rot,
-                               sizeof(camera->rot));
-        chunk_write_dict_value(&c, out, "ofs", &camera->ofs,
-                               sizeof(camera->ofs));
+        // chunk_write_dict_value(&c, out, "rot", &camera->rot,
+        //                       sizeof(camera->rot));
+        // chunk_write_dict_value(&c, out, "ofs", &camera->ofs,
+        //                       sizeof(camera->ofs));
         chunk_write_dict_value(&c, out, "ortho", &camera->ortho,
                                sizeof(camera->ortho));
+        chunk_write_dict_value(&c, out, "mat", &camera->mat,
+                               sizeof(camera->mat));
         if (camera == img->active_camera)
             chunk_write_dict_value(&c, out, "active", NULL, 0);
 
@@ -567,12 +569,14 @@ int load_from_file(const char *path)
                     strncpy(camera->name, dict_value, sizeof(camera->name));
                 if (strcmp(dict_key, "dist") == 0)
                     memcpy(&camera->dist, dict_value, dict_value_size);
-                if (strcmp(dict_key, "rot") == 0)
-                    memcpy(&camera->rot, dict_value, dict_value_size);
-                if (strcmp(dict_key, "ofs") == 0)
-                    memcpy(&camera->ofs, dict_value, dict_value_size);
+                // XXX: make old style camera loading work?
+                //    memcpy(&camera->rot, dict_value, dict_value_size);
+                // if (strcmp(dict_key, "ofs") == 0)
+                //    memcpy(&camera->ofs, dict_value, dict_value_size);
                 if (strcmp(dict_key, "ortho") == 0)
                     memcpy(&camera->ortho, dict_value, dict_value_size);
+                if (strcmp(dict_key, "mat") == 0)
+                    memcpy(&camera->mat, dict_value, dict_value_size);
                 if (strcmp(dict_key, "active") == 0) {
                     goxel.image->active_camera = camera;
                     camera_set(&goxel.camera, camera);

@@ -506,6 +506,7 @@ typedef struct goxel
         float  rotation[4];
         float  pos[2];
         float  camera_ofs[3];
+        float  camera_mat[4][4];
     } move_origin;
 
     palette_t  *palettes;   // The list of all the palettes

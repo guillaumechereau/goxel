@@ -65,24 +65,6 @@ static void unpack_pos_data(uint32_t v, int pos[3], int *face,
     *cube_id = i;
 }
 
-// XXX: can we merge this with unproject?
-static bool unproject_delta(const float win[3], const float model[4][4],
-                            const float proj[4][4], const float viewport[4],
-                            float out[3])
-{
-    float inv[4][4], norm_pos[4];
-
-    mat4_mul(proj, model, inv);
-    if (!mat4_invert(inv, inv)) {
-        vec3_copy(vec3_zero, out);
-        return false;
-    }
-    vec4_set(norm_pos, win[0] / viewport[2], win[1] / viewport[3], 0, 0);
-    mat4_mul_vec4(inv, norm_pos, norm_pos);
-    vec3_copy(norm_pos, out);
-    return true;
-}
-
 // Conveniance function to add a char in the inputs.
 void inputs_insert_char(inputs_t *inputs, uint32_t c)
 {
@@ -342,12 +324,14 @@ void goxel_reset(void)
 {
     image_delete(goxel.image);
     goxel.image = image_new();
-    quat_set_identity(goxel.camera.rot);
     goxel.camera.dist = 128;
     goxel.camera.aspect = 1;
-    quat_irotate(goxel.camera.rot, -M_PI / 4, 1, 0, 0);
-    quat_irotate(goxel.camera.rot, -M_PI / 4, 0, 0, 1);
     action_exec2("settings_load", "");
+
+    mat4_set_identity(goxel.camera.mat);
+    mat4_itranslate(goxel.camera.mat, 0, 0, goxel.camera.dist);
+    camera_turntable(&goxel.camera, M_PI / 4, M_PI / 4);
+    goxel.camera.dist = 128;
 
     camera_fit_box(&goxel.camera, goxel.image->box);
     // Put plane horizontal at the origin.
@@ -458,25 +442,6 @@ int goxel_iter(inputs_t *inputs)
     return goxel.quit ? 1 : 0;
 }
 
-static void compute_view_rotation(const float rot[4],
-        const float start_pos[2], const float end_pos[2],
-        const float viewport[4], float out[4])
-{
-    float x1, y1, x2, y2, x_rot, z_rot, q1[4], q2[4], q[4], x_axis[4];
-    x1 = start_pos[0] / viewport[2];
-    y1 = start_pos[1] / viewport[3];
-    x2 =   end_pos[0] / viewport[2];
-    y2 =   end_pos[1] / viewport[3];
-    z_rot = (x2 - x1) * 2 * M_PI;
-    x_rot = -(y2 - y1) * 2 * M_PI;
-    quat_from_axis(q1, z_rot, 0, 0, 1);
-    quat_mul(rot, q1, q);
-    quat_conjugate(q, q);
-    quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
-    quat_from_axis(q2, x_rot, x_axis[0], x_axis[1], x_axis[2]);
-    quat_mul(q1, q2, out);
-}
-
 static void set_cursor_hint(cursor_t *curs)
 {
     const char *snap_str = NULL;
@@ -518,37 +483,42 @@ static int on_drag(const gesture_t *gest, void *user)
 static int on_pan(const gesture_t *gest, void *user)
 {
     if (gest->state == GESTURE_BEGIN) {
-        vec3_copy(goxel.camera.ofs, goxel.move_origin.camera_ofs);
+        mat4_copy(goxel.camera.mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
     }
     float wpos[3] = {gest->pos[0], gest->pos[1], 0};
     float worigin_pos[3], wdelta[3], odelta[3];
-
     vec3_set(worigin_pos, goxel.move_origin.pos[0],
                           goxel.move_origin.pos[1], 0);
     vec3_sub(wpos, worigin_pos, wdelta);
-
-    unproject_delta(wdelta, goxel.camera.view_mat,
-                    goxel.camera.proj_mat, gest->viewport, odelta);
-    vec3_imul(odelta, 2); // XXX: why do I need that?
+    odelta[0] = wdelta[0] / gest->viewport[2] / 2;
+    odelta[1] = wdelta[1] / gest->viewport[3] / 2;
     if (!goxel.camera.ortho)
         vec3_imul(odelta, goxel.camera.dist);
-    vec3_add(goxel.move_origin.camera_ofs, odelta, goxel.camera.ofs);
+    mat4_translate(goxel.move_origin.camera_mat,
+                   -odelta[0], -odelta[1], 0,
+                   goxel.camera.mat);
     return 0;
 }
 
 static int on_rotate(const gesture_t *gest, void *user)
 {
-    float view_rot[4];
+    float x1, y1, x2, y2, x_rot, z_rot;
+
     if (gest->state == GESTURE_BEGIN) {
-        quat_copy(goxel.camera.rot, goxel.move_origin.rotation);
+        mat4_copy(goxel.camera.mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
     }
 
-    compute_view_rotation(goxel.move_origin.rotation,
-                          goxel.move_origin.pos, gest->pos,
-                          gest->viewport, view_rot);
-    quat_mul(goxel.move_origin.rotation, view_rot, goxel.camera.rot);
+    x1 = goxel.move_origin.pos[0] / gest->viewport[2];
+    y1 = goxel.move_origin.pos[1] / gest->viewport[3];
+    x2 = gest->pos[0] / gest->viewport[2];
+    y2 = gest->pos[1] / gest->viewport[3];
+    z_rot = (x1 - x2) * 2 * M_PI;
+    x_rot = (y2 - y1) * 2 * M_PI;
+
+    mat4_copy(goxel.move_origin.camera_mat, goxel.camera.mat);
+    camera_turntable(&goxel.camera, z_rot, x_rot);
     return 0;
 }
 
@@ -570,6 +540,7 @@ static int on_hover(const gesture_t *gest, void *user)
 
 static int on_pinch(const gesture_t *gest, void *user)
 {
+    /*
     static float start_zoom = 0;
     static float start_rot[4];
     static float start_pos[2];
@@ -603,6 +574,7 @@ static int on_pinch(const gesture_t *gest, void *user)
             camera_set_target(&goxel.camera, p);
         }
     }
+    */
     return 0;
 }
 
@@ -611,7 +583,8 @@ static int on_pinch(const gesture_t *gest, void *user)
 void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          bool capture_keys)
 {
-    float x_axis[4], q[4], p[3], n[3];
+    float p[3], n[3];
+
     painter_t painter = goxel.painter;
     gesture_t *gests[] = {&goxel.gestures.drag,
                           &goxel.gestures.pan,
@@ -646,8 +619,9 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     }
 
     if (inputs->mouse_wheel) {
-        goxel.camera.dist /= pow(1.1, inputs->mouse_wheel);
-
+        mat4_itranslate(goxel.camera.mat, 0, 0,
+                -goxel.camera.dist * (1 - pow(1.1, -inputs->mouse_wheel)));
+        goxel.camera.dist *= pow(1.1, -inputs->mouse_wheel);
         // Auto adjust the camera rotation position.
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
                                     goxel_get_layers_mesh(), p, n)) {
@@ -658,28 +632,20 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
     // handle keyboard rotations
     if (!capture_keys) return;
+
     if (inputs->keys[KEY_LEFT]) {
-        quat_irotate(goxel.camera.rot, 0.05, 0, 0, +1);
-        quat_normalize(goxel.camera.rot, goxel.camera.rot);
+        camera_turntable(&goxel.camera, +0.05, 0);
     }
     if (inputs->keys[KEY_RIGHT]) {
-        quat_irotate(goxel.camera.rot, 0.05, 0, 0, -1);
-        quat_normalize(goxel.camera.rot, goxel.camera.rot);
+        camera_turntable(&goxel.camera, -0.05, 0);
     }
     if (inputs->keys[KEY_UP]) {
-        quat_conjugate(goxel.camera.rot, q);
-        quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
-        quat_irotate(goxel.camera.rot, -0.05,
-                     x_axis[0], x_axis[1], x_axis[2]);
-        quat_normalize(goxel.camera.rot, goxel.camera.rot);
+        camera_turntable(&goxel.camera, 0, +0.05);
     }
     if (inputs->keys[KEY_DOWN]) {
-        quat_conjugate(goxel.camera.rot, q);
-        quat_mul_vec4(q, VEC(1, 0, 0, 0), x_axis);
-        quat_irotate(goxel.camera.rot, +0.05,
-                     x_axis[0], x_axis[1], x_axis[2]);
-        quat_normalize(goxel.camera.rot, goxel.camera.rot);
+        camera_turntable(&goxel.camera, 0, -0.05);
     }
+
     // C: recenter the view:
     // XXX: this should be an action!
     if (inputs->keys['C']) {
@@ -1169,15 +1135,21 @@ ACTION_REGISTER(past,
 
 static int view_default(const action_t *a, lua_State *l)
 {
-    quat_set_identity(goxel.camera.rot);
-    quat_irotate(goxel.camera.rot, -M_PI / 4, 1, 0, 0);
-    quat_irotate(goxel.camera.rot, -M_PI / 4, 0, 0, 1);
+    float dist = vec3_norm(goxel.camera.mat[3]);
+    mat4_set_identity(goxel.camera.mat);
+    mat4_irotate(goxel.camera.mat, M_PI / 4, 1, 0, 0);
+    mat4_itranslate(goxel.camera.mat, 0, 0, dist);
     return 0;
 }
 
 static int view_set(const action_t *a, lua_State *l)
 {
-    quat_copy(a->data, goxel.camera.rot);
+    float rz = ((float*)a->data)[0] / 180 * M_PI;
+    float rx = ((float*)a->data)[1] / 180 * M_PI;
+
+    mat4_set_identity(goxel.camera.mat);
+    mat4_itranslate(goxel.camera.mat, 0, 0, goxel.camera.dist);
+    camera_turntable(&goxel.camera, rz, rx);
     return 0;
 }
 
@@ -1185,7 +1157,7 @@ ACTION_REGISTER(view_left,
     .help = "Set camera view to left",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
-    .data = &QUAT(0.5, -0.5, 0.5, 0.5),
+    .data = (float[]){90, 90},
     .default_shortcut = "Ctrl 3",
 )
 
@@ -1193,7 +1165,7 @@ ACTION_REGISTER(view_right,
     .help = "Set camera view to right",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
-    .data = &QUAT(-0.5, 0.5, 0.5, 0.5),
+    .data = (float[]){-90, 90},
     .default_shortcut = "3",
 )
 
@@ -1201,7 +1173,7 @@ ACTION_REGISTER(view_top,
     .help = "Set camera view to top",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
-    .data = &QUAT(1, 0, 0, 0),
+    .data = (float[]){0, 0},
     .default_shortcut = "7",
 )
 
@@ -1216,7 +1188,7 @@ ACTION_REGISTER(view_front,
     .help = "Set camera view to front",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .func = view_set,
-    .data = &QUAT(HS2, -HS2, 0, 0),
+    .data = (float[]){0, 90},
     .default_shortcut = "1",
 )
 

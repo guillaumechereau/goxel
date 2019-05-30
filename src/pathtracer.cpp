@@ -295,6 +295,7 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
     pathtracer_internal_t *p = pt->p;
     yocto_camera *cam;
     uint64_t key;
+    float m[4][4];
 
     add_missing_cameras(p->scene);
     cam = &p->scene.cameras[0];
@@ -307,14 +308,11 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
     p->camera_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
-    cam->frame =
-        make_translation_frame<float>({-goxel.camera.ofs[0],
-                                       -goxel.camera.ofs[1],
-                                       -goxel.camera.ofs[2]}) *
-        make_rotation_frame(quat_inverse(vec<float, 4>{
-                goxel.camera.rot[1], goxel.camera.rot[2],
-                goxel.camera.rot[3], goxel.camera.rot[0]})) *
-        make_translation_frame<float>({0, 0, goxel.camera.dist});
+    mat4_copy(goxel.camera.mat, m);
+    cam->frame = mat_to_frame(mat4f({m[0][0], m[0][1], m[0][2], m[0][3]},
+                                    {m[1][0], m[1][1], m[1][2], m[1][3]},
+                                    {m[2][0], m[2][1], m[2][2], m[2][3]},
+                                    {m[3][0], m[3][1], m[3][2], m[3][3]}));
     set_camera_perspective(*cam, goxel.camera.fovy / 180 * M_PI, (float)w / h,
                            goxel.camera.dist);
 

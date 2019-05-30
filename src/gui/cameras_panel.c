@@ -48,6 +48,7 @@ void gui_cameras_panel(void)
     cam = &goxel.camera;
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 
+    /*
     gui_group_begin("Offset");
     gui_input_float("x", &cam->ofs[0], 1.0, 0, 0, NULL);
     gui_input_float("y", &cam->ofs[1], 1.0, 0, 0, NULL);
@@ -56,6 +57,7 @@ void gui_cameras_panel(void)
 
     gui_quat("Rotation", cam->rot);
     gui_checkbox("Ortho", &cam->ortho, NULL);
+    */
 
     gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); gui_same_line();

@@ -30,18 +30,12 @@
 /* Type: camera_t
  * Camera structure.
  *
- * The actual position of the camera is constructed from a distance, a
- * rotation and an offset:
- *
- * Pos = ofs * rot * dist
- *
  * Attributes:
  *   next, prev - Used for linked list of cameras in an image.
  *   name       - Name to show in the GUI.
  *   ortho      - Set to true for orthographic projection.
  *   dist       - Distance used to compute the position.
- *   rot        - Camera rotation quaternion.
- *   ofs        - Lateral offset of the camera position.
+ *   mat        - Position of the camera (the camera points toward -z).
  *   fovy       - Field of view in y direction.
  *   aspect     - Aspect ratio.
  *   view_mat   - Modelview transformation matrix (auto computed).
@@ -53,11 +47,10 @@ struct camera
     camera_t  *next, *prev; // List of camera in an image.
     char   name[128];  // 127 chars max.
     bool   ortho; // Set to true for orthographic projection.
-    float  dist;
-    float  rot[4]; // Quaternion.
-    float  ofs[3];
+    float  dist;  // Rotation distance.
     float  fovy;
     float  aspect;
+    float  mat[4][4];
 
     // Auto computed from other values:
     float view_mat[4][4];    // Model to view transformation.
@@ -125,5 +118,7 @@ void camera_fit_box(camera_t *camera, const float box[4][4]);
  * Return a value that is guarantied to change when the camera change.
  */
 uint32_t camera_get_key(const camera_t *camera);
+
+void camera_turntable(camera_t *camera, float rz, float rx);
 
 #endif // CAMERA_H

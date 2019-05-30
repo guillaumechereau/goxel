@@ -25,6 +25,7 @@ camera_t *camera_new(const char *name)
     camera_t *cam = calloc(1, sizeof(*cam));
     if (name)
         strncpy(cam->name, name, sizeof(cam->name) - 1);
+    mat4_set_identity(cam->mat);
     return cam;
 }
 
@@ -37,8 +38,7 @@ void camera_set(camera_t *cam, const camera_t *other)
 {
     cam->ortho = other->ortho;
     cam->dist = other->dist;
-    quat_copy(other->rot, cam->rot);
-    vec3_copy(other->ofs, cam->ofs);
+    mat4_copy(other->mat, cam->mat);
 }
 
 static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
@@ -84,13 +84,7 @@ void camera_update(camera_t *camera)
     float clip_near, clip_far;
 
     camera->fovy = 20.;
-    // Update the camera mats
-    mat4_set_identity(camera->view_mat);
-    mat4_itranslate(camera->view_mat, 0, 0, -camera->dist);
-    mat4_imul_quat(camera->view_mat, camera->rot);
-    mat4_itranslate(camera->view_mat,
-           camera->ofs[0], camera->ofs[1], camera->ofs[2]);
-
+    mat4_invert(camera->mat, camera->view_mat);
     compute_clip(camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
         size = camera->dist;
@@ -122,17 +116,10 @@ void camera_get_ray(const camera_t *camera, const float win[2],
 // position.
 void camera_set_target(camera_t *cam, const float pos[3])
 {
-    // Adjust the offset z coordinate (in the rotated referential) to put
-    // it in the xy plan intersecting the target point.  Then adjust the
-    // distance so that the final view matrix stays the same.
-    float u[4], v[4];
-    float d;
-    float roti[4] = {cam->rot[0], -cam->rot[1], -cam->rot[2], -cam->rot[3]};
-    quat_mul_vec4(roti, VEC(0, 0, 1, 0), u);
-    vec3_add(pos, cam->ofs, v);
-    d = vec3_dot(v, u);
-    vec3_iaddk(cam->ofs, u, -d);
-    cam->dist -= d;
+    float world_to_mat[4][4], p[3];
+    mat4_invert(cam->mat, world_to_mat);
+    mat4_mul_vec3(world_to_mat, pos, p);
+    cam->dist = -p[2];
 }
 
 /*
@@ -141,17 +128,18 @@ void camera_set_target(camera_t *cam, const float pos[3])
  */
 void camera_fit_box(camera_t *cam, const float box[4][4])
 {
-    float size[3];
+    float size[3], dist;
     if (box_is_null(box)) {
         cam->dist = 128;
         cam->aspect = 1;
         return;
     }
     box_get_size(box, size);
-    mat4_mul_vec3(box, VEC(0, 0, 0), cam->ofs);
-    vec3_imul(cam->ofs, -1);
     // XXX: not the proper way to compute the distance.
-    cam->dist = max3(size[0], size[1], size[2]) * 8;
+    dist = max3(size[0], size[1], size[2]) * 8;
+    mat4_mul_vec3(box, VEC(0, 0, 0), cam->mat[3]);
+    mat4_itranslate(cam->mat, 0, 0, dist);
+    cam->dist = dist;
 }
 
 /*
@@ -164,7 +152,22 @@ uint32_t camera_get_key(const camera_t *cam)
     key = crc32(key, (void*)&cam->name, sizeof(cam->name));
     key = crc32(key, (void*)&cam->ortho, sizeof(cam->ortho));
     key = crc32(key, (void*)&cam->dist, sizeof(cam->dist));
-    key = crc32(key, (void*)&cam->rot, sizeof(cam->rot));
-    key = crc32(key, (void*)&cam->ofs, sizeof(cam->ofs));
+    key = crc32(key, (void*)&cam->mat, sizeof(cam->mat));
     return key;
+}
+
+void camera_turntable(camera_t *camera, float rz, float rx)
+{
+    float center[3], mat[4][4] = MAT4_IDENTITY;
+
+    mat4_mul_vec3(camera->mat, VEC(0, 0, -camera->dist), center);
+    mat4_itranslate(mat, center[0], center[1], center[2]);
+    mat4_irotate(mat, rz, 0, 0, 1);
+    mat4_itranslate(mat, -center[0], -center[1], -center[2]);
+    mat4_imul(mat, camera->mat);
+    mat4_copy(mat, camera->mat);
+
+    mat4_itranslate(camera->mat, 0, 0, -camera->dist);
+    mat4_irotate(camera->mat, rx, 1, 0, 0);
+    mat4_itranslate(camera->mat, 0, 0, camera->dist);
 }
