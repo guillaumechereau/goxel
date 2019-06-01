@@ -45,6 +45,10 @@ enum  {
 #define VEC(...) ((float[]){__VA_ARGS__})
 #define QUAT(w, x, y, z) ((float[]){w, x, y, z})
 
+#define VEC2_SPLIT(v) (v)[0], (v)[1]
+#define VEC3_SPLIT(v) (v)[0], (v)[1], (v)[2]
+#define VEC4_SPLIT(v) (v)[0], (v)[1], (v)[2], (v)[3]
+
 static const float vec3_zero[] = {0, 0, 0};
 static const float vec4_zero[] = {0, 0, 0, 0};
 static const float mat4_identity[4][4] = {{1, 0, 0, 0},
