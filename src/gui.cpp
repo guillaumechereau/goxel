@@ -423,32 +423,6 @@ void gui_release(void)
     if (gui) ImGui::DestroyContext();
 }
 
-// XXX: Move this somewhere else.
-void render_axis_arrows(const float view_size[2])
-{
-    const float AXIS[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-    int i;
-    const int d = 40;  // Distance to corner of the view.
-    float spos[2] = {d, d};
-    float pos[3], normal[3], b[3];
-    uint8_t c[4];
-    float s = 1;
-    float view[4] = {0, 0, view_size[0], view_size[1]};
-    camera_get_ray(&goxel.camera, spos, view, pos, normal);
-    if (goxel.camera.ortho)
-        s = goxel.camera.dist / 32;
-    else
-        vec3_iaddk(pos, normal, 100);
-
-    for (i = 0; i < 3; i++) {
-        vec3_addk(pos, AXIS[i], 2.0 * s, b);
-        vec4_set(c, AXIS[i][0] * 255,
-                    AXIS[i][1] * 255,
-                    AXIS[i][2] * 255, 255);
-        render_line(&goxel.rend, pos, b, c);
-    }
-}
-
 void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 {
     float scale = ImGui::GetIO().DisplayFramebufferScale.y;
@@ -739,7 +713,6 @@ void gui_iter(const inputs_t *inputs)
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
     gui->mouse_in_view = ImGui::IsItemHovered();
-    float view_size[2] = {gui->view.rect[2], gui->view.rect[3]};
     float view_rect[4] = {canvas_pos.x,
                           io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
                           canvas_size.x, canvas_size.y};
@@ -755,7 +728,6 @@ void gui_iter(const inputs_t *inputs)
         goxel_mouse_in_view(view_rect, &inputs2, !io.WantCaptureKeyboard);
     }
 
-    render_axis_arrows(view_size);
     ImGui::Text("%s", goxel.hint_text ?: "");
     ImGui::SameLine(180);
     ImGui::Text("%s", goxel.help_text ?: "");

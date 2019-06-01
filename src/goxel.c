@@ -720,6 +720,31 @@ static void render_pathtrace_view(const float viewport[4])
     render_submit(&goxel.rend, rect, goxel.back_color);
 }
 
+static void render_axis_arrows(const float viewport[4])
+{
+    const float AXIS[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    int i;
+    const int d = 50;  // Distance to corner of the view.
+    float spos[2] = {viewport[0] + d, viewport[1] + d};
+    float pos[3], normal[3], b[3];
+    uint8_t c[4];
+    float length = 0.2;
+
+    camera_get_ray(&goxel.camera, spos, viewport, pos, normal);
+    if (goxel.camera.ortho)
+        length = goxel.camera.dist / 320;
+    else
+        vec3_iaddk(pos, normal, 10);
+
+    for (i = 0; i < 3; i++) {
+        vec3_addk(pos, AXIS[i], length, b);
+        vec4_set(c, AXIS[i][0] * 255,
+                    AXIS[i][1] * 255,
+                    AXIS[i][2] * 255, 255);
+        render_line(&goxel.rend, pos, b, c);
+    }
+}
+
 void goxel_render_view(const float viewport[4], bool render_mode)
 {
     const layer_t *layer;
@@ -734,6 +759,8 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
     goxel.camera.aspect = viewport[2] / viewport[3];
     camera_update(&goxel.camera);
+    mat4_copy(goxel.camera.view_mat, goxel.rend.view_mat);
+    mat4_copy(goxel.camera.proj_mat, goxel.rend.proj_mat);
 
     effects |= goxel.view_effects;
 
@@ -777,6 +804,8 @@ void goxel_render_view(const float viewport[4], bool render_mode)
                    EFFECT_SEE_BACK | EFFECT_GRID);
     if (goxel.show_export_viewport)
         render_export_viewport(viewport);
+
+    render_axis_arrows(viewport);
 
     // XXX: cleanup this!
     int rect[4] = {(int)viewport[0],
