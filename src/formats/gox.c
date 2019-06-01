@@ -125,22 +125,24 @@ static bool chunk_read_start(chunk_t *c, FILE *in)
     return true;
 }
 
-static void chunk_read(chunk_t *c, FILE *in, char *buff, int size)
+static void chunk_read(chunk_t *c, FILE *in, char *buff, int size, int line)
 {
     c->pos += size;
     assert(c->pos <= c->length);
     if (buff) {
         // XXX: use a better error mechanism!
-        if (fread(buff, size, 1, in) != 1) LOG_E("Error reading file");
+        if (fread(buff, size, 1, in) != 1) {
+            LOG_E("Error reading file (line %d)", line);
+        }
     } else {
         fseek(in, size, SEEK_CUR);
     }
 }
 
-static int32_t chunk_read_int32(chunk_t *c, FILE *in)
+static int32_t chunk_read_int32(chunk_t *c, FILE *in, int line)
 {
     int32_t v;
-    chunk_read(c, in, (char*)&v, 4);
+    chunk_read(c, in, (char*)&v, 4, line);
     return v;
 }
 
@@ -151,17 +153,18 @@ static void chunk_read_finish(chunk_t *c, FILE *in)
 }
 
 static bool chunk_read_dict_value(chunk_t *c, FILE *in,
-                                  char *key, char *value, int *value_size) {
+                                  char *key, char *value, int *value_size,
+                                  int line) {
     int size;
     assert(c->pos <= c->length);
     if (c->pos == c->length) return 0;
-    size = chunk_read_int32(c, in);
+    size = chunk_read_int32(c, in, line);
     if (size == 0) return false;
     assert(size < 256);
-    chunk_read(c, in, key, size);
+    chunk_read(c, in, key, size, line);
     key[size] = '\0';
-    size = chunk_read_int32(c, in);
-    chunk_read(c, in, value, size);
+    size = chunk_read_int32(c, in, line);
+    chunk_read(c, in, value, size, line);
     value[size] = '\0';
     *value_size = size;
     return true;
@@ -421,12 +424,12 @@ int gox_iter_infos(const char *path,
         if (strncmp(c.type, "LAYR", 4) == 0) break;
         if (strncmp(c.type, "PREV", 4) == 0) {
             png = calloc(1, c.length);
-            chunk_read(&c, in, (char*)png, c.length);
+            chunk_read(&c, in, (char*)png, c.length, __LINE__);
             callback(c.type, c.length, png, user);
             free(png);
         } else {
             // Ignore other blocks.
-            chunk_read(&c, in, NULL, c.length);
+            chunk_read(&c, in, NULL, c.length, __LINE__);
         }
         chunk_read_finish(&c, in);
     }
@@ -498,7 +501,7 @@ int load_from_file(const char *path)
     while (chunk_read_start(&c, in)) {
         if (strncmp(c.type, "BL16", 4) == 0) {
             png = calloc(1, c.length);
-            chunk_read(&c, in, (char*)png, c.length);
+            chunk_read(&c, in, (char*)png, c.length, __LINE__);
             bpp = 4;
             voxel_data = img_read_from_mem((void*)png, c.length, &w, &h, &bpp);
             assert(w == 64 && h == 64 && bpp == 4);
@@ -512,22 +515,24 @@ int load_from_file(const char *path)
 
         } else if (strncmp(c.type, "LAYR", 4) == 0) {
             layer = image_add_layer(goxel.image, NULL);
-            nb_blocks = chunk_read_int32(&c, in);   assert(nb_blocks >= 0);
+            nb_blocks = chunk_read_int32(&c, in, __LINE__);
+            assert(nb_blocks >= 0);
             for (i = 0; i < nb_blocks; i++) {
-                index = chunk_read_int32(&c, in);   assert(index >= 0);
-                x = chunk_read_int32(&c, in);
-                y = chunk_read_int32(&c, in);
-                z = chunk_read_int32(&c, in);
+                index = chunk_read_int32(&c, in, __LINE__);
+                assert(index >= 0);
+                x = chunk_read_int32(&c, in, __LINE__);
+                y = chunk_read_int32(&c, in, __LINE__);
+                z = chunk_read_int32(&c, in, __LINE__);
                 if (version == 1) { // Previous version blocks pos.
                     x -= 8; y -= 8; z -= 8;
                 }
-                chunk_read_int32(&c, in);
+                chunk_read_int32(&c, in, __LINE__);
                 data = hash_find_at(blocks_table, index);
                 assert(data);
                 mesh_blit(layer->mesh, data->v, x, y, z, 16, 16, 16, NULL);
             }
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
-                                          &dict_value_size))) {
+                                          &dict_value_size, __LINE__))) {
                 if (strcmp(dict_key, "name") == 0)
                     sprintf(layer->name, "%s", dict_value);
                 if (strcmp(dict_key, "mat") == 0) {
@@ -570,7 +575,7 @@ int load_from_file(const char *path)
             camera = camera_new("unnamed");
             DL_APPEND(goxel.image->cameras, camera);
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
-                                          &dict_value_size))) {
+                                          &dict_value_size, __LINE__))) {
                 if (strcmp(dict_key, "name") == 0)
                     strncpy(camera->name, dict_value, sizeof(camera->name));
                 if (strcmp(dict_key, "dist") == 0)
@@ -583,14 +588,13 @@ int load_from_file(const char *path)
                     memcpy(&camera->ortho, dict_value, dict_value_size);
                 if (strcmp(dict_key, "mat") == 0)
                     memcpy(&camera->mat, dict_value, dict_value_size);
-                if (strcmp(dict_key, "active") == 0) {
+                if (strcmp(dict_key, "active") == 0)
                     goxel.image->active_camera = camera;
-                }
             }
         } else if (strncmp(c.type, "MATE", 4) == 0) {
             mat = image_add_material(goxel.image, NULL);
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
-                                          &dict_value_size))) {
+                                          &dict_value_size, __LINE__))) {
                 if (strcmp(dict_key, "name") == 0)
                     strncpy(mat->name, dict_value, sizeof(mat->name));
                 if (strcmp(dict_key, "color") == 0)
@@ -604,13 +608,13 @@ int load_from_file(const char *path)
             }
         } else if (strncmp(c.type, "IMG ", 4) == 0) {
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
-                                          &dict_value_size))) {
+                                          &dict_value_size, __LINE__))) {
                 if (strcmp(dict_key, "box") == 0)
                     memcpy(&goxel.image->box, dict_value, dict_value_size);
             }
         } else {
             // Ignore other blocks.
-            chunk_read(&c, in, NULL, c.length);
+            chunk_read(&c, in, NULL, c.length, __LINE__);
         }
         chunk_read_finish(&c, in);
     }
