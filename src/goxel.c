@@ -79,6 +79,15 @@ void inputs_insert_char(inputs_t *inputs, uint32_t c)
     }
 }
 
+static camera_t *get_camera(void)
+{
+    if (!goxel.image->cameras)
+        image_add_camera(goxel.image, NULL);
+    if (goxel.image->active_camera)
+        return goxel.image->active_camera;
+    return goxel.image->cameras;
+}
+
 // XXX: lot of cleanup to do here.
 static bool goxel_unproject_on_plane(
         const float viewport[4], const float pos[2], const float plane[4][4],
@@ -90,8 +99,9 @@ static bool goxel_unproject_on_plane(
     // XXX: pos should already be in windows coordinates.
     float wpos[3] = {pos[0], pos[1], 0};
     float opos[3], onorm[3];
+    camera_t *cam = get_camera();
 
-    camera_get_ray(&goxel.camera, wpos, viewport, opos, onorm);
+    camera_get_ray(cam, wpos, viewport, opos, onorm);
     if (fabs(vec3_dot(onorm, plane[2])) <= min_angle_cos)
         return false;
 
@@ -111,9 +121,10 @@ static bool goxel_unproject_on_box(
     float wpos[3] = {pos[0], pos[1], 0};
     float opos[3], onorm[3];
     float plane[4][4];
+    camera_t *cam = get_camera();
 
     if (box_is_null(box)) return false;
-    camera_get_ray(&goxel.camera, wpos, viewport, opos, onorm);
+    camera_get_ray(cam, wpos, viewport, opos, onorm);
     for (f = 0; f < 6; f++) {
         mat4_copy(box, plane);
         mat4_imul(plane, FACES_MATS[f]);
@@ -198,6 +209,7 @@ int goxel_unproject(const float viewport[4],
     bool r = false;
     float dist, best = INFINITY;
     float v[3], p[3] = {}, n[3] = {}, box[4][4];
+    camera_t *cam = get_camera();
 
     // If tool_plane is set, we specifically use it.
     if (!plane_is_null(goxel.tool_plane)) {
@@ -238,14 +250,14 @@ int goxel_unproject(const float viewport[4],
                                        goxel.image->box, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
-            camera_get_ray(&goxel.camera, pos, viewport, p, n);
+            camera_get_ray(cam, pos, viewport, p, n);
             r = true;
         }
 
         if (!r)
             continue;
 
-        mat4_mul_vec3(goxel.camera.view_mat, p, v);
+        mat4_mul_vec3(cam->view_mat, p, v);
         dist = -v[2];
         if (dist < 0 || dist > best) continue;
 
@@ -324,16 +336,8 @@ void goxel_reset(void)
 {
     image_delete(goxel.image);
     goxel.image = image_new();
-    goxel.camera.dist = 128;
-    goxel.camera.aspect = 1;
     action_exec2("settings_load", "");
 
-    mat4_set_identity(goxel.camera.mat);
-    mat4_itranslate(goxel.camera.mat, 0, 0, goxel.camera.dist);
-    camera_turntable(&goxel.camera, M_PI / 4, M_PI / 4);
-    goxel.camera.dist = 128;
-
-    camera_fit_box(&goxel.camera, goxel.image->box);
     // Put plane horizontal at the origin.
     plane_from_vectors(goxel.plane,
             VEC(0, 0, 0), VEC(1, 0, 0), VEC(0, 1, 0));
@@ -405,6 +409,7 @@ int goxel_iter(inputs_t *inputs)
     double time = sys_get_time();
     uint64_t mesh_key;
     float pitch;
+    camera_t *camera = get_camera();
 
     goxel.fps = mix(goxel.fps, 1.0 / (time - goxel.frame_time), 0.1);
     goxel.frame_time = time;
@@ -415,11 +420,9 @@ int goxel_iter(inputs_t *inputs)
     goxel.screen_scale = inputs->scale;
     goxel.rend.fbo = inputs->framebuffer;
     goxel.rend.scale = inputs->scale;
-    camera_update(&goxel.camera);
-    if (goxel.image->active_camera)
-        camera_set(goxel.image->active_camera, &goxel.camera);
-    mat4_copy(goxel.camera.view_mat, goxel.rend.view_mat);
-    mat4_copy(goxel.camera.proj_mat, goxel.rend.proj_mat);
+    camera_update(camera);
+    mat4_copy(camera->view_mat, goxel.rend.view_mat);
+    mat4_copy(camera->proj_mat, goxel.rend.proj_mat);
     gui_iter(inputs);
 
     if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
@@ -482,8 +485,9 @@ static int on_drag(const gesture_t *gest, void *user)
 
 static int on_pan(const gesture_t *gest, void *user)
 {
+    camera_t *camera = get_camera();
     if (gest->state == GESTURE_BEGIN) {
-        mat4_copy(goxel.camera.mat, goxel.move_origin.camera_mat);
+        mat4_copy(camera->mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
     }
     float wpos[3] = {gest->pos[0], gest->pos[1], 0};
@@ -493,20 +497,21 @@ static int on_pan(const gesture_t *gest, void *user)
     vec3_sub(wpos, worigin_pos, wdelta);
     odelta[0] = wdelta[0] / gest->viewport[2] / 2;
     odelta[1] = wdelta[1] / gest->viewport[3] / 2;
-    if (!goxel.camera.ortho)
-        vec3_imul(odelta, goxel.camera.dist);
+    if (!camera->ortho)
+        vec3_imul(odelta, camera->dist);
     mat4_translate(goxel.move_origin.camera_mat,
                    -odelta[0], -odelta[1], 0,
-                   goxel.camera.mat);
+                   camera->mat);
     return 0;
 }
 
 static int on_rotate(const gesture_t *gest, void *user)
 {
     float x1, y1, x2, y2, x_rot, z_rot;
+    camera_t *camera = get_camera();
 
     if (gest->state == GESTURE_BEGIN) {
-        mat4_copy(goxel.camera.mat, goxel.move_origin.camera_mat);
+        mat4_copy(camera->mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
     }
 
@@ -517,8 +522,8 @@ static int on_rotate(const gesture_t *gest, void *user)
     z_rot = (x1 - x2) * 2 * M_PI;
     x_rot = (y2 - y1) * 2 * M_PI;
 
-    mat4_copy(goxel.move_origin.camera_mat, goxel.camera.mat);
-    camera_turntable(&goxel.camera, z_rot, x_rot);
+    mat4_copy(goxel.move_origin.camera_mat, camera->mat);
+    camera_turntable(camera, z_rot, x_rot);
     return 0;
 }
 
@@ -584,6 +589,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          bool capture_keys)
 {
     float p[3], n[3];
+    camera_t *camera = get_camera();
 
     painter_t painter = goxel.painter;
     gesture_t *gests[] = {&goxel.gestures.drag,
@@ -619,13 +625,13 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     }
 
     if (inputs->mouse_wheel) {
-        mat4_itranslate(goxel.camera.mat, 0, 0,
-                -goxel.camera.dist * (1 - pow(1.1, -inputs->mouse_wheel)));
-        goxel.camera.dist *= pow(1.1, -inputs->mouse_wheel);
+        mat4_itranslate(camera->mat, 0, 0,
+                -camera->dist * (1 - pow(1.1, -inputs->mouse_wheel)));
+        camera->dist *= pow(1.1, -inputs->mouse_wheel);
         // Auto adjust the camera rotation position.
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
                                     goxel_get_layers_mesh(), p, n)) {
-            camera_set_target(&goxel.camera, p);
+            camera_set_target(camera, p);
         }
         return;
     }
@@ -634,16 +640,16 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     if (!capture_keys) return;
 
     if (inputs->keys[KEY_LEFT]) {
-        camera_turntable(&goxel.camera, +0.05, 0);
+        camera_turntable(camera, +0.05, 0);
     }
     if (inputs->keys[KEY_RIGHT]) {
-        camera_turntable(&goxel.camera, -0.05, 0);
+        camera_turntable(camera, -0.05, 0);
     }
     if (inputs->keys[KEY_UP]) {
-        camera_turntable(&goxel.camera, 0, +0.05);
+        camera_turntable(camera, 0, +0.05);
     }
     if (inputs->keys[KEY_DOWN]) {
-        camera_turntable(&goxel.camera, 0, -0.05);
+        camera_turntable(camera, 0, -0.05);
     }
 
     // C: recenter the view:
@@ -651,7 +657,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     if (inputs->keys['C']) {
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
                                     goxel_get_layers_mesh(), p, n)) {
-            camera_set_target(&goxel.camera, p);
+            camera_set_target(camera, p);
         }
     }
 }
@@ -679,11 +685,13 @@ static void render_export_viewport(const float viewport[4])
     int h = goxel.image->export_height;
     float aspect = (float)w/h;
     float plane[4][4];
+    camera_t *camera = get_camera();
+
     mat4_set_identity(plane);
-    if (aspect < goxel.camera.aspect) {
-        mat4_iscale(plane, aspect / goxel.camera.aspect, 1, 1);
+    if (aspect < camera->aspect) {
+        mat4_iscale(plane, aspect / camera->aspect, 1, 1);
     } else {
-        mat4_iscale(plane, 1, goxel.camera.aspect / aspect, 1);
+        mat4_iscale(plane, 1, camera->aspect / aspect, 1);
     }
     render_rect(&goxel.rend, plane, EFFECT_STRIP);
 }
@@ -729,10 +737,11 @@ static void render_axis_arrows(const float viewport[4])
     float pos[3], normal[3], b[3];
     uint8_t c[4];
     float length = 0.2;
+    camera_t *camera = get_camera();
 
-    camera_get_ray(&goxel.camera, spos, viewport, pos, normal);
-    if (goxel.camera.ortho)
-        length = goxel.camera.dist / 320;
+    camera_get_ray(camera, spos, viewport, pos, normal);
+    if (camera->ortho)
+        length = camera->dist / 320;
     else
         vec3_iaddk(pos, normal, 10);
 
@@ -751,16 +760,17 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     renderer_t *rend = &goxel.rend;
     const uint8_t layer_box_color[4] = {128, 128, 255, 255};
     int effects = 0;
+    camera_t *camera = get_camera();
 
     if (render_mode) {
         render_pathtrace_view(viewport);
         return;
     }
 
-    goxel.camera.aspect = viewport[2] / viewport[3];
-    camera_update(&goxel.camera);
-    mat4_copy(goxel.camera.view_mat, goxel.rend.view_mat);
-    mat4_copy(goxel.camera.proj_mat, goxel.rend.proj_mat);
+    camera->aspect = viewport[2] / viewport[3];
+    camera_update(camera);
+    mat4_copy(camera->view_mat, goxel.rend.view_mat);
+    mat4_copy(camera->proj_mat, goxel.rend.proj_mat);
 
     effects |= goxel.view_effects;
 
@@ -916,21 +926,21 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 {
-    camera_t camera = goxel.camera;
+    camera_t *camera = get_camera();
     const mesh_t *mesh;
     texture_t *fbo;
     renderer_t rend = goxel.rend;
     int rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *tmp_buf;
 
-    camera.aspect = (float)w / h;
-    camera_update(&camera);
+    camera->aspect = (float)w / h;
+    camera_update(camera);
 
     mesh = goxel_get_layers_mesh();
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
-    mat4_copy(camera.view_mat, rend.view_mat);
-    mat4_copy(camera.proj_mat, rend.proj_mat);
+    mat4_copy(camera->view_mat, rend.view_mat);
+    mat4_copy(camera->proj_mat, rend.proj_mat);
     rend.fbo = fbo->framebuffer;
     rend.scale = 1.0;
 
@@ -1164,10 +1174,11 @@ ACTION_REGISTER(past,
 
 static int view_default(const action_t *a, lua_State *l)
 {
-    float dist = vec3_norm(goxel.camera.mat[3]);
-    mat4_set_identity(goxel.camera.mat);
-    mat4_irotate(goxel.camera.mat, M_PI / 4, 1, 0, 0);
-    mat4_itranslate(goxel.camera.mat, 0, 0, dist);
+    camera_t *camera = get_camera();
+    float dist = vec3_norm(camera->mat[3]);
+    mat4_set_identity(camera->mat);
+    mat4_irotate(camera->mat, M_PI / 4, 1, 0, 0);
+    mat4_itranslate(camera->mat, 0, 0, dist);
     return 0;
 }
 
@@ -1175,10 +1186,11 @@ static int view_set(const action_t *a, lua_State *l)
 {
     float rz = ((float*)a->data)[0] / 180 * M_PI;
     float rx = ((float*)a->data)[1] / 180 * M_PI;
+    camera_t *camera = get_camera();
 
-    mat4_set_identity(goxel.camera.mat);
-    mat4_itranslate(goxel.camera.mat, 0, 0, goxel.camera.dist);
-    camera_turntable(&goxel.camera, rz, rx);
+    mat4_set_identity(camera->mat);
+    mat4_itranslate(camera->mat, 0, 0, camera->dist);
+    camera_turntable(camera, rz, rx);
     return 0;
 }
 

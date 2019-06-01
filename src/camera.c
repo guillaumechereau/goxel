@@ -26,6 +26,10 @@ camera_t *camera_new(const char *name)
     if (name)
         strncpy(cam->name, name, sizeof(cam->name) - 1);
     mat4_set_identity(cam->mat);
+    cam->dist = 128;
+    cam->aspect = 1;
+    mat4_itranslate(cam->mat, 0, 0, cam->dist);
+    camera_turntable(cam, M_PI / 4, M_PI / 4);
     return cam;
 }
 

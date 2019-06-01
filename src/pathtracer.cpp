@@ -308,13 +308,13 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
     p->camera_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
-    mat4_copy(goxel.camera.mat, m);
+    mat4_copy(camera->mat, m);
     cam->frame = mat_to_frame(mat4f({m[0][0], m[0][1], m[0][2], m[0][3]},
                                     {m[1][0], m[1][1], m[1][2], m[1][3]},
                                     {m[2][0], m[2][1], m[2][2], m[2][3]},
                                     {m[3][0], m[3][1], m[3][2], m[3][3]}));
-    set_camera_perspective(*cam, goxel.camera.fovy / 180 * M_PI, (float)w / h,
-                           goxel.camera.dist);
+    set_camera_perspective(*cam, camera->fovy / 180 * M_PI, (float)w / h,
+                           camera->dist);
 
     return CHANGE_CAMERA;
 }
@@ -432,7 +432,7 @@ static int sync(pathtracer_t *pt, int w, int h, bool force)
     changes |= sync_floor(pt, changes);
     changes |= sync_world(pt, changes);
     changes |= sync_light(pt, changes);
-    changes |= sync_camera(pt, w, h, &goxel.camera, changes);
+    changes |= sync_camera(pt, w, h, goxel.image->active_camera, changes);
     changes |= sync_options(pt, changes);
 
     if (changes) {

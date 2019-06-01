@@ -68,6 +68,9 @@ bool image_layer_can_edit(const image_t *img, const layer_t *layer);
 material_t *image_add_material(image_t *img, material_t *mat);
 void image_delete_material(image_t *img, material_t *mat);
 
+camera_t *image_add_camera(image_t *img, camera_t *cam);
+void image_delete_camera(image_t *img, camera_t *cam);
+
 /*
  * Function: image_get_key
  * Return a value that is guarantied to change when the image change.

@@ -460,7 +460,7 @@ int load_from_file(const char *path)
     char dict_key[256];
     char dict_value[256];
     uint64_t uid = 1;
-    camera_t *camera;
+    camera_t *camera, *camera_tmp;
     material_t *mat, *mat_tmp;
 
     in = fopen(path, "rb");
@@ -474,7 +474,7 @@ int load_from_file(const char *path)
         goto error;
     }
 
-    // Remove all layers and materials.
+    // Remove all layers, materials and camera.
     // XXX: should have a way to create a totally empty image instead.
     DL_FOREACH_SAFE(goxel.image->layers, layer, layer_tmp) {
         mesh_delete(layer->mesh);
@@ -483,9 +483,15 @@ int load_from_file(const char *path)
     DL_FOREACH_SAFE(goxel.image->materials, mat, mat_tmp) {
         material_delete(mat);
     }
+    DL_FOREACH_SAFE(goxel.image->cameras, camera, camera_tmp) {
+        camera_delete(camera);
+    }
+
     goxel.image->layers = NULL;
     goxel.image->materials = NULL;
     goxel.image->active_material = NULL;
+    goxel.image->cameras = NULL;
+    goxel.image->active_camera = NULL;
 
     memset(&goxel.image->box, 0, sizeof(goxel.image->box));
 
@@ -579,7 +585,6 @@ int load_from_file(const char *path)
                     memcpy(&camera->mat, dict_value, dict_value_size);
                 if (strcmp(dict_key, "active") == 0) {
                     goxel.image->active_camera = camera;
-                    camera_set(&goxel.camera, camera);
                 }
             }
         } else if (strncmp(c.type, "MATE", 4) == 0) {
@@ -622,11 +627,16 @@ int load_from_file(const char *path)
     goxel.image->saved_key = image_get_key(goxel.image);
     fclose(in);
 
-    // Update plane, snap mask and camera pos not to confuse people.
+    // Add a default camera if there is none.
+    if (!goxel.image->cameras) {
+        image_add_camera(goxel.image, NULL);
+        camera_fit_box(goxel.image->active_camera, goxel.image->box);
+    }
+
+    // Update plane, snap mask not to confuse people.
     plane_from_vectors(goxel.plane, goxel.image->box[3],
                        VEC(1, 0, 0), VEC(0, 1, 0));
     if (box_is_null(goxel.image->box)) goxel.snap_mask |= SNAP_PLANE;
-    camera_fit_box(&goxel.camera, goxel.image->box);
     return 0;
 
 error:

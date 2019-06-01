@@ -478,8 +478,6 @@ typedef struct goxel
     float      plane[4][4];         // The snapping plane.
     bool       show_export_viewport;
 
-    camera_t   camera;
-
     uint8_t    back_color[4];
     uint8_t    grid_color[4];
     uint8_t    image_box_color[4];

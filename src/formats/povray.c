@@ -31,7 +31,7 @@ static void export_as_pov(const char *path, int w, int h)
     uint8_t v[4];
     float modelview[4][4], light_dir[3];
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
-    camera_t camera = goxel.camera;
+    camera_t camera = *goxel.image->active_camera;
     mesh_iterator_t iter;
 
     w = w ?: goxel.image->export_width;

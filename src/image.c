@@ -170,6 +170,7 @@ image_t *image_new(void)
     img->export_width = 1024;
     img->export_height = 1024;
     image_add_material(img, NULL);
+    image_add_camera(img, NULL);
     layer = image_add_layer(img, NULL);
     layer->visible = true;
     layer->id = img_get_new_id(img);
@@ -201,8 +202,6 @@ static image_t *image_snap(image_t *other)
     return img;
 }
 
-
-static void image_delete_camera(image_t *img, camera_t *cam);
 
 void image_delete(image_t *img)
 {
@@ -387,7 +386,7 @@ camera_t *image_add_camera(image_t *img, camera_t *cam)
     return cam;
 }
 
-static void image_delete_camera(image_t *img, camera_t *cam)
+void image_delete_camera(image_t *img, camera_t *cam)
 {
     img = img ?: goxel.image;
     cam = cam ?: img->active_camera;

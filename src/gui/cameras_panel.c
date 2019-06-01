@@ -27,12 +27,7 @@ void gui_cameras_panel(void)
     DL_FOREACH(goxel.image->cameras, cam) {
         current = goxel.image->active_camera == cam;
         if (gui_layer_item(i, -1, NULL, &current, cam->name, sizeof(cam->name))) {
-            if (current) {
-                camera_set(&goxel.camera, cam);
-                goxel.image->active_camera = cam;
-            } else {
-                goxel.image->active_camera = NULL;
-            }
+            goxel.image->active_camera = cam;
         }
         i++;
     }
@@ -45,7 +40,7 @@ void gui_cameras_panel(void)
     gui_same_line();
     gui_action_button("img_move_camera_down", NULL, 0, "");
 
-    cam = &goxel.camera;
+    cam = goxel.image->active_camera;
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 
     /*
