@@ -711,7 +711,8 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
     }
 }
 
-static void render_model_item(renderer_t *rend, const render_item_t *item)
+static void render_model_item(renderer_t *rend, const render_item_t *item,
+                              const float viewport[4])
 {
     float proj[4][4];
     const float (*proj_mat)[4][4];
@@ -719,7 +720,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item)
     float light[3];
 
     if (item->proj_screen) {
-        mat4_ortho(proj, -0.5, +0.5, -0.5, +0.5, -10, +10);
+        mat4_ortho(proj, 0, viewport[2], 0, viewport[3], -10, +10);
         proj_mat = &proj;
         view_mat = &mat4_identity;
     } else {
@@ -1010,7 +1011,7 @@ void render_submit(renderer_t *rend, const float viewport[4],
             mesh_delete(item->mesh);
             break;
         case ITEM_MODEL3D:
-            render_model_item(rend, item);
+            render_model_item(rend, item, viewport);
             DL_DELETE(rend->items, item);
             break;
         case ITEM_GRID:

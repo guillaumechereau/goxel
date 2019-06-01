@@ -688,6 +688,8 @@ static void render_export_viewport(const float viewport[4])
     camera_t *camera = get_camera();
 
     mat4_set_identity(plane);
+    mat4_iscale(plane, viewport[2], viewport[3], 1);
+    mat4_itranslate(plane, 0.5, 0.5, 0);
     if (aspect < camera->aspect) {
         mat4_iscale(plane, aspect / camera->aspect, 1, 1);
     } else {
@@ -716,6 +718,8 @@ static void render_pathtrace_view(const float viewport[4])
     // Render the buffer.
     mat4_set_identity(mat);
     a = 1.0 * pt->w / pt->h / viewport[2] * viewport[3];
+    mat4_iscale(mat, viewport[2], viewport[3], 1);
+    mat4_itranslate(mat, 0.5, 0.5, 0);
     mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
     texture_set_data(pt->texture, pt->buf, pt->w, pt->h, 4);
     render_img(&goxel.rend, pt->texture, mat,
