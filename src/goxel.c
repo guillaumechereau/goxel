@@ -749,7 +749,7 @@ static void render_axis_arrows(const float viewport[4])
         vec4_set(c, AXIS[i][0] * 255,
                     AXIS[i][1] * 255,
                     AXIS[i][2] * 255, 255);
-        render_line(&goxel.rend, pos, b, c);
+        render_line(&goxel.rend, pos, b, c, 0);
     }
 }
 

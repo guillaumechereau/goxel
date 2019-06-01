@@ -823,7 +823,7 @@ static void line_create_plane(const float a[3], const float b[3],
 }
 
 void render_line(renderer_t *rend, const float a[3], const float b[3],
-                 const uint8_t color[4])
+                 const uint8_t color[4], int effects)
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
@@ -831,6 +831,7 @@ void render_line(renderer_t *rend, const float a[3], const float b[3],
     line_create_plane(a, b, item->mat);
     copy_color(color, item->color);
     mat4_itranslate(item->mat, 0.5, 0, 0);
+    item->proj_screen = effects & EFFECT_PROJ_SCREEN;
     DL_APPEND(rend->items, item);
 }
 
