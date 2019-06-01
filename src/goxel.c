@@ -729,27 +729,25 @@ static void render_pathtrace_view(const float viewport[4])
 
 static void render_axis_arrows(const float viewport[4])
 {
+    float rot[4][4], a[3], b[3];
     const float AXIS[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    uint8_t color[4];
     int i;
-    const int d = 50;  // Distance to corner of the view.
-    float spos[2] = {viewport[0] + d, viewport[1] + d};
-    float pos[3], normal[3], b[3];
-    uint8_t c[4];
-    float length = 0.2;
-    camera_t *camera = get_camera();
+    const float size = 40;
 
-    camera_get_ray(camera, spos, viewport, pos, normal);
-    if (camera->ortho)
-        length = camera->dist / 320;
-    else
-        vec3_iaddk(pos, normal, 10);
+    mat4_copy(get_camera()->mat, rot);
+    vec3_set(rot[3], 0, 0, 0);
+    mat4_invert(rot, rot);
 
+    vec3_set(a, 50, 50, 0); // Origin pos (viewport coordinates)
     for (i = 0; i < 3; i++) {
-        vec3_addk(pos, AXIS[i], length, b);
-        vec4_set(c, AXIS[i][0] * 255,
-                    AXIS[i][1] * 255,
-                    AXIS[i][2] * 255, 255);
-        render_line(&goxel.rend, pos, b, c, 0);
+        vec4_set(color, AXIS[i][0] * 255,
+                        AXIS[i][1] * 255,
+                        AXIS[i][2] * 255, 255);
+        vec3_mul(AXIS[i], size, b);
+        mat4_mul_vec3(rot, b, b);
+        vec3_add(a, b, b);
+        render_line(&goxel.rend, a, b, color, EFFECT_PROJ_SCREEN);
     }
 }
 
