@@ -720,7 +720,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item,
     float light[3];
 
     if (item->proj_screen) {
-        mat4_ortho(proj, 0, viewport[2], 0, viewport[3], -10, +10);
+        mat4_ortho(proj, 0, viewport[2], 0, viewport[3], -128, +128);
         proj_mat = &proj;
         view_mat = &mat4_identity;
     } else {
