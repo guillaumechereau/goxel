@@ -127,6 +127,7 @@ static bool chunk_read_start(chunk_t *c, FILE *in)
 
 static void chunk_read(chunk_t *c, FILE *in, char *buff, int size, int line)
 {
+    if (size == 0) return;
     c->pos += size;
     assert(c->pos <= c->length);
     if (buff) {
