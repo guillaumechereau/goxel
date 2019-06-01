@@ -51,8 +51,8 @@ void gui_cameras_panel(void)
     gui_group_end();
 
     gui_quat("Rotation", cam->rot);
-    gui_checkbox("Ortho", &cam->ortho, NULL);
     */
+    gui_checkbox("Ortho", &cam->ortho, NULL);
 
     gui_group_begin("Set");
     gui_action_button("view_left", "left", 0.5, ""); gui_same_line();
