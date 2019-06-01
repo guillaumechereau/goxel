@@ -701,7 +701,7 @@ static void render_pathtrace_view(const float viewport[4])
     pathtracer_t *pt = &goxel.pathtracer;
     float a, mat[4][4];
     int rect[4] = {(int)viewport[0],
-                   (int)(goxel.screen_size[1] - viewport[1] - viewport[3]),
+                   (int)viewport[1],
                    (int)viewport[2],
                    (int)viewport[3]};
 
@@ -819,7 +819,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
     // XXX: cleanup this!
     int rect[4] = {(int)viewport[0],
-                   (int)(goxel.screen_size[1] - viewport[1] - viewport[3]),
+                   (int)viewport[1],
                    (int)viewport[2],
                    (int)viewport[3]};
     render_submit(&goxel.rend, rect, goxel.back_color);

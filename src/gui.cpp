@@ -706,16 +706,15 @@ void gui_iter(const inputs_t *inputs)
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
     canvas_size.y -= 20; // Leave space for the help label.
-    vec4_set(gui->view.rect, canvas_pos.x, canvas_pos.y,
-                             canvas_size.x, canvas_size.y);
+    vec4_set(gui->view.rect,
+             canvas_pos.x,
+             goxel.screen_size[1] - (canvas_pos.y + canvas_size.y),
+             canvas_size.x, canvas_size.y);
     draw_list = ImGui::GetWindowDrawList();
     draw_list->AddCallback(render_view, &gui->view);
     // Invisible button so that we catch inputs.
     ImGui::InvisibleButton("canvas", canvas_size);
     gui->mouse_in_view = ImGui::IsItemHovered();
-    float view_rect[4] = {canvas_pos.x,
-                          io.DisplaySize.y - (canvas_pos.y + canvas_size.y),
-                          canvas_size.x, canvas_size.y};
     // Call mouse_in_view with inputs in the view referential.
     if (    inputs &&
             !(!gui->mouse_in_view && inputs->mouse_wheel) &&
@@ -725,7 +724,7 @@ void gui_iter(const inputs_t *inputs)
             inputs2.touches[i].pos[1] =
                 io.DisplaySize.y - inputs2.touches[i].pos[1];
         }
-        goxel_mouse_in_view(view_rect, &inputs2, !io.WantCaptureKeyboard);
+        goxel_mouse_in_view(gui->view.rect, &inputs2, !io.WantCaptureKeyboard);
     }
 
     ImGui::Text("%s", goxel.hint_text ?: "");
