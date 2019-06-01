@@ -16,6 +16,8 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// XXX: probably need to redo the code here.
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -30,6 +32,7 @@ struct palette {
     char    name[128];
     int     columns;
     int     size;
+    int     allocated;
     palette_entry_t *entries;
 };
 

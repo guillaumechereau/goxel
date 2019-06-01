@@ -43,6 +43,23 @@ int palette_search(const palette_t *palette, const uint8_t col[4],
     return -1;
 }
 
+static void palette_insert(palette_t *p, const uint8_t col[4],
+                           const char *name)
+{
+    palette_entry_t *e;
+    if (palette_search(p, col, true) != -1) return;
+    if (p->allocated <= p->size) {
+        p->allocated += 64;
+        p->entries = realloc(p->entries, p->allocated * sizeof(*p->entries));
+    }
+    e = &p->entries[p->size];
+    memset(e, 0, sizeof(*e));
+    memcpy(e->color, col, 4);
+    if (name)
+        snprintf(e->name, sizeof(e->name), "%s", name);
+    p->size++;
+}
+
 
 // Parse a gimp palette.
 // XXX: we don't check for buffer overflow!
@@ -99,6 +116,26 @@ static int parse_dat(const uint8_t *data, int len, palette_entry_t *entries)
     return 256;
 }
 
+/*
+ * Function: parse_png
+ * Parse a png image into a palette.
+ */
+static int parse_png(const void *data, int len, palette_t *palette)
+{
+    int i, w, h, bpp = 3;
+    uint8_t *img, color[4];
+    img = img_read_from_mem((void*)data, len, &w, &h, &bpp);
+    if (!img) return -1;
+
+    for (i = 0; i < w * h; i++) {
+        memcpy(color, (uint8_t[]){0, 0, 0, 255}, 4);
+        memcpy(color, img + i * bpp, bpp);
+        palette_insert(palette, color, NULL);
+    }
+    free(img);
+    return palette->size;
+}
+
 
 static int on_palette(int i, const char *path, void *user)
 {
@@ -121,7 +158,9 @@ static int on_palette2(const char *dir, const char *name, void *user)
     int size, err = 0;
     palette_t *pal;
 
-    if (!str_endswith(name, ".gpl") && !str_endswith(name, ".dat"))
+    if (    !str_endswith(name, ".gpl") &&
+            !str_endswith(name, ".dat") &&
+            !str_endswith(name, ".png"))
         return 0;
 
     asprintf(&path, "%s/%s", dir, name);
@@ -137,6 +176,10 @@ static int on_palette2(const char *dir, const char *name, void *user)
         pal->size = 256;
         pal->entries = calloc(pal->size, sizeof(*pal->entries));
         err = parse_dat((void*)data, size, pal->entries);
+    }
+    else if (str_endswith(name, ".png")) {
+        snprintf(pal->name, sizeof(pal->name), "%s", name);
+        err = parse_png(data, size, pal);
     }
 
     if (err < 0) {
