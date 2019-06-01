@@ -171,7 +171,7 @@ static bool goxel_unproject_on_mesh(
     int voxel_pos[3];
     int face, block_id, block_pos[3];
     int x, y;
-    int rect[4] = {0, 0, view_size[0], view_size[1]};
+    float rect[4] = {0, 0, view_size[0], view_size[1]};
     uint8_t clear_color[4] = {0, 0, 0, 0};
 
     rend.settings.shadow = 0;
@@ -700,11 +700,6 @@ static void render_pathtrace_view(const float viewport[4])
 {
     pathtracer_t *pt = &goxel.pathtracer;
     float a, mat[4][4];
-    int rect[4] = {(int)viewport[0],
-                   (int)viewport[1],
-                   (int)viewport[2],
-                   (int)viewport[3]};
-
     // Recreate the buffer if needed.
     if (    !pt->buf ||
             pt->w != goxel.image->export_width ||
@@ -720,12 +715,12 @@ static void render_pathtrace_view(const float viewport[4])
 
     // Render the buffer.
     mat4_set_identity(mat);
-    a = 1.0 * pt->w / pt->h / rect[2] * rect[3];
+    a = 1.0 * pt->w / pt->h / viewport[2] * viewport[3];
     mat4_iscale(mat, min(a, 1.f), min(1.f / a, 1.f), 1);
     texture_set_data(pt->texture, pt->buf, pt->w, pt->h, 4);
     render_img(&goxel.rend, pt->texture, mat,
                EFFECT_NO_SHADING | EFFECT_PROJ_SCREEN | EFFECT_ANTIALIASING);
-    render_submit(&goxel.rend, rect, goxel.back_color);
+    render_submit(&goxel.rend, viewport, goxel.back_color);
 }
 
 static void render_axis_arrows(const float viewport[4])
@@ -816,13 +811,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
         render_export_viewport(viewport);
 
     render_axis_arrows(viewport);
-
-    // XXX: cleanup this!
-    int rect[4] = {(int)viewport[0],
-                   (int)viewport[1],
-                   (int)viewport[2],
-                   (int)viewport[3]};
-    render_submit(&goxel.rend, rect, goxel.back_color);
+    render_submit(&goxel.rend, viewport, goxel.back_color);
 }
 
 void image_update(image_t *img);
@@ -930,7 +919,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     const mesh_t *mesh;
     texture_t *fbo;
     renderer_t rend = goxel.rend;
-    int rect[4] = {0, 0, w * 2, h * 2};
+    float rect[4] = {0, 0, w * 2, h * 2};
     uint8_t *tmp_buf;
 
     camera->aspect = (float)w / h;

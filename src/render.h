@@ -102,7 +102,7 @@ void render_rect(renderer_t *rend, const float plane[4][4], int effects);
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.
-void render_submit(renderer_t *rend, const int rect[4],
+void render_submit(renderer_t *rend, const float viewport[4],
                    const uint8_t clear_color[4]);
 // Compute the light direction in the model coordinates (toward the light)
 void render_get_light_dir(const renderer_t *rend, float out[3]);

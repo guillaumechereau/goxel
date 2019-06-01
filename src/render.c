@@ -977,7 +977,7 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     GL(glDepthMask(true));
 }
 
-void render_submit(renderer_t *rend, const int rect[4],
+void render_submit(renderer_t *rend, const float viewport[4],
                    const uint8_t clear_color[4])
 {
     render_item_t *item, *tmp;
@@ -993,8 +993,10 @@ void render_submit(renderer_t *rend, const int rect[4],
 
     GL(glBindFramebuffer(GL_FRAMEBUFFER, rend->fbo));
     GL(glEnable(GL_SCISSOR_TEST));
-    GL(glViewport(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
-    GL(glScissor(rect[0] * s, rect[1] * s, rect[2] * s, rect[3] * s));
+    GL(glViewport(viewport[0] * s, viewport[1] * s,
+                  viewport[2] * s, viewport[3] * s));
+    GL(glScissor(viewport[0] * s, viewport[1] * s,
+                 viewport[2] * s, viewport[3] * s));
     GL(glLineWidth(rend->scale));
     render_background(rend, clear_color);
 
