@@ -423,7 +423,7 @@ void gui_release(void)
     if (gui) ImGui::DestroyContext();
 }
 
-void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
+static void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
 {
     float scale = ImGui::GetIO().DisplayFramebufferScale.y;
     view_t *view = (view_t*)cmd->UserCallbackData;
