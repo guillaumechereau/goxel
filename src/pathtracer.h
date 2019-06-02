@@ -66,9 +66,10 @@ typedef struct {
  * Iter the rendering process of the current mesh.
  *
  * Parameters:
- *   pt     - A pathtracer instance.
+ *   pt       - A pathtracer instance.
+ *   viewport - The full view viewport.
  */
-void pathtracer_iter(pathtracer_t *pt);
+void pathtracer_iter(pathtracer_t *pt, const float viewport[4]);
 
 /*
  * Stop the pathtracer thread if it is running.

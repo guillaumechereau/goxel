@@ -288,12 +288,13 @@ static int sync_floor(pathtracer_t *pt, bool force)
 }
 
 static int sync_camera(pathtracer_t *pt, int w, int h,
+                       const float viewport[4],
                        const camera_t *camera, bool force)
 {
     pathtracer_internal_t *p = pt->p;
     yocto_camera *cam;
     uint64_t key;
-    float m[4][4];
+    float m[4][4], aspect, viewport_aspect, fovy;
 
     add_missing_cameras(p->scene);
     cam = &p->scene.cameras[0];
@@ -311,8 +312,13 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
                                     {m[1][0], m[1][1], m[1][2], m[1][3]},
                                     {m[2][0], m[2][1], m[2][2], m[2][3]},
                                     {m[3][0], m[3][1], m[3][2], m[3][3]}));
-    set_camera_perspective(*cam, camera->fovy / 180 * M_PI, (float)w / h,
-                           camera->dist);
+    aspect = (float)w / h;
+    viewport_aspect = viewport[2] / viewport[3];
+    fovy = camera->fovy / 180 * M_PI;
+    if (viewport_aspect < aspect) {
+        fovy *= viewport_aspect / aspect;
+    }
+    set_camera_perspective(*cam, fovy, aspect, camera->dist);
 
     return CHANGE_CAMERA;
 }
@@ -419,7 +425,8 @@ static int sync_options(pathtracer_t *pt, bool force)
     return CHANGE_OPTIONS;
 }
 
-static int sync(pathtracer_t *pt, int w, int h, bool force)
+static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
+                bool force)
 {
     pathtracer_internal_t *p = pt->p;
     int changes = 0;
@@ -430,7 +437,8 @@ static int sync(pathtracer_t *pt, int w, int h, bool force)
     changes |= sync_floor(pt, changes);
     changes |= sync_world(pt, changes);
     changes |= sync_light(pt, changes);
-    changes |= sync_camera(pt, w, h, goxel.image->active_camera, changes);
+    changes |= sync_camera(pt, w, h, viewport,
+                           goxel.image->active_camera, changes);
     changes |= sync_options(pt, changes);
 
     if (changes) {
@@ -505,8 +513,9 @@ static void make_preview(pathtracer_t *pt)
  *
  * Parameters:
  *   pt     - A pathtracer instance.
+ *   viewport - The full view viewport.
  */
-void pathtracer_iter(pathtracer_t *pt)
+void pathtracer_iter(pathtracer_t *pt, const float viewport[4])
 {
     pathtracer_internal_t *p;
     int changes, i, j, size = 0;
@@ -516,7 +525,7 @@ void pathtracer_iter(pathtracer_t *pt)
     if (!pt->p) pt->p = new pathtracer_internal_t();
     p = pt->p;
     p->trace_options.image_size = {pt->w, pt->h};
-    changes = sync(pt, pt->w, pt->h, pt->force_restart);
+    changes = sync(pt, pt->w, pt->h, viewport, pt->force_restart);
     pt->force_restart = false;
     assert(p->display.size()[0] == pt->w);
     assert(p->display.size()[1] == pt->h);

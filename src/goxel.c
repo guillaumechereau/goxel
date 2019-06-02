@@ -710,7 +710,7 @@ static void render_pathtrace_view(const float viewport[4])
         texture_delete(pt->texture);
         pt->texture = texture_new_surface(pt->w, pt->h, 0);
     }
-    pathtracer_iter(pt);
+    pathtracer_iter(pt, viewport);
 
     // Render the buffer.
     mat4_set_identity(mat);
