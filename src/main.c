@@ -48,17 +48,70 @@ typedef struct
     float scale;
 } args_t;
 
-#define OPT_SCRIPT 1
+#define OPT_HELP 1
+#define OPT_SCRIPT 2
+#define OPT_VERSION 3
+
+typedef struct {
+    const char *name;
+    int val;
+    int has_arg;
+    const char *arg_name;
+    const char *help;
+} gox_option_t;
+
+static const gox_option_t OPTIONS[] = {
+    {"export", 'e', required_argument, "FILENAME",
+        .help="Export the image to a file"},
+    {"scale", 's', required_argument, "FLOAT", .help="Set UI scale"},
+    {"script", OPT_SCRIPT, required_argument, "FILENAME",
+        .help="Run a script and exit"},
+    {"help", OPT_HELP, .help="Give this help list"},
+    {"version", OPT_VERSION, .help="Print program version"},
+    {}
+};
+
+static void print_help(void)
+{
+    const gox_option_t *opt;
+    char buf[128];
+
+    printf("Usage: goxel [OPTION...] [INPUT]\n");
+    printf("A 3D voxels editor\n");
+    printf("\n");
+
+    for (opt = OPTIONS; opt->name; opt++) {
+        if (opt->val >= 'a')
+            printf("  -%c, ", opt->val);
+        else
+            printf("      ");
+
+        if (opt->has_arg)
+            snprintf(buf, sizeof(buf), "--%s=%s", opt->name, opt->arg_name);
+        else
+            snprintf(buf, sizeof(buf), "--%s", opt->name);
+        printf("%-23s %s\n", buf, opt->help);
+    }
+    printf("\n");
+    printf("Report bugs to <guillaume@noctua-software.com>.\n");
+}
 
 static void parse_options(int argc, char **argv, args_t *args)
 {
-    int c, option_index;
-    static struct option long_options[] = {
-        {"export", required_argument, 0, 'e'},
-        {"scale", required_argument, 0, 's'},
-        {"script", required_argument, 0, OPT_SCRIPT},
-        {NULL, 0, NULL, 0}
-    };
+    int i, c, option_index;
+    const gox_option_t *opt;
+    struct option long_options[ARRAY_SIZE(OPTIONS)] = {};
+
+    for (i = 0; i < ARRAY_SIZE(OPTIONS); i++) {
+        opt = &OPTIONS[i];
+        long_options[i] = (struct option) {
+            opt->name,
+            opt->has_arg,
+            NULL,
+            opt->val,
+        };
+    }
+
     while (true) {
         c = getopt_long(argc, argv, "e:s:", long_options, &option_index);
         if (c == -1) break;
@@ -72,6 +125,12 @@ static void parse_options(int argc, char **argv, args_t *args)
         case OPT_SCRIPT:
             args->script = optarg;
             break;
+        case OPT_HELP:
+            print_help();
+            exit(0);
+        case OPT_VERSION:
+            printf("Goxel " GOXEL_VERSION_STR "\n");
+            exit(0);
         case '?':
             exit(-1);
         }
