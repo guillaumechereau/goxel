@@ -65,7 +65,7 @@ void gui_view_panel(void)
                 &goxel.rend.settings.effects, EFFECT_MARCHING_CUBES, NULL);
 
     if (goxel.rend.settings.effects & EFFECT_MARCHING_CUBES) {
-        gui_checkbox_flag("Flat", &goxel.rend.settings.effects, EFFECT_FLAT,
-                          NULL);
+        gui_checkbox_flag("Smooth Colors", &goxel.rend.settings.effects,
+                          EFFECT_MC_SMOOTH, NULL);
     }
 }

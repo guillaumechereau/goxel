@@ -347,7 +347,7 @@ static render_item_t *get_item_for_block(
         int effects, float smoothness)
 {
     render_item_t *item;
-    const int effects_mask = EFFECT_MARCHING_CUBES | EFFECT_FLAT;
+    const int effects_mask = EFFECT_MARCHING_CUBES | EFFECT_MC_SMOOTH;
     uint64_t block_data_id;
     int p[3], i, x, y, z;
     block_item_key_t key = {};

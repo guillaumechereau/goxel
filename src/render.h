@@ -29,7 +29,7 @@ enum {
     EFFECT_SEE_BACK         = 1 << 6,
     EFFECT_MARCHING_CUBES   = 1 << 7,
     EFFECT_SHADOW_MAP       = 1 << 8,
-    EFFECT_FLAT             = 1 << 9,
+    EFFECT_MC_SMOOTH        = 1 << 9,
 
     // For render box.
     EFFECT_NO_SHADING       = 1 << 10,

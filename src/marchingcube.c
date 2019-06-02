@@ -263,7 +263,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
 
     mc_vert_t tri[30][3];
     float n[3];
-    const bool flat = effects & EFFECT_FLAT;
+    const bool flat = !(effects & EFFECT_MC_SMOOTH);
 
     *size = 3;      // Triangles.
     *subdivide = MC_VOXEL_SUB_POS;
