@@ -25,6 +25,7 @@ void gui_render_panel(void)
     pathtracer_t *pt = &goxel.pathtracer;
     const char *path;
     float view_rect[4];
+    material_t *material;
 
     goxel.no_edit |= pt->status;
 
@@ -94,14 +95,25 @@ void gui_render_panel(void)
                               NULL, -1);
         gui_group_end();
 
-        gui_group_begin("size");
-        gui_input_int("x", &pt->floor.size[0], 1, 2048);
-        gui_input_int("y", &pt->floor.size[1], 1, 2048);
-        gui_group_end();
+        if (pt->floor.type == PT_FLOOR_PLANE) {
+            gui_group_begin("size");
+            gui_input_int("x", &pt->floor.size[0], 1, 2048);
+            gui_input_int("y", &pt->floor.size[1], 1, 2048);
+            gui_group_end();
+            gui_color_small("Color", pt->floor.color);
 
-        gui_color_small("Color", pt->floor.color);
-        gui_input_float("Diffuse", &pt->floor.diffuse, 0.1, 0, 1, "%.1f");
-        gui_input_float("Specular", &pt->floor.specular, 0.01, 0, 1, "%.3f");
+            gui_text("Material");
+            if (gui_combo_begin("##material", pt->floor.material)) {
+                DL_FOREACH(goxel.image->materials, material) {
+                    if (gui_combo_item(material->name,
+                            material == pt->floor.material)) {
+                        pt->floor.material = material;
+                    }
+                }
+                gui_combo_end();
+            }
+        }
+
         gui_pop_id();
     }
     if (gui_collapsing_header("Light", false)) {

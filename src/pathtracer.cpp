@@ -117,6 +117,7 @@ static int get_material_id(pathtracer_t *pt, const material_t *mat,
     yocto_material *m;
     bool created;
 
+    if (!mat) return -1;
     snprintf(name, sizeof(name), "<mat_%x>", material_get_hash(mat));
     m = getdefault(p->scene.materials, name, &created);
     if (created) {
@@ -243,16 +244,17 @@ static int sync_floor(pathtracer_t *pt, bool force)
     yocto_shape *shape;
     yocto_instance *instance;
     int i;
-    yocto_material *material;
     vec4f color;
     float pos[3] = {0, 0, 0};
+    int changed = 0;
 
     key = crc32(key, &pt->floor, sizeof(pt->floor));
     if (!force && key == p->floor_key) return 0;
+    changed |= CHANGE_FLOOR;
     p->floor_key = key;
     trace_image_async_stop(p->trace_futures, p->trace_queue, p->trace_options);
 
-    if (pt->floor.type == PT_FLOOR_NONE) return CHANGE_FLOOR;
+    if (pt->floor.type == PT_FLOOR_NONE) return changed;
 
     color[0] = pt->floor.color[0] / 255.f;
     color[1] = pt->floor.color[1] / 255.f;
@@ -265,10 +267,6 @@ static int sync_floor(pathtracer_t *pt, bool force)
         pos[2] = goxel.image->box[3][2] - goxel.image->box[2][2];
     }
 
-    material = getdefault(p->scene.materials, "<floor>");
-    material->diffuse = vec3f(pt->floor.diffuse);
-    material->specular = vec3f(pt->floor.specular);
-
     shape = getdefault(p->scene.shapes, "<floor>");
     shape->positions = {};
     shape->colors = {};
@@ -280,13 +278,13 @@ static int sync_floor(pathtracer_t *pt, bool force)
         shape->colors.push_back(color);
     }
     shape->quads.push_back({0, 1, 3, 2});
-    shape->material = getindex(p->scene.materials, material);
+    shape->material = get_material_id(pt, pt->floor.material, &changed);
     instance = getdefault(p->scene.instances, "<floor>");
     instance->shape = getindex(p->scene.shapes, shape);
     instance->frame = make_translation_frame<float>({pos[0], pos[1], pos[2]}) *
                       make_scaling_frame(
                         vec3f(pt->floor.size[0], pt->floor.size[1], 1.f));
-    return CHANGE_FLOOR;
+    return changed;
 }
 
 static int sync_camera(pathtracer_t *pt, int w, int h,
