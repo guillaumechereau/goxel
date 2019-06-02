@@ -16,9 +16,14 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Include first to fix windows compilation.
+#include "../ext_src/lua/lprefix.h"
+
 #include "luagoxel.h"
 
 // Include all lua sources here.
+#include "../ext_src/lua/lundump.c" // Keep on top to fix windows compilation
+
 #include "../ext_src/lua/lapi.c"
 #include "../ext_src/lua/lauxlib.c"
 #include "../ext_src/lua/lbaselib.c"
@@ -48,7 +53,6 @@
 #include "../ext_src/lua/ltable.c"
 #include "../ext_src/lua/ltablib.c"
 #include "../ext_src/lua/ltm.c"
-#include "../ext_src/lua/lundump.c"
 #include "../ext_src/lua/lutf8lib.c"
 #include "../ext_src/lua/lvm.c"
 #include "../ext_src/lua/lzio.c"

@@ -24,7 +24,9 @@
 #ifndef LUAGOXEL_H
 #define LUAGOXEL_H
 
-#define LUA_USE_POSIX
+#ifndef WIN32
+#   define LUA_USE_POSIX
+#endif
 
 #include <stdint.h>
 #include <stdlib.h>
