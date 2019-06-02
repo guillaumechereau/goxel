@@ -24,6 +24,9 @@
 #include <errno.h>
 #include <stdio.h>
 
+// Defined in utils.
+int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
+
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
