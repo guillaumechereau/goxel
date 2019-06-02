@@ -22,15 +22,16 @@
 static void export_as_png(const char *path, int w, int h)
 {
     uint8_t *buf;
+    int bpp = goxel.image->export_transparent_background ? 4 : 3;
     w = w ?: goxel.image->export_width;
     h = h ?: goxel.image->export_height;
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                    "png\0*.png\0", NULL, "untitled.png");
     if (!path) return;
     LOG_I("Exporting to file %s", path);
-    buf = calloc(w * h, 4);
-    goxel_render_to_buf(buf, w, h, 4);
-    img_write(buf, w, h, 4, path);
+    buf = calloc(w * h, bpp);
+    goxel_render_to_buf(buf, w, h, bpp);
+    img_write(buf, w, h, bpp, path);
     free(buf);
 }
 
@@ -54,6 +55,10 @@ static void export_gui(void) {
         goxel.image->export_height = view_rect[3];
     }
     gui_group_end();
+
+    gui_checkbox("Transparent background",
+                 &goxel.image->export_transparent_background,
+                 NULL);
 }
 
 ACTION_REGISTER(export_as_png,

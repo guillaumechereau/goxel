@@ -43,6 +43,7 @@ struct image {
     float    box[4][4];
 
     // For saving.
+    // XXX: I think those should be persistend data of export code instead.
     char     *path;
     int      export_width;
     int      export_height;
