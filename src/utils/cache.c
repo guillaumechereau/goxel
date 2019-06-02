@@ -20,6 +20,7 @@
 #include "uthash.h"
 
 #include <assert.h>
+#include <stdint.h>
 
 typedef struct item item_t;
 struct item {
