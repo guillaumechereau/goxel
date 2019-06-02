@@ -24,9 +24,6 @@
 #include <errno.h>
 #include <stdio.h>
 
-// Defined in utils.
-int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
-
 #ifndef PATH_MAX
 #define PATH_MAX 1024
 #endif
@@ -93,6 +90,9 @@ static void init_unix(void)
 #define NOC_FILE_DIALOG_WIN32
 #define NOC_FILE_DIALOG_IMPLEMENTATION
 #include "noc_file_dialog.h"
+
+// Defined in utils.
+int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
 
 // On mingw mkdir takes only one argument!
 #define mkdir(p, m) mkdir(p)
