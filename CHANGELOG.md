@@ -1,5 +1,27 @@
 #Changelog
 
+## [0.9.0] - 2019-06-04
+
+This major release brings proper material support, and better pathtracing
+rendering.  The code has changed a lot, so expect a few bugs!
+
+### Added
+- Layer materials: each layer can now have its own material.
+- Transparent materials.
+- Emission materials.
+- Support for png palettes.
+- Add new view settings.
+- Allow to scale a layer (only by factors of two).
+
+### Changed
+- Marching cube rendering default to 'flat' colors.
+- Layer visibility is saved.
+- Materials now use metallic/roughness settings.
+
+### Fixed
+- Bug with retina display on OSX.
+
+
 ## [0.8.3] - 2017-03-30
 
 Minor release.
