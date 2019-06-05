@@ -158,7 +158,8 @@ end:
 static int kvx_import(const char *path)
 {
     FILE *file;
-    int i, r, ret = 0, nb, w, h, d, x, y, z, lastz = 0, len, visface;
+    int i, r, ret = 0, nb, size, w, h, d, x, y, z, lastz = 0, len, visface;
+    int offsetsize, voxdatasize;
     uint8_t color = 0;
     uint8_t (*palette)[4] = NULL;
     uint32_t *xoffsets = NULL;
@@ -172,7 +173,7 @@ static int kvx_import(const char *path)
     if (!path) return -1;
 
     file = fopen(path, "rb");
-    nb = READ(uint32_t, file); (void)nb;
+    size = READ(uint32_t, file);
     w = READ(uint32_t, file);
     h = READ(uint32_t, file);
     d = READ(uint32_t, file);
@@ -186,6 +187,12 @@ static int kvx_import(const char *path)
     xyoffsets = calloc(w * (h + 1), sizeof(*xyoffsets));
     for (i = 0; i < w + 1; i++)        xoffsets[i] = READ(uint32_t, file);
     for (i = 0; i < w * (h + 1); i++) xyoffsets[i] = READ(uint16_t, file);
+
+    // Make sure the final x offset points pass the end the voxel data.
+    // Just a warning for the moment.
+    offsetsize = (w + 1) * 4 + w * (h + 1) * 2;
+    voxdatasize = size - 24 - offsetsize;
+    if (xoffsets[w] != offsetsize + voxdatasize) LOG_W("Invalide kvx file");
 
     datpos = ftell(file);
 
