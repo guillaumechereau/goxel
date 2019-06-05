@@ -1,5 +1,11 @@
 #Changelog
 
+## [0.9.1]
+
+### Fixed
+- Fix bug in KVX export.
+
+
 ## [0.9.0] - 2019-06-04
 
 This major release brings proper material support, and better pathtracing
