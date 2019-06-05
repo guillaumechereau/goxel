@@ -330,6 +330,7 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     uint32_t *xoffsets;
     uint32_t *xyoffsets;
     bool use_current_palette = false;
+    float pivot[3];
 
     UT_icd voxel_icd = {sizeof(voxel_t), NULL, NULL, NULL};
     UT_icd slab_icd = {sizeof(slab_t), NULL, NULL, NULL};
@@ -469,10 +470,13 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, size[1], file);
     WRITE(uint32_t, size[2], file);
 
-    // XXX: should compute the proper pivot!
-    WRITE(int32_t, size[0] * 256 / 2, file);
-    WRITE(int32_t, size[1] * 256 / 2, file);
-    WRITE(int32_t, size[2] * 256, file);
+    pivot[0] = -orig[0] + (size[0] % 2) / 2.;
+    pivot[1] = -orig[1] + (size[1] % 2) / 2.;
+    pivot[2] = size[2] - orig[2];
+
+    WRITE(int32_t, (int)(pivot[0] * 256), file);
+    WRITE(int32_t, (int)(pivot[1] * 256), file);
+    WRITE(int32_t, (int)(pivot[2] * 256), file);
 
     for (i = 0; i < size[0] + 1; i++)
         WRITE(uint32_t, xoffsets[i], file);
