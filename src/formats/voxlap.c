@@ -459,7 +459,8 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     }
 
     // Now we have all the data ready to be saved.
-    WRITE(uint32_t, utarray_len(voxels), file);
+    // The byte size is the last x offset plus the header size (24).
+    WRITE(uint32_t, xoffsets[size[0]] + 24, file);
     WRITE(uint32_t, size[0], file);
     WRITE(uint32_t, size[1], file);
     WRITE(uint32_t, size[2], file);
