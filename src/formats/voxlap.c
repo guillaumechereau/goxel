@@ -158,8 +158,10 @@ end:
 static int kvx_import(const char *path)
 {
     FILE *file;
-    int i, r, ret = 0, nb, size, w, h, d, x, y, z, lastz = 0, len, visface;
+    int i, r, ret = 0, nb, size, lastz = 0, len, visface;
+    int w, h, d, px, py, pz, x, y, z;
     int offsetsize, voxdatasize;
+    int aabb[2][3];
     uint8_t color = 0;
     uint8_t (*palette)[4] = NULL;
     uint32_t *xoffsets = NULL;
@@ -179,9 +181,9 @@ static int kvx_import(const char *path)
     d = READ(uint32_t, file);
     cube = calloc(w * h * d, sizeof(*cube));
 
-    READ(uint32_t, file);
-    READ(uint32_t, file);
-    READ(uint32_t, file);
+    px = READ(uint32_t, file) / 256;
+    py = READ(uint32_t, file) / 256;
+    pz = READ(uint32_t, file) / 256;
 
     xoffsets = calloc(w + 1, sizeof(*xoffsets));
     xyoffsets = calloc(w * (h + 1), sizeof(*xyoffsets));
@@ -238,11 +240,13 @@ static int kvx_import(const char *path)
         }
     }
 
-    bbox_from_aabb(goxel.image->box, (int[2][3]){{0, 0, 0}, {w, h, d}});
-    bbox_from_aabb(goxel.image->active_layer->box,
-                   (int[2][3]){{0, 0, 0}, {w, h, d}});
+    vec3_set(aabb[0], -px, -py, pz - d);
+    vec3_set(aabb[1], w - px, h - py, pz);
+
+    bbox_from_aabb(goxel.image->box, aabb);
+    bbox_from_aabb(goxel.image->active_layer->box, aabb);
     mesh_blit(goxel.image->active_layer->mesh, (uint8_t*)cube,
-              0, 0, 0, w, h, d, NULL);
+              -px, -py, pz - d, w, h, d, NULL);
 
 end:
     free(palette);
@@ -464,9 +468,11 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     WRITE(uint32_t, size[0], file);
     WRITE(uint32_t, size[1], file);
     WRITE(uint32_t, size[2], file);
-    WRITE(int32_t, size[0] / 2, file);
-    WRITE(int32_t, size[1] / 2, file);
-    WRITE(int32_t, size[2] / 2, file);
+
+    // XXX: should compute the proper pivot!
+    WRITE(int32_t, size[0] * 256 / 2, file);
+    WRITE(int32_t, size[1] * 256 / 2, file);
+    WRITE(int32_t, size[2] * 256, file);
 
     for (i = 0; i < size[0] + 1; i++)
         WRITE(uint32_t, xoffsets[i], file);
