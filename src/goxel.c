@@ -287,7 +287,6 @@ static int on_drag(const gesture_t *gest, void *user);
 static int on_pan(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
 static int on_hover(const gesture_t *gest, void *user);
-static int on_pinch(const gesture_t *gest, void *user);
 
 KEEPALIVE
 void goxel_init(void)
@@ -323,10 +322,6 @@ void goxel_init(void)
     goxel.gestures.hover = (gesture_t) {
         .type = GESTURE_HOVER,
         .callback = on_hover,
-    };
-    goxel.gestures.pinch = (gesture_t) {
-        .type = GESTURE_PINCH,
-        .callback = on_pinch,
     };
 
     goxel_reset();
@@ -541,47 +536,6 @@ static int on_hover(const gesture_t *gest, void *user)
     set_flag(&c->flags, CURSOR_OUT, gest->state == GESTURE_END);
     return 0;
 }
-
-static int on_pinch(const gesture_t *gest, void *user)
-{
-    /*
-    static float start_zoom = 0;
-    static float start_rot[4];
-    static float start_pos[2];
-    static float start_ofs[3];
-    float wpos[3], worigin_pos[3], wdelta[3], odelta[3];
-    float p[3], n[3];
-
-    if (gest->state == GESTURE_BEGIN) {
-        start_zoom = goxel.camera.dist;
-        quat_copy(goxel.camera.rot, start_rot);
-        vec2_copy(gest->pos, start_pos);
-        vec3_copy(goxel.camera.ofs, start_ofs);
-    }
-    goxel.camera.dist = start_zoom / gest->pinch;
-    quat_rotate(start_rot, gest->rotation, 0, 0, 1, goxel.camera.rot);
-
-    vec3_set(wpos, gest->pos[0], gest->pos[1], 0);
-    vec3_set(worigin_pos, start_pos[0], start_pos[1], 0);
-    vec3_sub(wpos, worigin_pos, wdelta);
-    unproject_delta(wdelta, goxel.camera.view_mat,
-                    goxel.camera.proj_mat, gest->viewport, odelta);
-    vec3_imul(odelta, 2); // XXX: why do I need that?
-    if (!goxel.camera.ortho)
-        vec3_imul(odelta, goxel.camera.dist);
-    vec3_add(start_ofs, odelta, goxel.camera.ofs);
-
-    // Auto adjust the camera rotation position.
-    if (gest->state == GESTURE_END) {
-        if (goxel_unproject_on_mesh(gest->viewport, gest->pos,
-                                    goxel_get_layers_mesh(), p, n)) {
-            camera_set_target(&goxel.camera, p);
-        }
-    }
-    */
-    return 0;
-}
-
 
 // XXX: Cleanup this.
 void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
