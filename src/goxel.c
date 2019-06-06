@@ -369,6 +369,8 @@ void goxel_reset(void)
         .ambient = 0.3,
         .shadow = 0.3,
     };
+    if (DEFINED(NO_SHADOW))
+        goxel.rend.settings.shadow = 0;
 
     goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
 
