@@ -22,6 +22,9 @@
  * operating system, not relying on libc, should go there.
  */
 
+#ifndef SYSTEM_H
+#define SYSTEM_H
+
 #include <stdbool.h>
 
 /*
@@ -108,3 +111,5 @@ void sys_set_window_title(const char *title);
  * Show a virtual keyboard if needed.
  */
 void sys_show_keyboard(bool has_text);
+
+#endif // SYSTEM_H
