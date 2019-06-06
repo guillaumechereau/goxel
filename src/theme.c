@@ -20,6 +20,14 @@
 
 #include "utils/ini.h"
 
+#ifndef THEME_ITEM_HEIGHT
+#   define THEME_ITEM_HEIGHT 18
+#endif
+
+#ifndef THEME_ICON_HEIGHT
+#   define THEME_ICON_HEIGHT 32
+#endif
+
 theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT] = {
     [THEME_GROUP_BASE] = {
         .name = "base",
@@ -77,8 +85,8 @@ theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT] = {
 static theme_t g_base_theme = {
     .name = "Unamed",
     .sizes = {
-        .item_height = 18,
-        .icons_height = 32,
+        .item_height = THEME_ITEM_HEIGHT,
+        .icons_height = THEME_ICON_HEIGHT,
         .item_padding_h = 4,
         .item_rounding = 4,
         .item_spacing_h = 4,
