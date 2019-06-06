@@ -748,6 +748,8 @@ void gui_iter(const inputs_t *inputs)
         actions_iter(check_action_shortcut, NULL);
     }
     ImGui::EndFrame();
+
+    sys_show_keyboard(io.WantTextInput);
 }
 
 void gui_render(void)

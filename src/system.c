@@ -217,3 +217,13 @@ void sys_set_clipboard_text(void *user, const char *text)
     if (sys_callbacks.set_clipboard_text)
         sys_callbacks.set_clipboard_text(sys_callbacks.user, text);
 }
+
+/*
+ * Function: sys_show_keyboard
+ * Show a virtual keyboard if needed.
+ */
+void sys_show_keyboard(bool has_text)
+{
+    if (!sys_callbacks.show_keyboard) return;
+    sys_callbacks.show_keyboard(sys_callbacks.user, has_text);
+}

@@ -22,6 +22,7 @@
  * operating system, not relying on libc, should go there.
  */
 
+#include <stdbool.h>
 
 /*
  * Global structure that hold pointers to system functions.  Need to be
@@ -34,6 +35,7 @@ typedef struct {
     const char *(*get_user_dir)(void *user);
     const char *(*get_clipboard_text)(void* user);
     void (*set_clipboard_text)(void *user, const char *text);
+    void (*show_keyboard)(void *user, bool has_text);
 } sys_callbacks_t;
 extern sys_callbacks_t sys_callbacks;
 
@@ -100,3 +102,9 @@ double sys_get_time(void); // Unix time.
  * Set the window title.
  */
 void sys_set_window_title(const char *title);
+
+/*
+ * Function: sys_show_keyboard
+ * Show a virtual keyboard if needed.
+ */
+void sys_show_keyboard(bool has_text);
