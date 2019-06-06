@@ -622,6 +622,14 @@ DECL bool mat4_equal(const float a[S 4][4], const float b[S 4][4])
     return true;
 }
 
+DECL void mat4_to_mat3(const float m[S 4][4], float out[3][3])
+{
+    int i, j;
+    for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
+            out[i][j] = m[i][j];
+}
+
 DECL void quat_from_axis(float quat[S 4], float a, float x, float y, float z)
 {
     float sin_angle;
