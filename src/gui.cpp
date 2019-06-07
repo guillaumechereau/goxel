@@ -16,6 +16,10 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef GUI_HAS_MENU
+#   define GUI_HAS_MENU 1
+#endif
+
 extern "C" {
 #include "goxel.h"
 
@@ -684,8 +688,8 @@ void gui_iter(const inputs_t *inputs)
                                     ImGuiWindowFlags_NoResize |
                                     ImGuiWindowFlags_NoMove |
                                     ImGuiWindowFlags_NoScrollbar |
-                                    ImGuiWindowFlags_MenuBar |
-                                    ImGuiWindowFlags_NoCollapse;
+                                    ImGuiWindowFlags_NoCollapse |
+                                    (GUI_HAS_MENU ? ImGuiWindowFlags_MenuBar : 0);
 
     ImGui::SetNextWindowSize(ImVec2(
         io.DisplaySize.x - (gui->margins.left + gui->margins.right),
@@ -693,7 +697,7 @@ void gui_iter(const inputs_t *inputs)
     ImGui::SetNextWindowPos(ImVec2(gui->margins.left, gui->margins.top));
     ImGui::Begin("Goxel", NULL, window_flags);
 
-    render_menu();
+    if (GUI_HAS_MENU) render_menu();
     gui_top_bar();
 
     goxel.no_edit = gui->popup_count;
