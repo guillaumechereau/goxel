@@ -563,6 +563,8 @@ static void render_left_panel(void)
         goxel.show_export_viewport = false;
         ImGui::PushID("panel");
         ImGui::PushID(PANELS[gui->current_panel].name);
+        gui_text(PANELS[gui->current_panel].name);
+        ImGui::Separator();
         PANELS[gui->current_panel].fn();
         ImGui::PopID();
         ImGui::PopID();
