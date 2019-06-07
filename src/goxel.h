@@ -543,6 +543,11 @@ void goxel_release(void);
 void goxel_reset(void);
 int goxel_iter(inputs_t *inputs);
 void goxel_render(void);
+
+int goxel_unproject(const float viewport[4],
+                    const float pos[2], int snap_mask, float offset,
+                    float out[3], float normal[3]);
+
 void goxel_render_view(const float viewport[4], bool render_mode);
 void goxel_render_export_view(const float viewport[4]);
 // Called by the gui when the mouse hover a 3D view.
