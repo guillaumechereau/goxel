@@ -20,6 +20,10 @@
 #   define GUI_HAS_MENU 1
 #endif
 
+#ifndef GUI_HAS_HELP
+#   define GUI_HAS_HELP 1
+#endif
+
 extern "C" {
 #include "goxel.h"
 
@@ -711,7 +715,7 @@ void gui_iter(const inputs_t *inputs)
     // ImGui::Text("3d view");
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
-    canvas_size.y -= 20; // Leave space for the help label.
+    if (GUI_HAS_HELP) canvas_size.y -= 20; // Leave space for the help label.
     vec4_set(gui->view.rect,
              canvas_pos.x,
              goxel.screen_size[1] - (canvas_pos.y + canvas_size.y),
@@ -733,9 +737,11 @@ void gui_iter(const inputs_t *inputs)
         goxel_mouse_in_view(gui->view.rect, &inputs2, !io.WantCaptureKeyboard);
     }
 
-    ImGui::Text("%s", goxel.hint_text ?: "");
-    ImGui::SameLine(180);
-    ImGui::Text("%s", goxel.help_text ?: "");
+    if (GUI_HAS_HELP) {
+        ImGui::Text("%s", goxel.hint_text ?: "");
+        ImGui::SameLine(180);
+        ImGui::Text("%s", goxel.help_text ?: "");
+    }
 
     ImGui::EndChild();
     ImGui::End();
