@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 11525, .data =
+{.path = "data/shaders/mesh.glsl", .size = 11559, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -116,7 +116,7 @@
     "#endif\n"
     "\n"
     "\n"
-    "const float M_PI = 3.141592653589793;\n"
+    "const mediump float M_PI = 3.141592653589793;\n"
     "\n"
     "#ifdef VERTEX_SHADER\n"
     "\n"
@@ -162,6 +162,8 @@
     "#endif\n"
     "\n"
     "#ifdef FRAGMENT_SHADER\n"
+    "\n"
+    "precision mediump float;\n"
     "\n"
     "struct Light\n"
     "{\n"

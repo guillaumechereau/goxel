@@ -65,7 +65,7 @@ varying mediump vec3 v_Normal;
 #endif
 
 
-const float M_PI = 3.141592653589793;
+const mediump float M_PI = 3.141592653589793;
 
 #ifdef VERTEX_SHADER
 
@@ -111,6 +111,8 @@ void main()
 #endif
 
 #ifdef FRAGMENT_SHADER
+
+precision mediump float;
 
 struct Light
 {
