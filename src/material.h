@@ -31,6 +31,9 @@ struct material {
     material_t *next, *prev; // List of materials in an image.
 };
 
+#define MATERIAL_DEFAULT (material_t){ \
+    .metallic = 0.2, .roughness = 0.5, .base_color = {1, 1, 1, 1}}
+
 material_t *material_new(const char *name);
 void material_delete(material_t *m);
 uint32_t material_get_hash(const material_t *m);

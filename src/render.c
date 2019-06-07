@@ -682,11 +682,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
                  const material_t *material, int effects)
 {
     render_item_t *item;
-    const material_t default_material = {
-        .metallic = 0.2,
-        .roughness = 0.5,
-        .base_color = {1, 1, 1, 1},
-    };
+    const material_t default_material = MATERIAL_DEFAULT;
 
     material = material ?: &default_material;
     item = calloc(1, sizeof(*item));

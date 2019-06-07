@@ -116,8 +116,9 @@ static int get_material_id(pathtracer_t *pt, const material_t *mat,
     pathtracer_internal_t *p = pt->p;
     yocto_material *m;
     bool created;
+    const material_t default_mat = MATERIAL_DEFAULT;
 
-    if (!mat) return -1;
+    if (!mat) mat = &default_mat;
     snprintf(name, sizeof(name), "<mat_%x>", material_get_hash(mat));
     m = getdefault(p->scene.materials, name, &created);
     if (created) {
