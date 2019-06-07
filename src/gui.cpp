@@ -24,6 +24,10 @@
 #   define GUI_HAS_HELP 1
 #endif
 
+#ifndef GUI_HAS_ROTATION_BAR
+#   define GUI_HAS_ROTATION_BAR 0
+#endif
+
 extern "C" {
 #include "goxel.h"
 
@@ -38,6 +42,7 @@ void gui_view_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
 void gui_export_panel(void);
+void gui_rotation_bar(void);
 
 void gui_menu(void);
 void gui_top_bar(void);
@@ -744,6 +749,12 @@ void gui_iter(const inputs_t *inputs)
     }
 
     ImGui::EndChild();
+
+    if (GUI_HAS_ROTATION_BAR) {
+        ImGui::SameLine();
+        gui_rotation_bar();
+    }
+
     ImGui::End();
 
     // Handle the shortcuts.  XXX: this should be done with actions.
