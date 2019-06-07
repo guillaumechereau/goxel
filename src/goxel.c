@@ -288,13 +288,22 @@ static int on_pan(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
 static int on_hover(const gesture_t *gest, void *user);
 
+static void goxel_init_sound()
+{
+#ifdef SOUND
+    sound_init();
+    sound_register("build", assets_get("asset://data/sounds/build.wav", NULL));
+    sound_register("click", assets_get("asset://data/sounds/click.wav", NULL));
+#endif
+}
+
 KEEPALIVE
 void goxel_init(void)
 {
     render_init();
     shapes_init();
-    sound_init();
     model3d_init();
+    goxel_init_sound();
 
     // Load and set default palette.
     palette_load_all(&goxel.palettes);

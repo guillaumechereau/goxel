@@ -174,6 +174,7 @@ void sound_iter(void)
 // Dummy API when we compile without sound support.
 
 void sound_init(void) {}
+void sound_register(const char *name, const char *wav_data) {}
 void sound_play(const char *name, float volume, float pitch) {}
 void sound_iter(void) {}
 bool sound_is_enabled(void) { return false; }
