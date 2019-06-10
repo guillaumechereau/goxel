@@ -59,12 +59,24 @@ void gui_top_bar(void);
             z = f[2] / 255.; \
             w = f[3] / 255.; }     \
 
+// Prevent warnings with gcc.
+#ifndef __clang__
+#pragma GCC diagnostic push
+#if __GNUC__ >= 8
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+#endif
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #define IMGUI_INCLUDE_IMGUI_USER_INL
 
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
+
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif
 
 static inline ImVec4 color_lighten(ImVec4 c, float k)
 {

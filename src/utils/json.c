@@ -18,8 +18,13 @@
 
 #include "json.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
+
 #include "../../ext_src/json/json.c"
 #include "../../ext_src/json/json-builder.c"
+
+#pragma GCC diagnostic pop
 
 #include <assert.h>
 #include <stdbool.h>
