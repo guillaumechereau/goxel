@@ -42,7 +42,6 @@ typedef struct {
     int status;
     uint8_t *buf;       // RGBA buffer.
     int w, h;           // Size of the buffer.
-    char output[1024];  // Output path.
     float progress;
     bool force_restart;
     texture_t *texture;

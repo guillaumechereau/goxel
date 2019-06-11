@@ -23,7 +23,6 @@ void gui_render_panel(void)
     int i;
     int maxsize;
     pathtracer_t *pt = &goxel.pathtracer;
-    const char *path;
     float view_rect[4];
     material_t *material;
 
@@ -44,14 +43,7 @@ void gui_render_panel(void)
         goxel.image->export_width = view_rect[2];
         goxel.image->export_height = view_rect[3];
     }
-    if (gui_button("Set output", 1, 0)) {
-        path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "png\0*.png\0", NULL,
-                                    "untitled.png");
-        if (path)
-            snprintf(pt->output, sizeof(pt->output), "%s", path);
-    }
     gui_group_end();
-    if (*pt->output) gui_text("%s", pt->output);
 
     gui_input_int("Samples", &pt->num_samples, 1, 10000);
 
@@ -68,6 +60,12 @@ void gui_render_panel(void)
     }
     if (pt->status) {
         gui_text("%d/100", (int)(pt->progress * 100));
+    }
+    if (    pt->status == PT_FINISHED &&
+            gui_button("Save to album", -1, 0))
+    {
+        action_exec2("export_render_buf_to_photos", "");
+        gui_alert("Export", "Export Complete");
     }
 
     if (gui_collapsing_header("World", false)) {
@@ -127,3 +125,19 @@ void gui_render_panel(void)
     }
 }
 
+static void export_render_buf_to_photos(void)
+{
+    int w = goxel.pathtracer.w;
+    int h = goxel.pathtracer.h;
+    int bpp = 4;
+    int size;
+    uint8_t *img;
+    img = img_write_to_mem(goxel.pathtracer.buf, w, h, bpp, &size);
+    sys_save_to_photos(img, size);
+    free(img);
+}
+
+ACTION_REGISTER(export_render_buf_to_photos,
+    .cfunc = export_render_buf_to_photos,
+    .csig = "v",
+)

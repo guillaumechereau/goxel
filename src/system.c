@@ -228,3 +228,27 @@ void sys_show_keyboard(bool has_text)
     if (!sys_callbacks.show_keyboard) return;
     sys_callbacks.show_keyboard(sys_callbacks.user, has_text);
 }
+
+/*
+ * Function: sys_save_to_photos
+ * Save a png file to the system photo album.
+ */
+int sys_save_to_photos(const uint8_t *data, int size)
+{
+    FILE *file;
+    const char *path;
+    size_t r;
+
+    if (sys_callbacks.save_to_photos)
+        return sys_callbacks.save_to_photos(sys_callbacks.user, data, size);
+
+    // Default implementation.
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
+                   "png\0*.png\0", NULL, "untitled.png");
+    if (!path) return 1;
+    file = fopen(path, "wb");
+    if (!file) return -1;
+    r = fwrite(data, size, 1, file);
+    fclose(file);
+    return r == size ? 0 : -1;
+}
