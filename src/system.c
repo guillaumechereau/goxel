@@ -18,6 +18,8 @@
 
 #include "system.h"
 
+#include "noc_file_dialog.h"
+
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <dirent.h>
