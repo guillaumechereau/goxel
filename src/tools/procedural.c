@@ -112,44 +112,11 @@ static void on_example(int i, const char *name, const char *code,
     names[i] = strdup(name);
 }
 
-static void load(tool_procedural_t *p)
-{
-    const char *path;
-    FILE *f;
-    int nb;
-
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                "goxcf\0*.goxcf\0", NULL, NULL);
-    if (!path) return;
-    f = fopen(path, "r");
-    nb = (int)fread(p->prog_buff, 1, sizeof(p->prog_buff), f);
-    p->prog_buff[nb] = '\0';
-    fclose(f);
-    strcpy(p->prog_path, path);
-    proc_parse(p->prog_buff, &p->proc);
-}
-
-static void save(tool_procedural_t *p)
-{
-    const char *path;
-    FILE *f;
-    if (!*p->prog_path) {
-        path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                "goxcf\0*.goxcf\0", NULL, NULL);
-        if (path) strcpy(p->prog_path, path);
-    }
-    if (!*p->prog_path) return;
-    f = fopen(p->prog_path, "w");
-    fwrite(p->prog_buff, strlen(p->prog_buff), 1, f);
-    fclose(f);
-}
-
 static int gui(tool_t *tool)
 {
     tool_procedural_t *p = (tool_procedural_t*)tool;
     bool enabled;
     gox_proc_t *proc;
-    const char *dir_path;
     char *path;
 
     gui_request_panel_width(GUI_PANEL_WIDTH_LARGE);
@@ -191,29 +158,6 @@ static int gui(tool_t *tool)
             p->timer = 0;
         }
         gui_enabled_end();
-    }
-    if (!DEFINED(GOXEL_MOBILE)) {
-        gui_same_line();
-        if (gui_checkbox("Auto", &p->auto_run, NULL))
-            proc_parse(p->prog_buff, proc);
-        gui_same_line();
-
-        if (gui_button("Export Animation", 0, 0)) {
-            dir_path = noc_file_dialog_open(
-                        NOC_FILE_DIALOG_SAVE | NOC_FILE_DIALOG_DIR,
-                        NULL, NULL, NULL);
-            if (dir_path) {
-                mesh_clear(goxel.image->active_layer->mesh);
-                proc_start(proc, NULL);
-                p->export_animation = true;
-                sprintf(p->export_animation_path, "%s", dir_path);
-            }
-        }
-
-        if (*p->prog_path) gui_text(p->prog_path);
-        if (gui_button("Load", 0, 0)) load(p);
-        gui_same_line();
-        if (gui_button("Save", 0, 0)) save(p);
     }
 
     if (gui_combo("Examples", &p->current,
