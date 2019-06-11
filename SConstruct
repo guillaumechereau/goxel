@@ -59,7 +59,7 @@ if env['werror']:
 if env['mode'] == 'debug':
     env.Append(CCFLAGS=['-O0'])
 else:
-    env.Append(CCFLAGS=['-O3', '-DNDEBUG'])
+    env.Append(CCFLAGS='-O3', CPPDEFINES='NDEBUG')
     if env['CC'] == 'gcc': env.Append(CCFLAGS='-Ofast')
 
 if env['mode'] in ('profile', 'debug'):
@@ -77,7 +77,7 @@ for root, dirnames, filenames in os.walk('src'):
 
 # Check for libpng.
 if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
-    env.Append(CCFLAGS='-DHAVE_LIBPNG=1')
+    env.Append(CPPDEFINES='HAVE_LIBPNG=1')
 
 # Linux compilation support.
 if target_os == 'posix':
@@ -89,14 +89,13 @@ if target_os == 'posix':
 # Windows compilation support.
 if target_os == 'msys':
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
-                         '-Wno-unused-function',
-                         '-DFREE_WINDOWS'])
+                         '-Wno-unused-function'])
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32',
                      'z', 'tre', 'intl', 'iconv'],
                LINKFLAGS='--static')
     sources += glob.glob('ext_src/glew/glew.c')
     env.Append(CPPPATH=['ext_src/glew'])
-    env.Append(CCFLAGS='-DGLEW_STATIC')
+    env.Append(CPPDEFINES=['GLEW_STATIC', 'FREE_WINDOWS'])
 
 # OSX Compilation support.
 if target_os == 'darwin':
@@ -111,7 +110,7 @@ env.Append(CPPPATH=['ext_src/noc'])
 
 if env['sound']:
     env.Append(LIBS='openal')
-    env.Append(CCFLAGS='-DSOUND=1')
+    env.Append(CPPDEFINES='SOUND=1')
 
 # Append external environment flags
 env.Append(
