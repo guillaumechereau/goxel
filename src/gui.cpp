@@ -403,19 +403,33 @@ static bool color_edit(const char *name, uint8_t color[4],
     return ret;
 }
 
-
+static bool rect_contains(const float rect[4], const float pos[2])
+{
+    return pos[0] >= rect[0] && pos[0] < rect[0] + rect[2] &&
+           pos[1] >= rect[1] && pos[1] < rect[1] + rect[3];
+}
 
 static int on_gesture(const gesture_t *gest, void *user)
 {
     gui_t *gui = (gui_t*)user;
     ImGuiIO& io = ImGui::GetIO();
+    ImGuiContext& g = *GImGui;
+
+    if (DEFINED(GOXEL_MOBILE) && gest->type == GESTURE_HOVER) return 0;
     io.MousePos = ImVec2(gest->pos[0], gest->pos[1]);
     io.MouseDown[0] = (gest->type == GESTURE_DRAG) &&
                       (gest->state != GESTURE_END);
-    if (gest->state == GESTURE_BEGIN && !gui->mouse_in_view)
-        gui->capture_mouse = true;
+
+    if (gest->state == GESTURE_BEGIN) {
+        gui->mouse_in_view = rect_contains(gui->view.rect, gest->pos);
+        gui->capture_mouse = !gui->mouse_in_view || g.OpenPopupStack.Size;
+    }
     if (gest->state == GESTURE_END || gest->type == GESTURE_HOVER)
         gui->capture_mouse = false;
+    if (gest->state == GESTURE_END && gest->type != GESTURE_HOVER) {
+        gui_iter(NULL);
+        io.MousePos = ImVec2(-1, -1);
+    }
     return 0;
 }
 
