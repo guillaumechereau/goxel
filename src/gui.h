@@ -102,6 +102,9 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
 bool gui_is_key_down(int key);
 bool gui_palette_entry(const uint8_t color[4], uint8_t target[4]);
 
+bool gui_need_full_version(void);
+
+
 enum {
     GUI_POPUP_FULL      = 1 << 0,
     GUI_POPUP_RESIZE    = 1 << 1,

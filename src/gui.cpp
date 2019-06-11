@@ -1570,5 +1570,12 @@ bool gui_menu_item(const char *action, const char *label, bool enabled)
     return false;
 }
 
+#if !DEFINED(GOXEL_MOBILE)
+bool gui_need_full_version(void)
+{
+    return true;
+}
+#endif
+
 
 }

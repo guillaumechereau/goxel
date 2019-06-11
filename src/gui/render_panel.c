@@ -62,7 +62,8 @@ void gui_render_panel(void)
         gui_text("%d/100", (int)(pt->progress * 100));
     }
     if (    pt->status == PT_FINISHED &&
-            gui_button("Save to album", -1, 0))
+            gui_button("Save to album", -1, 0) &&
+            gui_need_full_version())
     {
         action_exec2("export_render_buf_to_photos", "");
         gui_alert("Export", "Export Complete");
