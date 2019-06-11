@@ -19,12 +19,13 @@ import glob
 import os
 import sys
 
-vars = Variables()
+vars = Variables('settings.py')
 vars.AddVariables(
     EnumVariable('mode', 'Build mode', 'debug',
         allowed_values=('debug', 'release', 'profile')),
     BoolVariable('werror', 'Warnings as error', True),
     BoolVariable('sound', 'Enable sound', False),
+    PathVariable('config_file', 'Config file to use', 'src/config.h'),
 )
 
 target_os = str(Platform())
@@ -66,7 +67,7 @@ if env['mode'] in ('profile', 'debug'):
     env.Append(CCFLAGS='-g')
 
 env.Append(CPPPATH=['src'])
-env.Append(CCFLAGS='-include config.h')
+env.Append(CCFLAGS=['-include', '$config_file'])
 
 # Get all the c and c++ files in src, recursively.
 sources = []
