@@ -21,9 +21,10 @@
 bool gui_about_popup(void *data)
 {
     gui_text("Goxel " GOXEL_VERSION_STR);
-    gui_text("Copyright © 2015-2017 Guillaume Chereau");
+    gui_text("Copyright © 2015-2019 Guillaume Chereau");
     gui_text("<guillaume@noctua-software.com>");
-    gui_text("GPL 3 License");
+    gui_text("All right reserved");
+    if (!DEFINED(GOXEL_MOBILE)) gui_text("GPL 3 License");
     gui_text("http://guillaumechereau.github.io/goxel");
 
     if (gui_collapsing_header("Credits", true)) {
