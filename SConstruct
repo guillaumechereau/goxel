@@ -19,25 +19,24 @@ import glob
 import os
 import sys
 
+vars = Variables()
+vars.AddVariables(
+    EnumVariable('mode', 'Build mode', 'debug',
+        allowed_values=('debug', 'release', 'profile')),
+    BoolVariable('werror', 'Warnings as error', True),
+    BoolVariable('sound', 'Enable sound', False),
+)
+
 target_os = str(Platform())
 
-debug = int(ARGUMENTS.get('debug', 1))
-profile = int(ARGUMENTS.get('profile', 0))
-werror = int(ARGUMENTS.get("werror", 1))
-clang = int(ARGUMENTS.get("clang", 0))
-sound = False
-
-if os.environ.get('CC') == 'clang': clang = 1
-if profile: debug = 0
-
-env = Environment(ENV = os.environ)
+env = Environment(variables = vars, ENV = os.environ)
 conf = env.Configure()
 
-if clang:
+if os.environ.get('CC') == 'clang':
     env.Replace(CC='clang', CXX='clang++')
 
 # Asan & Ubsan (need to come first).
-if debug and target_os == 'posix':
+if env['mode'] == 'debug' and target_os == 'posix':
     env.Append(CCFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
                LINKFLAGS=['-fsanitize=address', '-fsanitize=undefined'],
                LIBS=['asan', 'ubsan'])
@@ -53,17 +52,17 @@ env.Append(
     CXXFLAGS=['-std=gnu++17', '-Wall', '-Wno-narrowing']
 )
 
-if werror:
+if env['werror']:
     env.Append(CCFLAGS='-Werror')
 
 
-if debug:
+if env['mode'] == 'debug':
     env.Append(CCFLAGS=['-O0'])
 else:
     env.Append(CCFLAGS=['-O3', '-DNDEBUG'])
     if env['CC'] == 'gcc': env.Append(CCFLAGS='-Ofast')
 
-if profile or debug:
+if env['mode'] in ('profile', 'debug'):
     env.Append(CCFLAGS='-g')
 
 env.Append(CPPPATH=['src'])
@@ -110,7 +109,7 @@ env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
 
-if sound:
+if env['sound']:
     env.Append(LIBS='openal')
     env.Append(CCFLAGS='-DSOUND=1')
 

@@ -5,10 +5,10 @@ all:
 	scons -j 8
 
 release:
-	scons debug=0
+	scons mode=release
 
 profile:
-	scons profile=1
+	scons mode=profile
 
 run:
 	./goxel
