@@ -74,7 +74,7 @@ void gui_top_bar(void);
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
 
-#ifdef __clang__
+#ifndef __clang__
 #pragma GCC diagnostic pop
 #endif
 
