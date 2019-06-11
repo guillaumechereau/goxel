@@ -16,6 +16,11 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC diagnostic push
+#ifdef __clang__
+#   pragma GCC diagnostic ignored "-Wstring-plus-int"
+#endif
+
 // Include first to fix windows compilation.
 #include "../ext_src/lua/lprefix.h"
 
@@ -56,6 +61,8 @@
 #include "../ext_src/lua/lutf8lib.c"
 #include "../ext_src/lua/lvm.c"
 #include "../ext_src/lua/lzio.c"
+
+#pragma GCC diagnostic pop
 
 void *luaG_checkpointer(lua_State *l, int narg, const char *type)
 {
