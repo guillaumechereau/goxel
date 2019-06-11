@@ -741,8 +741,9 @@ void gui_iter(const inputs_t *inputs)
 
     render_popups(0);
 
-    ImGui::BeginChild("3d view", ImVec2(0, 0), false,
-                      ImGuiWindowFlags_NoScrollWithMouse);
+    ImGui::BeginChild("3d view",
+            ImVec2(GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0),
+            false, ImGuiWindowFlags_NoScrollWithMouse);
     // ImGui::Text("3d view");
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
