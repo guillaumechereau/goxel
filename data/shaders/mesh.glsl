@@ -89,7 +89,7 @@ void main()
     vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);
     v_Position = vec3(pos.xyz) / pos.w;
 
-    v_color = pow(a_color.rgba, vec4(2.2));
+    v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     v_uv = a_uv;
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
@@ -232,7 +232,7 @@ vec3 compute_light(vec3 light_direction,
 vec3 toneMap(vec3 color)
 {
     // color *= u_exposure;
-    return pow(color, vec3(1.0 / 2.2));
+    return sqrt(color); // Gamma correction.
 }
 
 void main()
@@ -254,7 +254,7 @@ void main()
     vec3 specularColor = mix(f0, baseColor.rgb, metallic);
 
 #ifdef MATERIAL_UNLIT
-    gl_FragColor = vec4(pow(baseColor.rgb, vec3(1.0 / 2.2)), baseColor.a);
+    gl_FragColor = vec4(sqrt(baseColor.rgb), baseColor.a);
     return;
 #endif
 

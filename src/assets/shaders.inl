@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 8632, .data =
+{.path = "data/shaders/mesh.glsl", .size = 8646, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -140,7 +140,7 @@
     "    vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);\n"
     "    v_Position = vec3(pos.xyz) / pos.w;\n"
     "\n"
-    "    v_color = pow(a_color.rgba, vec4(2.2));\n"
+    "    v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).\n"
     "    v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);\n"
     "    v_uv = a_uv;\n"
     "    gl_Position = u_proj * u_view * vec4(v_Position, 1.0);\n"
@@ -283,7 +283,7 @@
     "vec3 toneMap(vec3 color)\n"
     "{\n"
     "    // color *= u_exposure;\n"
-    "    return pow(color, vec3(1.0 / 2.2));\n"
+    "    return sqrt(color); // Gamma correction.\n"
     "}\n"
     "\n"
     "void main()\n"
@@ -305,7 +305,7 @@
     "    vec3 specularColor = mix(f0, baseColor.rgb, metallic);\n"
     "\n"
     "#ifdef MATERIAL_UNLIT\n"
-    "    gl_FragColor = vec4(pow(baseColor.rgb, vec3(1.0 / 2.2)), baseColor.a);\n"
+    "    gl_FragColor = vec4(sqrt(baseColor.rgb), baseColor.a);\n"
     "    return;\n"
     "#endif\n"
     "\n"
