@@ -191,10 +191,10 @@ mediump vec3 getNormal()
  * Optimized variant (presented by Epic at SIGGRAPH '13)
  * https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
  */
-vec3 F_Schlick(MaterialInfo mat, AngularInfo ang)
+vec3 F_Schlick(vec3 f0, vec3 LdotH)
 {
-    float fresnel = exp2((-5.55473 * ang.LdotH - 6.98316) * ang.LdotH);
-    return (1.0 - mat.reflectance0) * fresnel + mat.reflectance0;
+    float fresnel = exp2((-5.55473 * LdotH - 6.98316) * LdotH);
+    return (1.0 - f0) * fresnel + f0;
 }
 
 /*
@@ -228,7 +228,7 @@ vec3 diffuse(MaterialInfo materialInfo)
     return materialInfo.diffuseColor / M_PI;
 }
 
-vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal,
+vec3 getPointShade(vec3 pointToLight, MaterialInfo mat, vec3 normal,
                    vec3 view)
 {
     AngularInfo angularInfo = getAngularInfo(pointToLight, normal, view);
@@ -238,12 +238,12 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal,
         return vec3(0.0, 0.0, 0.0);
 
     // Calculate the shading terms for the microfacet specular shading model
-    vec3  F = F_Schlick(materialInfo, angularInfo);
-    float V = V_SmithGGXCorrelatedFast(materialInfo, angularInfo);
-    float D = D_GGX(materialInfo, angularInfo);
+    vec3  F = F_Schlick(mat.reflectance0, angularInfo.LdotH);
+    float V = V_SmithGGXCorrelatedFast(mat, angularInfo);
+    float D = D_GGX(mat, angularInfo);
 
     // Calculation of analytical lighting contribution
-    vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);
+    vec3 diffuseContrib = (1.0 - F) * diffuse(mat);
     vec3 specContrib = F * (V * D);
 
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of
