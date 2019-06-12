@@ -486,6 +486,24 @@ static int on_drag(const gesture_t *gest, void *user)
     return 0;
 }
 
+// XXX: can we merge this with unproject?
+static bool unproject_delta(const float win[3], const float model[4][4],
+                            const float proj[4][4], const float viewport[4],
+                            float out[3])
+{
+    float inv[4][4], norm_pos[4];
+
+    mat4_mul(proj, model, inv);
+    if (!mat4_invert(inv, inv)) {
+        vec3_copy(vec3_zero, out);
+        return false;
+    }
+    vec4_set(norm_pos, win[0] / viewport[2], win[1] / viewport[3], 0, 0);
+    mat4_mul_vec4(inv, norm_pos, norm_pos);
+    vec3_copy(norm_pos, out);
+    return true;
+}
+
 static int on_pan(const gesture_t *gest, void *user)
 {
     camera_t *camera = get_camera();
@@ -498,12 +516,13 @@ static int on_pan(const gesture_t *gest, void *user)
     vec3_set(worigin_pos, goxel.move_origin.pos[0],
                           goxel.move_origin.pos[1], 0);
     vec3_sub(wpos, worigin_pos, wdelta);
-    odelta[0] = wdelta[0] / gest->viewport[2] / 2;
-    odelta[1] = wdelta[1] / gest->viewport[3] / 2;
+
+    unproject_delta(wdelta, mat4_identity,
+                    camera->proj_mat, gest->viewport, odelta);
+    vec3_imul(odelta, 2); // XXX: why do I need that?
     if (!camera->ortho)
         vec3_imul(odelta, camera->dist);
-    mat4_translate(goxel.move_origin.camera_mat,
-                   -odelta[0], -odelta[1], 0,
+    mat4_translate(goxel.move_origin.camera_mat, -odelta[0], -odelta[1], 0,
                    camera->mat);
     return 0;
 }
