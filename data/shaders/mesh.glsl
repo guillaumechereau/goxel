@@ -204,11 +204,11 @@ vec3 F_Schlick(vec3 f0, vec3 LdotH)
  * Fast approximation from
  * https://google.github.io/filament/Filament.html#materialsystem/standardmodel
  */
-float V_SmithGGXCorrelatedFast(MaterialInfo mat, AngularInfo ang)
+float V_GGX(vec3 NdotL, vec3 NdotV, float alpha)
 {
-    float a = mat.alphaRoughness;
-    float GGXV = ang.NdotL * (ang.NdotV * (1.0 - a) + a);
-    float GGXL = ang.NdotV * (ang.NdotL * (1.0 - a) + a);
+    float a = alpha;
+    float GGXV = NdotL * (NdotV * (1.0 - a) + a);
+    float GGXL = NdotV * (NdotL * (1.0 - a) + a);
     return 0.5 / (GGXV + GGXL);
 }
 
@@ -216,10 +216,10 @@ float V_SmithGGXCorrelatedFast(MaterialInfo mat, AngularInfo ang)
  * Function: D_GGX
  * Microfacet distribution
  */
-float D_GGX(MaterialInfo mat, AngularInfo ang)
+float D_GGX(vec3 NdotH, float alpha)
 {
-    float a2 = mat.alphaRoughness * mat.alphaRoughness;
-    float f = (ang.NdotH * a2 - ang.NdotH) * ang.NdotH + 1.0;
+    float a2 = alpha * alpha;
+    float f = (NdotH * a2 - NdotH) * NdotH + 1.0;
     return a2 / (M_PI * f * f);
 }
 
@@ -231,16 +231,16 @@ vec3 diffuse(MaterialInfo materialInfo)
 vec3 getPointShade(vec3 pointToLight, MaterialInfo mat, vec3 normal,
                    vec3 view)
 {
-    AngularInfo angularInfo = getAngularInfo(pointToLight, normal, view);
+    AngularInfo ang = getAngularInfo(pointToLight, normal, view);
     // If one of the dot products is larger than zero, no division by zero can
     // happen. Avoids black borders.
-    if (angularInfo.NdotL <= 0.0 && angularInfo.NdotV <= 0.0)
+    if (ang.NdotL <= 0.0 && ang.NdotV <= 0.0)
         return vec3(0.0, 0.0, 0.0);
 
     // Calculate the shading terms for the microfacet specular shading model
-    vec3  F = F_Schlick(mat.reflectance0, angularInfo.LdotH);
-    float V = V_SmithGGXCorrelatedFast(mat, angularInfo);
-    float D = D_GGX(mat, angularInfo);
+    vec3  F = F_Schlick(mat.reflectance0, ang.LdotH);
+    float V = V_GGX(ang.NdotL, ang.NdotV, mat.alphaRoughness);
+    float D = D_GGX(ang.NdotH, mat.alphaRoughness);
 
     // Calculation of analytical lighting contribution
     vec3 diffuseContrib = (1.0 - F) * diffuse(mat);
@@ -248,14 +248,14 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo mat, vec3 normal,
 
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of
     // the light (cosine law)
-    vec3 ret = angularInfo.NdotL * (diffuseContrib + specContrib);
+    vec3 ret = ang.NdotL * (diffuseContrib + specContrib);
 
     // Shadow map.
 #ifdef SHADOW
     lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
     float visibility = 1.0;
     mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
-    lowp float bias = 0.005 * tan(acos(clamp(angularInfo.NdotL, 0.0, 1.0)));
+    lowp float bias = 0.005 * tan(acos(clamp(ang.NdotL, 0.0, 1.0)));
     bias = clamp(bias, 0.0, 0.015);
     shadow_coord.z -= bias;
     PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;
@@ -265,7 +265,7 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo mat, vec3 normal,
     for (int i = 0; i < 4; i++)
         if (texture2D(u_shadow_tex, v_shadow_coord.xy +
            PS[i]).z < shadow_coord.z) visibility -= 0.2;
-    if (angularInfo.NdotL <= 0.0) visibility = 0.5;
+    if (ang.NdotL <= 0.0) visibility = 0.5;
     ret *= mix(1.0, visibility, u_shadow_strength);
 #endif // SHADOW
 
