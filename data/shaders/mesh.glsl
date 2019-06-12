@@ -239,13 +239,13 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal,
         return vec3(0.0, 0.0, 0.0);
 
     // Calculate the shading terms for the microfacet specular shading model
-    vec3 F = F_Schlick(materialInfo, angularInfo);
-    float Vis = V_SmithGGXCorrelatedFast(materialInfo, angularInfo);
+    vec3  F = F_Schlick(materialInfo, angularInfo);
+    float V = V_SmithGGXCorrelatedFast(materialInfo, angularInfo);
     float D = D_GGX(materialInfo, angularInfo);
 
     // Calculation of analytical lighting contribution
     vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);
-    vec3 specContrib = F * Vis * D;
+    vec3 specContrib = F * (V * D);
 
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of
     // the light (cosine law)

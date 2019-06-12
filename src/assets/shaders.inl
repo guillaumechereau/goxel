@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 10796, .data =
+{.path = "data/shaders/mesh.glsl", .size = 10795, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -290,13 +290,13 @@
     "        return vec3(0.0, 0.0, 0.0);\n"
     "\n"
     "    // Calculate the shading terms for the microfacet specular shading model\n"
-    "    vec3 F = F_Schlick(materialInfo, angularInfo);\n"
-    "    float Vis = V_SmithGGXCorrelatedFast(materialInfo, angularInfo);\n"
+    "    vec3  F = F_Schlick(materialInfo, angularInfo);\n"
+    "    float V = V_SmithGGXCorrelatedFast(materialInfo, angularInfo);\n"
     "    float D = D_GGX(materialInfo, angularInfo);\n"
     "\n"
     "    // Calculation of analytical lighting contribution\n"
     "    vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);\n"
-    "    vec3 specContrib = F * Vis * D;\n"
+    "    vec3 specContrib = F * (V * D);\n"
     "\n"
     "    // Obtain final intensity as reflectance (BRDF) scaled by the energy of\n"
     "    // the light (cosine law)\n"
