@@ -133,7 +133,6 @@ struct MaterialInfo
     vec3 reflectance0;           // full reflectance color
     float alphaRoughness;        // roughness mapped to a more linear change
     vec3 diffuseColor;           // color contribution from diffuse lighting
-    vec3 reflectance90;          // reflectance color at grazing angle
     vec3 specularColor;          // color contribution from specular lighting
 };
 
@@ -313,16 +312,13 @@ void main()
     perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);
     metallic = clamp(metallic, 0.0, 1.0);
     float alphaRoughness = perceptualRoughness * perceptualRoughness;
-    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);
     vec3 specularEnvironmentR0 = specularColor.rgb;
-    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));
 
     MaterialInfo materialInfo = MaterialInfo(
         perceptualRoughness,
         specularEnvironmentR0,
         alphaRoughness,
         diffuseColor,
-        specularEnvironmentR90,
         specularColor
     );
 

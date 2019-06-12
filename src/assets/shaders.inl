@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 10795, .data =
+{.path = "data/shaders/mesh.glsl", .size = 10530, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -184,7 +184,6 @@
     "    vec3 reflectance0;           // full reflectance color\n"
     "    float alphaRoughness;        // roughness mapped to a more linear change\n"
     "    vec3 diffuseColor;           // color contribution from diffuse lighting\n"
-    "    vec3 reflectance90;          // reflectance color at grazing angle\n"
     "    vec3 specularColor;          // color contribution from specular lighting\n"
     "};\n"
     "\n"
@@ -364,16 +363,13 @@
     "    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);\n"
     "    metallic = clamp(metallic, 0.0, 1.0);\n"
     "    float alphaRoughness = perceptualRoughness * perceptualRoughness;\n"
-    "    float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);\n"
     "    vec3 specularEnvironmentR0 = specularColor.rgb;\n"
-    "    vec3 specularEnvironmentR90 = vec3(clamp(reflectance * 50.0, 0.0, 1.0));\n"
     "\n"
     "    MaterialInfo materialInfo = MaterialInfo(\n"
     "        perceptualRoughness,\n"
     "        specularEnvironmentR0,\n"
     "        alphaRoughness,\n"
     "        diffuseColor,\n"
-    "        specularEnvironmentR90,\n"
     "        specularColor\n"
     "    );\n"
     "\n"
