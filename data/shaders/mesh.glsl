@@ -119,56 +119,6 @@ void main()
 
 precision mediump float;
 
-struct Light
-{
-    vec3    direction;
-    float   intensity;
-    vec3    color;
-    float   padding;
-};
-
-struct MaterialInfo
-{
-    float perceptualRoughness;   // roughness value
-    vec3 reflectance0;           // full reflectance color
-    float alphaRoughness;        // roughness mapped to a more linear change
-    vec3 diffuseColor;           // color contribution from diffuse lighting
-    vec3 specularColor;          // color contribution from specular lighting
-};
-
-struct AngularInfo
-{
-    float NdotL;    // cos angle between normal and light direction
-    float NdotV;    // cos angle between normal and view direction
-    float NdotH;    // cos angle between normal and half vector
-    float LdotH;    // cos angle between light direction and half vector
-    float VdotH;    // cos angle between view direction and half vector
-    vec3  padding;
-};
-
-AngularInfo getAngularInfo(vec3 pointToLight, vec3 normal, vec3 view)
-{
-    // Standard one-letter names
-    vec3 n = normalize(normal);           // Outward direction of surface point
-    vec3 v = normalize(view);             // Direction from surface point to view
-    vec3 l = normalize(pointToLight);     // Direction from surface point to light
-    vec3 h = normalize(l + v);            // Direction of the vector between l and v
-
-    float NdotL = clamp(dot(n, l), 0.0, 1.0);
-    float NdotV = clamp(dot(n, v), 0.0, 1.0);
-    float NdotH = clamp(dot(n, h), 0.0, 1.0);
-    float LdotH = clamp(dot(l, h), 0.0, 1.0);
-    float VdotH = clamp(dot(v, h), 0.0, 1.0);
-
-    return AngularInfo(
-        NdotL,
-        NdotV,
-        NdotH,
-        LdotH,
-        VdotH,
-        vec3(0, 0, 0)
-    );
-}
 
 /************************************************************************/
 mediump vec3 getNormal()
@@ -223,39 +173,48 @@ float D_GGX(vec3 NdotH, float alpha)
     return a2 / (M_PI * f * f);
 }
 
-vec3 diffuse(MaterialInfo materialInfo)
+vec3 compute_light(vec3 light_direction,
+                   float light_intensity,
+                   vec3 light_color,
+                   vec3 mat_reflectance0,
+                   float mat_alpha_roughness,
+                   vec3 mat_diffuse_color,
+                   vec3 normal, vec3 view)
 {
-    return materialInfo.diffuseColor / M_PI;
-}
+    // AngularInfo ang = getAngularInfo(-light_direction, normal, view);
 
-vec3 compute_light(Light light, MaterialInfo mat, vec3 normal, vec3 view)
-{
-    AngularInfo ang = getAngularInfo(-light.direction, normal, view);
+    // Standard one-letter names
+    vec3 N = normalize(normal);
+    vec3 V = normalize(view);
+    vec3 L = normalize(-light_direction);
+    vec3 H = normalize(L + V);
+
+    float NdotL = clamp(dot(N, L), 0.0, 1.0);
+    float NdotV = clamp(dot(N, V), 0.0, 1.0);
+    float NdotH = clamp(dot(N, H), 0.0, 1.0);
+    float LdotH = clamp(dot(L, H), 0.0, 1.0);
+    float VdotH = clamp(dot(V, H), 0.0, 1.0);
 
     // If one of the dot products is larger than zero, no division by zero can
     // happen. Avoids black borders.
-    if (ang.NdotL <= 0.0 && ang.NdotV <= 0.0)
+    if (NdotL <= 0.0 && NdotV <= 0.0)
         return vec3(0.0, 0.0, 0.0);
 
     // Calculate the shading terms for the microfacet specular shading model
-    vec3  F = F_Schlick(mat.reflectance0, ang.LdotH);
-    float V = V_GGX(ang.NdotL, ang.NdotV, mat.alphaRoughness);
-    float D = D_GGX(ang.NdotH, mat.alphaRoughness);
-
+    vec3  F   = F_Schlick(mat_reflectance0, LdotH);
+    float Vis = V_GGX(NdotL, NdotV, mat_alpha_roughness);
+    float D   = D_GGX(NdotH, mat_alpha_roughness);
     // Calculation of analytical lighting contribution
-    vec3 diffuseContrib = (1.0 - F) * diffuse(mat);
-    vec3 specContrib = F * (V * D);
-
-    // Obtain final intensity as reflectance (BRDF) scaled by the energy of
-    // the light (cosine law)
-    vec3 shade = ang.NdotL * (diffuseContrib + specContrib);
+    vec3 diffuseContrib = (1.0 - F) * (mat_diffuse_color / M_PI);
+    vec3 specContrib = F * (Vis * D);
+    vec3 shade = NdotL * (diffuseContrib + specContrib);
 
     // Shadow map.
 #ifdef SHADOW
     lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
     float visibility = 1.0;
     mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
-    lowp float bias = 0.005 * tan(acos(clamp(ang.NdotL, 0.0, 1.0)));
+    lowp float bias = 0.005 * tan(acos(clamp(NdotL, 0.0, 1.0)));
     bias = clamp(bias, 0.0, 0.015);
     shadow_coord.z -= bias;
     PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;
@@ -265,11 +224,11 @@ vec3 compute_light(Light light, MaterialInfo mat, vec3 normal, vec3 view)
     for (int i = 0; i < 4; i++)
         if (texture2D(u_shadow_tex, v_shadow_coord.xy +
            PS[i]).z < shadow_coord.z) visibility -= 0.2;
-    if (ang.NdotL <= 0.0) visibility = 0.5;
+    if (NdotL <= 0.0) visibility = 0.5;
     shade *= mix(1.0, visibility, u_shadow_strength);
 #endif // SHADOW
 
-    return light.intensity * light.color * shade;
+    return light_intensity * light_color * shade;
 }
 
 vec3 toneMap(vec3 color)
@@ -306,21 +265,14 @@ void main()
     float alphaRoughness = perceptualRoughness * perceptualRoughness;
     vec3 specularEnvironmentR0 = specularColor.rgb;
 
-    MaterialInfo materialInfo = MaterialInfo(
-        perceptualRoughness,
-        specularEnvironmentR0,
-        alphaRoughness,
-        diffuseColor,
-        specularColor
-    );
-
     vec3 normal = getNormal();
     vec3 view = normalize(u_camera - v_Position);
-
-    Light light = Light(-u_l_dir, u_l_int, vec3(1.0, 1.0, 1.0), 0.0);
+    vec3 light_color = vec3(1.0, 1.0, 1.0);
 
     vec3 color = vec3(0.0);
-    color += compute_light(light, materialInfo, normal, view);
+    color += compute_light(-u_l_dir, u_l_int, light_color,
+                           specularEnvironmentR0, alphaRoughness,
+                           diffuseColor, normal, view);
 
     color += u_l_amb * baseColor.rgb;
 
