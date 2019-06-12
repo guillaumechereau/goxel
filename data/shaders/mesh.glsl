@@ -141,7 +141,7 @@ mediump vec3 getNormal()
  * Optimized variant (presented by Epic at SIGGRAPH '13)
  * https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
  */
-vec3 F_Schlick(vec3 f0, vec3 LdotH)
+vec3 F_Schlick(vec3 f0, float LdotH)
 {
     float fresnel = exp2((-5.55473 * LdotH - 6.98316) * LdotH);
     return (1.0 - f0) * fresnel + f0;
@@ -154,7 +154,7 @@ vec3 F_Schlick(vec3 f0, vec3 LdotH)
  * Fast approximation from
  * https://google.github.io/filament/Filament.html#materialsystem/standardmodel
  */
-float V_GGX(vec3 NdotL, vec3 NdotV, float alpha)
+float V_GGX(float NdotL, float NdotV, float alpha)
 {
     float a = alpha;
     float GGXV = NdotL * (NdotV * (1.0 - a) + a);
@@ -166,7 +166,7 @@ float V_GGX(vec3 NdotL, vec3 NdotV, float alpha)
  * Function: D_GGX
  * Microfacet distribution
  */
-float D_GGX(vec3 NdotH, float alpha)
+float D_GGX(float NdotH, float alpha)
 {
     float a2 = alpha * alpha;
     float f = (NdotH * a2 - NdotH) * NdotH + 1.0;

@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 8646, .data =
+{.path = "data/shaders/mesh.glsl", .size = 8650, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -192,7 +192,7 @@
     " * Optimized variant (presented by Epic at SIGGRAPH '13)\n"
     " * https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf\n"
     " */\n"
-    "vec3 F_Schlick(vec3 f0, vec3 LdotH)\n"
+    "vec3 F_Schlick(vec3 f0, float LdotH)\n"
     "{\n"
     "    float fresnel = exp2((-5.55473 * LdotH - 6.98316) * LdotH);\n"
     "    return (1.0 - f0) * fresnel + f0;\n"
@@ -205,7 +205,7 @@
     " * Fast approximation from\n"
     " * https://google.github.io/filament/Filament.html#materialsystem/standardmodel\n"
     " */\n"
-    "float V_GGX(vec3 NdotL, vec3 NdotV, float alpha)\n"
+    "float V_GGX(float NdotL, float NdotV, float alpha)\n"
     "{\n"
     "    float a = alpha;\n"
     "    float GGXV = NdotL * (NdotV * (1.0 - a) + a);\n"
@@ -217,7 +217,7 @@
     " * Function: D_GGX\n"
     " * Microfacet distribution\n"
     " */\n"
-    "float D_GGX(vec3 NdotH, float alpha)\n"
+    "float D_GGX(float NdotH, float alpha)\n"
     "{\n"
     "    float a2 = alpha * alpha;\n"
     "    float f = (NdotH * a2 - NdotH) * NdotH + 1.0;\n"
