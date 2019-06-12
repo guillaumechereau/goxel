@@ -228,10 +228,10 @@ vec3 diffuse(MaterialInfo materialInfo)
     return materialInfo.diffuseColor / M_PI;
 }
 
-vec3 getPointShade(vec3 pointToLight, MaterialInfo mat, vec3 normal,
-                   vec3 view)
+vec3 compute_light(Light light, MaterialInfo mat, vec3 normal, vec3 view)
 {
-    AngularInfo ang = getAngularInfo(pointToLight, normal, view);
+    AngularInfo ang = getAngularInfo(-light.direction, normal, view);
+
     // If one of the dot products is larger than zero, no division by zero can
     // happen. Avoids black borders.
     if (ang.NdotL <= 0.0 && ang.NdotV <= 0.0)
@@ -248,7 +248,7 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo mat, vec3 normal,
 
     // Obtain final intensity as reflectance (BRDF) scaled by the energy of
     // the light (cosine law)
-    vec3 ret = ang.NdotL * (diffuseContrib + specContrib);
+    vec3 shade = ang.NdotL * (diffuseContrib + specContrib);
 
     // Shadow map.
 #ifdef SHADOW
@@ -266,17 +266,9 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo mat, vec3 normal,
         if (texture2D(u_shadow_tex, v_shadow_coord.xy +
            PS[i]).z < shadow_coord.z) visibility -= 0.2;
     if (ang.NdotL <= 0.0) visibility = 0.5;
-    ret *= mix(1.0, visibility, u_shadow_strength);
+    shade *= mix(1.0, visibility, u_shadow_strength);
 #endif // SHADOW
 
-    return ret;
-}
-
-vec3 applyDirectionalLight(Light light, MaterialInfo materialInfo,
-                           vec3 normal, vec3 view)
-{
-    vec3 pointToLight = -light.direction;
-    vec3 shade = getPointShade(pointToLight, materialInfo, normal, view);
     return light.intensity * light.color * shade;
 }
 
@@ -328,7 +320,7 @@ void main()
     Light light = Light(-u_l_dir, u_l_int, vec3(1.0, 1.0, 1.0), 0.0);
 
     vec3 color = vec3(0.0);
-    color += applyDirectionalLight(light, materialInfo, normal, view);
+    color += compute_light(light, materialInfo, normal, view);
 
     color += u_l_amb * baseColor.rgb;
 
