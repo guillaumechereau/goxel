@@ -40,6 +40,9 @@ void gui_cameras_panel(void)
     gui_same_line();
     gui_action_button("img_move_camera_down", NULL, 0, "");
 
+    if (!goxel.image->cameras) image_add_camera(goxel.image, NULL);
+
+
     cam = goxel.image->active_camera;
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 

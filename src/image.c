@@ -392,7 +392,8 @@ void image_delete_camera(image_t *img, camera_t *cam)
     cam = cam ?: img->active_camera;
     if (!cam) return;
     DL_DELETE(img->cameras, cam);
-    if (cam == img->active_camera) img->active_camera = NULL;
+    if (cam == img->active_camera)
+        img->active_camera = img->cameras;
     camera_delete(cam);
 }
 
