@@ -181,8 +181,6 @@ vec3 compute_light(vec3 light_direction,
                    vec3 mat_diffuse_color,
                    vec3 normal, vec3 view)
 {
-    // AngularInfo ang = getAngularInfo(-light_direction, normal, view);
-
     // Standard one-letter names
     vec3 N = normalize(normal);
     vec3 V = normalize(view);

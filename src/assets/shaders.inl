@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 8706, .data =
+{.path = "data/shaders/mesh.glsl", .size = 8632, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -232,8 +232,6 @@
     "                   vec3 mat_diffuse_color,\n"
     "                   vec3 normal, vec3 view)\n"
     "{\n"
-    "    // AngularInfo ang = getAngularInfo(-light_direction, normal, view);\n"
-    "\n"
     "    // Standard one-letter names\n"
     "    vec3 N = normalize(normal);\n"
     "    vec3 V = normalize(view);\n"
