@@ -185,45 +185,43 @@ mediump vec3 getNormal()
 #endif
 }
 
-// The following equation models the Fresnel reflectance term of the spec
-// equation (aka F()) Implementation of fresnel from [4], Equation 15
-vec3 specularReflection(MaterialInfo materialInfo, AngularInfo angularInfo)
+/*
+ * Function: F_Schlick.
+ * Compute Fresnel (specular).
+ *
+ * Optimized variant (presented by Epic at SIGGRAPH '13)
+ * https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
+ */
+vec3 F_Schlick(MaterialInfo mat, AngularInfo ang)
 {
-    return materialInfo.reflectance0 +
-            (materialInfo.reflectance90 - materialInfo.reflectance0) *
-            pow(clamp(1.0 - angularInfo.VdotH, 0.0, 1.0), 5.0);
+    float fresnel = exp2((-5.55473 * ang.LdotH - 6.98316) * ang.LdotH);
+    return (1.0 - mat.reflectance0) * fresnel + mat.reflectance0;
 }
 
-// Smith Joint GGX
-// Note: Vis = G / (4 * NdotL * NdotV)
-// see Eric Heitz. 2014. Understanding the Masking-Shadowing Function in
-// Microfacet-Based BRDFs. Journal of Computer Graphics Techniques, 3 see
-// Real-Time Rendering. Page 331 to 336.
-float visibilityOcclusion(MaterialInfo materialInfo, AngularInfo angularInfo)
+/*
+ * Function: V_SmithGGXCorrelatedFast
+ * Compute Geometic occlusion.
+ *
+ * Fast approximation from
+ * https://google.github.io/filament/Filament.html#materialsystem/standardmodel
+ */
+float V_SmithGGXCorrelatedFast(MaterialInfo mat, AngularInfo ang)
 {
-    float NdotL = angularInfo.NdotL;
-    float NdotV = angularInfo.NdotV;
-    float alphaRoughnessSq = materialInfo.alphaRoughness *
-                             materialInfo.alphaRoughness;
-    float GGXV = NdotL * sqrt(
-            NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
-    float GGXL = NdotV * sqrt(
-            NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+    float a = mat.alphaRoughness;
+    float GGXV = ang.NdotL * (ang.NdotV * (1.0 - a) + a);
+    float GGXL = ang.NdotV * (ang.NdotL * (1.0 - a) + a);
     return 0.5 / (GGXV + GGXL);
 }
 
-// The following equation(s) model the distribution of microfacet normals
-// across the area being drawn (aka D()) Implementation from "Average
-// Irregularity Representation of a Roughened Surface for Ray Reflection" by T.
-// S. Trowbridge, and K. P. Reitz Follows the distribution function recommended
-// in the SIGGRAPH 2013 course notes from EPIC Games [1], Equation 3.
-float microfacetDistribution(MaterialInfo materialInfo, AngularInfo angularInfo)
+/*
+ * Function: D_GGX
+ * Microfacet distribution
+ */
+float D_GGX(MaterialInfo mat, AngularInfo ang)
 {
-    float alphaRoughnessSq = materialInfo.alphaRoughness *
-                             materialInfo.alphaRoughness;
-    float f = (angularInfo.NdotH * alphaRoughnessSq - angularInfo.NdotH) *
-              angularInfo.NdotH + 1.0;
-    return alphaRoughnessSq / (M_PI * f * f);
+    float a2 = mat.alphaRoughness * mat.alphaRoughness;
+    float f = (ang.NdotH * a2 - ang.NdotH) * ang.NdotH + 1.0;
+    return a2 / (M_PI * f * f);
 }
 
 vec3 diffuse(MaterialInfo materialInfo)
@@ -241,9 +239,9 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal,
         return vec3(0.0, 0.0, 0.0);
 
     // Calculate the shading terms for the microfacet specular shading model
-    vec3 F = specularReflection(materialInfo, angularInfo);
-    float Vis = visibilityOcclusion(materialInfo, angularInfo);
-    float D = microfacetDistribution(materialInfo, angularInfo);
+    vec3 F = F_Schlick(materialInfo, angularInfo);
+    float Vis = V_SmithGGXCorrelatedFast(materialInfo, angularInfo);
+    float D = D_GGX(materialInfo, angularInfo);
 
     // Calculation of analytical lighting contribution
     vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);
