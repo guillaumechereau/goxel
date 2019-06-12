@@ -130,7 +130,7 @@ mediump vec3 getNormal()
     n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
     return normalize(n);
 #else
-    return v_Normal;
+    return normaize(v_Normal);
 #endif
 }
 
@@ -173,18 +173,14 @@ float D_GGX(float NdotH, float alpha)
     return a2 / (M_PI * f * f);
 }
 
-vec3 compute_light(vec3 light_direction,
+vec3 compute_light(vec3 L,
                    float light_intensity,
                    vec3 light_color,
                    vec3 mat_reflectance0,
                    float mat_alpha_roughness,
                    vec3 mat_diffuse_color,
-                   vec3 normal, vec3 view)
+                   vec3 N, vec3 V)
 {
-    // Standard one-letter names
-    vec3 N = normalize(normal);
-    vec3 V = normalize(view);
-    vec3 L = normalize(-light_direction);
     vec3 H = normalize(L + V);
 
     float NdotL = clamp(dot(N, L), 0.0, 1.0);
@@ -206,25 +202,6 @@ vec3 compute_light(vec3 light_direction,
     vec3 diffuseContrib = (1.0 - F) * (mat_diffuse_color / M_PI);
     vec3 specContrib = F * (Vis * D);
     vec3 shade = NdotL * (diffuseContrib + specContrib);
-
-    // Shadow map.
-#ifdef SHADOW
-    lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
-    float visibility = 1.0;
-    mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
-    lowp float bias = 0.005 * tan(acos(clamp(NdotL, 0.0, 1.0)));
-    bias = clamp(bias, 0.0, 0.015);
-    shadow_coord.z -= bias;
-    PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;
-    PS[1] = vec2(+0.94558609, -0.76890725) / 1024.0;
-    PS[2] = vec2(-0.09418410, -0.92938870) / 1024.0;
-    PS[3] = vec2(+0.34495938, +0.29387760) / 1024.0;
-    for (int i = 0; i < 4; i++)
-        if (texture2D(u_shadow_tex, v_shadow_coord.xy +
-           PS[i]).z < shadow_coord.z) visibility -= 0.2;
-    if (NdotL <= 0.0) visibility = 0.5;
-    shade *= mix(1.0, visibility, u_shadow_strength);
-#endif // SHADOW
 
     return light_intensity * light_color * shade;
 }
@@ -263,14 +240,36 @@ void main()
     float alphaRoughness = perceptualRoughness * perceptualRoughness;
     vec3 specularEnvironmentR0 = specularColor.rgb;
 
-    vec3 normal = getNormal();
-    vec3 view = normalize(u_camera - v_Position);
+    vec3 N = getNormal();
+    vec3 V = normalize(u_camera - v_Position);
+    vec3 L = normalize(u_l_dir);
     vec3 light_color = vec3(1.0, 1.0, 1.0);
 
-    vec3 color = vec3(0.0);
-    color += compute_light(-u_l_dir, u_l_int, light_color,
-                           specularEnvironmentR0, alphaRoughness,
-                           diffuseColor, normal, view);
+    vec3 color;
+    color = compute_light(L, u_l_int, light_color,
+                          specularEnvironmentR0, alphaRoughness,
+                          diffuseColor, N, V);
+
+    // Shadow map.
+#ifdef SHADOW
+    float NdotL = clamp(dot(N, L), 0.0, 1.0);
+    lowp vec2 PS[4]; // Poisson offsets used for the shadow map.
+    float visibility = 1.0;
+    mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
+    lowp float bias = 0.005 * tan(acos(clamp(NdotL, 0.0, 1.0)));
+    bias = clamp(bias, 0.0, 0.015);
+    shadow_coord.z -= bias;
+    PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;
+    PS[1] = vec2(+0.94558609, -0.76890725) / 1024.0;
+    PS[2] = vec2(-0.09418410, -0.92938870) / 1024.0;
+    PS[3] = vec2(+0.34495938, +0.29387760) / 1024.0;
+    for (int i = 0; i < 4; i++)
+        if (texture2D(u_shadow_tex, v_shadow_coord.xy +
+           PS[i]).z < shadow_coord.z) visibility -= 0.2;
+    if (NdotL <= 0.0) visibility = 0.5;
+    vec3 shade = mix(1.0, visibility, u_shadow_strength);
+    color *= shade;
+#endif // SHADOW
 
     color += u_l_amb * baseColor.rgb;
 
