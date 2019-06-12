@@ -21,7 +21,6 @@
 uniform highp mat4  u_model;
 uniform highp mat4  u_view;
 uniform highp mat4  u_proj;
-uniform highp mat4  u_shadow_mvp;
 uniform lowp  float u_pos_scale;
 uniform highp vec3  u_camera;
 uniform highp float u_z_ofs; // Used for line rendering.
@@ -46,15 +45,18 @@ uniform mediump sampler2D u_occlusion_tex;
 uniform mediump float     u_occlusion_strength;
 #endif
 
+#ifdef SHADOW
+uniform highp   mat4      u_shadow_mvp;
 uniform mediump sampler2D u_shadow_tex;
 uniform mediump float     u_shadow_strength;
+varying mediump vec4      v_shadow_coord;
+#endif
 
 
 varying highp   vec3 v_Position;
 varying lowp    vec4 v_color;
 varying mediump vec2 v_occlusion_uv;
 varying mediump vec2 v_uv;
-varying mediump vec4 v_shadow_coord;
 varying mediump vec2 v_UVCoord1;
 varying mediump vec3 v_gradient;
 
@@ -92,7 +94,10 @@ void main()
     v_uv = a_uv;
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
     gl_Position.z += u_z_ofs;
+
+#ifdef SHADOW
     v_shadow_coord = u_shadow_mvp * vec4(v_Position, 1.0);
+#endif
 
 #ifdef HAS_TANGENTS
     mediump vec4 tangent = vec4(normalize(a_tangent), 1.0);
