@@ -390,6 +390,10 @@ void goxel_reset(void)
             .size = {64, 64},
         },
     };
+
+    #ifdef AFTER_RESET_FUNC
+    AFTER_RESET_FUNC();
+    #endif
 }
 
 void goxel_release(void)
