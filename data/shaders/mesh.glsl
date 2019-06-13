@@ -195,32 +195,32 @@ vec3 compute_light(vec3 L,
         return vec3(0.0, 0.0, 0.0);
 
 #ifdef BLINN
-    {
-        float shininess = exp2(15.0 * (1.0 - roughness) + 1.0) * 0.25;
-        float blinn = pow(NdotH, shininess);
-        blinn *= (shininess + 8.0) * (1.0 / (8.0 * M_PI));
-        float specular = (blinn) / max(4.0 * NdotV * NdotL, 0.75);
-        float diffuse = NdotL * (1.0 / M_PI);
-        diffuse *= (1.0 - metallic);
-        return light_intensity * (specular + diffuse) *
-               light_color * base_color;
-    }
+
+    float shininess = exp2(15.0 * (1.0 - roughness) + 1.0) * 0.25;
+    float blinn = pow(NdotH, shininess);
+    blinn *= (shininess + 8.0) * (1.0 / (8.0 * M_PI));
+    float specular = (blinn) / max(4.0 * NdotV * NdotL, 0.75);
+    float diffuse = NdotL * (1.0 / M_PI);
+    diffuse *= (1.0 - metallic);
+    return light_intensity * (specular + diffuse) *
+           light_color * base_color;
+
 #else // Schlick GGX default model.
-    {
-        float a_roughness = roughness * roughness;
-        // Schlick GGX model, as used by glTF2.
-        vec3 f0 = vec3(0.04);
-        vec3 diffuse_color = base_color * (vec3(1.0) - f0) * (1.0 - metallic);
-        vec3 specular_color = mix(f0, base_color, metallic);
-        vec3  F   = F_Schlick(specular_color, LdotH);
-        float Vis = V_GGX(NdotL, NdotV, a_roughness);
-        float D   = D_GGX(NdotH, a_roughness);
-        // Calculation of analytical lighting contribution
-        vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
-        vec3 specContrib = F * (Vis * D);
-        vec3 shade = NdotL * (diffuseContrib + specContrib);
-        return light_intensity * light_color * shade;
-    }
+
+    float a_roughness = roughness * roughness;
+    // Schlick GGX model, as used by glTF2.
+    vec3 f0 = vec3(0.04);
+    vec3 diffuse_color = base_color * (vec3(1.0) - f0) * (1.0 - metallic);
+    vec3 specular_color = mix(f0, base_color, metallic);
+    vec3  F   = F_Schlick(specular_color, LdotH);
+    float Vis = V_GGX(NdotL, NdotV, a_roughness);
+    float D   = D_GGX(NdotH, a_roughness);
+    // Calculation of analytical lighting contribution
+    vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
+    vec3 specContrib = F * (Vis * D);
+    vec3 shade = NdotL * (diffuseContrib + specContrib);
+    return light_intensity * light_color * shade;
+
 #endif
 }
 
