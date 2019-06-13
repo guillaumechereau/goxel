@@ -174,6 +174,7 @@ float D_GGX(float NdotH, float alpha)
 vec3 compute_light(vec3 L,
                    float light_intensity,
                    vec3 light_color,
+                   float light_ambient,
                    vec3 base_color,
                    float metallic,
                    float roughness,
@@ -195,8 +196,8 @@ vec3 compute_light(vec3 L,
     float specular = (blinn) / max(4.0 * NdotV * NdotL, 0.75);
     float diffuse = NdotL * (1.0 / M_PI);
     diffuse *= (1.0 - metallic);
-    return light_intensity * (specular + diffuse) *
-           light_color * base_color;
+    float light = light_intensity * (specular + diffuse) + light_ambient;
+    return light * (light_color * base_color);
 
 #else // Schlick GGX default model.
 
@@ -212,7 +213,8 @@ vec3 compute_light(vec3 L,
     vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
     vec3 specContrib = F * (Vis * D);
     vec3 shade = NdotL * (diffuseContrib + specContrib);
-    return light_intensity * light_color * shade;
+    return light_intensity * (light_color * shade) +
+           light_ambient * (light_color * base_color);
 
 #endif
 }
@@ -247,7 +249,7 @@ void main()
     vec3 light_color = vec3(1.0, 1.0, 1.0);
 
     vec3 color;
-    color = compute_light(L, u_l_int, light_color, base_color.rgb,
+    color = compute_light(L, u_l_int, light_color, u_l_amb, base_color.rgb,
                           metallic, roughness,
                           N, V);
 
@@ -271,8 +273,6 @@ void main()
     vec3 shade = mix(1.0, visibility, u_shadow_strength);
     color *= shade;
 #endif // SHADOW
-
-    color += u_l_amb * base_color.rgb;
 
 #ifdef HAS_OCCLUSION_MAP
     lowp float ao;
