@@ -222,11 +222,11 @@ void main()
 #endif
 
     float metallic = u_m_metallic;
-    float perceptualRoughness = u_m_roughness;
+    float roughness = u_m_roughness * u_m_roughness;
 
     vec3 f0 = vec3(0.04);
-    vec4 baseColor = u_m_base_color;
-    baseColor *= v_color;
+    vec4 baseColor = u_m_base_color * v_color;
+
     vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
     vec3 specularColor = mix(f0, baseColor.rgb, metallic);
 
@@ -235,11 +235,6 @@ void main()
     return;
 #endif
 
-    perceptualRoughness = clamp(perceptualRoughness, 0.0, 1.0);
-    metallic = clamp(metallic, 0.0, 1.0);
-    float alphaRoughness = perceptualRoughness * perceptualRoughness;
-    vec3 specularEnvironmentR0 = specularColor.rgb;
-
     vec3 N = getNormal();
     vec3 V = normalize(u_camera - v_Position);
     vec3 L = normalize(u_l_dir);
@@ -247,7 +242,7 @@ void main()
 
     vec3 color;
     color = compute_light(L, u_l_int, light_color,
-                          specularEnvironmentR0, alphaRoughness,
+                          specularColor.rgb, roughness,
                           diffuseColor, N, V);
 
     // Shadow map.
