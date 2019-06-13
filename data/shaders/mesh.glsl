@@ -176,8 +176,8 @@ float D_GGX(float NdotH, float alpha)
 vec3 compute_light(vec3 L,
                    float light_intensity,
                    vec3 light_color,
-                   vec3 diffuse_color,
-                   vec3 specular_color,
+                   vec3 base_color,
+                   float metallic,
                    float roughness,
                    vec3 N, vec3 V)
 {
@@ -194,7 +194,10 @@ vec3 compute_light(vec3 L,
     if (NdotL <= 0.0 && NdotV <= 0.0)
         return vec3(0.0, 0.0, 0.0);
 
-    // Calculate the shading terms for the microfacet specular shading model
+    // Schlick GGX model, as used by glTF2.
+    vec3 f0 = vec3(0.04);
+    vec3 diffuse_color = base_color * (vec3(1.0) - f0) * (1.0 - metallic);
+    vec3 specular_color = mix(f0, base_color, metallic);
     vec3  F   = F_Schlick(specular_color, LdotH);
     float Vis = V_GGX(NdotL, NdotV, roughness);
     float D   = D_GGX(NdotH, roughness);
@@ -223,12 +226,7 @@ void main()
 
     float metallic = u_m_metallic;
     float roughness = u_m_roughness * u_m_roughness;
-
-    vec3 f0 = vec3(0.04);
-    vec4 baseColor = u_m_base_color * v_color;
-
-    vec3 diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
-    vec3 specularColor = mix(f0, baseColor.rgb, metallic);
+    vec4 base_color = u_m_base_color * v_color;
 
 #ifdef MATERIAL_UNLIT
     gl_FragColor = vec4(sqrt(baseColor.rgb), baseColor.a);
@@ -241,8 +239,8 @@ void main()
     vec3 light_color = vec3(1.0, 1.0, 1.0);
 
     vec3 color;
-    color = compute_light(L, u_l_int, light_color, diffuseColor,
-                          specularColor.rgb, roughness,
+    color = compute_light(L, u_l_int, light_color, base_color.rgb,
+                          metallic, roughness,
                           N, V);
 
     // Shadow map.
@@ -266,7 +264,7 @@ void main()
     color *= shade;
 #endif // SHADOW
 
-    color += u_l_amb * baseColor.rgb;
+    color += u_l_amb * base_color.rgb;
 
 #ifdef HAS_OCCLUSION_MAP
     lowp float ao;
