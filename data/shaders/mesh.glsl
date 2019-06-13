@@ -176,9 +176,9 @@ float D_GGX(float NdotH, float alpha)
 vec3 compute_light(vec3 L,
                    float light_intensity,
                    vec3 light_color,
-                   vec3 mat_reflectance0,
-                   float mat_alpha_roughness,
-                   vec3 mat_diffuse_color,
+                   vec3 diffuse_color,
+                   vec3 specular_color,
+                   float roughness,
                    vec3 N, vec3 V)
 {
     vec3 H = normalize(L + V);
@@ -195,11 +195,11 @@ vec3 compute_light(vec3 L,
         return vec3(0.0, 0.0, 0.0);
 
     // Calculate the shading terms for the microfacet specular shading model
-    vec3  F   = F_Schlick(mat_reflectance0, LdotH);
-    float Vis = V_GGX(NdotL, NdotV, mat_alpha_roughness);
-    float D   = D_GGX(NdotH, mat_alpha_roughness);
+    vec3  F   = F_Schlick(specular_color, LdotH);
+    float Vis = V_GGX(NdotL, NdotV, roughness);
+    float D   = D_GGX(NdotH, roughness);
     // Calculation of analytical lighting contribution
-    vec3 diffuseContrib = (1.0 - F) * (mat_diffuse_color / M_PI);
+    vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
     vec3 specContrib = F * (Vis * D);
     vec3 shade = NdotL * (diffuseContrib + specContrib);
 
@@ -241,9 +241,9 @@ void main()
     vec3 light_color = vec3(1.0, 1.0, 1.0);
 
     vec3 color;
-    color = compute_light(L, u_l_int, light_color,
+    color = compute_light(L, u_l_int, light_color, diffuseColor,
                           specularColor.rgb, roughness,
-                          diffuseColor, N, V);
+                          N, V);
 
     // Shadow map.
 #ifdef SHADOW
