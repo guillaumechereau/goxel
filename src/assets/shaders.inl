@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 8521, .data =
+{.path = "data/shaders/mesh.glsl", .size = 8477, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -107,7 +107,6 @@
     "varying highp   vec3 v_Position;\n"
     "varying lowp    vec4 v_color;\n"
     "varying mediump vec2 v_occlusion_uv;\n"
-    "varying mediump vec2 v_uv;\n"
     "varying mediump vec2 v_UVCoord1;\n"
     "varying mediump vec3 v_gradient;\n"
     "\n"
@@ -142,7 +141,6 @@
     "\n"
     "    v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).\n"
     "    v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);\n"
-    "    v_uv = a_uv;\n"
     "    gl_Position = u_proj * u_view * vec4(v_Position, 1.0);\n"
     "    gl_Position.z += u_z_ofs;\n"
     "\n"

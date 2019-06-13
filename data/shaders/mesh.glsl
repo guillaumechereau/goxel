@@ -56,7 +56,6 @@ varying mediump vec4      v_shadow_coord;
 varying highp   vec3 v_Position;
 varying lowp    vec4 v_color;
 varying mediump vec2 v_occlusion_uv;
-varying mediump vec2 v_uv;
 varying mediump vec2 v_UVCoord1;
 varying mediump vec3 v_gradient;
 
@@ -91,7 +90,6 @@ void main()
 
     v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
-    v_uv = a_uv;
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
     gl_Position.z += u_z_ofs;
 
