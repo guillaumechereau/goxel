@@ -49,6 +49,8 @@ void gui_view_panel(void)
             clamp(goxel.rend.settings.smoothness, 0, 1);
     }
 
+    gui_checkbox_flag("Blinn Shading", &goxel.rend.settings.effects,
+                      EFFECT_BLINN, NULL);
     gui_checkbox_flag("Grid", &goxel.view_effects, EFFECT_GRID, NULL);
     if (goxel.view_effects & EFFECT_GRID)
         set_flag(&goxel.view_effects, EFFECT_EDGES, false);
