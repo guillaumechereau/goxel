@@ -173,7 +173,6 @@ float D_GGX(float NdotH, float alpha)
 
 vec3 compute_light(vec3 L,
                    float light_intensity,
-                   vec3 light_color,
                    float light_ambient,
                    vec3 base_color,
                    float metallic,
@@ -197,7 +196,7 @@ vec3 compute_light(vec3 L,
     float diffuse = NdotL * (1.0 / M_PI);
     diffuse *= (1.0 - metallic);
     float light = light_intensity * (specular + diffuse) + light_ambient;
-    return light * (light_color * base_color);
+    return light * base_color;
 
 #else // Schlick GGX default model.
 
@@ -213,8 +212,7 @@ vec3 compute_light(vec3 L,
     vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
     vec3 specContrib = F * (Vis * D);
     vec3 shade = NdotL * (diffuseContrib + specContrib);
-    return light_intensity * (light_color * shade) +
-           light_ambient * (light_color * base_color);
+    return light_intensity * shade + light_ambient * base_color;
 
 #endif
 }
@@ -246,10 +244,9 @@ void main()
     vec3 N = getNormal();
     vec3 V = normalize(u_camera - v_Position);
     vec3 L = normalize(u_l_dir);
-    vec3 light_color = vec3(1.0, 1.0, 1.0);
 
     vec3 color;
-    color = compute_light(L, u_l_int, light_color, u_l_amb, base_color.rgb,
+    color = compute_light(L, u_l_int, u_l_amb, base_color.rgb,
                           metallic, roughness,
                           N, V);
 
