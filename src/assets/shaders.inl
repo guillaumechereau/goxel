@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 8709, .data =
+{.path = "data/shaders/mesh.glsl", .size = 8712, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -181,7 +181,7 @@
     "    n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);\n"
     "    return normalize(n);\n"
     "#else\n"
-    "    return normaize(v_Normal);\n"
+    "    return normalize(v_Normal);\n"
     "#endif\n"
     "}\n"
     "\n"
@@ -295,7 +295,7 @@
     "    vec4 base_color = u_m_base_color * v_color;\n"
     "\n"
     "#ifdef MATERIAL_UNLIT\n"
-    "    gl_FragColor = vec4(sqrt(baseColor.rgb), baseColor.a);\n"
+    "    gl_FragColor = vec4(sqrt(base_color.rgb), base_color.a);\n"
     "    return;\n"
     "#endif\n"
     "\n"

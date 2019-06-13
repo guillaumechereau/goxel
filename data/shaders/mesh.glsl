@@ -130,7 +130,7 @@ mediump vec3 getNormal()
     n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
     return normalize(n);
 #else
-    return normaize(v_Normal);
+    return normalize(v_Normal);
 #endif
 }
 
@@ -244,7 +244,7 @@ void main()
     vec4 base_color = u_m_base_color * v_color;
 
 #ifdef MATERIAL_UNLIT
-    gl_FragColor = vec4(sqrt(baseColor.rgb), baseColor.a);
+    gl_FragColor = vec4(sqrt(base_color.rgb), base_color.a);
     return;
 #endif
 
