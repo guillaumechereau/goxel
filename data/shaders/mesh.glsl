@@ -189,11 +189,6 @@ vec3 compute_light(vec3 L,
     float LdotH = clamp(dot(L, H), 0.0, 1.0);
     float VdotH = clamp(dot(V, H), 0.0, 1.0);
 
-    // If one of the dot products is larger than zero, no division by zero can
-    // happen. Avoids black borders.
-    if (NdotL <= 0.0 && NdotV <= 0.0)
-        return vec3(0.0, 0.0, 0.0);
-
 #ifdef BLINN
 
     float shininess = exp2(15.0 * (1.0 - roughness) + 1.0) * 0.25;

@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 8712, .data =
+{.path = "data/shaders/mesh.glsl", .size = 8521, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -239,11 +239,6 @@
     "    float NdotH = clamp(dot(N, H), 0.0, 1.0);\n"
     "    float LdotH = clamp(dot(L, H), 0.0, 1.0);\n"
     "    float VdotH = clamp(dot(V, H), 0.0, 1.0);\n"
-    "\n"
-    "    // If one of the dot products is larger than zero, no division by zero can\n"
-    "    // happen. Avoids black borders.\n"
-    "    if (NdotL <= 0.0 && NdotV <= 0.0)\n"
-    "        return vec3(0.0, 0.0, 0.0);\n"
     "\n"
     "#ifdef BLINN\n"
     "\n"
