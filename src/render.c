@@ -560,6 +560,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     mat4_set_identity(model);
     get_light_dir(rend, light_dir);
 
+    if (effects & EFFECT_MARCHING_CUBES)
+        effects &= ~EFFECT_BORDERS;
+
     if (effects & EFFECT_RENDER_POS)
         shader = shader_get("pos_data", NULL, shader_init);
     else if (effects & EFFECT_SHADOW_MAP)
@@ -570,9 +573,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
             {"SHADOW", shadow},
             {"MATERIAL_UNLIT", (rend->settings.effects & EFFECT_UNLIT) ||
                                (effects & (EFFECT_GRID | EFFECT_EDGES))},
-            {"HAS_TANGENTS", !(rend->settings.effects & EFFECT_MARCHING_CUBES)},
-            {"ONLY_EDGES", (effects & EFFECT_EDGES)},
-            {"HAS_OCCLUSION_MAP", (rend->settings.occlusion_strength > 0)},
+            {"HAS_TANGENTS", effects & EFFECT_BORDERS},
+            {"ONLY_EDGES", effects & EFFECT_EDGES},
+            {"HAS_OCCLUSION_MAP", rend->settings.occlusion_strength > 0},
             {"BLINN", rend->settings.effects & EFFECT_BLINN},
             {}
         };
