@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 9274, .data =
+{.path = "data/shaders/mesh.glsl", .size = 9295, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -261,7 +261,9 @@
     "\n"
     "#ifdef FRAGMENT_SHADER\n"
     "\n"
+    "#ifdef GL_ES\n"
     "precision mediump float;\n"
+    "#endif\n"
     "\n"
     "\n"
     "/************************************************************************/\n"
@@ -331,7 +333,7 @@
     "        if (texture2D(u_shadow_tex, v_shadow_coord.xy +\n"
     "           PS[i]).z < shadow_coord.z) visibility -= 0.2;\n"
     "    if (NdotL <= 0.0) visibility = 0.5;\n"
-    "    vec3 shade = mix(1.0, visibility, u_shadow_strength);\n"
+    "    float shade = mix(1.0, visibility, u_shadow_strength);\n"
     "    color *= shade;\n"
     "#endif // SHADOW\n"
     "\n"

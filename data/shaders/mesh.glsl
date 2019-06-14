@@ -210,7 +210,9 @@ void main()
 
 #ifdef FRAGMENT_SHADER
 
+#ifdef GL_ES
 precision mediump float;
+#endif
 
 
 /************************************************************************/
@@ -280,7 +282,7 @@ void main()
         if (texture2D(u_shadow_tex, v_shadow_coord.xy +
            PS[i]).z < shadow_coord.z) visibility -= 0.2;
     if (NdotL <= 0.0) visibility = 0.5;
-    vec3 shade = mix(1.0, visibility, u_shadow_strength);
+    float shade = mix(1.0, visibility, u_shadow_strength);
     color *= shade;
 #endif // SHADOW
 
