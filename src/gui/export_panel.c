@@ -29,6 +29,7 @@ typedef struct {
  * automatically from the actions.  The problem is that it has to be sorted
  * somehow. */
 static const format_t FORMATS[] = {
+    {"glTF (.gltf)", "export_as_gltf"},
     {"Wavefront (.obj)", "export_as_obj"},
     {"Stanford (.pny)", "export_as_ply"},
     {"Png", "export_as_png"},
