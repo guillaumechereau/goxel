@@ -245,7 +245,7 @@ static void gltf_export(const mesh_t *mesh, const char *path)
     fwrite(json_buf, 1, strlen(json_buf), file);
     free(json_buf);
     fclose(file);
-    json_value_free(g.root);
+    json_builder_free(g.root);
 }
 
 static void export_as_gltf(const char *path)
