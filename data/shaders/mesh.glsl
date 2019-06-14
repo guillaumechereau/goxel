@@ -149,6 +149,7 @@ mediump vec3 compute_light(mediump vec3 L,
     mediump vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
     mediump vec3 specContrib = F * (Vis * D);
     mediump vec3 shade = NdotL * (diffuseContrib + specContrib);
+    shade = max(shade, vec3(0.0));
     return light_intensity * shade + light_ambient * base_color;
 
 #endif
@@ -198,10 +199,11 @@ void main()
     v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
 
 #ifdef VERTEX_LIGHTNING
+    mediump vec3 N;
+    N = mix(normalize(a_normal), normalize(a_gradient), u_m_smoothness);
     v_color.rgb = compute_light(normalize(u_l_dir), u_l_int, u_l_amb,
                                 (v_color * u_m_base_color).rgb,
-                                u_m_metallic, u_m_roughness,
-                                normalize(a_normal),
+                                u_m_metallic, u_m_roughness, N,
                                 normalize(u_camera - v_Position));
 #endif
 }

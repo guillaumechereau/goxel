@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 9295, .data =
+{.path = "data/shaders/mesh.glsl", .size = 9373, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -200,6 +200,7 @@
     "    mediump vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);\n"
     "    mediump vec3 specContrib = F * (Vis * D);\n"
     "    mediump vec3 shade = NdotL * (diffuseContrib + specContrib);\n"
+    "    shade = max(shade, vec3(0.0));\n"
     "    return light_intensity * shade + light_ambient * base_color;\n"
     "\n"
     "#endif\n"
@@ -249,10 +250,11 @@
     "    v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;\n"
     "\n"
     "#ifdef VERTEX_LIGHTNING\n"
+    "    mediump vec3 N;\n"
+    "    N = mix(normalize(a_normal), normalize(a_gradient), u_m_smoothness);\n"
     "    v_color.rgb = compute_light(normalize(u_l_dir), u_l_int, u_l_amb,\n"
     "                                (v_color * u_m_base_color).rgb,\n"
-    "                                u_m_metallic, u_m_roughness,\n"
-    "                                normalize(a_normal),\n"
+    "                                u_m_metallic, u_m_roughness, N,\n"
     "                                normalize(u_camera - v_Position));\n"
     "#endif\n"
     "}\n"
