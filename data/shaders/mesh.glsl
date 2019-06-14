@@ -195,6 +195,14 @@ void main()
 
     v_gradient = a_gradient;
     v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
+
+#ifdef VERTEX_LIGHTNING
+    v_color.rgb = compute_light(normalize(u_l_dir), u_l_int, u_l_amb,
+                                (v_color * u_m_base_color).rgb,
+                                u_m_metallic, u_m_roughness,
+                                normalize(a_normal),
+                                normalize(u_camera - v_Position));
+#endif
 }
 
 #endif
@@ -246,10 +254,13 @@ void main()
     vec3 V = normalize(u_camera - v_Position);
     vec3 L = normalize(u_l_dir);
 
-    vec3 color;
-    color = compute_light(L, u_l_int, u_l_amb, base_color.rgb,
-                          metallic, roughness,
-                          N, V);
+#ifndef VERTEX_LIGHTNING
+    vec3 color = compute_light(L, u_l_int, u_l_amb, base_color.rgb,
+                               metallic, roughness,
+                               N, V);
+#else
+    vec3 color = v_color;
+#endif
 
     // Shadow map.
 #ifdef SHADOW
