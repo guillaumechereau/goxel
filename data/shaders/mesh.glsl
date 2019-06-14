@@ -75,9 +75,9 @@ const mediump float M_PI = 3.141592653589793;
  * Optimized variant (presented by Epic at SIGGRAPH '13)
  * https://cdn2.unrealengine.com/Resources/files/2013SiggraphPresentationsNotes-26915738.pdf
  */
-vec3 F_Schlick(vec3 f0, float LdotH)
+mediump vec3 F_Schlick(mediump vec3 f0, mediump float LdotH)
 {
-    float fresnel = exp2((-5.55473 * LdotH - 6.98316) * LdotH);
+    mediump float fresnel = exp2((-5.55473 * LdotH - 6.98316) * LdotH);
     return (1.0 - f0) * fresnel + f0;
 }
 
@@ -88,11 +88,12 @@ vec3 F_Schlick(vec3 f0, float LdotH)
  * Fast approximation from
  * https://google.github.io/filament/Filament.html#materialsystem/standardmodel
  */
-float V_GGX(float NdotL, float NdotV, float alpha)
+mediump float V_GGX(mediump float NdotL, mediump float NdotV,
+                    mediump float alpha)
 {
-    float a = alpha;
-    float GGXV = NdotL * (NdotV * (1.0 - a) + a);
-    float GGXL = NdotV * (NdotL * (1.0 - a) + a);
+    mediump float a = alpha;
+    mediump float GGXV = NdotL * (NdotV * (1.0 - a) + a);
+    mediump float GGXL = NdotV * (NdotL * (1.0 - a) + a);
     return 0.5 / (GGXV + GGXL);
 }
 
@@ -100,54 +101,54 @@ float V_GGX(float NdotL, float NdotV, float alpha)
  * Function: D_GGX
  * Microfacet distribution
  */
-float D_GGX(float NdotH, float alpha)
+mediump float D_GGX(mediump float NdotH, mediump float alpha)
 {
-    float a2 = alpha * alpha;
-    float f = (NdotH * a2 - NdotH) * NdotH + 1.0;
+    mediump float a2 = alpha * alpha;
+    mediump float f = (NdotH * a2 - NdotH) * NdotH + 1.0;
     return a2 / (M_PI * f * f);
 }
 
-vec3 compute_light(vec3 L,
-                   float light_intensity,
-                   float light_ambient,
-                   vec3 base_color,
-                   float metallic,
-                   float roughness,
-                   vec3 N, vec3 V)
+mediump vec3 compute_light(mediump vec3 L,
+                           mediump float light_intensity,
+                           mediump float light_ambient,
+                           mediump vec3 base_color,
+                           mediump float metallic,
+                           mediump float roughness,
+                           mediump vec3 N, mediump vec3 V)
 {
-    vec3 H = normalize(L + V);
+    mediump vec3 H = normalize(L + V);
 
-    float NdotL = clamp(dot(N, L), 0.0, 1.0);
-    float NdotV = clamp(dot(N, V), 0.0, 1.0);
-    float NdotH = clamp(dot(N, H), 0.0, 1.0);
-    float LdotH = clamp(dot(L, H), 0.0, 1.0);
-    float VdotH = clamp(dot(V, H), 0.0, 1.0);
+    mediump float NdotL = clamp(dot(N, L), 0.0, 1.0);
+    mediump float NdotV = clamp(dot(N, V), 0.0, 1.0);
+    mediump float NdotH = clamp(dot(N, H), 0.0, 1.0);
+    mediump float LdotH = clamp(dot(L, H), 0.0, 1.0);
+    mediump float VdotH = clamp(dot(V, H), 0.0, 1.0);
 
 #ifdef BLINN
 
-    float shininess = exp2(15.0 * (1.0 - roughness) + 1.0) * 0.25;
-    float blinn = pow(NdotH, shininess);
+    mediump float shininess = exp2(15.0 * (1.0 - roughness) + 1.0) * 0.25;
+    mediump float blinn = pow(NdotH, shininess);
     blinn *= (shininess + 8.0) * (1.0 / (8.0 * M_PI));
-    float specular = (blinn) / max(4.0 * NdotV * NdotL, 0.75);
-    float diffuse = NdotL * (1.0 / M_PI);
+    mediump float specular = (blinn) / max(4.0 * NdotV * NdotL, 0.75);
+    mediump float diffuse = NdotL * (1.0 / M_PI);
     diffuse *= (1.0 - metallic);
-    float light = light_intensity * (specular + diffuse) + light_ambient;
+    mediump float light = light_intensity * (specular + diffuse) + light_ambient;
     return light * base_color;
 
 #else // Schlick GGX default model.
 
-    float a_roughness = roughness * roughness;
+    mediump float a_roughness = roughness * roughness;
     // Schlick GGX model, as used by glTF2.
-    vec3 f0 = vec3(0.04);
-    vec3 diffuse_color = base_color * (vec3(1.0) - f0) * (1.0 - metallic);
-    vec3 specular_color = mix(f0, base_color, metallic);
-    vec3  F   = F_Schlick(specular_color, LdotH);
-    float Vis = V_GGX(NdotL, NdotV, a_roughness);
-    float D   = D_GGX(NdotH, a_roughness);
+    mediump vec3 f0 = vec3(0.04);
+    mediump vec3 diffuse_color = base_color * (vec3(1.0) - f0) * (1.0 - metallic);
+    mediump vec3 specular_color = mix(f0, base_color, metallic);
+    mediump vec3  F   = F_Schlick(specular_color, LdotH);
+    mediump float Vis = V_GGX(NdotL, NdotV, a_roughness);
+    mediump float D   = D_GGX(NdotH, a_roughness);
     // Calculation of analytical lighting contribution
-    vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
-    vec3 specContrib = F * (Vis * D);
-    vec3 shade = NdotL * (diffuseContrib + specContrib);
+    mediump vec3 diffuseContrib = (1.0 - F) * (diffuse_color / M_PI);
+    mediump vec3 specContrib = F * (Vis * D);
+    mediump vec3 shade = NdotL * (diffuseContrib + specContrib);
     return light_intensity * shade + light_ambient * base_color;
 
 #endif
@@ -259,7 +260,7 @@ void main()
                                metallic, roughness,
                                N, V);
 #else
-    vec3 color = v_color;
+    vec3 color = v_color.rgb;
 #endif
 
     // Shadow map.
