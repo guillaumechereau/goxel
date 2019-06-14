@@ -68,70 +68,6 @@ varying mediump vec3 v_Normal;
 
 const mediump float M_PI = 3.141592653589793;
 
-#ifdef VERTEX_SHADER
-
-/************************************************************************/
-attribute highp   vec3 a_pos;
-attribute mediump vec3 a_normal;
-attribute mediump vec3 a_tangent;
-attribute mediump vec3 a_gradient;
-attribute lowp    vec4 a_color;
-attribute mediump vec2 a_occlusion_uv;
-attribute mediump vec2 a_bump_uv;   // bump tex base coordinates [0,255]
-attribute mediump vec2 a_uv;        // uv coordinates [0,1]
-
-// Must match the value in goxel.h
-#define VOXEL_TEXTURE_SIZE 8.0
-
-void main()
-{
-    vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);
-    v_Position = vec3(pos.xyz) / pos.w;
-
-    v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).
-    v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
-    gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
-    gl_Position.z += u_z_ofs;
-
-#ifdef SHADOW
-    v_shadow_coord = u_shadow_mvp * vec4(v_Position, 1.0);
-#endif
-
-#ifdef HAS_TANGENTS
-    mediump vec4 tangent = vec4(normalize(a_tangent), 1.0);
-    mediump vec3 normalW = normalize(a_normal);
-    mediump vec3 tangentW = normalize(vec3(u_model * vec4(tangent.xyz, 0.0)));
-    mediump vec3 bitangentW = cross(normalW, tangentW) * tangent.w;
-    v_TBN = mat3(tangentW, bitangentW, normalW);
-#else
-    v_Normal = normalize(a_normal);
-#endif
-
-    v_gradient = a_gradient;
-    v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
-}
-
-#endif
-
-#ifdef FRAGMENT_SHADER
-
-precision mediump float;
-
-
-/************************************************************************/
-mediump vec3 getNormal()
-{
-#ifdef HAS_TANGENTS
-    mediump mat3 tbn = v_TBN;
-    mediump vec3 n = texture2D(u_normal_sampler, v_UVCoord1).rgb;
-    n = tbn * ((2.0 * n - 1.0) * vec3(u_normal_scale, u_normal_scale, 1.0));
-    n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
-    return normalize(n);
-#else
-    return normalize(v_Normal);
-#endif
-}
-
 /*
  * Function: F_Schlick.
  * Compute Fresnel (specular).
@@ -214,6 +150,71 @@ vec3 compute_light(vec3 L,
     vec3 shade = NdotL * (diffuseContrib + specContrib);
     return light_intensity * shade + light_ambient * base_color;
 
+#endif
+}
+
+
+#ifdef VERTEX_SHADER
+
+/************************************************************************/
+attribute highp   vec3 a_pos;
+attribute mediump vec3 a_normal;
+attribute mediump vec3 a_tangent;
+attribute mediump vec3 a_gradient;
+attribute lowp    vec4 a_color;
+attribute mediump vec2 a_occlusion_uv;
+attribute mediump vec2 a_bump_uv;   // bump tex base coordinates [0,255]
+attribute mediump vec2 a_uv;        // uv coordinates [0,1]
+
+// Must match the value in goxel.h
+#define VOXEL_TEXTURE_SIZE 8.0
+
+void main()
+{
+    vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);
+    v_Position = vec3(pos.xyz) / pos.w;
+
+    v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).
+    v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
+    gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
+    gl_Position.z += u_z_ofs;
+
+#ifdef SHADOW
+    v_shadow_coord = u_shadow_mvp * vec4(v_Position, 1.0);
+#endif
+
+#ifdef HAS_TANGENTS
+    mediump vec4 tangent = vec4(normalize(a_tangent), 1.0);
+    mediump vec3 normalW = normalize(a_normal);
+    mediump vec3 tangentW = normalize(vec3(u_model * vec4(tangent.xyz, 0.0)));
+    mediump vec3 bitangentW = cross(normalW, tangentW) * tangent.w;
+    v_TBN = mat3(tangentW, bitangentW, normalW);
+#else
+    v_Normal = normalize(a_normal);
+#endif
+
+    v_gradient = a_gradient;
+    v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
+}
+
+#endif
+
+#ifdef FRAGMENT_SHADER
+
+precision mediump float;
+
+
+/************************************************************************/
+mediump vec3 getNormal()
+{
+#ifdef HAS_TANGENTS
+    mediump mat3 tbn = v_TBN;
+    mediump vec3 n = texture2D(u_normal_sampler, v_UVCoord1).rgb;
+    n = tbn * ((2.0 * n - 1.0) * vec3(u_normal_scale, u_normal_scale, 1.0));
+    n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
+    return normalize(n);
+#else
+    return normalize(v_Normal);
 #endif
 }
 
