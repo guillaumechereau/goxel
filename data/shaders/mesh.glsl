@@ -155,6 +155,24 @@ mediump vec3 compute_light(mediump vec3 L,
 #endif
 }
 
+mediump vec3 getNormal()
+{
+    mediump vec3 ret;
+#ifdef HAS_TANGENTS
+    mediump mat3 tbn = v_TBN;
+    mediump vec3 n = texture2D(u_normal_sampler, v_UVCoord1).rgb;
+    n = tbn * ((2.0 * n - 1.0) * vec3(u_normal_scale, u_normal_scale, 1.0));
+    ret = normalize(n);
+#else
+    ret = normalize(v_Normal);
+#endif
+
+#ifdef SMOOTHNESS
+    ret = normalize(mix(ret, normalize(v_gradient), u_m_smoothness));
+#endif
+    return ret;
+}
+
 
 #ifdef VERTEX_SHADER
 
@@ -199,8 +217,7 @@ void main()
     v_UVCoord1 = (a_bump_uv + 0.5 + a_uv * 15.0) / 256.0;
 
 #ifdef VERTEX_LIGHTNING
-    mediump vec3 N;
-    N = mix(normalize(a_normal), normalize(a_gradient), u_m_smoothness);
+    mediump vec3 N = getNormal();
     v_color.rgb = compute_light(normalize(u_l_dir), u_l_int, u_l_amb,
                                 (v_color * u_m_base_color).rgb,
                                 u_m_metallic, u_m_roughness, N,
@@ -218,19 +235,6 @@ precision mediump float;
 
 
 /************************************************************************/
-mediump vec3 getNormal()
-{
-#ifdef HAS_TANGENTS
-    mediump mat3 tbn = v_TBN;
-    mediump vec3 n = texture2D(u_normal_sampler, v_UVCoord1).rgb;
-    n = tbn * ((2.0 * n - 1.0) * vec3(u_normal_scale, u_normal_scale, 1.0));
-    n = mix(normalize(n), normalize(v_gradient), u_m_smoothness);
-    return normalize(n);
-#else
-    return normalize(v_Normal);
-#endif
-}
-
 vec3 toneMap(vec3 color)
 {
     // color *= u_exposure;

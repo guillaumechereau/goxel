@@ -578,6 +578,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
             {"HAS_OCCLUSION_MAP", rend->settings.occlusion_strength > 0},
             {"BLINN", rend->settings.effects & EFFECT_BLINN},
             {"VERTEX_LIGHTNING", !(effects & (EFFECT_BORDERS | EFFECT_UNLIT))},
+            {"SMOOTHNESS", rend->settings.smoothness > 0},
             {}
         };
         shader = shader_get("mesh", defines, shader_init);
