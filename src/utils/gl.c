@@ -70,9 +70,9 @@ static int compile_shader(int shader, const char *code,
 #else
     const char *pre = "";
 #endif
-    const char *sources[] = {pre, include1, include2, code};
+    const char *sources[] = {pre, include1, include2, "#line 0\n", code};
     assert(code);
-    glShaderSource(shader, 4, (const char**)&sources, NULL);
+    glShaderSource(shader, 5, (const char**)&sources, NULL);
     glCompileShader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
