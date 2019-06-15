@@ -205,4 +205,12 @@ void mesh_read(const mesh_t *mesh,
                const int pos[3], const int size[3],
                uint8_t *data);
 
+typedef struct {
+    int       nb_meshes;
+    int       nb_blocks;
+    uint64_t  mem;
+} mesh_global_stats_t;
+
+void mesh_get_global_stats(mesh_global_stats_t *stats);
+
 #endif // MESH_H

@@ -66,6 +66,8 @@ struct mesh
 
 static uint64_t g_uid = 2; // Global id counter.
 
+static mesh_global_stats_t g_global_stats = {};
+
 #define N BLOCK_SIZE
 
 #define vec3_copy(a, b) do {b[0] = a[0]; b[1] = a[1]; b[2] = a[2];} while (0)
@@ -166,6 +168,8 @@ static void block_delete(block_t *block)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
+        g_global_stats.nb_blocks--;
+        g_global_stats.mem -= sizeof(*block->data);
     }
     free(block);
 }
@@ -185,6 +189,8 @@ static void block_set_data(block_t *block, block_data_t *data)
     block->data->ref--;
     if (block->data->ref == 0) {
         free(block->data);
+        g_global_stats.nb_blocks--;
+        g_global_stats.mem -= sizeof(*block->data);
     }
     block->data = data;
     data->ref++;
@@ -204,6 +210,9 @@ static void block_prepare_write(block_t *block)
     data->ref = 1;
     block->data = data;
     block->data->id = ++g_uid;
+
+    g_global_stats.nb_blocks++;
+    g_global_stats.mem += sizeof(*block->data);
 }
 
 static void block_get_at(const block_t *block, const int pos[3],
@@ -295,6 +304,7 @@ static void mesh_prepare_write(mesh_t *mesh)
         new_block = block_copy(block);
         HASH_ADD(hh, mesh->blocks, pos, sizeof(new_block->pos), new_block);
     }
+    g_global_stats.nb_meshes++;
 }
 
 static block_t *mesh_add_block(mesh_t *mesh, const int pos[3]);
@@ -353,6 +363,7 @@ mesh_t *mesh_new(void)
     mesh->ref = calloc(1, sizeof(*mesh->ref));
     mesh->key = 1; // Empty mesh key.
     *mesh->ref = 1;
+    g_global_stats.nb_meshes++;
     return mesh;
 }
 
@@ -425,6 +436,7 @@ void mesh_delete(mesh_t *mesh)
             block_delete(block);
         }
         free(mesh->ref);
+        g_global_stats.nb_meshes--;
     }
     free(mesh);
 }
@@ -452,6 +464,7 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
             block_delete(block);
         }
         free(mesh->ref);
+        g_global_stats.nb_meshes--;
     }
     mesh->blocks = other->blocks;
     mesh->ref = other->ref;
@@ -778,4 +791,10 @@ rest:
         mesh_get_at(mesh, &accessor, p, v);
         memcpy(&data[(z * size[1] * size[0] + y * size[0] + x) * 4], v, 4);
     }
+}
+
+
+void mesh_get_global_stats(mesh_global_stats_t *stats)
+{
+    *stats = g_global_stats;
 }

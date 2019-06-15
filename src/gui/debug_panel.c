@@ -20,10 +20,18 @@
 
 void gui_debug_panel(void)
 {
+    mesh_global_stats_t stats;
+
     gui_text("FPS: %d", (int)round(goxel.fps));
+    mesh_get_global_stats(&stats);
+    gui_text("Nb meshes: %d", stats.nb_meshes);
+    gui_text("Nb blocks: %d", stats.nb_blocks);
+    gui_text("Mem: %dM", (int)(stats.mem / (1 << 20)));
+
     if (!DEFINED(GLES2)) {
         gui_checkbox_flag("Show wireframe", &goxel.view_effects,
                           EFFECT_WIREFRAME, NULL);
     }
+
 }
 
