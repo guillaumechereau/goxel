@@ -61,9 +61,12 @@ void image_delete_layer(image_t *img, layer_t *layer);
 void image_move_layer(image_t *img, layer_t *layer, int d);
 layer_t *image_duplicate_layer(image_t *img, layer_t *layer);
 void image_merge_visible_layers(image_t *img);
+
 void image_history_push(image_t *img);
 void image_undo(image_t *img);
 void image_redo(image_t *img);
+void image_history_resize(image_t *img, int size);
+
 bool image_layer_can_edit(const image_t *img, const layer_t *layer);
 
 material_t *image_add_material(image_t *img, material_t *mat);

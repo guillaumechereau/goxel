@@ -33,5 +33,9 @@ void gui_debug_panel(void)
                           EFFECT_WIREFRAME, NULL);
     }
 
+    if (gui_button("Clear undo history", -1, 0)) {
+        image_history_resize(goxel.image, 0);
+    }
+
 }
 

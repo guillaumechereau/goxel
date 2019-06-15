@@ -506,6 +506,29 @@ void image_history_push(image_t *img)
     debug_print_history(img);
 }
 
+void image_history_resize(image_t *img, int size)
+{
+    int i, nb = 0;
+    image_t *hist;
+    layer_t *layer, *layer_tmp;
+
+    // First cound the size of the history to compute how many we are going
+    // to remove.
+    for (hist = img->history; hist != img; hist = hist->history_next) nb++;
+    nb = max(0, nb - size);
+    for (i = 0; i < nb; i++) {
+        hist = img->history;
+
+        // XXX: do that in a function!
+        DL_FOREACH_SAFE(hist->layers, layer, layer_tmp) {
+            DL_DELETE(hist->layers, layer);
+            layer_delete(layer);
+        }
+        DL_DELETE2(img->history, hist, history_prev, history_next);
+        free(hist);
+    }
+}
+
 // XXX: not clear what this is doing.  We should try to remove it.
 // It swap the content of two images without touching their pointer or
 // history.
