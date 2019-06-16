@@ -43,6 +43,7 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
         bbox_from_extents(box, p0, r, r, r);
         box_swap_axis(box, 2, 0, 1, box);
         mat4_copy(box, out);
+        return;
     }
     if (r == 0) {
         bbox_from_points(box, p0, p1);
