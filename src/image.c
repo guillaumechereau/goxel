@@ -496,6 +496,7 @@ void image_history_push(image_t *img)
             layer_delete(layer);
         }
         DL_DELETE2(img->history, hist, history_prev, history_next);
+        assert(hist != img->history_next);
         free(hist);
     }
 
