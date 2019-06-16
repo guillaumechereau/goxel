@@ -137,7 +137,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 int box_edit(int snap, int mode, float transf[4][4], bool *first)
 {
     cursor_t *curs = &goxel.cursor;
-    float box[4][4];
+    float box[4][4] = {};
     int ret;
 
     if (snap == SNAP_LAYER_OUT) {
