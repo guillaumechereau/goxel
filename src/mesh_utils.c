@@ -566,7 +566,10 @@ static int l_mesh_save(const action_t *action, lua_State *l)
     mesh = luaG_checkpointer(l, 1, "mesh");
     path = luaL_checkstring(l, 2);
     type = strrchr(path, '.');
-    if (!type) luaL_error(l, "file has no extension: %s", path);
+    if (!type) {
+        luaL_error(l, "file has no extension: %s", path);
+        return 0;
+    }
     type++;
     sprintf(buf, "mesh_export_as_%s", type);
     action = action_get(buf, false);
