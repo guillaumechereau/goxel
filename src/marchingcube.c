@@ -253,7 +253,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                               int *size, int *subdivide)
 {
     int i, vi, x, y, z, v, vx, vy, vz, nb_tri, nb_tri_tot = 0;
-    uint8_t color[4] = {255, 255, 255, 255}, tmp[4];
+    uint8_t tmp[4];
     uint8_t *data;
 
     int densities[8];
@@ -333,7 +333,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
                              y + VERTICES_POSITIONS[tri[i][v].v1][1],
                              z + VERTICES_POSITIONS[tri[i][v].v1][2],
                              c2);
-                memcpy(tri[i][v].color, c1[3] > c2[3] ? c1 : c2, sizeof(color));
+                memcpy(tri[i][v].color, c1[3] > c2[3] ? c1 : c2, 4);
             }
         }
         if (flat) nb_tri = split_triangles(nb_tri, tri, tri);
