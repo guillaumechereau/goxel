@@ -233,7 +233,7 @@ static int get_material_idx(const image_t *img, const material_t *mat)
 static const material_t *get_material(const image_t *img, int idx)
 {
     int i;
-    const material_t *m = img->materials;
+    const material_t *m;
     for (i = 0, m = img->materials; m; m = m->next, i++) {
         if (i == idx) return m;
     }
