@@ -333,6 +333,7 @@ void mesh_remove_empty_blocks(mesh_t *mesh, bool fast)
     HASH_ITER(hh, mesh->blocks, block, tmp) {
         if (block_is_empty(block, false)) {
             HASH_DEL(mesh->blocks, block);
+            assert(mesh->blocks != block);
             block_delete(block);
         }
     }
@@ -405,6 +406,7 @@ void mesh_clear(mesh_t *mesh)
     mesh_prepare_write(mesh);
     HASH_ITER(hh, mesh->blocks, block, tmp) {
         HASH_DEL(mesh->blocks, block);
+        assert(mesh->blocks != block);
         block_delete(block);
     }
     mesh->key = 1; // Empty mesh key.
@@ -419,6 +421,7 @@ void mesh_delete(mesh_t *mesh)
     if (*mesh->ref == 0) {
         HASH_ITER(hh, mesh->blocks, block, tmp) {
             HASH_DEL(mesh->blocks, block);
+            assert(mesh->blocks != block);
             block_delete(block);
         }
         free(mesh->ref);
@@ -445,6 +448,7 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     if (*mesh->ref == 0) {
         HASH_ITER(hh, mesh->blocks, block, tmp) {
             HASH_DEL(mesh->blocks, block);
+            assert(mesh->blocks != block);
             block_delete(block);
         }
         free(mesh->ref);
