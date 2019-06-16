@@ -50,8 +50,10 @@ static void cleanup(cache_t *cache)
 {
     item_t *item;
     while (cache->size >= cache->max_size) {
+        assert(cache->items);
         item = cache->items;
         HASH_DEL(cache->items, item);
+        assert(item != cache->items);
         item->delfunc(item->data);
         cache->size -= item->cost;
         free(item);
