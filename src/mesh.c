@@ -306,7 +306,7 @@ static void mesh_add_neighbors_blocks(mesh_t *mesh)
         {0, -1, 0}, {0, +1, 0},
         {-1, 0, 0}, {+1, 0, 0},
     };
-    int i, p[3];
+    int i, p[3] = {};
     uint64_t key = mesh->key;
     block_t *block, *tmp, *other;
 
@@ -468,11 +468,12 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
                                   mesh_accessor_t *it)
 {
     block_t *block;
-    int p[3] = {pos[0] & ~(int)(N - 1),
-                pos[1] & ~(int)(N - 1),
-                pos[2] & ~(int)(N - 1)};
+    int p[3] = {};
+    p[0] = pos[0] & ~(int)(N - 1);
+    p[1] = pos[1] & ~(int)(N - 1);
+    p[2] = pos[2] & ~(int)(N - 1);
     if (!it) {
-        HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
+        HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
         return block;
     }
 
@@ -480,7 +481,7 @@ static block_t *mesh_get_block_at(const mesh_t *mesh, const int pos[3],
             vec3_equal(it->block_pos, p)) {
         return it->block;
     }
-    HASH_FIND(hh, mesh->blocks, p, 3 * sizeof(int), block);
+    HASH_FIND(hh, mesh->blocks, p, sizeof(p), block);
     it->block = block;
     it->block_id = get_block_id(block);
     vec3_copy(p, it->block_pos);
