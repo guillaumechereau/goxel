@@ -69,7 +69,6 @@ static int parse_gpl(const char *data, char *name, int *columns,
     const char *start, *end;
     int linen, r, g, b, nb = 0;
     char entry_name[128];
-    start = data;
 
     for (linen = 1, start = data; *start; start = end + 1, linen++) {
         end = strchr(start, '\n');
