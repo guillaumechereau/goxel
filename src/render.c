@@ -1027,3 +1027,8 @@ void render_submit(renderer_t *rend, const float viewport[4],
     }
     assert(rend->items == NULL);
 }
+
+void render_on_low_memory(renderer_t *rend)
+{
+    cache_clear(g_items_cache);
+}

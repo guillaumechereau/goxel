@@ -991,6 +991,11 @@ void goxel_import_image_plane(const char *path)
     mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);
 }
 
+void goxel_on_low_memory(void)
+{
+    render_on_low_memory(&goxel.rend);
+}
+
 static int search_action_for_format_cb(action_t *a, void *user)
 {
     const char *path = USER_GET(user, 0);

@@ -114,4 +114,7 @@ void render_get_light_dir(const renderer_t *rend, float out[3]);
 void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
                           int id, int pos[3]);
 
+// Attempt to release some memory.
+void render_on_low_memory(renderer_t *rend);
+
 #endif // RENDER_H

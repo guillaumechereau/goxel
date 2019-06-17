@@ -543,6 +543,12 @@ void goxel_reset(void);
 int goxel_iter(inputs_t *inputs);
 void goxel_render(void);
 
+/*
+ * Function: goxel_on_low_memory
+ * Attempt to release cached memory
+ */
+void goxel_on_low_memory(void);
+
 int goxel_unproject(const float viewport[4],
                     const float pos[2], int snap_mask, float offset,
                     float out[3], float normal[3]);

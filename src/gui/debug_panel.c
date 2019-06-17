@@ -36,6 +36,9 @@ void gui_debug_panel(void)
     if (gui_button("Clear undo history", -1, 0)) {
         image_history_resize(goxel.image, 0);
     }
+    if (gui_button("On low memory", -1, 0)) {
+        goxel_on_low_memory();
+    }
 
 }
 
