@@ -183,12 +183,19 @@ image_t *image_new(void)
     return img;
 }
 
+/*
+ * Generate a copy of the image that can be put into the history.
+ */
 static image_t *image_snap(image_t *other)
 {
     image_t *img;
     layer_t *layer, *other_layer;
+    camera_t *camera, *other_camera;
+    material_t *material, *other_material;
+
     img = calloc(1, sizeof(*img));
     *img = *other;
+
     img->layers = NULL;
     img->active_layer = NULL;
     DL_FOREACH(other->layers, other_layer) {
@@ -197,32 +204,67 @@ static image_t *image_snap(image_t *other)
         if (other_layer == other->active_layer)
             img->active_layer = layer;
     }
-    img->history_next = img->history_prev = NULL;
     assert(img->active_layer);
+
+    img->cameras = NULL;
+    img->active_camera = NULL;
+    DL_FOREACH(other->cameras, other_camera) {
+        camera = camera_copy(other_camera);
+        DL_APPEND(img->cameras, camera);
+        if (other_camera == other->active_camera)
+            img->active_camera = camera;
+    }
+
+    img->materials = NULL;
+    img->active_material = NULL;
+    DL_FOREACH(other->materials, other_material) {
+        material = material_copy(other_material);
+        DL_APPEND(img->materials, material);
+        if (other_material == other->active_material)
+            img->active_material = material;
+        DL_FOREACH(img->layers, layer) {
+            if (layer->material == other_material)
+                layer->material = material;
+        }
+    }
+
+    img->history = img->history_next = img->history_prev = NULL;
     return img;
 }
 
 
 void image_delete(image_t *img)
 {
-    if (!img) return;
     image_t *hist, *snap, *snap_tmp;
-    layer_t *layer, *layer_tmp;
-    while (img->cameras)
-        image_delete_camera(img, img->cameras);
-    while (img->materials)
-        image_delete_material(img, img->materials);
+    camera_t *cam;
+    layer_t *layer;
+    material_t *mat;
+
+    if (!img) return;
+
+    while ((layer = img->layers)) {
+        DL_DELETE(img->layers, layer);
+        layer_delete(layer);
+    }
+    while ((cam = img->cameras)) {
+        DL_DELETE(img->cameras, cam);
+        camera_delete(cam);
+    }
+    while ((mat = img->materials)) {
+        DL_DELETE(img->materials, mat);
+        material_delete(mat);
+    }
 
     free(img->path);
+
     hist = img->history;
     DL_FOREACH_SAFE2(hist, snap, snap_tmp, history_next) {
-        DL_FOREACH_SAFE(snap->layers, layer, layer_tmp) {
-            DL_DELETE(snap->layers, layer);
-            layer_delete(layer);
-        }
+        if (snap == img) continue;
         DL_DELETE2(hist, snap, history_prev, history_next);
-        free(snap);
+        image_delete(snap);
     }
+
+    free(img);
 }
 
 layer_t *image_add_layer(image_t *img, layer_t *layer)
@@ -487,17 +529,12 @@ void image_history_push(image_t *img)
 {
     image_t *snap = image_snap(img);
     image_t *hist;
-    layer_t *layer, *layer_tmp;
 
     // Discard previous undo.
     while ((hist = img->history_next)) {
-        DL_FOREACH_SAFE(hist->layers, layer, layer_tmp) {
-            DL_DELETE(hist->layers, layer);
-            layer_delete(layer);
-        }
         DL_DELETE2(img->history, hist, history_prev, history_next);
         assert(hist != img->history_next);
-        free(hist);
+        image_delete(hist);
     }
 
     DL_DELETE2(img->history, img,  history_prev, history_next);

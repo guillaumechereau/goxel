@@ -38,6 +38,14 @@ void camera_delete(camera_t *cam)
     free(cam);
 }
 
+camera_t *camera_copy(const camera_t *other)
+{
+    camera_t *cam = malloc(sizeof(*cam));
+    *cam = *other;
+    cam->next = cam->prev = NULL;
+    return cam;
+}
+
 void camera_set(camera_t *cam, const camera_t *other)
 {
     cam->ortho = other->ortho;

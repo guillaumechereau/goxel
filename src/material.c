@@ -37,6 +37,14 @@ void material_delete(material_t *m)
     free(m);
 }
 
+material_t *material_copy(const material_t *other)
+{
+    material_t *m = malloc(sizeof(*m));
+    *m = *other;
+    m->next = m->prev = NULL;
+    return m;
+}
+
 uint32_t material_get_hash(const material_t *m)
 {
     uint32_t ret = 0;

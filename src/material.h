@@ -39,6 +39,7 @@ struct material {
 
 material_t *material_new(const char *name);
 void material_delete(material_t *m);
+material_t *material_copy(const material_t *mat);
 uint32_t material_get_hash(const material_t *m);
 
 #endif // MATERIAL_H

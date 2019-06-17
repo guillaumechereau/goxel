@@ -75,6 +75,8 @@ camera_t *camera_new(const char *name);
  */
 void camera_delete(camera_t *camera);
 
+camera_t *camera_copy(const camera_t *other);
+
 /*
  * Function: camera_set
  * Set a camera position from an other camera.
