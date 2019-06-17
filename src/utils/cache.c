@@ -86,3 +86,15 @@ void *cache_get(cache_t *cache, const void *key, int keylen)
     HASH_ADD(hh, cache->items, key, keylen, item);
     return item->data;
 }
+
+void cache_clear(cache_t *cache)
+{
+    item_t *item;
+    while ((item = cache->items)) {
+        HASH_DEL(cache->items, item);
+        item->delfunc(item->data);
+        cache->size -= item->cost;
+        free(item);
+    }
+    assert(cache->size == 0);
+}

@@ -61,4 +61,10 @@ void cache_add(cache_t *cache, const void *key, int keylen, void *data,
  */
 void *cache_get(cache_t *cache, const void *key, int keylen);
 
+/*
+ * Function: cache_clear
+ * Delete all the cached items.
+ */
+void cache_clear(cache_t *cache);
+
 #endif // CACHE_H
