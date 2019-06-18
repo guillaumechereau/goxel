@@ -99,6 +99,13 @@ typedef struct {
     int      pos;
 } chunk_t;
 
+// Conveniance macro to call snprintf without gcc warning us about
+// possible truncations.
+#define copy_string(dst, src) ({ \
+    int r = snprintf(dst, sizeof(dst), "%s", src); \
+    if (r >= sizeof(dst)) LOG_W("String truncated"); \
+})
+
 static void write_int32(FILE *out, int32_t v)
 {
     fwrite((char*)&v, 4, 1, out);
@@ -577,9 +584,9 @@ int load_from_file(const char *path)
             DL_APPEND(goxel.image->cameras, camera);
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size, __LINE__))) {
-                if (strcmp(dict_key, "name") == 0)
-                    snprintf(camera->name, sizeof(camera->name), "%s",
-		             dict_value);
+                if (strcmp(dict_key, "name") == 0) {
+                    copy_string(camera->name, dict_value);
+                }
                 if (strcmp(dict_key, "dist") == 0)
                     memcpy(&camera->dist, dict_value, dict_value_size);
                 // XXX: make old style camera loading work?
@@ -598,7 +605,7 @@ int load_from_file(const char *path)
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size, __LINE__))) {
                 if (strcmp(dict_key, "name") == 0)
-                    snprintf(mat->name, sizeof(mat->name), "%s", dict_value);
+                    copy_string(mat->name, dict_value);
                 if (strcmp(dict_key, "color") == 0)
                     memcpy(mat->base_color, dict_value, dict_value_size);
                 if (strcmp(dict_key, "metallic") == 0)
