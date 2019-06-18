@@ -3,7 +3,8 @@
 ## [0.9.1]
 
 ### Fixed
-- Fix bug in KVX export.
+- Fixed bug in KVX export.
+- Fixed crash with undo when we change materials or cameras.
 
 
 ## [0.9.0] - 2019-06-04
