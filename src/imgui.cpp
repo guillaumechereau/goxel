@@ -26,6 +26,7 @@
 #pragma GCC diagnostic push
 #if __GNUC__ >= 8
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
 #endif
 #endif
 
