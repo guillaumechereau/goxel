@@ -124,19 +124,6 @@ mediump vec3 compute_light(mediump vec3 L,
     mediump float LdotH = clamp(dot(L, H), 0.0, 1.0);
     mediump float VdotH = clamp(dot(V, H), 0.0, 1.0);
 
-#ifdef BLINN
-
-    mediump float shininess = exp2(15.0 * (1.0 - roughness) + 1.0) * 0.25;
-    mediump float blinn = pow(NdotH, shininess);
-    blinn *= (shininess + 8.0) * (1.0 / (8.0 * M_PI));
-    mediump float specular = (blinn) / max(4.0 * NdotV * NdotL, 0.75);
-    mediump float diffuse = NdotL * (1.0 / M_PI);
-    diffuse *= (1.0 - metallic);
-    mediump float light = light_intensity * (specular + diffuse) + light_ambient;
-    return light * base_color;
-
-#else // Schlick GGX default model.
-
     mediump float a_roughness = roughness * roughness;
     // Schlick GGX model, as used by glTF2.
     mediump vec3 f0 = vec3(0.04);
@@ -151,8 +138,6 @@ mediump vec3 compute_light(mediump vec3 L,
     mediump vec3 shade = NdotL * (diffuseContrib + specContrib);
     shade = max(shade, vec3(0.0));
     return light_intensity * shade + light_ambient * base_color;
-
-#endif
 }
 
 mediump vec3 getNormal()

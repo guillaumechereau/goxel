@@ -41,8 +41,6 @@ enum {
     EFFECT_PROJ_SCREEN      = 1 << 15, // Image project in screen.
     EFFECT_ANTIALIASING     = 1 << 16,
     EFFECT_UNLIT            = 1 << 17,
-
-    EFFECT_BLINN            = 1 << 18, // Use Blinn-Phong shading.
 };
 
 typedef struct {
