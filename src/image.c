@@ -255,7 +255,12 @@ void image_delete(image_t *img)
         material_delete(mat);
     }
 
-    free(img->path);
+    // Path is shared between images and snaps!
+    // XXX: find a better way.
+    if (img->history) {
+        free(img->path);
+        img->path = NULL;
+    }
 
     hist = img->history;
     DL_FOREACH_SAFE2(hist, snap, snap_tmp, history_next) {
