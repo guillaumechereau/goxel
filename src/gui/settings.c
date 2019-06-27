@@ -112,7 +112,7 @@ static int settings_ini_handler(void *user, const char *section,
         if ((a = action_get(name, false))) {
             strncpy(a->shortcut, value, sizeof(a->shortcut) - 1);
         } else {
-            LOG_W("Cannot set shortcut for unknow action '%s'", name);
+            LOG_W("Cannot set shortcut for unknown action '%s'", name);
         }
     }
     return 0;
