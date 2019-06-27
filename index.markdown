@@ -35,7 +35,7 @@ Open Source 3D voxel editor for Mac Windows and Linux.
 {% include feature.html
    title="Many export formats"
    icon="fa-file-image-o"
-   text="Goxel can export to obj, pyl, magica voxel, png, qubicle, povray,
+   text="Goxel can export to obj, ply, magica voxel, png, qubicle, povray,
          and more."
 %}
 
