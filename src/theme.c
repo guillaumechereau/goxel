@@ -83,7 +83,7 @@ theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT] = {
 };
 
 static theme_t g_base_theme = {
-    .name = "Unamed",
+    .name = "Unnamed",
     .sizes = {
         .item_height = THEME_ITEM_HEIGHT,
         .icons_height = THEME_ICON_HEIGHT,
