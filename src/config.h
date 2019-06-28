@@ -29,6 +29,8 @@ extern "C" {
 #   define _GNU_SOURCE
 #endif
 
+#pragma GCC diagnostic ignored "-Wpragmas"
+
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
 
