@@ -471,7 +471,6 @@ typedef struct goxel
         float  box[4][4];
     } clipboard;
 
-    history_t  *history;     // Undo/redo history.
     int        snap_mask;    // Global snap mask (can edit in the GUI).
     float      snap_offset;  // Only for brush tool, remove that?
 
