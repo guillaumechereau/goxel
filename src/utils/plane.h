@@ -109,7 +109,7 @@ static inline bool plane_triangle_intersection(const float plane[4][4],
     float pinv[4][4], tri[3][3], r0, r1;
 
     // Turn triangle into plane local coordinates.
-    mat4_invert(plane, pinv);
+    if (!mat4_invert(plane, pinv)) return false;
     for (i = 0; i < 3; i++)
         mat4_mul_vec3(pinv, triangle[i], tri[i]);
 
