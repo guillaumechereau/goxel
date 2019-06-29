@@ -52,6 +52,8 @@ int mesh_select(const mesh_t *mesh,
     mesh_accessor = mesh_get_accessor(mesh);
     selection_accessor = mesh_get_accessor(selection);
 
+    if (!mesh_get_alpha_at(mesh, &mesh_accessor, start_pos))
+        return 0;
     mesh_set_at(selection, &selection_accessor, start_pos,
                 (uint8_t[]){255, 255, 255, 255});
 
