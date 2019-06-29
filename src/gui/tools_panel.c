@@ -44,6 +44,7 @@ void gui_tools_panel(void)
         {TOOL_MOVE,         "move",      "Move",         ICON_TOOL_MOVE},
         {TOOL_PICK_COLOR,   "pick_color","Pick Color",   ICON_TOOL_PICK},
         {TOOL_SELECTION,    "selection", "Selection",    ICON_TOOL_SELECTION},
+        {TOOL_FUZZY_SELECT, "fuzzy_select", "Fuzzy Select", ICON_TOOL_FUZZY_SELECT},
         {TOOL_EXTRUDE,      "extrude",   "Extrude",      ICON_TOOL_EXTRUDE},
         {TOOL_PROCEDURAL,   "procedural","Procedural",   ICON_TOOL_PROCEDURAL},
     };
