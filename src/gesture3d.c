@@ -44,6 +44,19 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
         }
     }
 
+    if (gest->type == GESTURE_CLICK) {
+        switch (gest->state) {
+        case GESTURE_POSSIBLE:
+            if (curs->snaped && !pressed) gest->state = GESTURE_RECOGNISED;
+            break;
+        case GESTURE_RECOGNISED:
+            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
+                break;
+            if (curs->snaped && pressed) gest->state = GESTURE_TRIGGERED;
+            break;
+        }
+    }
+
     if (!DEFINED(GOXEL_MOBILE) && gest->type == GESTURE_HOVER) {
         switch (gest->state) {
         case GESTURE_POSSIBLE:
@@ -65,7 +78,8 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
 
     if (    gest->state == GESTURE_BEGIN ||
             gest->state == GESTURE_UPDATE ||
-            gest->state == GESTURE_END)
+            gest->state == GESTURE_END ||
+            gest->state == GESTURE_TRIGGERED)
     {
         r = gest->callback(gest, user);
         if (r == GESTURE_FAILED) {
@@ -75,7 +89,8 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
             ret = gest->state;
         }
     }
-    if (gest->state == GESTURE_END) gest->state = GESTURE_POSSIBLE;
+    if (gest->state == GESTURE_END || gest->state == GESTURE_TRIGGERED)
+        gest->state = GESTURE_POSSIBLE;
 
     return ret;
 }
