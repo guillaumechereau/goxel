@@ -80,6 +80,17 @@ static int iter(tool_t *tool_, const painter_t *painter,
     return 0;
 }
 
+static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
+                                 const mesh_t *mask)
+{
+    layer_t *new_layer;
+
+    new_layer = image_duplicate_layer(img, layer);
+    mesh_merge(new_layer->mesh, mask, MODE_INTERSECT, NULL);
+    mesh_merge(layer->mesh, mask, MODE_SUB, NULL);
+    return new_layer;
+}
+
 static int gui(tool_t *tool_)
 {
     tool_fuzzy_select_t *tool = (void*)tool_;
@@ -96,6 +107,11 @@ static int gui(tool_t *tool_)
     if (gui_button("Fill", 1, 0)) {
         image_history_push(goxel.image);
         mesh_merge(mesh, tool->selection, MODE_OVER, goxel.painter.color);
+    }
+    if (gui_button("Cut as new layer", 1, 0)) {
+        image_history_push(goxel.image);
+        cut_as_new_layer(goxel.image, goxel.image->active_layer,
+                         tool->selection);
     }
     gui_group_end();
     return 0;
