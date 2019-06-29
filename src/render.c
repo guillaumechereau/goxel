@@ -690,18 +690,22 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
     const material_t default_material = MATERIAL_DEFAULT;
 
     material = material ?: &default_material;
-    item = calloc(1, sizeof(*item));
-    item->type = ITEM_MESH;
-    item->mesh = mesh_copy(mesh);
-    item->material = *material;
-    item->effects = effects | rend->settings.effects;
-    item->effects &= ~(EFFECT_GRID | EFFECT_EDGES);
-    // With EFFECT_RENDER_POS we need to remove some effects.
-    if (item->effects & EFFECT_RENDER_POS)
-        item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK |
-                           EFFECT_MARCHING_CUBES);
-    DL_APPEND(rend->items, item);
 
+    if (!(effects & EFFECT_GRID_ONLY)) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_MESH;
+        item->mesh = mesh_copy(mesh);
+        item->material = *material;
+        item->effects = effects | rend->settings.effects;
+        item->effects &= ~(EFFECT_GRID | EFFECT_EDGES);
+        // With EFFECT_RENDER_POS we need to remove some effects.
+        if (item->effects & EFFECT_RENDER_POS)
+            item->effects &= ~(EFFECT_SEMI_TRANSPARENT | EFFECT_SEE_BACK |
+                               EFFECT_MARCHING_CUBES);
+        DL_APPEND(rend->items, item);
+    }
+
+    if (effects & EFFECT_GRID_ONLY) effects |= EFFECT_GRID;
     if (effects & (EFFECT_GRID | EFFECT_EDGES)) {
         item = calloc(1, sizeof(*item));
         item->type = ITEM_MESH;
