@@ -100,3 +100,29 @@ static inline void plane_from_normal(float plane[4][4],
     }
     vec3_cross(plane[2], plane[0], plane[1]);
 }
+
+
+static inline bool plane_triangle_intersection(const float plane[4][4],
+                    const float triangle[3][3], float segs[2][3])
+{
+    int i;
+    float pinv[4][4], tri[3][3], r0, r1;
+
+    // Turn triangle into plane local coordinates.
+    mat4_invert(plane, pinv);
+    for (i = 0; i < 3; i++)
+        mat4_mul_vec3(pinv, triangle[i], tri[i]);
+
+    for (i = 0; i < 3; i++) {
+        if (tri[i][2] != tri[(i + 1) % 3][2] &&
+            tri[i][2] != tri[(i + 2) % 3][2]) break;
+    }
+    if (i == 3) return false;
+
+    r0 = -tri[i][2] / (tri[(i + 1) % 3][2] - tri[i][2]);
+    r1 = -tri[i][2] / (tri[(i + 2) % 3][2] - tri[i][2]);
+
+    vec3_mix(triangle[i], triangle[(i + 1) % 3], r0, segs[0]);
+    vec3_mix(triangle[i], triangle[(i + 2) % 3], r1, segs[1]);
+    return true;
+}
