@@ -736,6 +736,34 @@ static void render_axis_arrows(const float viewport[4])
     }
 }
 
+static void render_symmetry_axis(
+        const float box[4][4], int sym, const float sym_o[3])
+{
+    int i, f;
+    float plane[4][4], vertices[8][3], triangles[2][3][3], seg[2][3], n[3];
+    const uint8_t color[4] = {255, 0, 0, 255};
+    box_get_vertices(box, vertices);
+
+    for (i = 0; i < 3; i++) {
+        if (!(sym & (1 << i))) continue;
+        memset(n, 0, sizeof(n));
+        n[i] = 1;
+        plane_from_normal(plane, sym_o, n);
+        for (f = 0; f < 6; f++) {
+            vec3_copy(vertices[FACES_VERTICES[f][0]], triangles[0][0]);
+            vec3_copy(vertices[FACES_VERTICES[f][1]], triangles[0][1]);
+            vec3_copy(vertices[FACES_VERTICES[f][2]], triangles[0][2]);
+            vec3_copy(vertices[FACES_VERTICES[f][2]], triangles[1][0]);
+            vec3_copy(vertices[FACES_VERTICES[f][3]], triangles[1][1]);
+            vec3_copy(vertices[FACES_VERTICES[f][0]], triangles[1][2]);
+            if (plane_triangle_intersection(plane, triangles[0], seg))
+                render_line(&goxel.rend, seg[0], seg[1], color, 0);
+            if (plane_triangle_intersection(plane, triangles[1], seg))
+                render_line(&goxel.rend, seg[0], seg[1], color, 0);
+        }
+    }
+}
+
 void goxel_render_view(const float viewport[4], bool render_mode)
 {
     const layer_t *layer;
@@ -791,9 +819,12 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     }
     if (goxel.snap_mask & SNAP_PLANE)
         render_grid(rend, goxel.plane, goxel.grid_color, goxel.image->box);
-    if (!box_is_null(goxel.image->box) && !goxel.hide_box)
+    if (!box_is_null(goxel.image->box) && !goxel.hide_box) {
         render_box(rend, goxel.image->box, goxel.image_box_color,
                    EFFECT_SEE_BACK | EFFECT_GRID);
+        render_symmetry_axis(goxel.image->box, goxel.painter.symmetry,
+                             goxel.painter.symmetry_origin);
+    }
     if (goxel.show_export_viewport)
         render_export_viewport(viewport);
 
