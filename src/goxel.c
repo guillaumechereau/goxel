@@ -736,12 +736,23 @@ static void render_axis_arrows(const float viewport[4])
     }
 }
 
+static bool is_box_face_visible(const float box[4][4], int f)
+{
+    float mat[4][4], n[4];
+    camera_t *cam = get_camera();
+
+    mat4_mul(box, FACES_MATS[f], mat);
+    mat4_mul_vec4(cam->view_mat, mat[2], n);
+    return (n[2] < 0);
+}
+
+
 static void render_symmetry_axis(
         const float box[4][4], int sym, const float sym_o[3])
 {
     int i, f;
     float plane[4][4], vertices[8][3], triangles[2][3][3], seg[2][3], n[3];
-    const uint8_t color[4] = {255, 0, 0, 255};
+    uint8_t color[4];
     box_get_vertices(box, vertices);
 
     for (i = 0; i < 3; i++) {
@@ -749,7 +760,11 @@ static void render_symmetry_axis(
         memset(n, 0, sizeof(n));
         n[i] = 1;
         plane_from_normal(plane, sym_o, n);
+        memset(color, 0, sizeof(color));
+        color[i] = 255;
+        color[3] = 255;
         for (f = 0; f < 6; f++) {
+            if (!is_box_face_visible(box, f)) continue;
             vec3_copy(vertices[FACES_VERTICES[f][0]], triangles[0][0]);
             vec3_copy(vertices[FACES_VERTICES[f][1]], triangles[0][1]);
             vec3_copy(vertices[FACES_VERTICES[f][2]], triangles[0][2]);
