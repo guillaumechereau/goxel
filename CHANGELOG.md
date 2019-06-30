@@ -2,6 +2,10 @@
 
 ## [0.9.1]
 
+### Added
+- 'Magic Wand' tool.  Allows to select adjacent voxels.
+- Show mirror axis on image box.
+
 ### Fixed
 - Fixed bug in KVX export.
 - Fixed crash with undo when we change materials or cameras.
