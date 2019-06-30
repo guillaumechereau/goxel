@@ -28,11 +28,9 @@ typedef struct {
 } tool_fuzzy_select_t;
 
 static int select_cond(void *user, const mesh_t *mesh,
-                       const mesh_t *selection,
                        const int base_pos[3],
                        const int new_pos[3],
-                       mesh_accessor_t *mesh_accessor,
-                       mesh_accessor_t *selection_accessor)
+                       mesh_accessor_t *mesh_accessor)
 {
     tool_fuzzy_select_t *tool = (void*)user;
     uint8_t v0[4], v1[4];

@@ -34,11 +34,9 @@ static int mesh_del(void *data_)
 int mesh_select(const mesh_t *mesh,
                 const int start_pos[3],
                 int (*cond)(void *user, const mesh_t *mesh,
-                            const mesh_t *selection,
                             const int base_pos[3],
                             const int new_pos[3],
-                            mesh_accessor_t *mesh_accessor,
-                            mesh_accessor_t *selection_accessor),
+                            mesh_accessor_t *mesh_accessor),
                 void *user, mesh_t *selection)
 {
     int i, a;
@@ -75,8 +73,7 @@ int mesh_select(const mesh_t *mesh,
                     continue; // Already done.
                 if (!mesh_get_alpha_at(mesh, &mesh_accessor, p))
                     continue; // No voxel here.
-                a = cond(user, mesh, selection, pos, p, &mesh_accessor,
-                         &selection_accessor);
+                a = cond(user, mesh, pos, p, &mesh_accessor);
                 if (a) {
                     mesh_set_at(selection, &selection_accessor, p,
                                 (uint8_t[]){255, 255, 255, a});

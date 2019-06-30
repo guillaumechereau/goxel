@@ -30,11 +30,9 @@ typedef struct {
 } tool_extrude_t;
 
 static int select_cond(void *user, const mesh_t *mesh,
-                       const mesh_t *selection,
                        const int base_pos[3],
                        const int new_pos[3],
-                       mesh_accessor_t *mesh_accessor,
-                       mesh_accessor_t *selection_accessor)
+                       mesh_accessor_t *mesh_accessor)
 {
     int snap_face = *((int*)user);
     int p[3], n[3];
