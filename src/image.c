@@ -85,9 +85,21 @@ static void make_uniq_name(
         char *buf, int size, const char *base, void *user,
         bool (*name_exists)(void *user, const char *name))
 {
-    int i;
-    for (i = 1; ; i++) {
-        snprintf(buf, size, "%s.%d", base, i);
+    int i = 1, n, len;
+    const char *ext;
+
+    // If base if of the form 'abc.<num>' then we turn it into 'abc'
+    len = strlen(base);
+    ext = strrchr(base, '.');
+    if (ext) {
+        if (sscanf(ext, ".%d%*c", &n) == 1) {
+            len -= strlen(ext);
+            i = n;
+        }
+    }
+
+    for (;; i++) {
+        snprintf(buf, size, "%.*s.%d", len, base, i);
         if (!name_exists(user, buf)) break;
     }
 }
