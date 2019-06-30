@@ -21,6 +21,7 @@
 typedef struct {
     tool_t tool;
     mesh_t *selection;
+    int threshold;
     struct {
         gesture3d_t click;
     } gestures;
@@ -33,10 +34,16 @@ static int select_cond(void *user, const mesh_t *mesh,
                        mesh_accessor_t *mesh_accessor,
                        mesh_accessor_t *selection_accessor)
 {
-    if (mesh_get_alpha_at(selection, selection_accessor, base_pos))
-        return 255;
-    else
-        return 0;
+    tool_fuzzy_select_t *tool = (void*)user;
+    uint8_t v0[4], v1[4];
+    int d;
+
+    mesh_get_at(mesh, mesh_accessor, base_pos, v0);
+    mesh_get_at(mesh, mesh_accessor, new_pos, v1);
+    if (!v0[3] || !v1[3]) return 0;
+
+    d = max3(abs(v0[0] - v1[0]), abs(v0[1] - v1[1]), abs(v0[2] - v1[2]));
+    return d <= tool->threshold ? 255 : 0;
 }
 
 static int on_click(gesture3d_t *gest, void *user)
@@ -51,7 +58,7 @@ static int on_click(gesture3d_t *gest, void *user)
     pi[2] = floor(curs->pos[2]);
     if (!tool->selection) tool->selection = mesh_new();
     mesh_clear(tool->selection);
-    mesh_select(mesh, pi, select_cond, NULL, tool->selection);
+    mesh_select(mesh, pi, select_cond, tool, tool->selection);
     return 0;
 }
 
@@ -94,6 +101,8 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
 static int gui(tool_t *tool_)
 {
     tool_fuzzy_select_t *tool = (void*)tool_;
+
+    gui_input_int("Threshold", &tool->threshold, 1, 255);
     if (!tool->selection || mesh_is_empty(tool->selection))
         return 0;
 
