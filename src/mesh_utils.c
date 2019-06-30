@@ -33,18 +33,17 @@ static int mesh_del(void *data_)
 
 int mesh_select(const mesh_t *mesh,
                 const int start_pos[3],
-                int (*cond)(const uint8_t value[4],
-                            const uint8_t neighboors[6][4],
-                            const uint8_t mask[6],
-                            void *user),
+                int (*cond)(void *user, const mesh_t *mesh,
+                            const mesh_t *selection,
+                            const int base_pos[3],
+                            const int new_pos[3],
+                            mesh_accessor_t *mesh_accessor,
+                            mesh_accessor_t *selection_accessor),
                 void *user, mesh_t *selection)
 {
-    int i, j, a;
-    uint8_t v2[4];
-    int pos[3], p[3], p2[3];
+    int i, a;
+    int pos[3], p[3];
     bool keep = true;
-    uint8_t neighboors[6][4];
-    uint8_t mask[6];
     mesh_iterator_t iter;
     mesh_accessor_t mesh_accessor, selection_accessor;
     mesh_clear(selection);
@@ -64,24 +63,20 @@ int mesh_select(const mesh_t *mesh,
         keep = false;
         iter = mesh_get_iterator(selection, MESH_ITER_VOXELS);
         while (mesh_iter(&iter, pos)) {
+            // Shouldn't be needed if the iter function did filter the voxels.
+            if (!mesh_get_alpha_at(selection, &selection_accessor, pos))
+                continue;
+
             for (i = 0; i < 6; i++) {
                 p[0] = pos[0] + FACES_NORMALS[i][0];
                 p[1] = pos[1] + FACES_NORMALS[i][1];
                 p[2] = pos[2] + FACES_NORMALS[i][2];
-                mesh_get_at(selection, &selection_accessor, p, v2);
-                if (v2[3]) continue; // Already done.
-                mesh_get_at(mesh, &mesh_accessor, p, v2);
-                // Compute neighboors and mask.
-                for (j = 0; j < 6; j++) {
-                    p2[0] = p[0] + FACES_NORMALS[j][0];
-                    p2[1] = p[1] + FACES_NORMALS[j][1];
-                    p2[2] = p[2] + FACES_NORMALS[j][2];
-                    mesh_get_at(mesh, &mesh_accessor, p2, neighboors[j]);
-                    mask[j] = mesh_get_alpha_at(selection,
-                                                &selection_accessor, p2);
-                }
-                // XXX: the (void*) are only here for gcc <= 4.8.4
-                a = cond((void*)v2, (void*)neighboors, (void*)mask, user);
+                if (mesh_get_alpha_at(selection, &selection_accessor, p))
+                    continue; // Already done.
+                if (!mesh_get_alpha_at(mesh, &mesh_accessor, p))
+                    continue; // No voxel here.
+                a = cond(user, mesh, selection, pos, p, &mesh_accessor,
+                         &selection_accessor);
                 if (a) {
                     mesh_set_at(selection, &selection_accessor, p,
                                 (uint8_t[]){255, 255, 255, a});

@@ -29,20 +29,30 @@ typedef struct {
     } gestures;
 } tool_extrude_t;
 
-static int select_cond(const uint8_t value[4],
-                       const uint8_t neighboors[6][4],
-                       const uint8_t mask[6],
-                       void *user)
+static int select_cond(void *user, const mesh_t *mesh,
+                       const mesh_t *selection,
+                       const int base_pos[3],
+                       const int new_pos[3],
+                       mesh_accessor_t *mesh_accessor,
+                       mesh_accessor_t *selection_accessor)
 {
-    int i, snap_face = *((int*)user);
-    int opp_face = ((int[6]){1, 0, 3, 2, 5, 4})[snap_face];
-    if (value[3] == 0) return 0;
-    if (neighboors[snap_face][3]) return 0;
-    for (i = 0; i < 6; i++) {
-        if (i == snap_face || i == opp_face) continue;
-        if (mask[i]) return 255;
-    }
-    return 0;
+    int snap_face = *((int*)user);
+    int p[3], n[3];
+
+    // Only consider voxel in the snap plane.
+    memcpy(n, FACES_NORMALS[snap_face], sizeof(n));
+    p[0] = new_pos[0] - base_pos[0];
+    p[1] = new_pos[1] - base_pos[1];
+    p[2] = new_pos[2] - base_pos[2];
+    if (p[0] * n[0] + p[1] * n[1] + p[2] * n[2]) return 0;
+
+    // Also ignore if the face is not visible.
+    p[0] = new_pos[0] + FACES_NORMALS[snap_face][0];
+    p[1] = new_pos[1] + FACES_NORMALS[snap_face][1];
+    p[2] = new_pos[2] + FACES_NORMALS[snap_face][2];
+    if (mesh_get_alpha_at(mesh, mesh_accessor, p)) return 0;
+
+    return 255;
 }
 
 // Get the face index from the normal.

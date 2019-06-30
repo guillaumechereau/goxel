@@ -26,17 +26,17 @@ typedef struct {
     } gestures;
 } tool_fuzzy_select_t;
 
-static int select_cond(const uint8_t value[4],
-                       const uint8_t neighboors[6][4],
-                       const uint8_t mask[6],
-                       void *user)
+static int select_cond(void *user, const mesh_t *mesh,
+                       const mesh_t *selection,
+                       const int base_pos[3],
+                       const int new_pos[3],
+                       mesh_accessor_t *mesh_accessor,
+                       mesh_accessor_t *selection_accessor)
 {
-    int i;
-    if (value[3] == 0) return 0;
-    for (i = 0; i < 6; i++) {
-        if (mask[i]) return 255;
-    }
-    return 0;
+    if (mesh_get_alpha_at(selection, selection_accessor, base_pos))
+        return 255;
+    else
+        return 0;
 }
 
 static int on_click(gesture3d_t *gest, void *user)

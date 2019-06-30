@@ -137,10 +137,12 @@ void mesh_shift_alpha(mesh_t *mesh, int v);
 // Compute the selection mask for a given condition.
 int mesh_select(const mesh_t *mesh,
                 const int start_pos[3],
-                int (*cond)(const uint8_t value[4],
-                            const uint8_t neighboors[6][4],
-                            const uint8_t mask[6],
-                            void *user),
+                int (*cond)(void *user, const mesh_t *mesh,
+                            const mesh_t *selection,
+                            const int base_pos[3],
+                            const int new_pos[3],
+                            mesh_accessor_t *mesh_accessor,
+                            mesh_accessor_t *selection_accessor),
                 void *user, mesh_t *selection);
 
 /*
