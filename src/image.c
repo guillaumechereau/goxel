@@ -379,6 +379,8 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
     img = img ?: goxel.image;
     other = other ?: img->active_layer;
     layer = layer_copy(other);
+    make_uniq_name(layer->name, sizeof(layer->name), other->name, img,
+                   layer_name_exists);
     layer->visible = true;
     layer->id = img_get_new_id(img);
     DL_APPEND(img->layers, layer);
