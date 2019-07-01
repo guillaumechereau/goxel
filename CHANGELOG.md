@@ -1,6 +1,6 @@
 #Changelog
 
-## [0.9.1]
+## [0.10.0]
 
 ### Added
 - 'Magic Wand' tool.  Allows to select adjacent voxels.
