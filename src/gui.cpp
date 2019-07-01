@@ -634,6 +634,7 @@ static void render_popups(int index)
         flags &= ~(ImGuiWindowFlags_NoMove |
                    ImGuiWindowFlags_AlwaysAutoResize);
     }
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
     if (ImGui::BeginPopupModal(popup->title, NULL, flags)) {
         typeof(popup->func) func = popup->func;
         if (func(popup->data)) {
@@ -650,6 +651,7 @@ static void render_popups(int index)
         render_popups(index + 1);
         ImGui::EndPopup();
     }
+    ImGui::PopStyleVar();
 }
 
 void gui_iter(const inputs_t *inputs)
