@@ -81,10 +81,10 @@ Goxel if free to use for any purpose.
 
 ## Downloads
 
-Version 0.9.0:
+Version 0.10.0:
 
-- [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.9.0/goxel-0.9.0-windows.zip)
-- [Mac](https://github.com/guillaumechereau/goxel/releases/download/v0.9.0/goxel-0.9.0-mac.zip)
+- [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.10.0/goxel-0.10.0-windows.zip)
+- [Mac](https://github.com/guillaumechereau/goxel/releases/download/v0.10.0/goxel-0.10.0-mac.zip)
 
 {: .clear }
 <br/>

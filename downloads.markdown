@@ -4,9 +4,14 @@ layout: default
 
 ### Download Goxel
 
-#### iOS version 0.7.2
+#### iOS version (last)
 
 - [iOS](https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826)
+
+#### Version 0.10.0
+
+- [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.10.0/goxel-0.10.0-windows.zip)
+- [Mac](https://github.com/guillaumechereau/goxel/releases/download/v0.10.0/goxel-0.10.0-mac.zip)
 
 #### Version 0.9.0
 
