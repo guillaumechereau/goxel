@@ -88,6 +88,7 @@
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
 		F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */; };
 		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
+		F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */; };
 		F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C611F98B03200FB50DE /* mesh_utils.c */; };
 		F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */; };
 		F0EEB7DE1C8EC25D004AB676 /* procedural.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7D91C8EC25D004AB676 /* procedural.c */; };
@@ -209,6 +210,7 @@
 		F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noc_file_dialog.h; sourceTree = "<group>"; };
 		F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = dialogs_osx.m; sourceTree = "<group>"; };
 		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
+		F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuzzy_select.c; sourceTree = "<group>"; };
 		F0ED3C611F98B03200FB50DE /* mesh_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_utils.c; sourceTree = "<group>"; };
 		F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_to_vertices.c; sourceTree = "<group>"; };
 		F0ED3C631F98B03300FB50DE /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
@@ -291,6 +293,7 @@
 		F037D5C61EA6069A00C96D10 /* tools */ = {
 			isa = PBXGroup;
 			children = (
+				F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */,
 				F0C5368A1F42EE43003A0DCA /* extrude.c */,
 				F037D5C71EA6069A00C96D10 /* brush.c */,
 				F037D5C81EA6069A00C96D10 /* color_picker.c */,
@@ -590,6 +593,7 @@
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
 				F0ACA2A12271ACD400376C82 /* gltf.c in Sources */,
 				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,
+				F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */,
 				F097B3F31F0C97DB00A3622B /* gesture.c in Sources */,
 				F00FC337226B2FCF0002F251 /* view_panel.c in Sources */,
 				F07DEA0B1BD0F31500BAA1AD /* palette.c in Sources */,
