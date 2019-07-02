@@ -45,7 +45,7 @@ Open Source 3D voxel editor for Mac Windows and Linux.
 {::options parse_block_html="true" /}
 <div class="row">
 <div class="col m6">
-![screenshot](images/screenshots/selection.png){: .materialboxed .responsive-img}
+![screenshot](images/screenshots/plane.png){: .materialboxed .responsive-img}
 </div>
 <div class="col m6">
 Goxel is a 3D program that lets you create voxel volumes, a bit similar to
@@ -53,39 +53,3 @@ minecraft.  The code is Open Source and fully available on Github.
 {: .flow-text}
 </div>
 </div>
-
-
-{::comment}
-# Goxel, an Open Source Voxel Editor
-
-Home of the open source voxel editor Goxel.
-
-Goxel if free to use for any purpose.
-
-![screenshot](images/screenshots/selection.png){: .small-image .float-left }
-
-## Features:
-
-- 24 bits RGB colors.
-- Unlimited scene size.
-- Unlimited undo buffer.
-- Multiple layers support.
-- Marching Cube rendering.
-- [Procedural rendering](https://blog.noctua-software.com/goxel-procedural.html).
-- Export to obj, pyl, magica voxel, png, qubicle.
-
-{: .clear }
-<br/>
-
-![screenshot](images/screenshots/palettes.png){: .small-image .float-left }
-
-## Downloads
-
-Version 0.10.0:
-
-- [Windows](https://github.com/guillaumechereau/goxel/releases/download/v0.10.0/goxel-0.10.0-windows.zip)
-- [Mac](https://github.com/guillaumechereau/goxel/releases/download/v0.10.0/goxel-0.10.0-mac.zip)
-
-{: .clear }
-<br/>
-{:/comment}
