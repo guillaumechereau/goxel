@@ -2,7 +2,7 @@
 Goxel
 =====
 
-Version 0.9.0
+Version 0.10.0
 
 By Guillaume Chereau <guillaume@noctua-software.com>
 
