@@ -97,14 +97,14 @@ using namespace std::literals::string_literals;
 using byte = unsigned char;
 using uint = unsigned int;
 
-inline const double pi  = 3.14159265358979323846;
-inline const float  pif = (float)pi;
+static const double pi  = 3.14159265358979323846;
+static const float  pif = (float)pi;
 
-inline const auto int_max = INT_MAX;
-inline const auto int_min = INT_MIN;
-inline const auto flt_max = FLT_MAX;
-inline const auto flt_min = -FLT_MAX;
-inline const auto flt_eps = FLT_EPSILON;
+static const auto int_max = INT_MAX;
+static const auto int_min = INT_MIN;
+static const auto flt_max = FLT_MAX;
+static const auto flt_min = -FLT_MAX;
+static const auto flt_eps = FLT_EPSILON;
 
 inline float abs(float a) { return a < 0 ? -a : a; }
 inline float min(float a, float b) { return (a < b) ? a : b; }
