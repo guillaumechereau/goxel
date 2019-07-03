@@ -56,8 +56,4 @@ static int size(const std::vector<T> &x) {
 #include "../ext_src/yocto/yocto_shape.cpp"
 #include "../ext_src/yocto/yocto_trace.cpp"
 
-#define file_holder yocto_obj_file_holder
-#define open_input_file yocto_obj_open_input_file
-#include "../ext_src/yocto/yocto_obj.cpp"
-
 #pragma GCC diagnostic pop

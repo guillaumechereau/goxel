@@ -2919,6 +2919,7 @@ void make_shape_preset(vector<int>& points, vector<vec2i>& lines,
 // -----------------------------------------------------------------------------
 // IMPLEMENTATION OF SHAPE IO
 // -----------------------------------------------------------------------------
+#if 0
 namespace yocto {
 
 // hack for CyHair data
@@ -3784,6 +3785,8 @@ static void load_cyhair_shape(const string& filename, vector<vec2i>& lines,
 }
 
 }  // namespace yocto
+
+#endif
 
 // -----------------------------------------------------------------------------
 // EMBEDDED SHAPE DATA
