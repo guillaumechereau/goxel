@@ -1629,11 +1629,11 @@ void make_edge_solver_slow(geodesic_solver& solver,
 
   if (!use_steiner_points) return;
 
-  solver.graph.reserve(size(positions) + size(edges));
+  solver.graph.reserve(positions.size() + edges.size());
   auto steiner_per_edge = vector<int>(num_edges(emap));
 
   // On each edge, connect the mid vertex with the vertices on th same edge.
-  for (auto edge_index = 0; edge_index < size(edges); edge_index++) {
+  for (auto edge_index = 0; edge_index < edges.size(); edge_index++) {
     auto& edge                   = edges[edge_index];
     auto  steiner_idx            = solver.graph.size();
     steiner_per_edge[edge_index] = steiner_idx;
@@ -1716,7 +1716,7 @@ void make_edge_solver_fast(geodesic_solver& solver,
   solver.graph.resize(positions.size() + edges.size());
   solver.edge_index.resize(positions.size() + edges.size());
   solver.positions.resize(positions.size() + edges.size());
-  auto steiner_per_edge = vector<int>(size(edges));
+  auto steiner_per_edge = vector<int>(edges.size());
 
   // On each edge, connect the mid vertex with the vertices on th same edge.
   auto edge_offset = (int)positions.size();
