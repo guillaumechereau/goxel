@@ -78,6 +78,25 @@ void gui_top_bar(void);
 #pragma GCC diagnostic pop
 #endif
 
+static const struct {
+    const char *name;
+    int icon;
+    void (*fn)(void);
+} PANELS[] = {
+    {NULL},
+    {"Tools", ICON_TOOLS, gui_tools_panel},
+    {"Palette", ICON_PALETTE, gui_palette_panel},
+    {"Layers", ICON_LAYERS, gui_layers_panel},
+    {"View", ICON_VIEW, gui_view_panel},
+    {"Material", ICON_MATERIAL, gui_material_panel},
+    {"Light", ICON_LIGHT, gui_light_panel},
+    {"Cameras", ICON_CAMERA, gui_cameras_panel},
+    {"Image", ICON_IMAGE, gui_image_panel},
+    {"Render", ICON_RENDER, gui_render_panel},
+    {"Export", ICON_EXPORT, gui_export_panel},
+    {"Debug", ICON_DEBUG, gui_debug_panel},
+};
+
 static inline ImVec4 color_lighten(ImVec4 c, float k)
 {
     c.x *= k;
@@ -469,9 +488,8 @@ static void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
     bool render_mode;
-    // XXX: 9 here means 'export' panel.  Need to use an enum or find a
-    // better way!
-    render_mode = gui->current_panel == 9 && goxel.pathtracer.status;
+    render_mode = (PANELS[gui->current_panel].fn == gui_render_panel) &&
+                  goxel.pathtracer.status;
     goxel_render_view(view->rect, render_mode);
     GL(glViewport(0, 0, width * scale, height * scale));
 }
@@ -555,25 +573,6 @@ static void render_left_panel(void)
     int i;
     const theme_t *theme = theme_get();
     float left_pane_width;
-    const struct {
-        const char *name;
-        int icon;
-        void (*fn)(void);
-    } PANELS[] = {
-        {NULL},
-        {"Tools", ICON_TOOLS, gui_tools_panel},
-        {"Palette", ICON_PALETTE, gui_palette_panel},
-        {"Layers", ICON_LAYERS, gui_layers_panel},
-        {"View", ICON_VIEW, gui_view_panel},
-        {"Material", ICON_MATERIAL, gui_material_panel},
-        {"Light", ICON_LIGHT, gui_light_panel},
-        {"Cameras", ICON_CAMERA, gui_cameras_panel},
-        {"Image", ICON_IMAGE, gui_image_panel},
-        {"Render", ICON_RENDER, gui_render_panel},
-        {"Export", ICON_EXPORT, gui_export_panel},
-        {"Debug", ICON_DEBUG, gui_debug_panel},
-    };
-
     left_pane_width = (gui->current_panel ? gui->panel_width : 0) +
                        gui->panel_adjust_w + theme->sizes.icons_height + 4;
     ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
