@@ -134,7 +134,7 @@ inline float exp(float a) { return expf(a); }
 inline float log2(float a) { return log2f(a); }
 inline float exp2(float a) { return exp2f(a); }
 inline float pow(float a, float b) { return powf(a, b); }
-inline float is_finite(float a) { return ::isfinite(a); }
+inline float is_finite(float a) { return isfinite(a); }
 inline void  swap(float& a, float& b) { std::swap(a, b); }
 
 inline int  abs(int a) { return a < 0 ? -a : a; }
@@ -1331,7 +1331,7 @@ inline quat4f conjugate(const quat4f& a) { return {-a.x, -a.y, -a.z, a.w}; }
 inline quat4f inverse(const quat4f& a) { return conjugate(a) / dot(a, a); }
 inline float  uangle(const quat4f& a, const quat4f& b) {
   auto d = dot(a, b);
-  return d > 1 ? 0 : std::acos(d < -1 ? -1 : d);
+  return d > 1 ? 0 : acos(d < -1 ? -1 : d);
 }
 inline quat4f lerp(const quat4f& a, const quat4f& b, float t) {
   return a * (1 - t) + b * t;
