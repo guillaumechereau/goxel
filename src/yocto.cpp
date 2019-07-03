@@ -25,7 +25,10 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wparentheses"
+#pragma GCC diagnostic ignored "-Wreturn-type"
 #endif
 
 #include <cstddef>
@@ -42,6 +45,8 @@ static int size(const std::vector<T> &x) {
 
 
 #define YOCTO_EMBREE 0
+#define STB_IMAGE_STATIC
+#define STB_IMAGE_WRITE_STATIC
 
 #include "../ext_src/yocto/ext/ArHosekSkyModel.cpp"
 #include "../ext_src/yocto/yocto_bvh.cpp"
