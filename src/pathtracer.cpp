@@ -81,7 +81,7 @@ struct pathtracer_internal {
     image4f display;
     trace_state state;
     trace_lights lights;
-    trace_image_options trace_options;
+    trace_image_options trace_prms;
     atomic<int> trace_sample;
     vector<future<void>> trace_futures;
     deque<image_region> trace_queue;
@@ -462,7 +462,7 @@ static int sync_options(pathtracer_t *pt, bool force)
     p->options_key = key;
     stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
                 &p->trace_stop);
-    p->trace_options.num_samples = pt->num_samples;
+    p->trace_prms.num_samples = pt->num_samples;
     return CHANGE_OPTIONS;
 }
 
@@ -473,34 +473,34 @@ static void start_render(
         vector<future<void>>& futures, atomic<int>& current_sample,
         deque<image_region>& queue,
         mutex& queuem,
-        const trace_image_options& options,
+        const trace_image_options& prms,
         atomic<bool>* cancel)
 {
-    auto& camera     = scene.cameras.at(options.camera_id);
-    auto  image_size = get_camera_image_size(camera, options.image_size);
+    auto& camera     = scene.cameras.at(prms.camera_id);
+    auto  image_size = get_camera_image_size(camera, prms.image_size);
     image            = {image_size, zero4f};
     state            = trace_state{};
-    init_trace_state(state, image_size, options.random_seed);
+    init_trace_state(state, image_size, prms.random_seed);
     auto regions = vector<image_region>{};
-    make_image_regions(regions, image.size(), options.region_size, true);
+    make_image_regions(regions, image.size(), prms.region_size, true);
     if (cancel) *cancel = false;
 
     futures.clear();
-    futures.emplace_back(async([options, regions, &current_sample, &image,
+    futures.emplace_back(async([prms, regions, &current_sample, &image,
                                 &scene, &lights, &bvh, &state, &queue,
                                 &queuem, cancel]() {
-        for (auto sample = 0; sample < options.num_samples;
-             sample += options.samples_per_batch) {
+        for (auto sample = 0; sample < prms.num_samples;
+             sample += prms.samples_per_batch) {
             if (cancel && *cancel) return;
             current_sample   = sample;
-            auto num_samples = min(options.samples_per_batch,
-                options.num_samples - current_sample);
+            auto num_samples = min(prms.samples_per_batch,
+                prms.num_samples - current_sample);
             auto futures  = vector<future<void>>{};
             int nthreads = std::thread::hardware_concurrency();
             std::atomic<size_t> next_idx(0);
             for (int thread_id = 0; thread_id < nthreads; thread_id++) {
                 futures.emplace_back(async(std::launch::async,
-                            [num_samples, &options, &image, &scene, &lights,
+                            [num_samples, &prms, &image, &scene, &lights,
                              &bvh, &state, &queue, &queuem, &next_idx, cancel,
                              &regions]() {
                     while (true) {
@@ -509,7 +509,7 @@ static void start_render(
                         if (idx >= regions.size()) break;
                         auto region = regions[idx];
                         trace_image_region(image, state, scene, bvh, lights,
-                                           region, num_samples, options);
+                                           region, num_samples, prms);
                         {
                             std::lock_guard guard{queuem};
                             queue.push_back(region);
@@ -518,7 +518,7 @@ static void start_render(
                 }));
             }
         }
-        current_sample = options.num_samples;
+        current_sample = prms.num_samples;
     }));
 }
 
@@ -556,9 +556,9 @@ static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
     if (changes) {
         if (p->lights.instances.empty() &&
                 p->lights.environments.empty()) {
-            p->trace_options.sampler_type = trace_sampler_type::eyelight;
+            p->trace_prms.sampler_type = trace_sampler_type::eyelight;
         }
-        p->trace_options.image_size = {w, h};
+        p->trace_prms.image_size = {w, h};
         p->image = image4f({w, h});
         p->display = image4f({w, h});
 
@@ -567,14 +567,14 @@ static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
 
         init_trace_state(p->state, {w, h});
 
-        p->trace_options.cancel_flag = &p->trace_stop;
-        // p->trace_options.run_serially = true;
+        p->trace_prms.cancel_flag = &p->trace_stop;
+        // p->trace_prms.run_serially = true;
         p->trace_sample = 0;
         p->trace_stop = false;
         start_render(p->image, p->state, p->scene,
                      p->bvh, p->lights,
                      p->trace_futures, p->trace_sample,
-                     p->trace_queue, p->trace_queuem, p->trace_options,
+                     p->trace_queue, p->trace_queuem, p->trace_prms,
                      &p->trace_stop);
     }
     return changes;
@@ -584,15 +584,15 @@ static void make_preview(pathtracer_t *pt)
 {
     int i, j, pi, pj;
     pathtracer_internal_t *p = pt->p;
-    trace_image_options preview_options = p->trace_options;
+    trace_image_options preview_prms = p->trace_prms;
     int preview_ratio = 8;
     image4f preview;
     vec4b v;
 
-    preview_options.image_size /= preview_ratio;
-    preview_options.num_samples = 1;
+    preview_prms.image_size /= preview_ratio;
+    preview_prms.num_samples = 1;
     preview = trace_image(p->scene, p->bvh, p->lights,
-                          preview_options);
+                          preview_prms);
     tonemap_image(preview, preview, p->exposure, false, true);
 
     for (i = 0; i < pt->h; i++) {
@@ -622,7 +622,7 @@ void pathtracer_iter(pathtracer_t *pt, const float viewport[4])
 
     if (!pt->p) pt->p = new pathtracer_internal_t();
     p = pt->p;
-    p->trace_options.image_size = {pt->w, pt->h};
+    p->trace_prms.image_size = {pt->w, pt->h};
     changes = sync(pt, pt->w, pt->h, viewport, pt->force_restart);
     pt->force_restart = false;
     assert(p->display.size()[0] == pt->w);
@@ -646,11 +646,10 @@ void pathtracer_iter(pathtracer_t *pt, const float viewport[4])
         size += region.size().x * region.size().y;
         if (size >= p->image.size().x * p->image.size().y) break;
     }
-    pt->progress = (float)p->trace_sample /
-                   p->trace_options.num_samples;
+    pt->progress = (float)p->trace_sample / p->trace_prms.num_samples;
 
     if (pt->status != PT_FINISHED &&
-            p->trace_sample == p->trace_options.num_samples) {
+            p->trace_sample == p->trace_prms.num_samples) {
         pt->status = PT_FINISHED;
     }
 }
