@@ -21,11 +21,11 @@
  * that we keeps a clean build system.
  */
 
-#ifndef __clang__
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#ifndef __clang__
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wparentheses"
 #pragma GCC diagnostic ignored "-Wreturn-type"
@@ -60,6 +60,4 @@ static int size(const std::vector<T> &x) {
 #define open_input_file yocto_obj_open_input_file
 #include "../ext_src/yocto/yocto_obj.cpp"
 
-#ifndef __clang__
 #pragma GCC diagnostic pop
-#endif
