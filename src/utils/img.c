@@ -28,11 +28,14 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wunused-function"
 #ifdef WIN32
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #endif
 #endif
 
+#define STB_IMAGE_STATIC
+#define STB_IMAGE_WRITE_STATIC
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_ONLY_PNG
