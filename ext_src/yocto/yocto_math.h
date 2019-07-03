@@ -1012,9 +1012,9 @@ struct mat4f {
 };
 
 // Identity matrices constants.
-inline const auto identity2x2f = mat2f{{1, 0}, {0, 1}};
-inline const auto identity3x3f = mat3f{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-inline const auto identity4x4f = mat4f{
+static const auto identity2x2f = mat2f{{1, 0}, {0, 1}};
+static const auto identity3x3f = mat3f{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+static const auto identity4x4f = mat4f{
     {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
 
 // Matrix comparisons.
