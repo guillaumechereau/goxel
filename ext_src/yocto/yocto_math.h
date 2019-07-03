@@ -193,9 +193,9 @@ struct vec4f {
 };
 
 // Zero vector constants.
-inline const auto zero2f = vec2f{0, 0};
-inline const auto zero3f = vec3f{0, 0, 0};
-inline const auto zero4f = vec4f{0, 0, 0, 0};
+static const auto zero2f = vec2f{0, 0};
+static const auto zero3f = vec3f{0, 0, 0};
+static const auto zero4f = vec4f{0, 0, 0, 0};
 
 // Element access
 inline vec3f&       xyz(vec4f& a) { return (vec3f&)a; }
@@ -684,10 +684,10 @@ struct vec4b {
 };
 
 // Zero vector constants.
-inline const auto zero2i = vec2i{0, 0};
-inline const auto zero3i = vec3i{0, 0, 0};
-inline const auto zero4i = vec4i{0, 0, 0, 0};
-inline const auto zero4b = vec4b{0, 0, 0, 0};
+static const auto zero2i = vec2i{0, 0};
+static const auto zero3i = vec3i{0, 0, 0};
+static const auto zero4i = vec4i{0, 0, 0, 0};
+static const auto zero4b = vec4b{0, 0, 0, 0};
 
 // Element access
 inline vec3i&       xyz(vec4i& a) { return (vec3i&)a; }
@@ -1205,8 +1205,8 @@ struct frame3f {
 };
 
 // Indentity frames.
-inline const auto identity2x3f = frame2f{{1, 0}, {0, 1}, {0, 0}};
-inline const auto identity3x4f = frame3f{
+static const auto identity2x3f = frame2f{{1, 0}, {0, 1}, {0, 0}};
+static const auto identity3x4f = frame3f{
     {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0, 0, 0}};
 
 // Frame properties
@@ -1299,7 +1299,7 @@ struct quat4f {
 };
 
 // Constants
-inline const auto identity_quat4f = quat4f{0, 0, 0, 1};
+static const auto identity_quat4f = quat4f{0, 0, 0, 1};
 
 // Quaternion operatons
 inline quat4f operator+(const quat4f& a, const quat4f& b) {
@@ -1378,8 +1378,8 @@ struct bbox3f {
 };
 
 // Empty bbox constant.
-inline const auto invalidb2f = bbox2f{};
-inline const auto invalidb3f = bbox3f{};
+static const auto invalidb2f = bbox2f{};
+static const auto invalidb3f = bbox3f{};
 
 // Bounding box properties
 inline vec2f center(const bbox2f& a) { return (a.min + a.max) / 2; }
@@ -1454,7 +1454,7 @@ inline bbox3f quad_bounds(
 namespace yocto {
 
 // Ray esplison
-inline const auto ray_eps = 1e-4f;
+static const auto ray_eps = 1e-4f;
 
 struct ray2f {
   vec2f o    = {0, 0};
