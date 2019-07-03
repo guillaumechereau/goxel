@@ -6,7 +6,7 @@
 // low level parsing code. We support a few extensions such as camera and
 // environment map loading.
 //
-// Error reporting is done through exceptions using the `objio_error` exception.
+// Error reporting is done through exceptions using the `io_error` exception.
 //
 // ## Parse an OBJ file
 //
@@ -48,19 +48,6 @@
 // -----------------------------------------------------------------------------
 
 #include "yocto_math.h"
-#include "yocto_utils.h"
-
-#include <unordered_map>
-
-// -----------------------------------------------------------------------------
-// USING DIRECTIVES
-// -----------------------------------------------------------------------------
-namespace yocto {
-
-using std::unordered_map;
-using std::function;
-
-}
 
 // -----------------------------------------------------------------------------
 // SIMPLE OBJ LOADER
@@ -69,136 +56,171 @@ namespace yocto {
 
 // OBJ vertex
 struct obj_vertex {
-    int position     = 0;
-    int texturecoord = 0;
-    int normal       = 0;
+  int position = 0;
+  int texcoord = 0;
+  int normal   = 0;
 };
+
+inline bool operator==(const obj_vertex& a, const obj_vertex& b) {
+  return a.position == b.position && a.texcoord == b.texcoord &&
+         a.normal == b.normal;
+}
 
 // Obj texture information.
 struct obj_texture_info {
-    string path  = "";     // file path
-    bool   clamp = false;  // clamp to edge
-    float  scale = 1;      // scale for bump/displacement
-    // Properties not explicitly handled.
-    unordered_map<string, vector<float>> props;
+  string path  = "";     // file path
+  bool   clamp = false;  // clamp to edge
+  float  scale = 1;      // scale for bump/displacement
+
+  // Properties not explicitly handled.
+  unordered_map<string, vector<float>> props;
+
+  obj_texture_info() {}
+  obj_texture_info(const char* path) : path{path} {}
+  obj_texture_info(const string& path) : path{path} {}
 };
 
 // Obj material.
 struct obj_material {
-    string name;       // name
-    int    illum = 0;  // MTL illum mode
+  string name  = "";  // name
+  int    illum = 0;   // MTL illum mode
 
-    // base values
-    vec3f ke  = {0, 0, 0};  // emission color
-    vec3f ka  = {0, 0, 0};  // ambient color
-    vec3f kd  = {0, 0, 0};  // diffuse color
-    vec3f ks  = {0, 0, 0};  // specular color
-    vec3f kr  = {0, 0, 0};  // reflection color
-    vec3f kt  = {0, 0, 0};  // transmission color
-    float ns  = 0;          // Phong exponent color
-    float ior = 1;          // index of refraction
-    float op  = 1;          // opacity
-    float rs  = -1;         // roughness (-1 not defined)
-    float km  = -1;         // metallic  (-1 not defined)
+  // base values
+  vec3f ke  = {0, 0, 0};  // emission color
+  vec3f ka  = {0, 0, 0};  // ambient color
+  vec3f kd  = {0, 0, 0};  // diffuse color
+  vec3f ks  = {0, 0, 0};  // specular color
+  vec3f kr  = {0, 0, 0};  // reflection color
+  vec3f kt  = {0, 0, 0};  // transmission color
+  float ns  = 0;          // Phong exponent color
+  float ior = 1;          // index of refraction
+  float op  = 1;          // opacity
 
-    // textures
-    obj_texture_info ke_txt;    // emission texture
-    obj_texture_info ka_txt;    // ambient texture
-    obj_texture_info kd_txt;    // diffuse texture
-    obj_texture_info ks_txt;    // specular texture
-    obj_texture_info kr_txt;    // reflection texture
-    obj_texture_info kt_txt;    // transmission texture
-    obj_texture_info ns_txt;    // Phong exponent texture
-    obj_texture_info op_txt;    // opacity texture
-    obj_texture_info rs_txt;    // roughness texture
-    obj_texture_info km_txt;    // metallic texture
-    obj_texture_info ior_txt;   // ior texture
-    obj_texture_info occ_txt;   // occlusion map
-    obj_texture_info bump_txt;  // bump map
-    obj_texture_info disp_txt;  // displacement map
-    obj_texture_info norm_txt;  // normal map
+  // textures
+  obj_texture_info ke_map   = "";  // emission texture
+  obj_texture_info ka_map   = "";  // ambient texture
+  obj_texture_info kd_map   = "";  // diffuse texture
+  obj_texture_info ks_map   = "";  // specular texture
+  obj_texture_info kr_map   = "";  // reflection texture
+  obj_texture_info kt_map   = "";  // transmission texture
+  obj_texture_info ns_map   = "";  // Phong exponent texture
+  obj_texture_info op_map   = "";  // opacity texture
+  obj_texture_info ior_map  = "";  // ior texture
+  obj_texture_info bump_map = "";  // bump map
 
-    // volume data [extension]
-    vec3f ve = {0, 0, 0};  // volume emission
-    vec3f va = {0, 0, 0};  // albedo: scattering / (absorption + scattering)
-    vec3f vd = {0, 0, 0};  // density: absorption + scattering
-    float vg = 0;          // phase function shape
+  // pbr values
+  bool  has_pbr = false;  // whether pbr values are defined
+  float pr      = 0;      // roughness
+  float pm      = 0;      // metallic
+  float ps      = 0;      // sheen
+  float pc      = 0;      // coat
+  float pcr     = 0;      // coat roughness
 
-    // volume textures [extension]
-    obj_texture_info vd_txt;  // density
+  // textures
+  obj_texture_info pr_map   = "";  // roughness texture
+  obj_texture_info pm_map   = "";  // metallic texture
+  obj_texture_info ps_map   = "";  // sheen texture
+  obj_texture_info norm_map = "";  // normal map
+  obj_texture_info disp_map = "";  // displacement map
+  obj_texture_info occ_map  = "";  // occlusion map
 
-    // Properties not explicitly handled.
-    unordered_map<string, vector<string>> props;
+  // volume values
+  vec3f vt = {0, 0, 0};  // volumetric transmission
+  vec3f vp = {0, 0, 0};  // volumetric mean-free-path
+  vec3f ve = {0, 0, 0};  // volumetric emission
+  vec3f vs = {0, 0, 0};  // volumetric scattering
+  float vg = 0;          // volumetric anisotropy (phase g)
+  float vr = 0.01;       // volumetric scale
+
+  // textures
+  obj_texture_info vs_map = "";  // scattering texture
+
+  // Properties not explicitly handled.
+  unordered_map<string, vector<string>> props;
 };
 
 // Obj camera [extension].
 struct obj_camera {
-    string  name;                         // name
-    frame3f frame    = identity_frame3f;  // transform
-    bool    ortho    = false;             // orthographic
-    float   width    = 0.036f;            // film size (default to 35mm)
-    float   height   = 0.024f;            // film size (default to 35mm)
-    float   focal    = 0.050f;            // focal length
-    float   aspect   = 16.0f / 9.0f;      // aspect ratio
-    float   aperture = 0;                 // lens aperture
-    float   focus    = float_max;         // focus distance
+  string  name     = "";            // name
+  frame3f frame    = identity3x4f;  // transform
+  bool    ortho    = false;         // orthographic
+  float   width    = 0.036f;        // film size (default to 35mm)
+  float   height   = 0.024f;        // film size (default to 35mm)
+  float   lens     = 0.050f;        // focal length
+  float   aperture = 0;             // lens aperture
+  float   focus    = flt_max;       // focus distance
 };
 
 // Obj environment [extension].
 struct obj_environment {
-    string           name;                      // name
-    frame3f          frame = identity_frame3f;  // transform
-    vec3f            ke    = zero3f;            // emission color
-    obj_texture_info ke_txt;                    // emission texture
+  string           name  = "";            // name
+  frame3f          frame = identity3x4f;  // transform
+  vec3f            ke    = zero3f;        // emission color
+  obj_texture_info ke_txt;                // emission texture
 };
 
 // Obj procedural object [extension].
 struct obj_procedural {
-    string  name;                      // name
-    frame3f frame = identity_frame3f;  // transform
-    string  type;                      // type
-    string  material;                  // material
-    float   size  = 2;                 // size
-    int     level = -1;                // level of subdivision (-1 default)
+  string  name     = "";            // name
+  frame3f frame    = identity3x4f;  // transform
+  string  type     = "";            // type
+  string  material = "";            // material
+  float   size     = 2;             // size
+  int     level    = -1;            // level of subdivision (-1 default)
+};
+
+// Obj instance [extension]
+struct obj_instance {
+  string  name     = "";            // name
+  frame3f frame    = identity3x4f;  // transform
+  string  object   = "";            // object name
+  string  material = "";            // material name
 };
 
 // Obj callbacks
 struct obj_callbacks {
-    function<void(const vec3f&)>              vert        = {};
-    function<void(const vec3f&)>              norm        = {};
-    function<void(const vec2f&)>              texcoord    = {};
-    function<void(const vector<obj_vertex>&)> face        = {};
-    function<void(const vector<obj_vertex>&)> line        = {};
-    function<void(const vector<obj_vertex>&)> point       = {};
-    function<void(const string& name)>        object      = {};
-    function<void(const string& name)>        group       = {};
-    function<void(const string& name)>        usemtl      = {};
-    function<void(const string& name)>        smoothing   = {};
-    function<void(const string& name)>        mtllib      = {};
-    function<void(const obj_material&)>       material    = {};
-    function<void(const obj_camera&)>         camera      = {};
-    function<void(const obj_environment&)>    environmnet = {};
-    function<void(const obj_procedural&)>     procedural  = {};
-};
-
-// Load obj options
-struct load_obj_options {
-    bool exit_on_error = false;
-    bool geometry_only = false;
-    bool flip_texcoord = true;
-    bool flip_tr       = true;
+  virtual void vert(const vec3f&) {}
+  virtual void norm(const vec3f&) {}
+  virtual void texcoord(const vec2f&) {}
+  virtual void face(const vector<obj_vertex>&) {}
+  virtual void line(const vector<obj_vertex>&) {}
+  virtual void point(const vector<obj_vertex>&) {}
+  virtual void object(const string&) {}
+  virtual void group(const string&) {}
+  virtual void usemtl(const string&) {}
+  virtual void smoothing(const string&) {}
+  virtual void mtllib(const string&) {}
+  virtual void material(const obj_material&) {}
+  virtual void camera(const obj_camera&) {}
+  virtual void environmnet(const obj_environment&) {}
+  virtual void instance(const obj_instance&) {}
+  virtual void procedural(const obj_procedural&) {}
 };
 
 // Load obj scene
-void load_obj(const string& filename, const obj_callbacks& cb,
-    const load_obj_options& options = {});
-
-// objio error
-struct obj_error : runtime_error {
-    explicit obj_error(const char* msg) : runtime_error{msg} {}
-    explicit obj_error(const std::string& msg) : runtime_error{msg} {}
-};
+void load_obj(const string& filename, obj_callbacks& cb,
+    bool nomaterials = false, bool flipv = true, bool fliptr = true);
 
 }  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// HELPER FOR DICTIONARIES
+// -----------------------------------------------------------------------------
+namespace std {
+
+// Hash functor for vector for use with unordered_map
+template <>
+struct hash<yocto::obj_vertex> {
+  size_t operator()(const yocto::obj_vertex& v) const {
+    static const std::hash<int> hasher = std::hash<int>();
+    auto                        h      = (size_t)0;
+    h ^= hasher(v.position) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= hasher(v.normal) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= hasher(v.texcoord) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+};
+
+}  // namespace std
 
 #endif

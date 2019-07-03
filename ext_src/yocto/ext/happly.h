@@ -102,6 +102,13 @@ public:
   std::string name;
 
   /**
+   * @brief Reserve memory.
+   * 
+   * @param capacity Expected number of elements.
+   */
+  virtual void reserve(size_t capacity) = 0;
+
+  /**
    * @brief (ASCII reading) Parse out the next value of this property from a list of tokens.
    *
    * @param tokens The list of property tokens for the element.
@@ -188,16 +195,24 @@ public:
   virtual ~TypedProperty() override{};
 
   /**
+   * @brief Reserve memory.
+   * 
+   * @param capacity Expected number of elements.
+   */
+  virtual void reserve(size_t capacity) override {
+    data.reserve(capacity);
+  }
+
+  /**
    * @brief (ASCII reading) Parse out the next value of this property from a list of tokens.
    *
    * @param tokens The list of property tokens for the element.
    * @param currEntry Index in to tokens, updated after this property is read.
    */
   virtual void parseNext(const std::vector<std::string>& tokens, size_t& currEntry) override {
-    T val;
+    data.emplace_back();
     std::istringstream iss(tokens[currEntry]);
-    iss >> val;
-    data.push_back(val);
+    iss >> data.back();
     currEntry++;
   };
 
@@ -207,9 +222,8 @@ public:
    * @param stream Stream to read from.
    */
   virtual void readNext(std::ifstream& stream) override {
-    T val;
-    stream.read((char*)&val, sizeof(T));
-    data.push_back(val);
+    data.emplace_back();
+    stream.read((char*)&data.back(), sizeof(T));
   }
 
   /**
@@ -324,6 +338,18 @@ public:
   virtual ~TypedListProperty() override{};
 
   /**
+   * @brief Reserve memory.
+   * 
+   * @param capacity Expected number of elements.
+   */
+  virtual void reserve(size_t capacity) override {
+    data.reserve(capacity);
+    for (size_t i = 0; i < data.size(); i++) {
+      data[i].reserve(3); // optimize for triangle meshes
+    }
+  }
+
+  /**
    * @brief (ASCII reading) Parse out the next value of this property from a list of tokens.
    *
    * @param tokens The list of property tokens for the element.
@@ -336,15 +362,13 @@ public:
     iss >> count;
     currEntry++;
 
-    std::vector<T> thisVec;
+    data.emplace_back();
+    data.back().resize(count);
     for (size_t iCount = 0; iCount < count; iCount++) {
       std::istringstream iss(tokens[currEntry]);
-      T val;
-      iss >> val;
-      thisVec.push_back(val);
+      iss >> data.back()[iCount];
       currEntry++;
     }
-    data.push_back(thisVec);
   }
 
   /**
@@ -359,13 +383,9 @@ public:
     stream.read(((char*)&count), listCountBytes);
 
     // Read list elements
-    std::vector<T> thisVec;
-    for (size_t iCount = 0; iCount < count; iCount++) {
-      T val;
-      stream.read((char*)&val, sizeof(T));
-      thisVec.push_back(val);
-    }
-    data.push_back(thisVec);
+    data.emplace_back();
+    data.back().resize(count);
+    stream.read((char*)&data.back().front(), count*sizeof(T));
   }
 
   /**
@@ -1524,6 +1544,9 @@ private:
         std::cout << "  - Processing element: " << elem.name << std::endl;
       }
 
+      for (size_t iP = 0; iP < elem.properties.size(); iP++) {
+        elem.properties[iP]->reserve(elem.count);
+      }
       for (size_t iEntry = 0; iEntry < elem.count; iEntry++) {
 
         string line;
@@ -1556,6 +1579,9 @@ private:
         std::cout << "  - Processing element: " << elem.name << std::endl;
       }
 
+      for (size_t iP = 0; iP < elem.properties.size(); iP++) {
+        elem.properties[iP]->reserve(elem.count);
+      }
       for (size_t iEntry = 0; iEntry < elem.count; iEntry++) {
         for (size_t iP = 0; iP < elem.properties.size(); iP++) {
           elem.properties[iP]->readNext(inStream);

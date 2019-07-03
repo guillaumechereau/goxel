@@ -23,7 +23,7 @@
 // general (you can even more an arbitrary shape sun). For now only the first
 // environment is used.
 //
-// 1. prepare the ray-tracing acceleration structure with `build_scene_bvh()`
+// 1. prepare the ray-tracing acceleration structure with `build_bvh()`
 // 2. prepare lights for rendering with `init_trace_lights()`
 // 3. create the random number generators with `init_trace_state()`
 // 4. render blocks of samples with `trace_samples()`
@@ -75,16 +75,8 @@
 #include "yocto_math.h"
 #include "yocto_random.h"
 #include "yocto_scene.h"
-#include "yocto_utils.h"
 
-// -----------------------------------------------------------------------------
-// USING DIRECTIVES
-// -----------------------------------------------------------------------------
-namespace yocto {
-
-using std::function;
-
-}
+#include <atomic>
 
 // -----------------------------------------------------------------------------
 // PATH TRACING
@@ -96,105 +88,104 @@ const auto trace_default_seed = 961748941ull;
 
 // Trace lights used during rendering.
 struct trace_lights {
-    vector<int>           instances               = {};
-    vector<int>           environments            = {};
-    vector<vector<float>> shape_elements_cdf      = {};
-    vector<vector<float>> environment_texture_cdf = {};
+  vector<int>           instances        = {};
+  vector<int>           environments     = {};
+  vector<vector<float>> shape_cdfs       = {};
+  vector<vector<float>> environment_cdfs = {};
 
-    bool empty() const { return instances.empty() && environments.empty(); }
+  bool empty() const { return instances.empty() && environments.empty(); }
 };
 
 // Initialize lights.
-void init_trace_lights(trace_lights& lights, const yocto_scene& scene);
+trace_lights make_trace_lights(const yocto_scene& scene);
+void         make_trace_lights(trace_lights& lights, const yocto_scene& scene);
 
 // State of a pixel during tracing
 struct trace_pixel {
-    vec3f     radiance = zero3f;
-    int       hits     = 0;
-    int       samples  = 0;
-    rng_state rng      = {};
+  vec3f     radiance = zero3f;
+  int       hits     = 0;
+  int       samples  = 0;
+  rng_state rng      = {};
 };
 struct trace_state {
-    vec2i               image_size = {0, 0};
-    vector<trace_pixel> pixels     = {};
+  vec2i               image_size = {0, 0};
+  vector<trace_pixel> pixels     = {};
 };
 
 // Initialize state of the renderer.
-void init_trace_state(trace_state& state, const vec2i& image_size,
+trace_state make_trace_state(
+    const vec2i& image_size, uint64_t random_seed = trace_default_seed);
+void make_trace_state(trace_state& state, const vec2i& image_size,
     uint64_t random_seed = trace_default_seed);
 
-// Type of tracing algorithm to use
-enum struct trace_sampler_type {
-    path,                // path tracing
-    naive,               // naive path tracing
-    split,               // path tracing with split heuristic
-    eyelight,            // eyelight rendering
-    debug_normal,        // debug - normal
-    debug_albedo,        // debug - albedo
-    debug_texcoord,      // debug - texcoord
-    debug_color,         // debug - color
-    debug_frontfacing,   // debug - faceforward
-    debug_emission,      // debug - emission
-    debug_diffuse,       // debug - diffuse
-    debug_specular,      // debug - specular
-    debug_transmission,  // debug - transmission
-    debug_roughness,     // debug - roughness
-    debug_highlight,     // debug - highlight
-};
-
-const auto trace_sampler_type_names = vector<string>{"path", "naive", "split",
-    "eyelight", "debug_normal", "debug_albedo", "debug_texcoord", "debug_color",
-    "debug_frontfacing", "debug_emission", "debug_diffuse", "debug_specular",
-    "debug_transmission", "debug_roughness", "debug_highlight"};
-
-// Tracer function
-using trace_sampler_func = function<pair<vec3f, bool>(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden)>;
-trace_sampler_func get_trace_sampler_func(trace_sampler_type type);
-
 // Options for trace functions
-struct trace_image_options {
-    int                camera_id           = 0;
-    vec2i              image_size          = {1280, 720};
-    trace_sampler_type sampler_type        = trace_sampler_type::path;
-    trace_sampler_func custom_sampler      = {};
-    int                num_samples         = 512;
-    int                max_bounces         = 8;
-    int                samples_per_batch   = 16;
-    int                region_size         = 16;
-    float              pixel_clamp         = 10;
-    bool               environments_hidden = false;
-    bool               double_sided        = false;
-    uint64_t           random_seed         = trace_default_seed;
-    std::atomic<bool>* cancel_flag         = nullptr;
-    bool               run_serially        = false;
+struct trace_params {
+  // clang-format off
+  // Type of tracing algorithm to use
+  enum struct sampler_type {
+    path,        // path tracing
+    naive,       // naive path tracing
+    eyelight,    // eyelight rendering
+    falsecolor,  // false color rendering
+  };
+  enum struct falsecolor_type {
+    normal, frontfacing, gnormal, gfrontfacing, texcoord, color, emission,    
+    diffuse, specular, transmission, roughness, material, shape, instance, 
+    element, highlight };
+  // clang-format on
+
+  int                camera     = 0;
+  int                resolution = 1280;
+  sampler_type       sampler    = sampler_type::path;
+  falsecolor_type    falsecolor = falsecolor_type::diffuse;
+  int                samples    = 512;
+  int                bounces    = 8;
+  int                batch      = 16;
+  int                region     = 16;
+  float              clamp      = 10;
+  bool               envhidden  = false;
+  bool               tentfilter = false;
+  uint64_t           seed       = trace_default_seed;
+  std::atomic<bool>* cancel     = nullptr;
+  bool               noparallel = false;
 };
+
+const auto trace_sampler_names = vector<string>{
+    "path", "naive", "eyelight", "falsecolor"};
+
+const auto trace_falsecolor_names = vector<string>{"normal", "frontfacing",
+    "gnormal", "gfrontfacing", "texcoord", "color", "emission", "diffuse",
+    "specular", "transmission", "roughness", "material", "shape", "instance",
+    "element", "highlight"};
+
+// Equality operators
+inline bool operator==(const trace_params& a, const trace_params& b) {
+  return memcmp(&a, &b, sizeof(a)) == 0;
+}
+inline bool operator!=(const trace_params& a, const trace_params& b) {
+  return memcmp(&a, &b, sizeof(a)) != 0;
+}
 
 // Progressively compute an image by calling trace_samples multiple times.
-image4f trace_image(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const trace_image_options& options);
+image<vec4f> trace_image(const yocto_scene& scene, const bvh_scene& bvh,
+    const trace_lights& lights, const trace_params& params);
 
 // Progressively compute an image by calling trace_samples multiple times.
 // Start with an empty state and then successively call this function to
 // render the next batch of samples.
-int trace_image_samples(image4f& image, trace_state& state,
+int trace_samples(image<vec4f>& image, trace_state& state,
     const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
-    int current_sample, const trace_image_options& options);
+    int current_sample, const trace_params& params);
 
-// Starts an anyncrhounous renderer. The function will keep a reference to
-// options.
-void trace_image_async_start(image4f& image, trace_state& state,
+// Progressively compute an image by calling trace_region multiple times.
+// Compared to `trace_samples` this always runs serially and is helpful
+// when building async applications.
+void trace_region(image<vec4f>& image, trace_state& state,
     const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
-    vector<future<void>>& futures, atomic<int>& current_sample,
-    concurrent_queue<image_region>& queue, const trace_image_options& options);
-// Stop the asynchronous renderer.
-void trace_image_async_stop(vector<future<void>>& futures,
-    concurrent_queue<image_region>& queue, const trace_image_options& options);
+    const image_region& region, int num_samples, const trace_params& params);
 
 // Check is a sampler requires lights
-bool is_trace_sampler_lit(const trace_image_options& options);
+bool is_sampler_lit(const trace_params& params);
 
 // Trace statistics for last run used for fine tuning implementation.
 // For now returns number of paths and number of rays.
@@ -209,39 +200,46 @@ void                     reset_trace_stats();
 namespace yocto {
 
 // Phong exponent to roughness.
-float convert_specular_exponent_to_roughness(float n);
+float exponent_to_roughness(float n);
 
 // Specular to fresnel eta.
-void compute_fresnel_from_specular(
-    const vec3f& specular, vec3f& es, vec3f& esk);
-float convert_specular_to_eta(const vec3f& specular);
+vec3f              reflectivity_to_eta(const vec3f& reflectivity);
+vec3f              eta_to_reflectivity(const vec3f& eta);
+pair<vec3f, vec3f> reflectivity_to_eta(
+    const vec3f& reflectivity, const vec3f& edge_tint);
+vec3f eta_to_reflectivity(const vec3f& eta, const vec3f& etak);
+vec3f eta_to_edge_tint(const vec3f& eta, const vec3f& etak);
 // Compute the fresnel term for dielectrics.
-vec3f evaluate_fresnel_dielectric(float direction_cosine, const vec3f& eta);
+vec3f fresnel_dielectric(const vec3f& eta, float direction_cosine);
 // Compute the fresnel term for metals.
-vec3f evaluate_fresnel_metal(
-    float direction_cosine, const vec3f& eta, const vec3f& etak);
+vec3f fresnel_conductor(
+    const vec3f& eta, const vec3f& etak, float direction_cosine);
 // Schlick approximation of Fresnel term, optionally weighted by roughness;
-vec3f evaluate_fresnel_schlick(const vec3f& specular, float direction_cosine);
-vec3f evaluate_fresnel_schlick(
+vec3f fresnel_schlick(const vec3f& specular, float direction_cosine);
+vec3f fresnel_schlick(
     const vec3f& specular, float direction_cosine, float roughness);
 
 // Evaluates the microfacet distribution and geometric term (ggx or beckman).
-float evaluate_microfacet_distribution(float roughness, const vec3f& normal,
+float eval_microfacetD(float roughness, const vec3f& normal,
     const vec3f& half_vector, bool ggx = true);
-float evaluate_microfacet_shadowing(float roughness, const vec3f& normal,
+float eval_microfacetG(float roughness, const vec3f& normal,
     const vec3f& half_vector, const vec3f& outgoing, const vec3f& incoming,
     bool ggx = true);
-vec3f sample_microfacet_distribution(
+vec3f sample_microfacet(
     float roughness, const vec3f& normal, const vec2f& rn, bool ggx = true);
-float sample_microfacet_distribution_pdf(float roughness, const vec3f& normal,
+float sample_microfacet_pdf(float roughness, const vec3f& normal,
     const vec3f& half_vector, bool ggx = true);
 
 // Evaluate and sample volume phase function.
-vec3f sample_phase_function(float vg, const vec2f& u);
-float evaluate_phase_function(float cos_theta, float vg);
+vec3f sample_phasefunction(float vg, const vec2f& u);
+float eval_phasefunction(float cos_theta, float vg);
 
-// Get a complex ior table with keys the metal name and values (eta, etak)
-bool get_metal_ior(const string& element, vec3f& eta, vec3f& etak);
+// Get complex ior from metal names (eta, etak).
+// Return zeros if not available.
+pair<vec3f, vec3f> get_conductor_eta(const string& element);
+
+// Get subsurface params
+pair<vec3f, vec3f> get_subsurface_params(const string& name);
 
 }  // namespace yocto
 

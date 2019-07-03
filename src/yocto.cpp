@@ -29,6 +29,7 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wparentheses"
 #pragma GCC diagnostic ignored "-Wreturn-type"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
 
 #include <cstddef>
@@ -48,12 +49,16 @@ static int size(const std::vector<T> &x) {
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_WRITE_STATIC
 
-#include "../ext_src/yocto/ext/ArHosekSkyModel.cpp"
+// #include "../ext_src/yocto/ext/ArHosekSkyModel.cpp"
 #include "../ext_src/yocto/yocto_bvh.cpp"
 #include "../ext_src/yocto/yocto_image.cpp"
 #include "../ext_src/yocto/yocto_scene.cpp"
 #include "../ext_src/yocto/yocto_shape.cpp"
 #include "../ext_src/yocto/yocto_trace.cpp"
+
+#define file_holder yocto_obj_file_holder
+#define open_input_file yocto_obj_open_input_file
+#include "../ext_src/yocto/yocto_obj.cpp"
 
 #ifndef __clang__
 #pragma GCC diagnostic pop

@@ -28,2148 +28,214 @@
 
 #include "yocto_trace.h"
 
-#include <unordered_map>
+#include <future>
+#include <thread>
 
 // -----------------------------------------------------------------------------
-// USING DIRECTIVES
-// -----------------------------------------------------------------------------
-namespace yocto {
-
-using std::pair;
-using std::unordered_map;
-
-}  // namespace yocto
-
-// -----------------------------------------------------------------------------
-// IMPLEMENTATION FOR PATH TRACING
+// IMPLEMENTATION FOR PATH TRACING SUPPORT FUNCTIONS
 // -----------------------------------------------------------------------------
 namespace yocto {
 
-// Trace stats.
-atomic<uint64_t> _trace_npaths{0};
-atomic<uint64_t> _trace_nrays{0};
-
-// Trace point
-struct trace_point {
-    int             instance_id  = -1;
-    int             element_id   = -1;
-    vec2f           element_uv   = zero2f;
-    vec3f           position     = zero3f;
-    vec3f           normal       = zero3f;
-    vec2f           texturecoord = zero2f;
-    vec4f           color        = zero4f;
-    vec3f           emission     = zero3f;
-    microfacet_brdf brdf         = {};
-    bool            hit          = false;
-};
-
-// Make a trace point
-trace_point make_trace_point(const yocto_scene& scene, int instance_id,
-    int element_id, const vec2f& element_uv,
-    const vec3f& shading_direction = zero3f) {
-    auto& instance    = scene.instances[instance_id];
-    auto& shape       = scene.shapes[instance.shape];
-    auto& material    = scene.materials[shape.material];
-    auto  point       = trace_point();
-    point.instance_id = instance_id;
-    point.element_id  = element_id;
-    point.element_uv  = element_uv;
-    point.position    = evaluate_instance_position(
-        scene, instance, element_id, element_uv);
-    point.normal = evaluate_instance_normal(
-        scene, instance, element_id, element_uv);
-    if (!shape.lines.empty()) {
-        point.normal = orthonormalize(-shading_direction, point.normal);
-    } else if (!shape.points.empty()) {
-        point.normal = -shading_direction;
-    } else {
-        if (material.normal_texture >= 0)
-            point.normal = evaluate_instance_perturbed_normal(
-                scene, instance, element_id, element_uv);
-    }
-    point.texturecoord = evaluate_shape_texturecoord(
-        shape, element_id, element_uv);
-    point.color    = evaluate_shape_color(shape, element_id, element_uv);
-    point.emission = evaluate_material_emission(
-        scene, material, point.texturecoord);
-    point.brdf = evaluate_material_brdf(scene, material, point.texturecoord);
-    point.brdf.diffuse *= xyz(point.color);
-    point.brdf.specular *= xyz(point.color);
-    point.brdf.opacity *= point.color.w;
-    point.hit = true;
-    return point;
-}
-
-// Intersects a ray and returns a point
-trace_point trace_ray(const yocto_scene& scene, const bvh_scene& bvh,
-    const vec3f& position, const vec3f& direction) {
-    auto isec = intersect_scene_bvh(bvh, make_ray(position, direction));
-    _trace_nrays += 1;
-    if (isec.hit) {
-        return make_trace_point(scene, isec.instance_id, isec.element_id,
-            isec.element_uv, direction);
-    } else {
-        auto point     = trace_point();
-        point.emission = evaluate_environment_emission(scene, direction);
-        return point;
-    }
-}
-
-// Intersects a ray and returns a point accounting for opacity treated as
-// coveregae
-trace_point trace_ray_with_opacity(const yocto_scene& scene,
-    const bvh_scene& bvh, const vec3f& position_, const vec3f& direction,
-    rng_state& rng, int max_bounces) {
-    auto position = position_;
-    for (auto b = 0; b < max_bounces * 10; b++) {
-        auto point = trace_ray(scene, bvh, position, direction);
-        if (!point.hit) return point;
-        if (point.brdf.opacity > 0.999f) return point;
-        if (get_random_float(rng) < point.brdf.opacity) return point;
-        position = point.position + direction * ray_eps;
-    }
-    return {};
-}
-
-// Sample camera
-ray3f sample_camera_ray(const yocto_camera& camera, const vec2i& ij,
-    const vec2i& image_size, const vec2f& puv, const vec2f& luv) {
-    return evaluate_camera_ray(
-        camera, ij, image_size, puv, sample_disk_point(luv));
-}
-
-#if YOCTO_TRACE_THINSHEET
-
 // Schlick approximation of the Fresnel term
-vec3f evaluate_fresnel_schlick(
-    const vec3f& specular, const vec3f& half_vector, const vec3f& incoming) {
-    if (specular == zero3f) return zero3f;
-    return specular +
-           (vec3f{1, 1, 1} - specular) *
-               pow(clamp(1.0f - fabs(dot(half_vector, incoming)), 0.0f, 1.0f),
-                   5.0f);
-}
-vec3f evaluate_fresnel_schlick(const vec3f& specular, const vec3f& half_vector,
-    const vec3f& incoming, float roughness) {
-    if (specular == zero3f) return zero3f;
-    auto fks = evaluate_fresnel_schlick(
-        specular, fabs(dot(half_vector, incoming)));
-    return specular +
-           (fks - specular) * (1 - sqrt(clamp(roughness, 0.0f, 1.0f)));
+vec3f fresnel_schlick(const vec3f& specular, float direction_cosine) {
+  if (specular == zero3f) return zero3f;
+  return specular + (1 - specular) *
+                        pow(clamp(1 - abs(direction_cosine), 0.0f, 1.0f), 5.0f);
 }
 
 // Evaluates the GGX distribution and geometric term
-float evaluate_ggx_distribution(
-    float roughness, const vec3f& normal, const vec3f& half_vector) {
-    auto di = (dot(normal, half_vector) * dot(normal, half_vector)) *
-                  (roughness * roughness - 1) +
-              1;
-    return roughness * roughness / (pif * di * di);
-}
-float evaluate_ggx_shadowing(float roughness, const vec3f& normal,
-    const vec3f& outgoing, const vec3f& incoming) {
-#if 0
-    // evaluate G from Heitz
-    auto lambda_o = (-1 + sqrt(1 + alpha2 * (1 - ndo * ndo) / (ndo * ndo))) / 2;
-    auto lambda_i = (-1 + sqrt(1 + alpha2 * (1 - ndi * ndi) / (ndi * ndi))) / 2;
-    auto g = 1 / (1 + lambda_o + lambda_i);
-#else
-    auto Go = (2 * fabs(dot(normal, outgoing))) /
-              (fabs(dot(normal, outgoing)) +
-                  sqrt(roughness * roughness + (1 - roughness * roughness) *
-                                                   dot(normal, outgoing) *
-                                                   dot(normal, outgoing)));
-    auto Gi = (2 * fabs(dot(normal, incoming))) /
-              (fabs(dot(normal, incoming)) +
-                  sqrt(roughness * roughness + (1 - roughness * roughness) *
-                                                   dot(normal, incoming) *
-                                                   dot(normal, incoming)));
-    return Go * Gi;
-#endif
-}
-// Evaluates the GGX pdf
-float sample_ggx_pdf(float rs, float ndh) {
-    auto alpha2 = rs * rs;
-    auto di     = (ndh * ndh) * (alpha2 - 1) + 1;
-    auto d      = alpha2 / (pif * di * di);
-    return d * ndh;
-}
-// Sample the GGX distribution
-vec3f sample_ggx(float rs, const vec2f& rn) {
-    auto tan2 = rs * rs * rn.y / (1 - rn.y);
-    auto rz   = sqrt(1 / (tan2 + 1));
-    auto rr   = sqrt(1 - rz * rz);
-    auto rphi = 2 * pif * rn.x;
-    // set to wh
-    auto wh_local = vec3f{rr * cos(rphi), rr * sin(rphi), rz};
-    return wh_local;
-}
-
-// Evaluates the BRDF scaled by the cosine of the incoming direction.
-// - ggx from [Heitz 2014] and [Walter 2007] and [Lagarde 2014]
-// "Understanding the Masking-Shadowing Function in Microfacet-Based
-// BRDFs" http://jcgt.org/published/0003/02/03/
-// - "Microfacet Models for Refraction through Rough Surfaces" EGSR 07
-// https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
-vec3f evaluate_brdf_cosine(const microfacet_brdf& brdf, const vec3f& normal,
-    const vec3f& outgoing, const vec3f& incoming) {
-    if (is_brdf_delta(brdf)) return zero3f;
-    auto brdf_cosine = zero3f;
-
-    // diffuse
-    if (brdf.diffuse != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) > 0) {
-        auto half_vector = normalize(incoming + outgoing);
-        auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(brdf.specular,
-                                            half_vector, outgoing)
-                                      : brdf.specular;
-        brdf_cosine += brdf.diffuse * (1 - fresnel) / pif;
-    }
-
-    // specular
-    if (brdf.specular != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) > 0) {
-        auto half_vector = normalize(incoming + outgoing);
-        auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(brdf.specular,
-                                            half_vector, outgoing)
-                                      : brdf.specular;
-        auto D = evaluate_ggx_distribution(brdf.roughness, normal, half_vector);
-        auto G = evaluate_ggx_shadowing(
-            brdf.roughness, normal, outgoing, incoming);
-        brdf_cosine +=
-            fresnel * D * G /
-            (4 * fabs(dot(normal, outgoing)) * fabs(dot(normal, incoming)));
-    }
-
-    // transmission (thin sheet)
-    if (brdf.transmission != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) < 0) {
-        auto ir = (dot(normal, outgoing) >= 0) ? reflect(-incoming, normal)
-                                               : reflect(-incoming, -normal);
-        auto half_vector = normalize(ir + outgoing);
-        auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(brdf.specular,
-                                            half_vector, outgoing)
-                                      : brdf.specular;
-        auto D = evaluate_ggx_distribution(brdf.roughness, normal, half_vector);
-        auto G = evaluate_ggx_shadowing(brdf.roughness, normal, outgoing, ir);
-        brdf_cosine +=
-            brdf.transmission * (1 - fresnel) * D * G /
-            (4 * fabs(dot(normal, outgoing)) * fabs(dot(normal, ir)));
-    }
-
-    return brdf_cosine * abs(dot(normal, incoming));
-}
-
-// Evaluates the BRDF assuming that it is called only from the directions
-// generated by sample_brdf_direction.
-vec3f evaluate_delta_brdf_cosine(const microfacet_brdf& brdf,
-    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
-    if (!is_brdf_delta(brdf)) return zero3f;
-    auto microfacet_brdf = zero3f;
-
-    // specular
-    if (brdf.specular != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) > 0) {
-        auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(
-                                            brdf.specular, normal, outgoing)
-                                      : brdf.specular;
-        microfacet_brdf += fresnel;
-    }
-
-    // transmission (thin sheet)
-    if (brdf.transmission != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) < 0) {
-        auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(
-                                            brdf.specular, normal, outgoing)
-                                      : brdf.specular;
-        microfacet_brdf += brdf.transmission * (1 - fresnel);
-    }
-
-    return microfacet_brdf;
-}
-
-// Picks a direction based on the BRDF
-vec3f sample_brdf_direction(const microfacet_brdf& brdf, const vec3f& normal,
-    const vec3f& outgoing, float rnl, const vec2f& rn) {
-    if (is_brdf_delta(brdf)) return zero3f;
-    auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(
-                                        brdf.specular, normal, outgoing)
-                                  : brdf.specular;
-    auto prob = vec3f{max(brdf.diffuse * (1 - fresnel)), max(fresnel),
-        max(brdf.transmission * (1 - fresnel))};
-    if (prob == zero3f) return zero3f;
-    prob /= prob.x + prob.y + prob.z;
-
-    // sample according to diffuse
-    if (brdf.diffuse != zero3f && rnl < prob.x) {
-        auto rz = sqrtf(rn.y), rr = sqrtf(1 - rz * rz), rphi = 2 * pif * rn.x;
-        auto il = vec3f{rr * cosf(rphi), rr * sinf(rphi), rz};
-        auto fp = dot(normal, outgoing) >= 0
-                      ? make_frame_fromz(zero3f, normal)
-                      : make_frame_fromz(zero3f, -normal);
-        return transform_direction(fp, il);
-    }
-    // sample according to specular GGX
-    else if (brdf.specular != zero3f && rnl < prob.x + prob.y) {
-        auto hl = sample_ggx_distribution(brdf.roughness, rn);
-        auto fp = dot(normal, outgoing) >= 0
-                      ? make_frame_fromz(zero3f, normal)
-                      : make_frame_fromz(zero3f, -normal);
-        auto half_vector = transform_direction(fp, hl);
-        return reflect(outgoing, half_vector);
-    }
-    // transmission hack
-    else if (brdf.transmission != zero3f && rnl < prob.x + prob.y + prob.z) {
-        auto hl = sample_ggx_distribution(brdf.roughness, rn);
-        auto fp = dot(normal, outgoing) >= 0
-                      ? make_frame_fromz(zero3f, normal)
-                      : make_frame_fromz(zero3f, -normal);
-        auto half_vector = transform_direction(fp, hl);
-        auto ir          = reflect(outgoing, half_vector);
-        return dot(normal, outgoing) >= 0 ? reflect(-ir, -normal)
-                                          : reflect(-ir, normal);
-    } else {
-        return zero3f;
-    }
-}
-
-// Picks a direction based on the BRDF
-vec3f sample_delta_brdf_direction(const microfacet_brdf& brdf,
-    const vec3f& normal, const vec3f& outgoing, float rnl, const vec2f& rn) {
-    if (!is_brdf_delta(brdf)) return zero3f;
-    auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(
-                                        brdf.specular, normal, outgoing)
-                                  : brdf.specular;
-    auto prob = vec3f{0, max(fresnel), max(brdf.transmission * (1 - fresnel))};
-    if (prob == zero3f) return zero3f;
-    prob /= prob.x + prob.y + prob.z;
-
-    // sample according to specular mirror
-    if (brdf.specular != zero3f && rnl < prob.x + prob.y) {
-        return reflect(outgoing, dot(normal, outgoing) >= 0 ? normal : -normal);
-    }
-    // sample according to transmission
-    else if (brdf.transmission != zero3f && !brdf.refract &&
-             rnl < prob.x + prob.y + prob.z) {
-        return -outgoing;
-    }
-    // sample according to transmission
-    else if (brdf.transmission != zero3f && brdf.refract &&
-             rnl < prob.x + prob.y + prob.z) {
-        if (dot(normal, outgoing) >= 0) {
-            return refract(
-                outgoing, normal, 1 / convert_specular_to_eta(brdf.specular));
-        } else {
-            return refract(
-                outgoing, -normal, convert_specular_to_eta(brdf.specular));
-        }
-    }
-    // no sampling
-    else {
-        return zero3f;
-    }
-}
-
-// Compute the weight for sampling the BRDF
-float sample_brdf_direction_pdf(const microfacet_brdf& brdf,
-    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
-    if (is_brdf_delta(brdf)) return 0;
-    auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(
-                                        brdf.specular, normal, outgoing)
-                                  : brdf.specular;
-    auto prob = vec3f{max(brdf.diffuse * (1 - fresnel)), max(fresnel),
-        max(brdf.transmission * (1 - fresnel))};
-    if (prob == zero3f) return 0;
-    prob /= prob.x + prob.y + prob.z;
-
-    auto pdf = 0.0f;
-
-    if (brdf.diffuse != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) > 0) {
-        pdf += prob.x * fabs(dot(normal, incoming)) / pif;
-    }
-    if (brdf.specular != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) > 0) {
-        auto half_vector = normalize(incoming + outgoing);
-        auto d           = sample_ggx_distribution_pdf(
-            brdf.roughness, fabs(dot(normal, half_vector)));
-        pdf += prob.y * d / (4 * fabs(dot(outgoing, half_vector)));
-    }
-    if (brdf.transmission != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) < 0) {
-        auto ir = (dot(normal, outgoing) >= 0) ? reflect(-incoming, normal)
-                                               : reflect(-incoming, -normal);
-        auto half_vector = normalize(ir + outgoing);
-        auto d           = sample_ggx_distribution_pdf(
-            brdf.roughness, fabs(dot(normal, half_vector)));
-        pdf += prob.z * d / (4 * fabs(dot(outgoing, half_vector)));
-    }
-
-    return pdf;
-}
-
-// Compute the weight for sampling the BRDF
-float sample_delta_brdf_direction_pdf(const microfacet_brdf& brdf,
-    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
-    if (!is_brdf_delta(brdf)) return 0;
-    auto fresnel = (brdf.fresnel) ? evaluate_fresnel_schlick(
-                                        brdf.specular, normal, outgoing)
-                                  : brdf.specular;
-    auto prob = vec3f{0, max(fresnel), max(brdf.transmission * (1 - fresnel))};
-    if (prob == zero3f) return 0;
-    prob /= prob.x + prob.y + prob.z;
-
-    auto pdf = 0.0f;
-
-    if (brdf.specular != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) > 0) {
-        return prob.y;
-    }
-    if (brdf.transmission != zero3f &&
-        dot(normal, outgoing) * dot(normal, incoming) < 0) {
-        return prob.z;
-    }
-
-    return pdf;
-}
-
-#else
-
-// Schlick approximation of the Fresnel term
-vec3f evaluate_fresnel_schlick(const vec3f& specular, float direction_cosine) {
-    return specular +
-           (1 - specular) *
-               pow(clamp(1 - abs(direction_cosine), 0.0f, 1.0f), 5.0f);
-}
-vec3f evaluate_fresnel_schlick(
-    const vec3f& specular, float direction_cosine, float roughness) {
-    auto fks = evaluate_fresnel_schlick(specular, direction_cosine);
-    return specular +
-           (fks - specular) * (1 - sqrt(clamp(roughness, 0.0f, 1.0f)));
-}
-
-// Evaluates the GGX distribution and geometric term
-float evaluate_microfacet_distribution(
+float eval_microfacetD(
     float roughness, const vec3f& normal, const vec3f& half_vector, bool ggx) {
-    auto cosine = dot(normal, half_vector);
-    if (cosine <= 0) return 0;
-    auto roughness_square = roughness * roughness;
-    auto cosine_square    = cosine * cosine;
-    auto tangent_square   = clamp01(1 - cosine_square) / cosine_square;
-    if (ggx) {
-        return roughness_square / (pif * cosine_square * cosine_square *
-                                      (roughness_square + tangent_square) *
-                                      (roughness_square + tangent_square));
-    } else {
-        return exp(-tangent_square / roughness_square) /
-               (pif * roughness_square * cosine_square * cosine_square);
-    }
+  auto cosine = dot(normal, half_vector);
+  if (cosine <= 0) return 0;
+  auto roughness_square = roughness * roughness;
+  auto cosine_square    = cosine * cosine;
+  auto tangent_square   = clamp(1 - cosine_square, 0.0f, 1.0f) / cosine_square;
+  if (ggx) {
+    return roughness_square / (pif * cosine_square * cosine_square *
+                                  (roughness_square + tangent_square) *
+                                  (roughness_square + tangent_square));
+  } else {
+    return exp(-tangent_square / roughness_square) /
+           (pif * roughness_square * cosine_square * cosine_square);
+  }
 }
-float evaluate_microfacet_shadowing_term(float roughness, const vec3f& normal,
+float evaluate_microfacetG1(float roughness, const vec3f& normal,
     const vec3f& half_vector, const vec3f& direction, bool ggx) {
-    auto cosine = dot(normal, direction);
-    if (dot(half_vector, direction) * cosine <= 0) return 0;
-    auto roughness_square = roughness * roughness;
-    auto cosine_square    = cosine * cosine;
-    auto tangent_square   = clamp01(1 - cosine_square) / cosine_square;
-    if (ggx) {
-        return 2 / (1 + sqrt(1.0f + roughness_square * tangent_square));
+  auto cosine = dot(normal, direction);
+  if (dot(half_vector, direction) * cosine <= 0) return 0;
+  auto roughness_square = roughness * roughness;
+  auto cosine_square    = cosine * cosine;
+  auto tangent_square   = clamp(1 - cosine_square, 0.0f, 1.0f) / cosine_square;
+  if (ggx) {
+    return 2 / (1 + sqrt(1.0f + roughness_square * tangent_square));
+  } else {
+    auto tangent       = sqrt(tangent_square);
+    auto inv_rt        = 1 / (roughness * tangent);
+    auto inv_rt_square = 1 / (roughness_square * tangent_square);
+    if (inv_rt < 1.6f) {
+      return (3.535f * inv_rt + 2.181f * inv_rt_square) /
+             (1.0f + 2.276f * inv_rt + 2.577f * inv_rt_square);
     } else {
-        auto tangent       = sqrt(tangent_square);
-        auto inv_rt        = 1 / (roughness * tangent);
-        auto inv_rt_square = 1 / (roughness_square * tangent_square);
-        if (inv_rt < 1.6f) {
-            return (3.535f * inv_rt + 2.181f * inv_rt_square) /
-                   (1.0f + 2.276f * inv_rt + 2.577f * inv_rt_square);
-        } else {
-            return 1.0f;
-        }
+      return 1.0f;
     }
+  }
 }
-float evaluate_microfacet_shadowing(float roughness, const vec3f& normal,
+float eval_microfacetG(float roughness, const vec3f& normal,
     const vec3f& half_vector, const vec3f& outgoing, const vec3f& incoming,
     bool ggx) {
-    return evaluate_microfacet_shadowing_term(
-               roughness, normal, half_vector, outgoing, ggx) *
-           evaluate_microfacet_shadowing_term(
-               roughness, normal, half_vector, incoming, ggx);
+  return evaluate_microfacetG1(roughness, normal, half_vector, outgoing, ggx) *
+         evaluate_microfacetG1(roughness, normal, half_vector, incoming, ggx);
 }
-vec3f sample_microfacet_distribution(
+vec3f sample_microfacet(
     float roughness, const vec3f& normal, const vec2f& rn, bool ggx) {
-    auto phi              = 2 * pif * rn.x;
-    auto roughness_square = roughness * roughness;
-    auto tangent_square   = 0.0f;
-    if (ggx) {
-        tangent_square = -roughness_square * log(1 - rn.y);
-    } else {
-        tangent_square = roughness_square * rn.y / (1 - rn.y);
-    }
-    auto cosine_square     = 1 / (1 + tangent_square);
-    auto cosine            = 1 / sqrt(1 + tangent_square);
-    auto radius            = sqrt(clamp01(1 - cosine_square));
-    auto local_half_vector = vec3f{
-        cos(phi) * radius, sin(phi) * radius, cosine};
-    return transform_direction(make_basis_fromz(normal), local_half_vector);
+  auto phi              = 2 * pif * rn.x;
+  auto roughness_square = roughness * roughness;
+  auto tangent_square   = 0.0f;
+  if (ggx) {
+    tangent_square = -roughness_square * log(1 - rn.y);
+  } else {
+    tangent_square = roughness_square * rn.y / (1 - rn.y);
+  }
+  auto cosine_square     = 1 / (1 + tangent_square);
+  auto cosine            = 1 / sqrt(1 + tangent_square);
+  auto radius            = sqrt(clamp(1 - cosine_square, 0.0f, 1.0f));
+  auto local_half_vector = vec3f{cos(phi) * radius, sin(phi) * radius, cosine};
+  return transform_direction(basis_fromz(normal), local_half_vector);
 }
-float sample_microfacet_distribution_pdf(
+float sample_microfacet_pdf(
     float roughness, const vec3f& normal, const vec3f& half_vector, bool ggx) {
-    auto cosine = dot(normal, half_vector);
-    if (cosine < 0) return 0;
-    return evaluate_microfacet_distribution(
-               roughness, normal, half_vector, ggx) *
-           cosine;
+  auto cosine = dot(normal, half_vector);
+  if (cosine < 0) return 0;
+  return eval_microfacetD(roughness, normal, half_vector, ggx) * cosine;
 }
-
-vec3f evaluate_brdf_fresnel(
-    const microfacet_brdf& brdf, const vec3f& normal, const vec3f& incoming) {
-    if (brdf.specular == zero3f) return zero3f;
-    if (!brdf.fresnel) return brdf.specular;
-    return evaluate_fresnel_schlick(brdf.specular, dot(normal, incoming));
-}
-
-// Evaluates the BRDF scaled by the cosine of the incoming direction.
-// - ggx from [Heitz 2014] and [Walter 2007] and [Lagarde 2014]
-// "Understanding the Masking-Shadowing Function in Microfacet-Based
-// BRDFs" http://jcgt.org/published/0003/02/03/
-// - "Microfacet Models for Refraction through Rough Surfaces" EGSR 07
-// https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
-vec3f evaluate_brdf_cosine(const microfacet_brdf& brdf, const vec3f& normal_,
-    const vec3f& outgoing, const vec3f& incoming) {
-    if (is_brdf_delta(brdf)) return zero3f;
-    auto brdf_cosine = zero3f;
-
-    // flip normal if necessary
-    auto normal = (dot(normal_, outgoing) > 0) ? normal_ : -normal_;
-
-    // orientation
-    auto outgoing_up = dot(outgoing, normal) > 0;
-    auto incoming_up = dot(incoming, normal) > 0;
-
-    // diffuse
-    if (brdf.diffuse != zero3f && outgoing_up && incoming_up) {
-        auto half_vector = normalize(incoming + outgoing);
-        auto fresnel     = evaluate_brdf_fresnel(brdf, half_vector, incoming);
-        brdf_cosine += brdf.diffuse * (1 - fresnel) / pif;
-    }
-
-    // specular
-    if (brdf.specular != zero3f && outgoing_up && incoming_up) {
-        auto half_vector = normalize(incoming + outgoing);
-        auto fresnel     = evaluate_brdf_fresnel(brdf, half_vector, incoming);
-        auto D           = evaluate_microfacet_distribution(
-            brdf.roughness, normal, half_vector);
-        auto G = evaluate_microfacet_shadowing(
-            brdf.roughness, normal, half_vector, outgoing, incoming);
-        brdf_cosine +=
-            fresnel * D * G /
-            (4 * fabs(dot(normal, outgoing)) * fabs(dot(normal, incoming)));
-    }
-
-    // transmission (thin sheet)
-    if (brdf.transmission != zero3f && outgoing_up && !incoming_up) {
-        auto ir          = reflect(-incoming, normal);
-        auto half_vector = normalize(ir + outgoing);
-        auto fresnel     = evaluate_brdf_fresnel(brdf, half_vector, -outgoing);
-        auto D           = evaluate_microfacet_distribution(
-            brdf.roughness, normal, half_vector);
-        auto G = evaluate_microfacet_shadowing(
-            brdf.roughness, normal, half_vector, outgoing, ir);
-        brdf_cosine +=
-            brdf.transmission * (1 - fresnel) * D * G /
-            (4 * fabs(dot(normal, outgoing)) * fabs(dot(normal, ir)));
-    }
-    if (brdf.transmission != zero3f && !outgoing_up && incoming_up) {
-        auto ir          = reflect(-incoming, -normal);
-        auto half_vector = normalize(ir + outgoing);
-        auto fresnel     = evaluate_brdf_fresnel(brdf, half_vector, incoming);
-        auto D           = evaluate_microfacet_distribution(
-            brdf.roughness, normal, half_vector);
-        auto G = evaluate_microfacet_shadowing(
-            brdf.roughness, normal, half_vector, outgoing, ir);
-        brdf_cosine +=
-            brdf.transmission * (1 - fresnel) * D * G /
-            (4 * fabs(dot(normal, outgoing)) * fabs(dot(normal, ir)));
-    }
-
-    return brdf_cosine * abs(dot(normal, incoming));
-}
-
-// Evaluates the BRDF assuming that it is called only from the directions
-// generated by sample_brdf_direction.
-vec3f evaluate_delta_brdf_cosine(const microfacet_brdf& brdf,
-    const vec3f& normal_, const vec3f& outgoing, const vec3f& incoming) {
-    if (!is_brdf_delta(brdf)) return zero3f;
-    auto microfacet_brdf = zero3f;
-
-    // flip normal if necessary
-    auto normal = (dot(normal_, outgoing) > 0) ? normal_ : -normal_;
-
-    // orientation
-    auto outgoing_up = dot(outgoing, normal) > 0;
-    auto incoming_up = dot(incoming, normal) > 0;
-
-    // specular
-    if (brdf.specular != zero3f && outgoing_up && incoming_up) {
-        auto fresnel = evaluate_brdf_fresnel(brdf, normal, incoming);
-        microfacet_brdf += fresnel;
-    }
-
-    // transmission (thin sheet)
-    if (brdf.transmission != zero3f && !brdf.refract && outgoing_up &&
-        !incoming_up) {
-        auto fresnel = evaluate_brdf_fresnel(brdf, normal, -incoming);
-        microfacet_brdf += brdf.transmission * (1 - fresnel);
-    }
-    if (brdf.transmission != zero3f && !brdf.refract && !outgoing_up &&
-        incoming_up) {
-        auto fresnel = evaluate_brdf_fresnel(brdf, normal, incoming);
-        microfacet_brdf += brdf.transmission * (1 - fresnel);
-    }
-
-    return microfacet_brdf;
-}
-
-// Picks a direction based on the BRDF
-vec3f sample_brdf_direction(const microfacet_brdf& brdf, const vec3f& normal_,
-    const vec3f& outgoing, float rnl, const vec2f& rn) {
-    if (is_brdf_delta(brdf)) return zero3f;
-
-    // flip normal if necessary
-    auto normal = (dot(normal_, outgoing) > 0) ? normal_ : -normal_;
-
-    // orientation
-    auto outgoing_up = dot(outgoing, normal) > 0;
-
-    // weights
-    auto fresnel = evaluate_brdf_fresnel(brdf, normal, outgoing);
-    auto weights = vec3f{max(brdf.diffuse * (1 - fresnel)), max(fresnel),
-        max(brdf.transmission * (1 - fresnel))};
-    if (weights == zero3f) return zero3f;
-    weights /= weights.x + weights.y + weights.z;
-
-    // sample according to diffuse
-    if (brdf.diffuse != zero3f && outgoing_up && rnl < weights.x) {
-        return sample_hemisphere_direction(normal, rn);
-    }
-    // sample according to specular GGX
-    else if (brdf.specular != zero3f && outgoing_up &&
-             rnl < weights.x + weights.y) {
-        auto half_vector = sample_microfacet_distribution(
-            brdf.roughness, normal, rn);
-        return reflect(outgoing, half_vector);
-    }
-    // transmission hack
-    else if (brdf.transmission != zero3f && outgoing_up &&
-             rnl < weights.x + weights.y + weights.z) {
-        auto half_vector = sample_microfacet_distribution(
-            brdf.roughness, normal, rn);
-        auto ir = reflect(outgoing, half_vector);
-        return reflect(-ir, -normal);
-    } else if (brdf.transmission != zero3f && !outgoing_up &&
-               rnl < weights.x + weights.y + weights.z) {
-        auto half_vector = sample_microfacet_distribution(
-            brdf.roughness, normal, rn);
-        auto ir = reflect(outgoing, half_vector);
-        return reflect(-ir, normal);
-    } else {
-        return zero3f;
-    }
-}
-
-// Picks a direction based on the BRDF
-vec3f sample_delta_brdf_direction(const microfacet_brdf& brdf,
-    const vec3f& normal_, const vec3f& outgoing, float rnl, const vec2f& rn) {
-    if (!is_brdf_delta(brdf)) return zero3f;
-
-    // flip normal if necessary
-    auto normal = (dot(normal_, outgoing) > 0) ? normal_ : -normal_;
-
-    // orientation
-    auto outgoing_up = dot(outgoing, normal) > 0;
-
-    // weights
-    auto fresnel = evaluate_brdf_fresnel(brdf, normal, outgoing);
-    auto weights = vec3f{
-        0, max(fresnel), max(brdf.transmission * (1 - fresnel))};
-    if (weights == zero3f) return zero3f;
-    weights /= weights.x + weights.y + weights.z;
-
-    // sample according to specular mirror
-    if (brdf.specular != zero3f && outgoing_up && rnl < weights.x + weights.y) {
-        return reflect(outgoing, dot(normal, outgoing) >= 0 ? normal : -normal);
-    }
-    // sample according to transmission
-    else if (brdf.transmission != zero3f && !brdf.refract && outgoing_up &&
-             rnl < weights.x + weights.y + weights.z) {
-        return -outgoing;
-    } else if (brdf.transmission != zero3f && !brdf.refract && !outgoing_up &&
-               rnl < weights.x + weights.y + weights.z) {
-        return -outgoing;
-    }
-    // sample according to transmission
-    else if (brdf.transmission != zero3f && brdf.refract && outgoing_up &&
-             rnl < weights.x + weights.y + weights.z) {
-        return refract(
-            outgoing, normal, 1 / convert_specular_to_eta(brdf.specular));
-
-    } else if (brdf.transmission != zero3f && brdf.refract && !outgoing_up &&
-               rnl < weights.x + weights.y + weights.z) {
-        return refract(
-            outgoing, -normal, convert_specular_to_eta(brdf.specular));
-    }
-    // no sampling
-    else {
-        return zero3f;
-    }
-}
-
-// Compute the weight for sampling the BRDF
-float sample_brdf_direction_pdf(const microfacet_brdf& brdf,
-    const vec3f& normal_, const vec3f& outgoing, const vec3f& incoming) {
-    if (is_brdf_delta(brdf)) return 0;
-
-    // flip normal if necessary
-    auto normal = (dot(normal_, outgoing) > 0) ? normal_ : -normal_;
-
-    // orientation
-    auto outgoing_up = dot(outgoing, normal) > 0;
-    auto incoming_up = dot(incoming, normal) > 0;
-
-    // weights
-    auto fresnel = evaluate_brdf_fresnel(brdf, normal, outgoing);
-    auto weights = vec3f{max(brdf.diffuse * (1 - fresnel)), max(fresnel),
-        max(brdf.transmission * (1 - fresnel))};
-    if (weights == zero3f) return 0;
-    weights /= weights.x + weights.y + weights.z;
-
-    auto pdf = 0.0f;
-
-    if (brdf.diffuse != zero3f && outgoing_up && incoming_up) {
-        pdf += weights.x * fabs(dot(normal, incoming)) / pif;
-    }
-    if (brdf.specular != zero3f && outgoing_up && incoming_up) {
-        auto half_vector = normalize(incoming + outgoing);
-        auto d           = sample_microfacet_distribution_pdf(
-            brdf.roughness, normal, half_vector);
-        pdf += weights.y * d / (4 * fabs(dot(outgoing, half_vector)));
-    }
-    if (brdf.transmission != zero3f && outgoing_up && !incoming_up) {
-        auto ir          = reflect(-incoming, normal);
-        auto half_vector = normalize(ir + outgoing);
-        auto d           = sample_microfacet_distribution_pdf(
-            brdf.roughness, normal, half_vector);
-        pdf += weights.z * d / (4 * fabs(dot(outgoing, half_vector)));
-    }
-    if (brdf.transmission != zero3f && !outgoing_up && incoming_up) {
-        auto ir          = reflect(-incoming, -normal);
-        auto half_vector = normalize(ir + outgoing);
-        auto d           = sample_microfacet_distribution_pdf(
-            brdf.roughness, normal, half_vector);
-        pdf += weights.z * d / (4 * fabs(dot(outgoing, half_vector)));
-    }
-
-    return pdf;
-}
-
-// Compute the weight for sampling the BRDF
-float sample_delta_brdf_direction_pdf(const microfacet_brdf& brdf,
-    const vec3f& normal_, const vec3f& outgoing, const vec3f& incoming) {
-    if (!is_brdf_delta(brdf)) return 0;
-
-    // flip normal if necessary
-    auto normal = (dot(normal_, outgoing) > 0) ? normal_ : -normal_;
-
-    // orientation
-    auto outgoing_up = dot(outgoing, normal) > 0;
-    auto incoming_up = dot(incoming, normal) > 0;
-
-    // weights
-    auto fresnel = evaluate_brdf_fresnel(brdf, normal, outgoing);
-    auto weights = vec3f{
-        0, max(fresnel), max(brdf.transmission * (1 - fresnel))};
-    if (weights == zero3f) return 0;
-    weights /= weights.x + weights.y + weights.z;
-
-    auto pdf = 0.0f;
-
-    if (brdf.specular != zero3f && outgoing_up && incoming_up) {
-        return weights.y;
-    }
-    if (brdf.transmission != zero3f && !brdf.refract && outgoing_up &&
-        !incoming_up) {
-        return weights.z;
-    }
-    if (brdf.transmission != zero3f && !brdf.refract && !outgoing_up &&
-        incoming_up) {
-        return weights.z;
-    }
-
-    return pdf;
-}
-
-#endif
-
-// Sample pdf for an environment.
-float sample_environment_direction_pdf(const yocto_scene& scene,
-    const trace_lights& lights, int environment_id, const vec3f& incoming) {
-    auto& environment = scene.environments[environment_id];
-    if (environment.emission_texture >= 0) {
-        auto& elements_cdf =
-            lights.environment_texture_cdf[environment.emission_texture];
-        auto& emission_texture = scene.textures[environment.emission_texture];
-        auto  size             = evaluate_texture_size(emission_texture);
-        auto  texcoord         = evaluate_environment_texturecoord(
-            environment, incoming);
-        auto i    = (int)(texcoord.x * size.x);
-        auto j    = (int)(texcoord.y * size.y);
-        auto idx  = j * size.x + i;
-
-        // Guillaume: hack to fix a crash.
-        if (idx >= elements_cdf.size()) idx = 0;
-
-        auto prob = sample_discrete_distribution_pdf(elements_cdf, idx) /
-                    elements_cdf.back();
-        auto angle = (2 * pif / size.x) * (pif / size.y) *
-                     sin(pif * (j + 0.5f) / size.y);
-        return prob / angle;
-    } else {
-        return 1 / (4 * pif);
-    }
-}
-
-// Picks a point on an environment.
-vec3f sample_environment_direction(const yocto_scene& scene,
-    const trace_lights& lights, int environment_id, float rel,
-    const vec2f& ruv) {
-    auto& environment = scene.environments[environment_id];
-    if (environment.emission_texture >= 0) {
-        auto& elements_cdf =
-            lights.environment_texture_cdf[environment.emission_texture];
-        auto& emission_texture = scene.textures[environment.emission_texture];
-        auto  idx  = sample_discrete_distribution(elements_cdf, rel);
-        auto  size = evaluate_texture_size(emission_texture);
-        auto  u    = (idx % size.x + 0.5f) / size.x;
-        auto  v    = (idx / size.x + 0.5f) / size.y;
-        return evaluate_environment_direction(environment, {u, v});
-    } else {
-        return sample_sphere_direction(ruv);
-    }
-}
-
-// Picks a point on a light.
-vec3f sample_instance_direction(const yocto_scene& scene,
-    const trace_lights& lights, int instance_id, const vec3f& p, float rel,
-    const vec2f& ruv) {
-    auto& instance                = scene.instances[instance_id];
-    auto& shape                   = scene.shapes[instance.shape];
-    auto& elements_cdf            = lights.shape_elements_cdf[instance.shape];
-    auto [element_id, element_uv] = sample_shape_element(
-        shape, elements_cdf, rel, ruv);
-    return normalize(
-        evaluate_instance_position(scene, instance, element_id, element_uv) -
-        p);
-}
-
-// Sample pdf for a light point.
-float sample_instance_direction_pdf(const yocto_scene& scene,
-    const trace_lights& lights, int instance_id, const bvh_scene& bvh,
-    const vec3f& position, const vec3f& direction) {
-    auto& instance = scene.instances[instance_id];
-    auto& shape    = scene.shapes[instance.shape];
-    auto& material = scene.materials[shape.material];
-    if (material.emission == zero3f) return 0;
-    auto& elements_cdf = lights.shape_elements_cdf[instance.shape];
-    // check all intersection
-    auto pdf           = 0.0f;
-    auto next_position = position;
-    for (auto bounce = 0; bounce < 100; bounce++) {
-        auto isec = intersect_instance_bvh(
-            bvh, instance_id, make_ray(next_position, direction));
-        if (!isec.hit) break;
-        // accumulate pdf
-        auto& instance       = scene.instances[isec.instance_id];
-        auto  light_position = evaluate_instance_position(
-            scene, instance, isec.element_id, isec.element_uv);
-        auto light_normal = evaluate_instance_normal(
-            scene, instance, isec.element_id, isec.element_uv);
-        // prob triangle * area triangle = area triangle mesh
-        auto area = elements_cdf.back();
-        pdf += distance_squared(light_position, position) /
-               (abs(dot(light_normal, direction)) * area);
-        // continue
-        next_position = light_position + direction * 1e-3f;
-    }
-    return pdf;
-}
-
-// Sample lights wrt solid angle
-vec3f sample_lights_direction(const yocto_scene& scene,
-    const trace_lights& lights, const bvh_scene& bvh, const vec3f& position,
-    float rl, float rel, const vec2f& ruv) {
-    auto light_id = sample_uniform_index(
-        lights.instances.size() + lights.environments.size(), rl);
-    if (light_id < lights.instances.size()) {
-        auto instance = lights.instances[light_id];
-        return sample_instance_direction(
-            scene, lights, instance, position, rel, ruv);
-    } else {
-        auto environment =
-            lights.environments[light_id - (int)lights.instances.size()];
-        return sample_environment_direction(
-            scene, lights, environment, rel, ruv);
-    }
-}
-
-// Sample lights pdf
-float sample_lights_direction_pdf(const yocto_scene& scene,
-    const trace_lights& lights, const bvh_scene& bvh, const vec3f& position,
-    const vec3f& direction) {
-    auto pdf = 0.0f;
-    for (auto instance : lights.instances) {
-        pdf += sample_instance_direction_pdf(
-            scene, lights, instance, bvh, position, direction);
-    }
-    for (auto environment : lights.environments) {
-        pdf += sample_environment_direction_pdf(
-            scene, lights, environment, direction);
-    }
-    pdf *= sample_uniform_index_pdf(
-        lights.instances.size() + lights.environments.size());
-    return pdf;
-}
-
-// Russian roulette
-bool sample_russian_roulette(
-    const vec3f& weight, int bounce, float rr, int min_bounce = 2) {
-    if (bounce <= min_bounce) return false;
-    auto rrprob = 1.0f - min(max(weight), 0.95f);
-    return rr < rrprob;
-}
-float sample_russian_roulette_pdf(
-    const vec3f& weight, int bounce, int min_bounce = 2) {
-    if (bounce <= min_bounce) return 1;
-    auto rrprob = 1.0f - min(max(weight), 0.95f);
-    return 1 - rrprob;
-}
-
-#if 0
-// Test occlusion.
-vec3f evaluate_transmission(const yocto_scene& scene, const bvh_scene& bvh,
-    const vec3f& from, const vec3f& to, int max_bounces) {
-    auto weight = vec3f{1, 1, 1};
-    auto p      = from;
-    for (auto bounce = 0; bounce < max_bounces; bounce++) {
-        auto ray  = make_segment(p, to);
-        auto isec = intersect_scene(scene, bvh, ray);
-        if (!isec.instance) break;
-        auto f = evaluate_brdf(isec.instance.shape, isec.element_id, isec.element_uv);
-        auto op = evaluate_opacity(
-            isec.instance, isec.element_id, isec.element_uv);
-        weight *= brdf.transmission + vec3f{1 - op, 1 - op, 1 - op};
-        if (weight == zero3f) break;
-        p = evaluate_position(isec.instance, isec.element_id, isec.element_uv);
-    }
-    return weight;
-}
-
-#endif
-
-vec3f evaluate_transmission(const yocto_scene& scene,
-    const yocto_material& material, const vec3f& from, const vec3f& dir,
-    float distance, int channel, rng_state& rng) {
-    auto& vd = material.volume_density;
-    if (is_material_volume_homogeneus(material))
-        return vec3f{exp(-distance * vd.x), exp(-distance * vd.y),
-            exp(-distance * vd.z)};
-
-    // ratio tracking
-    auto tr = 1.0f, t = 0.0f;
-    auto pos = from;
-    while (true) {
-        auto step = -log(1 - get_random_float(rng)) / vd[channel];
-        t += step;
-        if (t >= distance) break;
-        pos += dir * step;
-        auto density = material.volume_density;
-        if (material.volume_density_texture >= 0) {
-            auto& volume_density_texture =
-                scene.voltextures[material.volume_density_texture];
-            density *= evaluate_voltexture(volume_density_texture, pos);
-        }
-        tr *= 1.0f - max(0.0f, density[channel] / vd[channel]);
-    }
-    return {tr, tr, tr};
-}
-
-float sample_distance(const yocto_scene& scene, const yocto_material& material,
-    const vec3f& from, const vec3f& dir, int channel, rng_state& rng) {
-    auto pos      = from;
-    auto majorant = material.volume_density[channel];
-    if (majorant == 0) return float_max;
-
-    // delta tracking
-    auto distance = 0.0f;
-    while (true) {
-        auto r = get_random_float(rng);
-        if (r == 0) return float_max;
-        auto step = -log(r) / majorant;
-        if (is_material_volume_homogeneus(material)) return step;
-
-        pos += dir * step;
-        distance += step;
-        auto density = material.volume_density;
-        if (material.volume_density_texture >= 0) {
-            auto& volume_density_texture =
-                scene.voltextures[material.volume_density_texture];
-            density *= evaluate_voltexture(volume_density_texture, pos);
-        }
-        if (density[channel] / majorant >= get_random_float(rng))
-            return distance;
-
-        // Escape from volume.
-        if (pos.x > 1 || pos.y > 1 || pos.z > 1) return float_max;
-        if (pos.x < -1 || pos.y < -1 || pos.z < -1) return float_max;
-    }
-}
-
-float sample_distance(const yocto_scene& scene, const yocto_instance& instance,
-    const bbox3f& bbox, const vec3f& from, const vec3f& dir, int channel,
-    rng_state& rng) {
-    auto& shape    = scene.shapes[instance.shape];
-    auto& material = scene.materials[shape.material];
-    if (material.volume_density == zero3f) return float_max;
-
-    // Transform coordinates so that every position in the bounding box of the
-    // instance is mapped to the cube [-1,1]^3 (the same space of volume texture
-    // sampling).
-    auto scale    = bbox.max - bbox.min;
-    auto frame    = instance.frame;
-    auto froml    = transform_point_inverse(frame, from) / scale;
-    auto dirl     = transform_direction_inverse(frame, dir) / scale;
-    auto ll       = length(dirl);
-    auto distance = sample_distance(
-        scene, material, froml, dirl / ll, channel, rng);
-    return distance * ll;
-}
-
-vec3f sample_phase_function(float g, const vec2f& u) {
-    auto cos_theta = 0.0f;
-    if (abs(g) < 1e-3) {
-        cos_theta = 1 - 2 * u.x;
-    } else {
-        float square = (1 - g * g) / (1 - g + 2 * g * u.x);
-        cos_theta    = (1 + g * g - square * square) / (2 * g);
-    }
-
-    auto sin_theta = sqrt(max(0.0f, 1 - cos_theta * cos_theta));
-    auto phi       = 2 * pif * u.y;
-    return {sin_theta * cos(phi), sin_theta * sin(phi), cos_theta};
-}
-
-float evaluate_phase_function(float cos_theta, float g) {
-    auto denom = 1 + g * g + 2 * g * cos_theta;
-    return (1 - g * g) / (4 * pif * denom * sqrt(denom));
-}
-
-// Probability of computing direct illumination.
-float prob_direct(const microfacet_brdf& brdf) {
-    // This is just heuristic. Any other choice is equally correct.
-    if (brdf.diffuse + brdf.specular == zero3f) return 0;
-    auto kd       = max(brdf.diffuse);
-    auto specular = max(brdf.specular);
-    return (kd + brdf.roughness * specular) / (kd + specular);
-}
-
-// Sample a direction of direct illumination from the point p, which is inside
-// mediums.back(). pdf and incoming radiance le are returned in reference. It
-// works for both surface rendering and volume rendering.
-vec3f direct_illumination(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const vec3f& p, int channel,
-    const vector<int>& mediums_, rng_state& rng, float& pdf, vec3f& le) {
-    auto  incoming = zero3f;
-    vec3f weight   = vec3f{1, 1, 1};
-    auto  mediums  = mediums_;
-
-    auto idx = sample_uniform_index(
-        lights.instances.size() + lights.environments.size(),
-        get_random_float(rng));
-    pdf = 1.0f / (lights.instances.size() + lights.environments.size());
-    if (idx < lights.instances.size()) {
-        auto instance_id = lights.instances[idx];
-        incoming = sample_instance_direction(scene, lights, instance_id, p,
-            get_random_float(rng), get_random_vec2f(rng));
-        auto& instance = scene.instances[instance_id];
-        pdf *= 1.0 / lights.shape_elements_cdf[instance.shape].back();
-    } else {
-        auto environment_id =
-            lights.environments[idx - lights.instances.size()];
-        incoming = sample_environment_direction(scene, lights, environment_id,
-            get_random_float(rng), get_random_vec2f(rng));
-        pdf *= sample_environment_direction_pdf(
-            scene, lights, environment_id, incoming);
-        auto isec = intersect_scene_bvh(bvh, make_ray(p, incoming));
-        if (!isec.hit) {
-            auto& environment = scene.environments[environment_id];
-            le = evaluate_environment_emission(scene, environment, incoming);
-            return incoming;
-        }
-    }
-
-    auto isec = intersect_scene_bvh(bvh, make_ray(p, incoming));
-
-    while (isec.hit) {
-        auto& isec_instance = scene.instances[isec.instance_id];
-        auto& isec_shape    = scene.shapes[isec_instance.shape];
-        auto  lp            = evaluate_instance_position(
-            scene, isec_instance, isec.element_id, isec.element_uv);
-        auto ln = evaluate_instance_normal(
-            scene, isec_instance, isec.element_id, isec.element_uv);
-        auto& isec_material = scene.materials[isec_shape.material];
-        auto  emission      = evaluate_material_emission(scene, isec_material,
-                            evaluate_shape_texturecoord(
-                                isec_shape, isec.element_id, isec.element_uv)) *
-                        xyz(evaluate_shape_color(
-                            isec_shape, isec.element_id, isec.element_uv));
-
-        auto& medium_instance = scene.instances[mediums.back()];
-        auto& medium_shape    = scene.shapes[medium_instance.shape];
-        auto& medium_material = scene.materials[medium_shape.material];
-        if (medium_material.volume_density != zero3f)
-            weight *= evaluate_transmission(scene, medium_material, lp,
-                incoming, isec.distance, channel, rng);
-
-        // Hack: Uncomment this or the result will be biased
-        // If mediums refracts, the transmission ray won't reach the sampled
-        // light point if(isec.instance.mat->refract) break;
-
-        if (emission != zero3f) {
-            // Geometric term.
-            weight *= fabs(dot(ln, incoming)) / dot(lp - p, lp - p);
-            le += weight * emission;
-            break;
-        }
-
-        auto brdf = evaluate_material_brdf(scene, isec_material,
-            evaluate_shape_texturecoord(
-                isec_shape, isec.element_id, isec.element_uv));
-        if (brdf.transmission == zero3f) {
-            le = zero3f;
-            break;
-        }
-
-        auto  ndi       = dot(incoming, ln);
-        float threshold = 0.05;
-
-        if (ndi > threshold) {
-            // Exiting from medium.
-            if (isec.instance_id != mediums.back()) {
-                pdf = 0;
-                return zero3f;
-            }
-            if (mediums.size() <= 1) {
-                pdf = 0;
-                return zero3f;
-            }
-            mediums.pop_back();
-        } else if (ndi < -threshold) {
-            // Entering new medium.
-            if (isec.instance_id == mediums.back()) {
-                pdf = 0;
-                return zero3f;
-            }
-            mediums.push_back(isec.instance_id);
-        } else {
-            pdf = 0;
-            return zero3f;
-        }
-
-        // HACK: 10? Don't know...
-        isec = intersect_scene_bvh(bvh, make_ray(lp, incoming));
-    }
-
-    return incoming;
-}
-
-// Evaluates the weight after sampling distance in a medium.
-vec3f evaluate_transmission_div_pdf(const vec3f& vd, float distance, int ch) {
-    auto weight = zero3f;
-
-    // For the sampled channel, transmission / pdf == 1.0
-    weight[ch] = 1.0;
-
-    // Compute weight for the remaining channels i.
-    // In order to avoid numerical nasties (NaNs) transmission / pdf is
-    // evaluated. transmission[i] = exp(-distance * vd[i]) pdf             =
-    // exp(-distance * vd[channel])
-    auto i = (ch + 1) % 3, j = (ch + 2) % 3;
-    weight[i] = exp(-distance * (vd[i] - vd[ch]));
-    weight[j] = exp(-distance * (vd[j] - vd[ch]));
-    return weight;
-}
-
-// Iterative volume path tracing.
-pair<vec3f, bool> trace_volpath(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const vec3f& position, const vec3f& direction,
-    rng_state& rng, int max_bounces, bool environments_hidden) {
-    if (lights.instances.empty() && lights.environments.empty())
-        return {zero3f, false};
-
-    // initialize
-    auto radiance = zero3f;
-    auto weight   = vec3f{1, 1, 1};
-    auto emission = true;
-    auto ray      = make_ray(position, direction);
-
-#if 0
-    // @Hack: air volume properties should be set in the scene struct.
-    if (air == nullptr) {
-        air = new instance();
-        air->name = "air";
-        air->mat = new material();
-        air->mat->vd = vec3f{0.0, 0.0, 0.0};
-        air->mat->va = vec3f{0.0, 0.0, 0.0};
-        air->mat->vg = 0.0;
-    }
-#endif
-
-    // List of mediums that contains the path. The path starts in air.
-    auto mediums = vector<int>{-1};
-
-    // Sample color channel. This won't matter if there are no heterogeneus
-    // materials.
-    auto ch             = sample_uniform_index(3, get_random_float(rng));
-    auto single_channel = false;
-
-    int bounce = 0;
-    while (bounce < max_bounces) {
-        auto  medium   = mediums.back();
-        auto& instance = scene.instances[medium];
-        auto& shape    = scene.shapes[instance.shape];
-        auto& material = scene.materials[shape.material];
-        auto  ve       = material.volume_emission;
-        auto  va       = material.volume_albedo;
-        auto  vd       = material.volume_density;
-        auto  vg       = material.volume_phaseg;
-
-        // If medium has color but must use delta tracking, integrate only the
-        // sampled spectrum.
-        if (!single_channel && is_material_volume_colored(material) &&
-            !is_material_volume_homogeneus(material)) {
-            weight[ch] *= 3;
-            weight[(ch + 1) % 3] = 0;
-            weight[(ch + 2) % 3] = 0;
-            single_channel       = true;
-        }
-
-        // TODO: FIXME REMOVING BBOX
-        // Sample distance of next absorption/scattering event in the medium.
-        // dist_pdf is unknown due to delta tracking.
-        auto bbox = transform_bbox(
-            instance.frame, bbox3f{{-1, -1, -1}, {1, 1, 1}});
-        auto distance = sample_distance(
-            scene, instance, bbox, ray.o, ray.d, ch, rng);
-
-        // Create ray and clamp it to make the intersection faster.
-        ray       = make_ray(ray.o, ray.d);
-        ray.tmax  = distance;
-        auto isec = intersect_scene_bvh(bvh, ray);
-
-        // @Hack: When isec.instance == nullptr, we must discern if the ray hit
-        // nothing (the environment)
-        //        or a medium interaction was sampled. Doing isec.distance ==
-        //        maxf doesn't work, why??
-        auto scene_size = max(
-            bvh.nodes.front().bbox.max - bvh.nodes.front().bbox.min);
-
-        // environment
-        if (!isec.hit && distance > scene_size) {
-            if (emission) {
-                for (auto& environment : scene.environments)
-                    radiance += weight * evaluate_environment_emission(
-                                             scene, environment, ray.d);
-            }
-            return {radiance, false};
-        }
-
-        // surface intersection
-        if (isec.hit) {
-            auto& isec_instance = scene.instances[isec.instance_id];
-            auto& isec_shape    = scene.shapes[isec_instance.shape];
-            auto  outgoing      = -ray.d;
-            auto& isec_material = scene.materials[isec_shape.material];
-            auto  p             = evaluate_instance_position(
-                scene, isec_instance, isec.element_id, isec.element_uv);
-            auto normal = evaluate_instance_normal(
-                scene, isec_instance, isec.element_id, isec.element_uv);
-            auto brdf = evaluate_material_brdf(scene, isec_material,
-                evaluate_shape_texturecoord(
-                    isec_shape, isec.element_id, isec.element_uv));
-
-            // distance sampling pdf is unknown due to delta tracking, but we do
-            // know the value of transmission / pdf_dist.
-            weight *= evaluate_transmission_div_pdf(vd, isec.distance, ch);
-
-            // emission
-            if (emission)
-                radiance += weight *
-                            evaluate_material_emission(scene, isec_material,
-                                evaluate_shape_texturecoord(isec_shape,
-                                    isec.element_id, isec.element_uv)) *
-                            xyz(evaluate_shape_color(
-                                isec_shape, isec.element_id, isec.element_uv));
-
-            // early exit
-            if (brdf.diffuse + brdf.specular + brdf.transmission == zero3f ||
-                bounce >= max_bounces - 1)
-                break;
-
-            // direct lighting
-            if (get_random_float(rng) < prob_direct(brdf)) {
-                // With some probabilty, this is a naive path tracer (works
-                // great with delta-like brdfs)
-                vec3f direct;
-                float pdf;
-                vec3f incoming = direct_illumination(
-                    scene, bvh, lights, p, ch, mediums, rng, pdf, direct);
-                if (pdf != 0) {
-                    auto brdf_cosine = evaluate_brdf_cosine(
-                        brdf, normal, outgoing, incoming);
-                    radiance += weight * direct * brdf_cosine / pdf;
-                    emission = false;
-                }
-            } else
-                emission = true;
-
-            // continue path
-            vec3f incoming, brdf_cosine;
-            float pdf = 0;
-            if (!is_brdf_delta(brdf)) {
-                incoming    = sample_brdf_direction(brdf, normal, outgoing,
-                    get_random_float(rng), get_random_vec2f(rng));
-                brdf_cosine = evaluate_brdf_cosine(
-                    brdf, normal, outgoing, incoming);
-                pdf = sample_brdf_direction_pdf(
-                    brdf, normal, outgoing, incoming);
-            } else {
-                incoming = sample_delta_brdf_direction(brdf, normal, outgoing,
-                    get_random_float(rng), get_random_vec2f(rng));
-                brdf_cosine = evaluate_delta_brdf_cosine(
-                    brdf, normal, outgoing, incoming);
-                pdf = sample_delta_brdf_direction_pdf(
-                    brdf, normal, outgoing, incoming);
-            }
-            auto ndi = dot(normal, incoming);
-            auto ndo = dot(normal, outgoing);
-
-            // accumulate weight
-            if (pdf == 0) break;
-            weight *= brdf_cosine / pdf;
-            if (weight == zero3f) break;
-            ray.o            = p;
-            ray.d            = incoming;
-            bool transmitted = (ndi > 0) != (ndo > 0);
-
-            // transmission in medium
-            if (transmitted) {
-                float tr = 0.05;  // avoid numerical errors
-                if (ndo < -tr) {
-                    // Exiting from medium.
-                    if (isec.instance_id != medium) break;
-                    if (mediums.size() <= 1) break;
-                    mediums.pop_back();
-                } else if (ndo > tr) {
-                    // Entering new medium.
-                    if (isec.instance_id == medium) break;
-                    mediums.push_back(isec.instance_id);
-                } else
-                    break;
-            }
-            bounce += 1;
-        }
-        // medium interaction
-        else {
-            ray.o += ray.d * distance;
-            float scattering_prob = va[ch];
-
-            // absorption and emission
-            if (get_random_float(rng) >= scattering_prob) {
-                weight /= 1 - scattering_prob;
-                radiance += weight * ve;
-                break;
-            }
-
-            // scattering event
-            weight /= scattering_prob;
-            weight *= evaluate_transmission_div_pdf(vd, distance, ch);
-
-            // direct lighting
-            vec3f direct;
-            float pdf_direct;
-            vec3f l = direct_illumination(scene, bvh, lights, ray.o, ch,
-                mediums, rng, pdf_direct, direct);
-            if (pdf_direct != 0) {
-                auto f = va * evaluate_phase_function(dot(l, -ray.d), vg);
-                radiance += weight * direct * f / pdf_direct;
-                emission = false;
-            }
-
-            // indirect
-            vec3f incoming = sample_phase_function(vg, get_random_vec2f(rng));
-            weight *= va;
-            ray.d = transform_direction(
-                make_frame_fromz(zero3f, ray.d), incoming);
-        }
-
-        // russian roulette
-        if (bounce > 2) {
-            auto rrprob = 1.0f - min(max(weight), 0.95f);
-            if (get_random_float(rng) < rrprob) break;
-            weight *= 1 / (1 - rrprob);
-        }
-    }
-
-    return {radiance, true};
-}
-
-// Recursive path tracing.
-pair<vec3f, bool> trace_path(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const vec3f& position, const vec3f& direction,
-    rng_state& rng, int max_bounces, bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) {
-        if (environments_hidden || scene.environments.empty())
-            return {zero3f, false};
-        return {point.emission, true};
-    }
-
-    // initialize
-    auto radiance = point.emission;
-    auto weight   = vec3f{1, 1, 1};
-    auto outgoing = -direction;
-
-    // trace  path
-    for (auto bounce = 0; bounce < max_bounces; bounce++) {
-        // exit if needed
-        if (is_brdf_zero(point.brdf) || weight == zero3f) break;
-
-        // continue path
-        auto next_direction     = zero3f;
-        auto next_brdf_cosine   = zero3f;
-        auto next_direction_pdf = 0.0f;
-        if (!is_brdf_delta(point.brdf)) {
-            if (get_random_float(rng) < 0.5f) {
-                next_direction = sample_brdf_direction(point.brdf, point.normal,
-                    outgoing, get_random_float(rng), get_random_vec2f(rng));
-            } else {
-                next_direction = sample_lights_direction(scene, lights, bvh,
-                    point.position, get_random_float(rng),
-                    get_random_float(rng), get_random_vec2f(rng));
-            }
-            next_brdf_cosine = evaluate_brdf_cosine(
-                point.brdf, point.normal, outgoing, next_direction);
-            next_direction_pdf =
-                0.5f * sample_brdf_direction_pdf(
-                           point.brdf, point.normal, outgoing, next_direction) +
-                0.5f * sample_lights_direction_pdf(
-                           scene, lights, bvh, point.position, next_direction);
-        } else {
-            next_direction   = sample_delta_brdf_direction(point.brdf,
-                point.normal, outgoing, get_random_float(rng),
-                get_random_vec2f(rng));
-            next_brdf_cosine = evaluate_delta_brdf_cosine(
-                point.brdf, point.normal, outgoing, next_direction);
-            next_direction_pdf = sample_delta_brdf_direction_pdf(
-                point.brdf, point.normal, outgoing, next_direction);
-        }
-
-        // exit if no hit
-        if (next_direction_pdf == 0 || next_brdf_cosine == zero3f) break;
-
-        // intersect next point
-        auto next_point = trace_ray_with_opacity(
-            scene, bvh, point.position, next_direction, rng, max_bounces);
-        radiance += weight * next_brdf_cosine * next_point.emission /
-                    next_direction_pdf;
-        if (!next_point.hit || is_brdf_zero(next_point.brdf)) break;
-
-        // setup next iteration
-        point    = next_point;
-        outgoing = -next_direction;
-        weight *= next_brdf_cosine / next_direction_pdf;
-
-        // russian roulette
-        if (sample_russian_roulette(weight, bounce, get_random_float(rng)))
-            break;
-        weight /= sample_russian_roulette_pdf(weight, bounce);
-    }
-
-    return {radiance, true};
-}
-
-// Recursive path tracing.
-pair<vec3f, bool> trace_naive(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const vec3f& position, const vec3f& direction,
-    rng_state& rng, int max_bounces, bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) {
-        if (environments_hidden || scene.environments.empty())
-            return {zero3f, false};
-        return {point.emission, true};
-    }
-
-    // initialize
-    auto radiance = point.emission;
-    auto weight   = vec3f{1, 1, 1};
-    auto outgoing = -direction;
-
-    // trace  path
-    for (auto bounce = 0; bounce < max_bounces; bounce++) {
-        // exit if needed
-        if (is_brdf_zero(point.brdf) || weight == zero3f) break;
-
-        // continue path
-        auto next_direction     = zero3f;
-        auto next_brdf_cosine   = zero3f;
-        auto next_direction_pdf = 0.0f;
-        if (!is_brdf_delta(point.brdf)) {
-            next_direction   = sample_brdf_direction(point.brdf, point.normal,
-                outgoing, get_random_float(rng), get_random_vec2f(rng));
-            next_brdf_cosine = evaluate_brdf_cosine(
-                point.brdf, point.normal, outgoing, next_direction);
-            next_direction_pdf = sample_brdf_direction_pdf(
-                point.brdf, point.normal, outgoing, next_direction);
-        } else {
-            next_direction   = sample_delta_brdf_direction(point.brdf,
-                point.normal, outgoing, get_random_float(rng),
-                get_random_vec2f(rng));
-            next_brdf_cosine = evaluate_delta_brdf_cosine(
-                point.brdf, point.normal, outgoing, next_direction);
-            next_direction_pdf = sample_delta_brdf_direction_pdf(
-                point.brdf, point.normal, outgoing, next_direction);
-        }
-
-        // exit if no hit
-        if (next_direction_pdf == 0 || next_brdf_cosine == zero3f) break;
-
-        // intersect next point
-        auto next_point = trace_ray_with_opacity(
-            scene, bvh, point.position, next_direction, rng, max_bounces);
-        radiance += weight * next_brdf_cosine * next_point.emission /
-                    next_direction_pdf;
-        if (!next_point.hit || is_brdf_zero(next_point.brdf)) break;
-
-        // setup next iteration
-        point    = next_point;
-        outgoing = -next_direction;
-        weight *= next_brdf_cosine / next_direction_pdf;
-
-        // russian roulette
-        if (sample_russian_roulette(weight, bounce, get_random_float(rng)))
-            break;
-        weight /= sample_russian_roulette_pdf(weight, bounce);
-    }
-
-    return {radiance, true};
-}
-
-// Recursive path tracing.
-pair<vec3f, bool> trace_split(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const vec3f& position, const vec3f& direction,
-    rng_state& rng, int max_bounces, bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) {
-        if (environments_hidden || scene.environments.empty())
-            return {zero3f, false};
-        return {point.emission, true};
-    }
-
-    // initialize
-    auto radiance = point.emission;
-    auto weight   = vec3f{1, 1, 1};
-    auto outgoing = -direction;
-
-    // trace  path
-    for (auto bounce = 0; bounce < max_bounces; bounce++) {
-        // exit if needed
-        if (is_brdf_zero(point.brdf) || weight == zero3f) break;
-
-        // continue path
-        auto next_direction = zero3f, light_direction = zero3f;
-        auto next_brdf_cosine = zero3f, light_brdf_cosine = zero3f;
-        auto next_direction_pdf = 0.0f, light_direction_pdf = 0.0f;
-        auto continue_pdf = 0.0f;
-        if (!is_brdf_delta(point.brdf)) {
-            next_direction   = sample_brdf_direction(point.brdf, point.normal,
-                outgoing, get_random_float(rng), get_random_vec2f(rng));
-            light_direction  = sample_lights_direction(scene, lights, bvh,
-                point.position, get_random_float(rng), get_random_float(rng),
-                get_random_vec2f(rng));
-            next_brdf_cosine = evaluate_brdf_cosine(
-                point.brdf, point.normal, outgoing, next_direction);
-            light_brdf_cosine = evaluate_brdf_cosine(
-                point.brdf, point.normal, outgoing, light_direction);
-            next_direction_pdf = sample_brdf_direction_pdf(point.brdf,
-                                     point.normal, outgoing, next_direction) +
-                                 sample_lights_direction_pdf(scene, lights, bvh,
-                                     point.position, next_direction);
-            light_direction_pdf = sample_brdf_direction_pdf(point.brdf,
-                                      point.normal, outgoing, light_direction) +
-                                  sample_lights_direction_pdf(scene, lights,
-                                      bvh, point.position, light_direction);
-            continue_pdf = sample_brdf_direction_pdf(
-                point.brdf, point.normal, outgoing, next_direction);
-        } else {
-            next_direction   = sample_delta_brdf_direction(point.brdf,
-                point.normal, outgoing, get_random_float(rng),
-                get_random_vec2f(rng));
-            next_brdf_cosine = evaluate_delta_brdf_cosine(
-                point.brdf, point.normal, outgoing, next_direction);
-            next_direction_pdf = sample_delta_brdf_direction_pdf(
-                point.brdf, point.normal, outgoing, next_direction);
-            continue_pdf = next_direction_pdf;
-        }
-
-        // intersect points
-        auto next_point = trace_point{}, light_point = trace_point{};
-        if (next_direction_pdf > 0 && next_brdf_cosine != zero3f) {
-            next_point = trace_ray_with_opacity(
-                scene, bvh, point.position, next_direction, rng, max_bounces);
-            radiance += weight * next_brdf_cosine * next_point.emission /
-                        next_direction_pdf;
-        }
-        if (light_direction_pdf > 0 && light_brdf_cosine != zero3f) {
-            light_point = trace_ray_with_opacity(
-                scene, bvh, point.position, light_direction, rng, max_bounces);
-            radiance += weight * light_brdf_cosine * light_point.emission /
-                        light_direction_pdf;
-        }
-        if (!next_point.hit || is_brdf_zero(next_point.brdf)) break;
-
-        // setup next iteration
-        point    = next_point;
-        outgoing = -next_direction;
-        weight *= next_brdf_cosine / continue_pdf;
-
-        // russian roulette
-        if (sample_russian_roulette(weight, bounce, get_random_float(rng)))
-            break;
-        weight /= sample_russian_roulette_pdf(weight, bounce);
-    }
-
-    return {radiance, true};
-}
-
-// Eyelight for quick previewing.
-pair<vec3f, bool> trace_eyelight(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const vec3f& position, const vec3f& direction,
-    rng_state& rng, int max_bounces, bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) {
-        if (environments_hidden || scene.environments.empty())
-            return {zero3f, false};
-        return {point.emission, true};
-    }
-
-    // initialize
-    auto radiance = point.emission;
-    auto outgoing = -direction;
-
-    // microfacet_brdf * light
-    radiance += evaluate_brdf_cosine(
-                    point.brdf, point.normal, outgoing, outgoing) *
-                pif;
-
-    // done
-    return {radiance, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_normal(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {point.normal * 0.5f + 0.5f, true};
-}
-
-// Debug frontfacing.
-pair<vec3f, bool> trace_debug_frontfacing(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    auto outgoing    = -direction;
-    auto frontfacing = dot(point.normal, outgoing) > 0 ? vec3f{0, 1, 0}
-                                                       : vec3f{1, 0, 0};
-    return {frontfacing, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_albedo(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    auto albedo = point.brdf.diffuse + point.brdf.specular +
-                  point.brdf.transmission;
-    return {albedo, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_emission(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {point.emission, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_diffuse(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {point.brdf.diffuse, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_specular(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {point.brdf.specular, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_tranmission(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {point.brdf.transmission, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_roughness(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {{point.brdf.roughness, point.brdf.roughness, point.brdf.roughness},
-        true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_texcoord(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {{point.texturecoord.x, point.texturecoord.y, 0}, true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_color(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // shade
-    return {xyz(point.color), true};
-}
-
-// Debug previewing.
-pair<vec3f, bool> trace_debug_highlight(const yocto_scene& scene,
-    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
-    const vec3f& direction, rng_state& rng, int max_bounces,
-    bool environments_hidden) {
-    // intersect ray
-    auto point = trace_ray_with_opacity(
-        scene, bvh, position, direction, rng, max_bounces);
-    if (!point.hit) return {zero3f, false};
-
-    // initialize
-    auto emission = point.emission;
-    auto outgoing = -direction;
-    if (emission == zero3f) emission = {0.2f, 0.2f, 0.2f};
-
-    // done
-    return {emission * abs(dot(outgoing, point.normal)), true};
-}
-
-// Trace a single ray from the camera using the given algorithm.
-trace_sampler_func get_trace_sampler_func(trace_sampler_type type) {
-    switch (type) {
-        case trace_sampler_type::path: return trace_path;
-        // case trace_type::volpath:
-        //     return trace_volpath(
-        //         scene, bvh, lights, position, direction, rng, max_bounces);
-        case trace_sampler_type::naive: return trace_naive;
-        case trace_sampler_type::split: return trace_split;
-        case trace_sampler_type::eyelight: return trace_eyelight;
-        case trace_sampler_type::debug_normal: return trace_debug_normal;
-        case trace_sampler_type::debug_albedo: return trace_debug_albedo;
-        case trace_sampler_type::debug_texcoord: return trace_debug_texcoord;
-        case trace_sampler_type::debug_color: return trace_debug_color;
-        case trace_sampler_type::debug_frontfacing:
-            return trace_debug_frontfacing;
-        case trace_sampler_type::debug_emission: return trace_debug_emission;
-        case trace_sampler_type::debug_diffuse: return trace_debug_diffuse;
-        case trace_sampler_type::debug_specular: return trace_debug_specular;
-        case trace_sampler_type::debug_transmission:
-            return trace_debug_tranmission;
-        case trace_sampler_type::debug_roughness: return trace_debug_roughness;
-        case trace_sampler_type::debug_highlight: return trace_debug_highlight;
-        default: {
-            throw runtime_error("sampler unknown");
-            return {};
-        }
-    }
-}
-
-// Check is a sampler requires lights
-bool is_trace_sampler_lit(const trace_image_options& options) {
-    auto type = options.sampler_type;
-    switch (type) {
-        case trace_sampler_type::path:
-        case trace_sampler_type::naive:
-        case trace_sampler_type::split: return true;
-        case trace_sampler_type::eyelight:
-        case trace_sampler_type::debug_normal:
-        case trace_sampler_type::debug_albedo:
-        case trace_sampler_type::debug_texcoord:
-        case trace_sampler_type::debug_color:
-        case trace_sampler_type::debug_frontfacing:
-        case trace_sampler_type::debug_emission:
-        case trace_sampler_type::debug_diffuse:
-        case trace_sampler_type::debug_specular:
-        case trace_sampler_type::debug_transmission:
-        case trace_sampler_type::debug_roughness:
-        case trace_sampler_type::debug_highlight: return false;
-        default: {
-            throw runtime_error("sampler unknown");
-            return false;
-        }
-    }
-}
-
-// Get trace pixel
-trace_pixel& get_trace_pixel(trace_state& state, int i, int j) {
-    return state.pixels[j * state.image_size.x + i];
-}
-
-// Trace a block of samples
-void trace_image_region(image4f& image, trace_state& state,
-    const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
-    const image_region& region, int num_samples,
-    const trace_image_options& options) {
-    auto& camera  = scene.cameras.at(options.camera_id);
-    auto  sampler = get_trace_sampler_func(options.sampler_type);
-    for (auto j = region.min.y; j < region.max.y; j++) {
-        for (auto i = region.min.x; i < region.max.x; i++) {
-            auto& pixel = get_trace_pixel(state, i, j);
-            for (auto s = 0; s < num_samples; s++) {
-                if (options.cancel_flag && *options.cancel_flag) return;
-                _trace_npaths += 1;
-                auto ray = sample_camera_ray(camera, {i, j}, image.size(),
-                    get_random_vec2f(pixel.rng), get_random_vec2f(pixel.rng));
-                auto [radiance, hit] = sampler(scene, bvh, lights, ray.o, ray.d,
-                    pixel.rng, options.max_bounces,
-                    options.environments_hidden);
-                if (!isfinite(radiance)) {
-                    printf("NaN detected\n");
-                    radiance = zero3f;
-                }
-                if (max(radiance) > options.pixel_clamp)
-                    radiance = radiance * (options.pixel_clamp / max(radiance));
-                pixel.radiance += radiance;
-                pixel.hits += hit ? 1 : 0;
-                pixel.samples += 1;
-            }
-            auto radiance = pixel.hits ? pixel.radiance / pixel.hits : zero3f;
-            auto coverage = (float)pixel.hits / (float)pixel.samples;
-            image[{i, j}] = {radiance.x, radiance.y, radiance.z, coverage};
-        }
-    }
-}
-
-// Init a sequence of random number generators.
-void init_trace_state(
-    trace_state& state, const vec2i& image_size, uint64_t seed) {
-    state    = trace_state{image_size,
-        vector<trace_pixel>(image_size.x * image_size.y, trace_pixel{})};
-    auto rng = make_rng(1301081);
-    for (auto j = 0; j < state.image_size.y; j++) {
-        for (auto i = 0; i < state.image_size.x; i++) {
-            auto& pixel = get_trace_pixel(state, i, j);
-            pixel.rng   = make_rng(seed, get_random_int(rng, 1 << 31) / 2 + 1);
-        }
-    }
-}
-
-// Init trace lights
-void init_trace_lights(trace_lights& lights, const yocto_scene& scene) {
-    lights = {};
-
-    lights.shape_elements_cdf.resize(scene.shapes.size());
-    lights.environment_texture_cdf.resize(scene.textures.size());
-
-    for (auto instance_id = 0; instance_id < scene.instances.size();
-         instance_id++) {
-        auto& instance = scene.instances[instance_id];
-        auto& shape    = scene.shapes[instance.shape];
-        auto& material = scene.materials[shape.material];
-        if (material.emission == zero3f) continue;
-        if (shape.triangles.empty() && shape.quads.empty()) continue;
-        lights.instances.push_back(instance_id);
-        compute_shape_elements_cdf(
-            shape, lights.shape_elements_cdf[instance.shape]);
-    }
-
-    for (auto environment_id = 0; environment_id < scene.environments.size();
-         environment_id++) {
-        auto& environment = scene.environments[environment_id];
-        if (environment.emission == zero3f) continue;
-        lights.environments.push_back(environment_id);
-        if (environment.emission_texture >= 0) {
-            compute_environment_texels_cdf(scene, environment,
-                lights.environment_texture_cdf[environment.emission_texture]);
-        }
-    }
-}
-
-// Progressively compute an image by calling trace_samples multiple times.
-image4f trace_image(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const trace_image_options& options) {
-    auto image_size = get_camera_image_size(
-        scene.cameras.at(options.camera_id), options.image_size);
-    auto image = yocto::image{image_size, zero4f};
-    auto state = trace_state{};
-    init_trace_state(state, image_size, options.random_seed);
-    auto regions = vector<image_region>{};
-    make_image_regions(regions, image.size(), options.region_size, true);
-
-    parallel_foreach(regions, [&image, &state, &scene, &bvh, &lights, &options](
-                                  const image_region& region) {
-        trace_image_region(image, state, scene, bvh, lights, region,
-            options.num_samples, options);
-    });
-
-    return image;
-}
-
-// Progressively compute an image by calling trace_samples multiple times.
-int trace_image_samples(image4f& image, trace_state& state,
-    const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
-    int current_sample, const trace_image_options& options) {
-    auto regions = vector<image_region>{};
-    make_image_regions(regions, image.size(), options.region_size, true);
-    auto num_samples = min(
-        options.samples_per_batch, options.num_samples - current_sample);
-    parallel_foreach(
-        regions, [&image, &state, &scene, &bvh, &lights, num_samples, &options](
-                     const image_region& region) {
-            trace_image_region(
-                image, state, scene, bvh, lights, region, num_samples, options);
-        });
-    return current_sample + num_samples;
-}
-
-// Starts an anyncrhounous renderer.
-void trace_image_async_start(image4f& image, trace_state& state,
-    const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
-    vector<future<void>>& futures, atomic<int>& current_sample,
-    concurrent_queue<image_region>& queue, const trace_image_options& options) {
-    auto& camera     = scene.cameras.at(options.camera_id);
-    auto  image_size = get_camera_image_size(camera, options.image_size);
-    image            = {image_size, zero4f};
-    state            = trace_state{};
-    init_trace_state(state, image_size, options.random_seed);
-    auto regions = vector<image_region>{};
-    make_image_regions(regions, image.size(), options.region_size, true);
-    if (options.cancel_flag) *options.cancel_flag = false;
-
-    futures.clear();
-    futures.emplace_back(async([options, regions, &current_sample, &image,
-                                   &scene, &lights, &bvh, &state, &queue]() {
-        for (auto sample = 0; sample < options.num_samples;
-             sample += options.samples_per_batch) {
-            if (options.cancel_flag && *options.cancel_flag) return;
-            current_sample   = sample;
-            auto num_samples = min(options.samples_per_batch,
-                options.num_samples - current_sample);
-            parallel_foreach(
-                regions,
-                [num_samples, &options, &image, &scene, &lights, &bvh, &state,
-                    &queue](const image_region& region) {
-                    trace_image_region(image, state, scene, bvh, lights, region,
-                        num_samples, options);
-                    queue.push(region);
-                },
-                options.cancel_flag, options.run_serially);
-        }
-        current_sample = options.num_samples;
-    }));
-}
-
-// Stop the asynchronous renderer.
-void trace_image_async_stop(vector<future<void>>& futures,
-    concurrent_queue<image_region>& queue, const trace_image_options& options) {
-    if (options.cancel_flag) *options.cancel_flag = true;
-    for (auto& f : futures) f.get();
-    futures.clear();
-    queue.clear();
-}
-
-// Trace statistics for last run used for fine tuning implementation.
-// For now returns number of paths and number of rays.
-pair<uint64_t, uint64_t> get_trace_stats() {
-    return {_trace_nrays, _trace_npaths};
-}
-void reset_trace_stats() {
-    _trace_nrays  = 0;
-    _trace_npaths = 0;
-}
-
-}  // namespace yocto
-// -----------------------------------------------------------------------------
-// IMPLEMENTATION FOR PATH TRACING SUPPORT FUNCTION
-// -----------------------------------------------------------------------------
-namespace yocto {
 
 // Phong exponent to roughness.
-float convert_specular_exponent_to_roughness(float exponent) {
-    return sqrtf(2 / (exponent + 2));
-}
-
-// Specular to fresnel eta.
-void compute_fresnel_from_specular(
-    const vec3f& specular, vec3f& es, vec3f& esk) {
-    es  = {(1 + sqrt(specular.x)) / (1 - sqrt(specular.x)),
-        (1 + sqrt(specular.y)) / (1 - sqrt(specular.y)),
-        (1 + sqrt(specular.z)) / (1 - sqrt(specular.z))};
-    esk = {0, 0, 0};
+float exponent_to_roughness(float exponent) {
+  return sqrtf(2 / (exponent + 2));
 }
 
 // Specular to  eta.
-float convert_specular_to_eta(const vec3f& specular) {
-    auto f0 = (specular.x + specular.y + specular.z) / 3;
-    return (1 + sqrt(f0)) / (1 - sqrt(f0));
+vec3f reflectivity_to_eta(const vec3f& reflectivity) {
+  return (1 + sqrt(reflectivity)) / (1 - sqrt(reflectivity));
+}
+
+// Specular to fresnel eta.
+pair<vec3f, vec3f> reflectivity_to_eta(
+    const vec3f& reflectivity, const vec3f& edge_tint) {
+  auto r = clamp(reflectivity, 0.0f, 0.99f);
+  auto g = edge_tint;
+
+  auto r_sqrt = sqrt(r);
+  auto n_min  = (1 - r) / (1 + r);
+  auto n_max  = (1 + r_sqrt) / (1 - r_sqrt);
+
+  auto n  = lerp(n_max, n_min, g);
+  auto k2 = ((n + 1) * (n + 1) * r - (n - 1) * (n - 1)) / (1 - r);
+  k2      = max(k2, 0.0f);
+  auto k  = sqrt(k2);
+  return {n, k};
+}
+
+vec3f eta_to_reflectivity(const vec3f& eta) {
+  return ((eta - 1) * (eta - 1)) / ((eta + 1) * (eta + 1));
+}
+vec3f eta_to_reflectivity(const vec3f& eta, const vec3f& etak) {
+  return ((eta - 1) * (eta - 1) + etak * etak) /
+         ((eta + 1) * (eta + 1) + etak * etak);
+}
+vec3f eta_to_edge_tint(const vec3f& eta, const vec3f& etak) {
+  auto r     = eta_to_reflectivity(eta, etak);
+  auto numer = (1 + sqrt(r)) / (1 - sqrt(r)) - eta;
+  auto denom = (1 + sqrt(r)) / (1 - sqrt(r)) - (1 - r) / (1 + r);
+  return numer / denom;
 }
 
 // Compute the fresnel term for dielectrics. Implementation from
 // https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
-vec3f evaluate_fresnel_dielectric(float cosw, const vec3f& eta_) {
-    auto eta = eta_;
-    if (cosw < 0) {
-        eta  = vec3f{1, 1, 1} / eta;
-        cosw = -cosw;
-    }
+vec3f fresnel_dielectric(const vec3f& eta_, float cosw) {
+  auto eta = eta_;
+  if (cosw < 0) {
+    eta  = 1 / eta;
+    cosw = -cosw;
+  }
 
-    auto sin2 = 1 - cosw * cosw;
-    auto eta2 = eta * eta;
+  auto sin2 = 1 - cosw * cosw;
+  auto eta2 = eta * eta;
 
-    auto cos2t = vec3f{1, 1, 1} - vec3f{sin2, sin2, sin2} / eta2;
-    if (cos2t.x < 0 || cos2t.y < 0 || cos2t.z < 0)
-        return vec3f{1, 1, 1};  // tir
+  auto cos2t = 1 - sin2 / eta2;
+  if (cos2t.x < 0 || cos2t.y < 0 || cos2t.z < 0) return {1, 1, 1};  // tir
 
-    auto t0 = vec3f{sqrt(cos2t.x), sqrt(cos2t.y), sqrt(cos2t.z)};
-    auto t1 = eta * t0;
-    auto t2 = eta * cosw;
+  auto t0 = sqrt(cos2t);
+  auto t1 = eta * t0;
+  auto t2 = eta * cosw;
 
-    auto roughness = (vec3f{cosw, cosw, cosw} - t1) /
-                     (vec3f{cosw, cosw, cosw} + t1);
-    auto rp = (t0 - t2) / (t0 + t2);
+  auto rs = (cosw - t1) / (cosw + t1);
+  auto rp = (t0 - t2) / (t0 + t2);
 
-    return (roughness * roughness + rp * rp) / 2.0f;
+  return (rs * rs + rp * rp) / 2;
 }
 
 // Compute the fresnel term for metals. Implementation from
 // https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
-vec3f evaluate_fresnel_metal(float cosw, const vec3f& eta, const vec3f& etak) {
-    if (etak == zero3f) return evaluate_fresnel_dielectric(cosw, eta);
+vec3f fresnel_conductor(const vec3f& eta, const vec3f& etak, float cosw) {
+  if (etak == zero3f) return fresnel_dielectric(eta, cosw);
 
-    cosw       = clamp(cosw, (float)-1, (float)1);
-    auto cos2  = cosw * cosw;
-    auto sin2  = clamp(1 - cos2, (float)0, (float)1);
-    auto eta2  = eta * eta;
-    auto etak2 = etak * etak;
+  cosw       = clamp(cosw, (float)-1, (float)1);
+  auto cos2  = cosw * cosw;
+  auto sin2  = clamp(1 - cos2, (float)0, (float)1);
+  auto eta2  = eta * eta;
+  auto etak2 = etak * etak;
 
-    auto t0         = eta2 - etak2 - vec3f{sin2, sin2, sin2};
-    auto a2plusb2_2 = t0 * t0 + 4.0f * eta2 * etak2;
-    auto a2plusb2   = vec3f{
-        sqrt(a2plusb2_2.x), sqrt(a2plusb2_2.y), sqrt(a2plusb2_2.z)};
-    auto t1        = a2plusb2 + vec3f{cos2, cos2, cos2};
-    auto a_2       = (a2plusb2 + t0) / 2.0f;
-    auto a         = vec3f{sqrt(a_2.x), sqrt(a_2.y), sqrt(a_2.z)};
-    auto t2        = 2.0f * a * cosw;
-    auto roughness = (t1 - t2) / (t1 + t2);
+  auto t0       = eta2 - etak2 - sin2;
+  auto a2plusb2 = sqrt(t0 * t0 + 4 * eta2 * etak2);
+  auto t1       = a2plusb2 + cos2;
+  auto a        = sqrt((a2plusb2 + t0) / 2);
+  auto t2       = 2 * a * cosw;
+  auto rs       = (t1 - t2) / (t1 + t2);
 
-    auto t3 = vec3f{cos2, cos2, cos2} * a2plusb2 +
-              vec3f{sin2, sin2, sin2} * vec3f{sin2, sin2, sin2};
-    auto t4 = t2 * sin2;
-    auto rp = roughness * (t3 - t4) / (t3 + t4);
+  auto t3 = cos2 * a2plusb2 + sin2 * sin2;
+  auto t4 = t2 * sin2;
+  auto rp = rs * (t3 - t4) / (t3 + t4);
 
-    return (rp + roughness) / 2.0f;
+  return (rp + rs) / 2;
+}
+
+pair<float, int> sample_distance(const vec3f& density, float rl, float rd) {
+  auto channel         = clamp((int)(rl * 3), 0, 2);
+  auto density_channel = density[channel];
+  if (density_channel == 0 || rd == 0)
+    return {flt_max, channel};
+  else
+    return {-log(rd) / density_channel, channel};
+}
+
+float sample_distance_pdf(const vec3f& density, float distance, int channel) {
+  auto density_channel = density[channel];
+  return exp(-density_channel * distance);
+}
+
+vec3f eval_transmission(const vec3f& density, float distance) {
+  return exp(-density * distance);
+}
+
+vec3f sample_phasefunction(float g, const vec2f& u) {
+  auto cos_theta = 0.0f;
+  if (abs(g) < 1e-3f) {
+    cos_theta = 1 - 2 * u.x;
+  } else {
+    float square = (1 - g * g) / (1 - g + 2 * g * u.x);
+    cos_theta    = (1 + g * g - square * square) / (2 * g);
+  }
+
+  auto sin_theta = sqrt(max(0.0f, 1 - cos_theta * cos_theta));
+  auto phi       = 2 * pif * u.y;
+  return {sin_theta * cos(phi), sin_theta * sin(phi), cos_theta};
+}
+
+float eval_phasefunction(float cos_theta, float g) {
+  auto denom = 1 + g * g + 2 * g * cos_theta;
+  return (1 - g * g) / (4 * pif * denom * sqrt(denom));
 }
 
 // Tabulated ior for metals
@@ -2258,13 +324,1776 @@ const unordered_map<string, pair<vec3f, vec3f>> metal_ior_table = {
 };
 
 // Get a complex ior table with keys the metal name and values (eta, etak)
-bool get_metal_ior(const string& name, vec3f& eta, vec3f& etak) {
-    if (metal_ior_table.find(name) == metal_ior_table.end()) return false;
-    auto value = metal_ior_table.at(name);
-    eta        = value.first;
-    etak       = value.second;
-    return true;
+pair<vec3f, vec3f> get_conductor_eta(const string& name) {
+  if (metal_ior_table.find(name) == metal_ior_table.end())
+    return {zero3f, zero3f};
+  return metal_ior_table.at(name);
 }
+
+// Stores sigma_prime_s, sigma_a
+static unordered_map<string, pair<vec3f, vec3f>> subsurface_params_table = {
+    // From "A Practical Model for Subsurface Light Transport"
+    // Jensen, Marschner, Levoy, Hanrahan
+    // Proc SIGGRAPH 2001
+    {"Apple", {{2.29, 2.39, 1.97}, {0.0030, 0.0034, 0.046}}},
+    {"Chicken1", {{0.15, 0.21, 0.38}, {0.015, 0.077, 0.19}}},
+    {"Chicken2", {{0.19, 0.25, 0.32}, {0.018, 0.088, 0.20}}},
+    {"Cream", {{7.38, 5.47, 3.15}, {0.0002, 0.0028, 0.0163}}},
+    {"Ketchup", {{0.18, 0.07, 0.03}, {0.061, 0.97, 1.45}}},
+    {"Marble", {{2.19, 2.62, 3.00}, {0.0021, 0.0041, 0.0071}}},
+    {"Potato", {{0.68, 0.70, 0.55}, {0.0024, 0.0090, 0.12}}},
+    {"Skimmilk", {{0.70, 1.22, 1.90}, {0.0014, 0.0025, 0.0142}}},
+    {"Skin1", {{0.74, 0.88, 1.01}, {0.032, 0.17, 0.48}}},
+    {"Skin2", {{1.09, 1.59, 1.79}, {0.013, 0.070, 0.145}}},
+    {"Spectralon", {{11.6, 20.4, 14.9}, {0.00, 0.00, 0.00}}},
+    {"Wholemilk", {{2.55, 3.21, 3.77}, {0.0011, 0.0024, 0.014}}},
+    // From "Acquiring Scattering Properties of Participating Media by
+    // Dilution",
+    // Narasimhan, Gupta, Donner, Ramamoorthi, Nayar, Jensen
+    // Proc SIGGRAPH 2006
+    {"Lowfat Milk", {{0.89187, 1.5136, 2.532}, {0.002875, 0.00575, 0.0115}}},
+    {"Reduced Milk",
+        {{2.4858, 3.1669, 4.5214}, {0.0025556, 0.0051111, 0.012778}}},
+    {"Regular Milk", {{4.5513, 5.8294, 7.136}, {0.0015333, 0.0046, 0.019933}}},
+    {"Espresso", {{0.72378, 0.84557, 1.0247}, {4.7984, 6.5751, 8.8493}}},
+    {"Mint Mocha Coffee", {{0.31602, 0.38538, 0.48131}, {3.772, 5.8228, 7.82}}},
+    {"Lowfat Soy Milk",
+        {{0.30576, 0.34233, 0.61664}, {0.0014375, 0.0071875, 0.035937}}},
+    {"Regular Soy Milk",
+        {{0.59223, 0.73866, 1.4693}, {0.0019167, 0.0095833, 0.065167}}},
+    {"Lowfat Chocolate Milk",
+        {{0.64925, 0.83916, 1.1057}, {0.0115, 0.0368, 0.1564}}},
+    {"Regular Chocolate Milk",
+        {{1.4585, 2.1289, 2.9527}, {0.010063, 0.043125, 0.14375}}},
+    {"Coke", {{8.9053e-05, 8.372e-05, 0}, {0.10014, 0.16503, 0.2468}}},
+    {"Pepsi", {{6.1697e-05, 4.2564e-05, 0}, {0.091641, 0.14158, 0.20729}}},
+    {"Sprite", {{6.0306e-06, 6.4139e-06, 6.5504e-06},
+                   {0.001886, 0.0018308, 0.0020025}}},
+    {"Gatorade",
+        {{0.0024574, 0.003007, 0.0037325}, {0.024794, 0.019289, 0.008878}}},
+    {"Chardonnay",
+        {{1.7982e-05, 1.3758e-05, 1.2023e-05}, {0.010782, 0.011855, 0.023997}}},
+    {"White Zinfandel",
+        {{1.7501e-05, 1.9069e-05, 1.288e-05}, {0.012072, 0.016184, 0.019843}}},
+    {"Merlot", {{2.1129e-05, 0, 0}, {0.11632, 0.25191, 0.29434}}},
+    {"Budweiser Beer",
+        {{2.4356e-05, 2.4079e-05, 1.0564e-05}, {0.011492, 0.024911, 0.057786}}},
+    {"Coors Light Beer",
+        {{5.0922e-05, 4.301e-05, 0}, {0.006164, 0.013984, 0.034983}}},
+    {"Clorox",
+        {{0.0024035, 0.0031373, 0.003991}, {0.0033542, 0.014892, 0.026297}}},
+    {"Apple Juice",
+        {{0.00013612, 0.00015836, 0.000227}, {0.012957, 0.023741, 0.052184}}},
+    {"Cranberry Juice",
+        {{0.00010402, 0.00011646, 7.8139e-05}, {0.039437, 0.094223, 0.12426}}},
+    {"Grape Juice", {{5.382e-05, 0, 0}, {0.10404, 0.23958, 0.29325}}},
+    {"Ruby Grapefruit Juice",
+        {{0.011002, 0.010927, 0.011036}, {0.085867, 0.18314, 0.25262}}},
+    {"White Grapefruit Juice",
+        {{0.22826, 0.23998, 0.32748}, {0.0138, 0.018831, 0.056781}}},
+    {"Shampoo",
+        {{0.0007176, 0.0008303, 0.0009016}, {0.014107, 0.045693, 0.061717}}},
+    {"Strawberry Shampoo",
+        {{0.00015671, 0.00015947, 1.518e-05}, {0.01449, 0.05796, 0.075823}}},
+    {"Head & Shoulders Shampoo",
+        {{0.023805, 0.028804, 0.034306}, {0.084621, 0.15688, 0.20365}}},
+    {"Lemon Tea Powder",
+        {{0.040224, 0.045264, 0.051081}, {2.4288, 4.5757, 7.2127}}},
+    {"Orange Powder",
+        {{0.00015617, 0.00017482, 0.0001762}, {0.001449, 0.003441, 0.007863}}},
+    {"Pink Lemonade Powder",
+        {{0.00012103, 0.00013073, 0.00012528}, {0.001165, 0.002366, 0.003195}}},
+    {"Cappuccino Powder", {{1.8436, 2.5851, 2.1662}, {35.844, 49.547, 61.084}}},
+    {"Salt Powder",
+        {{0.027333, 0.032451, 0.031979}, {0.28415, 0.3257, 0.34148}}},
+    {"Sugar Powder",
+        {{0.00022272, 0.00025513, 0.000271}, {0.012638, 0.031051, 0.050124}}},
+    {"Suisse Mocha Powder",
+        {{2.7979, 3.5452, 4.3365}, {17.502, 27.004, 35.433}}},
+    {"Pacific Ocean Surface Water",
+        {{0.0001764, 0.00032095, 0.00019617}, {0.031845, 0.031324, 0.030147}}}};
+
+// Get subsurface params
+pair<vec3f, vec3f> get_subsurface_params(const string& name) {
+  if (subsurface_params_table.find(name) == subsurface_params_table.end())
+    return {zero3f, zero3f};
+  return subsurface_params_table.at(name);
+}
+
+// Check if we are on the same side of the hemisphere
+bool same_hemisphere(
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  return dot(normal, outgoing) * dot(normal, incoming) > 0;
+}
+bool other_hemisphere(
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  return dot(normal, outgoing) * dot(normal, incoming) < 0;
+}
+
+// Minimum roughness for GGX
+static const auto trace_min_roughness = 0.03f * 0.03f;
+
+// Evaluates/sample the BRDF scaled by the cosine of the incoming direction.
+vec3f eval_diffuse_reflection(float roughness, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!same_hemisphere(normal, outgoing, incoming)) return zero3f;
+  return vec3f{abs(dot(normal, incoming)) / pif};
+}
+vec3f eval_diffuse_translucency(float roughness, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return zero3f;
+  return vec3f{abs(dot(normal, incoming)) / pif};
+}
+vec3f eval_microfacet_reflection(float roughness, const vec3f& eta,
+    const vec3f& etak, const vec3f& normal, const vec3f& outgoing,
+    const vec3f& incoming) {
+  if (!same_hemisphere(normal, outgoing, incoming)) return zero3f;
+  roughness      = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  auto halfway   = normalize(incoming + outgoing);
+  auto F         = etak == zero3f
+               ? fresnel_dielectric(eta, abs(dot(halfway, outgoing)))
+               : fresnel_conductor(eta, etak, abs(dot(halfway, outgoing)));
+  auto D = eval_microfacetD(roughness, up_normal, halfway);
+  auto G = eval_microfacetG(roughness, up_normal, halfway, outgoing, incoming);
+  return F * D * G / abs(4 * dot(normal, outgoing) * dot(normal, incoming)) *
+         abs(dot(normal, incoming));
+}
+vec3f eval_delta_reflection(const vec3f& eta, const vec3f& etak,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!same_hemisphere(normal, outgoing, incoming)) return zero3f;
+  auto F = etak == zero3f
+               ? fresnel_dielectric(eta, abs(dot(normal, outgoing)))
+               : fresnel_conductor(eta, etak, abs(dot(normal, outgoing)));
+  return F;
+}
+vec3f eval_microfacet_transmission(float roughness, const vec3f& eta,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return zero3f;
+  roughness           = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal      = dot(outgoing, normal) > 0 ? normal : -normal;
+  auto halfway_vector = dot(outgoing, normal) > 0 ? -(outgoing + eta * incoming)
+                                                  : (eta * outgoing + incoming);
+  auto halfway = normalize(halfway_vector);
+  auto F       = fresnel_dielectric(eta, abs(dot(halfway, outgoing)));
+  auto D       = eval_microfacetD(roughness, up_normal, halfway);
+  auto G = eval_microfacetG(roughness, up_normal, halfway, outgoing, incoming);
+
+  auto dot_terms = (dot(outgoing, halfway) * dot(incoming, halfway)) /
+                   (dot(outgoing, normal) * dot(incoming, normal));
+
+  auto numerator   = (1 - F) * D * G;
+  auto denominator = dot(halfway_vector, halfway_vector);
+
+  // [Walter 2007] equation 21
+  return abs(dot_terms) * numerator / denominator * abs(dot(normal, incoming));
+}
+vec3f eval_delta_transmission(const vec3f& eta, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return zero3f;
+  auto F = fresnel_dielectric(eta, abs(dot(normal, outgoing)));
+  return (1 - F);
+}
+vec3f eval_microfacet_transparency(float roughness, const vec3f& eta,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return zero3f;
+  roughness      = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal = dot(outgoing, normal) > 0 ? normal : -normal;
+  auto ir        = reflect(-incoming, up_normal);
+  auto halfway   = normalize(ir + outgoing);
+  auto F         = fresnel_dielectric(eta, abs(dot(halfway, outgoing)));
+  auto D         = eval_microfacetD(roughness, up_normal, halfway);
+  auto G = eval_microfacetG(roughness, up_normal, halfway, outgoing, ir);
+  return (1 - F) * D * G /
+         abs(4 * dot(normal, outgoing) * dot(normal, incoming)) *
+         abs(dot(normal, incoming));
+}
+vec3f eval_delta_transparency(const vec3f& eta, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return zero3f;
+  if (eta == zero3f || eta == vec3f{1, 1, 1}) {
+    return {1, 1, 1};
+  } else {
+    auto F = fresnel_dielectric(eta, abs(dot(normal, outgoing)));
+    return (1 - F);
+  }
+}
+vec3f eval_delta_passthrough(
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return zero3f;
+  return {1, 1, 1};
+}
+vec3f eval_volume_scattering(const vec3f& albedo, float phaseg,
+    const vec3f& outgoing, const vec3f& incoming) {
+  return albedo * eval_phasefunction(dot(outgoing, incoming), phaseg);
+}
+
+// Picks a direction based on the BRDF
+vec3f sample_diffuse_reflection(float roughness, const vec3f& normal,
+    const vec3f& outgoing, const vec2f& rn) {
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  return sample_hemisphere(up_normal, rn);
+}
+vec3f sample_diffuse_translucency(float roughness, const vec3f& normal,
+    const vec3f& outgoing, const vec2f& rn) {
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  return sample_hemisphere(-up_normal, rn);
+}
+vec3f sample_microfacet_reflection(float roughness, const vec3f& eta,
+    const vec3f& normal, const vec3f& outgoing, const vec2f& rn) {
+  roughness      = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  auto halfway   = sample_microfacet(roughness, up_normal, rn);
+  return reflect(outgoing, halfway);
+}
+vec3f sample_delta_reflection(
+    const vec3f& eta, const vec3f& normal, const vec3f& outgoing) {
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  return reflect(outgoing, up_normal);
+}
+vec3f sample_microfacet_transmission(float roughness, const vec3f& eta,
+    const vec3f& normal, const vec3f& outgoing, const vec2f& rn) {
+  roughness      = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  auto halfway   = sample_microfacet(roughness, up_normal, rn);
+  return refract(
+      outgoing, halfway, dot(normal, outgoing) > 0 ? 1 / mean(eta) : mean(eta));
+}
+vec3f sample_delta_transmission(
+    const vec3f& eta, const vec3f& normal, const vec3f& outgoing) {
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  return refract(outgoing, up_normal,
+      dot(normal, outgoing) > 0 ? 1 / mean(eta) : mean(eta));
+}
+vec3f sample_microfacet_transparency(float roughness, const vec3f& eta,
+    const vec3f& normal, const vec3f& outgoing, const vec2f& rn) {
+  roughness      = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  auto halfway   = sample_microfacet(roughness, up_normal, rn);
+  auto ir        = reflect(outgoing, halfway);
+  return -reflect(ir, up_normal);
+}
+vec3f sample_delta_transparency(
+    const vec3f& eta, const vec3f& normal, const vec3f& outgoing) {
+  return -outgoing;
+}
+vec3f sample_delta_passthrough(const vec3f& normal, const vec3f& outgoing) {
+  return -outgoing;
+}
+vec3f sample_volume_scattering(
+    const vec3f& albedo, float phaseg, const vec3f& outgoing, const vec2f& rn) {
+  auto direction = sample_phasefunction(phaseg, rn);
+  return basis_fromz(-outgoing) * direction;
+}
+
+// Compute the weight for sampling the BRDF
+float sample_diffuse_reflection_pdf(float roughness, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!same_hemisphere(normal, outgoing, incoming)) return 0;
+  return abs(dot(normal, incoming)) / pif;
+}
+float sample_diffuse_translucency_pdf(float roughness, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return 0;
+  return abs(dot(normal, incoming)) / pif;
+}
+float sample_microfacet_reflection_pdf(float roughness, const vec3f& eta,
+    const vec3f& etak, const vec3f& normal, const vec3f& outgoing,
+    const vec3f& incoming) {
+  if (!same_hemisphere(normal, outgoing, incoming)) return 0;
+  roughness      = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal = dot(normal, outgoing) >= 0 ? normal : -normal;
+  auto halfway   = normalize(incoming + outgoing);
+  return sample_microfacet_pdf(roughness, up_normal, halfway) /
+         (4 * abs(dot(outgoing, halfway)));
+}
+float sample_delta_reflection_pdf(const vec3f& eta, const vec3f& etak,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!same_hemisphere(normal, outgoing, incoming)) return 0;
+  return 1;
+}
+float sample_microfacet_transmission_pdf(float roughness, const vec3f& eta,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return 0;
+  roughness           = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal      = dot(outgoing, normal) > 0 ? normal : -normal;
+  auto halfway_vector = dot(outgoing, normal) > 0 ? -(outgoing + eta * incoming)
+                                                  : (eta * outgoing + incoming);
+  auto halfway = normalize(halfway_vector);
+  // [Walter 2007] equation 17
+  return sample_microfacet_pdf(roughness, up_normal, halfway) *
+         abs(dot(halfway, incoming)) / dot(halfway_vector, halfway_vector);
+}
+float sample_delta_transmission_pdf(const vec3f& eta, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return 0;
+  return 1;
+}
+float sample_microfacet_transparency_pdf(float roughness, const vec3f& eta,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return 0;
+  roughness      = clamp(roughness, trace_min_roughness, 1.0f);
+  auto up_normal = dot(outgoing, normal) > 0 ? normal : -normal;
+  auto ir        = reflect(-incoming, up_normal);
+  auto halfway   = normalize(ir + outgoing);
+  auto d         = sample_microfacet_pdf(roughness, up_normal, halfway);
+  return d / (4 * abs(dot(outgoing, halfway)));
+}
+float sample_delta_transparency_pdf(const vec3f& eta, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return 0;
+  return 1;
+}
+float sample_delta_passthrough_pdf(
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!other_hemisphere(normal, outgoing, incoming)) return 0;
+  return 1;
+}
+float sample_volume_scattering_pdf(const vec3f& albedo, float phaseg,
+    const vec3f& outgoing, const vec3f& incoming) {
+  return eval_phasefunction(dot(outgoing, incoming), phaseg);
+}
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// IMPLEMENTATION FOR PATH TRACING
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Set non-rigid frames as default
+static const bool trace_non_rigid_frames = true;
+
+// defaults
+static const auto coat_roughness = 0.03f * 0.03f;
+
+bool has_brdf(const material_point& material) {
+  return material.coat != zero3f || material.specular != zero3f ||
+         material.diffuse != zero3f || material.transmission != zero3f;
+}
+bool has_volume(const material_point& material) {
+  return material.voldensity != zero3f;
+}
+bool is_delta(const material_point& material) {
+  return material.roughness == 0;
+}
+
+vec3f eval_emission(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing) {
+  return material.emission;
+}
+vec3f eval_volemission(const material_point& material, const vec3f& outgoing) {
+  return material.volemission;
+}
+
+// Evaluates/sample the BRDF scaled by the cosine of the incoming direction.
+vec3f eval_brdfcos(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (is_delta(material)) return zero3f;
+
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  auto ceta      = reflectivity_to_eta(material.coat);
+  auto eta       = reflectivity_to_eta(material.specular);
+  if (!material.thin && material.transmission != zero3f &&
+      dot(normal, outgoing) < 0) {
+    ceta = 1 / ceta;
+    eta  = 1 / eta;
+  }
+
+  auto brdfcos = zero3f;
+
+  if (material.coat != zero3f && same_hemisphere(normal, outgoing, incoming)) {
+    auto halfway = normalize(incoming + outgoing);
+    auto fresnel = fresnel_dielectric(ceta, abs(dot(halfway, outgoing)));
+    auto D       = eval_microfacetD(coat_roughness, up_normal, halfway);
+    auto G       = eval_microfacetG(
+        coat_roughness, up_normal, halfway, outgoing, incoming);
+    brdfcos += fresnel * D * G /
+               abs(4 * dot(normal, outgoing) * dot(normal, incoming)) *
+               abs(dot(normal, incoming));
+  }
+  if (material.specular != zero3f &&
+      same_hemisphere(normal, outgoing, incoming)) {
+    auto halfway = normalize(incoming + outgoing);
+    auto coat    = fresnel_dielectric(ceta, abs(dot(halfway, outgoing)));
+    auto fresnel = fresnel_dielectric(eta, abs(dot(halfway, outgoing)));
+    auto D       = eval_microfacetD(material.roughness, up_normal, halfway);
+    auto G       = eval_microfacetG(
+        material.roughness, up_normal, halfway, outgoing, incoming);
+    brdfcos += (1 - coat) * fresnel * D * G /
+               abs(4 * dot(normal, outgoing) * dot(normal, incoming)) *
+               abs(dot(normal, incoming));
+  }
+  if (material.diffuse != zero3f &&
+      same_hemisphere(normal, outgoing, incoming)) {
+    auto halfway  = normalize(incoming + outgoing);
+    auto coat     = fresnel_dielectric(ceta, abs(dot(halfway, outgoing)));
+    auto specular = fresnel_dielectric(eta, abs(dot(halfway, outgoing)));
+    brdfcos += (1 - coat) * (1 - specular) * material.diffuse / pif *
+               abs(dot(normal, incoming));
+  }
+  if (material.transmission != zero3f &&
+      other_hemisphere(normal, outgoing, incoming) && !material.thin) {
+    auto eta            = mean(reflectivity_to_eta(material.specular));
+    auto halfway_vector = dot(outgoing, normal) > 0
+                              ? -(outgoing + eta * incoming)
+                              : (eta * outgoing + incoming);
+    auto halfway = normalize(halfway_vector);
+    auto coat    = fresnel_dielectric(ceta, abs(dot(halfway, outgoing)));
+    auto fresnel = fresnel_dielectric(
+        dot(outgoing, normal) > 0 ? vec3f{eta} : vec3f{1 / eta}, abs(dot(halfway, outgoing)));
+    auto D = eval_microfacetD(material.roughness, up_normal, halfway);
+    auto G = eval_microfacetG(
+        material.roughness, up_normal, halfway, outgoing, incoming);
+
+    auto dot_terms = (dot(outgoing, halfway) * dot(incoming, halfway)) /
+                     (dot(outgoing, normal) * dot(incoming, normal));
+
+    // [Walter 2007] equation 21
+    brdfcos += (1 - coat) * material.transmission * abs(dot_terms) *
+               (1 - fresnel) * D * G / dot(halfway_vector, halfway_vector) *
+               abs(dot(normal, incoming));
+  }
+  if (material.transmission != zero3f &&
+      other_hemisphere(normal, outgoing, incoming) && material.thin) {
+    auto ir      = reflect(-incoming, up_normal);
+    auto halfway = normalize(ir + outgoing);
+    auto fresnel = fresnel_dielectric(ceta, abs(dot(halfway, outgoing)));
+    auto D = eval_microfacetD(material.roughness, up_normal, halfway);
+    auto G = eval_microfacetG(
+        material.roughness, up_normal, halfway, outgoing, ir);
+    brdfcos += material.transmission * (1 - fresnel) * D * G /
+               abs(4 * dot(normal, outgoing) * dot(normal, incoming)) *
+               abs(dot(normal, incoming));
+  }
+  return brdfcos;
+}
+vec3f eval_delta(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!is_delta(material)) return zero3f;
+  auto brdfcos = zero3f;
+
+  auto ceta = reflectivity_to_eta(material.coat);
+  auto eta  = reflectivity_to_eta(material.specular);
+  if (!material.thin && material.transmission != zero3f &&
+      dot(normal, outgoing) < 0) {
+    ceta = 1 / ceta;
+    eta  = 1 / eta;
+  }
+
+  if (material.coat != zero3f && same_hemisphere(normal, outgoing, incoming)) {
+    brdfcos += fresnel_dielectric(ceta, abs(dot(normal, outgoing)));
+  }
+  if (material.specular != zero3f &&
+      same_hemisphere(normal, outgoing, incoming)) {
+    auto coat = fresnel_dielectric(ceta, abs(dot(normal, outgoing)));
+    brdfcos += (1 - coat) * fresnel_dielectric(eta, abs(dot(normal, outgoing)));
+  }
+  if (material.transmission != zero3f &&
+      other_hemisphere(normal, outgoing, incoming)) {
+    auto coat     = fresnel_dielectric(ceta, abs(dot(normal, outgoing)));
+    auto specular = fresnel_dielectric(eta, abs(dot(normal, outgoing)));
+    brdfcos += (1 - coat) * (1 - specular) * material.transmission;
+  }
+  return brdfcos;
+}
+
+vec4f compute_brdf_pdfs(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing) {
+  auto ceta = reflectivity_to_eta(material.coat);
+  auto eta  = reflectivity_to_eta(material.specular);
+  if (!material.thin && material.transmission != zero3f &&
+      dot(normal, outgoing) < 0) {
+    ceta = 1 / ceta;
+    eta  = 1 / eta;
+  }
+
+  auto ndo      = abs(dot(outgoing, normal));
+  auto coat     = fresnel_dielectric(ceta, ndo);
+  auto specular = fresnel_dielectric(eta, ndo);
+
+  auto weights = zero4f;
+  weights[0]   = max(coat);
+  weights[1]   = max((1 - coat) * specular);
+  weights[2]   = max((1 - coat) * (1 - specular) * material.diffuse);
+  weights[3]   = max((1 - coat) * (1 - specular) * material.transmission);
+  weights /= sum(weights);
+  return weights;
+}
+
+// Picks a direction based on the BRDF
+vec3f sample_brdf(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing, float rnl, const vec2f& rn) {
+  if (is_delta(material)) return zero3f;
+
+  auto pdfs      = compute_brdf_pdfs(material, normal, outgoing);
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+
+  // keep a weight sum to pick a lobe
+  auto weight_sum = 0.0f;
+
+  weight_sum += pdfs[0];
+  if (rnl < weight_sum) {
+    auto halfway = sample_microfacet(coat_roughness, up_normal, rn);
+    return reflect(outgoing, halfway);
+  }
+
+  weight_sum += pdfs[1];
+  if (rnl < weight_sum) {
+    auto halfway = sample_microfacet(material.roughness, up_normal, rn);
+    return reflect(outgoing, halfway);
+  }
+
+  weight_sum += pdfs[2];
+  if (rnl < weight_sum) {
+    return sample_hemisphere(up_normal, rn);
+  }
+
+  weight_sum += pdfs[3];
+  if (rnl < weight_sum && !material.thin) {
+    auto halfway = sample_microfacet(material.roughness, up_normal, rn);
+    auto eta     = mean(reflectivity_to_eta(material.specular));
+    return refract_notir(
+        outgoing, halfway, dot(normal, outgoing) > 0 ? 1 / eta : eta);
+  }
+  if (rnl < weight_sum && material.thin) {
+    auto halfway = sample_microfacet(material.roughness, up_normal, rn);
+    auto ir      = reflect(outgoing, halfway);
+    return -reflect(ir, up_normal);
+  }
+
+  // something went wrong if we got here
+  return zero3f;
+}
+vec3f sample_delta(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing, float rnl) {
+  if (!is_delta(material)) return zero3f;
+
+  auto up_normal = dot(normal, outgoing) > 0 ? normal : -normal;
+  auto pdfs      = compute_brdf_pdfs(material, normal, outgoing);
+
+  // keep a weight sum to pick a lobe
+  auto weight_sum = 0.0f;
+
+  weight_sum += pdfs[0];
+  if (rnl < weight_sum) {
+    return reflect(outgoing, up_normal);
+  }
+
+  weight_sum += pdfs[1];
+  if (rnl < weight_sum) {
+    return reflect(outgoing, up_normal);
+  }
+
+  weight_sum += pdfs[2];
+  // skip diffuse
+
+  weight_sum += pdfs[3];
+  if (rnl < weight_sum && !material.thin) {
+    auto eta = mean(reflectivity_to_eta(material.specular));
+    return refract_notir(
+        outgoing, up_normal, dot(normal, outgoing) > 0 ? 1 / eta : eta);
+  }
+  if (rnl < weight_sum && material.thin) {
+    return -outgoing;
+  }
+
+  // something went wrong if we got here
+  return zero3f;
+}
+
+// Compute the weight for sampling the BRDF
+float sample_brdf_pdf(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (is_delta(material)) return 0;
+
+  auto up_normal = dot(normal, outgoing) >= 0 ? normal : -normal;
+  auto pdfs      = compute_brdf_pdfs(material, normal, outgoing);
+  auto pdf       = 0.0f;
+
+  if (pdfs[0] && same_hemisphere(normal, outgoing, incoming)) {
+    auto halfway = normalize(incoming + outgoing);
+    pdf += pdfs[0] * sample_microfacet_pdf(coat_roughness, up_normal, halfway) /
+           (4 * abs(dot(outgoing, halfway)));
+  }
+
+  if (pdfs[1] && same_hemisphere(normal, outgoing, incoming)) {
+    auto halfway = normalize(incoming + outgoing);
+    pdf += pdfs[1] *
+           sample_microfacet_pdf(material.roughness, up_normal, halfway) /
+           (4 * abs(dot(outgoing, halfway)));
+  }
+
+  if (pdfs[2] && same_hemisphere(normal, outgoing, incoming)) {
+    pdf += pdfs[2] * sample_hemisphere_pdf(up_normal, incoming);
+  }
+
+  if (pdfs[3] && other_hemisphere(normal, outgoing, incoming) &&
+      !material.thin) {
+    auto eta            = mean(reflectivity_to_eta(material.specular));
+    auto halfway_vector = dot(outgoing, normal) > 0
+                              ? -(outgoing + eta * incoming)
+                              : (eta * outgoing + incoming);
+    auto halfway = normalize(halfway_vector);
+    // [Walter 2007] equation 17
+    pdf += pdfs[3] *
+           sample_microfacet_pdf(material.roughness, up_normal, halfway) *
+           abs(dot(halfway, incoming)) / dot(halfway_vector, halfway_vector);
+  }
+  if (pdfs[3] && other_hemisphere(normal, outgoing, incoming) &&
+      material.thin) {
+    auto up_normal = dot(outgoing, normal) > 0 ? normal : -normal;
+    auto ir        = reflect(-incoming, up_normal);
+    auto halfway   = normalize(ir + outgoing);
+    auto d = sample_microfacet_pdf(material.roughness, up_normal, halfway);
+    pdf += pdfs[3] * d / (4 * abs(dot(outgoing, halfway)));
+  }
+
+  return pdf;
+}
+float sample_delta_pdf(const material_point& material, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!is_delta(material)) return 0;
+  auto pdfs = compute_brdf_pdfs(material, normal, outgoing);
+
+  auto pdf = 0.0f;
+  if (pdfs[0] && same_hemisphere(normal, outgoing, incoming)) pdf += pdfs[0];
+  if (pdfs[1] && same_hemisphere(normal, outgoing, incoming)) pdf += pdfs[1];
+  if (pdfs[3] && other_hemisphere(normal, outgoing, incoming)) pdf += pdfs[3];
+
+  return pdf;
+}
+
+vec3f eval_volscattering(const material_point& material, const vec3f& outgoing,
+    const vec3f& incoming) {
+  if (!has_volume(material)) return zero3f;
+  auto scattering = zero3f;
+  if (material.voldensity != zero3f) {
+    scattering += eval_volume_scattering(
+        material.volscatter, material.volanisotropy, outgoing, incoming);
+  }
+  return scattering;
+}
+vec3f sample_volscattering(const material_point& material,
+    const vec3f& outgoing, float rnl, const vec2f& rn) {
+  if (!has_volume(material)) return zero3f;
+  auto weights = vec2f{max(material.voldensity), 0};
+  if (weights == zero2f) return zero3f;
+  weights /= sum(weights);
+
+  // keep a weight sum to pick a lobe
+  auto weight_sum = 0.0f;
+  weight_sum += weights[0];
+  if (rnl < weight_sum) {
+    return sample_volume_scattering(
+        material.volscatter, material.volanisotropy, outgoing, rn);
+  }
+
+  // something went wrong if we got here
+  return zero3f;
+}
+float sample_volscattering_pdf(const material_point& material,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (!has_volume(material)) return 0;
+  auto weights = vec2f{max(material.voldensity), 0};
+  if (weights == zero2f) return 0;
+  weights /= sum(weights);
+
+  // commpute pdf
+  auto pdf = 0.0f;
+  if (weights[0]) {
+    pdf += weights[0] * sample_volume_scattering_pdf(material.volscatter,
+                            material.volanisotropy, outgoing, incoming);
+  }
+
+  return pdf;
+}
+
+// Sample pdf for an environment.
+float sample_environment_pdf(const yocto_scene& scene,
+    const trace_lights& lights, int environment_id, const vec3f& incoming) {
+  auto& environment = scene.environments[environment_id];
+  if (environment.emission_tex >= 0) {
+    auto& cdf          = lights.environment_cdfs[environment.emission_tex];
+    auto& emission_tex = scene.textures[environment.emission_tex];
+    auto  size         = texture_size(emission_tex);
+    auto  texcoord     = eval_texcoord(environment, incoming);
+    auto  i            = clamp((int)(texcoord.x * size.x), 0, size.x - 1);
+    auto  j            = clamp((int)(texcoord.y * size.y), 0, size.y - 1);
+    auto  prob         = sample_discrete_pdf(cdf, j * size.x + i) / cdf.back();
+    auto  angle        = (2 * pif / size.x) * (pif / size.y) *
+                 sin(pif * (j + 0.5f) / size.y);
+    return prob / angle;
+  } else {
+    return 1 / (4 * pif);
+  }
+}
+
+// Picks a point on an environment.
+vec3f sample_environment(const yocto_scene& scene, const trace_lights& lights,
+    int environment_id, float rel, const vec2f& ruv) {
+  auto& environment = scene.environments[environment_id];
+  if (environment.emission_tex >= 0) {
+    auto& cdf          = lights.environment_cdfs[environment.emission_tex];
+    auto& emission_tex = scene.textures[environment.emission_tex];
+    auto  idx          = sample_discrete(cdf, rel);
+    auto  size         = texture_size(emission_tex);
+    auto  u            = (idx % size.x + 0.5f) / size.x;
+    auto  v            = (idx / size.x + 0.5f) / size.y;
+    return eval_direction(environment, {u, v});
+  } else {
+    return sample_sphere(ruv);
+  }
+}
+
+// Picks a point on a light.
+vec3f sample_light(const yocto_scene& scene, const trace_lights& lights,
+    int instance_id, const vec3f& p, float rel, const vec2f& ruv) {
+  auto& instance = scene.instances[instance_id];
+  auto& shape    = scene.shapes[instance.shape];
+  auto& cdf      = lights.shape_cdfs[instance.shape];
+  auto  sample   = sample_shape(shape, cdf, rel, ruv);
+  auto  element  = sample.first;
+  auto  uv       = sample.second;
+  return normalize(eval_position(scene, instance, element, uv) - p);
+}
+
+// Sample pdf for a light point.
+float sample_light_pdf(const yocto_scene& scene, const trace_lights& lights,
+    int instance_id, const bvh_scene& bvh, const vec3f& position,
+    const vec3f& direction) {
+  auto& instance = scene.instances[instance_id];
+  auto& material = scene.materials[instance.material];
+  if (material.emission == zero3f) return 0;
+  auto& cdf = lights.shape_cdfs[instance.shape];
+  // check all intersection
+  auto pdf           = 0.0f;
+  auto next_position = position;
+  for (auto bounce = 0; bounce < 100; bounce++) {
+    auto isec = intersect_bvh(bvh, instance_id, {next_position, direction});
+    if (!isec.hit) break;
+    // accumulate pdf
+    auto& instance      = scene.instances[isec.instance];
+    auto light_position = eval_position(scene, instance, isec.element, isec.uv);
+    auto light_normal   = eval_normal(
+        scene, instance, isec.element, isec.uv, trace_non_rigid_frames);
+    // prob triangle * area triangle = area triangle mesh
+    auto area = cdf.back();
+    pdf += distance_squared(light_position, position) /
+           (abs(dot(light_normal, direction)) * area);
+    // continue
+    next_position = light_position + direction * 1e-3f;
+  }
+  return pdf;
+}
+
+// Sample lights wrt solid angle
+vec3f sample_lights(const yocto_scene& scene, const trace_lights& lights,
+    const bvh_scene& bvh, const vec3f& position, float rl, float rel,
+    const vec2f& ruv) {
+  auto light_id = sample_uniform(
+      lights.instances.size() + lights.environments.size(), rl);
+  if (light_id < lights.instances.size()) {
+    auto instance = lights.instances[light_id];
+    return sample_light(scene, lights, instance, position, rel, ruv);
+  } else {
+    auto environment =
+        lights.environments[light_id - (int)lights.instances.size()];
+    return sample_environment(scene, lights, environment, rel, ruv);
+  }
+}
+
+// Sample lights pdf
+float sample_lights_pdf(const yocto_scene& scene, const trace_lights& lights,
+    const bvh_scene& bvh, const vec3f& position, const vec3f& direction) {
+  auto pdf = 0.0f;
+  for (auto instance : lights.instances) {
+    pdf += sample_light_pdf(scene, lights, instance, bvh, position, direction);
+  }
+  for (auto environment : lights.environments) {
+    pdf += sample_environment_pdf(scene, lights, environment, direction);
+  }
+  pdf *= sample_uniform_pdf(
+      lights.instances.size() + lights.environments.size());
+  return pdf;
+}
+
+// Trace stats.
+std::atomic<uint64_t> _trace_npaths{0};
+std::atomic<uint64_t> _trace_nrays{0};
+
+// Sample camera
+ray3f sample_camera(const yocto_camera& camera, const vec2i& ij,
+    const vec2i& image_size, const vec2f& puv, const vec2f& luv) {
+  return eval_camera(camera, ij, image_size, puv, sample_disk(luv));
+}
+ray3f sample_camera_tent(const yocto_camera& camera, const vec2i& ij,
+    const vec2i& image_size, const vec2f& puv, const vec2f& luv) {
+  const auto width  = 2.0f;
+  const auto offset = 0.5f;
+  auto       fuv =
+      width *
+          vec2f{
+              puv.x < 0.5f ? sqrt(2 * puv.x) - 1 : 1 - sqrt(2 - 2 * puv.x),
+              puv.y - 0.5f ? sqrt(2 * puv.y) - 1 : 1 - sqrt(2 - 2 * puv.y),
+          } +
+      offset;
+  return eval_camera(camera, ij, image_size, fuv, sample_disk(luv));
+}
+
+// Recursive path tracing.
+pair<vec3f, bool> trace_path(const yocto_scene& scene, const bvh_scene& bvh,
+    const trace_lights& lights, const vec3f& origin_, const vec3f& direction_,
+    rng_state& rng, const trace_params& params) {
+  // initialize
+  auto radiance     = zero3f;
+  auto weight       = vec3f{1, 1, 1};
+  auto origin       = origin_;
+  auto direction    = direction_;
+  auto volume_stack = vector<pair<material_point, int>>{};
+  auto hit          = false;
+
+  // trace  path
+  for (auto bounce = 0; bounce < params.bounces; bounce++) {
+    // intersect next point
+    _trace_nrays += 1;
+    auto intersection = intersect_bvh(bvh, {origin, direction});
+    if (!intersection.hit) {
+      radiance += weight * eval_environment(scene, direction);
+      break;
+    }
+
+    // handle transmission if inside a volume
+    auto in_volume = false;
+    if (!volume_stack.empty()) {
+      auto medium              = volume_stack.back().first;
+      auto [distance, channel] = sample_distance(
+          medium.voldensity, rand1f(rng), rand1f(rng));
+      distance = min(distance, intersection.distance);
+      weight *= eval_transmission(medium.voldensity, distance) /
+                sample_distance_pdf(medium.voldensity, distance, channel);
+      in_volume             = distance < intersection.distance;
+      intersection.distance = distance;
+    }
+
+    // switch between surface and volume
+    if (!in_volume) {
+      // prepare shading point
+      auto  outgoing = -direction;
+      auto& instance = scene.instances[intersection.instance];
+      auto  position = eval_position(
+          scene, instance, intersection.element, intersection.uv);
+      auto normal   = eval_shading_normal(scene, instance, intersection.element,
+          intersection.uv, direction, trace_non_rigid_frames);
+      auto material = eval_material(
+          scene, instance, intersection.element, intersection.uv);
+
+      // handle opacity
+      if (material.opacity < 1 && rand1f(rng) >= material.opacity) {
+        origin = position + direction * 1e-2f;
+        bounce -= 1;
+        continue;
+      }
+      hit = true;
+
+      // accumulate emission
+      radiance += weight * eval_emission(material, normal, outgoing);
+
+      // next direction
+      auto incoming = zero3f;
+      if (!is_delta(material)) {
+        if (rand1f(rng) < 0.5f) {
+          incoming = sample_brdf(
+              material, normal, outgoing, rand1f(rng), rand2f(rng));
+        } else {
+          incoming = sample_lights(scene, lights, bvh, position, rand1f(rng),
+              rand1f(rng), rand2f(rng));
+        }
+        weight *=
+            eval_brdfcos(material, normal, outgoing, incoming) /
+            (0.5f * sample_brdf_pdf(material, normal, outgoing, incoming) +
+                0.5f *
+                    sample_lights_pdf(scene, lights, bvh, position, incoming));
+      } else {
+        incoming = sample_delta(material, normal, outgoing, rand1f(rng));
+        weight *= eval_delta(material, normal, outgoing, incoming) /
+                  sample_delta_pdf(material, normal, outgoing, incoming);
+      }
+
+      // update volume stack
+      if (material.voldensity != zero3f &&
+          other_hemisphere(normal, outgoing, incoming)) {
+        if (volume_stack.empty()) {
+          volume_stack.push_back({material, intersection.instance});
+        } else {
+          volume_stack.pop_back();
+        }
+      }
+
+      // setup next iteration
+      origin    = position;
+      direction = incoming;
+    } else {
+      // prepare shading point
+      auto outgoing = -direction;
+      auto position = origin + direction * intersection.distance;
+      auto material = volume_stack.back().first;
+
+      // handle opacity
+      hit = true;
+
+      // accumulate emission
+      radiance += weight * eval_volemission(material, outgoing);
+
+      // next direction
+      auto incoming = zero3f;
+      if (rand1f(rng) < 0.5f) {
+        incoming = sample_volscattering(
+            material, outgoing, rand1f(rng), rand2f(rng));
+      } else {
+        incoming = sample_lights(scene, lights, bvh, position, rand1f(rng),
+            rand1f(rng), rand2f(rng));
+      }
+      weight *=
+          eval_volscattering(material, outgoing, incoming) /
+          (0.5f * sample_volscattering_pdf(material, outgoing, incoming) +
+              0.5f * sample_lights_pdf(scene, lights, bvh, position, incoming));
+
+      // setup next iteration
+      origin    = position;
+      direction = incoming;
+    }
+
+    // check weight
+    if (weight == zero3f || !isfinite(weight)) break;
+
+    // russian roulette
+    if (max(weight) < 1 && bounce > 6) {
+      auto rr_prob = max((float)0.05, 1 - max(weight));
+      if (rand1f(rng) > rr_prob) break;
+      weight *= 1 / rr_prob;
+    }
+  }
+
+  return {radiance, hit};
+}
+
+// Recursive path tracing.
+pair<vec3f, bool> trace_naive(const yocto_scene& scene, const bvh_scene& bvh,
+    const trace_lights& lights, const vec3f& origin_, const vec3f& direction_,
+    rng_state& rng, const trace_params& params) {
+  // initialize
+  auto radiance  = zero3f;
+  auto weight    = vec3f{1, 1, 1};
+  auto origin    = origin_;
+  auto direction = direction_;
+  auto hit       = false;
+
+  // trace  path
+  for (auto bounce = 0; bounce < params.bounces; bounce++) {
+    // intersect next point
+    _trace_nrays += 1;
+    auto intersection = intersect_bvh(bvh, {origin, direction});
+    if (!intersection.hit) {
+      radiance += weight * eval_environment(scene, direction);
+      break;
+    }
+
+    // prepare shading point
+    auto  outgoing = -direction;
+    auto  incoming = outgoing;
+    auto& instance = scene.instances[intersection.instance];
+    auto  position = eval_position(
+        scene, instance, intersection.element, intersection.uv);
+    auto normal   = eval_shading_normal(scene, instance, intersection.element,
+        intersection.uv, direction, trace_non_rigid_frames);
+    auto material = eval_material(
+        scene, instance, intersection.element, intersection.uv);
+
+    // handle opacity
+    if (material.opacity < 1 && rand1f(rng) >= material.opacity) {
+      origin = position + direction * 1e-2f;
+      bounce -= 1;
+      continue;
+    }
+    hit = true;
+
+    // accumulate emission
+    radiance += weight * eval_emission(material, normal, outgoing);
+
+    // next direction
+    if (!is_delta(material)) {
+      incoming = sample_brdf(
+          material, normal, outgoing, rand1f(rng), rand2f(rng));
+      weight *= eval_brdfcos(material, normal, outgoing, incoming) /
+                sample_brdf_pdf(material, normal, outgoing, incoming);
+    } else {
+      incoming = sample_delta(material, normal, outgoing, rand1f(rng));
+      weight *= eval_delta(material, normal, outgoing, incoming) /
+                sample_delta_pdf(material, normal, outgoing, incoming);
+    }
+
+    // check weight
+    if (weight == zero3f || !isfinite(weight)) break;
+
+    // russian roulette
+    if (max(weight) < 1 && bounce > 3) {
+      auto rr_prob = max((float)0.05, 1 - max(weight));
+      if (rand1f(rng) > rr_prob) break;
+      weight *= 1 / rr_prob;
+    }
+
+    // setup next iteration
+    origin    = position;
+    direction = incoming;
+  }
+
+  return {radiance, hit};
+}
+
+// Eyelight for quick previewing.
+pair<vec3f, bool> trace_eyelight(const yocto_scene& scene, const bvh_scene& bvh,
+    const trace_lights& lights, const vec3f& origin_, const vec3f& direction_,
+    rng_state& rng, const trace_params& params) {
+  // initialize
+  auto radiance  = zero3f;
+  auto weight    = vec3f{1, 1, 1};
+  auto origin    = origin_;
+  auto direction = direction_;
+  auto hit       = false;
+
+  // trace  path
+  for (auto bounce = 0; bounce < max(params.bounces, 4); bounce++) {
+    // intersect next point
+    _trace_nrays += 1;
+    auto intersection = intersect_bvh(bvh, {origin, direction});
+    if (!intersection.hit) {
+      radiance += weight * eval_environment(scene, direction);
+      break;
+    }
+
+    // prepare shading point
+    auto  outgoing = -direction;
+    auto& instance = scene.instances[intersection.instance];
+    auto  position = eval_position(
+        scene, instance, intersection.element, intersection.uv);
+    auto normal   = eval_shading_normal(scene, instance, intersection.element,
+        intersection.uv, direction, trace_non_rigid_frames);
+    auto material = eval_material(
+        scene, instance, intersection.element, intersection.uv);
+
+    // handle opacity
+    if (material.opacity < 1 && rand1f(rng) >= material.opacity) {
+      origin = position + direction * 1e-2f;
+      bounce -= 1;
+      continue;
+    }
+    hit = true;
+
+    // accumulate emission
+    radiance += weight * eval_emission(material, normal, outgoing);
+
+    // brdf * light
+    radiance += weight * pif *
+                eval_brdfcos(material, normal, outgoing, outgoing);
+
+    // continue path
+    if (!is_delta(material)) break;
+    auto incoming = sample_delta(material, normal, outgoing, rand1f(rng));
+    weight *= eval_delta(material, normal, outgoing, incoming) /
+              sample_delta_pdf(material, normal, outgoing, incoming);
+    if (weight == zero3f || !isfinite(weight)) break;
+
+    // setup next iteration
+    origin    = position;
+    direction = incoming;
+  }
+
+  return {radiance, hit};
+}
+
+// False color rendering
+pair<vec3f, bool> trace_falsecolor(const yocto_scene& scene,
+    const bvh_scene& bvh, const trace_lights& lights, const vec3f& origin,
+    const vec3f& direction, rng_state& rng, const trace_params& params) {
+  // intersect next point
+  auto intersection = intersect_bvh(bvh, ray3f{origin, direction});
+  if (!intersection.hit) {
+    return {zero3f, false};
+  }
+
+  // get scene elements
+  auto& instance = scene.instances[intersection.instance];
+  auto& shape    = scene.shapes[instance.shape];
+  // auto& material = scene.materials[instance.material];
+
+  // prepare shading point
+  auto outgoing = -direction;
+  // auto  position = eval_position(
+  //     scene, instance, intersection.element, intersection.uv);
+  auto normal   = eval_shading_normal(scene, instance, intersection.element,
+      intersection.uv, direction, trace_non_rigid_frames);
+  auto material = eval_material(
+      scene, instance, intersection.element, intersection.uv);
+
+  switch (params.falsecolor) {
+    case trace_params::falsecolor_type::normal: {
+      return {normal * 0.5f + 0.5f, 1};
+    }
+    case trace_params::falsecolor_type::frontfacing: {
+      auto frontfacing = dot(normal, outgoing) > 0 ? vec3f{0, 1, 0}
+                                                   : vec3f{1, 0, 0};
+      return {frontfacing, 1};
+    }
+    case trace_params::falsecolor_type::gnormal: {
+      auto normal = eval_element_normal(
+          scene, instance, intersection.element, true);
+      return {normal * 0.5f + 0.5f, 1};
+    }
+    case trace_params::falsecolor_type::gfrontfacing: {
+      auto normal = eval_element_normal(
+          scene, instance, intersection.element, true);
+      auto frontfacing = dot(normal, outgoing) > 0 ? vec3f{0, 1, 0}
+                                                   : vec3f{1, 0, 0};
+      return {frontfacing, 1};
+    }
+    case trace_params::falsecolor_type::texcoord: {
+      auto texcoord = eval_texcoord(
+          shape, intersection.element, intersection.uv);
+      return {{texcoord.x, texcoord.y, 0}, 1};
+    }
+    case trace_params::falsecolor_type::color: {
+      auto color = eval_color(shape, intersection.element, intersection.uv);
+      return {xyz(color), 1};
+    }
+    case trace_params::falsecolor_type::emission: {
+      return {material.emission, 1};
+    }
+    case trace_params::falsecolor_type::diffuse: {
+      return {material.diffuse, 1};
+    }
+    case trace_params::falsecolor_type::specular: {
+      return {material.specular, 1};
+    }
+    case trace_params::falsecolor_type::transmission: {
+      return {material.transmission, 1};
+    }
+    case trace_params::falsecolor_type::roughness: {
+      return {vec3f{material.roughness}, 1};
+    }
+    case trace_params::falsecolor_type::material: {
+      auto hashed = std::hash<int>()(instance.material);
+      auto rng_   = make_rng(trace_default_seed, hashed);
+      return {pow(0.5f + 0.5f * rand3f(rng_), 2.2f), 1};
+    }
+    case trace_params::falsecolor_type::element: {
+      auto hashed = std::hash<int>()(intersection.element);
+      auto rng_   = make_rng(trace_default_seed, hashed);
+      return {pow(0.5f + 0.5f * rand3f(rng_), 2.2f), 1};
+    }
+    case trace_params::falsecolor_type::shape: {
+      auto hashed = std::hash<int>()(instance.shape);
+      auto rng_   = make_rng(trace_default_seed, hashed);
+      return {pow(0.5f + 0.5f * rand3f(rng_), 2.2f), 1};
+    }
+    case trace_params::falsecolor_type::instance: {
+      auto hashed = std::hash<int>()(intersection.instance);
+      auto rng_   = make_rng(trace_default_seed, hashed);
+      return {pow(0.5f + 0.5f * rand3f(rng_), 2.2f), 1};
+    }
+    case trace_params::falsecolor_type::highlight: {
+      auto emission = material.emission;
+      auto outgoing = -direction;
+      if (emission == zero3f) emission = {0.2f, 0.2f, 0.2f};
+      return {emission * abs(dot(outgoing, normal)), 1};
+    }
+    default: {
+      return {zero3f, false};
+    }
+  }
+}
+
+// Trace a single ray from the camera using the given algorithm.
+using trace_sampler_func = pair<vec3f, bool> (*)(const yocto_scene& scene,
+    const bvh_scene& bvh, const trace_lights& lights, const vec3f& position,
+    const vec3f& direction, rng_state& rng, const trace_params& params);
+trace_sampler_func get_trace_sampler_func(const trace_params& params) {
+  switch (params.sampler) {
+    case trace_params::sampler_type::path: return trace_path;
+    case trace_params::sampler_type::naive: return trace_naive;
+    case trace_params::sampler_type::eyelight: return trace_eyelight;
+    case trace_params::sampler_type::falsecolor: return trace_falsecolor;
+    default: {
+      throw std::runtime_error("sampler unknown");
+      return nullptr;
+    }
+  }
+}
+
+// Check is a sampler requires lights
+bool is_sampler_lit(const trace_params& params) {
+  switch (params.sampler) {
+    case trace_params::sampler_type::path: return true;
+    case trace_params::sampler_type::naive: return true;
+    case trace_params::sampler_type::eyelight: return false;
+    case trace_params::sampler_type::falsecolor: return false;
+    default: {
+      throw std::runtime_error("sampler unknown");
+      return false;
+    }
+  }
+}
+
+// Get trace pixel
+trace_pixel& get_trace_pixel(trace_state& state, int i, int j) {
+  return state.pixels[j * state.image_size.x + i];
+}
+
+// Trace a block of samples
+void trace_region(image<vec4f>& image, trace_state& state,
+    const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
+    const image_region& region, int num_samples, const trace_params& params) {
+  auto& camera  = scene.cameras.at(params.camera);
+  auto  sampler = get_trace_sampler_func(params);
+  for (auto j = region.min.y; j < region.max.y; j++) {
+    for (auto i = region.min.x; i < region.max.x; i++) {
+      auto& pixel = get_trace_pixel(state, i, j);
+      for (auto s = 0; s < num_samples; s++) {
+        if (params.cancel && *params.cancel) return;
+        _trace_npaths += 1;
+        auto ray = params.tentfilter
+                       ? sample_camera_tent(camera, {i, j}, image.size(),
+                             rand2f(pixel.rng), rand2f(pixel.rng))
+                       : sample_camera(camera, {i, j}, image.size(),
+                             rand2f(pixel.rng), rand2f(pixel.rng));
+        auto [radiance, hit] = sampler(
+            scene, bvh, lights, ray.o, ray.d, pixel.rng, params);
+        if (!hit) {
+          if (params.envhidden || scene.environments.empty()) {
+            radiance = zero3f;
+            hit      = false;
+          } else {
+            hit = true;
+          }
+        }
+        if (!isfinite(radiance)) {
+          // printf("NaN detected\n");
+          radiance = zero3f;
+        }
+        if (max(radiance) > params.clamp)
+          radiance = radiance * (params.clamp / max(radiance));
+        pixel.radiance += radiance;
+        pixel.hits += hit ? 1 : 0;
+        pixel.samples += 1;
+      }
+      auto radiance = pixel.hits ? pixel.radiance / pixel.hits : zero3f;
+      auto coverage = (float)pixel.hits / (float)pixel.samples;
+      image[{i, j}] = {radiance.x, radiance.y, radiance.z, coverage};
+    }
+  }
+}
+
+// Init a sequence of random number generators.
+trace_state make_trace_state(const vec2i& image_size, uint64_t seed) {
+  auto state = trace_state{image_size,
+      vector<trace_pixel>(image_size.x * image_size.y, trace_pixel{})};
+  auto rng   = make_rng(1301081);
+  for (auto j = 0; j < state.image_size.y; j++) {
+    for (auto i = 0; i < state.image_size.x; i++) {
+      auto& pixel = get_trace_pixel(state, i, j);
+      pixel.rng   = make_rng(seed, rand1i(rng, 1 << 31) / 2 + 1);
+    }
+  }
+  return state;
+}
+void make_trace_state(
+    trace_state& state, const vec2i& image_size, uint64_t seed) {
+  state    = trace_state{image_size,
+      vector<trace_pixel>(image_size.x * image_size.y, trace_pixel{})};
+  auto rng = make_rng(1301081);
+  for (auto j = 0; j < state.image_size.y; j++) {
+    for (auto i = 0; i < state.image_size.x; i++) {
+      auto& pixel = get_trace_pixel(state, i, j);
+      pixel.rng   = make_rng(seed, rand1i(rng, 1 << 31) / 2 + 1);
+    }
+  }
+}
+
+// Init trace lights
+trace_lights make_trace_lights(const yocto_scene& scene) {
+  auto lights = trace_lights{};
+  lights.shape_cdfs.resize(scene.shapes.size());
+  lights.environment_cdfs.resize(scene.textures.size());
+  for (auto idx = 0; idx < scene.instances.size(); idx++) {
+    auto& instance = scene.instances[idx];
+    auto& shape    = scene.shapes[instance.shape];
+    auto& material = scene.materials[instance.material];
+    if (material.emission == zero3f) continue;
+    if (shape.triangles.empty() && shape.quads.empty()) continue;
+    lights.instances.push_back(idx);
+    lights.shape_cdfs[instance.shape] = sample_shape_cdf(shape);
+  }
+  for (auto idx = 0; idx < scene.environments.size(); idx++) {
+    auto& environment = scene.environments[idx];
+    if (environment.emission == zero3f) continue;
+    lights.environments.push_back(idx);
+    if (environment.emission_tex >= 0) {
+      lights.environment_cdfs[environment.emission_tex] =
+          sample_environment_cdf(scene, environment);
+    }
+  }
+  return lights;
+}
+void make_trace_lights(trace_lights& lights, const yocto_scene& scene) {
+  lights = {};
+  lights.shape_cdfs.resize(scene.shapes.size());
+  lights.environment_cdfs.resize(scene.textures.size());
+  for (auto idx = 0; idx < scene.instances.size(); idx++) {
+    auto& instance = scene.instances[idx];
+    auto& shape    = scene.shapes[instance.shape];
+    auto& material = scene.materials[instance.material];
+    if (material.emission == zero3f) continue;
+    if (shape.triangles.empty() && shape.quads.empty()) continue;
+    lights.instances.push_back(idx);
+    sample_shape_cdf(shape, lights.shape_cdfs[instance.shape]);
+  }
+  for (auto idx = 0; idx < scene.environments.size(); idx++) {
+    auto& environment = scene.environments[idx];
+    if (environment.emission == zero3f) continue;
+    lights.environments.push_back(idx);
+    if (environment.emission_tex >= 0) {
+      sample_environment_cdf(scene, environment,
+          lights.environment_cdfs[environment.emission_tex]);
+    }
+  }
+}
+
+// Progressively compute an image by calling trace_samples multiple times.
+image<vec4f> trace_image(const yocto_scene& scene, const bvh_scene& bvh,
+    const trace_lights& lights, const trace_params& params) {
+  auto image_size = camera_resolution(
+      scene.cameras.at(params.camera), params.resolution);
+  auto render  = image{image_size, zero4f};
+  auto state   = make_trace_state(render.size(), params.seed);
+  auto regions = make_regions(render.size(), params.region, true);
+
+  if (params.noparallel) {
+    for (auto& region : regions) {
+      if (params.cancel && *params.cancel) break;
+      trace_region(
+          render, state, scene, bvh, lights, region, params.samples, params);
+    }
+  } else {
+    auto                futures  = vector<std::future<void>>{};
+    auto                nthreads = std::thread::hardware_concurrency();
+    std::atomic<size_t> next_idx(0);
+    for (auto thread_id = 0; thread_id < nthreads; thread_id++) {
+      futures.emplace_back(std::async(
+          std::launch::async, [&render, &state, &scene, &bvh, &lights, &params,
+                                  &regions, &next_idx]() {
+            while (true) {
+              if (params.cancel && *params.cancel) break;
+              auto idx = next_idx.fetch_add(1);
+              if (idx >= regions.size()) break;
+              trace_region(render, state, scene, bvh, lights, regions[idx],
+                  params.samples, params);
+            }
+          }));
+    }
+    for (auto& f : futures) f.get();
+  }
+
+  return render;
+}
+
+// Progressively compute an image by calling trace_samples multiple times.
+int trace_samples(image<vec4f>& render, trace_state& state,
+    const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
+    int current_sample, const trace_params& params) {
+  auto regions     = make_regions(render.size(), params.region, true);
+  auto num_samples = min(params.batch, params.samples - current_sample);
+  if (params.noparallel) {
+    for (auto& region : regions) {
+      if (params.cancel && *params.cancel) break;
+      trace_region(
+          render, state, scene, bvh, lights, region, params.samples, params);
+    }
+  } else {
+    auto                futures  = vector<std::future<void>>{};
+    auto                nthreads = std::thread::hardware_concurrency();
+    std::atomic<size_t> next_idx(0);
+    for (auto thread_id = 0; thread_id < nthreads; thread_id++) {
+      futures.emplace_back(std::async(
+          std::launch::async, [&render, &state, &scene, &bvh, &lights, &params,
+                                  &regions, &next_idx, num_samples]() {
+            while (true) {
+              if (params.cancel && *params.cancel) break;
+              auto idx = next_idx.fetch_add(1);
+              if (idx >= regions.size()) break;
+              trace_region(render, state, scene, bvh, lights, regions[idx],
+                  num_samples, params);
+            }
+          }));
+    }
+    for (auto& f : futures) f.get();
+  }
+  return current_sample + num_samples;
+}
+
+// Trace statistics for last run used for fine tuning implementation.
+// For now returns number of paths and number of rays.
+pair<uint64_t, uint64_t> get_trace_stats() {
+  return {_trace_nrays, _trace_npaths};
+}
+void reset_trace_stats() {
+  _trace_nrays  = 0;
+  _trace_npaths = 0;
+}
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// UNUSED CODE KEPT FOR REFERENCE
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+#if YOCTO_TRACE_THINSHEET
+
+// Schlick approximation of the Fresnel term
+vec3f fresnel_schlick(
+    const vec3f& specular, const vec3f& half_vector, const vec3f& incoming) {
+  if (specular == zero3f) return zero3f;
+  return specular +
+         (vec3f{1, 1, 1} - specular) *
+             pow(clamp(1.0f - fabs(dot(half_vector, incoming)), 0.0f, 1.0f),
+                 5.0f);
+}
+vec3f fresnel_schlick(const vec3f& specular, const vec3f& half_vector,
+    const vec3f& incoming, float roughness) {
+  if (specular == zero3f) return zero3f;
+  auto fks = fresnel_schlick(specular, half_vector, incoming);
+  return specular + (fks - specular) * (1 - sqrt(clamp(roughness, 0.0f, 1.0f)));
+}
+
+// Evaluates the GGX distribution and geometric term
+float evaluate_ggx_distribution(
+    float roughness, const vec3f& normal, const vec3f& half_vector) {
+  auto di = (dot(normal, half_vector) * dot(normal, half_vector)) *
+                (roughness * roughness - 1) +
+            1;
+  return roughness * roughness / (pif * di * di);
+}
+float evaluate_ggx_shadowing(float roughness, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+#if 0
+    // evaluate G from Heitz
+    auto lambda_o = (-1 + sqrt(1 + alpha2 * (1 - ndo * ndo) / (ndo * ndo))) / 2;
+    auto lambda_i = (-1 + sqrt(1 + alpha2 * (1 - ndi * ndi) / (ndi * ndi))) / 2;
+    auto g = 1 / (1 + lambda_o + lambda_i);
+#else
+  auto Go = (2 * fabs(dot(normal, outgoing))) /
+            (fabs(dot(normal, outgoing)) +
+                sqrt(roughness * roughness + (1 - roughness * roughness) *
+                                                 dot(normal, outgoing) *
+                                                 dot(normal, outgoing)));
+  auto Gi = (2 * fabs(dot(normal, incoming))) /
+            (fabs(dot(normal, incoming)) +
+                sqrt(roughness * roughness + (1 - roughness * roughness) *
+                                                 dot(normal, incoming) *
+                                                 dot(normal, incoming)));
+  return Go * Gi;
+#endif
+}
+// Evaluates the GGX pdf
+float sample_ggx_pdf(float rs, float ndh) {
+  auto alpha2 = rs * rs;
+  auto di     = (ndh * ndh) * (alpha2 - 1) + 1;
+  auto d      = alpha2 / (pif * di * di);
+  return d * ndh;
+}
+// Sample the GGX distribution
+vec3f sample_ggx(float rs, const vec2f& rn) {
+  auto tan2 = rs * rs * rn.y / (1 - rn.y);
+  auto rz   = sqrt(1 / (tan2 + 1));
+  auto rr   = sqrt(1 - rz * rz);
+  auto rphi = 2 * pif * rn.x;
+  // set to wh
+  auto wh_local = vec3f{rr * cos(rphi), rr * sin(rphi), rz};
+  return wh_local;
+}
+
+// Evaluates the BRDF scaled by the cosine of the incoming direction.
+// - ggx from [Heitz 2014] and [Walter 2007] and [Lagarde 2014]
+// "Understanding the Masking-Shadowing Function in Microfacet-Based
+// BRDFs" http://jcgt.org/published/0003/02/03/
+// - "Microfacet Models for Refraction through Rough Surfaces" EGSR 07
+// https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
+vec3f evaluate_brdf_cosine(const microfacet_brdf& brdf, const vec3f& normal,
+    const vec3f& outgoing, const vec3f& incoming) {
+  if (is_brdf_delta(brdf)) return zero3f;
+  auto brdf_cosine = zero3f;
+
+  // diffuse
+  if (brdf.diffuse != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) > 0) {
+    auto half_vector = normalize(incoming + outgoing);
+    auto fresnel     = (brdf.fresnel)
+                       ? fresnel_schlick(brdf.specular, half_vector, outgoing)
+                       : brdf.specular;
+    brdf_cosine += brdf.diffuse * (1 - fresnel) / pif;
+  }
+
+  // specular
+  if (brdf.specular != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) > 0) {
+    auto half_vector = normalize(incoming + outgoing);
+    auto fresnel     = (brdf.fresnel)
+                       ? fresnel_schlick(brdf.specular, half_vector, outgoing)
+                       : brdf.specular;
+    auto D = evaluate_ggx_distribution(brdf.roughness, normal, half_vector);
+    auto G = evaluate_ggx_shadowing(brdf.roughness, normal, outgoing, incoming);
+    brdf_cosine +=
+        fresnel * D * G /
+        (4 * fabs(dot(normal, outgoing)) * fabs(dot(normal, incoming)));
+  }
+
+  // transmission (thin sheet)
+  if (brdf.transmission != zero3f && !brdf.refract &&
+      dot(normal, outgoing) * dot(normal, incoming) < 0) {
+    auto ir = (dot(normal, outgoing) >= 0) ? reflect(-incoming, normal)
+                                           : reflect(-incoming, -normal);
+    auto half_vector = normalize(ir + outgoing);
+    auto fresnel     = (brdf.fresnel)
+                       ? fresnel_schlick(brdf.specular, half_vector, outgoing)
+                       : brdf.specular;
+    auto D = evaluate_ggx_distribution(brdf.roughness, normal, half_vector);
+    auto G = evaluate_ggx_shadowing(brdf.roughness, normal, outgoing, ir);
+    brdf_cosine += brdf.transmission * (1 - fresnel) * D * G /
+                   (4 * fabs(dot(normal, outgoing)) * fabs(dot(normal, ir)));
+  }
+
+  // refraction through rough surface
+  if (brdf.transmission != zero3f && brdf.refract &&
+      dot(normal, outgoing) * dot(normal, incoming) < 0) {
+    auto eta            = specular_to_eta(brdf.specular);
+    auto halfway_vector = dot(normal, outgoing) > 0
+                              ? -(outgoing + eta * incoming)
+                              : (eta * outgoing + incoming);
+    auto halfway = normalize(halfway_vector);
+
+    auto fresnel = fresnel_schlick(brdf.specular, halfway, outgoing);
+    auto D       = evaluate_ggx_distribution(brdf.roughness, normal, halfway);
+    auto G = evaluate_ggx_shadowing(brdf.roughness, normal, outgoing, incoming);
+
+    auto dots = dot(outgoing, halfway) * dot(incoming, halfway) /
+                (dot(outgoing, normal) * dot(incoming, normal));
+
+    auto numerator   = (1 - fresnel) * D * G;
+    auto denominator = dot(halfway_vector, halfway_vector);
+
+    brdf_cosine += abs(dots) * numerator / denominator;
+  }
+  return brdf_cosine * abs(dot(normal, incoming));
+}
+
+// Evaluates the BRDF assuming that it is called only from the directions
+// generated by sample_brdf_direction.
+vec3f evaluate_delta_brdf_cosine(const microfacet_brdf& brdf,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!is_brdf_delta(brdf)) return zero3f;
+  auto microfacet_brdf = zero3f;
+
+  // specular
+  if (brdf.specular != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) > 0) {
+    auto fresnel = (brdf.fresnel)
+                       ? fresnel_schlick(brdf.specular, normal, outgoing)
+                       : brdf.specular;
+    microfacet_brdf += fresnel;
+  }
+
+  // transmission (thin sheet)
+  if (brdf.transmission != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) < 0) {
+    auto fresnel = (brdf.fresnel)
+                       ? fresnel_schlick(brdf.specular, normal, outgoing)
+                       : brdf.specular;
+    microfacet_brdf += brdf.transmission * (1 - fresnel);
+  }
+
+  return microfacet_brdf;
+}
+
+// Picks a direction based on the BRDF
+vec3f sample_brdf_direction(const microfacet_brdf& brdf, const vec3f& normal,
+    const vec3f& outgoing, float rnl, const vec2f& rn) {
+  if (is_brdf_delta(brdf)) return zero3f;
+  auto fresnel = (brdf.fresnel)
+                     ? fresnel_schlick(brdf.specular, normal, outgoing)
+                     : brdf.specular;
+  auto prob = vec3f{max(brdf.diffuse * (1 - fresnel)), max(fresnel),
+      max(brdf.transmission * (1 - fresnel))};
+  if (prob == zero3f) return zero3f;
+  prob /= prob.x + prob.y + prob.z;
+
+  // sample according to diffuse
+  if (brdf.diffuse != zero3f && rnl < prob.x) {
+    auto rz = sqrtf(rn.y), rr = sqrtf(1 - rz * rz), rphi = 2 * pif * rn.x;
+    auto il = vec3f{rr * cosf(rphi), rr * sinf(rphi), rz};
+    auto fp = dot(normal, outgoing) >= 0 ? frame_fromz(zero3f, normal)
+                                         : frame_fromz(zero3f, -normal);
+    return transform_direction(fp, il);
+  }
+  // sample according to specular GGX
+  else if (brdf.specular != zero3f && rnl < prob.x + prob.y) {
+    auto hl = sample_ggx(brdf.roughness, rn);
+    auto fp = dot(normal, outgoing) >= 0 ? frame_fromz(zero3f, normal)
+                                         : frame_fromz(zero3f, -normal);
+    auto half_vector = transform_direction(fp, hl);
+    return reflect(outgoing, half_vector);
+  }
+  // transmission hack
+  else if (brdf.transmission != zero3f && !brdf.refract &&
+           rnl < prob.x + prob.y + prob.z) {
+    auto hl = sample_ggx(brdf.roughness, rn);
+    auto fp = dot(normal, outgoing) >= 0 ? frame_fromz(zero3f, normal)
+                                         : frame_fromz(zero3f, -normal);
+    auto half_vector = transform_direction(fp, hl);
+    auto ir          = reflect(outgoing, half_vector);
+    return dot(normal, outgoing) >= 0 ? reflect(-ir, -normal)
+                                      : reflect(-ir, normal);
+  }
+  // sample according to rough refraction
+  else if (brdf.transmission != zero3f && brdf.refract &&
+           rnl < prob.x + prob.y + prob.z) {
+    auto hl = sample_ggx(brdf.roughness, rn);
+    auto fp = dot(normal, outgoing) >= 0 ? frame_fromz(zero3f, normal)
+                                         : frame_fromz(zero3f, -normal);
+    auto halfway = transform_direction(fp, hl);
+
+    auto eta = specular_to_eta(brdf.specular);
+    return refract(
+        outgoing, halfway, dot(normal, outgoing) >= 0 ? 1 / eta : eta);
+  }
+
+  else {
+    return zero3f;
+  }
+}
+
+// Picks a direction based on the BRDF
+vec3f sample_delta_brdf_direction(const microfacet_brdf& brdf,
+    const vec3f& normal, const vec3f& outgoing, float rnl, const vec2f& rn) {
+  if (!is_brdf_delta(brdf)) return zero3f;
+  auto fresnel = (brdf.fresnel)
+                     ? fresnel_schlick(brdf.specular, normal, outgoing)
+                     : brdf.specular;
+  auto prob = vec3f{0, max(fresnel), max(brdf.transmission * (1 - fresnel))};
+  if (prob == zero3f) return zero3f;
+  prob /= prob.x + prob.y + prob.z;
+
+  // sample according to specular mirror
+  if (brdf.specular != zero3f && rnl < prob.x + prob.y) {
+    return reflect(outgoing, dot(normal, outgoing) >= 0 ? normal : -normal);
+  }
+  // sample according to transmission
+  else if (brdf.transmission != zero3f && !brdf.refract &&
+           rnl < prob.x + prob.y + prob.z) {
+    return -outgoing;
+  }
+  // sample according to transmission
+  else if (brdf.transmission != zero3f && brdf.refract &&
+           rnl < prob.x + prob.y + prob.z) {
+    if (dot(normal, outgoing) >= 0) {
+      return refract(outgoing, normal, 1 / specular_to_eta(brdf.specular));
+    } else {
+      return refract(outgoing, -normal, specular_to_eta(brdf.specular));
+    }
+  }
+  // no sampling
+  else {
+    return zero3f;
+  }
+}
+
+// Compute the weight for sampling the BRDF
+float sample_brdf_direction_pdf(const microfacet_brdf& brdf,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (is_brdf_delta(brdf)) return 0;
+  auto fresnel = (brdf.fresnel)
+                     ? fresnel_schlick(brdf.specular, normal, outgoing)
+                     : brdf.specular;
+  auto prob = vec3f{max(brdf.diffuse * (1 - fresnel)), max(fresnel),
+      max(brdf.transmission * (1 - fresnel))};
+  if (prob == zero3f) return 0;
+  prob /= prob.x + prob.y + prob.z;
+
+  auto pdf = 0.0f;
+
+  if (brdf.diffuse != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) > 0) {
+    pdf += prob.x * fabs(dot(normal, incoming)) / pif;
+  }
+  if (brdf.specular != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) > 0) {
+    auto half_vector = normalize(incoming + outgoing);
+    auto d = sample_ggx_pdf(brdf.roughness, fabs(dot(normal, half_vector)));
+    pdf += prob.y * d / (4 * fabs(dot(outgoing, half_vector)));
+  }
+  if (brdf.transmission != zero3f && !brdf.refract &&
+      dot(normal, outgoing) * dot(normal, incoming) < 0) {
+    auto ir = (dot(normal, outgoing) >= 0) ? reflect(-incoming, normal)
+                                           : reflect(-incoming, -normal);
+    auto half_vector = normalize(ir + outgoing);
+    auto d = sample_ggx_pdf(brdf.roughness, fabs(dot(normal, half_vector)));
+    pdf += prob.z * d / (4 * fabs(dot(outgoing, half_vector)));
+  }
+
+  // refraction through rough surface
+  if (brdf.transmission != zero3f && brdf.refract &&
+      dot(normal, outgoing) * dot(normal, incoming) < 0) {
+    auto eta            = specular_to_eta(brdf.specular);
+    auto outgoing_up    = dot(normal, outgoing) > 0;
+    auto halfway_vector = outgoing_up ? -(outgoing + eta * incoming)
+                                      : (eta * outgoing + incoming);
+    auto halfway = normalize(halfway_vector);
+
+    auto d = sample_ggx_pdf(brdf.roughness, fabs(dot(normal, halfway)));
+
+    auto jacobian = fabs(dot(halfway, incoming)) /
+                    dot(halfway_vector, halfway_vector);
+    pdf += prob.z * d * jacobian;
+  }
+
+  return pdf;
+}
+
+// Compute the weight for sampling the BRDF
+float sample_delta_brdf_direction_pdf(const microfacet_brdf& brdf,
+    const vec3f& normal, const vec3f& outgoing, const vec3f& incoming) {
+  if (!is_brdf_delta(brdf)) return 0;
+  auto fresnel = (brdf.fresnel)
+                     ? fresnel_schlick(brdf.specular, normal, outgoing)
+                     : brdf.specular;
+  auto prob = vec3f{0, max(fresnel), max(brdf.transmission * (1 - fresnel))};
+  if (prob == zero3f) return 0;
+  prob /= prob.x + prob.y + prob.z;
+
+  auto pdf = 0.0f;
+
+  if (brdf.specular != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) > 0) {
+    return prob.y;
+  }
+  if (brdf.transmission != zero3f &&
+      dot(normal, outgoing) * dot(normal, incoming) < 0) {
+    return prob.z;
+  }
+
+  return pdf;
+}
+
+#endif
 
 }  // namespace yocto
 
@@ -2273,41 +2102,43 @@ bool get_metal_ior(const string& name, vec3f& eta, vec3f& etak) {
 // -----------------------------------------------------------------------------
 namespace yocto {
 
+template <typename Func>
 float integrate_func_base(
-    function<float(float)> f, float a, float b, int nsamples, rng_state& rng) {
-    auto integral = 0.0f;
-    for (auto i = 0; i < nsamples; i++) {
-        auto r = get_random_float(rng);
-        auto x = a + r * (b - a);
-        integral += f(x) * (b - a);
-    }
-    integral /= nsamples;
-    return integral;
+    const Func& f, float a, float b, int nsamples, rng_state& rng) {
+  auto integral = 0.0f;
+  for (auto i = 0; i < nsamples; i++) {
+    auto r = rand1f(rng);
+    auto x = a + r * (b - a);
+    integral += f(x) * (b - a);
+  }
+  integral /= nsamples;
+  return integral;
 }
 
+template <typename Func>
 float integrate_func_stratified(
-    function<float(float)> f, float a, float b, int nsamples, rng_state& rng) {
-    auto integral = 0.0f;
-    for (auto i = 0; i < nsamples; i++) {
-        auto r = (i + get_random_float(rng)) / nsamples;
-        auto x = a + r * (b - a);
-        integral += f(x) * (b - a);
-    }
-    integral /= nsamples;
-    return integral;
+    const Func& f, float a, float b, int nsamples, rng_state& rng) {
+  auto integral = 0.0f;
+  for (auto i = 0; i < nsamples; i++) {
+    auto r = (i + rand1f(rng)) / nsamples;
+    auto x = a + r * (b - a);
+    integral += f(x) * (b - a);
+  }
+  integral /= nsamples;
+  return integral;
 }
 
-float integrate_func_importance(function<float(float)> f,
-    function<float(float)> pdf, function<float(float)> warp, int nsamples,
-    rng_state& rng) {
-    auto integral = 0.0f;
-    for (auto i = 0; i < nsamples; i++) {
-        auto r = get_random_float(rng);
-        auto x = warp(r);
-        integral += f(x) / pdf(x);
-    }
-    integral /= nsamples;
-    return integral;
+template <typename Func>
+float integrate_func_importance(const Func& f, const Func& pdf,
+    const Func& warp, int nsamples, rng_state& rng) {
+  auto integral = 0.0f;
+  for (auto i = 0; i < nsamples; i++) {
+    auto r = rand1f(rng);
+    auto x = warp(r);
+    integral += f(x) / pdf(x);
+  }
+  integral /= nsamples;
+  return integral;
 }
 
 // compute the integral and error using different Monte Carlo scehems
@@ -2320,63 +2151,64 @@ float integrate_func_importance(function<float(float)> f,
 // auto f = [](double x) { return sin(x); }
 // auto a = 0.0, b = (double)M_PI;
 // auto expected = (double)M_PI;
-void print_integrate_func_test(function<float(float)> f, float a, float b,
-    float expected, int nsamples, function<float(float)> pdf,
-    function<float(float)> warp) {
-    auto rng = rng_state();
-    printf("nsamples base base-err stratified-err importance-err\n");
-    for (auto ns = 10; ns < nsamples; ns += 10) {
-        auto integral_base       = integrate_func_base(f, a, b, ns, rng);
-        auto integral_stratified = integrate_func_stratified(f, a, b, ns, rng);
-        auto integral_importance = integrate_func_importance(
-            f, pdf, warp, ns, rng);
-        auto error_base       = fabs(integral_base - expected) / expected;
-        auto error_stratified = fabs(integral_stratified - expected) / expected;
-        auto error_importance = fabs(integral_importance - expected) / expected;
-        printf("%d %g %g %g %g\n", ns, integral_base, error_base,
-            error_stratified, error_importance);
-    }
+template <typename Func>
+void print_integrate_func_test(const Func& f, float a, float b, float expected,
+    int nsamples, const Func& pdf, const Func& warp) {
+  auto rng = rng_state();
+  printf("nsamples base base-err stratified-err importance-err\n");
+  for (auto ns = 10; ns < nsamples; ns += 10) {
+    auto integral_base       = integrate_func_base(f, a, b, ns, rng);
+    auto integral_stratified = integrate_func_stratified(f, a, b, ns, rng);
+    auto integral_importance = integrate_func_importance(f, pdf, warp, ns, rng);
+    auto error_base          = fabs(integral_base - expected) / expected;
+    auto error_stratified    = fabs(integral_stratified - expected) / expected;
+    auto error_importance    = fabs(integral_importance - expected) / expected;
+    printf("%d %g %g %g %g\n", ns, integral_base, error_base, error_stratified,
+        error_importance);
+  }
 }
 
+template <typename Func>
 float integrate_func2_base(
-    function<float(vec2f)> f, vec2f a, vec2f b, int nsamples, rng_state& rng) {
-    auto integral = 0.0f;
-    for (auto i = 0; i < nsamples; i++) {
-        auto r = get_random_vec2f(rng);
-        auto x = a + r * (b - a);
-        integral += f(x) * (b.x - a.x) * (b.y - a.y);
-    }
-    integral /= nsamples;
-    return integral;
+    const Func& f, vec2f a, vec2f b, int nsamples, rng_state& rng) {
+  auto integral = 0.0f;
+  for (auto i = 0; i < nsamples; i++) {
+    auto r = rand2f(rng);
+    auto x = a + r * (b - a);
+    integral += f(x) * (b.x - a.x) * (b.y - a.y);
+  }
+  integral /= nsamples;
+  return integral;
 }
 
+template <typename Func>
 float integrate_func2_stratified(
-    function<float(vec2f)> f, vec2f a, vec2f b, int nsamples, rng_state& rng) {
-    auto integral  = 0.0f;
-    auto nsamples2 = (int)sqrt(nsamples);
-    for (auto i = 0; i < nsamples2; i++) {
-        for (auto j = 0; j < nsamples2; j++) {
-            auto r = vec2f{(i + get_random_float(rng)) / nsamples2,
-                (j + get_random_float(rng)) / nsamples2};
-            auto x = a + r * (b - a);
-            integral += f(x) * (b.x - a.x) * (b.y - a.y);
-        }
+    const Func& f, vec2f a, vec2f b, int nsamples, rng_state& rng) {
+  auto integral  = 0.0f;
+  auto nsamples2 = (int)sqrt(nsamples);
+  for (auto i = 0; i < nsamples2; i++) {
+    for (auto j = 0; j < nsamples2; j++) {
+      auto r = vec2f{
+          (i + rand1f(rng)) / nsamples2, (j + rand1f(rng)) / nsamples2};
+      auto x = a + r * (b - a);
+      integral += f(x) * (b.x - a.x) * (b.y - a.y);
     }
-    integral /= nsamples2 * nsamples2;
-    return integral;
+  }
+  integral /= nsamples2 * nsamples2;
+  return integral;
 }
 
-float integrate_func2_importance(function<float(vec2f)> f,
-    function<float(vec2f)> pdf, function<vec2f(vec2f)> warp, int nsamples,
-    rng_state& rng) {
-    auto integral = 0.0f;
-    for (auto i = 0; i < nsamples; i++) {
-        auto r = get_random_vec2f(rng);
-        auto x = warp(r);
-        integral += f(x) / pdf(x);
-    }
-    integral /= nsamples;
-    return integral;
+template <typename Func, typename Func2>
+float integrate_func2_importance(const Func& f, const Func& pdf,
+    const Func2& warp, int nsamples, rng_state& rng) {
+  auto integral = 0.0f;
+  for (auto i = 0; i < nsamples; i++) {
+    auto r = rand2f(rng);
+    auto x = warp(r);
+    integral += f(x) / pdf(x);
+  }
+  integral /= nsamples;
+  return integral;
 }
 
 // compute the integral and error using different Monte Carlo scehems
@@ -2385,22 +2217,22 @@ float integrate_func2_importance(function<float(vec2f)> f,
 // auto a = 0.0, b = 1.0;
 // auto expected = 3.0 / 4.0;
 // auto nsamples = 10000
-void print_integrate_func2_test(function<float(vec2f)> f, vec2f a, vec2f b,
-    float expected, int nsamples, function<float(vec2f)> pdf,
-    function<vec2f(vec2f)> warp) {
-    auto rng = rng_state();
-    printf("nsamples base base-err stratified-err importance-err\n");
-    for (auto ns = 10; ns < nsamples; ns += 10) {
-        auto integral_base       = integrate_func2_base(f, a, b, ns, rng);
-        auto integral_stratified = integrate_func2_stratified(f, a, b, ns, rng);
-        auto integral_importance = integrate_func2_importance(
-            f, pdf, warp, ns, rng);
-        auto error_base       = fabs(integral_base - expected) / expected;
-        auto error_stratified = fabs(integral_stratified - expected) / expected;
-        auto error_importance = fabs(integral_importance - expected) / expected;
-        printf("%d %g %g %g %g\n", ns, integral_base, error_base,
-            error_stratified, error_importance);
-    }
+template <typename Func, typename Func2>
+void print_integrate_func2_test(const Func& f, vec2f a, vec2f b, float expected,
+    int nsamples, const Func& pdf, const Func2& warp) {
+  auto rng = rng_state();
+  printf("nsamples base base-err stratified-err importance-err\n");
+  for (auto ns = 10; ns < nsamples; ns += 10) {
+    auto integral_base       = integrate_func2_base(f, a, b, ns, rng);
+    auto integral_stratified = integrate_func2_stratified(f, a, b, ns, rng);
+    auto integral_importance = integrate_func2_importance(
+        f, pdf, warp, ns, rng);
+    auto error_base       = fabs(integral_base - expected) / expected;
+    auto error_stratified = fabs(integral_stratified - expected) / expected;
+    auto error_importance = fabs(integral_importance - expected) / expected;
+    printf("%d %g %g %g %g\n", ns, integral_base, error_base, error_stratified,
+        error_importance);
+  }
 }
 
 }  // namespace yocto

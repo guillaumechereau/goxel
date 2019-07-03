@@ -2,8 +2,8 @@
 // # Yocto/SceneIO: Tiny library for Yocto/Scene input and output
 //
 // Yocto/SceneIO provides loading and saving functionality for scenes
-// in Yocto/GL. We support a simple to use JSON format, PLY, OBJ and glTF.
-// The JSON serialization is a straight copy of the in-memory scene data.
+// in Yocto/GL. We support a simple to use YAML format, PLY, OBJ and glTF.
+// The YAML serialization is a straight copy of the in-memory scene data.
 // To speed up testing, we also support a binary format that is a dump of
 // the current scene. This format should not be use for archival though.
 //
@@ -11,13 +11,7 @@
 //
 // ## Scene Loading and Saving
 //
-// 1. load a scene with `load_json_scene()` and save it with `save_json_scene()`
-// 2. load and save OBJs with `load_obj_scene()` and `save_obj_scene()`
-// 3. load and save glTFs with `load_gltf_scene()` and `save_gltf_scene()`
-// 4. load and save binary dumps with `load_ybin_scene()`and `save_ybin_scene()`
-// 5. if desired, the function `load_scene()` and `save_scene()` will either
-//    load using the internal format or convert on the fly using on the
-//    supported conversions
+// 1. load a scene with `load_scene()` and save it with `save_scene()`
 //
 //
 
@@ -52,6 +46,7 @@
 // INCLUDES
 // -----------------------------------------------------------------------------
 
+#include <atomic>
 #include "yocto_scene.h"
 
 // -----------------------------------------------------------------------------
@@ -60,142 +55,47 @@
 
 namespace yocto {
 
-// Scene load options
-struct load_scene_options {
-    bool          skip_textures             = false;
-    bool          skip_meshes               = false;
-    bool          obj_split_shapes          = true;
-    bool          obj_preserve_face_varying = false;
-    atomic<bool>* cancel_flag               = nullptr;
-    bool          run_serially              = false;
+// Scene load params
+struct load_params {
+  bool               notextures  = false;
+  bool               facevarying = false;
+  std::atomic<bool>* cancel      = nullptr;
+  bool               noparallel  = false;
 };
-// Scene save options
-struct save_scene_options {
-    bool          skip_textures = false;
-    bool          skip_meshes   = false;
-    atomic<bool>* cancel_flag   = nullptr;
-    bool          run_serially  = false;
+
+// Scene save params
+struct save_params {
+  bool               notextures   = false;
+  bool               objinstances = false;
+  std::atomic<bool>* cancel       = nullptr;
+  bool               noparallel   = false;
 };
 
 // Load/save a scene in the supported formats.
-void load_scene(const string& filename, yocto_scene& scene,
-    const load_scene_options& options = {});
+void load_scene(
+    const string& filename, yocto_scene& scene, const load_params& params = {});
 void save_scene(const string& filename, const yocto_scene& scene,
-    const save_scene_options& options = {});
+    const save_params& params = {});
 
-// Load/save a scene in the builtin JSON format.
-void load_json_scene(const string& filename, yocto_scene& scene,
-    const load_scene_options& options = {});
-void save_json_scene(const string& filename, const yocto_scene& scene,
-    const save_scene_options& options = {});
+// Load/save scene textures
+void load_texture(yocto_texture& texture, const string& dirname);
+void save_texture(const yocto_texture& texture, const string& dirname);
+void load_voltexture(yocto_voltexture& texture, const string& dirname);
+void save_voltexture(const yocto_voltexture& texture, const string& dirname);
+void load_textures(
+    yocto_scene& scene, const string& dirname, const load_params& params);
+void save_textures(
+    const yocto_scene& scene, const string& dirname, const save_params& params);
 
-// Load/save a scene from/to OBJ.
-void load_obj_scene(const string& filename, yocto_scene& scene,
-    const load_scene_options& options = {});
-void save_obj_scene(const string& filename, const yocto_scene& scene,
-    const save_scene_options& options = {});
-
-// Load/save a scene from/to PLY. Loads/saves only one mesh with no other data.
-void load_ply_scene(const string& filename, yocto_scene& scene,
-    const load_scene_options& options = {});
-void save_ply_scene(const string& filename, const yocto_scene& scene,
-    const save_scene_options& options = {});
-
-// Load/save a scene from/to glTF.
-void load_gltf_scene(const string& filename, yocto_scene& scene,
-    const load_scene_options& options = {});
-void save_gltf_scene(const string& filename, const yocto_scene& scene,
-    const save_scene_options& options = {});
-
-// Load/save a scene from/to pbrt. This is not robust at all and only
-// works on scene that have been previously adapted since the two renderers
-// are too different to match.
-void load_pbrt_scene(const string& filename, yocto_scene& scene,
-    const load_scene_options& options = {});
-void save_pbrt_scene(const string& filename, const yocto_scene& scene,
-    const save_scene_options& options = {});
-
-// Load/save a binary dump useful for very fast scene IO. This format is not
-// an archival format and should only be used as an intermediate format.
-void load_ybin_scene(const string& filename, yocto_scene& scene,
-    const load_scene_options& options = {});
-void save_ybin_scene(const string& filename, const yocto_scene& scene,
-    const save_scene_options& options = {});
-
-// sceneio error
-struct sceneio_error : runtime_error {
-    explicit sceneio_error(const char* msg) : runtime_error{msg} {}
-    explicit sceneio_error(const std::string& msg) : runtime_error{msg} {}
-};
-
-}  // namespace yocto
-
-// -----------------------------------------------------------------------------
-// MESH IO FUNCTIONS
-// -----------------------------------------------------------------------------
-namespace yocto {
-
-// Load/Save a mesh
-void load_mesh(const string& filename, vector<int>& points,
-    vector<vec2i>& lines, vector<vec3i>& triangles, vector<vec4i>& quads,
-    vector<vec3f>& positions, vector<vec3f>& normals,
-    vector<vec2f>& texturecoords, vector<vec4f>& colors, vector<float>& radius,
-    bool force_triangles);
-void save_mesh(const string& filename, const vector<int>& points,
-    const vector<vec2i>& lines, const vector<vec3i>& triangles,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
-    const vector<vec4f>& colors, const vector<float>& radius,
-    bool ascii = false);
-
-// Load/Save a ply mesh
-void load_ply_mesh(const string& filename, vector<int>& points,
-    vector<vec2i>& lines, vector<vec3i>& triangles, vector<vec4i>& quads,
-    vector<vec3f>& positions, vector<vec3f>& normals,
-    vector<vec2f>& texturecoords, vector<vec4f>& color, vector<float>& radius,
-    bool force_triangles, bool flip_texcoord = true);
-void save_ply_mesh(const string& filename, const vector<int>& points,
-    const vector<vec2i>& lines, const vector<vec3i>& triangles,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
-    const vector<vec4f>& colors, const vector<float>& radius,
-    bool ascii = false, bool flip_texcoord = true);
-
-// Load/Save an OBJ mesh
-void load_obj_mesh(const string& filename, vector<int>& points,
-    vector<vec2i>& lines, vector<vec3i>& triangles, vector<vec4i>& quads,
-    vector<vec3f>& positions, vector<vec3f>& normals,
-    vector<vec2f>& texturecoords, bool force_triangles,
-    bool flip_texcoord = true);
-void save_obj_mesh(const string& filename, const vector<int>& points,
-    const vector<vec2i>& lines, const vector<vec3i>& triangles,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
-    bool flip_texcoord = true);
-
-// Load/Save a face-varying mesh
-void load_facevarying_mesh(const string& filename,
-    vector<vec4i>& quads_positions, vector<vec4i>& quads_normals,
-    vector<vec4i>& quads_texturecoords, vector<vec3f>& positions,
-    vector<vec3f>& normals, vector<vec2f>& texturecoords,
-    vector<int>& quads_materials);
-void save_facevarying_mesh(const string& filename,
-    const vector<vec4i>& quads_positions, const vector<vec4i>& quads_normals,
-    const vector<vec4i>& quads_texturecoords, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
-    const vector<int>& quads_materials, bool ascii = false);
-
-// Load/Save an OBJ mesh
-void load_obj_facevarying_mesh(const string& filename,
-    vector<vec4i>& quads_positions, vector<vec4i>& quads_normals,
-    vector<vec4i>& quads_texturecoords, vector<vec3f>& positions,
-    vector<vec3f>& normals, vector<vec2f>& texturecoords,
-    vector<int>& quads_materials, bool flip_texcoord = true);
-void save_obj_facevarying_mesh(const string& filename,
-    const vector<vec4i>& quads_positions, const vector<vec4i>& quads_normals,
-    const vector<vec4i>& quads_texturecoords, const vector<vec3f>& positions,
-    const vector<vec3f>& normals, const vector<vec2f>& texturecoords,
-    const vector<int>& quads_materials, bool flip_texcoord = true);
+// Load/save scene shapes
+void load_shape(yocto_shape& shape, const string& dirname);
+void save_shape(const yocto_shape& shape, const string& dirname);
+void load_subdiv(yocto_subdiv& subdiv, const string& dirname);
+void save_subdiv(const yocto_subdiv& subdiv, const string& dirname);
+void load_shapes(
+    yocto_scene& scene, const string& dirname, const load_params& params);
+void save_shapes(
+    const yocto_scene& scene, const string& dirname, const save_params& params);
 
 }  // namespace yocto
 
