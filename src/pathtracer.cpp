@@ -22,12 +22,6 @@
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #endif
 
-#include <cstddef>
-#include <cstdio>
-#include <iterator>
-#include <future>
-#include <deque>
-
 #define YOCTO_EMBREE 0
 #define STB_IMAGE_STATIC
 
@@ -38,6 +32,12 @@
 #ifndef __clang__
 #pragma GCC diagnostic pop
 #endif
+
+#include <cstddef>
+#include <cstdio>
+#include <iterator>
+#include <future>
+#include <deque>
 
 extern "C" {
 #include "goxel.h"
@@ -211,7 +211,7 @@ void stop_render(vector<future<void>>& futures,
     for (auto& f : futures) f.get();
     futures.clear();
     {
-        std::lock_guard guard{queuem};
+        std::lock_guard<mutex> guard{queuem};
         queue.clear();
     }
 }
@@ -510,7 +510,7 @@ static void start_render(
                         trace_region(image, state, scene, bvh, lights,
                                      region, num_samples, trace_prms);
                         {
-                            std::lock_guard guard{queuem};
+                            std::lock_guard<mutex> guard{queuem};
                             queue.push_back(region);
                         }
                     }
