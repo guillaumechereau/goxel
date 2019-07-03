@@ -473,15 +473,25 @@ static void start_render(
             current_sample   = sample;
             auto num_samples = min(options.samples_per_batch,
                 options.num_samples - current_sample);
-            parallel_foreach(
-                regions,
-                [num_samples, &options, &image, &scene, &lights, &bvh, &state,
-                    &queue](const image_region& region) {
-                    trace_image_region(image, state, scene, bvh, lights, region,
-                        num_samples, options);
-                    queue.push(region);
-                },
-                cancel, options.run_serially);
+            auto futures  = vector<future<void>>{};
+            int nthreads = std::thread::hardware_concurrency();
+            std::atomic<size_t> next_idx(0);
+            for (int thread_id = 0; thread_id < nthreads; thread_id++) {
+                futures.emplace_back(async(std::launch::async,
+                            [num_samples, &options, &image, &scene, &lights,
+                             &bvh, &state, &queue, &next_idx, cancel,
+                             &regions]() {
+                    while (true) {
+                        if (cancel && *cancel) break;
+                        auto idx = next_idx.fetch_add(1);
+                        if (idx >= regions.size()) break;
+                        auto region = regions[idx];
+                        trace_image_region(image, state, scene, bvh, lights,
+                                           region, num_samples, options);
+                        queue.push(region);
+                    }
+                }));
+            }
         }
         current_sample = options.num_samples;
     }));
