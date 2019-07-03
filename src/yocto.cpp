@@ -37,13 +37,11 @@
 #include <cstdio>
 #include <vector>
 
-// Attempt to fix a bug with clang.
-#ifdef __clang__
+// Attempt to fix compilation.
 template<class T>
 static int size(const std::vector<T> &x) {
     return x.size();
 }
-#endif
 
 
 #define YOCTO_EMBREE 0
