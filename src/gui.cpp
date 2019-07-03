@@ -28,6 +28,10 @@
 #   define GUI_HAS_ROTATION_BAR 0
 #endif
 
+#ifndef YOCTO
+#   define YOCTO 1
+#endif
+
 extern "C" {
 #include "goxel.h"
 
@@ -92,7 +96,9 @@ static const struct {
     {"Light", ICON_LIGHT, gui_light_panel},
     {"Cameras", ICON_CAMERA, gui_cameras_panel},
     {"Image", ICON_IMAGE, gui_image_panel},
+#if YOCTO
     {"Render", ICON_RENDER, gui_render_panel},
+#endif
     {"Export", ICON_EXPORT, gui_export_panel},
     {"Debug", ICON_DEBUG, gui_debug_panel},
 };

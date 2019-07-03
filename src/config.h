@@ -34,6 +34,13 @@ extern "C" {
 // Define the LOG macros, so that they get available in the utils files.
 #include "log.h"
 
+// Disable yocto with older version of gcc, since it doesn't compile then.
+#ifndef YOCTO
+#   if !defined(__clang__) && __GNUC__ < 6
+#       define YOCTO 0
+#   endif
+#endif
+
 #ifdef __cplusplus
 }
 #endif

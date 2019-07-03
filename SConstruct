@@ -25,6 +25,7 @@ vars.AddVariables(
         allowed_values=('debug', 'release', 'profile')),
     BoolVariable('werror', 'Warnings as error', True),
     BoolVariable('sound', 'Enable sound', False),
+    BoolVariable('yocto', 'Enable yocto renderer', True),
     PathVariable('config_file', 'Config file to use', 'src/config.h'),
 )
 
@@ -112,6 +113,9 @@ env.Append(CPPPATH=['ext_src/noc'])
 if env['sound']:
     env.Append(LIBS='openal')
     env.Append(CPPDEFINES='SOUND=1')
+
+if not env['yocto']:
+    env.Append(CPPDEFINES='YOCTO=0')
 
 # Append external environment flags
 env.Append(

@@ -16,6 +16,12 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef YOCTO
+#   define YOCTO 1
+#endif
+
+#if YOCTO
+
 #ifndef __clang__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
@@ -660,3 +666,14 @@ void pathtracer_stop(pathtracer_t *pt)
     delete p;
     pt->p = nullptr;
 }
+
+#else // Dummy implementation.
+
+extern "C" {
+#include "goxel.h"
+}
+
+void pathtracer_iter(pathtracer_t *pt, const float viewport[4]) {}
+void pathtracer_stop(pathtracer_t *pt) {}
+
+#endif // YOCTO

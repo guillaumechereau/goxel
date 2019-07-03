@@ -21,6 +21,12 @@
  * that we keeps a clean build system.
  */
 
+#ifndef YOCTO
+#   define YOCTO 1
+#endif
+
+#if YOCTO
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wcomma"
@@ -48,3 +54,5 @@
 #include "../ext_src/yocto/yocto_trace.cpp"
 
 #pragma GCC diagnostic pop
+
+#endif // YOCTO
