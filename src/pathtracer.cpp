@@ -193,9 +193,9 @@ end:
 // Stop the asynchronous renderer.
 void stop_render(vector<future<void>>& futures,
     concurrent_queue<image_region>& queue,
-    const trace_image_options& options)
+    atomic<bool>* cancel)
 {
-    if (options.cancel_flag) *options.cancel_flag = true;
+    if (cancel) *cancel = true;
     for (auto& f : futures) f.get();
     futures.clear();
     queue.clear();
@@ -231,7 +231,7 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     if (!force && key == p->mesh_key) return changed;
 
     p->mesh_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+    stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
     p->scene = {};
     p->lights = {};
     changed |= CHANGE_MESH;
@@ -272,7 +272,7 @@ static int sync_floor(pathtracer_t *pt, bool force)
     if (!force && key == p->floor_key) return 0;
     changed |= CHANGE_FLOOR;
     p->floor_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+    stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
 
     if (pt->floor.type == PT_FLOOR_NONE) return changed;
 
@@ -325,7 +325,7 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
     key = crc32(key, &h, sizeof(h));
     if (!force && key == p->camera_key) return 0;
     p->camera_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+    stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
 
     mat4_copy(camera->mat, m);
     cam->frame = mat_to_frame(mat4f({m[0][0], m[0][1], m[0][2], m[0][3]},
@@ -358,7 +358,7 @@ static int sync_world(pathtracer_t *pt, bool force)
     key = crc32(key, &pt->world.color, sizeof(pt->world.color));
     if (!force && key == p->world_key) return 0;
     p->world_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+    stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
 
     texture = getdefault(p->scene.textures, "<world>");
     texture->filename = "textures/uniform.hdr";
@@ -410,7 +410,7 @@ static int sync_light(pathtracer_t *pt, bool force)
 
     if (!force && key == p->light_key) return 0;
     p->light_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+    stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
 
     ke = goxel.rend.light.intensity;
     material = getdefault(p->scene.materials, "<light>");
@@ -440,7 +440,7 @@ static int sync_options(pathtracer_t *pt, bool force)
     key = crc32(key, &pt->num_samples, sizeof(pt->num_samples));
     if (!force && key == p->options_key) return 0;
     p->options_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+    stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
     p->trace_options.num_samples = pt->num_samples;
     return CHANGE_OPTIONS;
 }
@@ -451,7 +451,8 @@ static void start_render(
         const trace_lights& lights,
         vector<future<void>>& futures, atomic<int>& current_sample,
         concurrent_queue<image_region>& queue,
-        const trace_image_options& options)
+        const trace_image_options& options,
+        atomic<bool>* cancel)
 {
     auto& camera     = scene.cameras.at(options.camera_id);
     auto  image_size = get_camera_image_size(camera, options.image_size);
@@ -460,14 +461,15 @@ static void start_render(
     init_trace_state(state, image_size, options.random_seed);
     auto regions = vector<image_region>{};
     make_image_regions(regions, image.size(), options.region_size, true);
-    if (options.cancel_flag) *options.cancel_flag = false;
+    if (cancel) *cancel = false;
 
     futures.clear();
     futures.emplace_back(async([options, regions, &current_sample, &image,
-                                   &scene, &lights, &bvh, &state, &queue]() {
+                                &scene, &lights, &bvh, &state, &queue,
+                                cancel]() {
         for (auto sample = 0; sample < options.num_samples;
              sample += options.samples_per_batch) {
-            if (options.cancel_flag && *options.cancel_flag) return;
+            if (cancel && *cancel) return;
             current_sample   = sample;
             auto num_samples = min(options.samples_per_batch,
                 options.num_samples - current_sample);
@@ -479,7 +481,7 @@ static void start_render(
                         num_samples, options);
                     queue.push(region);
                 },
-                options.cancel_flag, options.run_serially);
+                cancel, options.run_serially);
         }
         current_sample = options.num_samples;
     }));
@@ -525,7 +527,7 @@ static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
         p->image = image4f({w, h});
         p->display = image4f({w, h});
 
-        stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+        stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
 
         init_trace_state(p->state, {w, h});
 
@@ -536,7 +538,7 @@ static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
         start_render(p->image, p->state, p->scene,
                      p->bvh, p->lights,
                      p->trace_futures, p->trace_sample,
-                     p->trace_queue, p->trace_options);
+                     p->trace_queue, p->trace_options, &p->trace_stop);
     }
     return changes;
 }
@@ -624,7 +626,7 @@ void pathtracer_stop(pathtracer_t *pt)
 {
     pathtracer_internal_t *p = pt->p;
     if (!p) return;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_options);
+    stop_render(p->trace_futures, p->trace_queue, &p->trace_stop);
     delete p;
     pt->p = nullptr;
 }
