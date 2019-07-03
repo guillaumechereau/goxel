@@ -37,13 +37,6 @@
 #include <cstdio>
 #include <vector>
 
-// Attempt to fix compilation.
-template<class T>
-static int size(const std::vector<T> &x) {
-    return x.size();
-}
-
-
 #define YOCTO_EMBREE 0
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_WRITE_STATIC

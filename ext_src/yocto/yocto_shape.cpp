@@ -1700,8 +1700,8 @@ void make_edge_solver_fast(geodesic_solver& solver,
     const vector<vec3i>& triangles, const vector<vec3f>& positions,
     bool use_steiner_points) {
   solver.positions = positions;
-  solver.graph.resize(size(positions));
-  solver.edge_index.resize(size(positions));
+  solver.graph.resize(positions.size());
+  solver.edge_index.resize(positions.size());
 
   // fast construction assuming edges are not repeated
   for (auto t : triangles) {
@@ -1713,14 +1713,14 @@ void make_edge_solver_fast(geodesic_solver& solver,
   if (!use_steiner_points) return;
 
   auto edges = solver.edges;
-  solver.graph.resize(size(positions) + size(edges));
-  solver.edge_index.resize(size(positions) + size(edges));
-  solver.positions.resize(size(positions) + size(edges));
+  solver.graph.resize(positions.size() + edges.size());
+  solver.edge_index.resize(positions.size() + edges.size());
+  solver.positions.resize(positions.size() + edges.size());
   auto steiner_per_edge = vector<int>(size(edges));
 
   // On each edge, connect the mid vertex with the vertices on th same edge.
   auto edge_offset = (int)positions.size();
-  for (auto edge_index = 0; edge_index < size(edges); edge_index++) {
+  for (auto edge_index = 0; edge_index < edges.size(); edge_index++) {
     auto& edge                    = edges[edge_index];
     auto  steiner_idx             = edge_offset + edge_index;
     steiner_per_edge[edge_index]  = steiner_idx;
