@@ -4,12 +4,10 @@ language: c++
 
 matrix:
   include:
-      # gcc disabled until I find a way to do something equivalent to
-      # Wno-incompatible-pointer-types-discards-qualifiers with gcc 4.8
-      #    - os: linux
-      #      sudo: required
-      #      dist: trusty
-      #      compiler: gcc
+    - os: linux
+      sudo: required
+      dist: xenial
+      compiler: gcc
     - os: linux
       sudo: required
       dist: xenial
