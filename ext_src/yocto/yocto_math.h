@@ -134,7 +134,7 @@ inline float exp(float a) { return expf(a); }
 inline float log2(float a) { return log2f(a); }
 inline float exp2(float a) { return exp2f(a); }
 inline float pow(float a, float b) { return powf(a, b); }
-inline float isfinite(float a) { return ::isfinite(a); }
+inline float is_finite(float a) { return ::isfinite(a); }
 inline void  swap(float& a, float& b) { std::swap(a, b); }
 
 inline int  abs(int a) { return a < 0 ? -a : a; }
@@ -292,7 +292,7 @@ inline vec2f exp(const vec2f& a) { return {exp(a.x), exp(a.y)}; };
 inline vec2f log(const vec2f& a) { return {log(a.x), log(a.y)}; };
 inline vec2f exp2(const vec2f& a) { return {exp2(a.x), exp2(a.y)}; };
 inline vec2f log2(const vec2f& a) { return {log2(a.x), log2(a.y)}; };
-inline bool isfinite(const vec2f& a) { return isfinite(a.x) && isfinite(a.y); };
+inline bool is_finite(const vec2f& a) { return is_finite(a.x) && is_finite(a.y); };
 inline vec2f pow(const vec2f& a, float b) {
   return {pow(a.x, b), pow(a.y, b)};
 };
@@ -452,8 +452,8 @@ inline vec3f pow(const vec3f& a, const vec3f& b) {
 inline vec3f gain(const vec3f& a, float b) {
   return {gain(a.x, b), gain(a.y, b), gain(a.z, b)};
 };
-inline bool isfinite(const vec3f& a) {
-  return isfinite(a.x) && isfinite(a.y) && isfinite(a.z);
+inline bool is_finite(const vec3f& a) {
+  return is_finite(a.x) && is_finite(a.y) && is_finite(a.z);
 };
 inline void swap(vec3f& a, vec3f& b) { std::swap(a, b); }
 
@@ -600,8 +600,8 @@ inline vec4f pow(const vec4f& a, const vec4f& b) {
 inline vec4f gain(const vec4f& a, float b) {
   return {gain(a.x, b), gain(a.y, b), gain(a.z, b), gain(a.w, b)};
 };
-inline bool isfinite(const vec4f& a) {
-  return isfinite(a.x) && isfinite(a.y) && isfinite(a.z) && isfinite(a.w);
+inline bool is_finite(const vec4f& a) {
+  return is_finite(a.x) && is_finite(a.y) && is_finite(a.z) && is_finite(a.w);
 };
 inline void swap(vec4f& a, vec4f& b) { std::swap(a, b); }
 

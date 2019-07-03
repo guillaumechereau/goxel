@@ -1265,7 +1265,7 @@ pair<vec3f, bool> trace_path(const yocto_scene& scene, const bvh_scene& bvh,
     }
 
     // check weight
-    if (weight == zero3f || !isfinite(weight)) break;
+    if (weight == zero3f || !is_finite(weight)) break;
 
     // russian roulette
     if (max(weight) < 1 && bounce > 6) {
@@ -1334,7 +1334,7 @@ pair<vec3f, bool> trace_naive(const yocto_scene& scene, const bvh_scene& bvh,
     }
 
     // check weight
-    if (weight == zero3f || !isfinite(weight)) break;
+    if (weight == zero3f || !is_finite(weight)) break;
 
     // russian roulette
     if (max(weight) < 1 && bounce > 3) {
@@ -1402,7 +1402,7 @@ pair<vec3f, bool> trace_eyelight(const yocto_scene& scene, const bvh_scene& bvh,
     auto incoming = sample_delta(material, normal, outgoing, rand1f(rng));
     weight *= eval_delta(material, normal, outgoing, incoming) /
               sample_delta_pdf(material, normal, outgoing, incoming);
-    if (weight == zero3f || !isfinite(weight)) break;
+    if (weight == zero3f || !is_finite(weight)) break;
 
     // setup next iteration
     origin    = position;
@@ -1576,7 +1576,7 @@ void trace_region(image<vec4f>& image, trace_state& state,
             hit = true;
           }
         }
-        if (!isfinite(radiance)) {
+        if (!is_finite(radiance)) {
           // printf("NaN detected\n");
           radiance = zero3f;
         }
