@@ -18,8 +18,8 @@
 
 #include "goxel.h"
 
-bool gui_settings_popup(void *data);
-bool gui_about_popup(void *data);
+int gui_settings_popup(void *data);
+int gui_about_popup(void *data);
 
 static void import_image_plane(void)
 {

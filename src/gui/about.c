@@ -18,7 +18,7 @@
 
 #include "goxel.h"
 
-bool gui_about_popup(void *data)
+int gui_about_popup(void *data)
 {
     gui_text("Goxel " GOXEL_VERSION_STR);
     gui_text("Copyright © 2015-2019 Guillaume Chereau");

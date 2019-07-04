@@ -34,7 +34,7 @@ static int shortcut_callback(action_t *action, void *user)
 }
 
 
-bool gui_settings_popup(void *data)
+int gui_settings_popup(void *data)
 {
     const char **names;
     theme_t *theme;
