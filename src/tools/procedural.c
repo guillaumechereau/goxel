@@ -182,6 +182,7 @@ static int gui(tool_t *tool)
 }
 
 TOOL_REGISTER(TOOL_PROCEDURAL, procedural, tool_procedural_t,
+              .name = "Procedural",
               .gui_fn = gui,
               .iter_fn = iter,
               .flags = TOOL_REQUIRE_CAN_EDIT,

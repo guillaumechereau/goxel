@@ -56,6 +56,7 @@ struct tool {
     const char *default_shortcut;
     int state; // XXX: to be removed I guess.
     int flags;
+    const char *name;
 };
 
 #define TOOL_REGISTER(id_, name_, klass_, ...) \
@@ -70,6 +71,8 @@ struct tool {
     }
 
 void tool_register_(const tool_t *tool);
+const tool_t *tool_get(int id);
+
 int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4]);
 int tool_gui(tool_t *tool);
 

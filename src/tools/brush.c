@@ -251,6 +251,7 @@ static int gui(tool_t *tool)
 }
 
 TOOL_REGISTER(TOOL_BRUSH, brush, tool_brush_t,
+              .name = "Brush",
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_ALLOW_PICK_COLOR,

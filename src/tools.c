@@ -18,6 +18,7 @@
 
 #include "goxel.h"
 
+static const tool_t *g_tools[TOOL_COUNT] = {};
 
 static int tool_set_action(const action_t *a, lua_State *l)
 {
@@ -41,8 +42,13 @@ void tool_register_(const tool_t *tool)
         .flags = ACTION_CAN_EDIT_SHORTCUT,
     };
     action_register(&action);
+    g_tools[tool->id] = tool;
 }
 
+const tool_t *tool_get(int id)
+{
+    return g_tools[id];
+}
 
 static int pick_color_gesture(gesture3d_t *gest, void *user)
 {

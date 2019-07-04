@@ -34,19 +34,18 @@ void gui_tools_panel(void)
     const struct {
         int         tool;
         const char  *tool_id;
-        const char  *name;
         int         icon;
     } values[] = {
-        {TOOL_BRUSH,        "brush",     "Brush",        ICON_TOOL_BRUSH},
-        {TOOL_SHAPE,        "shape",     "Shape",        ICON_TOOL_SHAPE},
-        {TOOL_LASER,        "laser",     "Laser",        ICON_TOOL_LASER},
-        {TOOL_SET_PLANE,    "plane",     "Plane",        ICON_TOOL_PLANE},
-        {TOOL_MOVE,         "move",      "Move",         ICON_TOOL_MOVE},
-        {TOOL_PICK_COLOR,   "pick_color","Pick Color",   ICON_TOOL_PICK},
-        {TOOL_SELECTION,    "selection", "Selection",    ICON_TOOL_SELECTION},
-        {TOOL_FUZZY_SELECT, "fuzzy_select", "Fuzzy Select", ICON_TOOL_FUZZY_SELECT},
-        {TOOL_EXTRUDE,      "extrude",   "Extrude",      ICON_TOOL_EXTRUDE},
-        {TOOL_PROCEDURAL,   "procedural","Procedural",   ICON_TOOL_PROCEDURAL},
+        {TOOL_BRUSH,        "brush",        ICON_TOOL_BRUSH},
+        {TOOL_SHAPE,        "shape",        ICON_TOOL_SHAPE},
+        {TOOL_LASER,        "laser",        ICON_TOOL_LASER},
+        {TOOL_SET_PLANE,    "plane",        ICON_TOOL_PLANE},
+        {TOOL_MOVE,         "move",         ICON_TOOL_MOVE},
+        {TOOL_PICK_COLOR,   "pick_color",   ICON_TOOL_PICK},
+        {TOOL_SELECTION,    "selection",    ICON_TOOL_SELECTION},
+        {TOOL_FUZZY_SELECT, "fuzzy_select", ICON_TOOL_FUZZY_SELECT},
+        {TOOL_EXTRUDE,      "extrude",      ICON_TOOL_EXTRUDE},
+        {TOOL_PROCEDURAL,   "procedural",   ICON_TOOL_PROCEDURAL},
     };
     const int nb = ARRAY_SIZE(values);
     int i;
@@ -54,17 +53,19 @@ void gui_tools_panel(void)
     char action_id[64];
     char label[64];
     const action_t *action = NULL;
+    const tool_t *tool;
 
     gui_group_begin(NULL);
     for (i = 0; i < nb; i++) {
+        tool = tool_get(values[i].tool);
         v = goxel.tool->id == values[i].tool;
-        sprintf(label, "%s", values[i].name);
+        sprintf(label, "%s", tool->name);
         if (values[i].tool_id) {
             sprintf(action_id, "tool_set_%s", values[i].tool_id);
             action = action_get(action_id, true);
             assert(action);
             if (*action->shortcut)
-                sprintf(label, "%s (%s)", values[i].name, action->shortcut);
+                sprintf(label, "%s (%s)", tool->name, action->shortcut);
         }
         if (gui_selectable_icon(label, &v, values[i].icon)) {
             action_exec(action, "");
@@ -73,7 +74,7 @@ void gui_tools_panel(void)
     }
     gui_group_end();
 
-    if (gui_collapsing_header("Tool Options", true))
+    if (gui_collapsing_header(goxel.tool->name, true))
         tool_gui(goxel.tool);
 }
 
