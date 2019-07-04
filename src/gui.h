@@ -121,11 +121,11 @@ enum {
  *    data  - Data passed to the popup.  It will be automatically released
  *            by the gui.
  *    func  - The popup function, that render the popup gui.  Should return
- *            true to close the popup.
+ *            a non zero value to close the popup.
  */
 void gui_open_popup(const char *title, int flags, void *data,
-                    bool (*func)(void *data));
-void gui_on_popup_closed(void (*func)(void));
+                    int (*func)(void *data));
+void gui_on_popup_closed(void (*func)(int v));
 void gui_popup_body_begin(void);
 void gui_popup_body_end(void);
 

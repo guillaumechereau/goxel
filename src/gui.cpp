@@ -193,8 +193,8 @@ typedef struct gui_t {
 
     struct {
         const char *title;
-        bool      (*func)(void *data);
-        void      (*on_closed)(void);
+        int       (*func)(void *data);
+        void      (*on_closed)(int);
         int         flags;
         void       *data; // Automatically released when popup close.
         bool        opened;
@@ -500,7 +500,7 @@ static void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
-static bool alert_popup(void *data)
+static int alert_popup(void *data)
 {
     if (data) gui_text((const char *)data);
     return gui_button("OK", 0, 0);
@@ -619,6 +619,7 @@ static void render_left_panel(void)
 
 static void render_popups(int index)
 {
+    int r;
     typeof(gui->popup[0]) *popup;
     ImGuiIO& io = ImGui::GetIO();
 
@@ -642,14 +643,14 @@ static void render_popups(int index)
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
     if (ImGui::BeginPopupModal(popup->title, NULL, flags)) {
         typeof(popup->func) func = popup->func;
-        if (func(popup->data)) {
+        if ((r = func(popup->data))) {
             ImGui::CloseCurrentPopup();
             gui->popup_count--;
             popup->title = NULL;
             popup->func = NULL;
             free(popup->data);
             popup->data = NULL;
-            if (popup->on_closed) popup->on_closed();
+            if (popup->on_closed) popup->on_closed(r);
             popup->on_closed = NULL;
             popup->opened = false;
         }
@@ -1388,7 +1389,7 @@ bool gui_quat(const char *label, float q[4])
 }
 
 void gui_open_popup(const char *title, int flags, void *data,
-                    bool (*func)(void *data))
+                    int (*func)(void *data))
 {
     typeof(gui->popup[0]) *popup;
     popup = &gui->popup[gui->popup_count++];
@@ -1399,7 +1400,7 @@ void gui_open_popup(const char *title, int flags, void *data,
     popup->data = data;
 }
 
-void gui_on_popup_closed(void (*func)(void))
+void gui_on_popup_closed(void (*func)(int))
 {
     gui->popup[gui->popup_count - 1].on_closed = func;
 }
