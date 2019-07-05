@@ -84,7 +84,6 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-
 static int on_hover(gesture3d_t *gest, void *user)
 {
     float box[4][4];
@@ -147,9 +146,14 @@ end:
     return tool->state;
 }
 
+static float get_magnitude(float box[4][4], int axisIndex)
+{
+    return box[0][axisIndex] + box[1][axisIndex] + box[2][axisIndex];
+}
 
 static int gui(tool_t *tool)
 {
+    float xMag, yMag, zMag;
     int x, y, z, w, h, d;
     float (*box)[4][4] = &goxel.selection;
     if (box_is_null(*box)) return 0;
@@ -169,12 +173,15 @@ static int gui(tool_t *tool)
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
     gui_group_end();
 
-    w = round((*box)[0][0] * 2);
-    h = round((*box)[1][1] * 2);
-    d = round((*box)[2][2] * 2);
-    x = round((*box)[3][0] - (*box)[0][0]);
-    y = round((*box)[3][1] - (*box)[1][1]);
-    z = round((*box)[3][2] - (*box)[2][2]);
+    xMag = fabs(get_magnitude(*box, 0));
+    yMag = fabs(get_magnitude(*box, 1));
+    zMag = fabs(get_magnitude(*box, 2));
+    w = round(xMag * 2);
+    h = round(yMag * 2);
+    d = round(zMag * 2);
+    x = round((*box)[3][0] - xMag);
+    y = round((*box)[3][1] - yMag);
+    z = round((*box)[3][2] - zMag);
 
     gui_group_begin("Origin");
     gui_input_int("x", &x, 0, 0);
