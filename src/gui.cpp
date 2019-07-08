@@ -343,12 +343,13 @@ static void load_fonts_texture()
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
-    glGenTextures(1, &tex_id);
-    glBindTexture(GL_TEXTURE_2D, tex_id);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-                 GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    GL(glGenTextures(1, &tex_id));
+    GL(glActiveTexture(GL_TEXTURE0));
+    GL(glBindTexture(GL_TEXTURE_2D, tex_id));
+    GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+                    GL_RGBA, GL_UNSIGNED_BYTE, pixels));
     io.Fonts->TexID = (void *)(intptr_t)tex_id;
 }
 
