@@ -384,8 +384,6 @@ static void init_ImGui(void)
         io.SetClipboardTextFn = sys_set_clipboard_text;
         io.GetClipboardTextFn = sys_get_clipboard_text;
     }
-
-    load_fonts_texture();
 }
 
 static bool color_edit(const char *name, uint8_t color[4],
@@ -484,6 +482,9 @@ static void gui_init(void)
         g_tex_icons = texture_new_image("asset://data/images/icons.png", 0);
         GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
     }
+
+    ImGuiIO& io = ImGui::GetIO();
+    if (!io.Fonts->TexID) load_fonts_texture();
 }
 
 void gui_release(void)
@@ -493,12 +494,17 @@ void gui_release(void)
 
 void gui_release_graphics(void)
 {
+    ImGuiIO& io = ImGui::GetIO();
     gl_shader_delete(gui->shader);
     gui->shader = NULL;
     GL(glDeleteBuffers(1, &gui->array_buffer));
     GL(glDeleteBuffers(1, &gui->index_buffer));
     texture_delete(g_tex_icons);
     g_tex_icons = NULL;
+
+    GL(glDeleteTextures(1, (GLuint*)&io.Fonts->TexID));
+    io.Fonts->TexID = 0;
+    io.Fonts->Clear();
 }
 
 static void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
