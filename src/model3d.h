@@ -55,11 +55,7 @@ typedef struct {
     bool     dirty;
 } model3d_t;
 
-/*
- * Function: model3d_init
- * Should be called once before any mode3d functions.
- */
-void model3d_init(void);
+void model3d_release_graphics(void);
 
 /*
  * Function: model3d_delete

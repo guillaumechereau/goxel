@@ -43,19 +43,29 @@ static texture_t *create_white_tex(void)
     return tex;
 }
 
-void model3d_init(void)
+static void model3d_init(void)
 {
     const char *shader;
-    shader = assets_get("asset://data/shaders/model3d.glsl", NULL);
-    g_shader = gl_shader_create(shader, shader, NULL);
-    GL(glUseProgram(g_shader->prog));
-    GL(glBindAttribLocation(g_shader->prog, A_POS_LOC, "a_pos"));
-    GL(glBindAttribLocation(g_shader->prog, A_COLOR_LOC, "a_color"));
-    GL(glBindAttribLocation(g_shader->prog, A_NORMAL_LOC, "a_normal"));
-    GL(glBindAttribLocation(g_shader->prog, A_UV_LOC, "a_uv"));
-    GL(glLinkProgram(g_shader->prog));
-    gl_update_uniform(g_shader, "u_tex", 0);
-    g_white_tex = create_white_tex();
+    if (!g_shader) {
+        shader = assets_get("asset://data/shaders/model3d.glsl", NULL);
+        g_shader = gl_shader_create(shader, shader, NULL);
+        GL(glUseProgram(g_shader->prog));
+        GL(glBindAttribLocation(g_shader->prog, A_POS_LOC, "a_pos"));
+        GL(glBindAttribLocation(g_shader->prog, A_COLOR_LOC, "a_color"));
+        GL(glBindAttribLocation(g_shader->prog, A_NORMAL_LOC, "a_normal"));
+        GL(glBindAttribLocation(g_shader->prog, A_UV_LOC, "a_uv"));
+        GL(glLinkProgram(g_shader->prog));
+        gl_update_uniform(g_shader, "u_tex", 0);
+        g_white_tex = create_white_tex();
+    }
+}
+
+void model3d_release_graphics(void)
+{
+    gl_shader_delete(g_shader);
+    g_shader = NULL;
+    texture_delete(g_white_tex);
+    g_white_tex = NULL;
 }
 
 void model3d_delete(model3d_t *model)
@@ -269,6 +279,7 @@ void model3d_render(model3d_t *model3d,
     float clip[4][4] = {};
     float grid_alpha;
 
+    model3d_init();
     copy_color(color, c);
     GL(glUseProgram(g_shader->prog));
     gl_update_uniform(g_shader, "u_model", model);

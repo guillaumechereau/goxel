@@ -303,7 +303,6 @@ KEEPALIVE
 void goxel_init(void)
 {
     shapes_init();
-    model3d_init();
     goxel_init_sound();
 
     // Load and set default palette.
@@ -420,6 +419,7 @@ void goxel_create_graphics(void)
 void goxel_release_graphics(void)
 {
     render_deinit();
+    model3d_release_graphics();
     gui_release_graphics();
     shaders_release_all();
     goxel.graphics_initialized = false;
