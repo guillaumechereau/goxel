@@ -324,8 +324,16 @@ void render_init()
 
 void render_deinit(void)
 {
+    cache_delete(g_items_cache);
     GL(glDeleteBuffers(1, &g_index_buffer));
     g_index_buffer = 0;
+    model3d_delete(g_cube_model);
+    model3d_delete(g_line_model);
+    model3d_delete(g_wire_cube_model);
+    model3d_delete(g_sphere_model);
+    model3d_delete(g_grid_model);
+    model3d_delete(g_rect_model);
+    model3d_delete(g_wire_rect_model);
 }
 
 // A global buffer large enough to contain all the vertices for any block.
