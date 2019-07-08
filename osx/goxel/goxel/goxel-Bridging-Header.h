@@ -9,6 +9,11 @@
 #ifndef goxel_Bridging_Header_h
 #define goxel_Bridging_Header_h
 
+#ifndef DEBUG
+#   define DEBUG 0
+#endif
+
+#include "config.h"
 #include "goxel.h"
 
 #endif /* goxel_Bridging_Header_h */
