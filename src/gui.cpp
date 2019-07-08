@@ -322,7 +322,7 @@ static void load_fonts_texture()
 {
     ImGuiIO& io = ImGui::GetIO();
 
-    float scale = io.DisplayFramebufferScale.y;
+    float scale = goxel.screen_scale;
     unsigned char* pixels;
     int width, height;
     const void *data;
