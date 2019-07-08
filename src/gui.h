@@ -36,6 +36,8 @@
 #endif
 
 void gui_release(void);
+void gui_release_graphics(void);
+
 void gui_iter(const inputs_t *inputs);
 void gui_render(void);
 

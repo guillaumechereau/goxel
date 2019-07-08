@@ -40,8 +40,7 @@ void gui_debug_panel(void)
         goxel_on_low_memory();
     }
     if (gui_button("Test release", -1, 0)) {
-        goxel_release_graphics();
-        goxel_create_graphics();
+        goxel.request_test_graphic_release = true;
     }
 
 }

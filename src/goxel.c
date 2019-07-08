@@ -420,6 +420,7 @@ void goxel_create_graphics(void)
 void goxel_release_graphics(void)
 {
     render_deinit();
+    gui_release_graphics();
     shaders_release_all();
     goxel.graphics_initialized = false;
 }
@@ -474,6 +475,13 @@ int goxel_iter(inputs_t *inputs)
     update_window_title();
 
     goxel.frame_count++;
+
+    if (goxel.request_test_graphic_release) {
+        goxel_release_graphics();
+        goxel_create_graphics();
+        goxel.request_test_graphic_release = false;
+    }
+
     return goxel.quit ? 1 : 0;
 }
 

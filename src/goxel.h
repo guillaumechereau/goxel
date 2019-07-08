@@ -454,7 +454,11 @@ typedef struct goxel
     float      screen_scale;
     image_t    *image;
 
+    // Flag so that we reinit OpenGL after the context has been killed.
     bool       graphics_initialized;
+    // We can't reset the graphics in the middle of the gui, so use this.
+    // for testing.
+    bool       request_test_graphic_release;
 
     // Tools can set this mesh and it will replace the current layer mesh
     // during render.

@@ -352,7 +352,7 @@ static void load_fonts_texture()
     io.Fonts->TexID = (void *)(intptr_t)tex_id;
 }
 
-static void init_ImGui(const inputs_t *inputs)
+static void init_ImGui(void)
 {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -378,8 +378,6 @@ static void init_ImGui(const inputs_t *inputs)
     io.KeyMap[ImGuiKey_X]           = 'X';
     io.KeyMap[ImGuiKey_Y]           = 'Y';
     io.KeyMap[ImGuiKey_Z]           = 'Z';
-    io.DisplayFramebufferScale = ImVec2(inputs->scale, inputs->scale);
-    io.FontGlobalScale = 1 / inputs->scale;
 
     if (DEFINED(__linux__)) {
         io.SetClipboardTextFn = sys_set_clipboard_text;
@@ -459,32 +457,47 @@ static int on_gesture(const gesture_t *gest, void *user)
 }
 
 
-static void gui_init(const inputs_t *inputs)
+static void gui_init(void)
 {
-    gui = (gui_t*)calloc(1, sizeof(*gui));
+    if (!gui) {
+        gui = (gui_t*)calloc(1, sizeof(*gui));
+        init_ImGui();
+        gui->gestures.drag.type = GESTURE_DRAG;
+        gui->gestures.drag.callback = on_gesture;
+        gui->gestures.hover.type = GESTURE_HOVER;
+        gui->gestures.hover.callback = on_gesture;
+        gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
+    }
 
-    gui->shader = gl_shader_create(VSHADER, FSHADER, NULL);
-    GL(glBindAttribLocation(gui->shader->prog, A_POS_LOC, "a_pos"));
-    GL(glBindAttribLocation(gui->shader->prog, A_TEX_POS_LOC, "a_tex_pos"));
-    GL(glBindAttribLocation(gui->shader->prog, A_COLOR_LOC, "a_color"));
-    GL(glLinkProgram(gui->shader->prog));
+    if (!gui->shader) {
+        gui->shader = gl_shader_create(VSHADER, FSHADER, NULL);
+        GL(glBindAttribLocation(gui->shader->prog, A_POS_LOC, "a_pos"));
+        GL(glBindAttribLocation(gui->shader->prog, A_TEX_POS_LOC, "a_tex_pos"));
+        GL(glBindAttribLocation(gui->shader->prog, A_COLOR_LOC, "a_color"));
+        GL(glLinkProgram(gui->shader->prog));
+        GL(glGenBuffers(1, &gui->array_buffer));
+        GL(glGenBuffers(1, &gui->index_buffer));
+    }
 
-    GL(glGenBuffers(1, &gui->array_buffer));
-    GL(glGenBuffers(1, &gui->index_buffer));
-    init_ImGui(inputs);
-    gui->gestures.drag.type = GESTURE_DRAG;
-    gui->gestures.drag.callback = on_gesture;
-    gui->gestures.hover.type = GESTURE_HOVER;
-    gui->gestures.hover.callback = on_gesture;
-    gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
-
-    g_tex_icons = texture_new_image("asset://data/images/icons.png", 0);
-    GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
+    if (!g_tex_icons) {
+        g_tex_icons = texture_new_image("asset://data/images/icons.png", 0);
+        GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
+    }
 }
 
 void gui_release(void)
 {
     if (gui) ImGui::DestroyContext();
+}
+
+void gui_release_graphics(void)
+{
+    gl_shader_delete(gui->shader);
+    gui->shader = NULL;
+    GL(glDeleteBuffers(1, &gui->array_buffer));
+    GL(glDeleteBuffers(1, &gui->index_buffer));
+    texture_delete(g_tex_icons);
+    g_tex_icons = NULL;
 }
 
 static void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
@@ -662,7 +675,7 @@ static void render_popups(int index)
 
 void gui_iter(const inputs_t *inputs)
 {
-    if (!gui) gui_init(inputs);
+    gui_init();
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list;
@@ -680,6 +693,8 @@ void gui_iter(const inputs_t *inputs)
                                         goxel.screen_scale);
     io.DeltaTime = 1.0 / 60;
     if (inputs) {
+        io.DisplayFramebufferScale = ImVec2(inputs->scale, inputs->scale);
+        io.FontGlobalScale = 1 / inputs->scale;
         gui->margins = inputs->safe_margins;
         gesture_update(2, gestures, inputs, display_rect, gui);
         io.MouseWheel = inputs->mouse_wheel;
@@ -812,6 +827,7 @@ void gui_iter(const inputs_t *inputs)
 
 void gui_render(void)
 {
+    gui_init();
     ImGui::Render();
     ImImpl_RenderDrawLists(ImGui::GetDrawData());
 }
