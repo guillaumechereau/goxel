@@ -418,12 +418,19 @@ void image_select_parent_layer(image_t *img, layer_t *layer)
 
 void image_merge_visible_layers(image_t *img)
 {
-    layer_t *layer, *last = NULL;
+    layer_t *layer, *other, *last = NULL;
     img = img ?: goxel.image;
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         image_unclone_layer(img, layer);
+
         if (last) {
+            // Unclone all layers cloned from this one.
+            DL_FOREACH(goxel.image->layers, other) {
+                if (other->base_id == last->id) {
+                    other->base_id = 0;
+                }
+            }
             mesh_merge(layer->mesh, last->mesh, MODE_OVER, NULL);
             DL_DELETE(img->layers, last);
             layer_delete(last);
