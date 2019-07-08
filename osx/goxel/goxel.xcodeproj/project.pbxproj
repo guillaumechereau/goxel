@@ -735,10 +735,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/goxel/goxel.pch";
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../src",
-					"$(SRCROOT)/../../ext_src/cycles/src",
-				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../src";
 				INFOPLIST_FILE = goxel/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
@@ -758,10 +755,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/goxel/goxel.pch";
-				HEADER_SEARCH_PATHS = (
-					"$(SRCROOT)/../../src",
-					"$(SRCROOT)/../../ext_src/cycles/src",
-				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../src";
 				INFOPLIST_FILE = goxel/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
