@@ -431,6 +431,7 @@ void image_merge_visible_layers(image_t *img)
                     other->base_id = 0;
                 }
             }
+            SWAP(layer->mesh, last->mesh);
             mesh_merge(layer->mesh, last->mesh, MODE_OVER, NULL);
             DL_DELETE(img->layers, last);
             layer_delete(last);

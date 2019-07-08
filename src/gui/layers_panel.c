@@ -18,6 +18,10 @@
 
 #include "goxel.h"
 
+#define DL_FOREACH_REVERSE(head, el) \
+    for (el = (head) ? (head)->prev : NULL; el; \
+            el = (el == (head)) ? NULL : el->prev)
+
 static void toggle_layer_only_visible(layer_t *layer)
 {
     layer_t *other;
@@ -43,7 +47,7 @@ void gui_layers_panel(void)
     bool current, visible, bounded;
 
     gui_group_begin(NULL);
-    DL_FOREACH(goxel.image->layers, layer) {
+    DL_FOREACH_REVERSE(goxel.image->layers, layer) {
         current = goxel.image->active_layer == layer;
         visible = layer->visible;
         icon = layer->base_id ? ICON_LINK : layer->shape ? ICON_SHAPE : -1;
