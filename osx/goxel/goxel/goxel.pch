@@ -20,15 +20,6 @@
 
 #pragma clang diagnostic ignored "-Wconversion"
 
-// Config for cycles
-#define WITH_CYCLES
-#define CYCLES_STD_UNORDERED_MAP
-#define CCL_NAMESPACE_BEGIN namespace ccl {
-#define CCL_NAMESPACE_END }
-#define WITH_CUDA_DYNLOAD
-#define WITHOUT_OPENIMAGEIO
-#define WITH_GLEW_MX
-
 #include "config.h"
 
 #endif /* goxel_pch */
