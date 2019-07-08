@@ -62,6 +62,12 @@ typedef struct {
 void model3d_init(void);
 
 /*
+ * Function: model3d_delete
+ * Delete a 3d model
+ */
+void model3d_delete(model3d_t *model);
+
+/*
  * Function: model3d_cube
  * Create a 3d cube from (0, 0, 0) to (1, 1, 1)
  */

@@ -58,6 +58,13 @@ void model3d_init(void)
     g_white_tex = create_white_tex();
 }
 
+void model3d_delete(model3d_t *model)
+{
+    GL(glDeleteBuffers(1, &model->vertex_buffer));
+    free(model->vertices);
+    free(model);
+}
+
 model3d_t *model3d_cube(void)
 {
     int f, i, v;
