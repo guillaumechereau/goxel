@@ -39,6 +39,10 @@ void gui_debug_panel(void)
     if (gui_button("On low memory", -1, 0)) {
         goxel_on_low_memory();
     }
+    if (gui_button("Test release", -1, 0)) {
+        goxel_release_graphics();
+        goxel_create_graphics();
+    }
 
 }
 

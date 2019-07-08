@@ -454,6 +454,8 @@ typedef struct goxel
     float      screen_scale;
     image_t    *image;
 
+    bool       graphics_initialized;
+
     // Tools can set this mesh and it will replace the current layer mesh
     // during render.
     mesh_t     *tool_mesh;
@@ -542,6 +544,18 @@ void goxel_release(void);
 void goxel_reset(void);
 int goxel_iter(inputs_t *inputs);
 void goxel_render(void);
+
+/*
+ * Function: goxel_create_graphics
+ * Called after the graphics context has been created.
+ */
+void goxel_create_graphics(void);
+
+/*
+ * Function: goxel_release_graphics
+ * Called before the graphics context gets destroyed.
+ */
+void goxel_release_graphics(void);
 
 /*
  * Function: goxel_on_low_memory

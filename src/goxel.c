@@ -300,7 +300,6 @@ static void goxel_init_sound()
 KEEPALIVE
 void goxel_init(void)
 {
-    render_init();
     shapes_init();
     model3d_init();
     goxel_init_sound();
@@ -402,6 +401,26 @@ void goxel_release(void)
     gui_release();
 }
 
+/*
+ * Function: goxel_create_graphics
+ * Called after the graphics context has been created.
+ */
+void goxel_create_graphics(void)
+{
+    render_init();
+    goxel.graphics_initialized = true;
+}
+
+/*
+ * Function: goxel_release_graphics
+ * Called before the graphics context gets destroyed.
+ */
+void goxel_release_graphics(void)
+{
+    render_deinit();
+    goxel.graphics_initialized = false;
+}
+
 static void update_window_title(void)
 {
     char buf[1024];
@@ -417,6 +436,9 @@ int goxel_iter(inputs_t *inputs)
     uint64_t mesh_key;
     float pitch;
     camera_t *camera = get_camera();
+
+    if (!goxel.graphics_initialized)
+        goxel_create_graphics();
 
     goxel.fps = mix(goxel.fps, 1.0 / (time - goxel.frame_time), 0.1);
     goxel.frame_time = time;
