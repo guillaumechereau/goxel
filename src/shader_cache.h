@@ -16,6 +16,9 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef SHADER_CACHE_H
+#define SHADER_CACHE_H
+
 #include "goxel.h"
 
 typedef struct {
@@ -37,3 +40,11 @@ typedef struct {
  */
 gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
                         void (*on_created)(gl_shader_t *s));
+
+/*
+ * Function: shaders_release_all
+ * Remove all the shaders from the cache.
+ */
+void shaders_release_all(void);
+
+#endif // SHADER_CACHE

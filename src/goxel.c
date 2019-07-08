@@ -17,8 +17,10 @@
  */
 
 #include "goxel.h"
-#include <stdarg.h>
 
+#include "shader_cache.h"
+
+#include <stdarg.h>
 #include <zlib.h> // For crc32
 
 // The global goxel instance.
@@ -418,6 +420,7 @@ void goxel_create_graphics(void)
 void goxel_release_graphics(void)
 {
     render_deinit();
+    shaders_release_all();
     goxel.graphics_initialized = false;
 }
 

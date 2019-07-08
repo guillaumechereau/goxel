@@ -71,3 +71,19 @@ gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
     if (on_created) on_created(s->shader);
     return s->shader;
 }
+
+/*
+ * Function: shaders_release_all
+ * Remove all the shaders from the cache.
+ */
+void shaders_release_all(void)
+{
+    int i;
+    shader_t *s = NULL;
+    for (i = 0; i < ARRAY_SIZE(g_shaders); i++) {
+        s = &g_shaders[i];
+        if (!*s->key) break;
+        gl_shader_delete(s->shader);
+        memset(s, 0, sizeof(*s));
+    }
+}
