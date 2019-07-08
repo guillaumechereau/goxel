@@ -98,3 +98,13 @@ void cache_clear(cache_t *cache)
     }
     assert(cache->size == 0);
 }
+
+/*
+ * Function: cache_delete
+ * Delete a cache.
+ */
+void cache_delete(cache_t *cache)
+{
+    cache_clear(cache);
+    free(cache);
+}

@@ -67,4 +67,11 @@ void *cache_get(cache_t *cache, const void *key, int keylen);
  */
 void cache_clear(cache_t *cache);
 
+/*
+ * Function: cache_delete
+ * Delete a cache.
+ */
+void cache_delete(cache_t *cache);
+
+
 #endif // CACHE_H
