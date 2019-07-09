@@ -34,8 +34,6 @@ https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826).
 
 
 ![goxel screenshot 0](https://guillaumechereau.github.io/goxel/images/screenshots/plane.png)
-![goxel screenshot 1](https://guillaumechereau.github.io/goxel/images/screenshots/palettes.png)
-![goxel screenshot 2](https://guillaumechereau.github.io/goxel/images/screenshots/selection.png)
 
 
 Licence
