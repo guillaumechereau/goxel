@@ -146,14 +146,14 @@ end:
     return tool->state;
 }
 
-static float get_magnitude(float box[4][4], int axisIndex)
+static float get_magnitude(float box[4][4], int axis_index)
 {
-    return box[0][axisIndex] + box[1][axisIndex] + box[2][axisIndex];
+    return box[0][axis_index] + box[1][axis_index] + box[2][axis_index];
 }
 
 static int gui(tool_t *tool)
 {
-    float xMag, yMag, zMag;
+    float x_mag, y_mag, z_mag;
     int x, y, z, w, h, d;
     float (*box)[4][4] = &goxel.selection;
     if (box_is_null(*box)) return 0;
@@ -173,15 +173,15 @@ static int gui(tool_t *tool)
     gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0, "");
     gui_group_end();
 
-    xMag = fabs(get_magnitude(*box, 0));
-    yMag = fabs(get_magnitude(*box, 1));
-    zMag = fabs(get_magnitude(*box, 2));
-    w = round(xMag * 2);
-    h = round(yMag * 2);
-    d = round(zMag * 2);
-    x = round((*box)[3][0] - xMag);
-    y = round((*box)[3][1] - yMag);
-    z = round((*box)[3][2] - zMag);
+    x_mag = fabs(get_magnitude(*box, 0));
+    y_mag = fabs(get_magnitude(*box, 1));
+    z_mag = fabs(get_magnitude(*box, 2));
+    w = round(x_mag * 2);
+    h = round(y_mag * 2);
+    d = round(z_mag * 2);
+    x = round((*box)[3][0] - x_mag);
+    y = round((*box)[3][1] - y_mag);
+    z = round((*box)[3][2] - z_mag);
 
     gui_group_begin("Origin");
     gui_input_int("x", &x, 0, 0);
