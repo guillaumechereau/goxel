@@ -422,6 +422,8 @@ void goxel_release_graphics(void)
     model3d_release_graphics();
     gui_release_graphics();
     shaders_release_all();
+    texture_delete(goxel.pick_fbo);
+    goxel.pick_fbo = NULL;
     goxel.graphics_initialized = false;
 }
 
