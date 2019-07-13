@@ -275,8 +275,8 @@ static void shader_init(gl_shader_t *shader)
     }
     GL(glLinkProgram(shader->prog));
     GL(glUseProgram(shader->prog));
-    gl_update_uniform(shader, "u_occlusion_tex", 0);
-    gl_update_uniform(shader, "u_normal_sampler", 1);
+    gl_update_uniform(shader, "u_normal_sampler", 0);
+    gl_update_uniform(shader, "u_occlusion_tex", 1);
     gl_update_uniform(shader, "u_shadow_tex", 2);
 }
 
@@ -595,10 +595,13 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     GL(glDepthFunc(GL_LESS));
     GL(glEnable(GL_CULL_FACE));
     GL(glCullFace(GL_BACK));
+
     GL(glActiveTexture(GL_TEXTURE0));
-    GL(glBindTexture(GL_TEXTURE_2D, g_occlusion_tex));
-    GL(glActiveTexture(GL_TEXTURE1));
     GL(glBindTexture(GL_TEXTURE_2D, g_bump_tex));
+
+    GL(glActiveTexture(GL_TEXTURE1));
+    GL(glBindTexture(GL_TEXTURE_2D, g_occlusion_tex));
+
     GL(glDisable(GL_BLEND));
 
     if (effects & EFFECT_SEE_BACK) {
@@ -628,8 +631,8 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
 
     gl_update_uniform(shader, "u_proj", rend->proj_mat);
     gl_update_uniform(shader, "u_view", rend->view_mat);
-    gl_update_uniform(shader, "u_occlusion_tex", 0);
-    gl_update_uniform(shader, "u_normal_sampler", 1);
+    gl_update_uniform(shader, "u_normal_sampler", 0);
+    gl_update_uniform(shader, "u_occlusion_tex", 1);
     gl_update_uniform(shader, "u_normal_scale",
                       effects & EFFECT_BORDERS ? 0.5 : 0.0);
     gl_update_uniform(shader, "u_l_dir", light_dir);
