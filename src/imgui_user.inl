@@ -182,8 +182,10 @@ namespace ImGui {
         ImGui::PushID(label);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
 
-        theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_TEXT, 0, color);
-        ImGui::PushStyleColor(ImGuiCol_Text, imvec4(color));
+        // XXX: commented out for the moment so that diabled input work.
+        // theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_TEXT, 0, color);
+        // ImGui::PushStyleColor(ImGuiCol_Text, imvec4(color));
+
         theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_INNER, 0, color);
         ImGui::PushStyleColor(ImGuiCol_Button, imvec4(color));
         ImGui::PushStyleColor(ImGuiCol_FrameBg, imvec4(color));
@@ -221,7 +223,7 @@ namespace ImGui {
         ImGui::PopStyleVar();
         ImGui::SetWindowFontScale(1);
 
-        ImGui::PopStyleColor(5);
+        ImGui::PopStyleColor(4);
         ImGui::PopStyleVar();
         ImGui::PopID();
 

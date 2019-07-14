@@ -43,17 +43,21 @@ static void export_gui(void) {
     maxsize /= 2; // Because png export already double it.
     goxel.show_export_viewport = true;
     gui_group_begin(NULL);
+    gui_checkbox("Custom size", &goxel.image->export_custom_size, NULL);
+    if (!goxel.image->export_custom_size) {
+        gui_get_view_rect(view_rect);
+        goxel.image->export_width = view_rect[2];
+        goxel.image->export_height = view_rect[3];
+    }
+
+    gui_enabled_begin(goxel.image->export_custom_size);
     i = goxel.image->export_width;
     if (gui_input_int("w", &i, 1, maxsize))
         goxel.image->export_width = clamp(i, 1, maxsize);
     i = goxel.image->export_height;
     if (gui_input_int("h", &i, 1, maxsize))
         goxel.image->export_height = clamp(i, 1, maxsize);
-    if (gui_button("Fit screen", 1, 0)) {
-        gui_get_view_rect(view_rect);
-        goxel.image->export_width = view_rect[2];
-        goxel.image->export_height = view_rect[3];
-    }
+    gui_enabled_end();
     gui_group_end();
 
     gui_checkbox("Transparent background",

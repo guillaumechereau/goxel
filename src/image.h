@@ -45,6 +45,7 @@ struct image {
     // For saving.
     // XXX: I think those should be persistend data of export code instead.
     char     *path;
+    bool     export_custom_size;
     int      export_width;
     int      export_height;
     bool     export_transparent_background;
