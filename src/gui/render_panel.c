@@ -137,7 +137,7 @@ static void export_render_buf_to_photos(void)
     int size;
     uint8_t *img;
     img = img_write_to_mem(goxel.pathtracer.buf, w, h, bpp, &size);
-    sys_save_to_photos(img, size);
+    sys_save_to_photos(img, size, NULL);
     free(img);
 }
 

@@ -235,22 +235,30 @@ void sys_show_keyboard(bool has_text)
  * Function: sys_save_to_photos
  * Save a png file to the system photo album.
  */
-int sys_save_to_photos(const uint8_t *data, int size)
+void sys_save_to_photos(const uint8_t *data, int size,
+                        void (*on_finished)(int r))
 {
     FILE *file;
     const char *path;
     size_t r;
 
     if (sys_callbacks.save_to_photos)
-        return sys_callbacks.save_to_photos(sys_callbacks.user, data, size);
+        return sys_callbacks.save_to_photos(sys_callbacks.user, data, size,
+                                            on_finished);
 
     // Default implementation.
     path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
                    "png\0*.png\0", NULL, "untitled.png");
-    if (!path) return 1;
+    if (!path) {
+        if (on_finished) on_finished(1);
+        return;
+    }
     file = fopen(path, "wb");
-    if (!file) return -1;
+    if (!file) {
+        if (on_finished) on_finished(-1);
+        return;
+    }
     r = fwrite(data, size, 1, file);
     fclose(file);
-    return r == size ? 0 : -1;
+    if (on_finished) on_finished(r == size ? 0 : -1);
 }

@@ -40,7 +40,8 @@ typedef struct {
     const char *(*get_clipboard_text)(void* user);
     void (*set_clipboard_text)(void *user, const char *text);
     void (*show_keyboard)(void *user, bool has_text);
-    int (*save_to_photos)(void *user, const uint8_t *data, int size);
+    void (*save_to_photos)(void *user, const uint8_t *data, int size,
+                           void (*on_finished)(int r));
 } sys_callbacks_t;
 extern sys_callbacks_t sys_callbacks;
 
@@ -118,6 +119,7 @@ void sys_show_keyboard(bool has_text);
  * Function: sys_save_to_photo
  * Save a png file to the system photo album.
  */
-int sys_save_to_photos(const uint8_t *data, int size);
+void sys_save_to_photos(const uint8_t *data, int size,
+                        void (*on_finished)(int r));
 
 #endif // SYSTEM_H
