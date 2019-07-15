@@ -135,4 +135,7 @@ bool gui_menu_begin(const char *label);
 void gui_menu_end(void);
 bool gui_menu_item(const char *action, const char *label, bool enabled);
 
+void gui_scrollable_begin(int width);
+void gui_scrollable_end(void);
+
 #endif // GUI_H

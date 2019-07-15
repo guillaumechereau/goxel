@@ -28,6 +28,10 @@
 #   define GUI_HAS_ROTATION_BAR 0
 #endif
 
+#ifndef GUI_HAS_SCROLLBARS
+#   define GUI_HAS_SCROLLBARS 1
+#endif
+
 #ifndef YOCTO
 #   define YOCTO 1
 #endif
@@ -601,14 +605,13 @@ static void render_left_panel(void)
     float left_pane_width;
     left_pane_width = (gui->current_panel ? gui->panel_width : 0) +
                        gui->panel_adjust_w + theme->sizes.icons_height + 4;
-    ImGui::BeginChild("left pane", ImVec2(left_pane_width, 0), true);
+    gui_scrollable_begin(left_pane_width);
     gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
 
     // Small hack to adjust the size if the scrolling bar is visible.
     gui->panel_adjust_w = left_pane_width - ImGui::GetContentRegionAvailWidth();
 
     ImGui::BeginGroup();
-
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (gui->current_panel == (int)i);
         if (render_tab(PANELS[i].name, PANELS[i].icon, &b)) {
@@ -621,6 +624,7 @@ static void render_left_panel(void)
         }
     }
     ImGui::EndGroup();
+
     if (gui->current_panel) {
         gui_same_line();
         ImGui::BeginGroup();
@@ -634,7 +638,8 @@ static void render_left_panel(void)
         ImGui::PopID();
         ImGui::EndGroup();
     }
-    ImGui::EndChild();
+
+    gui_scrollable_end();
 }
 
 static void render_popups(int index)
@@ -1614,6 +1619,44 @@ bool gui_menu_item(const char *action, const char *label, bool enabled)
         return true;
     }
     return false;
+}
+
+void gui_scrollable_begin(int width)
+{
+    ImGuiWindowFlags flags = 0;
+    if (!GUI_HAS_SCROLLBARS) flags |= ImGuiWindowFlags_NoScrollbar;
+    ImGui::BeginChild("#scroll", ImVec2(width, 0), true, flags);
+    ImGui::BeginGroup();
+}
+
+void gui_scrollable_end(void)
+{
+    // XXX: make this attribute of the item instead, so that we can use
+    // several scrollable widgets.
+    static float scroll_y = 0;
+    static float y;
+    static bool scroll;
+
+    ImGui::EndGroup();
+
+    if (!GUI_HAS_SCROLLBARS) {
+        if (ImGui::IsItemClicked()) {
+            scroll = false;
+            y = ImGui::GetMousePos().y;
+            scroll_y = ImGui::GetScrollY();
+        }
+
+        if (ImGui::IsItemHovered()) {
+            if (!scroll && fabs(y - ImGui::GetMousePos().y) > 8) {
+                scroll = true;
+            }
+            if (scroll) {
+                ImGui::ClearActiveID();
+                ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
+            }
+        }
+    }
+    ImGui::EndChild();
 }
 
 #if !DEFINED(GOXEL_MOBILE)
