@@ -1635,6 +1635,8 @@ void gui_scrollable_end(void)
     // several scrollable widgets.
     static float scroll_y = 0;
     static float y;
+    static float last_y;
+    static float speed = 0;
     static bool scroll;
 
     ImGui::EndGroup();
@@ -1642,7 +1644,9 @@ void gui_scrollable_end(void)
     if (!GUI_HAS_SCROLLBARS) {
         if (ImGui::IsItemClicked()) {
             scroll = false;
+            speed = 0;
             y = ImGui::GetMousePos().y;
+            last_y = y;
             scroll_y = ImGui::GetScrollY();
         }
 
@@ -1651,9 +1655,15 @@ void gui_scrollable_end(void)
                 scroll = true;
             }
             if (scroll) {
+                speed = last_y - ImGui::GetMousePos().y;
+                last_y = ImGui::GetMousePos().y;
                 ImGui::ClearActiveID();
                 ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
             }
+        } else if (speed) {
+            ImGui::SetScrollY(ImGui::GetScrollY() + speed);
+            speed *= 0.95;
+            if (fabs(speed) < 1) speed = 0;
         }
     }
     ImGui::EndChild();
