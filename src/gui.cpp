@@ -196,6 +196,7 @@ typedef struct gui_t {
     bool    capture_mouse;
     int     group;
     margins_t margins;
+    bool    is_scrolling;
 
     struct {
         const char *title;
@@ -592,7 +593,7 @@ static bool render_tab(const char *label, int icon, bool *v)
                                uv0, uv1, get_icon_color(icon, 0));
 
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("%s", label);
+        gui_tooltip(label);
         goxel_set_help_text(label);
     }
 
@@ -1088,7 +1089,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     ImGui::PopStyleColor(3);
     if (ret) *v = !*v;
     if (ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("%s", tooltip);
+        gui_tooltip(tooltip);
         goxel_set_help_text(tooltip);
     }
     ImGui::PopID();
@@ -1219,7 +1220,7 @@ bool gui_checkbox(const char *label, bool *v, const char *hint)
     }
     ret = Checkbox(label, v);
     if (gui->group) ImGui::PopStyleColor();
-    if (hint && ImGui::IsItemHovered()) ImGui::SetTooltip("%s", hint);
+    if (hint && ImGui::IsItemHovered()) gui_tooltip(hint);
     if (ret) on_click();
     return ret;
 }
@@ -1626,7 +1627,14 @@ bool gui_menu_item(const char *action, const char *label, bool enabled)
 void gui_scrollable_begin(int width)
 {
     ImGuiWindowFlags flags = 0;
-    if (!GUI_HAS_SCROLLBARS) flags |= ImGuiWindowFlags_NoScrollbar;
+
+    if (!GUI_HAS_SCROLLBARS) {
+        if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
+            gui->is_scrolling = false;
+        flags |= ImGuiWindowFlags_NoScrollbar;
+        if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
+    }
+
     ImGui::BeginChild("#scroll", ImVec2(width, 0), true, flags);
     ImGui::BeginGroup();
 }
@@ -1655,6 +1663,7 @@ void gui_scrollable_end(void)
         if (ImGui::IsItemHovered()) {
             if (!scroll && fabs(y - ImGui::GetMousePos().y) > 8) {
                 scroll = true;
+                gui->is_scrolling = true;
             }
             if (scroll) {
                 speed = last_y - ImGui::GetMousePos().y;
@@ -1669,6 +1678,12 @@ void gui_scrollable_end(void)
         }
     }
     ImGui::EndChild();
+}
+
+void gui_tooltip(const char *str)
+{
+    if (gui->is_scrolling) return;
+    ImGui::SetTooltip("%s", str);
 }
 
 #if !DEFINED(GOXEL_MOBILE)

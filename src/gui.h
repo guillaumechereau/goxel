@@ -138,4 +138,6 @@ bool gui_menu_item(const char *action, const char *label, bool enabled);
 void gui_scrollable_begin(int width);
 void gui_scrollable_end(void);
 
+void gui_tooltip(const char *str);
+
 #endif // GUI_H
