@@ -1,1 +1,5 @@
-src/assets.inl binary
+src/assets/sounds.inl binary
+src/assets/samples.inl binary
+src/assets/images.inl binary
+src/assets/icons.inl binary
+src/assets/fonts.inl binary
