@@ -104,7 +104,9 @@ static const struct {
     {"Render", ICON_RENDER, gui_render_panel},
 #endif
     {"Export", ICON_EXPORT, gui_export_panel},
+#if DEBUG
     {"Debug", ICON_DEBUG, gui_debug_panel},
+#endif
 };
 
 static inline ImVec4 color_lighten(ImVec4 c, float k)
