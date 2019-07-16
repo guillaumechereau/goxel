@@ -69,7 +69,6 @@ void gui_render_panel(void)
             gui_need_full_version())
     {
         action_exec2("export_render_buf_to_photos", "");
-        gui_alert("Export", "Export Complete");
     }
 
     if (gui_collapsing_header("World", false)) {
@@ -129,6 +128,10 @@ void gui_render_panel(void)
     }
 }
 
+static void on_saved_to_photo(int ret) {
+    gui_alert("Export", "Export Complete");
+}
+
 static void export_render_buf_to_photos(void)
 {
     int w = goxel.pathtracer.w;
@@ -137,7 +140,7 @@ static void export_render_buf_to_photos(void)
     int size;
     uint8_t *img;
     img = img_write_to_mem(goxel.pathtracer.buf, w, h, bpp, &size);
-    sys_save_to_photos(img, size, NULL);
+    sys_save_to_photos(img, size, on_saved_to_photo);
     free(img);
 }
 
