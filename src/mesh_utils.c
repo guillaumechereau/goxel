@@ -573,7 +573,7 @@ static int l_mesh_save(const action_t *action, lua_State *l)
         img = image_new();
         layer = image_add_layer(img, NULL);
         mesh_set(layer->mesh, mesh);
-        save_to_file(img, path, true);
+        save_to_file(img, path);
         image_delete(img);
         return 0;
     }

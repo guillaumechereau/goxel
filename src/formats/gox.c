@@ -247,7 +247,7 @@ static const material_t *get_material(const image_t *img, int idx)
     return NULL;
 }
 
-void save_to_file(const image_t *img, const char *path, bool with_preview)
+void save_to_file(const image_t *img, const char *path)
 {
     // XXX: remove all empty blocks before saving.
     LOG_I("Save to %s", path);
@@ -277,14 +277,12 @@ void save_to_file(const image_t *img, const char *path, bool with_preview)
         chunk_write_dict_value(&c, out, "box", &img->box, sizeof(img->box));
     chunk_write_finish(&c, out);
 
-    if (with_preview) {
-        preview = calloc(128 * 128, 4);
-        goxel_render_to_buf(preview, 128, 128, 4);
-        png = img_write_to_mem(preview, 128, 128, 4, &size);
-        chunk_write_all(out, "PREV", (char*)png, size);
-        free(preview);
-        free(png);
-    }
+    preview = calloc(128 * 128, 4);
+    goxel_render_to_buf(preview, 128, 128, 4);
+    png = img_write_to_mem(preview, 128, 128, 4, &size);
+    chunk_write_all(out, "PREV", (char*)png, size);
+    free(preview);
+    free(png);
 
     // Add all the blocks data into the hash table.
     index = 0;
@@ -676,7 +674,7 @@ ACTION_REGISTER(open,
     .default_shortcut = "Ctrl O",
 )
 
-static void save_as(const char *path, bool with_preview)
+static void save_as(const char *path)
 {
     if (!path) {
         path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "gox\0*.gox\0",
@@ -688,23 +686,23 @@ static void save_as(const char *path, bool with_preview)
         goxel.image->path = strdup(path);
         goxel.image->saved_key = image_get_key(goxel.image);
     }
-    save_to_file(goxel.image, goxel.image->path, with_preview);
+    save_to_file(goxel.image, goxel.image->path);
 }
 
 ACTION_REGISTER(save_as,
     .help = "Save the image as",
     .cfunc = save_as,
-    .csig = "vpi",
+    .csig = "vp",
 )
 
-static void save(const char *path, bool with_preview)
+static void save(const char *path)
 {
-    save_as(path ?: goxel.image->path, with_preview);
+    save_as(path ?: goxel.image->path);
 }
 
 ACTION_REGISTER(save,
     .help = "Save the image",
     .cfunc = save,
-    .csig = "vpi",
+    .csig = "vp",
     .default_shortcut = "Ctrl S"
 )

@@ -604,7 +604,7 @@ void goxel_import_image_plane(const char *path);
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
-void save_to_file(const image_t *img, const char *path, bool with_preview);
+void save_to_file(const image_t *img, const char *path);
 int load_from_file(const char *path);
 
 // Iter info of a gox file, without actually reading it.
