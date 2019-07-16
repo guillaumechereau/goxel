@@ -288,7 +288,7 @@ void model3d_render(model3d_t *model3d,
     GL(glEnableVertexAttribArray(A_POS_LOC));
     GL(glEnable(GL_BLEND));
     GL(glEnable(GL_DEPTH_TEST));
-    GL(glDepthFunc(GL_LESS));
+    GL(glDepthFunc(GL_LEQUAL));
     GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL(glCullFace(GL_BACK));
     model3d->cull ? GL(glEnable(GL_CULL_FACE)) :

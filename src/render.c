@@ -592,7 +592,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     }
 
     GL(glEnable(GL_DEPTH_TEST));
-    GL(glDepthFunc(GL_LESS));
+    GL(glDepthFunc(GL_LEQUAL));
     GL(glEnable(GL_CULL_FACE));
     GL(glCullFace(GL_BACK));
 
