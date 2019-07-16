@@ -1132,7 +1132,7 @@ material_point eval_material(const yocto_scene& scene,
   }
   if (metallic) {
     point.specular = point.specular * (1 - metallic) + metallic * point.diffuse;
-    point.diffuse  = metallic * point.diffuse * (1 - metallic);
+    point.diffuse  = /* metallic * */ point.diffuse * (1 - metallic);
   }
   if (point.diffuse != zero3f || point.roughness) {
     point.roughness = point.roughness * point.roughness;
