@@ -1666,7 +1666,7 @@ void gui_scrollable_end(void)
                 gui->is_scrolling = true;
             }
             if (scroll) {
-                speed = last_y - ImGui::GetMousePos().y;
+                speed = mix(speed, last_y - ImGui::GetMousePos().y, 0.5);
                 last_y = ImGui::GetMousePos().y;
                 ImGui::ClearActiveID();
                 ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
