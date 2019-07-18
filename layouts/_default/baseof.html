@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ block "title" . }}{{ .Title }} | {{ .Site.Title }}{{ end }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+  </head>
+
+  <style>
+    #banner {
+      position: absolute;
+      width: 100%;
+      height: 25em;
+    }
+
+    #banner img {
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .navbar {
+      background-color: transparent;
+    }
+  </style>
+
+
+  <body>
+    <div id="banner">
+      <img src="/img/top-img.png"></img>
+    </div>
+
+    <div class="container">
+      <header>{{ partial "header" }}</header>
+      <section class="section">
+        <main>{{ block "main" . }}{{ end }}</main>
+      </section>
+    </div>
+  </body>
+
+</html>
