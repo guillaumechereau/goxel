@@ -1,0 +1,6 @@
+
+{{ $v := .Site.Params.lastReleaseVersion }}
+{{ $os := .Get "os" }}
+{{ $base := "https://github.com/guillaumechereau/goxel/releases/download" }}
+
+{{$base}}/v{{$v}}/goxel-{{$v}}-{{$os}}.zip

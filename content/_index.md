@@ -21,7 +21,7 @@ dimensions, voxels make 3D editing as intuitive as drawing in 2D.
   {{% /feature %}}
 
   {{% feature title="Cross platform" img="img/feature-cross-platform.jpg" %}}
-  Goxel runs on virtually any OS: Windows, Mac, Linux, iOS, Android.
+  Goxel runs on virtually any OS: Windows, Mac, Linux, iOS, and Android.
   {{% /feature %}}
 
   {{% feature title="Many export formats"

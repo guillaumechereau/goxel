@@ -1,3 +1,6 @@
 baseURL = "http://example.org/"
 languageCode = "en-us"
 title = "Goxel"
+
+[params]
+  lastReleaseVersion = "0.10.0"

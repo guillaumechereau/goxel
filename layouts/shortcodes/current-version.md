@@ -1,0 +1,2 @@
+
+{{ .Site.Params.lastReleaseVersion }}
