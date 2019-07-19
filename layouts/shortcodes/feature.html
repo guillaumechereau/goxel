@@ -1,19 +1,11 @@
 
-<article class="media">
-
-  <figure class="media-left">
-    <p class="image is-64x64">
-      <img src="https://bulma.io/images/placeholders/128x128.png">
-    </p>
-  </figure>
-
-  <div class="media-content">
-    <div class="content">
-      <p><strong>{{ .Get "title" }}</strong>
-      <br>
+<div class="box"
+     style="background-image: url({{ .Get "img" }}),
+                              linear-gradient(grey, lightgrey);
+            background-blend-mode: multiply;
+            background-size: cover;">
+  <div class="content has-text-white has-text-centered">
+      <h2 class="has-text-white">{{ .Get "title" }}</h2>
       {{ .Inner }}
-      </p>
-    </div>
   </div>
-
-</article>
+</div>
