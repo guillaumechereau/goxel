@@ -9,51 +9,10 @@
     <!-- <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script> -->
   </head>
 
-  <style>
-
-    {{ with .Params.subtitle }}
-    #top {
-      width: 100%;
-      background-image: url(/img/top-img.png);
-      background-size: cover;
-      background-position: center top;
-    }
-    {{ else }}
-    #top {
-      width: 100%;
-      background-image: url(/img/top-img-small.jpg);
-      background-size: auto;
-    }
-    {{ end }}
-
-    .navbar {
-      background-color: transparent;
-    }
-  </style>
-
 
   <body>
 
-    <div id="top">
-      <div class="container">
-        <header>{{ partial "header" }}</header>
-
-        {{ with .Params.subtitle }}
-        <div class="content section">
-          <div class="columns">
-            <div class="column">
-              <h1 class="has-text-white is-size-1">
-                {{ . }}
-              </h1>
-            </div>
-            <div class="column"></div>
-          </div>
-          <a class="button is-link">Download</a>
-        </div>
-        {{ end }}
-
-      </div>
-    </div>
+    {{ partial "top" . }}
 
     <div class="container">
       <section class="section">
