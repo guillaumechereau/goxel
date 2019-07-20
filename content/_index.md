@@ -7,6 +7,8 @@ This is the official website of the 3D voxel editor Goxel.
 By restricting the volume along a 3D grid, just like pixels do in two
 dimensions, voxels make 3D editing as intuitive as drawing in 2D.
 
+Get the desktop version now for free in the [download page](/download).
+
 {{% features %}}
 
   {{% feature title="Unlimited scene size"
@@ -31,5 +33,9 @@ dimensions, voxels make 3D editing as intuitive as drawing in 2D.
   {{% /feature %}}
 
 {{% /features %}}
+
+Want to see how artists can use goxel on a tablette?  Check this video
+from French artist [Thibault Simar](https://www.artstation.com/exm) using
+Goxel on an iPad pro:
 
 {{< youtube pvBd3Zq0Of8 >}}
