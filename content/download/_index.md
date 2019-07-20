@@ -24,7 +24,8 @@ The last iOS version is available from iTune.
 
 ## Android
 
-To be done...
+<a href="https://play.google.com/store/apps/details?id=com.noctuasoftware.goxel"
+   class="button is-large is-link">Get Android version</a>
 
 ## Older releases
 
