@@ -2,7 +2,7 @@
 subtitle = "Open Source Voxel Editor for Windows, Mac, Linux, iOS, and Android."
 +++
 
-This this the official website of the 3D voxel editor Goxel.
+This is the official website of the 3D voxel editor Goxel.
 
 By restricting the volume along a 3D grid, just like pixels do in two
 dimensions, voxels make 3D editing as intuitive as drawing in 2D.
