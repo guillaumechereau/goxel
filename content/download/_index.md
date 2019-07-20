@@ -9,6 +9,8 @@ Title = "Download"
 The current stable version of Goxel for desktop is
 **{{% current-version %}}**
 
+[Read the release notes](/releases/{{% current-version %}}).
+
 <a href="{{% download-link os="windows" %}}"
    class="button is-large is-link">Download for Windows</a>
 
