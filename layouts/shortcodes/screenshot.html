@@ -1,0 +1,19 @@
+
+{{ $src := .Get "src" }}
+{{ $caption := .Get "caption" }}
+{{ $alt := default "Goxel Screenshot" (.Get "alt") }}
+
+<div class="column is-6">
+  <div class="card">
+    <div class="card-image">
+      <figure class="image is-4by3">
+        <a href="{{$src}}">
+          <img src="{{$src}}" alt="{{$alt}}">
+        </a>
+      </figure>
+    </div>
+    <div class="card-content">
+      <p class="content has-text-centered">{{$caption | markdownify}}</p>
+    </div>
+  </div>
+</div>
