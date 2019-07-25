@@ -33,7 +33,9 @@ There is also in iOS version on [iTunes](
 https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826).
 
 
-![goxel screenshot 0](https://guillaumechereau.github.io/goxel/images/screenshots/plane.png)
+![goxel screenshot 0](https://goxel.xyz/gallery/thibault-fisherman-house.jpg)
+Fisherman house, made with Goxel by
+[Thibault Simar](https://www.artstation.com/exm)
 
 
 Licence
