@@ -446,18 +446,11 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                               GL_UNSIGNED_SHORT, 0));
         } else {
             gl_update_uniform(shader, "u_l_amb", 0.0);
-            gl_update_uniform(shader, "u_m_base_color",
-                              VEC(0.2 * material->base_color[0],
-                                  0.2 * material->base_color[1],
-                                  0.2 * material->base_color[2],
-                                  1.0));
             gl_update_uniform(shader, "u_z_ofs", -0.001);
             GL(glDrawElements(GL_LINES, item->nb_elements * 8,
                               GL_UNSIGNED_SHORT,
                               (void*)(uintptr_t)(BATCH_QUAD_COUNT * 6 * 2)));
             gl_update_uniform(shader, "u_l_amb", rend->settings.ambient);
-            gl_update_uniform(shader, "u_m_base_color",
-                              material->base_color);
             gl_update_uniform(shader, "u_z_ofs", 0.0);
         }
     } else {
@@ -580,7 +573,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
         shader_define_t defines[] = {
             {"SHADOW", shadow},
             {"MATERIAL_UNLIT", (rend->settings.effects & EFFECT_UNLIT) ||
-                               (effects & (EFFECT_GRID | EFFECT_EDGES))},
+                               (effects & EFFECT_EDGES)},
             {"HAS_TANGENTS", effects & EFFECT_BORDERS},
             {"ONLY_EDGES", effects & EFFECT_EDGES},
             {"HAS_OCCLUSION_MAP", rend->settings.occlusion_strength > 0},
@@ -671,6 +664,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
         effects |= EFFECT_SEMI_TRANSPARENT;
         render_mesh_(rend, mesh, material, effects, shadow_mvp);
     }
+    GL(glDisable(GL_BLEND));
 }
 
 // XXX: this is quite ugly.  We could maybe use a callback of some sort
@@ -699,6 +693,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
 {
     render_item_t *item;
     const material_t default_material = MATERIAL_DEFAULT;
+    float alpha;
 
     material = material ?: &default_material;
 
@@ -718,11 +713,13 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
 
     if (effects & EFFECT_GRID_ONLY) effects |= EFFECT_GRID;
     if (effects & (EFFECT_GRID | EFFECT_EDGES)) {
+        alpha = (effects & EFFECT_EDGES) ? 0.5 : 0.1;
         item = calloc(1, sizeof(*item));
         item->type = ITEM_MESH;
         item->mesh = mesh_copy(mesh);
         item->effects = effects | EFFECT_BORDERS;
         item->material = *material;
+        vec4_set(item->material.base_color, 0, 0, 0, alpha);
         DL_APPEND(rend->items, item);
     }
 }
