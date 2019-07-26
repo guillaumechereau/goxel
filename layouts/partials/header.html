@@ -1,7 +1,12 @@
-<nav class="navbar is-transparent" role="navigation" aria-label="main navigation">
+<style>
+  .is-transparent { background-color: transparent !important; }
+</style>
+
+<nav class="navbar is-primary is-transparent" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
     <a class="navbar-item has-text-white" href="{{ .Site.BaseURL }}">
-      <img src="/img/logo.png" width="112" height="28">
+      <img src="/img/logo.png" width="112" height="28"
+           alt="Goxel 3D Voxel Editor">
     </a>
 
     <a role="button" class="navbar-burger burger" aria-label="menu"
@@ -12,7 +17,7 @@
     </a>
   </div>
 
-  <div id="navbarGoxel" class="navbar-menu">
+  <div id="navbarGoxel" class="navbar-menu is-transparent">
     <div class="navbar-start">
 
       <a class="navbar-item has-text-white" href="/">
@@ -37,3 +42,22 @@
   </div>
 </nav>
 
+<script>
+
+    // Make the navbar works on mobile (code taken from Bulma website).
+    document.addEventListener('DOMContentLoaded', () => {
+      const $navbarBurgers = Array.prototype.slice.call(
+          document.querySelectorAll('.navbar-burger'), 0);
+      if ($navbarBurgers.length > 0) {
+        $navbarBurgers.forEach( el => {
+          el.addEventListener('click', () => {
+            const target = el.dataset.target;
+            const $target = document.getElementById(target);
+            el.classList.toggle('is-active');
+            $target.classList.toggle('is-active');
+          });
+        });
+      }
+    });
+
+</script>

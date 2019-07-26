@@ -1,6 +1,6 @@
 baseURL = "https://goxel.xyz/"
 languageCode = "en-us"
-title = "Goxel"
+title = "Goxel 3D Voxel Editor"
 
 [params]
   lastReleaseVersion = "0.10.0"
