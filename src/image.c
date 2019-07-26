@@ -614,6 +614,13 @@ void image_undo(image_t *img)
     DL_DELETE2(img->history, img, history_prev, history_next);
     DL_PREPEND_ELEM2(img->history, prev, img, history_prev, history_next);
     swap(img, prev);
+
+    // Don't move the camera for an undo.
+    if (img->active_camera && prev->active_camera &&
+            strcmp(img->active_camera->name, prev->active_camera->name) == 0) {
+        camera_set(img->active_camera, prev->active_camera);
+    }
+
     debug_print_history(img);
 }
 
