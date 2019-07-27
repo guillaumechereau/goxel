@@ -14,8 +14,6 @@ By Guillaume Chereau <guillaume@noctua-software.com>
 
 Official webpage: https://goxel.xyz
 
-Online Procedural Rendering: https://voxeltoy.com
-
 About
 -----
 
@@ -29,8 +27,10 @@ Download
 The last release files can be downloaded from [there](
 https://github.com/guillaumechereau/goxel/releases/latest).
 
-There is also in iOS version on [iTunes](
-https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826).
+Goxel is also available for [iOS](
+https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826) and
+[Android](
+https://play.google.com/store/apps/details?id=com.noctuasoftware.goxel).
 
 
 ![goxel screenshot 0](https://goxel.xyz/gallery/thibault-fisherman-house.jpg)
