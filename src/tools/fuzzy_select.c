@@ -99,8 +99,15 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
 static int gui(tool_t *tool_)
 {
     tool_fuzzy_select_t *tool = (void*)tool_;
+    bool use_color = tool->threshold < 255;
 
-    gui_input_int("Threshold", &tool->threshold, 1, 255);
+    if (gui_checkbox("Use color", &use_color, "Stop at different color")) {
+        tool->threshold = use_color ? 0 : 255;
+    }
+    if (use_color) {
+        gui_input_int("Threshold", &tool->threshold, 1, 254);
+    }
+
     if (!tool->selection || mesh_is_empty(tool->selection))
         return 0;
 
