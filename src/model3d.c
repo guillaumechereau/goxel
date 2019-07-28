@@ -294,7 +294,6 @@ void model3d_render(model3d_t *model3d,
     model3d->cull ? GL(glEnable(GL_CULL_FACE)) :
                     GL(glDisable(GL_CULL_FACE));
     GL(glCullFace(effects & EFFECT_SEE_BACK ? GL_FRONT : GL_BACK));
-    if (!model3d->solid) GL(glDepthMask(false));
 
     vec4_set(cf, c[0] / 255.0, c[1] / 255.0, c[2] / 255.0, c[3] / 255.0);
     gl_update_uniform(g_shader, "u_color", cf);
@@ -355,5 +354,4 @@ void model3d_render(model3d_t *model3d,
     GL(glDisableVertexAttribArray(A_POS_LOC));
     GL(glDisableVertexAttribArray(A_COLOR_LOC));
     GL(glCullFace(GL_BACK));
-    GL(glDepthMask(true));
 }

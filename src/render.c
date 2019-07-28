@@ -886,17 +886,21 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
 
 static float item_sort_value(const render_item_t *a)
 {
-    if (a->type == ITEM_MESH && (a->effects & (EFFECT_GRID | EFFECT_EDGES)))
-        return 30;
-    if (a->effects & EFFECT_WIREFRAME) return 20;
-    if (a->proj_screen)     return 10;
-    switch (a->type) {
-        // XXX: probably need to sort mesh objects by distance too.
-        case ITEM_MESH:     return a->material.base_color[3] == 1 ? 0 : 0.5;
-        case ITEM_MODEL3D:  return 1;
-        case ITEM_GRID:     return 2;
-        default:            return 0;
-    }
+    // First, non transparent full models (like the image box).
+    if ((a->type == ITEM_MODEL3D) && !(a->effects & EFFECT_WIREFRAME) &&
+            !(a->tex) && (a->color[3] == 255)) return 0;
+
+    // Then all the non transparent meshes.
+    if (a->type == ITEM_MESH && a->material.base_color[3] == 1) return 2;
+
+    // Then all the transparent meshes.
+    if (a->type == ITEM_MESH && a->material.base_color[3] < 1) return 4;
+
+    // Then the grids.
+    if (a->type == ITEM_GRID) return 5;
+
+    // Then all the rest.
+    return 10;
 }
 
 static int item_sort_cmp(const render_item_t *a, const render_item_t *b)
