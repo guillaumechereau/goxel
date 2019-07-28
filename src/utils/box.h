@@ -21,6 +21,8 @@
 
 #include "utils/vec.h"
 
+#include <assert.h>
+
 static float min(float x, float y)
 {
     return x < y ? x : y;
@@ -292,6 +294,16 @@ static inline void box_get_vertices(const float box[4][4],
     for (i = 0; i < 8; i++) {
         mat4_mul_vec3(box, P[i], vertices[i]);
     }
+}
+
+bool box_intersect_box(const float b1[4][4], const float b2[4][4]);
+
+static inline bool box_intersect_aabb(const float box[4][4],
+                                      const int aabb[2][3])
+{
+    float b2[4][4];
+    bbox_from_aabb(b2, aabb);
+    return box_intersect_box(box, b2);
 }
 
 #endif // BOX_H
