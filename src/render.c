@@ -874,6 +874,8 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
 
 static float item_sort_value(const render_item_t *a)
 {
+    if (a->type == ITEM_MESH && (a->effects & (EFFECT_GRID | EFFECT_EDGES)))
+        return 30;
     if (a->effects & EFFECT_WIREFRAME) return 20;
     if (a->proj_screen)     return 10;
     switch (a->type) {
