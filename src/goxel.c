@@ -856,6 +856,20 @@ void goxel_render_view(const float viewport[4], bool render_mode)
                    EFFECT_STRIP | EFFECT_WIREFRAME);
     }
 
+    // Debug: show the current layer mesh blocks.
+    if ((0)) {
+        mesh_iterator_t iter;
+        mesh_t *mesh = goxel.image->active_layer->mesh;
+        iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+        int p[3], aabb[2][3];
+        float box[4][4];
+        while (mesh_iter(&iter, p)) {
+            mesh_get_block_aabb(p, aabb);
+            bbox_from_aabb(box, aabb);
+            render_box(rend, box, NULL, EFFECT_WIREFRAME);
+        }
+    }
+
     // XXX: make a toggle for debug informations.
     if ((0)) {
         float b[4][4];
