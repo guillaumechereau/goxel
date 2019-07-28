@@ -50,11 +50,7 @@ void gui_view_panel(void)
     }
 
     gui_checkbox_flag("Grid", &goxel.view_effects, EFFECT_GRID, NULL);
-    if (goxel.view_effects & EFFECT_GRID)
-        set_flag(&goxel.view_effects, EFFECT_EDGES, false);
     gui_checkbox_flag("Edges", &goxel.view_effects, EFFECT_EDGES, NULL);
-    if (goxel.view_effects & EFFECT_EDGES)
-        set_flag(&goxel.view_effects, EFFECT_GRID, false);
     gui_checkbox_flag("Unlit",
             &goxel.rend.settings.effects, EFFECT_UNLIT, NULL);
     gui_checkbox_flag("Borders",

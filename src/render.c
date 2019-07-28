@@ -712,12 +712,24 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
     }
 
     if (effects & EFFECT_GRID_ONLY) effects |= EFFECT_GRID;
-    if (effects & (EFFECT_GRID | EFFECT_EDGES)) {
-        alpha = (effects & EFFECT_EDGES) ? 0.5 : 0.1;
+
+    if (effects & EFFECT_GRID) {
+        alpha = 0.1;
         item = calloc(1, sizeof(*item));
         item->type = ITEM_MESH;
         item->mesh = mesh_copy(mesh);
-        item->effects = effects | EFFECT_BORDERS;
+        item->effects = EFFECT_GRID | EFFECT_BORDERS;
+        item->material = *material;
+        vec4_set(item->material.base_color, 0, 0, 0, alpha);
+        DL_APPEND(rend->items, item);
+    }
+
+    if (effects & EFFECT_EDGES) {
+        alpha = 0.2;
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_MESH;
+        item->mesh = mesh_copy(mesh);
+        item->effects = EFFECT_EDGES | EFFECT_BORDERS;
         item->material = *material;
         vec4_set(item->material.base_color, 0, 0, 0, alpha);
         DL_APPEND(rend->items, item);
