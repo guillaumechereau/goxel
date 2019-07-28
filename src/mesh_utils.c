@@ -281,6 +281,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     bool use_box, skip_src_empty, skip_dst_empty;
     painter_t painter2;
     float box2[4][4];
+    int aabb[2][3];
     mesh_t *cached;
     static cache_t *cache = NULL;
     const float *sym_o = painter->symmetry_origin;
@@ -331,13 +332,20 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
                      mode == MODE_SUB_CLAMP ||
                      mode == MODE_MULT_ALPHA ||
                      mode == MODE_INTERSECT;
-    if (mode != MODE_INTERSECT) {
-        iter = mesh_get_box_iterator(mesh, box,
-                skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
-    } else {
-        iter = mesh_get_iterator(mesh,
-                skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
+
+    // for intersection start by deleting all the blocks that are not in
+    // the box.
+    if (mode == MODE_INTERSECT) {
+        iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+        while (mesh_iter(&iter, vp)) {
+            mesh_get_block_aabb(vp, aabb);
+            if (box_intersect_aabb(box, aabb)) continue;
+            mesh_clear_block(mesh, &iter, vp);
+        }
     }
+
+    iter = mesh_get_box_iterator(mesh, box,
+                                 skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
 
     // XXX: for the moment we cannot use the same accessor for both
     // setting and getting!  Need to fix that!!
