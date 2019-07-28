@@ -568,6 +568,18 @@ void mesh_set_at(mesh_t *mesh, mesh_iterator_t *iter,
     memcpy(BLOCK_AT(block, p[0], p[1], p[2]), v, 4);
 }
 
+void mesh_clear_block(mesh_t *mesh, mesh_iterator_t *it, const int pos[3])
+{
+    block_t *block;
+    mesh_prepare_write(mesh);
+    block = mesh_get_block_at(mesh, pos, it);
+    if (!block) return;
+    HASH_DEL(mesh->blocks, block);
+    assert(mesh->blocks != block);
+    block_delete(block);
+    if (it) it->block = NULL;
+}
+
 
 static bool mesh_iter_next_block_box(mesh_iterator_t *it)
 {

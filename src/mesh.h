@@ -96,6 +96,20 @@ void mesh_delete(mesh_t *mesh);
  */
 void mesh_clear(mesh_t *mesh);
 
+/*
+ * Function: mesh_get_block_aabb
+ * Compute the AABB box of a given block of the mesh.
+ */
+static inline void mesh_get_block_aabb(const int pos[3], int aabb[2][3])
+{
+    aabb[0][0] = pos[0];
+    aabb[0][1] = pos[1];
+    aabb[0][2] = pos[2];
+    aabb[1][0] = pos[0] + BLOCK_SIZE;
+    aabb[1][1] = pos[1] + BLOCK_SIZE;
+    aabb[1][2] = pos[2] + BLOCK_SIZE;
+}
+
 mesh_t *mesh_copy(const mesh_t *mesh);
 
 void mesh_set(mesh_t *mesh, const mesh_t *other);
@@ -123,6 +137,12 @@ void mesh_set_at(mesh_t *mesh, mesh_iterator_t *it,
 
 // XXX: we should remove this one I guess.
 void mesh_remove_empty_blocks(mesh_t *mesh, bool fast);
+
+/*
+ * Function: mesh_clear_block
+ * Set to zero all the voxels in a given block.
+ */
+void mesh_clear_block(mesh_t *mesh, mesh_iterator_t *it, const int pos[3]);
 
 /*
  * Function: mesh_is_empty
