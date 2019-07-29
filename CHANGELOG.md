@@ -1,5 +1,18 @@
 #Changelog
 
+## [0.10.4] - 2019-07-29
+
+### Added
+- Line tool (same as brush tool with shift pressed).
+### Changed
+- Better plane tool: on click the plane move just before the clicked voxel
+  for quick editing.  The plane rendering has also been improved.
+- Slightly better looking grid effect.
+### Fixed
+- Fixed the behavior of snapping to always select the closest snapped point.
+- Fixed bug with selections on top of planes.
+
+
 ## [0.10.0]
 
 ### Added
