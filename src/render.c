@@ -785,7 +785,7 @@ void render_grid(renderer_t *rend, const float plane[4][4],
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_GRID;
     mat4_copy(plane, item->mat);
-    mat4_iscale(item->mat, 8, 8, 1);
+    mat4_iscale(item->mat, 1024, 1024, 1);
     mat4_itranslate(item->mat, 0, 0, 0.01);
     item->model3d = g_rect_model;
     copy_color(color, item->color);
