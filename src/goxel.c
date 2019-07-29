@@ -266,13 +266,7 @@ int goxel_unproject(const float viewport[4],
         vec3_copy(p, out);
         vec3_copy(n, normal);
         ret = 1 << i;
-
-        if ((1 << i) == SNAP_IMAGE_BOX) {
-            best = dist;
-            continue;
-        }
-
-        break;
+        best = dist;
     }
 end:
     if (ret && offset)
