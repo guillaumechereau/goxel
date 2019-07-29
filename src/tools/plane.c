@@ -36,6 +36,8 @@ static int iter(tool_t *tool, const painter_t *painter,
         curs->pos[1] = round(curs->pos[1]);
         curs->pos[2] = round(curs->pos[2]);
         plane_from_normal(goxel.plane, curs->pos, curs->normal);
+        mat4_itranslate(goxel.plane, 0, 0, -1);
+        goxel.snap_mask |= SNAP_PLANE;
     }
     return 0;
 }
