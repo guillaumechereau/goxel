@@ -86,6 +86,8 @@
 		F0ACA2A8227BF2A300376C82 /* shader_cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A7227BF2A300376C82 /* shader_cache.c */; };
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
+		F0DC02A122EEE267007E2F17 /* line.c in Sources */ = {isa = PBXBuildFile; fileRef = F0DC02A022EEE267007E2F17 /* line.c */; };
+		F0DC02A322EEE274007E2F17 /* box.c in Sources */ = {isa = PBXBuildFile; fileRef = F0DC02A222EEE274007E2F17 /* box.c */; };
 		F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */; };
 		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
 		F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */; };
@@ -207,6 +209,8 @@
 		F0ACA2A7227BF2A300376C82 /* shader_cache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader_cache.c; sourceTree = "<group>"; };
 		F0AE90F51C8EE01200C29080 /* assets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = assets.c; sourceTree = "<group>"; };
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
+		F0DC02A022EEE267007E2F17 /* line.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = line.c; sourceTree = "<group>"; };
+		F0DC02A222EEE274007E2F17 /* box.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box.c; sourceTree = "<group>"; };
 		F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noc_file_dialog.h; sourceTree = "<group>"; };
 		F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = dialogs_osx.m; sourceTree = "<group>"; };
 		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
@@ -239,6 +243,7 @@
 		F00FC2F8226B2F7B0002F251 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				F0DC02A222EEE274007E2F17 /* box.c */,
 				F0ACA2A32271ACEA00376C82 /* json.c */,
 				F0ACA2A22271ACEA00376C82 /* json.h */,
 				F00FC2F9226B2F7B0002F251 /* sound.h */,
@@ -293,6 +298,7 @@
 		F037D5C61EA6069A00C96D10 /* tools */ = {
 			isa = PBXGroup;
 			children = (
+				F0DC02A022EEE267007E2F17 /* line.c */,
 				F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */,
 				F0C5368A1F42EE43003A0DCA /* extrude.c */,
 				F037D5C71EA6069A00C96D10 /* brush.c */,
@@ -578,6 +584,7 @@
 				F0A15FFD1E962F1300C6EF33 /* png.c in Sources */,
 				F037D5D01EA6069A00C96D10 /* color_picker.c in Sources */,
 				F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */,
+				F0DC02A322EEE274007E2F17 /* box.c in Sources */,
 				F07DE9D31BD0F03900BAA1AD /* AppDelegate.swift in Sources */,
 				F0EEB7DE1C8EC25D004AB676 /* procedural.c in Sources */,
 				F00FC313226B2F7C0002F251 /* gl.c in Sources */,
@@ -595,6 +602,7 @@
 				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,
 				F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */,
 				F097B3F31F0C97DB00A3622B /* gesture.c in Sources */,
+				F0DC02A122EEE267007E2F17 /* line.c in Sources */,
 				F00FC337226B2FCF0002F251 /* view_panel.c in Sources */,
 				F07DEA0B1BD0F31500BAA1AD /* palette.c in Sources */,
 				F07DEA131BD0F31500BAA1AD /* utils.c in Sources */,
