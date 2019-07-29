@@ -774,7 +774,8 @@ static void render_grid_item(renderer_t *rend, const render_item_t *item)
         mat4_translate(model_mat, x + 0.5, y + 0.5, 0, model_mat);
         model3d_render(item->model3d,
                        model_mat, rend->view_mat, rend->proj_mat,
-                       item->color, NULL, NULL, item->clip_box, 0);
+                       item->color, NULL, NULL, item->clip_box,
+                       item->effects);
     }
 }
 
@@ -785,8 +786,10 @@ void render_grid(renderer_t *rend, const float plane[4][4],
     item->type = ITEM_GRID;
     mat4_copy(plane, item->mat);
     mat4_iscale(item->mat, 8, 8, 1);
-    item->model3d = g_grid_model;
+    mat4_itranslate(item->mat, 0, 0, 0.01);
+    item->model3d = g_rect_model;
     copy_color(color, item->color);
+    item->effects = EFFECT_GRID;
     if (clip_box) mat4_copy(clip_box, item->clip_box);
     DL_APPEND(rend->items, item);
 }

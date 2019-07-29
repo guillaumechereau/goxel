@@ -347,7 +347,7 @@ void goxel_reset(void)
             VEC(0, 0, 0), VEC(1, 0, 0), VEC(0, 1, 0));
 
     vec4_set(goxel.back_color, 70, 70, 70, 255);
-    vec4_set(goxel.grid_color, 19, 19, 19, 255);
+    vec4_set(goxel.grid_color, 255, 255, 255, 127);
     vec4_set(goxel.image_box_color, 204, 204, 255, 255);
 
     action_exec2("tool_set_brush", "");
@@ -883,6 +883,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     }
     if (goxel.snap_mask & SNAP_PLANE)
         render_grid(rend, goxel.plane, goxel.grid_color, goxel.image->box);
+
     if (!box_is_null(goxel.image->box) && !goxel.hide_box) {
         render_box(rend, goxel.image->box, goxel.image_box_color,
                    EFFECT_SEE_BACK | EFFECT_GRID);

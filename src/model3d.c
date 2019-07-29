@@ -221,7 +221,7 @@ model3d_t *model3d_rect(void)
         vec2_copy(POS_UV[v][0], model->vertices[i].pos);
         vec2_copy(POS_UV[v][1], model->vertices[i].uv);
         vec4_set(model->vertices[i].color, 255, 255, 255, 255);
-        vec3_set(model->vertices[i].normal, 0, 1, 0);
+        vec3_set(model->vertices[i].normal, 0, 0, 1);
     }
     model->solid = true;
     model->dirty = true;
