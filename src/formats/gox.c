@@ -469,6 +469,7 @@ int load_from_file(const char *path)
     char dict_key[256];
     char dict_value[256];
     uint64_t uid = 1;
+    int aabb[2][3];
     camera_t *camera, *camera_tmp;
     material_t *mat, *mat_tmp;
 
@@ -644,10 +645,24 @@ int load_from_file(const char *path)
         camera_fit_box(goxel.image->active_camera, goxel.image->box);
     }
 
+    // Set default image box if we didn't have one.
+    if (box_is_null(goxel.image->box)) {
+        mesh_get_bbox(goxel_get_layers_mesh(), aabb, true);
+        if (aabb[0][0] > aabb[1][0]) {
+            aabb[0][0] = -16;
+            aabb[0][1] = -16;
+            aabb[0][2] = 0;
+            aabb[1][0] = 16;
+            aabb[1][1] = 16;
+            aabb[1][2] = 32;
+        }
+        bbox_from_aabb(goxel.image->box, aabb);
+    }
+
     // Update plane, snap mask not to confuse people.
     plane_from_vectors(goxel.plane, goxel.image->box[3],
                        VEC(1, 0, 0), VEC(0, 1, 0));
-    if (box_is_null(goxel.image->box)) goxel.snap_mask |= SNAP_PLANE;
+
     return 0;
 
 error:
