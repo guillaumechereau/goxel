@@ -1644,28 +1644,31 @@ void gui_scrollable_end(void)
     // XXX: make this attribute of the item instead, so that we can use
     // several scrollable widgets.
     static float scroll_y = 0;
-    static float y;
+    static float x, y;
     static float last_y;
     static float speed = 0;
-    static bool scroll;
+    static int state; // 0: possible, 1: scrolling, 2: cancel.
 
     ImGui::EndGroup();
 
     if (!GUI_HAS_SCROLLBARS) {
         if (ImGui::IsItemClicked()) {
-            scroll = false;
+            state = 0;
             speed = 0;
             y = ImGui::GetMousePos().y;
+            x = ImGui::GetMousePos().x;
             last_y = y;
             scroll_y = ImGui::GetScrollY();
         }
 
         if (ImGui::IsItemHovered()) {
-            if (!scroll && fabs(y - ImGui::GetMousePos().y) > 8) {
-                scroll = true;
+            if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
+                state = 2;
+            if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
+                state = 1;
                 gui->is_scrolling = true;
             }
-            if (scroll) {
+            if (state == 1) {
                 speed = mix(speed, last_y - ImGui::GetMousePos().y, 0.5);
                 last_y = ImGui::GetMousePos().y;
                 ImGui::ClearActiveID();
