@@ -7,6 +7,9 @@ This is the official website of the 3D voxel editor Goxel.
 By restricting the volume along a 3D grid, just like pixels do in two
 dimensions, voxels make 3D editing as intuitive as drawing in 2D.
 
+Voxel art is used in many video games, and also by artists as a standalone
+style.
+
 Get the desktop version now for free in the [download page](/download).
 
 {{% features %}}
