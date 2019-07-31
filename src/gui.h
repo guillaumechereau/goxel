@@ -140,7 +140,7 @@ void gui_scrollable_end(void);
 
 void gui_tooltip(const char *str);
 
-void gui_choice_begin(const char *label, int *value);
+void gui_choice_begin(const char *label, int *value, bool small);
 bool gui_choice(const char *label, int idx, int icon);
 void gui_choice_end(void);
 

@@ -1696,27 +1696,45 @@ bool gui_need_full_version(void)
 }
 #endif
 
-void gui_choice_begin(const char *label, int *value)
+void gui_choice_begin(const char *label, int *value, bool small)
 {
     ImGuiStorage* storage = ImGui::GetStateStorage();
     gui_group_begin(NULL);
     storage->SetVoidPtr(ImGui::GetID("choices#value"), value);
+    storage->SetBool(ImGui::GetID("choices#small"), small);
 }
 
 bool gui_choice(const char *label, int idx, int icon)
 {
     ImGuiStorage* storage = ImGui::GetStateStorage();
     int *value;
-    bool selected;
+    bool selected, small;
 
+    small = storage->GetBool(ImGui::GetID("choices#small"));
     value = (int*)storage->GetVoidPtr(ImGui::GetID("choices#value"));
     assert(value);
-    selected = (*value == idx);
-    if (gui_selectable_icon(label, &selected, icon) && selected) {
+
+    if (storage->GetBool(ImGui::GetID("choices#change"))) {
+        storage->SetBool(ImGui::GetID("choices#change"), false);
         *value = idx;
-        return true;
     }
-    gui_same_line();
+
+    selected = (*value == idx);
+
+    if (!small) {
+        if (gui_selectable_icon(label, &selected, icon) && selected) {
+            *value = idx;
+            return true;
+        }
+        gui_same_line();
+    } else {
+        if (!selected) return false;
+        selected = false;
+        if (gui_selectable_icon(label, &selected, icon)) {
+            storage->SetBool(ImGui::GetID("choices#change"), true);
+        }
+    }
+
     return false;
 }
 

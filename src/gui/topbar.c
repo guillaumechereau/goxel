@@ -23,7 +23,7 @@
 static int gui_mode_select(void)
 {
 
-    gui_choice_begin("Mode", &goxel.painter.mode);
+    gui_choice_begin("Mode", &goxel.painter.mode, false);
     gui_choice("Add", MODE_OVER, ICON_MODE_ADD);
     gui_choice("Sub", MODE_SUB, ICON_MODE_SUB);
     gui_choice("Paint", MODE_PAINT, ICON_MODE_PAINT);
