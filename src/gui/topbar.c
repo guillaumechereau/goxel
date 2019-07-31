@@ -20,34 +20,14 @@
 
 #ifndef GUI_CUSTOM_TOPBAR
 
-// XXX: better replace this by something more automatic.
-static void auto_grid(int nb, int i, int col)
-{
-    if ((i + 1) % col != 0) gui_same_line();
-}
-
 static int gui_mode_select(void)
 {
-    int i;
-    bool v;
-    struct {
-        int        mode;
-        const char *name;
-        int        icon;
-    } values[] = {
-        {MODE_OVER,   "Add",  ICON_MODE_ADD},
-        {MODE_SUB,    "Sub",  ICON_MODE_SUB},
-        {MODE_PAINT,  "Paint", ICON_MODE_PAINT},
-    };
-    gui_group_begin(NULL);
-    for (i = 0; i < (int)ARRAY_SIZE(values); i++) {
-        v = goxel.painter.mode == values[i].mode;
-        if (gui_selectable_icon(values[i].name, &v, values[i].icon)) {
-            goxel.painter.mode = values[i].mode;
-        }
-        auto_grid(ARRAY_SIZE(values), i, 4);
-    }
-    gui_group_end();
+
+    gui_choice_begin("Mode", &goxel.painter.mode);
+    gui_choice("Add", MODE_OVER, ICON_MODE_ADD);
+    gui_choice("Sub", MODE_SUB, ICON_MODE_SUB);
+    gui_choice("Paint", MODE_PAINT, ICON_MODE_PAINT);
+    gui_choice_end();
     return 0;
 }
 

@@ -1696,5 +1696,33 @@ bool gui_need_full_version(void)
 }
 #endif
 
+void gui_choice_begin(const char *label, int *value)
+{
+    ImGuiStorage* storage = ImGui::GetStateStorage();
+    gui_group_begin(NULL);
+    storage->SetVoidPtr(ImGui::GetID("choices#value"), value);
+}
+
+bool gui_choice(const char *label, int idx, int icon)
+{
+    ImGuiStorage* storage = ImGui::GetStateStorage();
+    int *value;
+    bool selected;
+
+    value = (int*)storage->GetVoidPtr(ImGui::GetID("choices#value"));
+    assert(value);
+    selected = (*value == idx);
+    if (gui_selectable_icon(label, &selected, icon) && selected) {
+        *value = idx;
+        return true;
+    }
+    gui_same_line();
+    return false;
+}
+
+void gui_choice_end(void)
+{
+    gui_group_end();
+}
 
 }
