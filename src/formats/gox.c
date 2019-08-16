@@ -453,6 +453,21 @@ static block_hash_t *hash_find_at(block_hash_t *hash, int index)
     return hash;
 }
 
+
+// Ugly macro that check dict key/value and copy them if needed.
+#define DICT_CPY(key, dst) ({ \
+    bool r = false; \
+    if (strcmp(key, dict_key) == 0) { \
+        if (dict_value_size != sizeof(dst)) { \
+           LOG_E("Dict value %s size doesn't match!", key); \
+        } else { \
+            memcpy(&(dst), dict_value, dict_value_size); \
+            r = true; \
+        } \
+    } \
+    r; })
+
+
 int load_from_file(const char *path)
 {
     layer_t *layer, *layer_tmp;
@@ -542,22 +557,20 @@ int load_from_file(const char *path)
                                           &dict_value_size, __LINE__))) {
                 if (strcmp(dict_key, "name") == 0)
                     sprintf(layer->name, "%s", dict_value);
-                if (strcmp(dict_key, "mat") == 0) {
-                    assert(dict_value_size == sizeof(layer->mat));
-                    memcpy(&layer->mat, dict_value, dict_value_size);
-                }
+
+                DICT_CPY("mat", layer->mat);
+
                 if (strcmp(dict_key, "img-path") == 0) {
                     layer->image = texture_new_image(dict_value, TF_NEAREST);
                 }
-                if (strcmp(dict_key, "id") == 0) {
-                    typeof(layer->id) id;
-                    memcpy(&id, dict_value, dict_value_size);
+
+                typeof(layer->id) id;
+                if (DICT_CPY("id", id)) {
                     if (id) layer->id = id;
                 }
-                if (strcmp(dict_key, "base_id") == 0)
-                    memcpy(&layer->base_id, dict_value, dict_value_size);
-                if (strcmp(dict_key, "box") == 0)
-                    memcpy(&layer->box, dict_value, dict_value_size);
+
+                DICT_CPY("base_id", layer->base_id);
+                DICT_CPY("box", layer->box);
 
                 if (strcmp(dict_key, "shape") == 0) {
                     for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
@@ -567,16 +580,10 @@ int load_from_file(const char *path)
                         }
                     }
                 }
-                if (strcmp(dict_key, "color") == 0) {
-                    memcpy(layer->color, dict_value, dict_value_size);
-                }
-                if (strcmp(dict_key, "visible") == 0) {
-                    memcpy(&layer->visible, dict_value, dict_value_size);
-                }
-                if (strcmp(dict_key, "material") == 0) {
-                    memcpy(&material_idx, dict_value, dict_value_size);
+                DICT_CPY("color", layer->color);
+                DICT_CPY("visible", layer->visible);
+                if (DICT_CPY("material", material_idx))
                     layer->material = get_material(goxel.image, material_idx);
-                }
             }
         } else if (strncmp(c.type, "CAMR", 4) == 0) {
             camera = camera_new("unnamed");
@@ -586,16 +593,9 @@ int load_from_file(const char *path)
                 if (strcmp(dict_key, "name") == 0) {
                     copy_string(camera->name, dict_value);
                 }
-                if (strcmp(dict_key, "dist") == 0)
-                    memcpy(&camera->dist, dict_value, dict_value_size);
-                // XXX: make old style camera loading work?
-                //    memcpy(&camera->rot, dict_value, dict_value_size);
-                // if (strcmp(dict_key, "ofs") == 0)
-                //    memcpy(&camera->ofs, dict_value, dict_value_size);
-                if (strcmp(dict_key, "ortho") == 0)
-                    memcpy(&camera->ortho, dict_value, dict_value_size);
-                if (strcmp(dict_key, "mat") == 0)
-                    memcpy(&camera->mat, dict_value, dict_value_size);
+                DICT_CPY("dist", camera->dist);
+                DICT_CPY("ortho", camera->ortho);
+                DICT_CPY("mat", camera->mat);
                 if (strcmp(dict_key, "active") == 0)
                     goxel.image->active_camera = camera;
             }
@@ -605,20 +605,15 @@ int load_from_file(const char *path)
                                           &dict_value_size, __LINE__))) {
                 if (strcmp(dict_key, "name") == 0)
                     copy_string(mat->name, dict_value);
-                if (strcmp(dict_key, "color") == 0)
-                    memcpy(mat->base_color, dict_value, dict_value_size);
-                if (strcmp(dict_key, "metallic") == 0)
-                    memcpy(&mat->metallic, dict_value, dict_value_size);
-                if (strcmp(dict_key, "roughness") == 0)
-                    memcpy(&mat->roughness, dict_value, dict_value_size);
-                if (strcmp(dict_key, "emission") == 0)
-                    memcpy(&mat->emission, dict_value, dict_value_size);
+                DICT_CPY("color", mat->base_color);
+                DICT_CPY("metallic", mat->metallic);
+                DICT_CPY("roughness", mat->roughness);
+                DICT_CPY("emission", mat->emission);
             }
         } else if (strncmp(c.type, "IMG ", 4) == 0) {
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size, __LINE__))) {
-                if (strcmp(dict_key, "box") == 0)
-                    memcpy(&goxel.image->box, dict_value, dict_value_size);
+                DICT_CPY("box", goxel.image->box);
             }
         } else {
             // Ignore other blocks.
