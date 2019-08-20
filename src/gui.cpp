@@ -601,6 +601,15 @@ static bool render_tab(const char *label, int icon, bool *v)
     return ret;
 }
 
+static bool panel_header(const char *label)
+{
+    bool ret;
+    gui_text(label);
+    ret = gui_button_right("", ICON_CLOSE);
+    ImGui::Separator();
+    return ret;
+}
+
 static void render_left_panel(void)
 {
     int i;
@@ -634,9 +643,10 @@ static void render_left_panel(void)
         goxel.show_export_viewport = false;
         ImGui::PushID("panel");
         ImGui::PushID(PANELS[gui->current_panel].name);
-        gui_text(PANELS[gui->current_panel].name);
-        ImGui::Separator();
-        PANELS[gui->current_panel].fn();
+        if (panel_header(PANELS[gui->current_panel].name))
+            gui->current_panel = 0;
+        else
+            PANELS[gui->current_panel].fn();
         ImGui::PopID();
         ImGui::PopID();
         ImGui::EndGroup();
