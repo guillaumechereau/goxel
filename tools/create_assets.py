@@ -41,7 +41,7 @@ TYPES = {
     "lua":   { "text": True },
 }
 GROUPS = ['fonts', 'icons', 'images', 'other', 'palettes', 'progs',
-          'shaders', 'sounds', 'themes', 'samples']
+          'shaders', 'sounds', 'themes', 'samples', 'mobile']
 TEMPLATE = '{{.path = "{path}", .size = {size}, .data =\n{data}\n}},'
 File = namedtuple('File', 'path name data size')
 
