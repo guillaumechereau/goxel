@@ -86,8 +86,11 @@ float gui_get_avail_width(void);
 void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
+
 // Add an icon in top left corner of last item.
 void gui_floating_icon(int icon);
+// Add a text at the bottom of last item.
+void gui_bottom_text(const char *txt);
 
 void gui_alert(const char *title, const char *msg);
 

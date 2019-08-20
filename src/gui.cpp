@@ -1509,6 +1509,23 @@ void gui_floating_icon(int icon)
             uv0, uv1, get_icon_color(icon, 0));
 }
 
+void gui_bottom_text(const char *txt)
+{
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 pos, size, text_size;
+    float wrap;
+
+    pos = GetItemRectMin();
+    size = GetItemRectSize();
+    wrap = size.x - 8;
+    text_size = CalcTextSize(txt, NULL, false, wrap);
+
+    draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
+                       ImVec2(pos.x + 4, pos.y + size.y - text_size.y - 4),
+                       ImGui::GetColorU32(COLOR(WIDGET, TEXT, false)),
+                       txt, NULL, wrap);
+}
+
 void gui_request_panel_width(float width)
 {
     gui->panel_width = width;
