@@ -603,7 +603,13 @@ static bool render_tab(const char *label, int icon, bool *v)
 
 static bool panel_header(const char *label)
 {
+    const theme_t *theme = theme_get();
     bool ret;
+    float label_w = ImGui::CalcTextSize(label).x;
+    float w = ImGui::GetContentRegionAvailWidth() - theme->sizes.item_height;
+    ImGui::Dummy(ImVec2((w - label_w) / 2, 0));
+    gui_same_line();
+    ImGui::AlignTextToFramePadding();
     gui_text(label);
     ret = gui_button_right("", ICON_CLOSE);
     ImGui::Separator();
