@@ -248,6 +248,12 @@ static int gui(tool_t *tool)
     if (proc->state == PROC_RUNNING) {
         proc_iter(proc, goxel.image->active_layer->mesh, &goxel.painter);
     }
+
+    if (sys_get_user_dir()) {
+        gui_text_wrapped(
+                "You can add new programs as '*.gxcf' files inside %s/progs/",
+                sys_get_user_dir());
+    }
     return 0;
 }
 
