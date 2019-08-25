@@ -145,6 +145,28 @@ static void on_example(void *user, const char *path, const char *name,
     DL_APPEND(proc->progs, prog);
 }
 
+static void prog_revert(prog_t *prog)
+{
+    free(prog->code);
+    if (prog->is_asset)
+        prog->code = strdup(assets_get(prog->path, NULL));
+    else
+        prog->code = read_file(prog->path, NULL);
+}
+
+static void prog_save(prog_t *prog)
+{
+    FILE *file;
+    assert(!prog->is_asset);
+    file = fopen(prog->path, "w");
+    if (!file) {
+        gui_alert("Error", "Cannot save");
+        return;
+    }
+    fwrite(prog->code, 1, strlen(prog->code), file);
+    fclose(file);
+}
+
 static int gui(tool_t *tool)
 {
     tool_procedural_t *p = (tool_procedural_t*)tool;
@@ -202,6 +224,16 @@ static int gui(tool_t *tool)
             }
         }
         gui_combo_end();
+    }
+
+    if (gui_button("Revert", 0, 0)) {
+        prog_revert(p->current);
+    }
+    if (!p->current->is_asset) {
+        gui_same_line();
+        if (gui_button("Save", 0, 0)) {
+            prog_save(p->current);
+        }
     }
 
     if (proc->state == PROC_RUNNING && p->export_animation
