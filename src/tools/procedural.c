@@ -38,7 +38,6 @@ typedef struct {
     tool_t  tool;
     gox_proc_t proc;
 
-    bool auto_run;
     int timer;
 
     bool initialized;
@@ -183,15 +182,11 @@ static int gui(tool_t *tool)
     }
     enabled = proc->state >= PROC_READY;
 
-    if (p->auto_run && proc->state == PROC_READY && p->timer == 0)
-        p->timer = 1;
     if (proc->state == PROC_RUNNING) {
         if (gui_button("Stop", 0, 0)) proc_stop(proc);
     } else {
         gui_enabled_begin(enabled);
-        if (    (gui_button("Run", 0, 0) && enabled) ||
-                (p->auto_run && proc->state == PROC_READY &&
-                 p->timer && p->timer++ >= 16)) {
+        if (gui_button("Run", 0, 0) && enabled) {
             mesh_clear(goxel.image->active_layer->mesh);
             proc_start(proc, NULL);
             p->timer = 0;
