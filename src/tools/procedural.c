@@ -25,6 +25,14 @@ enum {
     STATE_PAINT,
 };
 
+typedef struct prog prog_t;
+struct prog {
+    prog_t *next, *prev;
+    char *name;
+    char *path;
+    char *code;
+    bool is_asset;
+};
 
 typedef struct {
     tool_t  tool;
@@ -34,13 +42,9 @@ typedef struct {
     int timer;
 
     bool initialized;
-    char **progs;
-    char **names;
-    int nb_progs;
-    int current;
 
-    char prog_path[1024];       // "\0" if no loaded prog.
-    char prog_buff[64 * 1024];  // XXX: make it dynamic?
+    prog_t *progs;
+    prog_t *current;
 
     bool export_animation;
     char export_animation_path[1024];
@@ -83,61 +87,63 @@ static int iter(tool_t *tool, const painter_t *painter, const float viewport[4])
 
 static int on_asset_path(int i, const char *path, void *user_)
 {
-   const char *data, *name;
-   void (*f)(int, const char*, const char*, void*) = USER_GET(user_, 0);
-   void *user = USER_GET(user_, 1);
-   int *nb = (int*)USER_GET(user_, 2);
-   if (!str_endswith(path, ".goxcf")) return -1;
-   if (f) {
-       data = assets_get(path, NULL);
-       name = strrchr(path, '/') + 1;
-       f(*nb, name, data, user);
-   }
-   (*nb)++;
-   return 0;
+    const char *data, *name;
+    void (*f)(void*, const char*, const char*, const char*, bool);
+    void *user;
+    f = USER_GET(user_, 0);
+    user = USER_GET(user_, 1);
+    if (!str_endswith(path, ".goxcf")) return -1;
+    if (f) {
+        data = assets_get(path, NULL);
+        name = strrchr(path, '/') + 1;
+        f(user, path, name, data, true);
+    }
+    return 0;
 }
 
 static int on_user_path(const char *dir, const char *name, void *user_)
 {
-   void (*f)(int, const char*, const char*, void*) = USER_GET(user_, 0);
-   void *user = USER_GET(user_, 1);
-   int *nb = (int*)USER_GET(user_, 2);
-   char path[1024];
-   char *data;
+    void (*f)(void*, const char*, const char*, const char*, bool);
+    void *user;
+    char path[1024];
+    char *data;
 
-   snprintf(path, sizeof(path), "%s/%s", dir, name);
-   if (!str_endswith(path, ".goxcf")) return -1;
-   if (f) {
-       data = read_file(path, NULL);
-       f(*nb, name, data, user);
-       free(data);
-   }
-   (*nb)++;
-   return 0;
+    f = USER_GET(user_, 0);
+    user = USER_GET(user_, 1);
+
+    snprintf(path, sizeof(path), "%s/%s", dir, name);
+    if (!str_endswith(path, ".goxcf")) return -1;
+    if (f) {
+        data = read_file(path, NULL);
+        f(user, path, name, data, false);
+        free(data);
+    }
+    return 0;
 }
 
 // List all the programs in data/progs.
-static int proc_list_examples(void (*f)(int index,
-                              const char *name, const char *code,
-                              void *user), void *user)
+static void proc_list_examples(void *user,
+        void (*f)(void *user, const char *path, const char *name,
+                  const char *code, bool is_asset))
 {
-    int nb = 0;
     char dir[1024];
     if (sys_get_user_dir()) {
         snprintf(dir, sizeof(dir), "%s/progs", sys_get_user_dir());
-        sys_list_dir(dir, on_user_path, USER_PASS(f, user, &nb));
+        sys_list_dir(dir, on_user_path, USER_PASS(f, user));
     }
-    assets_list("data/progs", USER_PASS(f, user, &nb), on_asset_path);
-    return nb;
+    assets_list("data/progs", USER_PASS(f, user), on_asset_path);
 }
 
-static void on_example(int i, const char *name, const char *code,
-                       void *user)
+static void on_example(void *user, const char *path, const char *name,
+                       const char *code, bool is_asset)
 {
-    char **progs = USER_GET(user, 0);
-    char **names = USER_GET(user, 1);
-    progs[i] = strdup(code);
-    names[i] = strdup(name);
+    tool_procedural_t *proc = (void*)user;
+    prog_t *prog = calloc(1, sizeof(*prog));
+    if (path) prog->path = strdup(path);
+    prog->name = strdup(name);
+    prog->code = strdup(code);
+    prog->is_asset = is_asset;
+    DL_APPEND(proc->progs, prog);
 }
 
 static int gui(tool_t *tool)
@@ -145,27 +151,32 @@ static int gui(tool_t *tool)
     tool_procedural_t *p = (tool_procedural_t*)tool;
     bool enabled;
     gox_proc_t *proc;
+    prog_t *prog;
     char *path;
+    int buf_size;
+    char *buf;
 
     gui_request_panel_width(GUI_PANEL_WIDTH_LARGE);
     if (!p->initialized) {
         p->initialized = true;
-        strcpy(p->prog_buff, "shape main {\n    cube[s 3]\n}");
-        p->nb_progs = proc_list_examples(NULL, NULL);
-        p->progs = (char**)calloc(p->nb_progs, sizeof(*p->progs));
-        p->names = (char**)calloc(p->nb_progs, sizeof(*p->names));
-        proc_list_examples(on_example,
-                USER_PASS(p->progs, p->names));
-        proc_parse(p->prog_buff, &p->proc);
-        p->current = -1;
+        proc_list_examples(p, on_example);
+        assert(p->progs);
+        p->current = p->progs;
+        proc_parse(p->current->code, &p->proc);
     }
     proc = &p->proc;
 
-    if (gui_input_text_multiline("", p->prog_buff,
-                                 ARRAY_SIZE(p->prog_buff), -1, 400)) {
+    buf_size = 64 * 1024 + strlen(p->current->code);
+    buf = malloc(buf_size);
+    snprintf(buf, buf_size, "%s", p->current->code);
+    if (gui_input_text_multiline("", buf, buf_size, -1, 400)) {
         p->timer = 0;
-        proc_parse(p->prog_buff, proc);
+        free(p->current->code);
+        p->current->code = strdup(buf);
+        proc_parse(p->current->code, proc);
     }
+    free(buf);
+
     if (proc->error.str) {
         gui_input_text_multiline_highlight(proc->error.line);
         gui_text(proc->error.str);
@@ -188,10 +199,14 @@ static int gui(tool_t *tool)
         gui_enabled_end();
     }
 
-    if (gui_combo("Examples", &p->current,
-                    (const char**)p->names, p->nb_progs)) {
-        strcpy(p->prog_buff, p->progs[p->current]);
-        proc_parse(p->prog_buff, proc);
+    if (gui_combo_begin("Examples", p->current->name)) {
+        DL_FOREACH(p->progs, prog) {
+            if (gui_combo_item(prog->name, prog == p->current)) {
+                p->current = prog;
+                proc_parse(prog->code, proc);
+            }
+        }
+        gui_combo_end();
     }
 
     if (proc->state == PROC_RUNNING && p->export_animation
