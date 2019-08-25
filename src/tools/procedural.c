@@ -81,17 +81,38 @@ static int iter(tool_t *tool, const painter_t *painter, const float viewport[4])
     return tool->state;
 }
 
-static int list_saved_on_path(int i, const char *path, void *user_)
+static int on_asset_path(int i, const char *path, void *user_)
 {
    const char *data, *name;
    void (*f)(int, const char*, const char*, void*) = USER_GET(user_, 0);
    void *user = USER_GET(user_, 1);
+   int *nb = (int*)USER_GET(user_, 2);
    if (!str_endswith(path, ".goxcf")) return -1;
    if (f) {
        data = assets_get(path, NULL);
        name = strrchr(path, '/') + 1;
-       f(i, name, data, user);
+       f(*nb, name, data, user);
    }
+   (*nb)++;
+   return 0;
+}
+
+static int on_user_path(const char *dir, const char *name, void *user_)
+{
+   void (*f)(int, const char*, const char*, void*) = USER_GET(user_, 0);
+   void *user = USER_GET(user_, 1);
+   int *nb = (int*)USER_GET(user_, 2);
+   char path[1024];
+   char *data;
+
+   snprintf(path, sizeof(path), "%s/%s", dir, name);
+   if (!str_endswith(path, ".goxcf")) return -1;
+   if (f) {
+       data = read_file(path, NULL);
+       f(*nb, name, data, user);
+       free(data);
+   }
+   (*nb)++;
    return 0;
 }
 
@@ -100,7 +121,14 @@ static int proc_list_examples(void (*f)(int index,
                               const char *name, const char *code,
                               void *user), void *user)
 {
-    return assets_list("data/progs", USER_PASS(f, user), list_saved_on_path);
+    int nb = 0;
+    char dir[1024];
+    if (sys_get_user_dir()) {
+        snprintf(dir, sizeof(dir), "%s/progs", sys_get_user_dir());
+        sys_list_dir(dir, on_user_path, USER_PASS(f, user, &nb));
+    }
+    assets_list("data/progs", USER_PASS(f, user, &nb), on_asset_path);
+    return nb;
 }
 
 static void on_example(int i, const char *name, const char *code,
