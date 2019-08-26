@@ -763,7 +763,7 @@ void gui_iter(const inputs_t *inputs)
                                     render_view);
     // Call mouse_in_view with inputs in the view referential.
     if (    inputs &&
-            !(!gui->mouse_in_view && inputs->mouse_wheel) &&
+            (gui->mouse_in_view || !inputs->mouse_wheel) &&
             !gui->capture_mouse) {
         inputs_t inputs2 = *inputs;
         for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
