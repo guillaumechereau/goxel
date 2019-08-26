@@ -23,7 +23,6 @@ void gui_render_panel(void)
     int i;
     int maxsize;
     pathtracer_t *pt = &goxel.pathtracer;
-    float view_rect[4];
     material_t *material;
 
     goxel.no_edit |= pt->status;
@@ -34,9 +33,8 @@ void gui_render_panel(void)
     gui_group_begin(NULL);
     gui_checkbox("Custom size", &goxel.image->export_custom_size, NULL);
     if (!goxel.image->export_custom_size) {
-        gui_get_view_rect(view_rect);
-        goxel.image->export_width = view_rect[2];
-        goxel.image->export_height = view_rect[3];
+        goxel.image->export_width = goxel.gui.viewport[2];
+        goxel.image->export_height = goxel.gui.viewport[3];
     }
     gui_enabled_begin(goxel.image->export_custom_size);
     i = goxel.image->export_width;

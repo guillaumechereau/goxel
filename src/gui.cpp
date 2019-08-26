@@ -516,6 +516,8 @@ void gui_release_graphics(void)
 static void render_view(void *user, const float viewport[4])
 {
     bool render_mode;
+    assert(sizeof(goxel.gui.viewport[0]) == sizeof(viewport[0]));
+    memcpy(goxel.gui.viewport, viewport, sizeof(goxel.gui.viewport));
     render_mode = goxel.gui.current_panel == gui_render_panel &&
                   goxel.pathtracer.status;
     goxel_render_view(viewport, render_mode);
@@ -686,7 +688,7 @@ static void gui_app(void)
 
     // Call mouse_in_view with inputs in the view referential.
     if (has_mouse)
-        goxel_mouse_in_view(gui->view.rect, &inputs, has_keyboard);
+        goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 
     if (GUI_HAS_HELP) {
         gui_text("%s", goxel.hint_text ?: "");
@@ -1609,11 +1611,6 @@ bool gui_palette_entry(const uint8_t color[4], uint8_t target[4])
         memcpy(target, color, 4);
     }
     return ret;
-}
-
-void gui_get_view_rect(float rect[4])
-{
-    memcpy(rect, gui->view.rect, sizeof(gui->view.rect));
 }
 
 bool gui_menu_begin(const char *label)

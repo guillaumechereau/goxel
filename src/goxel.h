@@ -544,6 +544,7 @@ typedef struct goxel
     struct {
         void (*current_panel)(void);
         float panel_width;
+        float viewport[4];
     } gui;
 
 } goxel_t;

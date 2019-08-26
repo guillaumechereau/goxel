@@ -43,8 +43,6 @@ void gui_render(void);
 
 void gui_request_panel_width(float width);
 
-void gui_get_view_rect(float rect[4]);
-
 void gui_canvas(float w, float h,
                 inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
                 void *user,

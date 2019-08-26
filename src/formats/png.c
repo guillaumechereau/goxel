@@ -37,7 +37,6 @@ static void export_as_png(const char *path, int w, int h)
 
 static void export_gui(void) {
     int maxsize, i;
-    float view_rect[4];
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
@@ -45,9 +44,8 @@ static void export_gui(void) {
     gui_group_begin(NULL);
     gui_checkbox("Custom size", &goxel.image->export_custom_size, NULL);
     if (!goxel.image->export_custom_size) {
-        gui_get_view_rect(view_rect);
-        goxel.image->export_width = view_rect[2];
-        goxel.image->export_height = view_rect[3];
+        goxel.image->export_width = goxel.gui.viewport[2];
+        goxel.image->export_height = goxel.gui.viewport[3];
     }
 
     gui_enabled_begin(goxel.image->export_custom_size);
