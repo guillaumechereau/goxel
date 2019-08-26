@@ -186,7 +186,7 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
 
-    int     current_panel;
+    void (*current_panel)(void);
     view_t  view;
     float   panel_width;
     int     panel_adjust_w; // Adjust size for scrollbar.
@@ -519,7 +519,7 @@ void gui_release_graphics(void)
 static void render_view(void *user, const float viewport[4])
 {
     bool render_mode;
-    render_mode = (PANELS[gui->current_panel].fn == gui_render_panel) &&
+    render_mode = gui->current_panel == gui_render_panel &&
                   goxel.pathtracer.status;
     goxel_render_view(viewport, render_mode);
 }
@@ -615,9 +615,10 @@ static bool panel_header(const char *label)
 
 static void render_left_panel(void)
 {
-    int i;
+    int i, current_i;
     const theme_t *theme = theme_get();
     float left_pane_width;
+    bool selected;
     left_pane_width = (gui->current_panel ? gui->panel_width : 0) +
                        gui->panel_adjust_w + theme->sizes.icons_height + 4;
     gui_scrollable_begin(left_pane_width);
@@ -628,14 +629,12 @@ static void render_left_panel(void)
 
     gui_div_begin();
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
-        bool b = (gui->current_panel == (int)i);
-        if (render_tab(PANELS[i].name, PANELS[i].icon, &b)) {
+        selected = (gui->current_panel == PANELS[i].fn);
+        if (selected) current_i = i;
+        if (render_tab(PANELS[i].name, PANELS[i].icon, &selected)) {
             on_click();
-            if (i != gui->current_panel) {
-                gui->current_panel = i;
-            } else {
-                gui->current_panel = 0;
-            }
+            gui->current_panel = selected ? NULL : PANELS[i].fn;
+            current_i = gui->current_panel ? i : 0;
         }
     }
     gui_div_end();
@@ -645,11 +644,11 @@ static void render_left_panel(void)
         gui_div_begin();
         goxel.show_export_viewport = false;
         gui_push_id("panel");
-        gui_push_id(PANELS[gui->current_panel].name);
-        if (panel_header(PANELS[gui->current_panel].name))
-            gui->current_panel = 0;
+        gui_push_id(PANELS[current_i].name);
+        if (panel_header(PANELS[current_i].name))
+            gui->current_panel = NULL;
         else
-            PANELS[gui->current_panel].fn();
+            gui->current_panel();
         gui_pop_id();
         gui_pop_id();
         gui_div_end();
