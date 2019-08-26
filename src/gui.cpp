@@ -169,6 +169,8 @@ static const char *FSHADER =
 
 typedef struct {
     float  rect[4];
+    void    *user;
+    void    (*render)(void *user, const float viewport[4]);
 } view_t;
 
 enum {
@@ -514,17 +516,12 @@ void gui_release_graphics(void)
     io.Fonts->Clear();
 }
 
-static void render_view(const ImDrawList* parent_list, const ImDrawCmd* cmd)
+static void render_view(void *user, const float viewport[4])
 {
-    float scale = ImGui::GetIO().DisplayFramebufferScale.y;
-    view_t *view = (view_t*)cmd->UserCallbackData;
-    const float width = ImGui::GetIO().DisplaySize.x;
-    const float height = ImGui::GetIO().DisplaySize.y;
     bool render_mode;
     render_mode = (PANELS[gui->current_panel].fn == gui_render_panel) &&
                   goxel.pathtracer.status;
-    goxel_render_view(view->rect, render_mode);
-    GL(glViewport(0, 0, width * scale, height * scale));
+    goxel_render_view(viewport, render_mode);
 }
 
 static int alert_popup(void *data)
@@ -627,9 +624,9 @@ static void render_left_panel(void)
     gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
 
     // Small hack to adjust the size if the scrolling bar is visible.
-    gui->panel_adjust_w = left_pane_width - ImGui::GetContentRegionAvailWidth();
+    gui->panel_adjust_w = left_pane_width - gui_get_avail_width();
 
-    ImGui::BeginGroup();
+    gui_div_begin();
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
         bool b = (gui->current_panel == (int)i);
         if (render_tab(PANELS[i].name, PANELS[i].icon, &b)) {
@@ -641,21 +638,21 @@ static void render_left_panel(void)
             }
         }
     }
-    ImGui::EndGroup();
+    gui_div_end();
 
     if (gui->current_panel) {
         gui_same_line();
-        ImGui::BeginGroup();
+        gui_div_begin();
         goxel.show_export_viewport = false;
-        ImGui::PushID("panel");
-        ImGui::PushID(PANELS[gui->current_panel].name);
+        gui_push_id("panel");
+        gui_push_id(PANELS[gui->current_panel].name);
         if (panel_header(PANELS[gui->current_panel].name))
             gui->current_panel = 0;
         else
             PANELS[gui->current_panel].fn();
-        ImGui::PopID();
-        ImGui::PopID();
-        ImGui::EndGroup();
+        gui_pop_id();
+        gui_pop_id();
+        gui_div_end();
     }
 
     gui_scrollable_end();
@@ -709,7 +706,6 @@ void gui_iter(const inputs_t *inputs)
     gui_init();
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
-    ImDrawList* draw_list;
     ImGuiStyle& style = ImGui::GetStyle();
     const theme_t *theme = theme_get();
     gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
@@ -795,22 +791,11 @@ void gui_iter(const inputs_t *inputs)
 
     render_popups(0);
 
-    ImGui::BeginChild("3d view",
-            ImVec2(GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0),
-            false, ImGuiWindowFlags_NoScrollWithMouse);
-    // ImGui::Text("3d view");
-    ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_size = ImGui::GetContentRegionAvail();
-    if (GUI_HAS_HELP) canvas_size.y -= 20; // Leave space for the help label.
-    vec4_set(gui->view.rect,
-             canvas_pos.x,
-             goxel.screen_size[1] - (canvas_pos.y + canvas_size.y),
-             canvas_size.x, canvas_size.y);
-    draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddCallback(render_view, &gui->view);
-    // Invisible button so that we catch inputs.
-    ImGui::InvisibleButton("canvas", canvas_size);
-    gui->mouse_in_view = ImGui::IsItemHovered();
+    gui_child_begin("3d view",
+                    GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0);
+
+    gui->mouse_in_view = gui_canvas(0, GUI_HAS_HELP ? -20 : 0, &gui->view,
+                                    render_view);
     // Call mouse_in_view with inputs in the view referential.
     if (    inputs &&
             !(!gui->mouse_in_view && inputs->mouse_wheel) &&
@@ -824,15 +809,15 @@ void gui_iter(const inputs_t *inputs)
     }
 
     if (GUI_HAS_HELP) {
-        ImGui::Text("%s", goxel.hint_text ?: "");
-        ImGui::SameLine(180);
-        ImGui::Text("%s", goxel.help_text ?: "");
+        gui_text("%s", goxel.hint_text ?: "");
+        gui_same_line();
+        gui_spacing(180);
+        gui_text("%s", goxel.help_text ?: "");
     }
-
-    ImGui::EndChild();
+    gui_child_end();
 
     if (GUI_HAS_ROTATION_BAR) {
-        ImGui::SameLine();
+        gui_same_line();
         gui_rotation_bar();
     }
 
@@ -929,6 +914,27 @@ void gui_group_end(void)
     // Stencil reset.
     draw_list->AddCallback(stencil_callback, (void*)(intptr_t)0);
     GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), false);
+}
+
+void gui_div_begin(void)
+{
+    ImGui::BeginGroup();
+}
+
+void gui_div_end(void)
+{
+    ImGui::EndGroup();
+}
+
+void gui_child_begin(const char *id, float w, float h)
+{
+    ImGui::BeginChild(id, ImVec2(w, h), false,
+                      ImGuiWindowFlags_NoScrollWithMouse);
+}
+
+void gui_child_end(void)
+{
+    ImGui::EndChild();
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -1161,6 +1167,12 @@ void gui_text_wrapped(const char *label, ...)
 void gui_same_line(void)
 {
     SameLine();
+}
+
+void gui_spacing(int w)
+{
+    ImGui::Dummy(ImVec2(w, 0));
+    ImGui::SameLine();
 }
 
 bool gui_color(const char *label, uint8_t color[4])
@@ -1774,6 +1786,34 @@ bool gui_choice(const char *label, int idx, int icon)
 void gui_choice_end(void)
 {
     gui_group_end();
+}
+
+static void gui_canvas_(const ImDrawList* parent_list, const ImDrawCmd* cmd)
+{
+    float scale = ImGui::GetIO().DisplayFramebufferScale.y;
+    view_t *view = (view_t*)cmd->UserCallbackData;
+    const float width = ImGui::GetIO().DisplaySize.x;
+    const float height = ImGui::GetIO().DisplaySize.y;
+    view->render(view->user, view->rect);
+    GL(glViewport(0, 0, width * scale, height * scale));
+}
+
+bool gui_canvas(float w, float h, void *user,
+                void (*render)(void *user, const float viewport[4]))
+{
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
+    ImVec2 canvas_size = ImGui::GetContentRegionAvail();
+    if (h < 0) canvas_size.y += h;
+    vec4_set(gui->view.rect,
+             canvas_pos.x,
+             goxel.screen_size[1] - (canvas_pos.y + canvas_size.y),
+             canvas_size.x, canvas_size.y);
+    gui->view.user = user;
+    gui->view.render = render;
+    draw_list->AddCallback(gui_canvas_, &gui->view);
+    ImGui::InvisibleButton("canvas", canvas_size);
+    return ImGui::IsItemHovered();
 }
 
 }

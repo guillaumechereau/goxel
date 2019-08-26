@@ -45,6 +45,9 @@ void gui_request_panel_width(float width);
 
 void gui_get_view_rect(float rect[4]);
 
+bool gui_canvas(float w, float h, void *user,
+                void (*render)(void *user, const float viewport[4]));
+
 // Gui widgets:
 bool gui_collapsing_header(const char *label, bool default_opened);
 void gui_text(const char *label, ...);
@@ -53,6 +56,13 @@ bool gui_button(const char *label, float w, int icon);
 bool gui_button_right(const char *label, int icon);
 void gui_group_begin(const char *label);
 void gui_group_end(void);
+
+void gui_div_begin(void);
+void gui_div_end(void);
+
+void gui_child_begin(const char *id, float w, float h);
+void gui_child_end(void);
+
 bool gui_checkbox(const char *label, bool *v, const char *hint);
 bool gui_checkbox_flag(const char *label, int *v, int flag, const char *hint);
 bool gui_input_int(const char *label, int *v, int minv, int maxv);
@@ -86,6 +96,7 @@ float gui_get_avail_width(void);
 void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
+void gui_spacing(int w);
 
 // Add an icon in top left corner of last item.
 void gui_floating_icon(int icon);
