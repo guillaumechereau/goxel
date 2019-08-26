@@ -185,6 +185,7 @@ typedef struct gui_t {
     gl_shader_t *shader;
     GLuint  array_buffer;
     GLuint  index_buffer;
+    const inputs_t *inputs;
     view_t  view;
     struct {
         gesture_t drag;
@@ -666,6 +667,42 @@ static void render_popups(int index)
     ImGui::PopStyleVar();
 }
 
+static void gui_app(void)
+{
+    const theme_t *theme = theme_get();
+    inputs_t inputs;
+    ImGuiIO& io = ImGui::GetIO();
+
+    gui_top_bar();
+    render_left_panel();
+    gui_same_line();
+
+    gui_child_begin("3d view",
+                    GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0);
+
+    gui->mouse_in_view = gui_canvas(0, GUI_HAS_HELP ? -20 : 0, &inputs,
+                                    &gui->view, render_view);
+
+    // Call mouse_in_view with inputs in the view referential.
+    if (    (gui->mouse_in_view || !inputs.mouse_wheel) &&
+            !gui->capture_mouse) {
+        goxel_mouse_in_view(gui->view.rect, &inputs, !io.WantCaptureKeyboard);
+    }
+
+    if (GUI_HAS_HELP) {
+        gui_text("%s", goxel.hint_text ?: "");
+        gui_same_line();
+        gui_spacing(180);
+        gui_text("%s", goxel.help_text ?: "");
+    }
+    gui_child_end();
+
+    if (GUI_HAS_ROTATION_BAR) {
+        gui_same_line();
+        gui_rotation_bar();
+    }
+}
+
 void gui_iter(const inputs_t *inputs)
 {
     gui_init();
@@ -684,6 +721,8 @@ void gui_iter(const inputs_t *inputs)
     io.DisplayFramebufferScale = ImVec2(goxel.screen_scale,
                                         goxel.screen_scale);
     io.DeltaTime = 1.0 / 60;
+    gui->inputs = inputs;
+
     if (inputs) {
         io.DisplayFramebufferScale = ImVec2(inputs->scale, inputs->scale);
         io.FontGlobalScale = 1 / inputs->scale;
@@ -747,44 +786,12 @@ void gui_iter(const inputs_t *inputs)
     ImGui::SetNextWindowPos(ImVec2(gui->margins.left, gui->margins.top));
     ImGui::Begin("Goxel", NULL, window_flags);
 
-    if (GUI_HAS_MENU) render_menu();
-    gui_top_bar();
-
-    goxel.no_edit = gui->popup_count;
-    render_left_panel();
-    gui_same_line();
-
     render_popups(0);
+    goxel.no_edit = gui->popup_count;
 
-    gui_child_begin("3d view",
-                    GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0);
+    if (GUI_HAS_MENU) render_menu();
 
-    gui->mouse_in_view = gui_canvas(0, GUI_HAS_HELP ? -20 : 0, &gui->view,
-                                    render_view);
-    // Call mouse_in_view with inputs in the view referential.
-    if (    inputs &&
-            (gui->mouse_in_view || !inputs->mouse_wheel) &&
-            !gui->capture_mouse) {
-        inputs_t inputs2 = *inputs;
-        for (i = 0; i < ARRAY_SIZE(inputs->touches); i++) {
-            inputs2.touches[i].pos[1] =
-                io.DisplaySize.y - inputs2.touches[i].pos[1];
-        }
-        goxel_mouse_in_view(gui->view.rect, &inputs2, !io.WantCaptureKeyboard);
-    }
-
-    if (GUI_HAS_HELP) {
-        gui_text("%s", goxel.hint_text ?: "");
-        gui_same_line();
-        gui_spacing(180);
-        gui_text("%s", goxel.help_text ?: "");
-    }
-    gui_child_end();
-
-    if (GUI_HAS_ROTATION_BAR) {
-        gui_same_line();
-        gui_rotation_bar();
-    }
+    gui_app();
 
     ImGui::End();
 
@@ -1763,12 +1770,16 @@ static void gui_canvas_(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
-bool gui_canvas(float w, float h, void *user,
+bool gui_canvas(float w, float h, inputs_t *inputs, void *user,
                 void (*render)(void *user, const float viewport[4]))
 {
+    bool ret;
+    int i;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
+    ImGuiIO& io = ImGui::GetIO();
+
     if (h < 0) canvas_size.y += h;
     vec4_set(gui->view.rect,
              canvas_pos.x,
@@ -1778,7 +1789,21 @@ bool gui_canvas(float w, float h, void *user,
     gui->view.render = render;
     draw_list->AddCallback(gui_canvas_, &gui->view);
     ImGui::InvisibleButton("canvas", canvas_size);
-    return ImGui::IsItemHovered();
+    ret = ImGui::IsItemHovered();
+
+    if (    gui->inputs &&
+            (gui->mouse_in_view || !gui->inputs->mouse_wheel) &&
+            !gui->capture_mouse) {
+        *inputs = *gui->inputs;
+        for (i = 0; i < (int)ARRAY_SIZE(inputs->touches); i++) {
+            inputs->touches[i].pos[1] =
+                io.DisplaySize.y - inputs->touches[i].pos[1];
+        }
+    } else {
+        memset(inputs, 0, sizeof(*inputs));
+    }
+
+    return ret;
 }
 
 bool gui_tab(const char *label, int icon, bool *v)
