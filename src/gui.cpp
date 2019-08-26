@@ -191,7 +191,6 @@ typedef struct gui_t {
         gesture_t drag;
         gesture_t hover;
     }       gestures;
-    bool    mouse_in_view;
     bool    capture_mouse;
     int     group;
     margins_t margins;
@@ -442,6 +441,7 @@ static int on_gesture(const gesture_t *gest, void *user)
     gui_t *gui = (gui_t*)user;
     ImGuiIO& io = ImGui::GetIO();
     ImGuiContext& g = *GImGui;
+    bool mouse_in_view;
 
     if (DEFINED(GOXEL_MOBILE) && gest->type == GESTURE_HOVER) return 0;
     io.MousePos = ImVec2(gest->pos[0], gest->pos[1]);
@@ -449,8 +449,8 @@ static int on_gesture(const gesture_t *gest, void *user)
                       (gest->state != GESTURE_END);
 
     if (gest->state == GESTURE_BEGIN) {
-        gui->mouse_in_view = rect_contains(gui->view.rect, gest->pos);
-        gui->capture_mouse = !gui->mouse_in_view || g.OpenPopupStack.Size;
+        mouse_in_view = rect_contains(gui->view.rect, gest->pos);
+        gui->capture_mouse = !mouse_in_view || g.OpenPopupStack.Size;
     }
     if (gest->state == GESTURE_END || gest->type == GESTURE_HOVER)
         gui->capture_mouse = false;
@@ -683,7 +683,6 @@ static void gui_app(void)
     gui_canvas(0, GUI_HAS_HELP ? -20 : 0,
                &inputs, &has_mouse, &has_keyboard,
                &gui->view, render_view);
-    gui->mouse_in_view = has_mouse;
 
     // Call mouse_in_view with inputs in the view referential.
     if (has_mouse)
