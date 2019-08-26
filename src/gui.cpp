@@ -671,7 +671,7 @@ static void gui_app(void)
 {
     const theme_t *theme = theme_get();
     inputs_t inputs;
-    ImGuiIO& io = ImGui::GetIO();
+    bool has_mouse, has_keyboard;
 
     gui_top_bar();
     render_left_panel();
@@ -680,14 +680,14 @@ static void gui_app(void)
     gui_child_begin("3d view",
                     GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0);
 
-    gui->mouse_in_view = gui_canvas(0, GUI_HAS_HELP ? -20 : 0, &inputs,
-                                    &gui->view, render_view);
+    gui_canvas(0, GUI_HAS_HELP ? -20 : 0,
+               &inputs, &has_mouse, &has_keyboard,
+               &gui->view, render_view);
+    gui->mouse_in_view = has_mouse;
 
     // Call mouse_in_view with inputs in the view referential.
-    if (    (gui->mouse_in_view || !inputs.mouse_wheel) &&
-            !gui->capture_mouse) {
-        goxel_mouse_in_view(gui->view.rect, &inputs, !io.WantCaptureKeyboard);
-    }
+    if (has_mouse)
+        goxel_mouse_in_view(gui->view.rect, &inputs, has_keyboard);
 
     if (GUI_HAS_HELP) {
         gui_text("%s", goxel.hint_text ?: "");
@@ -1770,15 +1770,17 @@ static void gui_canvas_(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
-bool gui_canvas(float w, float h, inputs_t *inputs, void *user,
+void gui_canvas(float w, float h,
+                inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
+                void *user,
                 void (*render)(void *user, const float viewport[4]))
 {
-    bool ret;
     int i;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
     ImVec2 canvas_size = ImGui::GetContentRegionAvail();
     ImGuiIO& io = ImGui::GetIO();
+    bool hovered;
 
     if (h < 0) canvas_size.y += h;
     vec4_set(gui->view.rect,
@@ -1789,21 +1791,22 @@ bool gui_canvas(float w, float h, inputs_t *inputs, void *user,
     gui->view.render = render;
     draw_list->AddCallback(gui_canvas_, &gui->view);
     ImGui::InvisibleButton("canvas", canvas_size);
-    ret = ImGui::IsItemHovered();
+    hovered = ImGui::IsItemHovered();
 
     if (    gui->inputs &&
-            (gui->mouse_in_view || !gui->inputs->mouse_wheel) &&
+            (hovered || !gui->inputs->mouse_wheel) &&
             !gui->capture_mouse) {
+        *has_mouse = true;
         *inputs = *gui->inputs;
         for (i = 0; i < (int)ARRAY_SIZE(inputs->touches); i++) {
             inputs->touches[i].pos[1] =
                 io.DisplaySize.y - inputs->touches[i].pos[1];
         }
     } else {
+        *has_mouse = false;
         memset(inputs, 0, sizeof(*inputs));
     }
-
-    return ret;
+    *has_keyboard = !io.WantCaptureKeyboard;
 }
 
 bool gui_tab(const char *label, int icon, bool *v)
