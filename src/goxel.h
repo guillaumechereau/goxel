@@ -539,6 +539,13 @@ typedef struct goxel
     // Used to check if the active mesh changed to play tick sound.
     uint64_t    last_mesh_key;
     double      last_click_time;
+
+    // Some stats for the UI.
+    struct {
+        void (*current_panel)(void);
+        float panel_width;
+    } gui;
+
 } goxel_t;
 
 // the global goxel instance.

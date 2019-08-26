@@ -185,11 +185,7 @@ typedef struct gui_t {
     gl_shader_t *shader;
     GLuint  array_buffer;
     GLuint  index_buffer;
-
-    void (*current_panel)(void);
     view_t  view;
-    float   panel_width;
-    int     panel_adjust_w; // Adjust size for scrollbar.
     struct {
         gesture_t drag;
         gesture_t hover;
@@ -474,7 +470,7 @@ static void gui_init(void)
         gui->gestures.drag.callback = on_gesture;
         gui->gestures.hover.type = GESTURE_HOVER;
         gui->gestures.hover.callback = on_gesture;
-        gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
+        goxel.gui.panel_width = GUI_PANEL_WIDTH_NORMAL;
     }
 
     if (!gui->shader) {
@@ -519,7 +515,7 @@ void gui_release_graphics(void)
 static void render_view(void *user, const float viewport[4])
 {
     bool render_mode;
-    render_mode = gui->current_panel == gui_render_panel &&
+    render_mode = goxel.gui.current_panel == gui_render_panel &&
                   goxel.pathtracer.status;
     goxel_render_view(viewport, render_mode);
 }
@@ -585,36 +581,38 @@ static void render_left_panel(void)
     const theme_t *theme = theme_get();
     float left_pane_width;
     bool selected;
-    left_pane_width = (gui->current_panel ? gui->panel_width : 0) +
-                       gui->panel_adjust_w + theme->sizes.icons_height + 4;
+    static int panel_adjust_w; // Adjust size for scrollbar.
+
+    left_pane_width = (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
+                       panel_adjust_w + theme->sizes.icons_height + 4;
     gui_scrollable_begin(left_pane_width);
-    gui->panel_width = GUI_PANEL_WIDTH_NORMAL;
+    goxel.gui.panel_width = GUI_PANEL_WIDTH_NORMAL;
 
     // Small hack to adjust the size if the scrolling bar is visible.
-    gui->panel_adjust_w = left_pane_width - gui_get_avail_width();
+    panel_adjust_w = left_pane_width - gui_get_avail_width();
 
     gui_div_begin();
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
-        selected = (gui->current_panel == PANELS[i].fn);
+        selected = (goxel.gui.current_panel == PANELS[i].fn);
         if (selected) current_i = i;
         if (gui_tab(PANELS[i].name, PANELS[i].icon, &selected)) {
             on_click();
-            gui->current_panel = selected ? NULL : PANELS[i].fn;
-            current_i = gui->current_panel ? i : 0;
+            goxel.gui.current_panel = selected ? NULL : PANELS[i].fn;
+            current_i = goxel.gui.current_panel ? i : 0;
         }
     }
     gui_div_end();
 
-    if (gui->current_panel) {
+    if (goxel.gui.current_panel) {
         gui_same_line();
         gui_div_begin();
         goxel.show_export_viewport = false;
         gui_push_id("panel");
         gui_push_id(PANELS[current_i].name);
         if (panel_header(PANELS[current_i].name))
-            gui->current_panel = NULL;
+            goxel.gui.current_panel = NULL;
         else
-            gui->current_panel();
+            goxel.gui.current_panel();
         gui_pop_id();
         gui_pop_id();
         gui_div_end();
@@ -1505,7 +1503,7 @@ void gui_bottom_text(const char *txt)
 
 void gui_request_panel_width(float width)
 {
-    gui->panel_width = width;
+    goxel.gui.panel_width = width;
 }
 
 bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
