@@ -564,40 +564,6 @@ static void render_menu(void)
     ImGui::PopStyleColor(2);
 }
 
-static bool render_tab(const char *label, int icon, bool *v)
-{
-    bool ret;
-    const theme_t *theme = theme_get();
-    ImVec2 center;
-    ImVec2 uv0, uv1; // The position in the icon texture.
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
-
-    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(TAB, INNER, *v));
-    ImGui::PushID(label);
-    ret = ImGui::InvisibleButton("", ImVec2(theme->sizes.icons_height,
-                                            theme->sizes.icons_height));
-    ImGui::GoxBox(ImGui::GetItemRectMin(), ImGui::GetItemRectSize(),
-                 false, 0x05);
-    ImGui::PopStyleColor();
-
-    center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
-    center.y += 0.5;
-    uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
-    uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-    window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
-                               center - ImVec2(16, 16),
-                               center + ImVec2(16, 16),
-                               uv0, uv1, get_icon_color(icon, 0));
-
-    if (ImGui::IsItemHovered()) {
-        gui_tooltip(label);
-        goxel_set_help_text(label);
-    }
-
-    ImGui::PopID();
-    return ret;
-}
-
 static bool panel_header(const char *label)
 {
     const theme_t *theme = theme_get();
@@ -631,7 +597,7 @@ static void render_left_panel(void)
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
         selected = (gui->current_panel == PANELS[i].fn);
         if (selected) current_i = i;
-        if (render_tab(PANELS[i].name, PANELS[i].icon, &selected)) {
+        if (gui_tab(PANELS[i].name, PANELS[i].icon, &selected)) {
             on_click();
             gui->current_panel = selected ? NULL : PANELS[i].fn;
             current_i = gui->current_panel ? i : 0;
@@ -1814,5 +1780,40 @@ bool gui_canvas(float w, float h, void *user,
     ImGui::InvisibleButton("canvas", canvas_size);
     return ImGui::IsItemHovered();
 }
+
+bool gui_tab(const char *label, int icon, bool *v)
+{
+    bool ret;
+    const theme_t *theme = theme_get();
+    ImVec2 center;
+    ImVec2 uv0, uv1; // The position in the icon texture.
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(TAB, INNER, *v));
+    ImGui::PushID(label);
+    ret = ImGui::InvisibleButton("", ImVec2(theme->sizes.icons_height,
+                                            theme->sizes.icons_height));
+    ImGui::GoxBox(ImGui::GetItemRectMin(), ImGui::GetItemRectSize(),
+                 false, 0x05);
+    ImGui::PopStyleColor();
+
+    center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
+    center.y += 0.5;
+    uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
+    uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
+    window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                               center - ImVec2(16, 16),
+                               center + ImVec2(16, 16),
+                               uv0, uv1, get_icon_color(icon, 0));
+
+    if (ImGui::IsItemHovered()) {
+        gui_tooltip(label);
+        goxel_set_help_text(label);
+    }
+
+    ImGui::PopID();
+    return ret;
+}
+
 
 }

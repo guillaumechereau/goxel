@@ -63,6 +63,7 @@ void gui_div_end(void);
 void gui_child_begin(const char *id, float w, float h);
 void gui_child_end(void);
 
+bool gui_tab(const char *label, int icon, bool *v);
 bool gui_checkbox(const char *label, bool *v, const char *hint);
 bool gui_checkbox_flag(const char *label, int *v, int flag, const char *hint);
 bool gui_input_int(const char *label, int *v, int minv, int maxv);
