@@ -85,6 +85,7 @@
 		F0ACA2A42271ACEA00376C82 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A32271ACEA00376C82 /* json.c */; };
 		F0ACA2A8227BF2A300376C82 /* shader_cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A7227BF2A300376C82 /* shader_cache.c */; };
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
+		F0BC9B362315550500B2A56A /* app.c in Sources */ = {isa = PBXBuildFile; fileRef = F0BC9B352315550500B2A56A /* app.c */; };
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
 		F0DC02A122EEE267007E2F17 /* line.c in Sources */ = {isa = PBXBuildFile; fileRef = F0DC02A022EEE267007E2F17 /* line.c */; };
 		F0DC02A322EEE274007E2F17 /* box.c in Sources */ = {isa = PBXBuildFile; fileRef = F0DC02A222EEE274007E2F17 /* box.c */; };
@@ -208,6 +209,7 @@
 		F0ACA2A6227BF2A300376C82 /* shader_cache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_cache.h; sourceTree = "<group>"; };
 		F0ACA2A7227BF2A300376C82 /* shader_cache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shader_cache.c; sourceTree = "<group>"; };
 		F0AE90F51C8EE01200C29080 /* assets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = assets.c; sourceTree = "<group>"; };
+		F0BC9B352315550500B2A56A /* app.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = app.c; sourceTree = "<group>"; };
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
 		F0DC02A022EEE267007E2F17 /* line.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = line.c; sourceTree = "<group>"; };
 		F0DC02A222EEE274007E2F17 /* box.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box.c; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 		F00FC31E226B2FCF0002F251 /* gui */ = {
 			isa = PBXGroup;
 			children = (
+				F0BC9B352315550500B2A56A /* app.c */,
 				F076EA352284162400B74F0C /* light_panel.c */,
 				F00FC31F226B2FCF0002F251 /* cameras_panel.c */,
 				F00FC320226B2FCF0002F251 /* material_panel.c */,
@@ -561,6 +564,7 @@
 				F00FC330226B2FCF0002F251 /* menu.c in Sources */,
 				F037D5D11EA6069A00C96D10 /* laser.c in Sources */,
 				F00FC318226B2F7C0002F251 /* vec.c in Sources */,
+				F0BC9B362315550500B2A56A /* app.c in Sources */,
 				F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */,
 				F00FC312226B2F7C0002F251 /* ini.c in Sources */,
 				F0EEB7E41C8EC27C004AB676 /* action.c in Sources */,
