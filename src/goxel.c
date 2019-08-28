@@ -1114,7 +1114,7 @@ static int goxel_import_file(const char *path)
 ACTION_REGISTER(import,
     .help = "Import a file",
     .cfunc = goxel_import_file,
-    .csig = "vp",
+    .csig = "ip",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
