@@ -98,23 +98,47 @@ static texture_t *g_shadow_map; // XXX: the fbo should be part of the tex.
 
 #define OFFSET(n) offsetof(voxel_vertex_t, n)
 
+enum {
+    A_POS_LOC = 0,
+    A_NORMAL_LOC,
+    A_TANGENT_LOC,
+    A_GRADIENT_LOC,
+    A_COLOR_LOC,
+    A_POS_DATA_LOC,
+    A_UV_LOC,
+    A_BUMP_UV_LOC,
+    A_OCCLUSION_UV_LOC,
+};
+
 // The list of all the attributes used by the shaders.
 static const struct {
-    const char *name;
     int size;
     int type;
     int norm;
     int offset;
 } ATTRIBUTES[] = {
-    {"a_pos",           3, GL_UNSIGNED_BYTE,   false, OFFSET(pos)},
-    {"a_normal",        3, GL_BYTE,            false, OFFSET(normal)},
-    {"a_tangent",       3, GL_BYTE,            false, OFFSET(tangent)},
-    {"a_gradient",      3, GL_BYTE,            false, OFFSET(gradient)},
-    {"a_color",         4, GL_UNSIGNED_BYTE,   true,  OFFSET(color)},
-    {"a_pos_data",      2, GL_UNSIGNED_BYTE,   true,  OFFSET(pos_data)},
-    {"a_uv",            2, GL_UNSIGNED_BYTE,   true,  OFFSET(uv)},
-    {"a_bump_uv",       2, GL_UNSIGNED_BYTE,   false, OFFSET(bump_uv)},
-    {"a_occlusion_uv",  2, GL_UNSIGNED_BYTE,   false, OFFSET(occlusion_uv)},
+    [A_POS_LOC] = {3, GL_UNSIGNED_BYTE, false, OFFSET(pos)},
+    [A_NORMAL_LOC] = { 3, GL_BYTE, false, OFFSET(normal)},
+    [A_TANGENT_LOC] = {3, GL_BYTE, false, OFFSET(tangent)},
+    [A_GRADIENT_LOC] = {3, GL_BYTE, false, OFFSET(gradient)},
+    [A_COLOR_LOC] = {4, GL_UNSIGNED_BYTE, true, OFFSET(color)},
+    [A_POS_DATA_LOC] = {2, GL_UNSIGNED_BYTE, true, OFFSET(pos_data)},
+    [A_UV_LOC] = {2, GL_UNSIGNED_BYTE, true,  OFFSET(uv)},
+    [A_BUMP_UV_LOC] = {2, GL_UNSIGNED_BYTE, false, OFFSET(bump_uv)},
+    [A_OCCLUSION_UV_LOC] = {2, GL_UNSIGNED_BYTE, false, OFFSET(occlusion_uv)},
+};
+
+static const char *ATTR_NAMES[] = {
+    [A_POS_LOC] = "a_pos",
+    [A_NORMAL_LOC] = "a_normal",
+    [A_TANGENT_LOC] = "a_tangent",
+    [A_GRADIENT_LOC] = "a_gradient",
+    [A_COLOR_LOC] = "a_color",
+    [A_POS_DATA_LOC] = "a_pos_data",
+    [A_UV_LOC] = "a_uv",
+    [A_BUMP_UV_LOC] = "a_bump_uv",
+    [A_OCCLUSION_UV_LOC] = "a_occlusion_uv",
+    NULL,
 };
 
 /*
@@ -269,11 +293,6 @@ static void init_bump_texture(void)
 
 static void shader_init(gl_shader_t *shader)
 {
-    int attr;
-    for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++) {
-        GL(glBindAttribLocation(shader->prog, attr, ATTRIBUTES[attr].name));
-    }
-    GL(glLinkProgram(shader->prog));
     GL(glUseProgram(shader->prog));
     gl_update_uniform(shader, "u_normal_sampler", 0);
     gl_update_uniform(shader, "u_occlusion_tex", 1);
@@ -565,9 +584,9 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
         effects &= ~EFFECT_BORDERS;
 
     if (effects & EFFECT_RENDER_POS)
-        shader = shader_get("pos_data", NULL, shader_init);
+        shader = shader_get("pos_data", NULL, ATTR_NAMES, shader_init);
     else if (effects & EFFECT_SHADOW_MAP)
-        shader = shader_get("shadow_map", NULL, shader_init);
+        shader = shader_get("shadow_map", NULL, ATTR_NAMES, shader_init);
     else {
         shadow = rend->settings.shadow;
         shader_define_t defines[] = {
@@ -581,7 +600,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
             {"SMOOTHNESS", rend->settings.smoothness > 0},
             {}
         };
-        shader = shader_get("mesh", defines, shader_init);
+        shader = shader_get("mesh", defines, ATTR_NAMES, shader_init);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
@@ -994,7 +1013,7 @@ static void render_background(renderer_t *rend, const uint8_t col[4])
     vertices[2] = (vertex_t){{+1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
     vertices[3] = (vertex_t){{-1, +1, 0}, {c2[0], c2[1], c2[2], c2[3]}};
 
-    shader = shader_get("background", NULL, shader_init);
+    shader = shader_get("background", NULL, ATTR_NAMES, shader_init);
     GL(glUseProgram(shader->prog));
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));

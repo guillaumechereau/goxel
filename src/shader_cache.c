@@ -29,6 +29,7 @@ typedef struct {
 static shader_t g_shaders[16] = {};
 
 gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
+                        const char **attr_names,
                         void (*on_created)(gl_shader_t *s))
 {
     int i;
@@ -67,7 +68,7 @@ gl_shader_t *shader_get(const char *name, const shader_define_t *defines,
         if (define->set)
             sprintf(pre + strlen(pre), "#define %s\n", define->name);
     }
-    s->shader = gl_shader_create(code, code, pre);
+    s->shader = gl_shader_create(code, code, pre, attr_names);
     if (on_created) on_created(s->shader);
     return s->shader;
 }

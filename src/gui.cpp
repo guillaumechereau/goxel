@@ -132,6 +132,13 @@ enum {
     A_COLOR_LOC,
 };
 
+static const char *ATTR_NAMES[] = {
+    [A_POS_LOC]         = "a_pos",
+    [A_TEX_POS_LOC]     = "a_tex_pos",
+    [A_COLOR_LOC]       = "a_color",
+    NULL
+};
+
 typedef typeof(((inputs_t*)0)->safe_margins) margins_t;
 
 typedef struct gui_t {
@@ -428,11 +435,7 @@ static void gui_init(void)
     }
 
     if (!gui->shader) {
-        gui->shader = gl_shader_create(VSHADER, FSHADER, NULL);
-        GL(glBindAttribLocation(gui->shader->prog, A_POS_LOC, "a_pos"));
-        GL(glBindAttribLocation(gui->shader->prog, A_TEX_POS_LOC, "a_tex_pos"));
-        GL(glBindAttribLocation(gui->shader->prog, A_COLOR_LOC, "a_color"));
-        GL(glLinkProgram(gui->shader->prog));
+        gui->shader = gl_shader_create(VSHADER, FSHADER, NULL, ATTR_NAMES);
         GL(glGenBuffers(1, &gui->array_buffer));
         GL(glGenBuffers(1, &gui->index_buffer));
     }

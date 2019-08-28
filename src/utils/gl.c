@@ -91,39 +91,6 @@ static int compile_shader(int shader, const char *code,
     return 0;
 }
 
-static int gl_create_prog(const char *vertex_shader_code,
-                          const char *fragment_shader_code,
-                          const char *include)
-{
-    int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    include = include ? : "";
-    assert(vertex_shader);
-    if (compile_shader(vertex_shader, vertex_shader_code,
-                       "#define VERTEX_SHADER\n", include))
-        return 0;
-    int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    assert(fragment_shader);
-    if (compile_shader(fragment_shader, fragment_shader_code,
-                       "#define FRAGMENT_SHADER\n", include))
-        return 0;
-    int prog = glCreateProgram();
-    glAttachShader(prog, vertex_shader);
-    glAttachShader(prog, fragment_shader);
-    glLinkProgram(prog);
-    int status;
-    glGetProgramiv(prog, GL_LINK_STATUS, &status);
-    if (status != GL_TRUE) {
-        LOG_E("Link Error");
-        int len;
-        glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &len);
-        char log[len];
-        glGetProgramInfoLog(prog, len, &len, log);
-        LOG_E("%s", log);
-        return 0;
-    }
-    return prog;
-}
-
 static void gl_delete_prog(int prog)
 {
     int i;
@@ -239,21 +206,77 @@ bool gl_has_extension(const char *ext)
     return strstr(str, ext);
 }
 
+/*
+ * Function: gl_shader_create
+ * Helper function that compiles an opengl shader.
+ *
+ * Parameters:
+ *   vert       - The vertex shader code.
+ *   frag       - The fragment shader code.
+ *   include    - Extra includes added to both shaders.
+ *   attr_names - NULL terminated list of attribute names that will be binded.
+ *
+ * Return:
+ *   A new gl_shader_t instance.
+ */
 gl_shader_t *gl_shader_create(const char *vert, const char *frag,
-                              const char *include)
+                              const char *include, const char **attr_names)
 {
-    gl_shader_t *shader = calloc(1, sizeof(*shader));
-    int i, count;
+    int i, status, len, count;
+    int vertex_shader, fragment_shader;
+    char log[1024];
+    gl_shader_t *shader;
+    GLint prog;
     gl_uniform_t *uni;
 
-    shader->prog = gl_create_prog(vert, frag, include);
+    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    include = include ? : "";
+    assert(vertex_shader);
+    if (compile_shader(vertex_shader, vert,
+                       "#define VERTEX_SHADER\n", include))
+        return NULL;
+    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    assert(fragment_shader);
+    if (compile_shader(fragment_shader, frag,
+                       "#define FRAGMENT_SHADER\n", include))
+        return NULL;
+    prog = glCreateProgram();
+    glAttachShader(prog, vertex_shader);
+    glAttachShader(prog, fragment_shader);
+
+    // Set all the attributes names if specified.
+    if (attr_names) {
+        for (i = 0; attr_names[i]; i++) {
+            glBindAttribLocation(prog, i, attr_names[i]);
+        }
+    }
+
+    glLinkProgram(prog);
+    glGetProgramiv(prog, GL_LINK_STATUS, &status);
+    if (status != GL_TRUE) {
+        LOG_E("Link Error");
+        glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &len);
+        glGetProgramInfoLog(prog, sizeof(log), NULL, log);
+        LOG_E("%s", log);
+        return NULL;
+    }
+
+    shader = calloc(1, sizeof(*shader));
+    shader->prog = prog;
+
     GL(glGetProgramiv(shader->prog, GL_ACTIVE_UNIFORMS, &count));
     for (i = 0; i < count; i++) {
         uni = &shader->uniforms[i];
         GL(glGetActiveUniform(shader->prog, i, sizeof(uni->name),
                               NULL, &uni->size, &uni->type, uni->name));
+        // Special case for array uniforms: remove the '[0]'
+        if (uni->size > 1) {
+            assert(uni->type == GL_FLOAT);
+            *strchr(uni->name, '[') = '\0';
+        }
         GL(uni->loc = glGetUniformLocation(shader->prog, uni->name));
     }
+
     return shader;
 }
 

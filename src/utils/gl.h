@@ -101,8 +101,22 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
                GLuint *out_fbo, GLuint *out_tex);
 
 
+/*
+ * Function: gl_shader_create
+ * Helper function that compiles an opengl shader.
+ *
+ * Parameters:
+ *   vert       - The vertex shader code.
+ *   frag       - The fragment shader code.
+ *   include    - Extra includes added to both shaders.
+ *   attr_names - NULL terminated list of attribute names that will be binded.
+ *
+ * Return:
+ *   A new gl_shader_t instance.
+ */
 gl_shader_t *gl_shader_create(const char *vert, const char *frag,
-                              const char *include);
+                              const char *include, const char **attr_names);
+
 void gl_shader_delete(gl_shader_t *shader);
 
 bool gl_has_uniform(gl_shader_t *shader, const char *name);

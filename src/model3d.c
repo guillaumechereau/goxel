@@ -25,6 +25,14 @@ enum {
     A_UV_LOC = 3,
 };
 
+static const char *ATTR_NAMES[] = {
+    [A_POS_LOC]         = "a_pos",
+    [A_COLOR_LOC]       = "a_color",
+    [A_NORMAL_LOC]      = "a_normal",
+    [A_UV_LOC]          = "a_uv",
+    NULL
+};
+
 static gl_shader_t *g_shader = NULL;
 static texture_t *g_white_tex = NULL;
 
@@ -48,13 +56,8 @@ static void model3d_init(void)
     const char *shader;
     if (!g_shader) {
         shader = assets_get("asset://data/shaders/model3d.glsl", NULL);
-        g_shader = gl_shader_create(shader, shader, NULL);
+        g_shader = gl_shader_create(shader, shader, NULL, ATTR_NAMES);
         GL(glUseProgram(g_shader->prog));
-        GL(glBindAttribLocation(g_shader->prog, A_POS_LOC, "a_pos"));
-        GL(glBindAttribLocation(g_shader->prog, A_COLOR_LOC, "a_color"));
-        GL(glBindAttribLocation(g_shader->prog, A_NORMAL_LOC, "a_normal"));
-        GL(glBindAttribLocation(g_shader->prog, A_UV_LOC, "a_uv"));
-        GL(glLinkProgram(g_shader->prog));
         gl_update_uniform(g_shader, "u_tex", 0);
         g_white_tex = create_white_tex();
     }
