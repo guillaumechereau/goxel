@@ -274,7 +274,8 @@ int main(int argc, char **argv)
     assert(window);
     g_window = window;
     glfwMakeContextCurrent(window);
-    glfwSetScrollCallback(window, on_scroll);
+    if (!DEFINED(EMSCRIPTEN))
+        glfwSetScrollCallback(window, on_scroll);
     glfwSetCharCallback(window, on_char);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
     set_window_icon(window);
