@@ -18,10 +18,10 @@
 
 
 #include "material.h"
+#include "xxhash.h"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <zlib.h>
 
 
 material_t *material_new(const char *name)
@@ -48,8 +48,8 @@ material_t *material_copy(const material_t *other)
 uint32_t material_get_hash(const material_t *m)
 {
     uint32_t ret = 0;
-    ret = crc32(ret, (void*)&m->metallic, sizeof(m->metallic));
-    ret = crc32(ret, (void*)&m->roughness, sizeof(m->roughness));
-    ret = crc32(ret, (void*)&m->base_color, sizeof(m->base_color));
+    ret = XXH32(&m->metallic, sizeof(m->metallic), ret);
+    ret = XXH32(&m->roughness, sizeof(m->roughness), ret);
+    ret = XXH32(&m->base_color, sizeof(m->base_color), ret);
     return ret;
 }

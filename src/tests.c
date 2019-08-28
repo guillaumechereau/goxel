@@ -62,7 +62,7 @@ static void test_load_file_v2(void)
         "AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAA"
         "AAAAAAAAAAAAgD8CAAAAaWQEAAAAAQAAAAcAAABiYXNlX2lkBAAAAAAAAAAA"
         "AAAA";
-    test_file(b64_data, 0xf6aabf81);
+    test_file(b64_data, 0xc7c4c9ff);
 }
 
 static void test_load_file_v1_with_preview(void)
@@ -110,7 +110,7 @@ static void test_load_file_v1_with_preview(void)
         "bmFtZQoAAABiYWNrZ3JvdW5kAwAAAG1hdEAAAAAAAIA/AAAAAAAAAAAAAAAA"
         "AAAAAAAAgD8AAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAAAAA"
         "AIA/AgAAAGlkBAAAAAEAAAAHAAAAYmFzZV9pZAQAAAAAAAAAAAAAAA==";
-    test_file(b64_data, 0x7e06d030);
+    test_file(b64_data, 0xb5e8d973);
 }
 
 static void test_load_corrupt(void)

@@ -17,8 +17,7 @@
  */
 
 #include "goxel.h"
-
-#include <zlib.h> // For crc32
+#include "xxhash.h"
 
 /* History
     the images undo history is stored in a linked list.  Every time we call
@@ -157,9 +156,9 @@ void image_update(image_t *img)
             layer->base_mesh_key = mesh_get_key(base->mesh);
         }
         if (layer->shape) {
-            key = crc32(0, (void*)layer->mat, sizeof(layer->mat));
-            key = crc32(key, (void*)layer->shape, sizeof(layer->shape));
-            key = crc32(key, (void*)layer->color, sizeof(layer->color));
+            key = XXH32(layer->mat, sizeof(layer->mat), 0);
+            key = XXH32(layer->shape, sizeof(layer->shape), key);
+            key = XXH32(layer->color, sizeof(layer->color), key);
             if (key != layer->shape_key) {
                 painter.mode = MODE_OVER;
                 painter.shape = layer->shape;
@@ -671,15 +670,15 @@ uint32_t image_get_key(const image_t *img)
 
     DL_FOREACH(img->layers, layer) {
         k = layer_get_key(layer);
-        key = crc32(key, (void*)&k, sizeof(k));
+        key = XXH32(&k, sizeof(k), key);
     }
     DL_FOREACH(img->cameras, camera) {
         k = camera_get_key(camera);
-        key = crc32(key, (void*)&k, sizeof(k));
+        key = XXH32(&k, sizeof(k), key);
     }
     DL_FOREACH(img->materials, material) {
         k = material_get_hash(material);
-        key = crc32(key, (void*)&k, sizeof(k));
+        key = XXH32(&k, sizeof(k), key);
     }
     return key;
 }

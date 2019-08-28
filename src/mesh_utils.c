@@ -17,9 +17,9 @@
  */
 
 #include "goxel.h"
+#include "xxhash.h"
 
 #include <limits.h>
-#include <zlib.h> // For crc32
 
 #define N BLOCK_SIZE
 
@@ -515,8 +515,8 @@ uint32_t mesh_crc32(const mesh_t *mesh)
     while (mesh_iter(&iter, pos)) {
         mesh_get_at(mesh, &iter, pos, v);
         if (!v[3]) continue;
-        ret = crc32(ret, (void*)pos, sizeof(pos));
-        ret = crc32(ret, (void*)v, sizeof(v));
+        ret = XXH32(pos, sizeof(pos), ret);
+        ret = XXH32(v, sizeof(v), ret);
     }
     return ret;
 }

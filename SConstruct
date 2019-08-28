@@ -87,7 +87,7 @@ if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
 
 # Linux compilation support.
 if target_os == 'posix':
-    env.Append(LIBS=['GL', 'm', 'z'])
+    env.Append(LIBS=['GL', 'm'])
     # Note: add '--static' to link with all the libs needed by glfw3.
     env.ParseConfig('pkg-config --libs glfw3')
     env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
@@ -107,12 +107,13 @@ if target_os == 'msys':
 if target_os == 'darwin':
     sources += glob.glob('src/*.m')
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
-    env.Append(LIBS=['m', 'z', 'glfw3', 'objc'])
+    env.Append(LIBS=['m', 'glfw3', 'objc'])
 
 # Add external libs.
 env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
+env.Append(CPPPATH=['ext_src/xxhash'])
 
 if env['sound']:
     env.Append(LIBS='openal')

@@ -17,11 +17,11 @@
  */
 
 #include "goxel.h"
+#include "xxhash.h"
 
 #include "shader_cache.h"
 
 #include <stdarg.h>
-#include <zlib.h> // For crc32
 
 // The global goxel instance.
 goxel_t goxel = {};
@@ -903,7 +903,7 @@ const mesh_t *goxel_get_layers_mesh(void)
         if (!layer->visible) continue;
         if (!layer->mesh) continue;
         k = layer_get_key(layer);
-        key = crc32(key, (void*)&k, sizeof(k));
+        key = XXH32(&k, sizeof(k), key);
     }
     if (key != goxel.layers_mesh_hash) {
         goxel.layers_mesh_hash = key;
@@ -928,7 +928,7 @@ const mesh_t *goxel_get_render_mesh(void)
 
     key = mesh_get_key(goxel_get_layers_mesh());
     k = mesh_get_key(goxel.tool_mesh);
-    key = crc32(key, (void*)&k, sizeof(k));
+    key = XXH32(&k, sizeof(k), key);
     if (key != goxel.render_mesh_hash) {
         image_update(goxel.image);
         goxel.render_mesh_hash = key;
@@ -953,7 +953,7 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
     hash = image_get_key(goxel.image);
     if (with_tool_preview && goxel.tool_mesh) {
         k = mesh_get_key(goxel.tool_mesh);
-        hash = crc32(hash, (void*)&k, sizeof(k));
+        hash = XXH32(&k, sizeof(k), hash);
     }
 
     if (hash != goxel.render_layers_hash) {

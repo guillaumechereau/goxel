@@ -17,8 +17,7 @@
  */
 
 #include "goxel.h"
-
-#include <zlib.h> // For crc32.
+#include "xxhash.h"
 
 camera_t *camera_new(const char *name)
 {
@@ -161,10 +160,10 @@ void camera_fit_box(camera_t *cam, const float box[4][4])
 uint32_t camera_get_key(const camera_t *cam)
 {
     uint32_t key = 0;
-    key = crc32(key, (void*)&cam->name, sizeof(cam->name));
-    key = crc32(key, (void*)&cam->ortho, sizeof(cam->ortho));
-    key = crc32(key, (void*)&cam->dist, sizeof(cam->dist));
-    key = crc32(key, (void*)&cam->mat, sizeof(cam->mat));
+    key = XXH32(&cam->name, sizeof(cam->name), key);
+    key = XXH32(&cam->ortho, sizeof(cam->ortho), key);
+    key = XXH32(&cam->dist, sizeof(cam->dist), key);
+    key = XXH32(&cam->mat, sizeof(cam->mat), key);
     return key;
 }
 

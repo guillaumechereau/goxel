@@ -17,8 +17,7 @@
  */
 
 #include "goxel.h"
-
-#include <zlib.h> // For crc32
+#include "xxhash.h"
 
 layer_t *layer_new(const char *name)
 {
@@ -41,13 +40,13 @@ uint32_t layer_get_key(const layer_t *layer)
 {
     uint32_t key;
     key = mesh_get_key(layer->mesh);
-    key = crc32(key, (void*)&layer->visible, sizeof(layer->visible));
-    key = crc32(key, (void*)&layer->name, sizeof(layer->name));
-    key = crc32(key, (void*)&layer->box, sizeof(layer->box));
-    key = crc32(key, (void*)&layer->mat, sizeof(layer->mat));
-    key = crc32(key, (void*)&layer->shape, sizeof(layer->shape));
-    key = crc32(key, (void*)&layer->color, sizeof(layer->color));
-    key = crc32(key, (void*)&layer->material, sizeof(layer->material));
+    key = XXH32(&layer->visible, sizeof(layer->visible), key);
+    key = XXH32(&layer->name, sizeof(layer->name), key);
+    key = XXH32(&layer->box, sizeof(layer->box), key);
+    key = XXH32(&layer->mat, sizeof(layer->mat), key);
+    key = XXH32(&layer->shape, sizeof(layer->shape), key);
+    key = XXH32(&layer->color, sizeof(layer->color), key);
+    key = XXH32(&layer->material, sizeof(layer->material), key);
     return key;
 }
 

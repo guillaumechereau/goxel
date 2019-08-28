@@ -49,10 +49,7 @@ extern "C" {
 #include "goxel.h"
 }
 
-#include <zlib.h> // For crc32
-
-#define crc32(v, p, s) crc32(v, (const uint8_t*)(p), s)
-
+#include "xxhash.h"
 
 using namespace yocto;
 using namespace std;
@@ -238,17 +235,17 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
     DL_FOREACH(layers, layer) {
         if (!layer->visible || !layer->mesh) continue;
         k = mesh_get_key(layer->mesh);
-        key = crc32(key, &k, sizeof(k));
+        key = XXH32(&k, sizeof(k), key);
         i = get_material_id(pt, layer->material, &changed);
-        key = crc32(key, &i, sizeof(i));
+        key = XXH32(&i, sizeof(i), key);
     }
-    key = crc32(key, goxel.back_color, sizeof(goxel.back_color));
-    key = crc32(key, &w, sizeof(w));
-    key = crc32(key, &h, sizeof(h));
-    key = crc32(key, &goxel.rend.settings.effects,
-                     sizeof(goxel.rend.settings.effects));
-    key = crc32(key, &pt->floor.type, sizeof(pt->floor.type));
-    key = crc32(key, &force, sizeof(force));
+    key = XXH32(goxel.back_color, sizeof(goxel.back_color), key);
+    key = XXH32(&w, sizeof(w), key);
+    key = XXH32(&h, sizeof(h), key);
+    key = XXH32(&goxel.rend.settings.effects,
+                sizeof(goxel.rend.settings.effects), key);
+    key = XXH32(&pt->floor.type, sizeof(pt->floor.type), key);
+    key = XXH32(&force, sizeof(force), key);
     if (!force && key == p->mesh_key) return changed;
 
     p->mesh_key = key;
@@ -291,7 +288,7 @@ static int sync_floor(pathtracer_t *pt, bool force)
     float pos[3] = {0, 0, 0};
     int changed = 0;
 
-    key = crc32(key, &pt->floor, sizeof(pt->floor));
+    key = XXH32(&pt->floor, sizeof(pt->floor), key);
     if (!force && key == p->floor_key) return 0;
     changed |= CHANGE_FLOOR;
     p->floor_key = key;
@@ -344,10 +341,10 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
     add_cameras(p->scene);
     cam = &p->scene.cameras[0];
 
-    key = crc32(0, camera->view_mat, sizeof(camera->view_mat));
-    key = crc32(key, camera->proj_mat, sizeof(camera->proj_mat));
-    key = crc32(key, &w, sizeof(w));
-    key = crc32(key, &h, sizeof(h));
+    key = XXH32(camera->view_mat, sizeof(camera->view_mat), 0);
+    key = XXH32(camera->proj_mat, sizeof(camera->proj_mat), key);
+    key = XXH32(&w, sizeof(w), key);
+    key = XXH32(&h, sizeof(h), key);
     if (!force && key == p->camera_key) return 0;
     p->camera_key = key;
     stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
@@ -379,9 +376,9 @@ static int sync_world(pathtracer_t *pt, bool force)
     bool has_sun = false;
     vec4f color;
 
-    key = crc32(key, &pt->world.type, sizeof(pt->world.type));
-    key = crc32(key, &pt->world.energy, sizeof(pt->world.energy));
-    key = crc32(key, &pt->world.color, sizeof(pt->world.color));
+    key = XXH32(&pt->world.type, sizeof(pt->world.type), key);
+    key = XXH32(&pt->world.energy, sizeof(pt->world.energy), key);
+    key = XXH32(&pt->world.color, sizeof(pt->world.color), key);
     if (!force && key == p->world_key) return 0;
     p->world_key = key;
     stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
@@ -429,10 +426,10 @@ static int sync_light(pathtracer_t *pt, bool force)
     float light_dir[3];
 
     render_get_light_dir(&goxel.rend, light_dir);
-    key = crc32(key, &pt->world, sizeof(pt->world));
-    key = crc32(key, &goxel.rend.light.intensity,
-                sizeof(goxel.rend.light.intensity));
-    key = crc32(key, light_dir, sizeof(light_dir));
+    key = XXH32(&pt->world, sizeof(pt->world), key);
+    key = XXH32(&goxel.rend.light.intensity,
+                sizeof(goxel.rend.light.intensity), key);
+    key = XXH32(light_dir, sizeof(light_dir), key);
 
     if (!force && key == p->light_key) return 0;
     p->light_key = key;
@@ -464,7 +461,7 @@ static int sync_options(pathtracer_t *pt, bool force)
 {
     uint64_t key = 0;
     pathtracer_internal_t *p = pt->p;
-    key = crc32(key, &pt->num_samples, sizeof(pt->num_samples));
+    key = XXH32(&pt->num_samples, sizeof(pt->num_samples), key);
     if (!force && key == p->options_key) return 0;
     p->options_key = key;
     stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
