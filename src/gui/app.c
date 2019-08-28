@@ -72,7 +72,7 @@ static void on_click(void) {
 
 static void render_left_panel(void)
 {
-    int i, current_i;
+    int i, current_i = 0;
     const theme_t *theme = theme_get();
     float left_pane_width;
     bool selected;
