@@ -177,7 +177,14 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
             GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                         GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth));
         } else {
-            assert(false); // Not implemented yet!
+            GL(glGenRenderbuffers(1, &depth));
+            GL(glBindRenderbuffer(GL_RENDERBUFFER, depth));
+            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_STENCIL_OES,
+                                     w, h));
+            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                        GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
+            GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                        GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth));
         }
         if (tex) GL(glFramebufferTexture2D(
                     GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
