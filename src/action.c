@@ -124,6 +124,10 @@ static int default_function(const action_t *a, lua_State *l)
         void *(*func)(const void *) = a->cfunc;
         p = func(topointer(l, 1));
         lua_pushlightuserdata(l, p);
+    } else if (strcmp(a->csig, "ip") == 0) {
+        int (*func)(const void *) = a->cfunc;
+        i = func(topointer(l, 1));
+        lua_pushinteger(l, i);
     } else {
         LOG_E("Cannot handle sig '%s'", a->csig);
         assert(false);
