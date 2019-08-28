@@ -59,7 +59,7 @@
 #define GHC_OS_WINDOWS
 #define GHC_OS_WIN32
 #else
-#error "Operating system currently not supported!"
+// #error "Operating system currently not supported!"
 #endif
 
 #if defined(GHC_FILESYSTEM_IMPLEMENTATION)
@@ -1525,7 +1525,7 @@ GHC_INLINE std::string systemErrorText(ErrorNumber code = 0)
     std::string msg = toUtf8(std::wstring((LPWSTR)msgBuf));
     LocalFree(msgBuf);
     return msg;
-#elif defined(GHC_OS_MACOS) || ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !defined(_GNU_SOURCE)) || (defined(GHC_OS_ANDROID) && __ANDROID_API__ < 23)
+#elif defined(GHC_OS_MACOS) || ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !defined(_GNU_SOURCE)) || (defined(GHC_OS_ANDROID) && __ANDROID_API__ < 23) || defined(EMSCRIPTEN)
     char buffer[512];
     int rc = strerror_r(code ? code : errno, buffer, sizeof(buffer));
     return rc == 0 ? (const char*)buffer : "Error in strerror_r!";
