@@ -197,6 +197,7 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
     }
 
 #else
+    (void)color;
     if (format != GL_DEPTH_COMPONENT) {
         if (gl_has_extension("GL_OES_packed_depth_stencil")) {
             // Create depth/stencil buffer.
