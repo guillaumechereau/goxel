@@ -24,10 +24,6 @@
 #   define GUI_HAS_SCROLLBARS 1
 #endif
 
-#ifndef YOCTO
-#   define YOCTO 1
-#endif
-
 extern "C" {
 #include "goxel.h"
 

@@ -26,6 +26,10 @@
 #   define GUI_HAS_HELP 1
 #endif
 
+#ifndef YOCTO
+#   define YOCTO 1
+#endif
+
 
 void gui_tools_panel(void);
 void gui_top_bar(void);
