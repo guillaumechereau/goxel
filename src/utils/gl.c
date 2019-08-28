@@ -27,7 +27,9 @@
 #   define LOG_E(...)
 #endif
 
-static const char* get_gl_error_text(int code) {
+__attribute__((unused))
+static const char* get_gl_error_text(int code)
+{
     switch (code) {
     case GL_INVALID_ENUM:
         return "GL_INVALID_ENUM";
