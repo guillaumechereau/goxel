@@ -146,8 +146,8 @@ static void parse_options(int argc, char **argv, args_t *args)
 }
 
 
-static void loop_function(void) {
-
+static void loop_function(void)
+{
     int fb_size[2], win_size[2];
     int i;
     double xpos, ypos;
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
-    int ret = 0;
+    int width = 640, height = 480, ret = 0;
     inputs_t inputs = {};
     g_inputs = &inputs;
 
@@ -266,7 +266,11 @@ int main(int argc, char **argv)
     glfwWindowHint(GLFW_SAMPLES, 4);
     monitor = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(monitor);
-    window = glfwCreateWindow(mode->width, mode->height, "Goxel", NULL, NULL);
+    if (mode) {
+        width = mode->width ?: 640;
+        height = mode->height ?: 480;
+    }
+    window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
     assert(window);
     g_window = window;
     glfwMakeContextCurrent(window);
