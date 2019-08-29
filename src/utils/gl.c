@@ -177,14 +177,23 @@ int gl_gen_fbo(int w, int h, GLenum format, int msaa,
             GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                         GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth));
         } else {
+            // This path should only be for WebGL.
             GL(glGenRenderbuffers(1, &depth));
             GL(glBindRenderbuffer(GL_RENDERBUFFER, depth));
-            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_STENCIL_OES,
+            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
                                      w, h));
             GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
                         GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth));
+
+            /*
+            XXX: no stencil for the moment, it doesn't seem to work!
+            GL(glGenRenderbuffers(1, &stencil));
+            GL(glBindRenderbuffer(GL_RENDERBUFFER, stencil));
+            GL(glRenderbufferStorage(GL_RENDERBUFFER, GL_STENCIL_INDEX8,
+                                     w, h));
             GL(glFramebufferRenderbuffer(GL_FRAMEBUFFER,
-                        GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth));
+                        GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, stencil));
+            */
         }
         if (tex) GL(glFramebufferTexture2D(
                     GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
