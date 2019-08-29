@@ -459,7 +459,7 @@ static block_hash_t *hash_find_at(block_hash_t *hash, int index)
     bool r = false; \
     if (strcmp(key, dict_key) == 0) { \
         if (dict_value_size != sizeof(dst)) { \
-           LOG_E("Dict value %s size doesn't match!", key); \
+            LOG_E("Dict value %s size doesn't match!", key); \
         } else { \
             memcpy(&(dst), dict_value, dict_value_size); \
             r = true; \
