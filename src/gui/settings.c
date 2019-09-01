@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include <errno.h>
 
 #include "utils/ini.h"
 
@@ -144,6 +145,10 @@ static void settings_save(void)
     asprintf(&path, "%s/settings.ini", sys_get_user_dir());
     sys_make_dir(path);
     file = fopen(path, "w");
+    if (!file) {
+        LOG_E("Cannot save settings to %s: %s", path, strerror(errno));
+        return;
+    }
     fprintf(file, "[ui]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
 
