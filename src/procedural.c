@@ -503,7 +503,12 @@ static int iter(gox_proc_t *proc, ctx_t *ctx, mesh_t *mesh,
             new_ctx = calloc(1, sizeof(*new_ctx));
             *new_ctx = *ctx;
             new_ctx->prog = expr->children->next;
-            TRY(apply_transf(proc, expr->children, new_ctx));
+            int result = apply_transf(proc, expr->children, new_ctx);
+            if (result)
+            {
+                free(new_ctx);
+                return result;
+            }
             DL_APPEND(proc->ctxs, new_ctx);
         }
         if (expr->type == NODE_IF) {
