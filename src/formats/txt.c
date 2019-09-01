@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include <errno.h>
 
 static void export_as_txt(const char *path)
 {
@@ -31,6 +32,10 @@ static void export_as_txt(const char *path)
     if (!path) return;
 
     out = fopen(path, "w");
+    if (!out) {
+        LOG_E("Cannot save to %s: %s", path, strerror(errno));
+        return;
+    }
     fprintf(out, "# Goxel " GOXEL_VERSION_STR "\n");
     fprintf(out, "# One line per voxel\n");
     fprintf(out, "# X Y Z RRGGBB\n");
