@@ -18,6 +18,7 @@
 
 #include "goxel.h"
 #include <dirent.h>
+#include <errno.h>
 
 // Very basic implementation of DICOM files reader.
 
@@ -248,10 +249,14 @@ static bool parse_element(FILE *in, int state, element_t *out)
     return true;
 }
 
-static void dicom_load(const char *path, dicom_t *dicom,
+static bool dicom_load(const char *path, dicom_t *dicom,
                        char *out_buffer, int buffer_size)
 {
     FILE *in = fopen(path, "rb");
+    if (in == NULL) {
+        LOG_E("Cannot open %s: %s", path, strerror(errno));
+        return false;
+    }
     int state = 0;
     const char *uid_name;
 
@@ -298,6 +303,7 @@ static void dicom_load(const char *path, dicom_t *dicom,
     }
 
     fclose(in);
+    return true;
 }
 
 static int dicom_sort(const void *a, const void *b)
@@ -328,7 +334,10 @@ static void dicom_import(const char *dirpath)
     while ((dirent = readdir(dir))) {
         if (dirent->d_name[0] == '.') continue;
         asprintf(&dicom.path, "%s/%s", dirpath, dirent->d_name);
-        dicom_load(dicom.path, &dicom, NULL, 0);
+        if (!dicom_load(dicom.path, &dicom, NULL, 0)) {
+            utarray_free(all_files);
+            return;
+        }
         CHECK(dicom.rows && dicom.columns);
         utarray_push_back(all_files, &dicom);
     }
@@ -344,9 +353,14 @@ static void dicom_import(const char *dirpath)
     dptr = NULL;
     while( (dptr = (dicom_t*)utarray_next(all_files, dptr))) {
         i = utarray_eltidx(all_files, dptr);
-        dicom_load(dptr->path, &dicom,
+        bool success = dicom_load(dptr->path, &dicom,
                    (char*)&data[w * h * i], w * h * 2);
         free(dptr->path);
+        if (!success) {
+            free(data);
+            utarray_free(all_files);
+            return;
+        }
     }
     utarray_free(all_files);
 
