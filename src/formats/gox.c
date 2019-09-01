@@ -420,9 +420,16 @@ int gox_iter_infos(const char *path,
     char magic[4];
 
     in = fopen(path, "rb");
+    if (!in) return -1;
 
-    if (fread(magic, 4, 1, in) != 1) return -1;
-    if (strncmp(magic, "GOX ", 4) != 0) return -1;
+    if (fread(magic, 4, 1, in) != 1) {
+        fclose(in);
+        return -1;
+    }
+    if (strncmp(magic, "GOX ", 4) != 0) {
+        fclose(in);
+        return -1;
+    }
     read_int32(in);
 
     while (chunk_read_start(&c, in)) {
