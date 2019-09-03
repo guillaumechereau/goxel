@@ -421,8 +421,8 @@ int gox_iter_infos(const char *path,
 
     in = fopen(path, "rb");
 
-    if (fread(magic, 4, 1, in) != 1) return -1;
-    if (strncmp(magic, "GOX ", 4) != 0) return -1;
+    if (fread(magic, 4, 1, in) != 1) goto error;
+    if (strncmp(magic, "GOX ", 4) != 0) goto error;
     read_int32(in);
 
     while (chunk_read_start(&c, in)) {
@@ -441,6 +441,11 @@ int gox_iter_infos(const char *path,
     }
     fclose(in);
     return 0;
+
+error:
+    fclose(in);
+    LOG_W("Cannot get gox file info");
+    return -1;
 }
 
 
