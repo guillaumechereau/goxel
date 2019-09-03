@@ -322,6 +322,7 @@ static void dicom_import(const char *dirpath)
     int i;
     uint16_t *data;
     uint8_t (*cube)[4];
+    bool success;
 
     dirpath = dirpath ?: noc_file_dialog_open(
             NOC_FILE_DIALOG_OPEN | NOC_FILE_DIALOG_DIR, NULL, NULL, NULL);
@@ -353,8 +354,8 @@ static void dicom_import(const char *dirpath)
     dptr = NULL;
     while( (dptr = (dicom_t*)utarray_next(all_files, dptr))) {
         i = utarray_eltidx(all_files, dptr);
-        bool success = dicom_load(dptr->path, &dicom,
-                   (char*)&data[w * h * i], w * h * 2);
+        success = dicom_load(dptr->path, &dicom,
+                             (char*)&data[w * h * i], w * h * 2);
         free(dptr->path);
         if (!success) {
             free(data);
