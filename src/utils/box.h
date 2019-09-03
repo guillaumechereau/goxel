@@ -306,4 +306,10 @@ static inline bool box_intersect_aabb(const float box[4][4],
     return box_intersect_box(box, b2);
 }
 
+/*
+ * Function: box_union
+ * Return a box that constains two other ones.
+ */
+void box_union(const float a[4][4], const float b[4][4], float out[4][4]);
+
 #endif // BOX_H

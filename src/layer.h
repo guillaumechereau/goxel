@@ -51,4 +51,11 @@ void layer_delete(layer_t *layer);
 uint32_t layer_get_key(const layer_t *layer);
 layer_t *layer_copy(layer_t *other);
 
+/*
+ * Function: layer_get_bounding_box
+ * Return the layer box if set, otherwise the bounding box of the layer
+ * mesh.
+ */
+void layer_get_bounding_box(const layer_t *layer, float box[4][4]);
+
 #endif // LAYER_H

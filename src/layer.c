@@ -69,3 +69,20 @@ layer_t *layer_copy(layer_t *other)
     memcpy(layer->color, other->color, sizeof(layer->color));
     return layer;
 }
+
+/*
+ * Function: layer_get_bounding_box
+ * Return the layer box if set, otherwise the bounding box of the layer
+ * mesh.
+ */
+void layer_get_bounding_box(const layer_t *layer, float box[4][4])
+{
+    int aabb[2][3];
+    if (!box_is_null(layer->box)) {
+        mat4_copy(layer->box, box);
+        return;
+    }
+    mesh_get_bbox(layer->mesh, aabb, true);
+    if (aabb[0][0] > aabb[1][0]) memset(aabb, 0, sizeof(aabb));
+    bbox_from_aabb(box, aabb);
+}

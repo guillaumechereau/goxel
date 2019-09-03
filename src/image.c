@@ -522,6 +522,19 @@ void image_delete_material(image_t *img, material_t *mat)
         if (layer->material == mat) layer->material = NULL;
 }
 
+static void image_auto_resize(image_t *img)
+{
+    float box[4][4] = {}, layer_box[4][4];
+    layer_t *layer;
+
+    img = img ?: goxel.image;
+    DL_FOREACH(img->layers, layer) {
+        layer_get_bounding_box(layer, layer_box);
+        box_union(box, layer_box, box);
+    }
+    mat4_copy(box, img->box);
+}
+
 void image_set(image_t *img, image_t *other)
 {
     layer_t *layer, *tmp, *other_layer;
@@ -867,4 +880,11 @@ ACTION_REGISTER(img_del_material,
     .csig = "vpp",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
+)
+
+ACTION_REGISTER(img_auto_resize,
+    .help = "Auto resize the image to fit the layers",
+    .cfunc = image_auto_resize,
+    .csig = "vp",
+    .flags = ACTION_TOUCH_IMAGE,
 )

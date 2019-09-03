@@ -50,3 +50,21 @@ bool box_intersect_box(const float b1[4][4], const float b2[4][4])
 {
     return box_intersect_box_(b1, b2) || box_intersect_box_(b2, b1);
 }
+
+void box_union(const float a[4][4], const float b[4][4], float out[4][4])
+{
+    float verts[16][3];
+
+    if (box_is_null(a)) {
+        mat4_copy(b, out);
+        return;
+    }
+    if (box_is_null(b)) {
+        mat4_copy(a, out);
+        return;
+    }
+
+    box_get_vertices(a, verts + 0);
+    box_get_vertices(b, verts + 8);
+    bbox_from_npoints(out, 16, verts);
+}
