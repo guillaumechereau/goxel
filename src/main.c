@@ -165,7 +165,7 @@ static void loop_function(void)
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
     g_inputs->window_size[0] = win_size[0] / scale;
     g_inputs->window_size[1] = win_size[1] / scale;
-    g_inputs->scale = fb_size[0] / win_size[0] * scale;
+    g_inputs->scale = fb_size[0] * scale / win_size[0];
 
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
