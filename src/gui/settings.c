@@ -140,9 +140,9 @@ static int shortcut_save_callback(action_t *a, void *user)
 
 static void settings_save(void)
 {
-    char *path;
+    char path[1024];
     FILE *file;
-    asprintf(&path, "%s/settings.ini", sys_get_user_dir());
+    snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
     sys_make_dir(path);
     file = fopen(path, "w");
     if (!file) {
@@ -156,7 +156,6 @@ static void settings_save(void)
     actions_iter(shortcut_save_callback, file);
 
     fclose(file);
-    free(path);
 }
 
 ACTION_REGISTER(settings_load,
