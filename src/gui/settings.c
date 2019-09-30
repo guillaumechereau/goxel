@@ -85,6 +85,11 @@ int gui_settings_popup(void *data)
     gui_same_line();
     if (gui_button("Save", 0, 0)) theme_save();
 #endif
+    if (gui_collapsing_header("Paths", false)) {
+        gui_text("Palettes: %s/palettes", sys_get_user_dir());
+        gui_text("Progs: %s/progs", sys_get_user_dir());
+    }
+
     if (gui_collapsing_header("Shortcuts", false)) {
         gui_columns(2);
         gui_separator();
