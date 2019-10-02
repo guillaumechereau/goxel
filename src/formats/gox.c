@@ -70,6 +70,11 @@
  *          ofs: offset
  *          ortho: bool
  *
+ *   LIGH: the light:
+ *      [DICT] containing the following entries:
+ *          pitch: radian
+ *          yaw: radian
+ *          intensity: float
  */
 
 // We create a hash table of all the blocks, so that blocks with the same
@@ -399,6 +404,22 @@ void save_to_file(const image_t *img, const char *path)
         chunk_write_finish(&c, out);
     }
 
+    // Write the light settings.
+    chunk_write_start(&c, out, "LIGH");
+    chunk_write_dict_value(&c, out, "pitch", &goxel.rend.light.pitch,
+                           sizeof(goxel.rend.light.pitch));
+    chunk_write_dict_value(&c, out, "yaw", &goxel.rend.light.yaw,
+                           sizeof(goxel.rend.light.yaw));
+    chunk_write_dict_value(&c, out, "intensity", &goxel.rend.light.intensity,
+                           sizeof(goxel.rend.light.intensity));
+    chunk_write_dict_value(&c, out, "fixed", &goxel.rend.light.fixed,
+                           sizeof(goxel.rend.light.fixed));
+    chunk_write_dict_value(&c, out, "ambient", &goxel.rend.settings.ambient,
+                           sizeof(goxel.rend.settings.ambient));
+    chunk_write_dict_value(&c, out, "shadow", &goxel.rend.settings.shadow,
+                           sizeof(goxel.rend.settings.shadow));
+    chunk_write_finish(&c, out);
+
     HASH_ITER(hh, blocks_table, data, data_tmp) {
         HASH_DEL(blocks_table, data);
         free(data);
@@ -619,6 +640,16 @@ int load_from_file(const char *path)
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size, __LINE__))) {
                 DICT_CPY("box", goxel.image->box);
+            }
+        } else if (strncmp(c.type, "LIGH", 4) == 0) {
+            while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
+                                          &dict_value_size, __LINE__))) {
+                DICT_CPY("pitch", goxel.rend.light.pitch);
+                DICT_CPY("yaw", goxel.rend.light.yaw);
+                DICT_CPY("intensity", goxel.rend.light.intensity);
+                DICT_CPY("fixed", goxel.rend.light.fixed);
+                DICT_CPY("ambient", goxel.rend.settings.ambient);
+                DICT_CPY("shadow", goxel.rend.settings.shadow);
             }
         } else {
             // Ignore other blocks.
