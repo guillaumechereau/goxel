@@ -96,7 +96,7 @@ static void render_left_panel(void)
         if (selected) current_i = i;
         if (gui_tab(PANELS[i].name, PANELS[i].icon, &selected)) {
             on_click();
-            goxel.gui.current_panel = selected ? NULL : PANELS[i].fn;
+            goxel.gui.current_panel = selected ? PANELS[i].fn : NULL;
             current_i = goxel.gui.current_panel ? i : 0;
         }
     }

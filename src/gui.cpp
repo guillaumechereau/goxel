@@ -882,7 +882,7 @@ bool gui_action_checkbox(const char *id, const char *label)
 }
 
 static bool _selectable(const char *label, bool *v, const char *tooltip,
-                        float w, int icon)
+                        float w, int icon, int group)
 {
     const theme_t *theme = theme_get();
     ImGuiWindow* window = GetCurrentWindow();
@@ -894,7 +894,6 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     bool default_v = false;
     ImVec2 uv0, uv1; // The position in the icon texture.
     uint8_t color[4];
-    int group = THEME_GROUP_WIDGET;
 
     v = v ? v : &default_v;
     size = (icon != -1) ?
@@ -943,7 +942,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
 
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
 {
-    return _selectable(name, v, tooltip, w, -1);
+    return _selectable(name, v, tooltip, w, -1, THEME_GROUP_WIDGET);
 }
 
 bool gui_selectable_toggle(const char *name, int *v, int set_v,
@@ -959,7 +958,7 @@ bool gui_selectable_toggle(const char *name, int *v, int set_v,
 
 bool gui_selectable_icon(const char *name, bool *v, int icon)
 {
-    return _selectable(name, v, NULL, 0, icon);
+    return _selectable(name, v, NULL, 0, icon, THEME_GROUP_WIDGET);
 }
 
 float gui_get_avail_width(void)
@@ -1655,36 +1654,7 @@ void gui_canvas(float w, float h,
 
 bool gui_tab(const char *label, int icon, bool *v)
 {
-    bool ret;
-    const theme_t *theme = theme_get();
-    ImVec2 center;
-    ImVec2 uv0, uv1; // The position in the icon texture.
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
-
-    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(TAB, INNER, *v));
-    ImGui::PushID(label);
-    ret = ImGui::InvisibleButton("", ImVec2(theme->sizes.icons_height,
-                                            theme->sizes.icons_height));
-    ImGui::GoxBox(ImGui::GetItemRectMin(), ImGui::GetItemRectSize(),
-                 false, 0x05);
-    ImGui::PopStyleColor();
-
-    center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
-    center.y += 0.5;
-    uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
-    uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-    window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
-                               center - ImVec2(16, 16),
-                               center + ImVec2(16, 16),
-                               uv0, uv1, get_icon_color(icon, 0));
-
-    if (ImGui::IsItemHovered()) {
-        gui_tooltip(label);
-        goxel_set_help_text(label);
-    }
-
-    ImGui::PopID();
-    return ret;
+    return _selectable(label, v, NULL, 0, icon, THEME_GROUP_TAB);
 }
 
 bool gui_panel_header(const char *label)
