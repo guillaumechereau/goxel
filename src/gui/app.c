@@ -43,7 +43,7 @@ void gui_image_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
 void gui_export_panel(void);
-void gui_rotation_bar(void);
+bool gui_rotation_bar(void);
 
 static const struct {
     const char *name;
@@ -132,7 +132,6 @@ static void render_view(void *user, const float viewport[4])
 
 void gui_app(void)
 {
-    const theme_t *theme = theme_get();
     inputs_t inputs;
     bool has_mouse, has_keyboard;
 
@@ -140,16 +139,11 @@ void gui_app(void)
     render_left_panel();
     gui_same_line();
 
-    gui_child_begin("3d view",
-                    GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0);
+    gui_child_begin("3d view", 0, 0);
 
     gui_canvas(0, GUI_HAS_HELP ? -20 : 0,
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
-
-    // Call mouse_in_view with inputs in the view referential.
-    if (has_mouse)
-        goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 
     if (GUI_HAS_HELP) {
         gui_text("%s", goxel.hint_text ?: "");
@@ -160,8 +154,12 @@ void gui_app(void)
     gui_child_end();
 
     if (GUI_HAS_ROTATION_BAR) {
-        gui_same_line();
-        gui_rotation_bar();
+        if (gui_rotation_bar())
+            has_mouse = false;
     }
+
+    // Call mouse_in_view with inputs in the view referential.
+    if (has_mouse)
+        goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 }
 
