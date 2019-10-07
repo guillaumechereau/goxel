@@ -250,6 +250,7 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
         const ImDrawIdx* idx_buffer_offset = 0;
+
         if (cmd_list->VtxBuffer.size())
             GL(glBufferData(GL_ARRAY_BUFFER,
                     (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert),
@@ -672,32 +673,12 @@ void gui_render(void)
 extern "C" {
 using namespace ImGui;
 
-static void stencil_callback(
-        const ImDrawList* parent_list, const ImDrawCmd* cmd)
+static void reset_context_callback(const ImDrawList* parent_list,
+                                   const ImDrawCmd* cmd)
 {
-    int op = ((intptr_t)cmd->UserCallbackData);
-
-    switch (op) {
-    case 0: // Reset
-        GL(glDisable(GL_STENCIL_TEST));
-        GL(glStencilMask(0x00));
-        break;
-    case 1: // Write
-        GL(glEnable(GL_STENCIL_TEST));
-        GL(glStencilFunc(GL_ALWAYS, 1, 0xFF));
-        GL(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
-        GL(glStencilMask(0xFF));
-        break;
-    case 2: // Filter
-        GL(glEnable(GL_STENCIL_TEST));
-        GL(glStencilFunc(GL_EQUAL, 1, 0xFF));
-        GL(glStencilMask(0x00));
-        break;
-    default:
-        assert(false);
-        break;
-    }
+    // Do nothing.
 }
+
 
 void gui_group_begin(const char *label)
 {
@@ -719,21 +700,15 @@ void gui_group_end(void)
     ImGui::PopStyleVar(2);
     ImGui::Dummy(ImVec2(0, 0));
     ImGui::EndGroup();
+
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     draw_list->ChannelsSetCurrent(0);
     ImVec2 pos = ImGui::GetItemRectMin();
     ImVec2 size = ImGui::GetItemRectMax() - pos;
-
-    // Stencil write.
-    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)1);
-    GoxBox2(pos + ImVec2(1, 1), size - ImVec2(2, 2),
-            COLOR(WIDGET, OUTLINE, 0), true);
-    // Stencil filter.
-    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)2);
+    GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), true);
 
     draw_list->ChannelsMerge();
-    // Stencil reset.
-    draw_list->AddCallback(stencil_callback, (void*)(intptr_t)0);
+    draw_list->AddCallback(reset_context_callback, NULL);
     GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), false);
 }
 
