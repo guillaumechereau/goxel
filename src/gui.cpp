@@ -21,7 +21,7 @@
 #endif
 
 #ifndef GUI_HAS_SCROLLBARS
-#   define GUI_HAS_SCROLLBARS 1
+#   define GUI_HAS_SCROLLBARS 1 // FOr testing.
 #endif
 
 extern "C" {
@@ -731,6 +731,71 @@ void gui_child_begin(const char *id, float w, float h)
 void gui_child_end(void)
 {
     ImGui::EndChild();
+}
+
+void gui_window_begin(const char *id, float x, float y, float w, float h)
+{
+    int flags = ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoCollapse |
+                ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoNav;
+    if (!GUI_HAS_SCROLLBARS) {
+        if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
+            gui->is_scrolling = false;
+        flags |= ImGuiWindowFlags_NoScrollbar;
+        if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
+    }
+    ImGui::SetNextWindowFocus();
+    ImGui::SetNextWindowPos(ImVec2(x, y));
+    ImGui::SetNextWindowSize(ImVec2(w, h));
+
+    ImGui::Begin(id, NULL, flags);
+    ImGui::BeginGroup();
+}
+
+void gui_window_end(void)
+{
+    // XXX: make this attribute of the item instead, so that we can use
+    // several scrollable widgets.
+    static float scroll_y = 0;
+    static float x, y;
+    static float last_y;
+    static float speed = 0;
+    static int state; // 0: possible, 1: scrolling, 2: cancel.
+
+    ImGui::EndGroup();
+    if (!GUI_HAS_SCROLLBARS) {
+        if (ImGui::IsItemClicked()) {
+            state = 0;
+            speed = 0;
+            y = ImGui::GetMousePos().y;
+            x = ImGui::GetMousePos().x;
+            last_y = y;
+            scroll_y = ImGui::GetScrollY();
+        }
+
+        if (ImGui::IsItemHovered()) {
+            if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
+                state = 2;
+            if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
+                state = 1;
+                gui->is_scrolling = true;
+            }
+            if (state == 1) {
+                speed = mix(speed, last_y - ImGui::GetMousePos().y, 0.5);
+                last_y = ImGui::GetMousePos().y;
+                ImGui::ClearActiveID();
+                ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
+            }
+        } else if (speed) {
+            ImGui::SetScrollY(ImGui::GetScrollY() + speed);
+            speed *= 0.95;
+            if (fabs(speed) < 1) speed = 0;
+        }
+    }
+    ImGui::End();
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -1612,7 +1677,7 @@ void gui_canvas(float w, float h,
     hovered = ImGui::IsItemHovered();
 
     if (    gui->inputs &&
-            (hovered || !gui->inputs->mouse_wheel) &&
+            (hovered || 0 /* !gui->inputs->mouse_wheel*/) &&
             !gui->capture_mouse) {
         *has_mouse = true;
         *inputs = *gui->inputs;

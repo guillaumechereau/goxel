@@ -77,18 +77,9 @@ static void on_click(void) {
 static void render_left_panel(void)
 {
     int i, current_i = 0;
-    const theme_t *theme = theme_get();
-    float left_pane_width;
     bool selected;
-    static int panel_adjust_w; // Adjust size for scrollbar.
 
-    left_pane_width = (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
-                       panel_adjust_w + theme->sizes.icons_height + 4;
-    gui_scrollable_begin(left_pane_width);
     goxel.gui.panel_width = GUI_PANEL_WIDTH_NORMAL;
-
-    // Small hack to adjust the size if the scrolling bar is visible.
-    panel_adjust_w = left_pane_width - gui_get_avail_width();
 
     gui_div_begin();
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
@@ -116,8 +107,6 @@ static void render_left_panel(void)
         gui_pop_id();
         gui_div_end();
     }
-
-    gui_scrollable_end();
 }
 
 static void render_view(void *user, const float viewport[4])
@@ -134,32 +123,42 @@ void gui_app(void)
 {
     inputs_t inputs;
     bool has_mouse, has_keyboard;
+    const theme_t *theme = theme_get();
+    float menu_height = theme->sizes.icons_height * 0.7;
 
-    gui_top_bar();
-    render_left_panel();
-    gui_same_line();
-
-    gui_child_begin("3d view", 0, 0);
-
-    gui_canvas(0, GUI_HAS_HELP ? -20 : 0,
+    gui_canvas(0, 0,
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 
+    /*
     if (GUI_HAS_HELP) {
         gui_text("%s", goxel.hint_text ?: "");
         gui_same_line();
         gui_spacing(180);
         gui_text("%s", goxel.help_text ?: "");
     }
-    gui_child_end();
+    */
 
     if (GUI_HAS_ROTATION_BAR) {
         if (gui_rotation_bar())
             has_mouse = false;
     }
 
+    gui_window_begin("top_bar", 0, menu_height, 0, 0);
+    gui_top_bar();
+    gui_window_end();
+
+    gui_window_begin("left_panel", 0,
+            theme->sizes.icons_height + menu_height +
+            theme->sizes.item_padding_h * 2,
+            goxel.gui.current_panel ?  goxel.gui.panel_width : 0, 0);
+    render_left_panel();
+    gui_window_end();
+
     // Call mouse_in_view with inputs in the view referential.
     if (has_mouse)
         goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
+
+
 }
 
