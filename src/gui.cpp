@@ -628,6 +628,7 @@ void gui_iter(const inputs_t *inputs)
                                     ImGuiWindowFlags_NoMove |
                                     ImGuiWindowFlags_NoScrollbar |
                                     ImGuiWindowFlags_NoCollapse |
+                                    ImGuiWindowFlags_NoBringToFrontOnFocus |
                                     (GUI_HAS_MENU ? ImGuiWindowFlags_MenuBar : 0);
 
     ImGui::SetNextWindowSize(ImVec2(
@@ -747,7 +748,6 @@ void gui_window_begin(const char *id, float x, float y, float w, float h)
         flags |= ImGuiWindowFlags_NoScrollbar;
         if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
     }
-    ImGui::SetNextWindowFocus();
     ImGui::SetNextWindowPos(ImVec2(x, y));
     ImGui::SetNextWindowSize(ImVec2(w, h));
 
