@@ -742,6 +742,8 @@ void gui_window_begin(const char *id, float x, float y, float w, float h)
                 ImGuiWindowFlags_NoSavedSettings |
                 ImGuiWindowFlags_NoResize |
                 ImGuiWindowFlags_NoNav;
+    float max_h;
+
     if (!GUI_HAS_SCROLLBARS) {
         if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
             gui->is_scrolling = false;
@@ -749,6 +751,11 @@ void gui_window_begin(const char *id, float x, float y, float w, float h)
         if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
     }
     ImGui::SetNextWindowPos(ImVec2(x, y));
+
+    if (h == 0) {
+        max_h = ImGui::GetIO().DisplaySize.y - y;
+        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
+    }
     ImGui::SetNextWindowSize(ImVec2(w, h));
 
     ImGui::Begin(id, NULL, flags);
