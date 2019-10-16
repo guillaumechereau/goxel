@@ -148,6 +148,10 @@ void gui_app(void)
     render_left_panel();
     gui_window_end();
 
+    // Call mouse_in_view with inputs in the view referential.
+    if (has_mouse)
+        goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
+
     if (GUI_HAS_HELP) {
         gui_window_begin("bottom_bar", 0, -bottom_size, -1, -bottom_size);
         gui_text("%s", goxel.hint_text ?: "");
@@ -156,11 +160,5 @@ void gui_app(void)
         gui_text("%s", goxel.help_text ?: "");
         gui_window_end();
     }
-
-    // Call mouse_in_view with inputs in the view referential.
-    if (has_mouse)
-        goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
-
-
 }
 
