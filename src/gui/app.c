@@ -154,7 +154,7 @@ void gui_app(void)
             theme->sizes.item_padding_h * 2,
             left_panel_width, GUI_COMPACT ? 0 : -1);
     render_left_panel();
-    gui_window_end();
+    has_mouse &= !gui_window_end();
 
     // Call mouse_in_view with inputs in the view referential.
     if (has_mouse)

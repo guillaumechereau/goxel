@@ -770,7 +770,7 @@ void gui_window_begin(const char *id, float x, float y, float w, float h)
     ImGui::BeginGroup();
 }
 
-void gui_window_end(void)
+bool gui_window_end(void)
 {
     // XXX: make this attribute of the item instead, so that we can use
     // several scrollable widgets.
@@ -810,7 +810,13 @@ void gui_window_end(void)
             if (fabs(speed) < 1) speed = 0;
         }
     }
+    bool ret = ImGui::IsWindowHovered(
+            ImGuiHoveredFlags_RootAndChildWindows |
+            ImGuiHoveredFlags_AllowWhenBlockedByPopup |
+            ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+
     ImGui::End();
+    return ret;
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -1633,7 +1639,7 @@ void gui_canvas(float w, float h,
     hovered = ImGui::IsItemHovered();
 
     if (    gui->inputs &&
-            (hovered || 0 /* !gui->inputs->mouse_wheel*/) &&
+            (hovered || !gui->inputs->mouse_wheel) &&
             !gui->capture_mouse) {
         *has_mouse = true;
         *inputs = *gui->inputs;
