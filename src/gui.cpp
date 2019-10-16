@@ -750,12 +750,20 @@ void gui_window_begin(const char *id, float x, float y, float w, float h)
         flags |= ImGuiWindowFlags_NoScrollbar;
         if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
     }
-    ImGui::SetNextWindowPos(ImVec2(x, y));
+
+    if (y < 0)
+        y = ImGui::GetIO().DisplaySize.y + y;
 
     if (h == 0) {
         max_h = ImGui::GetIO().DisplaySize.y - y;
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
     }
+    if (h < 0)
+        h = ImGui::GetIO().DisplaySize.y - y + h;
+    if (w < 0)
+        w = ImGui::GetIO().DisplaySize.x - x + w;
+
+    ImGui::SetNextWindowPos(ImVec2(x, y));
     ImGui::SetNextWindowSize(ImVec2(w, h));
 
     ImGui::Begin(id, NULL, flags);

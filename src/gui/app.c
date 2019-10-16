@@ -125,19 +125,12 @@ void gui_app(void)
     bool has_mouse, has_keyboard;
     const theme_t *theme = theme_get();
     float menu_height = theme->sizes.icons_height * 0.7;
+    float bottom_size = theme->sizes.item_height +
+                        2 * theme->sizes.item_padding_h;
 
     gui_canvas(0, 0,
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
-
-    /*
-    if (GUI_HAS_HELP) {
-        gui_text("%s", goxel.hint_text ?: "");
-        gui_same_line();
-        gui_spacing(180);
-        gui_text("%s", goxel.help_text ?: "");
-    }
-    */
 
     if (GUI_HAS_ROTATION_BAR) {
         if (gui_rotation_bar())
@@ -151,9 +144,18 @@ void gui_app(void)
     gui_window_begin("left_panel", 0,
             theme->sizes.icons_height + menu_height +
             theme->sizes.item_padding_h * 2,
-            goxel.gui.current_panel ?  goxel.gui.panel_width : 0, 0);
+            goxel.gui.current_panel ? goxel.gui.panel_width : 0, 0);
     render_left_panel();
     gui_window_end();
+
+    if (GUI_HAS_HELP) {
+        gui_window_begin("bottom_bar", 0, -bottom_size, -1, -bottom_size);
+        gui_text("%s", goxel.hint_text ?: "");
+        gui_same_line();
+        gui_spacing(180);
+        gui_text("%s", goxel.help_text ?: "");
+        gui_window_end();
+    }
 
     // Call mouse_in_view with inputs in the view referential.
     if (has_mouse)
