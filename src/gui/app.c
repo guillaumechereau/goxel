@@ -22,8 +22,8 @@
 #   define GUI_HAS_ROTATION_BAR 0
 #endif
 
-#ifndef GUI_HAS_HELP
-#   define GUI_HAS_HELP 1
+#ifndef GUI_COMPACT
+#   define GUI_COMPACT 0
 #endif
 
 #ifndef YOCTO
@@ -127,6 +127,7 @@ void gui_app(void)
     float menu_height = theme->sizes.icons_height * 0.7;
     float bottom_size = theme->sizes.item_height +
                         2 * theme->sizes.item_padding_h;
+    float left_panel_width;
 
     gui_canvas(0, 0,
                &inputs, &has_mouse, &has_keyboard,
@@ -141,10 +142,13 @@ void gui_app(void)
     gui_top_bar();
     gui_window_end();
 
+    left_panel_width = goxel.gui.current_panel ? goxel.gui.panel_width :
+                theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
+
     gui_window_begin("left_panel", 0,
             theme->sizes.icons_height + menu_height +
             theme->sizes.item_padding_h * 2,
-            goxel.gui.current_panel ? goxel.gui.panel_width : 0, 0);
+            left_panel_width, GUI_COMPACT ? 0 : -1);
     render_left_panel();
     gui_window_end();
 
@@ -152,8 +156,9 @@ void gui_app(void)
     if (has_mouse)
         goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 
-    if (GUI_HAS_HELP) {
-        gui_window_begin("bottom_bar", 0, -bottom_size, -1, bottom_size);
+    if (!GUI_COMPACT) {
+        gui_window_begin("bottom_bar", left_panel_width,
+                         -bottom_size, -1, bottom_size);
         gui_text("%s", goxel.hint_text ?: "");
         gui_same_line();
         gui_spacing(180);
