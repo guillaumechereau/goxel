@@ -1539,65 +1539,6 @@ bool gui_menu_item(const char *action, const char *label, bool enabled)
     return false;
 }
 
-void gui_scrollable_begin(int width)
-{
-    ImGuiWindowFlags flags = 0;
-
-    if (!GUI_HAS_SCROLLBARS) {
-        if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
-            gui->is_scrolling = false;
-        flags |= ImGuiWindowFlags_NoScrollbar;
-        if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
-    }
-
-    ImGui::BeginChild("#scroll", ImVec2(width, 0), true, flags);
-    ImGui::BeginGroup();
-}
-
-void gui_scrollable_end(void)
-{
-    // XXX: make this attribute of the item instead, so that we can use
-    // several scrollable widgets.
-    static float scroll_y = 0;
-    static float x, y;
-    static float last_y;
-    static float speed = 0;
-    static int state; // 0: possible, 1: scrolling, 2: cancel.
-
-    ImGui::EndGroup();
-
-    if (!GUI_HAS_SCROLLBARS) {
-        if (ImGui::IsItemClicked()) {
-            state = 0;
-            speed = 0;
-            y = ImGui::GetMousePos().y;
-            x = ImGui::GetMousePos().x;
-            last_y = y;
-            scroll_y = ImGui::GetScrollY();
-        }
-
-        if (ImGui::IsItemHovered()) {
-            if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
-                state = 2;
-            if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
-                state = 1;
-                gui->is_scrolling = true;
-            }
-            if (state == 1) {
-                speed = mix(speed, last_y - ImGui::GetMousePos().y, 0.5);
-                last_y = ImGui::GetMousePos().y;
-                ImGui::ClearActiveID();
-                ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
-            }
-        } else if (speed) {
-            ImGui::SetScrollY(ImGui::GetScrollY() + speed);
-            speed *= 0.95;
-            if (fabs(speed) < 1) speed = 0;
-        }
-    }
-    ImGui::EndChild();
-}
-
 void gui_tooltip(const char *str)
 {
     if (gui->is_scrolling) return;
