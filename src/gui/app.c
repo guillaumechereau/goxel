@@ -26,6 +26,10 @@
 #   define GUI_COMPACT 0
 #endif
 
+#ifndef GUI_HAS_MENU
+#   define GUI_HAS_MENU 1
+#endif
+
 #ifndef YOCTO
 #   define YOCTO 1
 #endif
@@ -124,7 +128,7 @@ void gui_app(void)
     inputs_t inputs;
     bool has_mouse, has_keyboard;
     const theme_t *theme = theme_get();
-    float menu_height = theme->sizes.icons_height * 0.7;
+    float menu_height = GUI_HAS_MENU ? theme->sizes.icons_height * 0.7 : 0;
     float bottom_size = theme->sizes.item_height +
                         2 * theme->sizes.item_padding_h;
     float left_panel_width;
