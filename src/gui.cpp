@@ -21,7 +21,7 @@
 #endif
 
 #ifndef GUI_HAS_SCROLLBARS
-#   define GUI_HAS_SCROLLBARS 1 // FOr testing.
+#   define GUI_HAS_SCROLLBARS 1
 #endif
 
 extern "C" {
@@ -783,7 +783,7 @@ void gui_window_end(void)
             scroll_y = ImGui::GetScrollY();
         }
 
-        if (ImGui::IsItemHovered()) {
+        if (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown()) {
             if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
                 state = 2;
             if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
