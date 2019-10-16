@@ -153,7 +153,7 @@ void gui_app(void)
         goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 
     if (GUI_HAS_HELP) {
-        gui_window_begin("bottom_bar", 0, -bottom_size, -1, -bottom_size);
+        gui_window_begin("bottom_bar", 0, -bottom_size, -1, bottom_size);
         gui_text("%s", goxel.hint_text ?: "");
         gui_same_line();
         gui_spacing(180);

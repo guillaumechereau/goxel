@@ -758,8 +758,6 @@ void gui_window_begin(const char *id, float x, float y, float w, float h)
         max_h = ImGui::GetIO().DisplaySize.y - y;
         ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
     }
-    if (h < 0)
-        h = ImGui::GetIO().DisplaySize.y - y + h;
     if (w < 0)
         w = ImGui::GetIO().DisplaySize.x - x + w;
 
