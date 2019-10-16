@@ -146,7 +146,7 @@ void gui_app(void)
     gui_top_bar();
     gui_window_end();
 
-    left_panel_width = goxel.gui.current_panel ? goxel.gui.panel_width :
+    left_panel_width = (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
                 theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
 
     gui_window_begin("left_panel", 0,
