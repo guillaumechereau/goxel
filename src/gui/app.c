@@ -30,6 +30,10 @@
 #   define GUI_HAS_MENU 1
 #endif
 
+#ifndef GUI_HAS_SCROLLBARS
+#   define GUI_HAS_SCROLLBARS 1
+#endif
+
 #ifndef YOCTO
 #   define YOCTO 1
 #endif
@@ -133,21 +137,26 @@ static void gui_compact(void)
         (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
         theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
     float alpha = 0.85;
+    bool touch_scroll = !GUI_HAS_SCROLLBARS;
 
     gui_canvas(0, 0, -1, -1,
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 
-    if (GUI_HAS_ROTATION_BAR && gui_rotation_bar())
-        has_mouse = false;
+    if (GUI_HAS_ROTATION_BAR) {
+        gui_window_begin("rotation_bar", -theme->sizes.item_height, 0, -1, -1,
+                         alpha, false);
+        gui_rotation_bar();
+        has_mouse &= !gui_window_end();
+    }
 
-    gui_window_begin("top_bar", 0, 0, 0, 0, alpha);
+    gui_window_begin("top_bar", 0, 0, 0, 0, alpha, false);
     gui_top_bar();
     has_mouse &= !gui_window_end();
 
     gui_window_begin("left_panel", 0,
             theme->sizes.icons_height + theme->sizes.item_padding_h * 2,
-            left_panel_width, 0, alpha);
+            left_panel_width, 0, alpha, touch_scroll);
     render_left_panel();
     has_mouse &= !gui_window_end();
 
@@ -182,13 +191,13 @@ void gui_app(void)
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 
-    gui_window_begin("top_bar", 0, menu_height, 0, top_bar_height, alpha);
+    gui_window_begin("top_bar", 0, menu_height, 0, top_bar_height, alpha, false);
     gui_top_bar();
     gui_window_end();
 
     gui_window_begin("left_panel", 0,
             menu_height + top_bar_height,
-            left_panel_width, -1, alpha);
+            left_panel_width, -1, alpha, true);
     render_left_panel();
     has_mouse &= !gui_window_end();
 
@@ -197,7 +206,7 @@ void gui_app(void)
         goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 
     gui_window_begin("bottom_bar", left_panel_width,
-                     -bottom_size, -1, bottom_size, alpha);
+                     -bottom_size, -1, bottom_size, alpha, false);
     gui_text("%s", goxel.hint_text ?: "");
     gui_same_line();
     gui_spacing(180);

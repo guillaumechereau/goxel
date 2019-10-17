@@ -20,10 +20,6 @@
 #   define GUI_HAS_MENU 1
 #endif
 
-#ifndef GUI_HAS_SCROLLBARS
-#   define GUI_HAS_SCROLLBARS 1
-#endif
-
 extern "C" {
 #include "goxel.h"
 
@@ -724,7 +720,7 @@ void gui_child_end(void)
 }
 
 void gui_window_begin(const char *id, float x, float y, float w, float h,
-                      float alpha)
+                      float alpha, bool touch_scroll)
 {
     int flags = ImGuiWindowFlags_NoTitleBar |
                 ImGuiWindowFlags_NoMove |
@@ -734,13 +730,15 @@ void gui_window_begin(const char *id, float x, float y, float w, float h,
                 ImGuiWindowFlags_NoNav;
     float max_h;
 
-    if (!GUI_HAS_SCROLLBARS) {
+    if (touch_scroll) {
         if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
             gui->is_scrolling = false;
         flags |= ImGuiWindowFlags_NoScrollbar;
         if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
     }
 
+    if (x < 0)
+        x = ImGui::GetIO().DisplaySize.x + x;
     if (y < 0)
         y = ImGui::GetIO().DisplaySize.y + y;
 
@@ -759,6 +757,11 @@ void gui_window_begin(const char *id, float x, float y, float w, float h,
 
     ImGui::Begin(id, NULL, flags);
     ImGui::BeginGroup();
+
+    if (touch_scroll) {
+        ImGuiStorage* storage = ImGui::GetStateStorage();
+        storage->SetBool(ImGui::GetID("touch_scroll"), true);
+    }
 }
 
 bool gui_window_end(void)
@@ -771,12 +774,15 @@ bool gui_window_end(void)
     static float speed = 0;
     static int state; // 0: possible, 1: scrolling, 2: cancel.
     bool ret = false;
+    bool touch_scroll;
 
     ImGui::EndGroup();
 
     if (ImGui::IsItemClicked()) gui->capture_mouse = true;
 
-    if (!GUI_HAS_SCROLLBARS) {
+    ImGuiStorage* storage = ImGui::GetStateStorage();
+    touch_scroll = storage->GetBool(ImGui::GetID("touch_scroll"), false);
+    if (touch_scroll) {
         if (ImGui::IsItemClicked()) {
             ret = true;
             state = 0;
