@@ -97,10 +97,10 @@ static void render_left_panel(void)
     }
     gui_div_end();
 
+    goxel.show_export_viewport = false;
     if (goxel.gui.current_panel) {
         gui_same_line();
         gui_div_begin();
-        goxel.show_export_viewport = false;
         gui_push_id("panel");
         gui_push_id(PANELS[current_i].name);
         if (gui_panel_header(PANELS[current_i].name))
