@@ -734,7 +734,8 @@ void gui_child_end(void)
     ImGui::EndChild();
 }
 
-void gui_window_begin(const char *id, float x, float y, float w, float h)
+void gui_window_begin(const char *id, float x, float y, float w, float h,
+                      float alpha)
 {
     int flags = ImGuiWindowFlags_NoTitleBar |
                 ImGuiWindowFlags_NoMove |
@@ -765,6 +766,7 @@ void gui_window_begin(const char *id, float x, float y, float w, float h)
 
     ImGui::SetNextWindowPos(ImVec2(x, y));
     ImGui::SetNextWindowSize(ImVec2(w, h));
+    ImGui::SetNextWindowBgAlpha(alpha);
 
     ImGui::Begin(id, NULL, flags);
     ImGui::BeginGroup();
@@ -968,6 +970,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     ImGui::PushID(label);
 
     theme_get_color(group, THEME_COLOR_INNER, *v, color);
+    if (group == THEME_GROUP_TAB) color[3] = 0;
     PushStyleColor(ImGuiCol_Button, color);
     PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(
                 style.Colors[ImGuiCol_Button], 1.2));

@@ -62,7 +62,8 @@ void gui_group_end(void);
 void gui_div_begin(void);
 void gui_div_end(void);
 
-void gui_window_begin(const char *id, float x, float y, float w, float h);
+void gui_window_begin(const char *id, float x, float y, float w, float h,
+                      float alpha);
 bool gui_window_end(void);
 
 void gui_child_begin(const char *id, float w, float h);

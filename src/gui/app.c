@@ -132,6 +132,7 @@ static void gui_compact(void)
     float left_panel_width =
         (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
         theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
+    float alpha = 0.75;
 
     gui_canvas(0, 0, -1, -1,
                &inputs, &has_mouse, &has_keyboard,
@@ -140,13 +141,13 @@ static void gui_compact(void)
     if (GUI_HAS_ROTATION_BAR && gui_rotation_bar())
         has_mouse = false;
 
-    gui_window_begin("top_bar", 0, 0, 0, 0);
+    gui_window_begin("top_bar", 0, 0, 0, 0, alpha);
     gui_top_bar();
     gui_window_end();
 
     gui_window_begin("left_panel", 0,
             theme->sizes.icons_height + theme->sizes.item_padding_h * 2,
-            left_panel_width, 0);
+            left_panel_width, 0, alpha);
     render_left_panel();
     has_mouse &= !gui_window_end();
 
@@ -167,6 +168,7 @@ void gui_app(void)
         theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
     float top_bar_height = theme->sizes.icons_height +
         theme->sizes.item_padding_h * 2;
+    float alpha = 1;
 
     if (GUI_COMPACT) {
         gui_compact();
@@ -180,13 +182,13 @@ void gui_app(void)
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 
-    gui_window_begin("top_bar", 0, menu_height, 0, top_bar_height);
+    gui_window_begin("top_bar", 0, menu_height, 0, top_bar_height, alpha);
     gui_top_bar();
     gui_window_end();
 
     gui_window_begin("left_panel", 0,
             menu_height + top_bar_height,
-            left_panel_width, -1);
+            left_panel_width, -1, alpha);
     render_left_panel();
     has_mouse &= !gui_window_end();
 
@@ -195,7 +197,7 @@ void gui_app(void)
         goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 
     gui_window_begin("bottom_bar", left_panel_width,
-                     -bottom_size, -1, bottom_size);
+                     -bottom_size, -1, bottom_size, alpha);
     gui_text("%s", goxel.hint_text ?: "");
     gui_same_line();
     gui_spacing(180);
