@@ -132,7 +132,7 @@ static void gui_compact(void)
     float left_panel_width =
         (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
         theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
-    float alpha = 0.75;
+    float alpha = 0.85;
 
     gui_canvas(0, 0, -1, -1,
                &inputs, &has_mouse, &has_keyboard,
