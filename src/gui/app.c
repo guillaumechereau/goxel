@@ -131,9 +131,16 @@ void gui_app(void)
     float menu_height = GUI_HAS_MENU ? theme->sizes.icons_height * 0.7 : 0;
     float bottom_size = theme->sizes.item_height +
                         2 * theme->sizes.item_padding_h;
-    float left_panel_width;
+    float left_panel_width =
+        (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
+        theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
+    float top_bar_height = theme->sizes.icons_height +
+        theme->sizes.item_padding_h * 2;
 
-    gui_canvas(0, 0,
+    gui_canvas(left_panel_width,
+               menu_height + top_bar_height,
+               -1,
+               -bottom_size,
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 

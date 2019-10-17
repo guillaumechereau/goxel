@@ -45,7 +45,7 @@ void gui_request_panel_width(float width);
 
 bool gui_panel_header(const char *label);
 
-void gui_canvas(float w, float h,
+void gui_canvas(float x, float y, float w, float h,
                 inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
                 void *user,
                 void (*render)(void *user, const float viewport[4]));

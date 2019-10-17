@@ -1615,27 +1615,28 @@ static void gui_canvas_(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
-void gui_canvas(float w, float h,
+void gui_canvas(float x, float y, float w, float h,
                 inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
                 void *user,
                 void (*render)(void *user, const float viewport[4]))
 {
     int i;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_size = ImGui::GetContentRegionAvail();
     ImGuiIO& io = ImGui::GetIO();
     bool hovered;
 
-    if (h < 0) canvas_size.y += h;
+    ImGui::SetCursorPos(ImVec2(x, y));
+
+    if (w < 0) w = ImGui::GetContentRegionAvail().x + w + 1;
+    if (h < 0) h = ImGui::GetContentRegionAvail().y + h + 1;
+
     vec4_set(gui->view.rect,
-             canvas_pos.x,
-             goxel.screen_size[1] - (canvas_pos.y + canvas_size.y),
-             canvas_size.x, canvas_size.y);
+             x, goxel.screen_size[1] - (y + h),
+             w, h);
     gui->view.user = user;
     gui->view.render = render;
     draw_list->AddCallback(gui_canvas_, &gui->view);
-    ImGui::InvisibleButton("canvas", canvas_size);
+    ImGui::InvisibleButton("canvas", ImVec2(w, h));
     hovered = ImGui::IsItemHovered();
 
     if (    gui->inputs &&
