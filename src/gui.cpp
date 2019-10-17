@@ -781,10 +781,13 @@ bool gui_window_end(void)
     static float last_y;
     static float speed = 0;
     static int state; // 0: possible, 1: scrolling, 2: cancel.
+    bool ret = false;
 
     ImGui::EndGroup();
+
     if (!GUI_HAS_SCROLLBARS) {
         if (ImGui::IsItemClicked()) {
+            ret = true;
             state = 0;
             speed = 0;
             y = ImGui::GetMousePos().y;
@@ -793,7 +796,8 @@ bool gui_window_end(void)
             scroll_y = ImGui::GetScrollY();
         }
 
-        if (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown()) {
+        if (gui->is_scrolling || (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown())) {
+            ret = true;
             if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
                 state = 2;
             if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
@@ -812,7 +816,7 @@ bool gui_window_end(void)
             if (fabs(speed) < 1) speed = 0;
         }
     }
-    bool ret = ImGui::IsWindowHovered(
+    ret |= ImGui::IsWindowHovered(
             ImGuiHoveredFlags_RootAndChildWindows |
             ImGuiHoveredFlags_AllowWhenBlockedByPopup |
             ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
