@@ -143,7 +143,7 @@ static void gui_compact(void)
 
     gui_window_begin("top_bar", 0, 0, 0, 0, alpha);
     gui_top_bar();
-    gui_window_end();
+    has_mouse &= !gui_window_end();
 
     gui_window_begin("left_panel", 0,
             theme->sizes.icons_height + theme->sizes.item_padding_h * 2,

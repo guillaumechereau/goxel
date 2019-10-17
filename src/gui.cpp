@@ -151,7 +151,7 @@ typedef struct gui_t {
         gesture_t drag;
         gesture_t hover;
     }       gestures;
-    bool    capture_mouse;
+    bool    capture_mouse; // Mouse is captured by a window.
     int     group;
     margins_t margins;
     bool    is_scrolling;
@@ -391,30 +391,19 @@ static bool color_edit(const char *name, uint8_t color[4],
     return ret;
 }
 
-static bool rect_contains(const float rect[4], const float pos[2])
-{
-    return pos[0] >= rect[0] && pos[0] < rect[0] + rect[2] &&
-           pos[1] >= rect[1] && pos[1] < rect[1] + rect[3];
-}
-
 static int on_gesture(const gesture_t *gest, void *user)
 {
     gui_t *gui = (gui_t*)user;
     ImGuiIO& io = ImGui::GetIO();
-    ImGuiContext& g = *GImGui;
-    bool mouse_in_view;
 
     if (DEFINED(GOXEL_MOBILE) && gest->type == GESTURE_HOVER) return 0;
     io.MousePos = ImVec2(gest->pos[0], gest->pos[1]);
     io.MouseDown[0] = (gest->type == GESTURE_DRAG) &&
                       (gest->state != GESTURE_END);
 
-    if (gest->state == GESTURE_BEGIN) {
-        mouse_in_view = rect_contains(gui->view.rect, gest->pos);
-        gui->capture_mouse = !mouse_in_view || g.OpenPopupStack.Size;
-    }
-    if (gest->state == GESTURE_END || gest->type == GESTURE_HOVER)
+    if (gest->state == GESTURE_END || gest->type == GESTURE_HOVER) {
         gui->capture_mouse = false;
+    }
     if (gest->state == GESTURE_END && gest->type != GESTURE_HOVER) {
         gui_iter(NULL);
         io.MousePos = ImVec2(-1, -1);
@@ -784,6 +773,8 @@ bool gui_window_end(void)
     bool ret = false;
 
     ImGui::EndGroup();
+
+    if (ImGui::IsItemClicked()) gui->capture_mouse = true;
 
     if (!GUI_HAS_SCROLLBARS) {
         if (ImGui::IsItemClicked()) {
