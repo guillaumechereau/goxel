@@ -123,19 +123,55 @@ static void render_view(void *user, const float viewport[4])
     goxel_render_view(viewport, render_mode);
 }
 
+// Compact gui, where all the panels are rendered on top of the canvas.
+static void gui_compact(void)
+{
+    bool has_mouse, has_keyboard;
+    inputs_t inputs;
+    const theme_t *theme = theme_get();
+    float left_panel_width =
+        (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
+        theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
+
+    gui_canvas(0, 0, -1, -1,
+               &inputs, &has_mouse, &has_keyboard,
+               NULL, render_view);
+
+    if (GUI_HAS_ROTATION_BAR && gui_rotation_bar())
+        has_mouse = false;
+
+    gui_window_begin("top_bar", 0, 0, 0, 0);
+    gui_top_bar();
+    gui_window_end();
+
+    gui_window_begin("left_panel", 0,
+            theme->sizes.icons_height + theme->sizes.item_padding_h * 2,
+            left_panel_width, 0);
+    render_left_panel();
+    has_mouse &= !gui_window_end();
+
+    if (has_mouse)
+        goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
+}
+
 void gui_app(void)
 {
     inputs_t inputs;
     bool has_mouse, has_keyboard;
     const theme_t *theme = theme_get();
-    float menu_height = GUI_HAS_MENU ? theme->sizes.icons_height * 0.7 : 0;
-    float bottom_size = theme->sizes.item_height +
-                        2 * theme->sizes.item_padding_h;
+    float menu_height = theme->sizes.icons_height * 0.7;
+    float bottom_size =
+        theme->sizes.item_height + 2 * theme->sizes.item_padding_h;
     float left_panel_width =
         (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
         theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
     float top_bar_height = theme->sizes.icons_height +
         theme->sizes.item_padding_h * 2;
+
+    if (GUI_COMPACT) {
+        gui_compact();
+        return;
+    }
 
     gui_canvas(left_panel_width,
                menu_height + top_bar_height,
@@ -144,22 +180,13 @@ void gui_app(void)
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 
-    if (GUI_HAS_ROTATION_BAR) {
-        if (gui_rotation_bar())
-            has_mouse = false;
-    }
-
-    gui_window_begin("top_bar", 0, menu_height, 0, 0);
+    gui_window_begin("top_bar", 0, menu_height, 0, top_bar_height);
     gui_top_bar();
     gui_window_end();
 
-    left_panel_width = (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
-                theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
-
     gui_window_begin("left_panel", 0,
-            theme->sizes.icons_height + menu_height +
-            theme->sizes.item_padding_h * 2,
-            left_panel_width, GUI_COMPACT ? 0 : -1);
+            menu_height + top_bar_height,
+            left_panel_width, -1);
     render_left_panel();
     has_mouse &= !gui_window_end();
 
@@ -167,14 +194,12 @@ void gui_app(void)
     if (has_mouse)
         goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 
-    if (!GUI_COMPACT) {
-        gui_window_begin("bottom_bar", left_panel_width,
-                         -bottom_size, -1, bottom_size);
-        gui_text("%s", goxel.hint_text ?: "");
-        gui_same_line();
-        gui_spacing(180);
-        gui_text("%s", goxel.help_text ?: "");
-        gui_window_end();
-    }
+    gui_window_begin("bottom_bar", left_panel_width,
+                     -bottom_size, -1, bottom_size);
+    gui_text("%s", goxel.hint_text ?: "");
+    gui_same_line();
+    gui_spacing(180);
+    gui_text("%s", goxel.help_text ?: "");
+    gui_window_end();
 }
 
