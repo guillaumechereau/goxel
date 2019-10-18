@@ -624,6 +624,7 @@ void gui_iter(const inputs_t *inputs)
 
     render_popups(0);
     goxel.no_edit = gui->popup_count;
+    if (gui->popup_count) gui->capture_mouse = true;
 
     if (GUI_HAS_MENU) render_menu();
 
