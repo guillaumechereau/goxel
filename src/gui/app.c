@@ -136,21 +136,24 @@ static void gui_compact(void)
     float left_panel_width =
         (goxel.gui.current_panel ? goxel.gui.panel_width : 0) +
         theme->sizes.icons_height + 2 * theme->sizes.item_padding_h;
-    float alpha = 0.85;
     bool touch_scroll = !GUI_HAS_SCROLLBARS;
+    float top_bar_height = theme->sizes.icons_height +
+        theme->sizes.item_padding_h * 2;
+    float alpha = 0.85;
 
-    gui_canvas(0, 0, -1, -1,
+    gui_canvas(0, top_bar_height, -1, -1,
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 
     if (GUI_HAS_ROTATION_BAR) {
-        gui_window_begin("rotation_bar", -theme->sizes.item_height, 0, -1, -1,
-                         alpha, false);
+        gui_window_begin("rotation_bar",
+                         -theme->sizes.item_height, top_bar_height, -1, -1,
+                         0.0, false);
         gui_rotation_bar();
         has_mouse &= !gui_window_end();
     }
 
-    gui_window_begin("top_bar", 0, 0, 0, 0, alpha, false);
+    gui_window_begin("top_bar", 0, 0, 0, top_bar_height, alpha, false);
     gui_top_bar();
     has_mouse &= !gui_window_end();
 
