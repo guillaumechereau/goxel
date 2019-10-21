@@ -77,9 +77,14 @@ with msvc.
 
 # Linux/BSD
 
-Install dependencies: scons pkg-config libglfw3-dev libgtk-3-dev
+Install dependencies using your package manager.  On Debian/Ubuntu:
 
-Then to build:
+    - scons
+    - pkg-config
+    - libglfw3-dev
+    - libgtk-3-dev
+
+Then to build, run the command:
 
     make release
 
