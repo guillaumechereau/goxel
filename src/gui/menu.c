@@ -71,7 +71,7 @@ void gui_menu(void)
         gui_menu_item("undo", "Undo", true);
         gui_menu_item("redo", "Redo", true);
         gui_menu_item("copy", "Copy", true);
-        gui_menu_item("past", "Past", true);
+        gui_menu_item("past", "Paste", true);
         if (gui_menu_item(NULL, "Settings", true))
             gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
                            NULL, gui_settings_popup);
