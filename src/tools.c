@@ -30,7 +30,7 @@ static int tool_set_action(const action_t *a, lua_State *l)
     return 0;
 }
 
-void tool_register_(const tool_t *tool)
+void tool_register_(tool_t *tool)
 {
     action_t action;
     action = (action_t) {
@@ -43,6 +43,7 @@ void tool_register_(const tool_t *tool)
     };
     action_register(&action);
     g_tools[tool->id] = tool;
+    tool->obj.ref = 1;
 }
 
 const tool_t *tool_get(int id)

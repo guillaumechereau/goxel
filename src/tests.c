@@ -122,9 +122,25 @@ static void test_load_corrupt(void)
     action_exec2("import", "p", "/tmp/goxel_test.gox");
 }
 
+static void test_meta(void)
+{
+    val_t val;
+    val = obj_get_attr(&goxel.obj, "hide_box");
+    assert(val.type == TYPE_BOOL);
+    val_free(val);
+
+    val = obj_get_attr(&goxel.obj, "does not exist");
+    assert(val.type == TYPE_ERROR);
+    val_free(val);
+
+    val = obj_get_attr(&goxel.obj, "tool");
+    val_free(val);
+}
+
 void tests_run(void)
 {
     test_load_file_v2();
     test_load_file_v1_with_preview();
     test_load_corrupt();
+    test_meta();
 }

@@ -49,6 +49,7 @@ enum {
 // Tools
 typedef struct tool tool_t;
 struct tool {
+    obj_t obj;
     int id;
     const char *action_id;
     int (*iter_fn)(tool_t *tool, const painter_t *painter,
@@ -71,7 +72,7 @@ struct tool {
         tool_register_(&GOX_tool_##id_.tool); \
     }
 
-void tool_register_(const tool_t *tool);
+void tool_register_(tool_t *tool);
 const tool_t *tool_get(int id);
 
 int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4]);
