@@ -47,6 +47,7 @@ static void export_as_txt(const char *path)
                 p[0], p[1], p[2], v[0], v[1], v[2]);
     }
     fclose(out);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(export_as_txt,

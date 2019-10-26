@@ -187,6 +187,7 @@ static void export_as_qubicle(const char *path)
     path = path ?: sys_get_save_path("qubicle\0*.qb\0", "untitled.qb");
     if (!path) return;
     qubicle_export(goxel.image, path);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(import_qubicle,

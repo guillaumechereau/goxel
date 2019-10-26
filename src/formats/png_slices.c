@@ -52,8 +52,8 @@ static void export_as_png_slices(const char *path)
         img[(y * w * d + z * w + x) * 4 + 3] = c[3];
     }
     img_write(img, w * d, h, 4, path);
-
     free(img);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(export_as_png_slices,

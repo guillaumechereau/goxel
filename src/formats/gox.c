@@ -732,6 +732,7 @@ static void save_as(const char *path)
         goxel.image->saved_key = image_get_key(goxel.image);
     }
     save_to_file(goxel.image, goxel.image->path);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(save_as,

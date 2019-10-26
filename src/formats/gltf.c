@@ -253,6 +253,7 @@ static void export_as_gltf(const char *path)
     path = path ?: sys_get_save_path("gltf\0*.gltf\0", "untitled.gltf");
     if (!path) return;
     gltf_export(goxel_get_layers_mesh(), path);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(export_as_gltf,

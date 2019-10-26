@@ -315,6 +315,7 @@ static void export_as_vox(const char *path)
     path = path ?: sys_get_save_path("magica voxel\0*.vox\0", "untitled.vox");
     if (!path) return;
     vox_export(goxel_get_layers_mesh(), path);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(export_as_vox,

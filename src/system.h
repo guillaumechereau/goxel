@@ -128,4 +128,10 @@ void sys_save_to_photos(const uint8_t *data, int size,
  */
 const char *sys_get_save_path(const char *filters, const char *default_name);
 
+/*
+ * Function: sys_on_saved
+ * Called after we saved a file
+ */
+void sys_on_saved(const char *path);
+
 #endif // SYSTEM_H

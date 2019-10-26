@@ -204,6 +204,7 @@ static void export_as_obj(const char *path)
     path = path ?: sys_get_save_path("obj\0*.obj\0", "untitled.obj");
     if (!path) return;
     wavefront_export(goxel_get_layers_mesh(), path);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(mesh_export_as_obj,

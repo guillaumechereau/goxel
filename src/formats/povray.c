@@ -91,6 +91,7 @@ static void export_as_pov(const char *path, int w, int h)
     fwrite(buf, 1, size, file);
     fclose(file);
     free(buf);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(export_as_pov,

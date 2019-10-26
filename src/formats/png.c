@@ -32,6 +32,7 @@ static void export_as_png(const char *path, int w, int h)
     goxel_render_to_buf(buf, w, h, bpp);
     img_write(buf, w, h, bpp, path);
     free(buf);
+    sys_on_saved(path);
 }
 
 static void export_gui(void) {

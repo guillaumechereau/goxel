@@ -514,6 +514,7 @@ static void export_as_kvx(const char *path)
     path = path ?: sys_get_save_path("kvx\0*.kvx\0", "untitled.kvx");
     if (!path) return;
     kvx_export(goxel_get_layers_mesh(), path);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(import_kv6,
