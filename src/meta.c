@@ -149,7 +149,7 @@ val_t obj_get_attr(const obj_t *obj, const char *attr)
         case TYPE_BOOL:
             return val_new_bool(*(bool*)p);
         case TYPE_OBJ:
-            return val_new_obj((void*)p);
+            return val_new_obj(*(void**)p);
         default:
             LOG_E("Type not supported");
             assert(false);
