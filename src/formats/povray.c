@@ -37,8 +37,7 @@ static void export_as_pov(const char *path, int w, int h)
     w = w ?: goxel.image->export_width;
     h = h ?: goxel.image->export_height;
 
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "povray\0*.pov\0", NULL, "untitled.pov");
+    path = path ?: sys_get_save_path("povray\0*.pov\0", "untitled.pov");
     if (!path) return;
 
     template = assets_get("asset://data/other/povray_template.pov", NULL);

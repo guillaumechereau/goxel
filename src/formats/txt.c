@@ -27,8 +27,7 @@ static void export_as_txt(const char *path)
     uint8_t v[4];
     mesh_iterator_t iter;
 
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "text\0*.txt\0", NULL, "untitled.txt");
+    path = path ?: sys_get_save_path("text\0*.txt\0", "untitled.txt");
     if (!path) return;
 
     out = fopen(path, "w");

@@ -201,8 +201,7 @@ void ply_export(const mesh_t *mesh, const char *path)
 
 static void export_as_obj(const char *path)
 {
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "obj\0*.obj\0", NULL, "untitled.obj");
+    path = path ?: sys_get_save_path("obj\0*.obj\0", "untitled.obj");
     if (!path) return;
     wavefront_export(goxel_get_layers_mesh(), path);
 }
@@ -229,8 +228,7 @@ ACTION_REGISTER(export_as_obj,
 
 static void export_as_ply(const char *path)
 {
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "ply\0*.ply\0", NULL, "untitled.ply");
+    path = path ?: sys_get_save_path("ply\0*.ply\0", "untitled.ply");
     if (!path) return;
     ply_export(goxel_get_layers_mesh(), path);
 }

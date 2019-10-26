@@ -184,8 +184,7 @@ static void qubicle_export(const image_t *img, const char *path)
 
 static void export_as_qubicle(const char *path)
 {
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "qubicle\0*.qb\0", NULL, "untitled.qb");
+    path = path ?: sys_get_save_path("qubicle\0*.qb\0", "untitled.qb");
     if (!path) return;
     qubicle_export(goxel.image, path);
 }

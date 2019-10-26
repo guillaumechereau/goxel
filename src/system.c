@@ -262,3 +262,12 @@ void sys_save_to_photos(const uint8_t *data, int size,
     fclose(file);
     if (on_finished) on_finished(r == size ? 0 : -1);
 }
+
+
+#ifdef NOC_FILE_DIALOG_IMPLEMENTATION
+const char *sys_get_save_path(const char *filters, const char *default_name)
+{
+    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
+                                default_name);
+}
+#endif

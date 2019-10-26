@@ -246,8 +246,7 @@ static void export_as_vxl(const char *path)
     uint8_t c[4];
     int x, y, z, pos[3];
 
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "vxl\0*.vxl\0", NULL, "untitled.vxl");
+    path = path ?: sys_get_save_path("vxl\0*.vxl\0", "untitled.vxl");
     if (!path) return;
 
     map = calloc(1, sizeof(*map));

@@ -122,4 +122,10 @@ void sys_show_keyboard(bool has_text);
 void sys_save_to_photos(const uint8_t *data, int size,
                         void (*on_finished)(int r));
 
+/*
+ * Function: sys_get_save_path
+ * Get the path where to save an image.  By default this opens a file dialog.
+ */
+const char *sys_get_save_path(const char *filters, const char *default_name);
+
 #endif // SYSTEM_H

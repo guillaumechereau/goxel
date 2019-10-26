@@ -250,8 +250,7 @@ static void gltf_export(const mesh_t *mesh, const char *path)
 
 static void export_as_gltf(const char *path)
 {
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "gltf\0*.gltf\0", NULL, "untitled.gltf");
+    path = path ?: sys_get_save_path("gltf\0*.gltf\0", "untitled.gltf");
     if (!path) return;
     gltf_export(goxel_get_layers_mesh(), path);
 }

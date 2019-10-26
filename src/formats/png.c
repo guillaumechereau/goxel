@@ -25,8 +25,7 @@ static void export_as_png(const char *path, int w, int h)
     int bpp = goxel.image->export_transparent_background ? 4 : 3;
     w = w ?: goxel.image->export_width;
     h = h ?: goxel.image->export_height;
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                   "png\0*.png\0", NULL, "untitled.png");
+    path = path ?: sys_get_save_path("png\0*.png\0", "untitled.png");
     if (!path) return;
     LOG_I("Exporting to file %s", path);
     buf = calloc(w * h, bpp);

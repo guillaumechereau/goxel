@@ -27,8 +27,7 @@ static void export_as_png_slices(const char *path)
     uint8_t *img;
     mesh_iterator_t iter = {0};
 
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                   "png\0*.png\0", NULL, "untitled.png");
+    path = path ?: sys_get_save_path("png\0*.png\0", "untitled.png");
     if (!path) return;
     mesh = goxel_get_layers_mesh();
     mat4_copy(goxel.image->box, box);

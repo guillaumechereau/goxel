@@ -511,8 +511,7 @@ static void kvx_export(const mesh_t *mesh, const char *path)
 
 static void export_as_kvx(const char *path)
 {
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                    "kvx\0*.kvx\0", NULL, "untitled.kvx");
+    path = path ?: sys_get_save_path("kvx\0*.kvx\0", "untitled.kvx");
     if (!path) return;
     kvx_export(goxel_get_layers_mesh(), path);
 }

@@ -723,8 +723,7 @@ ACTION_REGISTER(open,
 static void save_as(const char *path)
 {
     if (!path) {
-        path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "gox\0*.gox\0",
-                                    NULL, "untitled.gox");
+        path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
         if (!path) return;
     }
     if (path != goxel.image->path) {
