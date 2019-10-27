@@ -16,12 +16,28 @@ title = "Live"
     height: 100%;
   }
 
+  #help {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-top: 0.5rem;
+  }
+}
+
+
 </style>
 
 <script src="goxel.js"></script>
 
 <div id="goxel-canvas-parent">
-  <canvas id='goxel-canvas'></canvas>
+  <canvas id="goxel-canvas"></canvas>
+  <div id="help">
+    <div>
+      <a class="button is-link" target="_blank" rel="noopener noreferrer"
+         href="about">About the live version</a>
+    </div>
+  </div>
 </div>
 
 <script>
