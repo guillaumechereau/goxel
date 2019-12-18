@@ -151,7 +151,9 @@ static void loop_function(void)
     int fb_size[2], win_size[2];
     int i;
     double xpos, ypos;
-    float scale = g_scale;
+    float xscale, yscale;
+    float scale;
+    GLFWmonitor *monitor;
 
     if (    !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
              glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
@@ -163,6 +165,11 @@ static void loop_function(void)
     // size.
     glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
+
+    monitor = glfwGetPrimaryMonitor();
+    glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+    scale = g_scale * xscale;
+
     g_inputs->window_size[0] = win_size[0] / scale;
     g_inputs->window_size[1] = win_size[1] / scale;
     g_inputs->scale = fb_size[0] * scale / win_size[0];
@@ -180,6 +187,7 @@ static void loop_function(void)
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
     g_inputs->touches[0].down[2] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+
     goxel_iter(g_inputs);
     goxel_render();
 
