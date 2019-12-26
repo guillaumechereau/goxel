@@ -90,7 +90,11 @@ class GoxNSOpenGLView: NSOpenGLView {
     override func otherMouseDragged(with event: NSEvent) { mouseEvent(1, 1, event) }
 
     override func scrollWheel(with event: NSEvent) {
-        appDelegate().inputs.mouse_wheel = Float(event.scrollingDeltaY)
+        var delta = Float(event.scrollingDeltaY)
+        if event.hasPreciseScrollingDeltas {
+            delta /= 8.0;
+        }
+        appDelegate().inputs.mouse_wheel = delta
     }
 
     override func keyDown(with event: NSEvent) {
