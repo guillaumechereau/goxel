@@ -126,6 +126,25 @@ static void init_win(void)
 #endif
 
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#if TARGET_OS_MAC
+
+const char *sys_get_save_path(const char *filters, const char *default_name)
+{
+    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
+                                default_name);
+}
+
+void sys_on_saved(const char *path)
+{
+    LOG_I("Saved %s", path);
+}
+
+#endif
+#endif
+
+
 void sys_log(const char *msg)
 {
     if (sys_callbacks.log) {
