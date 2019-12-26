@@ -166,9 +166,11 @@ static void loop_function(void)
     glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
 
-    monitor = glfwGetPrimaryMonitor();
-    glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-    scale = g_scale * xscale;
+    if (GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 3) {
+        monitor = glfwGetPrimaryMonitor();
+        glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+        scale = g_scale * xscale;
+    }
 
     g_inputs->window_size[0] = win_size[0] / scale;
     g_inputs->window_size[1] = win_size[1] / scale;
