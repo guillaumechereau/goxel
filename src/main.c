@@ -155,6 +155,10 @@ static void loop_function(void)
     float scale;
     GLFWmonitor *monitor;
 
+    (void)monitor;
+    (void)xscale;
+    (void)yscale;
+
     if (    !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
              glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
         glfwWaitEvents();
@@ -166,11 +170,14 @@ static void loop_function(void)
     glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
 
-    if (GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 3) {
+    scale = g_scale;
+    // Note: when all platforms get updated to glfw 3.3+, we should remove
+    // this test.
+#if (GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 3)
         monitor = glfwGetPrimaryMonitor();
         glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-        scale = g_scale * xscale;
-    }
+        scale *= xscale;
+#endif
 
     g_inputs->window_size[0] = win_size[0] / scale;
     g_inputs->window_size[1] = win_size[1] / scale;
