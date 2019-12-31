@@ -120,6 +120,14 @@ void img_write(const uint8_t *img, int w, int h, int bpp, const char *path)
     }
     png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
                                       NULL, NULL, NULL);
+    if (!png_ptr) {
+        // With ubuntu 19.04, libpng seems to fail!
+        LOG_E("Libpng error: fallback to stb-img");
+        fclose(fp);
+        stbi_write_png(path, w, h, bpp, img, 0);
+        return;
+    }
+
     info_ptr = png_create_info_struct(png_ptr);
     if (setjmp(png_jmpbuf(png_ptr))) {
        png_destroy_write_struct(&png_ptr, &info_ptr);
