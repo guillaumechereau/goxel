@@ -112,6 +112,8 @@ void gui_layers_panel(void)
             mat4_copy(mat4_zero, layer->box);
         }
     }
+    if (bounded)
+        gui_bbox(layer->box);
 
     if (layer->shape) {
         tool_gui_drag_mode(&goxel.tool_drag_mode);
