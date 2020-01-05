@@ -1,5 +1,13 @@
 #Changelog
 
+## [0.10.5] - 2020-01-06
+
+Minor update to attempt to fix a crash with AMD cards.
+
+### Fixed
+- Reintroduced layer bounding box edit widget.
+
+
 ## [0.10.4] - 2019-07-29
 
 ### Added
