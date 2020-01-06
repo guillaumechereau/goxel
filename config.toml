@@ -3,4 +3,4 @@ languageCode = "en-us"
 title = "Goxel 3D Voxel Editor"
 
 [params]
-  lastReleaseVersion = "0.10.0"
+  lastReleaseVersion = "0.10.5"
