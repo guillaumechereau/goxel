@@ -43,8 +43,7 @@ int palette_search(const palette_t *palette, const uint8_t col[4],
     return -1;
 }
 
-static void palette_insert(palette_t *p, const uint8_t col[4],
-                           const char *name)
+void palette_insert(palette_t *p, const uint8_t col[4], const char *name)
 {
     palette_entry_t *e;
     if (palette_search(p, col, true) != -1) return;

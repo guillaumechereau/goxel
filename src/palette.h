@@ -54,3 +54,5 @@ void palette_load_all(palette_t **list);
  */
 int palette_search(const palette_t *palette, const uint8_t col[4],
                    bool exact);
+
+void palette_insert(palette_t *p, const uint8_t col[4], const char *name);
