@@ -40,6 +40,7 @@ typedef struct {
     json_t *accessors;
     json_t *nodes;
     json_t *scenes;
+    json_t *materials;
 } gltf_t;
 
 typedef struct {
@@ -62,6 +63,7 @@ static void gltf_init(gltf_t *g)
     g->accessors = json_object_push(g->root, "accessors", json_array_new(0));
     g->nodes = json_object_push(g->root, "nodes", json_array_new(0));
     g->scenes = json_object_push(g->root, "scenes", json_array_new(0));
+    g->materials = json_object_push(g->root, "materials", json_array_new(0));
 }
 
 // Create a buffer view and attribute.
@@ -156,8 +158,18 @@ static void get_pos_min_max(gltf_vertex_t *bverts, int nb,
     }
 }
 
+static int get_material_idx(const image_t *img, const material_t *mat)
+{
+    int i;
+    const material_t *m;
+    for (i = 0, m = img->materials; m; m = m->next, i++) {
+        if (m == mat) return i;
+    }
+    return 0;
+}
+
 static void save_layer(gltf_t *g, json_t *root_node_children,
-                       const layer_t *layer)
+                       const image_t *img, const layer_t *layer)
 {
     json_t *gmesh, *buffer, *primitives, *primitive, *attributes, *node,
            *buffer_view;
@@ -192,6 +204,8 @@ static void save_layer(gltf_t *g, json_t *root_node_children,
         primitive = json_array_push(primitives, json_object_new(0));
         attributes = json_object_push(primitive, "attributes",
                                       json_object_new(0));
+        json_object_push_int(primitive, "material",
+                             get_material_idx(img, layer->material));
 
         if (size == 4)
             make_quad_indices(g, primitive, nb_elems, size);
@@ -231,9 +245,25 @@ static void gltf_export(const image_t *img, const char *path)
     FILE *file;
     json_serialize_opts opts = {.indent_size = 4};
     const layer_t *layer;
-    json_t *root_node, *root_node_children, *scene, *scene_nodes;
+    json_t *root_node, *root_node_children, *scene, *scene_nodes, *material,
+           *pbr;
+    material_t *mat;
 
     gltf_init(&g);
+
+    DL_FOREACH(img->materials, mat) {
+        material = json_array_push(g.materials, json_object_new(0));
+        json_object_push_string(material, "name", mat->name);
+        json_object_push(material, "emissiveFactor",
+                         json_float_array_new(mat->emission, 3));
+        pbr = json_object_push(material, "pbrMetallicRoughness",
+                               json_object_new(0));
+        json_object_push(pbr, "baseColorFactor",
+                         json_float_array_new(mat->base_color, 4));
+        json_object_push_float(pbr, "metallicFactor", mat->metallic);
+        json_object_push_float(pbr, "roughnessFactor", mat->roughness);
+    }
+
     root_node = json_array_push(g.nodes, json_object_new(0));
     root_node_children = json_object_push(root_node, "children",
                                           json_array_new(0));
@@ -248,7 +278,7 @@ static void gltf_export(const image_t *img, const char *path)
     json_array_push(scene_nodes, json_integer_new(json_index(root_node)));
 
     DL_FOREACH(img->layers, layer) {
-        save_layer(&g, root_node_children, layer);
+        save_layer(&g, root_node_children, img, layer);
     }
     json_buf = malloc(json_measure_ex(g.root, opts));
     json_serialize_ex(json_buf, g.root, opts);

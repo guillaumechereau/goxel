@@ -32,6 +32,8 @@ json_value *json_object_push_string(json_value *obj, const json_char *name,
                                     const json_char *v);
 json_value *json_object_push_bool(json_value *obj, const json_char *name,
                                   bool v);
+json_value *json_object_push_float(json_value *obj, const json_char *name,
+                                   double v);
 
 json_value *json_data_new(const void *data, uint32_t len, const char *mime);
 

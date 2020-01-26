@@ -79,6 +79,12 @@ json_value *json_object_push_bool(json_value *obj, const json_char *name,
     return json_object_push(obj, name, json_boolean_new(v));
 }
 
+json_value *json_object_push_float(json_value *obj, const json_char *name,
+                                   double v)
+{
+    return json_object_push(obj, name, json_double_new(v));
+}
+
 json_value *json_data_new(const void *data, uint32_t len, const char *mime)
 {
     char *string;
