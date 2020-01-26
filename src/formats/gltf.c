@@ -156,38 +156,22 @@ static void get_pos_min_max(gltf_vertex_t *bverts, int nb,
     }
 }
 
-static void gltf_export(const mesh_t *mesh, const char *path)
+static void save_layer(gltf_t *g, json_t *root_node_children,
+                       const layer_t *layer)
 {
     json_t *gmesh, *buffer, *primitives, *primitive, *attributes, *node,
-           *scene, *scene_nodes, *root_node, *root_node_children, *buffer_view;
-    char *json_buf;
-    FILE *file;
+           *buffer_view;
     mesh_iterator_t iter;
     int nb_elems, bpos[3], size = 0, subdivide;
     voxel_vertex_t *verts;
     const int N = BLOCK_SIZE;
-    gltf_t g;
-    json_serialize_opts opts = {.indent_size = 4};
     gltf_vertex_t *gverts;
     int buf_size;
     float pos_min[3], pos_max[3];
-
-    gltf_init(&g);
+    mesh_t *mesh = layer->mesh;
 
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     gverts = calloc(N * N * N * 6 * 4, sizeof(*gverts));
-    root_node = json_array_push(g.nodes, json_object_new(0));
-    json_object_push(root_node, "matrix", json_int_array_new((int[]) {
-        1, 0,  0, 0,
-        0, 0, -1, 0,
-        0, 1,  0, 0,
-        0, 0,  0, 1
-    }, 16));
-    root_node_children = json_object_push(root_node, "children",
-                                          json_array_new(0));
-    scene = json_array_push(g.scenes, json_object_new(0));
-    scene_nodes = json_object_push(scene, "nodes", json_array_new(0));
-    json_array_push(scene_nodes, json_integer_new(json_index(root_node)));
 
     iter = mesh_get_iterator(mesh,
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
@@ -200,45 +184,72 @@ static void gltf_export(const mesh_t *mesh, const char *path)
         get_pos_min_max(gverts, nb_elems * size, pos_min, pos_max);
         buf_size = nb_elems * size * sizeof(*gverts);
 
-        buffer = json_array_push(g.buffers, json_object_new(0));
+        buffer = json_array_push(g->buffers, json_object_new(0));
         json_object_push_int(buffer, "byteLength", buf_size);
         json_object_push(buffer, "uri", json_data_new(gverts, buf_size, NULL));
-        gmesh = json_array_push(g.meshes, json_object_new(0));
+        gmesh = json_array_push(g->meshes, json_object_new(0));
         primitives = json_object_push(gmesh, "primitives", json_array_new(0));
         primitive = json_array_push(primitives, json_object_new(0));
         attributes = json_object_push(primitive, "attributes",
                                       json_object_new(0));
 
         if (size == 4)
-            make_quad_indices(&g, primitive, nb_elems, size);
+            make_quad_indices(g, primitive, nb_elems, size);
 
-        buffer_view = json_array_push(g.buffer_views, json_object_new(0));
+        buffer_view = json_array_push(g->buffer_views, json_object_new(0));
         json_object_push_int(buffer_view, "buffer", json_index(buffer));
         json_object_push_int(buffer_view, "byteLength", buf_size);
         json_object_push_int(buffer_view, "byteStride", sizeof(gltf_vertex_t));
         json_object_push_int(buffer_view, "target", 34962);
 
-        make_attribute(&g, buffer_view, attributes,
+        make_attribute(g, buffer_view, attributes,
                        "POSITION", GLTF_FLOAT, "VEC3", false,
                        nb_elems * size, offsetof(gltf_vertex_t, pos),
                        pos_min, pos_max);
-        make_attribute(&g, buffer_view, attributes,
+        make_attribute(g, buffer_view, attributes,
                        "COLOR_0", GLTF_UNSIGNED_BYTE, "VEC4", true,
                        nb_elems * size, offsetof(gltf_vertex_t, color),
                        NULL, NULL);
-        make_attribute(&g, buffer_view, attributes,
+        make_attribute(g, buffer_view, attributes,
                        "NORMAL", GLTF_FLOAT, "VEC3", false,
                        nb_elems * size, offsetof(gltf_vertex_t, normal),
                        NULL, NULL);
 
-        node = json_array_push(g.nodes, json_object_new(0));
+        node = json_array_push(g->nodes, json_object_new(0));
         json_object_push(node, "translation", json_int_array_new(bpos, 3));
         json_object_push_int(node, "mesh", json_index(gmesh));
         json_array_push(root_node_children, json_integer_new(json_index(node)));
     }
     free(verts);
     free(gverts);
+}
 
+static void gltf_export(const image_t *img, const char *path)
+{
+    char *json_buf;
+    gltf_t g;
+    FILE *file;
+    json_serialize_opts opts = {.indent_size = 4};
+    const layer_t *layer;
+    json_t *root_node, *root_node_children, *scene, *scene_nodes;
+
+    gltf_init(&g);
+    root_node = json_array_push(g.nodes, json_object_new(0));
+    root_node_children = json_object_push(root_node, "children",
+                                          json_array_new(0));
+    json_object_push(root_node, "matrix", json_int_array_new((int[]) {
+        1, 0,  0, 0,
+        0, 0, -1, 0,
+        0, 1,  0, 0,
+        0, 0,  0, 1
+    }, 16));
+    scene = json_array_push(g.scenes, json_object_new(0));
+    scene_nodes = json_object_push(scene, "nodes", json_array_new(0));
+    json_array_push(scene_nodes, json_integer_new(json_index(root_node)));
+
+    DL_FOREACH(img->layers, layer) {
+        save_layer(&g, root_node_children, layer);
+    }
     json_buf = malloc(json_measure_ex(g.root, opts));
     json_serialize_ex(json_buf, g.root, opts);
     file = fopen(path, "w");
@@ -252,7 +263,7 @@ static void export_as_gltf(const char *path)
 {
     path = path ?: sys_get_save_path("gltf\0*.gltf\0", "untitled.gltf");
     if (!path) return;
-    gltf_export(goxel_get_layers_mesh(), path);
+    gltf_export(goxel.image, path);
     sys_on_saved(path);
 }
 
