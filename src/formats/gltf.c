@@ -157,7 +157,7 @@ static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
                         const voxel_vertex_t *verts, int nb, int subdivide,
                         bool vertex_color)
 {
-    int i, c, s;
+    int i, c, s = 0;
     float uv[2];
 
     // The palette texture size.
