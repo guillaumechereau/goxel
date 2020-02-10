@@ -50,10 +50,19 @@ typedef struct {
 typedef struct {
     float   pos[3];
     float   normal[3];
-    // XXX: should be one or the other!
-    uint8_t color[4];
-    float   texcoord[2];
+
+    // XXX: for vertex color we are wasting space here.
+    union {
+        uint8_t color[4];
+        float   texcoord[2];
+    };
 } gltf_vertex_t;
+
+typedef struct {
+    bool vertex_color;
+} export_options_t;
+
+static export_options_t g_export_options = {};
 
 
 // Return the next power of 2 larger or equal to x.
@@ -69,7 +78,7 @@ static int next_pow2(int x)
     return x;
 }
 
-static void gltf_init(gltf_t *g)
+static void gltf_init(gltf_t *g, const export_options_t *options)
 {
     g->root = json_object_new(0);
     g->asset = json_object_push(g->root, "asset", json_object_new(0));
@@ -84,8 +93,11 @@ static void gltf_init(gltf_t *g)
     g->nodes = json_object_push(g->root, "nodes", json_array_new(0));
     g->scenes = json_object_push(g->root, "scenes", json_array_new(0));
     g->materials = json_object_push(g->root, "materials", json_array_new(0));
-    g->images = json_object_push(g->root, "images", json_array_new(0));
-    g->textures = json_object_push(g->root, "textures", json_array_new(0));
+
+    if (!options->vertex_color) {
+        g->images = json_object_push(g->root, "images", json_array_new(0));
+        g->textures = json_object_push(g->root, "textures", json_array_new(0));
+    }
 }
 
 // Create a buffer view and attribute.
@@ -142,17 +154,17 @@ static void make_quad_indices(gltf_t *g, json_t *primitive, int nb, int size)
 }
 
 static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
-                        const voxel_vertex_t *verts, int nb, int subdivide)
+                        const voxel_vertex_t *verts, int nb, int subdivide,
+                        bool vertex_color)
 {
     int i, c, s;
     float uv[2];
+
     // The palette texture size.
-    s = max(next_pow2(ceil(log2(g->palette.size))), 16);
+    if (!vertex_color)
+        s = max(next_pow2(ceil(log2(g->palette.size))), 16);
+
     for (i = 0; i < nb; i++) {
-        c = palette_search(&g->palette, verts[i].color, true);
-        assert(c != -1);
-        uv[0] = (c % s + 0.5) / s;
-        uv[1] = (c / s + 0.5) / s;
         bverts[i].pos[0] = (float)verts[i].pos[0] / subdivide;
         bverts[i].pos[1] = (float)verts[i].pos[1] / subdivide;
         bverts[i].pos[2] = (float)verts[i].pos[2] / subdivide;
@@ -160,12 +172,20 @@ static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
         bverts[i].normal[1] = verts[i].normal[1];
         bverts[i].normal[2] = verts[i].normal[2];
         vec3_normalize(bverts[i].normal, bverts[i].normal);
-        bverts[i].color[0] = verts[i].color[0];
-        bverts[i].color[1] = verts[i].color[1];
-        bverts[i].color[2] = verts[i].color[2];
-        bverts[i].color[3] = verts[i].color[3];
-        bverts[i].texcoord[0] = uv[0];
-        bverts[i].texcoord[1] = uv[1];
+
+        if (vertex_color) {
+            bverts[i].color[0] = verts[i].color[0];
+            bverts[i].color[1] = verts[i].color[1];
+            bverts[i].color[2] = verts[i].color[2];
+            bverts[i].color[3] = verts[i].color[3];
+        } else {
+            c = palette_search(&g->palette, verts[i].color, true);
+            assert(c != -1);
+            uv[0] = (c % s + 0.5) / s;
+            uv[1] = (c / s + 0.5) / s;
+            bverts[i].texcoord[0] = uv[0];
+            bverts[i].texcoord[1] = uv[1];
+        }
     }
 }
 
@@ -200,7 +220,8 @@ static int get_material_idx(const image_t *img, const material_t *mat)
 }
 
 static void save_layer(gltf_t *g, json_t *root_node_children,
-                       const image_t *img, const layer_t *layer)
+                       const image_t *img, const layer_t *layer,
+                       const export_options_t *options)
 {
     json_t *gmesh, *buffer, *primitives, *primitive, *attributes, *node,
            *buffer_view;
@@ -223,7 +244,8 @@ static void save_layer(gltf_t *g, json_t *root_node_children,
                                     goxel.rend.settings.effects, verts,
                                     &size, &subdivide);
         if (!nb_elems) continue;
-        fill_buffer(g, gverts, verts, nb_elems * size, subdivide);
+        fill_buffer(g, gverts, verts, nb_elems * size, subdivide,
+                    options->vertex_color);
         get_pos_min_max(gverts, nb_elems * size, pos_min, pos_max);
         buf_size = nb_elems * size * sizeof(*gverts);
 
@@ -255,15 +277,18 @@ static void save_layer(gltf_t *g, json_t *root_node_children,
                        "NORMAL", GLTF_FLOAT, "VEC3", false,
                        nb_elems * size, offsetof(gltf_vertex_t, normal),
                        NULL, NULL);
-        if ((0))
-        make_attribute(g, buffer_view, attributes,
-                       "COLOR_0", GLTF_UNSIGNED_BYTE, "VEC4", true,
-                       nb_elems * size, offsetof(gltf_vertex_t, color),
-                       NULL, NULL);
-        make_attribute(g, buffer_view, attributes,
-                       "TEXCOORD_0", GLTF_FLOAT, "VEC2", false,
-                       nb_elems * size, offsetof(gltf_vertex_t, texcoord),
-                       NULL, NULL);
+
+        if (options->vertex_color) {
+            make_attribute(g, buffer_view, attributes,
+                           "COLOR_0", GLTF_UNSIGNED_BYTE, "VEC4", true,
+                           nb_elems * size, offsetof(gltf_vertex_t, color),
+                           NULL, NULL);
+        } else {
+            make_attribute(g, buffer_view, attributes,
+                           "TEXCOORD_0", GLTF_FLOAT, "VEC2", false,
+                           nb_elems * size, offsetof(gltf_vertex_t, texcoord),
+                           NULL, NULL);
+        }
 
         node = json_array_push(g->nodes, json_object_new(0));
         json_object_push(node, "translation", json_int_array_new(bpos, 3));
@@ -307,7 +332,8 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
     json_object_push_int(texture, "source", 0);
 }
 
-static void gltf_export(const image_t *img, const char *path)
+static void gltf_export(const image_t *img, const char *path,
+                        const export_options_t *options)
 {
     char *json_buf;
     gltf_t g = {};
@@ -318,8 +344,10 @@ static void gltf_export(const image_t *img, const char *path)
            *pbr, *tex;
     material_t *mat;
 
-    gltf_init(&g);
-    create_palette_texture(&g, img);
+    gltf_init(&g, options);
+
+    if (!options->vertex_color)
+        create_palette_texture(&g, img);
 
     DL_FOREACH(img->materials, mat) {
         material = json_array_push(g.materials, json_object_new(0));
@@ -332,8 +360,11 @@ static void gltf_export(const image_t *img, const char *path)
                          json_float_array_new(mat->base_color, 4));
         json_object_push_float(pbr, "metallicFactor", mat->metallic);
         json_object_push_float(pbr, "roughnessFactor", mat->roughness);
-        tex = json_object_push(pbr, "baseColorTexture", json_object_new(0));
-        json_object_push_int(tex, "index", 0);
+
+        if (!options->vertex_color) {
+            tex = json_object_push(pbr, "baseColorTexture", json_object_new(0));
+            json_object_push_int(tex, "index", 0);
+        }
     }
 
     root_node = json_array_push(g.nodes, json_object_new(0));
@@ -350,7 +381,7 @@ static void gltf_export(const image_t *img, const char *path)
     json_array_push(scene_nodes, json_integer_new(json_index(root_node)));
 
     DL_FOREACH(img->layers, layer) {
-        save_layer(&g, root_node_children, img, layer);
+        save_layer(&g, root_node_children, img, layer, options);
     }
     json_buf = malloc(json_measure_ex(g.root, opts));
     json_serialize_ex(json_buf, g.root, opts);
@@ -366,8 +397,14 @@ static void export_as_gltf(const char *path)
 {
     path = path ?: sys_get_save_path("gltf\0*.gltf\0", "untitled.gltf");
     if (!path) return;
-    gltf_export(goxel.image, path);
+    gltf_export(goxel.image, path, &g_export_options);
     sys_on_saved(path);
+}
+
+static void export_gui(void)
+{
+    gui_checkbox("Vertex color", &g_export_options.vertex_color,
+                 "Save colors as a vertex attribute");
 }
 
 ACTION_REGISTER(export_as_gltf,
@@ -377,5 +414,6 @@ ACTION_REGISTER(export_as_gltf,
     .file_format = {
         .name = "gltf",
         .ext = "*.gltf\0",
+        .export_gui = export_gui,
     },
 )
