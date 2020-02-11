@@ -8,7 +8,8 @@ type = "gallery"
 This is a gallery of some Duke Nukem voxel assets from
 [this source](https://forums.duke4.net/topic/3322-duke-3d-voxel-pack).
 
-Those images have been created with Goxel and Qubicle by Michal B.
+Those images have been created with Goxel and Qubicle by
+[Michal B.](http://twitter.com/@Borion_83)
 
 <div class="section columns is-multiline">
 
