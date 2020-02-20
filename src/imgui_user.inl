@@ -67,101 +67,9 @@ namespace ImGui {
         return GoxBox2(pos, size, color, true, 1, rounding_corners_flags);
     }
 
-    // Copied from imgui, with some customization...
-    bool GoxInputScalarAsWidgetReplacement(const ImRect& aabb, const char* label, ImGuiDataType data_type, void* data_ptr, ImGuiID id, int decimal_precision)
-    {
+    inline bool TempInputTextIsActive(ImGuiID id) {
         ImGuiContext& g = *GImGui;
-        ImGuiWindow* window = GetCurrentWindow();
-
-        // Our replacement widget will override the focus ID (registered previously to allow for a TAB focus to happen)
-        SetActiveID(g.ScalarAsInputTextId, window);
-        SetHoveredID(0);
-        FocusableItemUnregister(window);
-
-        char buf[32];
-        DataTypeFormatString(data_type, data_ptr, decimal_precision, buf, IM_ARRAYSIZE(buf));
-        bool text_value_changed = InputTextEx(label, buf, IM_ARRAYSIZE(buf), aabb.GetSize(), ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue);
-        if (g.ScalarAsInputTextId == 0)
-        {
-            // First frame
-            IM_ASSERT(g.ActiveId == id);    // InputText ID expected to match the Slider ID (else we'd need to store them both, which is also possible)
-            g.ScalarAsInputTextId = g.ActiveId;
-            SetHoveredID(id);
-        }
-        else if (g.ActiveId != g.ScalarAsInputTextId)
-        {
-            // Release
-            g.ScalarAsInputTextId = 0;
-        }
-        if (text_value_changed)
-            return DataTypeApplyOpFromText(buf, GImGui->InputTextState.InitialText.begin(), data_type, data_ptr, NULL);
-        return false;
-    }
-
-    // Copied from imgui, with some custom modifications.
-    bool GoxDragFloat(const char* label, const char* name,
-            float* v, float v_speed,
-            float v_min, float v_max, const char* display_format, float power)
-    {
-        ImGuiWindow* window = GetCurrentWindow();
-        if (window->SkipItems)
-            return false;
-
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
-        const ImGuiID id = window->GetID(label);
-        const float w = CalcItemWidth();
-
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
-        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + ImVec2(w, label_size.y + style.FramePadding.y*2.0f));
-        const ImRect inner_bb(frame_bb.Min + style.FramePadding, frame_bb.Max - style.FramePadding);
-        const ImRect total_bb(frame_bb.Min, frame_bb.Max + ImVec2(label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f, 0.0f));
-
-        // NB- we don't call ItemSize() yet because we may turn into a text edit box below
-        if (!ItemAdd(total_bb, id, &frame_bb))
-        {
-            ItemSize(total_bb, style.FramePadding.y);
-            return false;
-        }
-
-        const bool hovered = ItemHoverable(frame_bb, id);
-        if (hovered)
-            SetHoveredID(id);
-
-        if (!display_format)
-            display_format = "%.3f";
-        int decimal_precision = ParseFormatPrecision(display_format, 3);
-
-        // Tabbing or CTRL-clicking on Drag turns it into an input box
-        bool start_text_input = false;
-        const bool tab_focus_requested = FocusableItemRegister(window, g.ActiveId == id);
-        if (tab_focus_requested || (hovered && (g.IO.MouseClicked[0] | g.IO.MouseDoubleClicked[0])))
-        {
-            SetActiveID(id, window);
-            FocusWindow(window);
-
-            if (tab_focus_requested || g.IO.KeyCtrl || g.IO.MouseDoubleClicked[0])
-            {
-                start_text_input = true;
-                g.ScalarAsInputTextId = 0;
-            }
-        }
-        if (start_text_input || (g.ActiveId == id && g.ScalarAsInputTextId == id))
-            return GoxInputScalarAsWidgetReplacement(frame_bb, label, ImGuiDataType_Float, v, id, decimal_precision);
-
-        // Actual drag behavior
-        ItemSize(total_bb, style.FramePadding.y);
-        const bool value_changed = DragBehavior(frame_bb, id, v, v_speed, v_min, v_max, decimal_precision, power);
-
-        // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
-        char value_buf[64];
-        const char* value_buf_end = value_buf + ImFormatString(value_buf, IM_ARRAYSIZE(value_buf), display_format, *v);
-        RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, NULL, ImVec2(1.0f,0.5f));
-
-        value_buf_end = value_buf + ImFormatString(value_buf, IM_ARRAYSIZE(value_buf), "%s:", name);
-        RenderTextClipped(frame_bb.Min, frame_bb.Max - ImVec2(30, 0), value_buf, value_buf_end, NULL, ImVec2(0.0f,0.5f));
-
-        return value_changed;
+        return (g.ActiveId == id && g.ScalarAsInputTextId == id);
     }
 
     bool GoxInputFloat(const char *label, float *v, float step,
@@ -178,6 +86,9 @@ namespace ImGui {
             ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         float speed = step / 20;
         uint8_t color[4];
+        char buf[128];
+        bool input_active;
+        ImVec4 text_color;
 
         ImGui::PushID(label);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
@@ -209,9 +120,26 @@ namespace ImGui {
                 ImGui::GetContentRegionAvailWidth() -
                 button_sz.x - style.ItemSpacing.x);
 
-        ret |= ImGui::GoxDragFloat("", label, v, speed, minv, maxv, format, 1.0);
-        ImGui::PopItemWidth();
+        input_active = ImGui::TempInputTextIsActive(ImGui::GetID(""));
+        text_color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+        if (!input_active)
+            text_color = ImVec4(0, 0, 0, 0);
+        ImGui::PushStyleColor(ImGuiCol_Text, text_color);
+        ret |= ImGui::DragFloat("", v, speed, minv, maxv, format, 1.0);
+        ImGui::PopStyleColor();
 
+        if (!input_active) {
+            snprintf(buf, sizeof(buf), "%s:", label);
+            ImGui::RenderTextClipped(ImGui::GetItemRectMin(),
+                                     ImGui::GetItemRectMax(),
+                                     buf, NULL, NULL, ImVec2(0, 0.5));
+            snprintf(buf, sizeof(buf), format, *v);
+            ImGui::RenderTextClipped(ImGui::GetItemRectMin(),
+                                     ImGui::GetItemRectMax(),
+                                     buf, NULL, NULL, ImVec2(1, 0.5));
+        }
+
+        ImGui::PopItemWidth();
         ImGui::SameLine();
 
         ImGui::SetWindowFontScale(0.75);
