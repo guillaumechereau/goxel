@@ -31,7 +31,6 @@
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_INCLUDE_IMGUI_USER_INL
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 #include "../ext_src/imgui/imgui.cpp"
