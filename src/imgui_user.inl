@@ -100,14 +100,11 @@ namespace ImGui {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
             color_lighten(imvec4(color), 1.2));
 
-
         ImGui::SetWindowFontScale(0.75);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         if (ImGui::ButtonEx("◀", button_sz, button_flags)) {
             (*v) -= step;
             ret = true;
         }
-        ImGui::PopStyleVar();
         ImGui::SetWindowFontScale(1);
 
         ImGui::SameLine();
@@ -138,12 +135,10 @@ namespace ImGui {
         ImGui::SameLine();
 
         ImGui::SetWindowFontScale(0.75);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         if (ImGui::ButtonEx("▶", button_sz, button_flags)) {
             (*v) += step;
             ret = true;
         }
-        ImGui::PopStyleVar();
         ImGui::SetWindowFontScale(1);
 
         ImGui::PopStyleColor(4);
