@@ -49,7 +49,6 @@ void gui_menu(void);
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-#define IMGUI_INCLUDE_IMGUI_USER_INL
 
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
