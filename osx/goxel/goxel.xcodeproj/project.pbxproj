@@ -54,7 +54,6 @@
 		F07DEA041BD0F31500BAA1AD /* goxel.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9EA1BD0F31500BAA1AD /* goxel.c */; };
 		F07DEA051BD0F31500BAA1AD /* gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9EC1BD0F31500BAA1AD /* gui.cpp */; };
 		F07DEA061BD0F31500BAA1AD /* image.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9ED1BD0F31500BAA1AD /* image.c */; };
-		F07DEA071BD0F31500BAA1AD /* imgui_user.inl in Resources */ = {isa = PBXBuildFile; fileRef = F07DE9EE1BD0F31500BAA1AD /* imgui_user.inl */; };
 		F07DEA091BD0F31500BAA1AD /* mesh.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9F11BD0F31500BAA1AD /* mesh.c */; };
 		F07DEA0A1BD0F31500BAA1AD /* model3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9F21BD0F31500BAA1AD /* model3d.c */; };
 		F07DEA0B1BD0F31500BAA1AD /* palette.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9F31BD0F31500BAA1AD /* palette.c */; };
@@ -166,7 +165,6 @@
 		F07DE9EB1BD0F31500BAA1AD /* goxel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = goxel.h; sourceTree = "<group>"; };
 		F07DE9EC1BD0F31500BAA1AD /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
 		F07DE9ED1BD0F31500BAA1AD /* image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = image.c; sourceTree = "<group>"; };
-		F07DE9EE1BD0F31500BAA1AD /* imgui_user.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = imgui_user.inl; sourceTree = "<group>"; };
 		F07DE9F11BD0F31500BAA1AD /* mesh.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh.c; sourceTree = "<group>"; };
 		F07DE9F21BD0F31500BAA1AD /* model3d.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = model3d.c; sourceTree = "<group>"; };
 		F07DE9F31BD0F31500BAA1AD /* palette.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = palette.c; sourceTree = "<group>"; };
@@ -391,7 +389,6 @@
 				F07DE9EB1BD0F31500BAA1AD /* goxel.h */,
 				F07DE9EC1BD0F31500BAA1AD /* gui.cpp */,
 				F07DE9ED1BD0F31500BAA1AD /* image.c */,
-				F07DE9EE1BD0F31500BAA1AD /* imgui_user.inl */,
 				F07DE9F11BD0F31500BAA1AD /* mesh.c */,
 				F07DE9F21BD0F31500BAA1AD /* model3d.c */,
 				F07DE9F31BD0F31500BAA1AD /* palette.c */,
@@ -536,7 +533,6 @@
 			files = (
 				F00FC314226B2F7C0002F251 /* sound_openal.inl in Resources */,
 				F0EEB7E61C8EC472004AB676 /* procedural.inl in Resources */,
-				F07DEA071BD0F31500BAA1AD /* imgui_user.inl in Resources */,
 				F07DE9D51BD0F03900BAA1AD /* Assets.xcassets in Resources */,
 				F0EEB7E01C8EC25D004AB676 /* procedural.leg in Resources */,
 				F07DE9D81BD0F03900BAA1AD /* MainMenu.xib in Resources */,
