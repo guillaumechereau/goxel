@@ -43,7 +43,7 @@ namespace ImGui {
         const ImGuiStyle& style = g.Style;
         ImGuiWindow* window = GetCurrentWindow();
         float r = style.FrameRounding;
-        size.x = size.x ?: ImGui::GetContentRegionAvailWidth();
+        size.x = size.x ?: ImGui::GetContentRegionAvail().x;
         if (fill) {
             window->DrawList->AddRectFilled(
                     pos, pos + size,
@@ -65,11 +65,6 @@ namespace ImGui {
         ImVec4 color  = style.Colors[selected ? ImGuiCol_ButtonActive :
                                      ImGuiCol_Button];
         return GoxBox2(pos, size, color, true, 1, rounding_corners_flags);
-    }
-
-    inline bool TempInputTextIsActive(ImGuiID id) {
-        ImGuiContext& g = *GImGui;
-        return (g.ActiveId == id && g.ScalarAsInputTextId == id);
     }
 
     bool GoxInputFloat(const char *label, float *v, float step,
@@ -117,7 +112,7 @@ namespace ImGui {
 
         ImGui::SameLine();
         ImGui::PushItemWidth(
-                ImGui::GetContentRegionAvailWidth() -
+                ImGui::GetContentRegionAvail().x -
                 button_sz.x - style.ItemSpacing.x);
 
         input_active = ImGui::TempInputTextIsActive(ImGui::GetID(""));

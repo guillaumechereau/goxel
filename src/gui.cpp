@@ -172,8 +172,10 @@ static void on_click(void) {
 
 static bool isCharPressed(int c)
 {
+    // TODO: remove this function if possible.
     ImGuiContext& g = *GImGui;
-    return g.IO.InputCharacters[0] == c;
+    if (g.IO.InputQueueCharacters.Size == 0) return false;
+    return g.IO.InputQueueCharacters[0] == c;
 }
 
 #define COLOR(g, c, s) ({ \
@@ -1027,7 +1029,7 @@ bool gui_selectable_icon(const char *name, bool *v, int icon)
 
 float gui_get_avail_width(void)
 {
-    return GetContentRegionAvailWidth();
+    return ImGui::GetContentRegionAvail().x;
 }
 
 void gui_text(const char *label, ...)
@@ -1160,9 +1162,9 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 center;
     int w, isize;
 
-    button_size = ImVec2(size * GetContentRegionAvailWidth(),
+    button_size = ImVec2(size * GetContentRegionAvail().x,
                          theme->sizes.item_height);
-    if (size == -1) button_size.x = GetContentRegionAvailWidth();
+    if (size == -1) button_size.x = GetContentRegionAvail().x;
     if (size == 0 && (label == NULL || label[0] == '#')) {
         button_size.x = theme->sizes.icons_height;
         button_size.y = theme->sizes.icons_height;
@@ -1198,7 +1200,7 @@ bool gui_button_right(const char *label, int icon)
     w = max(w, theme->sizes.item_height);
     w += theme->sizes.item_padding_h;
     gui_same_line();
-    ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth() - w, 0));
+    ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
     gui_same_line();
     return gui_button(label, 0, icon);
 }
@@ -1364,7 +1366,7 @@ void gui_alert(const char *title, const char *msg)
 bool gui_collapsing_header(const char *label, bool default_opened)
 {
     if (default_opened)
-        ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
+        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     return ImGui::CollapsingHeader(label);
 }
 
@@ -1668,7 +1670,7 @@ bool gui_panel_header(const char *label)
     const theme_t *theme = theme_get();
     bool ret;
     float label_w = ImGui::CalcTextSize(label).x;
-    float w = ImGui::GetContentRegionAvailWidth() - theme->sizes.item_height;
+    float w = ImGui::GetContentRegionAvail().x - theme->sizes.item_height;
     gui_push_id("panel_header");
     ImGui::Dummy(ImVec2((w - label_w) / 2, 0));
     gui_same_line();
