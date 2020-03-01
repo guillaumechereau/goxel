@@ -38,6 +38,12 @@ void on_char(GLFWwindow *win, unsigned int c)
     inputs_insert_char(g_inputs, c);
 }
 
+void on_drop(GLFWwindow* win, int count, const char** paths)
+{
+    for (int i = 0;  i < count;  i++)
+        action_exec2("import", "p", paths[i]);
+}
+
 typedef struct
 {
     char *input;
@@ -293,6 +299,7 @@ int main(int argc, char **argv)
     glfwMakeContextCurrent(window);
     if (!DEFINED(EMSCRIPTEN))
         glfwSetScrollCallback(window, on_scroll);
+    glfwSetDropCallback(window, on_drop);
     glfwSetCharCallback(window, on_char);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
     set_window_icon(window);
