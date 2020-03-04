@@ -56,6 +56,12 @@ static void qubicle_import(const char *path)
                                         NULL, NULL, NULL);
     if (!path) return;
 
+    if (!str_endswith(path,".qb"))
+    {
+        gui_alert("Import Error", "Wrong type: This is not a .qb file");
+        return;
+    }
+
     file = fopen(path, "rb");
     version = READ(uint32_t, file);
     (void)version;
