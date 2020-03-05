@@ -1002,6 +1002,19 @@ bool gui_bbox(float box[4][4])
     return ret;
 }
 
+bool gui_vector_float(const char *id, float vector[3], float step,
+                     float minv, float maxv, const char *format)
+{
+    bool ret = false;
+
+    gui_group_begin(id);
+    ret |= gui_input_float("x", &vector[0], step, minv, maxv, format);
+    ret |= gui_input_float("y", &vector[1], step, minv, maxv, format);
+    ret |= gui_input_float("z", &vector[2], step, minv, maxv, format);
+    gui_group_end();
+    return ret;
+}
+
 bool gui_angle(const char *id, float *v, int vmin, int vmax)
 {
     int a;
