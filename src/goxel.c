@@ -390,6 +390,14 @@ void goxel_reset(void)
         },
     };
 
+    goxel.clipping = (typeof(goxel.clipping))
+    {
+        .origin = {0, 0, 0},
+        .normal = {1,0,0},
+        .clip = false,
+        .color = {255, 222, 222, 255},
+    };
+
     #ifdef AFTER_RESET_FUNC
     AFTER_RESET_FUNC();
     #endif
@@ -889,6 +897,11 @@ void goxel_render_view(const float viewport[4], bool render_mode)
         render_symmetry_axis(goxel.image->box, goxel.painter.symmetry,
                              goxel.painter.symmetry_origin);
     }
+    if (goxel.clipping.clip)
+    {
+        render_grid(rend, goxel.clipping.plane, 
+        goxel.clipping.color,goxel.image->active_layer->box);
+    }
     if (goxel.show_export_viewport)
         render_export_viewport(viewport);
 
@@ -1135,6 +1148,47 @@ ACTION_REGISTER(export,
     .help = "Export to a file",
     .cfunc = goxel_export_to_file,
     .csig = "vp",
+)
+
+static layer_t *clip_layer(image_t *img, layer_t *layer)
+{
+    layer_t *clipped_layer;
+
+    img = img?:goxel.image;
+    layer = layer?:img->active_layer;
+
+    clipped_layer = image_duplicate_layer(img,layer);
+
+
+    mesh_iterator_t iter;
+    mesh_t *mesh2clip = clipped_layer->mesh;
+    mesh_accessor_t accessor;
+    int vp[3];
+    float dot;
+    float p[3], p_vec[3];
+    uint8_t new_value[4];
+    for(int i = 0;i<4;i++)
+        new_value[i]=0;
+    iter = mesh_get_iterator(mesh2clip,MESH_ITER_VOXELS);
+
+    accessor = mesh_get_accessor(mesh2clip);
+    while (mesh_iter(&iter, vp)) {
+        vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
+        for(int i = 0;i<3;i++)
+            p_vec[i]=p[i]- goxel.clipping.origin[i];
+        vec3_normalize(p_vec,p_vec);
+        dot = vec3_dot(p_vec, goxel.clipping.normal);
+        if (dot>0)
+            mesh_set_at(mesh2clip, &accessor, vp,new_value);
+}
+    return clipped_layer;
+}
+
+ACTION_REGISTER(clip_layer,
+    .help = "Clip the current layer",
+    .cfunc = clip_layer,
+    .csig = "vpp",
+    .flags = ACTION_TOUCH_IMAGE,
 )
 
 static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
