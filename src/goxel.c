@@ -897,10 +897,12 @@ void goxel_render_view(const float viewport[4], bool render_mode)
         render_symmetry_axis(goxel.image->box, goxel.painter.symmetry,
                              goxel.painter.symmetry_origin);
     }
-    if (goxel.clipping.clip)
-    {
+    if (goxel.clipping.clip && !mesh_is_empty(goxel.image->active_layer->mesh))
+    {           
+        float b[4][4];
+        bbox_grow(goxel.image->active_layer->box,5,5,5,b);
         render_grid(rend, goxel.clipping.plane, 
-        goxel.clipping.color,goxel.image->active_layer->box);
+        goxel.clipping.color,b);
     }
     if (goxel.show_export_viewport)
         render_export_viewport(viewport);
@@ -1156,7 +1158,7 @@ static layer_t *clip_layer(image_t *img, layer_t *layer)
 
     img = img?:goxel.image;
     layer = layer?:img->active_layer;
-
+    layer->visible=false; // Hide the clipped layer 
     clipped_layer = image_duplicate_layer(img,layer);
 
 
