@@ -24,10 +24,9 @@ void clip_init(void)
 
     float bbox[4][4];
     box_get_bbox(goxel.image->active_layer->box,bbox);
-    goxel.clipping.origin[0] = bbox[3][0];
-    goxel.clipping.origin[1] = bbox[3][1];
-    goxel.clipping.origin[2] = bbox[3][2];
+    vec3_copy(goxel.clipping.origin, bbox[3]);
 }
+
 void clip_cancel()
 {
     goxel.clipping.clip=false;
@@ -36,34 +35,30 @@ void clip_cancel()
 static layer_t *clip_layer(image_t *img, layer_t *layer)
 {
     layer_t *clipped_layer;
-
-    img = img?:goxel.image;
-    layer = layer?:img->active_layer;
-    layer->visible=false; // Hide the clipped layer 
-
-    clipped_layer = image_duplicate_layer(img,layer);
-    
-
     mesh_iterator_t iter;
     mesh_t *mesh2clip = clipped_layer->mesh;
     mesh_accessor_t accessor;
     int vp[3];
     float dot, p[3], p_vec[3];
     uint8_t new_value[4];
-    for(int i = 0;i<4;i++)
-        new_value[i]=0;
+
+    img = img?:goxel.image;
+    layer = layer?:img->active_layer;
+    layer->visible=false; // Hide the layer being clipped
+
+    clipped_layer = image_duplicate_layer(img,layer);
+
+    vec4_set(new_value,0,0,0,0);
     iter = mesh_get_iterator(mesh2clip,MESH_ITER_VOXELS);
 
     accessor = mesh_get_accessor(mesh2clip);
     while (mesh_iter(&iter, vp)) {
         vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
-        for(int i = 0;i<3;i++)
-            p_vec[i]=p[i]- goxel.clipping.origin[i];
+        vec3_sub(p,goxel.clipping.origin,p_vec);
         vec3_normalize(p_vec,p_vec);
-        dot = vec3_dot(p_vec, goxel.clipping.normal);
-        if (dot>0)
+        if (vec3_dot(p_vec, goxel.clipping.normal)>0)
             mesh_set_at(mesh2clip, &accessor, vp,new_value);
-}
+    }
     goxel.clipping.clip=false;
     // Update name 
     strcat(clipped_layer->name,"_clipped");
