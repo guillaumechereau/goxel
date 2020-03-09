@@ -65,45 +65,4 @@ void gui_view_panel(void)
                           EFFECT_MC_SMOOTH, NULL);
     }
     
-    gui_checkbox("Clip", &goxel.clipping.clip, NULL);
-    if(goxel.clipping.clip) {
-        gui_vector_float("Origin", goxel.clipping.origin, 0.1, .0f, .0f, NULL);
-        gui_vector_float("Normal", goxel.clipping.normal, 0.1, -1.0f, 1.0f, NULL);
-        if(gui_button("Normal X", .5, 0))
-        {
-            goxel.clipping.normal[0] = 1;
-            goxel.clipping.normal[1] = 0;
-            goxel.clipping.normal[2] = 0;
-        }
-        gui_same_line();
-        if(gui_button("Normal Y", 1, 0))
-        {
-            goxel.clipping.normal[0] = 0;
-            goxel.clipping.normal[1] = 1;
-            goxel.clipping.normal[2] = 0;
-        }
-        if(gui_button("Normal Z", .5, 0))
-        {
-            goxel.clipping.normal[0] = 0;
-            goxel.clipping.normal[1] = 0;
-            goxel.clipping.normal[2] = 1;
-        } gui_same_line();
-        if(gui_button("Normal Cam", 1, 0))
-        {
-            // camera_t *camera = goxel.image->active_camera;
-            // camera->view_mat;
-            // goxel.image->active_layer->box;
-            // goxel.clipping.normal=goxel.
-        }
-        if(gui_button("Invert Normal", 1, 0))
-        {
-            for(int i = 0; i<3;i++)
-                goxel.clipping.normal[i] = -goxel.clipping.normal[i];
-        }
-        gui_action_button("clip_layer", "Clip", 1, "");
-
-        // Update Plane 
-        plane_from_normal(goxel.clipping.plane,goxel.clipping.origin,goxel.clipping.normal);
-    }
-
 }

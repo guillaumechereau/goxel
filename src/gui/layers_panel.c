@@ -75,6 +75,7 @@ void gui_layers_panel(void)
     gui_group_begin(NULL);
     gui_action_button("img_duplicate_layer", "Duplicate", 1, "");
     gui_action_button("img_clone_layer", "Clone", 1, "");
+    gui_action_button("clip_init", "Clip", 1, "");
     gui_action_button("img_merge_visible_layers", "Merge visible", 1, "");
 
     layer = goxel.image->active_layer;
@@ -129,4 +130,28 @@ void gui_layers_panel(void)
         }
         gui_combo_end();
     }
+
+    if(goxel.clipping.clip) {
+        if(gui_collapsing_header("Clipping Parameters",false))
+        {
+            gui_vector_float("Origin", goxel.clipping.origin, 0.1, .0f, .0f, NULL);
+            gui_vector_float("Normal", goxel.clipping.normal, 0.1, -1.0f, 1.0f, NULL);
+
+            gui_action_button("clipping_normal_x", "Normal X", .5, "");
+            gui_same_line();
+            gui_action_button("clipping_normal_y", "Normal Y", 1, "");
+            gui_action_button("clipping_normal_z", "Normal Z", .5, "");
+            gui_same_line();
+            gui_action_button("clipping_normal_cam", "Normal Cam", 1, "");
+
+            gui_action_button("clipping_invert_normal", "Invert Normal", 1, "");
+        }
+        gui_action_button("clip_layer", "Apply Clipping", 1, "");
+        gui_action_button("clip_cancel", "Cancel", 1, "");
+
+        // Update Plane 
+        plane_from_normal(goxel.clipping.plane,goxel.clipping.origin,goxel.clipping.normal);
+     
+    }
+
 }
