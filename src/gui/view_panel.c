@@ -64,5 +64,4 @@ void gui_view_panel(void)
         gui_checkbox_flag("Smooth Colors", &goxel.rend.settings.effects,
                           EFFECT_MC_SMOOTH, NULL);
     }
-    
 }
