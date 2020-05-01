@@ -364,12 +364,12 @@ void image_move_layer(image_t *img, layer_t *layer, int d)
 
 static void image_move_layer_up(image_t *img, layer_t *layer)
 {
-    image_move_layer(img, layer, +1);
+    image_move_layer(img, layer, -1);
 }
 
 static void image_move_layer_down(image_t *img, layer_t *layer)
 {
-    image_move_layer(img, layer, -1);
+    image_move_layer(img, layer, +1);
 }
 
 layer_t *image_duplicate_layer(image_t *img, layer_t *other)
