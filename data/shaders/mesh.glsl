@@ -263,7 +263,7 @@ void main()
     float visibility = 1.0;
     mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;
     lowp float bias = 0.005 * tan(acos(clamp(NdotL, 0.0, 1.0)));
-    bias = clamp(bias, 0.0, 0.015);
+    bias = clamp(bias, 0.0015, 0.015);
     shadow_coord.z -= bias;
     PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;
     PS[1] = vec2(+0.94558609, -0.76890725) / 1024.0;

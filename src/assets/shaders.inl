@@ -48,7 +48,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/mesh.glsl", .size = 8874, .data =
+{.path = "data/shaders/mesh.glsl", .size = 8877, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -314,7 +314,7 @@
     "    float visibility = 1.0;\n"
     "    mediump vec4 shadow_coord = v_shadow_coord / v_shadow_coord.w;\n"
     "    lowp float bias = 0.005 * tan(acos(clamp(NdotL, 0.0, 1.0)));\n"
-    "    bias = clamp(bias, 0.0, 0.015);\n"
+    "    bias = clamp(bias, 0.0015, 0.015);\n"
     "    shadow_coord.z -= bias;\n"
     "    PS[0] = vec2(-0.94201624, -0.39906216) / 1024.0;\n"
     "    PS[1] = vec2(+0.94558609, -0.76890725) / 1024.0;\n"
