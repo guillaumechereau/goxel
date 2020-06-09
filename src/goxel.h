@@ -74,7 +74,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GOXEL_VERSION_STR "0.10.5"
+#define GOXEL_VERSION_STR "0.10.6"
 #ifndef GOXEL_DEFAULT_THEME
 #   define GOXEL_DEFAULT_THEME "original"
 #endif
