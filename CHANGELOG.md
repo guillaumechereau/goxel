@@ -1,5 +1,11 @@
 #Changelog
 
+## [0.10.6] - 2020-07-09
+
+Minor update that improves glTF color export: we can now export the models
+with the colors put into a texture instead of vertices attributes.
+
+
 ## [0.10.5] - 2020-01-06
 
 Minor update to attempt to fix a crash with AMD cards.
