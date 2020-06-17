@@ -19,8 +19,7 @@
 	</description>
 	<screenshots>
 		<screenshot type="default">
-			<caption>Fisherman House, by Thibault Simar</caption>
-			<image type="source">https://goxel.xyz/gallery/thibault-fisherman-house.jpg</image>
+			<image type="source">https://github.com/guillaumechereau/goxel/raw/b06a56c3c10fa54d5616367195251d84ff95124f/screenshots/screenshot-plane.png</image>
 		</screenshot>
 	</screenshots>
 	<releases>
