@@ -28,6 +28,12 @@ static inputs_t     *g_inputs = NULL;
 static GLFWwindow   *g_window = NULL;
 static float        g_scale = 1;
 
+static void on_glfw_error(int code, const char *msg)
+{
+    fprintf(stderr, "glfw error %d (%s)\n", code, msg);
+    assert(false);
+}
+
 void on_scroll(GLFWwindow *win, double x, double y)
 {
     g_inputs->mouse_wheel = y;
@@ -191,7 +197,7 @@ static void loop_function(void)
 
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-    for (i = 0; i <= GLFW_KEY_LAST; i++) {
+    for (i = GLFW_KEY_SPACE; i <= GLFW_KEY_LAST; i++) {
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
@@ -275,8 +281,7 @@ int main(int argc, char **argv)
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
-    int width = 640, height = 480, ret = 0, err;
-    const char *err_msg;
+    int width = 640, height = 480, ret = 0;
     inputs_t inputs = {};
     g_inputs = &inputs;
 
@@ -286,6 +291,7 @@ int main(int argc, char **argv)
 
     g_scale = args.scale;
 
+    glfwSetErrorCallback(on_glfw_error);
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 4);
     monitor = glfwGetPrimaryMonitor();
@@ -295,11 +301,6 @@ int main(int argc, char **argv)
         height = mode->height ?: 480;
     }
     window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
-    if (!window) {
-        err = glfwGetError(&err_msg);
-        fprintf(stderr, "glfw error %d (%s)\n", err, err_msg);
-        return -1;
-    }
     assert(window);
     g_window = window;
     glfwMakeContextCurrent(window);
