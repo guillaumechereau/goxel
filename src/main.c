@@ -275,7 +275,8 @@ int main(int argc, char **argv)
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
-    int width = 640, height = 480, ret = 0;
+    int width = 640, height = 480, ret = 0, err;
+    const char *err_msg;
     inputs_t inputs = {};
     g_inputs = &inputs;
 
@@ -294,6 +295,11 @@ int main(int argc, char **argv)
         height = mode->height ?: 480;
     }
     window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
+    if (!window) {
+        err = glfwGetError(&err_msg);
+        fprintf(stderr, "glfw error %d (%s)\n", err, err_msg);
+        return -1;
+    }
     assert(window);
     g_window = window;
     glfwMakeContextCurrent(window);
