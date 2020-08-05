@@ -41,6 +41,9 @@ extern "C" {
 #   endif
 #endif
 
+// Disable OpenGL deprecation warnings on Mac.
+#define GL_SILENCE_DEPRECATION 1
+
 #ifdef __cplusplus
 }
 #endif

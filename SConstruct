@@ -107,7 +107,7 @@ if target_os == 'msys':
 if target_os == 'darwin':
     sources += glob.glob('src/*.m')
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
-    env.Append(LIBS=['m', 'glfw3', 'objc'])
+    env.Append(LIBS=['m', 'glfw', 'objc'])
 
 # Add external libs.
 env.Append(CPPPATH=['ext_src/uthash'])
