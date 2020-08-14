@@ -390,6 +390,14 @@ void goxel_reset(void)
         },
     };
 
+    goxel.clipping = (typeof(goxel.clipping))
+    {
+        .origin = {0, 0, 0},
+        .normal = {1,0,0},
+        .clip = false,
+        .color = {255, 222, 222, 255},
+    };
+
     #ifdef AFTER_RESET_FUNC
     AFTER_RESET_FUNC();
     #endif
@@ -888,6 +896,25 @@ void goxel_render_view(const float viewport[4], bool render_mode)
                    EFFECT_SEE_BACK | EFFECT_GRID);
         render_symmetry_axis(goxel.image->box, goxel.painter.symmetry,
                              goxel.painter.symmetry_origin);
+    }
+    if (goxel.clipping.clip && !mesh_is_empty(goxel.image->active_layer->mesh))
+    {           
+        float b[4][4], end[3], box_size[3], max_length, normal[3];
+        uint8_t c[4];
+        box_get_size(goxel.image->active_layer->box, box_size);
+        bbox_grow(goxel.image->active_layer->box, box_size[0]/10,
+                                                  box_size[1]/10,
+                                                  box_size[2]/10, b);
+        render_grid(rend, goxel.clipping.plane, 
+                    goxel.clipping.color, b);
+        
+        // Render clipping direction pointer 
+        max_length = max(box_size[0], max(box_size[1],box_size[2]))*1.25;
+        vec3_mul(goxel.clipping.normal, max_length, normal);
+        vec3_add(goxel.clipping.origin, normal, end);
+      
+        vec4_set(c, 255, 0, 0, 255);
+        render_line(rend, goxel.clipping.origin, end, c, 0);
     }
     if (goxel.show_export_viewport)
         render_export_viewport(viewport);

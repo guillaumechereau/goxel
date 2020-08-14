@@ -77,6 +77,9 @@ bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);
 bool gui_angle(const char *id, float *v, int vmin, int vmax);
 bool gui_bbox(float box[4][4]);
+bool gui_vector_float(const char *id, float vector[3], float step,
+                     float minv, float maxv, const char *format);
+
 bool gui_quat(const char *label, float q[4]);
 bool gui_action_button(const char *id, const char *label, float size,
                        const char *sig, ...);

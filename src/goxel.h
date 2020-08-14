@@ -482,6 +482,14 @@ typedef struct goxel
         float  box[4][4];
     } clipboard;
 
+    struct     {
+        float      plane[4][4];  
+        float      origin[3];
+        float      normal[3];
+        bool       clip;
+        uint8_t    color[4];
+    }clipping;
+
     int        snap_mask;    // Global snap mask (can edit in the GUI).
     float      snap_offset;  // Only for brush tool, remove that?
 
