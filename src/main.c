@@ -180,20 +180,22 @@ static void loop_function(void)
     // On retina display, this might not be the same as the window
     // size.
     glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
-    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
 
     scale = g_scale;
     // Note: when all platforms get updated to glfw 3.3+, we should remove
     // this test.
-#if (GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 3)
+    if (GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 3) {
         monitor = glfwGetPrimaryMonitor();
         glfwGetMonitorContentScale(monitor, &xscale, &yscale);
         scale *= xscale;
-#endif
+    } else {
+        glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
+        scale *= (float)fb_size[0] / win_size[0];
+    }
 
-    g_inputs->window_size[0] = win_size[0] / scale;
-    g_inputs->window_size[1] = win_size[1] / scale;
-    g_inputs->scale = fb_size[0] * scale / win_size[0];
+    g_inputs->window_size[0] = win_size[0];
+    g_inputs->window_size[1] = win_size[1];
+    g_inputs->scale = scale;
 
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -201,7 +203,7 @@ static void loop_function(void)
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    vec2_set(g_inputs->touches[0].pos, xpos / scale, ypos / scale);
+    vec2_set(g_inputs->touches[0].pos, xpos, ypos);
     g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
