@@ -84,10 +84,15 @@ static int vox_import_old(const char *path)
 
 typedef struct node node_t;
 struct node {
-    node_t *parent;
     node_t *children;
     node_t *next, *prev;
+
     char id[4];
+    node_t *parent; // Logical parent.
+
+    int node_id;
+    int nb_children;
+    int *children_ids;
 
     union {
         struct {
@@ -105,6 +110,10 @@ struct node {
             int child_id;
             int nb_frames;
             int tr[3];
+            bool has_rot;
+            int rot[3][3];
+            bool has_trans;
+            int trans[3];
         } ntrn;
         struct {
             int id;
@@ -145,16 +154,58 @@ static void read_dict(FILE *file, void *user,
 static void on_trn_dict(void *user, const char *key, int size,
                         const char *value)
 {
-    // Not implemented yet.
+    node_t *node = user;
+    int v, x, y, z;
+    if (strcmp(key, "_r") == 0) {
+        node->ntrn.has_rot = true;
+        v = atoi(value);
+        x = (v >> 0) & 3;
+        y = (v >> 2) & 3;
+        z = 3 - x - y;
+        node->ntrn.rot[0][x] = ((v >> 4) & 1) ? -1 : +1;
+        node->ntrn.rot[1][y] = ((v >> 5) & 1) ? -1 : +1;
+        node->ntrn.rot[2][z] = ((v >> 6) & 1) ? -1 : +1;
+    }
+    if (strcmp(key, "_t") == 0) {
+        node->ntrn.has_trans = true;
+        sscanf(value, "%d %d %d", &x, &y, &z);
+        node->ntrn.trans[0] = x;
+        node->ntrn.trans[1] = y;
+        node->ntrn.trans[2] = z;
+    }
+}
+
+static bool node_is(const node_t *node, const char *id)
+{
+    return strncmp(node->id, id, 4) == 0;
+}
+
+static void free_node(node_t *node)
+{
+    node_t *child, *tmp;
+
+    if (node_is(node, "RGBA"))
+        free(node->rgba.values);
+    if (node_is(node, "XYZI"))
+        free(node->xyzi.values);
+
+    DL_FOREACH_SAFE(node->children, child, tmp) {
+        DL_DELETE(node->children, child);
+        free_node(child);
+    }
+
+    free(node->children_ids);
+    free(node);
 }
 
 static node_t *read_node(FILE *file)
 {
     int i, r, size, children_size;
-    node_t *node, *child;
+    node_t *node, *child, *child2;
     long fpos;
 
     node = calloc(1, sizeof(*node));
+    node->node_id = -1;
     r = fread(node->id, 1, 4, file);
     if (r != 4) goto error;
 
@@ -193,9 +244,11 @@ static node_t *read_node(FILE *file)
         }
     }
     else if (strncmp(node->id, "nTRN", 4) == 0) {
-        node->ntrn.id = READ(int32_t, file);
+        node->node_id = READ(int32_t, file);
         read_dict(file, NULL, NULL);
-        node->ntrn.child_id = READ(int32_t, file);
+        node->nb_children = 1;
+        node->children_ids = calloc(1, sizeof(int));
+        *node->children_ids = READ(int32_t, file);
         READ(int32_t, file);
         READ(int32_t, file);
         node->ntrn.nb_frames = READ(int32_t, file);
@@ -204,12 +257,21 @@ static node_t *read_node(FILE *file)
         }
     }
     else if (strncmp(node->id, "nSHP", 4) == 0) {
-        node->nshp.id = READ(int32_t, file);
+        node->node_id = READ(int32_t, file);
         read_dict(file, NULL, NULL);
         node->nshp.nb_models = READ(int32_t, file);
         for (i = 0; i < node->nshp.nb_models; i++) {
             node->nshp.model_id = READ(int32_t, file);
             read_dict(file, NULL, NULL);
+        }
+    }
+    else if (strncmp(node->id, "nGRP", 4) == 0) {
+        node->node_id = READ(int32_t, file);
+        read_dict(file, NULL, NULL);
+        node->nb_children = READ(int32_t, file);
+        node->children_ids = calloc(node->nb_children, sizeof(int));
+        for (i = 0; i < node->nb_children; i++) {
+            node->children_ids[i] = READ(int32_t, file);
         }
     }
 
@@ -220,40 +282,72 @@ static node_t *read_node(FILE *file)
     while (ftell(file) < fpos + size + children_size) {
         child = read_node(file);
         if (!child) continue;
-        child->parent = node;
         DL_APPEND(node->children, child);
+    }
+
+
+    // Set the parents.
+    DL_FOREACH(node->children, child) {
+        for (i = 0; i < child->nb_children; i++) {
+            DL_FOREACH(node->children, child2) {
+                if (child2->node_id == child->children_ids[i]) {
+                    child2->parent = child;
+                }
+            }
+        }
     }
 
     return node;
 error:
-    free(node);
+    free_node(node);
     return NULL;
 }
 
-static void free_node(node_t *node)
+static const node_t *tree_find_shape(const node_t *tree, int model_id)
 {
-    node_t *child, *tmp;
+    const node_t *child, *ret;
+    DL_FOREACH(tree->children, child) {
+        if (node_is(child, "nSHP") && child->nshp.model_id == model_id)
+            return child;
+        ret = tree_find_shape(child, model_id);
+        if (ret) return ret;
+    }
+    return NULL;
+}
 
-    if (strncmp(node->id, "RGBA", 4) == 0) {
-        free(node->rgba.values);
-    } else if (strncmp(node->id, "XYZI", 4) == 0) {
-        free(node->xyzi.values);
+static void node_apply_mat(const node_t *node, float mat[4][4])
+{
+    float rot[4][4] = MAT4_IDENTITY;
+    int i, j;
+
+    if (node->parent) {
+        node_apply_mat(node->parent, mat);
     }
 
-    DL_FOREACH_SAFE(node->children, child, tmp) {
-        DL_DELETE(node->children, child);
-        free_node(child);
+    if (node_is(node, "nTRN") && node->ntrn.has_rot) {
+        for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++) {
+            rot[i][j] = node->ntrn.rot[i][j];
+        }
+        mat4_imul(mat, rot);
     }
-    free(node);
+    if (node_is(node, "nTRN") && node->ntrn.has_trans) {
+        mat4_itranslate(mat, -node->ntrn.trans[0],
+                             -node->ntrn.trans[1],
+                             -node->ntrn.trans[2]);
+    }
 }
 
 static int import_layer(const node_t *size, const node_t *xyzi,
-                       const node_t *rgba, const node_t *tree)
+                        const node_t *rgba, const node_t *tree,
+                        int model_id)
 {
     int i, x, y, z, c, pos[3];
     layer_t *layer;
     uint8_t color[4];
     mesh_iterator_t iter = {0};
+    const node_t *shape;
+    float mat[4][4] = MAT4_IDENTITY;
 
     // Use the current layer for first shape, then create new layers.
     if (size == tree->children)
@@ -276,6 +370,15 @@ static int import_layer(const node_t *size, const node_t *xyzi,
             hexcolor(VOX_DEFAULT_PALETTE[c], color);
         mesh_set_at(layer->mesh, &iter, pos, color);
     }
+
+    // Apply the transformation.
+    // XXX: would be better to properly support layer transformations!
+    shape = tree_find_shape(tree, model_id);
+    if (shape) {
+        node_apply_mat(shape, mat);
+        mesh_move(layer->mesh, mat);
+    }
+
     return 0;
 }
 
@@ -283,7 +386,7 @@ static int vox_import(const char *path)
 {
     FILE *file;
     char magic[4];
-    int r, version;
+    int r, i, version;
     node_t *tree, *size_n, *xyzi_n, *rgba_n;
 
     path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
@@ -303,6 +406,7 @@ static int vox_import(const char *path)
     version = READ(uint32_t, file);
     if (version != 150) LOG_W("Magica voxel file version %d!", version);
     tree = read_node(file);
+    if (!tree) goto error;
 
     // Get the palette.
     DL_FOREACH(tree->children, rgba_n) {
@@ -310,14 +414,15 @@ static int vox_import(const char *path)
     }
 
     // Create one layer for each ('size', 'xyzi') chunks in the main chunk.
+    i = 0;
     DL_FOREACH(tree->children, size_n) {
         if (strncmp(size_n->id, "SIZE", 4) != 0) continue;
         xyzi_n = size_n->next;
         if (strncmp(xyzi_n->id, "XYZI", 4) != 0) continue;
-        import_layer(size_n, xyzi_n, rgba_n, tree);
+        import_layer(size_n, xyzi_n, rgba_n, tree, i);
+        i++;
     }
 
-    if (!tree) goto error;
     free_node(tree);
 
     return 0;
