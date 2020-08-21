@@ -324,17 +324,17 @@ static void node_apply_mat(const node_t *node, float mat[4][4])
         node_apply_mat(node->parent, mat);
     }
 
+    if (node_is(node, "nTRN") && node->ntrn.has_trans) {
+        mat4_itranslate(mat, node->ntrn.trans[0],
+                             node->ntrn.trans[1],
+                             node->ntrn.trans[2]);
+    }
     if (node_is(node, "nTRN") && node->ntrn.has_rot) {
         for (i = 0; i < 3; i++)
         for (j = 0; j < 3; j++) {
             rot[i][j] = node->ntrn.rot[i][j];
         }
         mat4_imul(mat, rot);
-    }
-    if (node_is(node, "nTRN") && node->ntrn.has_trans) {
-        mat4_itranslate(mat, -node->ntrn.trans[0],
-                             -node->ntrn.trans[1],
-                             -node->ntrn.trans[2]);
     }
 }
 
@@ -362,7 +362,7 @@ static int import_layer(const node_t *size, const node_t *xyzi,
         c = xyzi->xyzi.values[i * 4 + 3];
         pos[0] = x - size->size.w / 2;
         pos[1] = y - size->size.h / 2;
-        pos[2] = z;
+        pos[2] = z - size->size.d / 2;
         if (!c) continue; // Not sure what c == 0 means.
         if (rgba)
             memcpy(color, rgba->rgba.values[c], 4);
