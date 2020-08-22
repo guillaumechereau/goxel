@@ -27,4 +27,9 @@
 // Fix quickjs calls to memcpy with n = 0 and src = NULL.
 #define memcpy(dest, src, n) ({ ((n) != 0) ? memcpy(dest, src, n) : dest; })
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
+
 #include "../ext_src/quickjs/quickjs.c"
