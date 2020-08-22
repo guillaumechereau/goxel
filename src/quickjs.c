@@ -23,4 +23,8 @@
 
 #define is_digit is_digit_
 #define compute_stack_size compute_stack_size_
+
+// Fix quickjs calls to memcpy with n = 0 and src = NULL.
+#define memcpy(dest, src, n) ({ ((n) != 0) ? memcpy(dest, src, n) : dest; })
+
 #include "../ext_src/quickjs/quickjs.c"
