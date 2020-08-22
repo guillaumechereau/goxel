@@ -25,7 +25,9 @@
 #define compute_stack_size compute_stack_size_
 
 // Fix quickjs calls to memcpy with n = 0 and src = NULL.
+#ifndef __APPLE__
 #define memcpy(dest, src, n) ({ ((n) != 0) ? memcpy(dest, src, n) : dest; })
+#endif
 
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Warray-bounds"
