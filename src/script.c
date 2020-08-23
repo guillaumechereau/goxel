@@ -17,91 +17,102 @@
  */
 
 #include "goxel.h"
+#include "../ext_src/quickjs/quickjs.h"
 
-#if 0
+typedef struct klass klass_t;
 
-#include "../ext_src/lua/lauxlib.h"
-#include "../ext_src/lua/lua.h"
-#include "../ext_src/lua/lualib.h"
+typedef struct {
+    const char *name;
+    int type;
+    klass_t *klass;
+    struct {
+        int offset;
+        int size;
+    } member;
+} attribute_t;
 
+struct klass {
+    JSClassID id;
+    JSClassDef def;
+    attribute_t attributes[];
+};
 
-static int l_goxel_call(lua_State *l)
+#define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
+
+static klass_t image_klass;
+
+static klass_t list_klass = {
+    .def = { "List" },
+    .attributes = {
+        {}
+    },
+};
+
+static klass_t goxel_klass = {
+    .def = { "Goxel" },
+    .attributes = {
+        {"image", .klass=&image_klass, MEMBER(goxel_t, image)},
+        {}
+    },
+};
+
+static klass_t image_klass = {
+    .def = { "Image" },
+    .attributes = {
+        {"layers", .klass=&list_klass, MEMBER(image_t, layers)},
+        {}
+    },
+};
+
+static JSValue new_obj_ref(JSContext *ctx, void *obj, const klass_t *klass)
 {
-    action_t *a;
-    const char *id = lua_tostring(l, 1);
-    lua_remove(l, 1);
-    a = action_get(id, false);
-    if (!a) luaL_error(l, "Cannot find action %s", id);
-    return action_exec_lua(a, l);
-}
-
-static void add_globals(lua_State *l)
-{
-    const char *script;
-    lua_pushcfunction(l, l_goxel_call);
-    lua_setglobal(l, "goxel_call");
-    script = assets_get("asset://data/other/script_header.lua", NULL);
-    assert(script);
-    luaL_loadstring(l, script);
-    lua_pcall(l, 0, 0, 0);
-}
-
-/*
- * Function: script_run
- * Run a lua script from a file.
- */
-int script_run(const char *filename, int argc, const char **argv)
-{
-    lua_State *l;
-    char *script;
-    int ret = 0, i;
-
-    script = read_file(filename, 0);
-    if (!script) {
-        LOG_E("Cannot read '%d'", filename);
-        return -1;
-    }
-    l = luaL_newstate();
-    luaL_openlibs(l);
-    add_globals(l);
-
-    // Put the arguments.
-    lua_newtable(l);
-    for (i = 0; i < argc; i++) {
-        lua_pushnumber(l, i + 1);
-        lua_pushstring(l, argv[i]);
-        lua_rawset(l, -3);
-    }
-    lua_setglobal(l, "arg");
-
-    luaL_loadstring(l, script);
-    if (lua_pcall(l, 0, 0, 0)) {
-        fprintf(stderr, "ERROR:\n%s\n", lua_tostring(l, -1));
-        ret = -1;
-    }
-    lua_close(l);
-    free(script);
+    JSValue ret;
+    ret = JS_NewObjectClass(ctx, klass->id);
+    JS_SetOpaque(ret, obj);
     return ret;
 }
 
-#endif
-
-#include "../ext_src/quickjs/quickjs.h"
-
-struct {
-
-} klass_t;
-
-static JSClassID gox_obj_class_id;
-
-static void gox_obj_finalizer(JSRuntime *rt, JSValue val)
+static JSValue obj_attr_getter(JSContext *ctx, JSValueConst this_val,
+                               int magic)
 {
+    void *obj, *ptr;
+    const klass_t *klass;
+    const attribute_t *attr;
+    JSValue proto;
+
+    proto = JS_GetPrototype(ctx, this_val);
+    klass = JS_GetOpaque(proto, 1);
+    obj = JS_GetOpaque(this_val, klass->id);
+    JS_FreeValue(ctx, proto);
+
+    attr = &klass->attributes[magic];
+    if (attr->klass && attr->member.size) {
+        ptr = obj + attr->member.offset;
+        return new_obj_ref(ctx, ptr, attr->klass);
+    }
+
+    return JS_NewInt32(ctx, magic);
 }
 
-static JSClassDef gox_obj_class = {
-    "Obj",
-    .finalizer = gox_obj_finalizer,
-}; 
+static void init_klass(JSContext *ctx, klass_t *klass)
+{
+    JSValue proto, getter;
+    attribute_t *attr;
+    int i;
+
+    JS_NewClassID(&klass->id);
+    JS_NewClass(JS_GetRuntime(ctx), klass->id, &klass->def);
+    proto = JS_NewObject(ctx);
+    JS_SetOpaque(proto, klass);
+    JS_SetClassProto(ctx, klass->id, proto);
+
+    for (i = 0, attr = &klass->attributes[0]; attr->name; attr++, i++) {
+        getter = JS_NewCFunction2(ctx, (void*)obj_attr_getter, NULL, 0,
+                                  JS_CFUNC_getter_magic, 0);
+        JS_DefinePropertyGetSet(ctx, proto, JS_NewAtom(ctx, attr->name),
+                                getter, JS_UNDEFINED, i);
+    }
+}
 
 // Taken as it is from quickjs-libc.c
 static JSValue js_print(JSContext *ctx, JSValueConst this_val,
@@ -124,6 +135,7 @@ static JSValue js_print(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
+/*
 static JSValue gox_obj_attr_getter(JSContext *ctx, JSValueConst this_val,
                                    int argc, JSValueConst *argv, int magic,
                                    JSValue *func_data)
@@ -134,30 +146,23 @@ static JSValue gox_obj_attr_getter(JSContext *ctx, JSValueConst this_val,
     }
     return JS_UNDEFINED;
 }
+*/
 
 static void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
 {
-    JSValue global_obj, console, goxel_obj, proto;
+    JSValue global_obj, console, goxel_obj;
     global_obj = JS_GetGlobalObject(ctx);
     console = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, console, "log",
                       JS_NewCFunction(ctx, js_print, "log", 1));
     JS_SetPropertyStr(ctx, global_obj, "console", console);
 
-    JS_NewClassID(&gox_obj_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), gox_obj_class_id, &gox_obj_class);
-    proto = JS_NewObject(ctx);
-    JS_SetClassProto(ctx, gox_obj_class_id, proto);
+    init_klass(ctx, &list_klass);
+    init_klass(ctx, &goxel_klass);
+    init_klass(ctx, &image_klass);
 
-    goxel_obj = JS_NewObjectClass(ctx, gox_obj_class_id);
-    JS_SetOpaque(goxel_obj, &goxel);
+    goxel_obj = new_obj_ref(ctx, &goxel, &goxel_klass);
     JS_SetPropertyStr(ctx, global_obj, "goxel", goxel_obj);
-
-    JSValue getter;
-    JSValue name = JS_NewString(ctx, "image");
-    getter = JS_NewCFunctionData(ctx, gox_obj_attr_getter, 0, 0, 1, &name);
-    JS_DefinePropertyGetSet(ctx, goxel_obj, JS_NewAtom(ctx, "image"),
-                            getter, JS_UNDEFINED, 0);
 
     JS_FreeValue(ctx, global_obj);
 }
