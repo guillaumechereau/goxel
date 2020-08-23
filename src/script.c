@@ -120,6 +120,20 @@ static void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
     JS_FreeValue(ctx, global_obj);
 }
 
+static  void dump_exception(JSContext *ctx)
+{
+    JSValue exception_val;
+    const char *str;
+    exception_val = JS_GetException(ctx);
+    str = JS_ToCString(ctx, exception_val);
+    if (str) {
+        fprintf(stderr, "%s\n", str);
+        JS_FreeCString(ctx, str);
+    } else {
+        fprintf(stderr, "[exception]\n");
+    }
+    JS_FreeValue(ctx, exception_val);
+}
 
 int script_run(const char *filename, int argc, const char **argv)
 {
@@ -143,6 +157,10 @@ int script_run(const char *filename, int argc, const char **argv)
         return -1;
     }
     res_val = JS_Eval(ctx, input, size, filename, flags);
+    if (JS_IsException(res_val)) {
+        dump_exception(ctx);
+    }
+
     JS_FreeValue(ctx, res_val);
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);
