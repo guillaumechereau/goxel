@@ -49,7 +49,6 @@ enum {
 // Tools
 typedef struct tool tool_t;
 struct tool {
-    obj_t obj;
     int id;
     const char *action_id;
     int (*iter_fn)(tool_t *tool, const painter_t *painter,

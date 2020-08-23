@@ -23,13 +23,8 @@
 
 #include <stdarg.h>
 
-static klass_t goxel_klass;
-
 // The global goxel instance.
-goxel_t goxel = {
-    .obj.ref = 1,
-    .obj.klass = &goxel_klass,
-};
+goxel_t goxel = {};
 
 texture_t *texture_new_image(const char *path, int flags)
 {
@@ -1359,16 +1354,3 @@ ACTION_REGISTER(toggle_mode,
     .cfunc = toggle_mode,
     .csig = "v",
 )
-
-/*
- * Klass definition
- */
-
-static klass_t goxel_klass = {
-    .name = "Goxel",
-    .attributes = (attribute_t[]) {
-        {"tool", TYPE_OBJ, MEMBER(goxel_t, tool)},
-        {"hide_box", TYPE_BOOL, MEMBER(goxel_t, hide_box)},
-        {},
-    },
-};

@@ -88,6 +88,21 @@ int script_run(const char *filename, int argc, const char **argv)
 
 #include "../ext_src/quickjs/quickjs.h"
 
+struct {
+
+} klass_t;
+
+static JSClassID gox_obj_class_id;
+
+static void gox_obj_finalizer(JSRuntime *rt, JSValue val)
+{
+}
+
+static JSClassDef gox_obj_class = {
+    "Obj",
+    .finalizer = gox_obj_finalizer,
+}; 
+
 // Taken as it is from quickjs-libc.c
 static JSValue js_print(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)
@@ -109,14 +124,41 @@ static JSValue js_print(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
+static JSValue gox_obj_attr_getter(JSContext *ctx, JSValueConst this_val,
+                                   int argc, JSValueConst *argv, int magic,
+                                   JSValue *func_data)
+{
+    const char *name;
+    name = JS_ToCString(ctx, *func_data);
+    if (strcmp(name, "image")) {
+    }
+    return JS_UNDEFINED;
+}
+
 static void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
 {
-    JSValue global_obj, console;
+    JSValue global_obj, console, goxel_obj, proto;
     global_obj = JS_GetGlobalObject(ctx);
     console = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, console, "log",
                       JS_NewCFunction(ctx, js_print, "log", 1));
     JS_SetPropertyStr(ctx, global_obj, "console", console);
+
+    JS_NewClassID(&gox_obj_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), gox_obj_class_id, &gox_obj_class);
+    proto = JS_NewObject(ctx);
+    JS_SetClassProto(ctx, gox_obj_class_id, proto);
+
+    goxel_obj = JS_NewObjectClass(ctx, gox_obj_class_id);
+    JS_SetOpaque(goxel_obj, &goxel);
+    JS_SetPropertyStr(ctx, global_obj, "goxel", goxel_obj);
+
+    JSValue getter;
+    JSValue name = JS_NewString(ctx, "image");
+    getter = JS_NewCFunctionData(ctx, gox_obj_attr_getter, 0, 0, 1, &name);
+    JS_DefinePropertyGetSet(ctx, goxel_obj, JS_NewAtom(ctx, "image"),
+                            getter, JS_UNDEFINED, 0);
+
     JS_FreeValue(ctx, global_obj);
 }
 
