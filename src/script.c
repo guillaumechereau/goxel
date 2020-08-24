@@ -38,6 +38,7 @@ struct attribute {
 
     struct {
         klass_t *klass;
+        void *(*add)(void *parent, void *val);
     } list;
 
     JSValue (*getter)(JSContext *ctx, JSValueConst this_val);
@@ -58,8 +59,9 @@ struct list_el {
 };
 
 typedef struct {
+    void *parent;
     list_el_t **ptr;
-    const klass_t *klass;
+    const attribute_t *attr;
 } list_t;
 
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
@@ -81,8 +83,9 @@ static JSValue list_create(JSContext *ctx, void *parent,
 {
     list_t *list;
     list = calloc(1, sizeof(*list));
+    list->parent = parent;
+    list->attr = attr;
     list->ptr = parent + attr->member.offset;
-    list->klass = attr->list.klass;
     return new_obj_ref(ctx, list, &list_klass);
 }
 
@@ -91,14 +94,10 @@ static JSValue list_new(JSContext *ctx, JSValueConst this_val,
 {
     list_t *list;
     list_el_t *el;
-    JSValue el_val;
 
     list = JS_GetOpaque(this_val, list_klass.id);
-    el_val = list->klass->ctor(ctx, JS_UNDEFINED, 0, NULL);
-    el = JS_GetOpaque(el_val, list->klass->id);
-    DL_APPEND(*list->ptr, el);
-
-    return el_val;
+    el = list->attr->list.add(list->parent, NULL);
+    return new_obj_ref(ctx, el, list->attr->list.klass);
 }
 
 static JSValue list_length_get(JSContext *ctx, JSValueConst this_val)
@@ -116,7 +115,8 @@ static klass_t list_klass = {
     .create = list_create,
     .attributes = {
         {"length", .getter=list_length_get},
-        {"new", .fn=list_new}
+        {"new", .fn=list_new},
+        {},
     },
 };
 
@@ -132,21 +132,13 @@ static klass_t image_klass = {
     .def = { "Image" },
     .attributes = {
         {"layers", .klass=&list_klass, MEMBER(image_t, layers),
-         .list={.klass=&layer_klass}},
+         .list={.klass=&layer_klass, .add=(void*)image_add_layer}},
         {}
     },
 };
 
-static JSValue layer_ctor(JSContext *ctx, JSValueConst new_target,
-                          int argc, JSValueConst *argv)
-{
-    layer_t *layer = layer_new(NULL);
-    return new_obj_ref(ctx, layer, &layer_klass);
-}
-
 static klass_t layer_klass = {
     .def = { "Layer" },
-    .ctor = layer_ctor,
     .attributes = {
         {"name", .flags=ATTR_STR_BUF, MEMBER(layer_t, name)},
         {}
