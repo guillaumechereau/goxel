@@ -37,7 +37,7 @@ struct attribute {
     } member;
 
     struct {
-        const char *type;
+        klass_t *klass;
     } list;
 
     JSValue (*getter)(JSContext *ctx, JSValueConst this_val);
@@ -48,6 +48,7 @@ struct klass {
     JSClassID id;
     JSClassDef def;
     JSValue (*create)(JSContext *ctx, void *parent, const attribute_t *attr);
+    JSCFunction *ctor;
     attribute_t attributes[];
 };
 
@@ -58,13 +59,14 @@ struct list_el {
 
 typedef struct {
     list_el_t **ptr;
-    const char *type;
+    const klass_t *klass;
 } list_t;
 
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
 
 static klass_t image_klass;
 static klass_t list_klass;
+static klass_t layer_klass;
 
 static JSValue new_obj_ref(JSContext *ctx, void *obj, const klass_t *klass)
 {
@@ -80,16 +82,23 @@ static JSValue list_create(JSContext *ctx, void *parent,
     list_t *list;
     list = calloc(1, sizeof(*list));
     list->ptr = parent + attr->member.offset;
+    list->klass = attr->list.klass;
     return new_obj_ref(ctx, list, &list_klass);
 }
 
-static JSValue list_add_new(JSContext *ctx, JSValueConst this_val,
-                            int argc, JSValueConst *argv)
+static JSValue list_new(JSContext *ctx, JSValueConst this_val,
+                        int argc, JSValueConst *argv)
 {
     list_t *list;
-    list = JS_GetOpaque(this_val, list_klass.id);
+    list_el_t *el;
+    JSValue el_val;
 
-    return JS_NewInt32(ctx, 10);
+    list = JS_GetOpaque(this_val, list_klass.id);
+    el_val = list->klass->ctor(ctx, JS_UNDEFINED, 0, NULL);
+    el = JS_GetOpaque(el_val, list->klass->id);
+    DL_APPEND(*list->ptr, el);
+
+    return el_val;
 }
 
 static JSValue list_length_get(JSContext *ctx, JSValueConst this_val)
@@ -107,7 +116,7 @@ static klass_t list_klass = {
     .create = list_create,
     .attributes = {
         {"length", .getter=list_length_get},
-        {"addNew", .fn=list_add_new}
+        {"new", .fn=list_new}
     },
 };
 
@@ -122,14 +131,22 @@ static klass_t goxel_klass = {
 static klass_t image_klass = {
     .def = { "Image" },
     .attributes = {
-        {"layers", .klass=&list_klass, .list={.type="Layer"},
-         MEMBER(image_t, layers)},
+        {"layers", .klass=&list_klass, MEMBER(image_t, layers),
+         .list={.klass=&layer_klass}},
         {}
     },
 };
 
+static JSValue layer_ctor(JSContext *ctx, JSValueConst new_target,
+                          int argc, JSValueConst *argv)
+{
+    layer_t *layer = layer_new(NULL);
+    return new_obj_ref(ctx, layer, &layer_klass);
+}
+
 static klass_t layer_klass = {
     .def = { "Layer" },
+    .ctor = layer_ctor,
     .attributes = {
         {"name", .flags=ATTR_STR_BUF, MEMBER(layer_t, name)},
         {}
@@ -139,7 +156,7 @@ static klass_t layer_klass = {
 static JSValue obj_attr_getter(JSContext *ctx, JSValueConst this_val,
                                int magic)
 {
-    void *obj, **ptr;
+    void *obj, *ptr;
     const klass_t *klass;
     const attribute_t *attr;
     JSValue proto;
@@ -150,20 +167,52 @@ static JSValue obj_attr_getter(JSContext *ctx, JSValueConst this_val,
     JS_FreeValue(ctx, proto);
 
     attr = &klass->attributes[magic];
-    if (attr->klass->create) {
+    if (attr->klass && attr->klass->create) {
         return attr->klass->create(ctx, obj, attr);
     }
+
+    if (attr->flags & ATTR_STR_BUF) {
+        ptr = obj + attr->member.offset;
+        return JS_NewStringLen(ctx, (void*)ptr, attr->member.size);
+    }
+
     if (attr->klass && attr->member.size) {
         ptr = obj + attr->member.offset;
-        return new_obj_ref(ctx, *ptr, attr->klass);
+        return new_obj_ref(ctx, *(void**)ptr, attr->klass);
     }
 
     return JS_NewInt32(ctx, magic);
 }
 
+static JSValue obj_attr_setter(JSContext *ctx, JSValueConst this_val,
+                               JSValueConst val, int magic)
+{
+    const klass_t *klass;
+    const attribute_t *attr;
+    void *obj, *ptr;
+    JSValue proto;
+    const char *str;
+    size_t len;
+
+    proto = JS_GetPrototype(ctx, this_val);
+    klass = JS_GetOpaque(proto, 1);
+    obj = JS_GetOpaque(this_val, klass->id);
+    JS_FreeValue(ctx, proto);
+    attr = &klass->attributes[magic];
+
+    if (attr->flags & ATTR_STR_BUF) {
+        ptr = obj + attr->member.offset;
+        str = JS_ToCStringLen(ctx, &len, val);
+        snprintf(ptr, attr->member.size, "%s", str);
+        JS_FreeCString(ctx, str);
+    }
+    return JS_UNDEFINED;
+}
+
+
 static void init_klass(JSContext *ctx, klass_t *klass)
 {
-    JSValue proto, getter;
+    JSValue proto, getter, setter, obj_class, global_obj;
     attribute_t *attr;
     int i;
     JSAtom name;
@@ -174,6 +223,16 @@ static void init_klass(JSContext *ctx, klass_t *klass)
     JS_SetOpaque(proto, klass);
     JS_SetClassProto(ctx, klass->id, proto);
 
+    if (klass->ctor) {
+        obj_class = JS_NewCFunction2(ctx, klass->ctor, klass->def.class_name, 0,
+                                     JS_CFUNC_constructor, 0);
+        JS_SetConstructor(ctx, obj_class, proto);
+        global_obj = JS_GetGlobalObject(ctx);
+        JS_SetPropertyStr(ctx, global_obj, klass->def.class_name, obj_class);
+        JS_FreeValue(ctx, global_obj);
+    }
+
+    // XXX: cleanup this.
     for (i = 0, attr = &klass->attributes[0]; attr->name; attr++, i++) {
         name = JS_NewAtom(ctx, attr->name);
         if (attr->getter) {
@@ -187,7 +246,9 @@ static void init_klass(JSContext *ctx, klass_t *klass)
         } else {
             getter = JS_NewCFunction2(ctx, (void*)obj_attr_getter, NULL, 0,
                                       JS_CFUNC_getter_magic, i);
-            JS_DefinePropertyGetSet(ctx, proto, name, getter, JS_UNDEFINED, 0);
+            setter = JS_NewCFunction2(ctx, (void*)obj_attr_setter, NULL, 0,
+                                      JS_CFUNC_setter_magic, i);
+            JS_DefinePropertyGetSet(ctx, proto, name, getter, setter, 0);
         }
     }
 }
