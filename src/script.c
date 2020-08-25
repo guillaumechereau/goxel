@@ -19,6 +19,9 @@
 #include "goxel.h"
 #include "../ext_src/quickjs/quickjs.h"
 
+JSValue JS_NewInt32Array(JSContext *ctx, JSValueConst arrayBuffer,
+                         int offset, int length);
+
 enum {
     ATTR_STR_BUF =      1 << 0,
 };
@@ -166,6 +169,41 @@ static JSValue volume_ctor(JSContext *ctx, JSValueConst new_target,
     return new_obj_ref(ctx, mesh, &volume_klass);
 }
 
+static JSValue js_volume_fill(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
+{
+    mesh_t *mesh;
+    int aabb[2][3] = {}, pos[3];
+    uint8_t c[4];
+    JSValue args[2], pos_buf, aabb_buf, c_val;
+
+    mesh = JS_GetOpaque(this_val, volume_klass.id);
+    get_vec_int(ctx, argv[0], 3, aabb[1]);
+
+    aabb_buf = JS_NewArrayBuffer(ctx, (void*)aabb, sizeof(aabb),
+                                 NULL, NULL, true);
+    pos_buf = JS_NewArrayBuffer(ctx, (void*)pos, sizeof(pos),
+                                NULL, NULL, true);
+    args[0] = JS_NewInt32Array(ctx, pos_buf, 0, 3);
+    args[1] = JS_NewInt32Array(ctx, aabb_buf, 12, 3);
+
+    for (pos[2] = aabb[0][2]; pos[2] < aabb[1][2]; pos[2]++)
+    for (pos[1] = aabb[0][1]; pos[1] < aabb[1][1]; pos[1]++)
+    for (pos[0] = aabb[0][0]; pos[0] < aabb[1][0]; pos[0]++) {
+        c_val = JS_Call(ctx, argv[1], JS_UNDEFINED, 2, args);
+        get_vec_uint8(ctx, c_val, 4, c);
+        mesh_set_at(mesh, NULL, pos, c);
+        JS_FreeValue(ctx, c_val);
+    }
+
+    JS_FreeValue(ctx, args[0]);
+    JS_FreeValue(ctx, args[1]);
+    JS_FreeValue(ctx, aabb_buf);
+    JS_FreeValue(ctx, pos_buf);
+
+    return JS_UNDEFINED;
+}
+
 static JSValue js_volume_set_at(JSContext *ctx, JSValueConst this_val,
                                 int argc, JSValueConst *argv)
 {
@@ -205,6 +243,7 @@ static klass_t volume_klass = {
     .def = { "Volume", .finalizer = js_volume_finalizer },
     .ctor = volume_ctor,
     .attributes = {
+        {"fill", .fn=js_volume_fill},
         {"setAt", .fn=js_volume_set_at},
         {"save", .fn=js_volume_save},
         {}

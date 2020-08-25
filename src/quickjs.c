@@ -35,3 +35,14 @@
 #pragma GCC diagnostic ignored "-Wimplicit-int-float-conversion"
 
 #include "../ext_src/quickjs/quickjs.c"
+
+// Add functions to create arrays from a buffer.
+JSValue JS_NewInt32Array(JSContext *ctx, JSValueConst arrayBuffer,
+                         int offset, int length)
+{
+    JSValue offsetValue = JS_NewInt32(ctx, offset);
+    JSValue lengthValue = JS_NewInt32(ctx, length);
+    JSValue args[] = {arrayBuffer, offsetValue, lengthValue};
+    return js_typed_array_constructor(ctx, arrayBuffer, 3, args,
+                                      JS_CLASS_INT32_ARRAY);
+}
