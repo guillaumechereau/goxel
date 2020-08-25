@@ -160,6 +160,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
             case 'i': lua_pushnumber(l, va_arg(ap, int)); break;
             case 'b': lua_pushboolean(l, va_arg(ap, int)); break;
             case 'p': lua_pushlightuserdata(l, va_arg(ap, void*)); break;
+            case 's': lua_pushstring(l, va_arg(ap, char*)); break;
             default: assert(false);
         }
     }
