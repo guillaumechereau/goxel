@@ -69,6 +69,7 @@ typedef struct {
 static klass_t image_klass;
 static klass_t list_klass;
 static klass_t layer_klass;
+static klass_t volume_klass;
 
 static JSValue new_obj_ref(JSContext *ctx, void *obj, const klass_t *klass)
 {
@@ -133,6 +134,79 @@ static klass_t image_klass = {
     .attributes = {
         {"layers", .klass=&list_klass, MEMBER(image_t, layers),
          .list={.klass=&layer_klass, .add=(void*)image_add_layer}},
+        {}
+    },
+};
+
+static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out)
+{
+    int i;
+    JSValue v;
+    for (i = 0; i < size; i++) {
+        v = JS_GetPropertyUint32(ctx, val, i);
+        JS_ToInt32(ctx, &out[i], v);
+    }
+}
+
+static void get_vec_uint8(JSContext *ctx, JSValue val, int size, uint8_t *out)
+{
+    int *buf;
+    int i;
+    buf = calloc(size, sizeof(int));
+    get_vec_int(ctx, val, size, buf);
+    for (i = 0; i < size; i++) out[i] = buf[i];
+    free(buf);
+}
+
+static JSValue volume_ctor(JSContext *ctx, JSValueConst new_target,
+                           int argc, JSValueConst *argv)
+{
+    mesh_t *mesh;
+    mesh = mesh_new();
+    return new_obj_ref(ctx, mesh, &volume_klass);
+}
+
+static JSValue js_volume_set_at(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv)
+{
+    mesh_t *mesh;
+    int pos[3];
+    uint8_t v[4];
+
+    get_vec_int(ctx, argv[0], 3, pos);
+    get_vec_uint8(ctx, argv[1], 4, v);
+    mesh = JS_GetOpaque(this_val, volume_klass.id);
+    mesh_set_at(mesh, NULL, pos, v);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_volume_save(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
+{
+    mesh_t *mesh;
+    const char *path;
+
+    mesh = JS_GetOpaque(this_val, volume_klass.id);
+    (void)mesh;
+    path = JS_ToCString(ctx, argv[0]);
+    action_exec2("mesh_save", "ps", mesh, path); // XXX: should be removed.
+    JS_FreeCString(ctx, path);
+    return JS_UNDEFINED;
+}
+
+static void js_volume_finalizer(JSRuntime *rt, JSValue val)
+{
+    mesh_t *mesh = JS_GetOpaque(val, volume_klass.id);
+    mesh_delete(mesh);
+}
+
+
+static klass_t volume_klass = {
+    .def = { "Volume", .finalizer = js_volume_finalizer },
+    .ctor = volume_ctor,
+    .attributes = {
+        {"setAt", .fn=js_volume_set_at},
+        {"save", .fn=js_volume_save},
         {}
     },
 };
@@ -279,6 +353,7 @@ static void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
     init_klass(ctx, &goxel_klass);
     init_klass(ctx, &image_klass);
     init_klass(ctx, &layer_klass);
+    init_klass(ctx, &volume_klass);
 
     goxel_obj = new_obj_ref(ctx, &goxel, &goxel_klass);
     JS_SetPropertyStr(ctx, global_obj, "goxel", goxel_obj);
