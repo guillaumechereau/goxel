@@ -334,7 +334,7 @@ void goxel_reset(void)
 {
     image_delete(goxel.image);
     goxel.image = image_new();
-    action_exec2("settings_load", "");
+    settings_load();
 
     // Put plane horizontal at the origin.
     plane_from_vectors(goxel.plane,

@@ -646,6 +646,10 @@ void ply_export(const mesh_t *mesh, const char *path);
  */
 int box_edit(int snap, int mode, float transf[4][4], bool *first);
 
+
+void settings_load(void);
+void settings_save(void);
+
 // Section: tests
 
 /* Function: tests_run

@@ -99,7 +99,8 @@ int gui_settings_popup(void *data)
     }
 
     gui_popup_body_end();
-    gui_action_button("settings_save", "Save", 0);
+    if (gui_button("Save", 0, 0))
+        settings_save();
     gui_same_line();
     return gui_button("OK", 0, 0);
 }
@@ -124,15 +125,11 @@ static int settings_ini_handler(void *user, const char *section,
     return 0;
 }
 
-static void settings_load(const char *path)
+void settings_load(void)
 {
-    char *path_ = NULL;
-    if (!path) {
-        asprintf(&path_, "%s/settings.ini", sys_get_user_dir());
-        path = path_;
-    }
+    char path[1024];
+    snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
     ini_parse(path, settings_ini_handler, NULL);
-    free(path_);
 }
 
 static int shortcut_save_callback(action_t *a, void *user)
@@ -143,7 +140,7 @@ static int shortcut_save_callback(action_t *a, void *user)
     return 0;
 }
 
-static void settings_save(void)
+void settings_save(void)
 {
     char path[1024];
     FILE *file;
@@ -162,15 +159,3 @@ static void settings_save(void)
 
     fclose(file);
 }
-
-ACTION_REGISTER(settings_load,
-    .help = "Load the settings from disk",
-    .cfunc = settings_load,
-    .csig = "vp",
-)
-
-ACTION_REGISTER(settings_save,
-    .help = "Save the settings to disk",
-    .cfunc = settings_save,
-    .csig = "v",
-)
