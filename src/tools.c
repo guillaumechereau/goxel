@@ -43,7 +43,6 @@ void tool_register_(tool_t *tool)
     };
     action_register(&action);
     g_tools[tool->id] = tool;
-    tool->obj.ref = 1;
 }
 
 const tool_t *tool_get(int id)

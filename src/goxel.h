@@ -44,7 +44,6 @@
 #include "material.h"
 #include "mesh.h"
 #include "mesh_utils.h"
-#include "meta.h"
 #include "model3d.h"
 #include "noc_file_dialog.h"
 #include "palette.h"
@@ -453,7 +452,6 @@ enum {
 
 typedef struct goxel
 {
-    obj_t      obj;
     int        screen_size[2];
     float      screen_scale;
     image_t    *image;
