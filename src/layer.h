@@ -38,7 +38,8 @@ struct layer {
     // For 2d image layers.
     texture_t   *image;
     // For clone layers:
-    int         base_id;
+    int         parent_id; // To remove.  Only used for loading.
+    const layer_t *parent;
     uint64_t    base_mesh_key;
     // For shape layers.
     const shape_t *shape;
@@ -49,7 +50,10 @@ struct layer {
 layer_t *layer_new(const char *name);
 void layer_delete(layer_t *layer);
 uint32_t layer_get_key(const layer_t *layer);
-layer_t *layer_copy(layer_t *other);
+layer_t *layer_copy(const layer_t *other);
+
+layer_t *layer_clone(const layer_t *other);
+void layer_unclone(layer_t *other);
 
 /*
  * Function: layer_get_bounding_box

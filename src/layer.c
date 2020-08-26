@@ -50,7 +50,7 @@ uint32_t layer_get_key(const layer_t *layer)
     return key;
 }
 
-layer_t *layer_copy(layer_t *other)
+layer_t *layer_copy(const layer_t *other)
 {
     layer_t *layer;
     layer = calloc(1, sizeof(*layer));
@@ -62,12 +62,34 @@ layer_t *layer_copy(layer_t *other)
     mat4_copy(other->box, layer->box);
     mat4_copy(other->mat, layer->mat);
     layer->id = other->id;
-    layer->base_id = other->base_id;
+    layer->parent = other->parent;
     layer->base_mesh_key = other->base_mesh_key;
     layer->shape = other->shape;
     layer->shape_key = other->shape_key;
     memcpy(layer->color, other->color, sizeof(layer->color));
     return layer;
+}
+
+layer_t *layer_clone(const layer_t *other)
+{
+    int len;
+    layer_t *layer;
+    layer = calloc(1, sizeof(*layer));
+    len = sizeof(layer->name) - 1 - strlen(" clone");
+    snprintf(layer->name, sizeof(layer->name), "%.*s clone", len, other->name);
+    layer->visible = other->visible;
+    layer->material = other->material;
+    layer->mesh = mesh_copy(other->mesh);
+    mat4_set_identity(layer->mat);
+    layer->parent = other;
+    layer->base_mesh_key = mesh_get_key(other->mesh);
+    return layer;
+}
+
+void layer_unclone(layer_t *layer)
+{
+    layer->parent = NULL;
+    layer->shape = NULL;
 }
 
 /*

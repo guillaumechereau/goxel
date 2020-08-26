@@ -50,7 +50,7 @@ void gui_layers_panel(void)
     DL_FOREACH_REVERSE(goxel.image->layers, layer) {
         current = goxel.image->active_layer == layer;
         visible = layer->visible;
-        icon = layer->base_id ? ICON_LINK : layer->shape ? ICON_SHAPE : -1;
+        icon = layer->parent ? ICON_LINK : layer->shape ? ICON_SHAPE : -1;
         gui_layer_item(i, icon, &visible, &current,
                        layer->name, sizeof(layer->name));
         if (current && goxel.image->active_layer != layer) {
@@ -94,7 +94,7 @@ void gui_layers_panel(void)
 
     gui_group_end();
 
-    if (layer->base_id) {
+    if (layer->parent) {
         gui_group_begin(NULL);
         gui_action_button("img_unclone_layer", "Unclone", 1, "");
         gui_action_button("img_select_parent_layer", "Select parent", 1, "");

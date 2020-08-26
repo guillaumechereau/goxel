@@ -103,6 +103,7 @@ static void make_uniq_name(
     }
 }
 
+/*
 static layer_t *img_get_layer(const image_t *img, int id)
 {
     layer_t *layer;
@@ -112,6 +113,7 @@ static layer_t *img_get_layer(const image_t *img, int id)
     assert(false);
     return NULL;
 }
+*/
 
 static int img_get_new_id(const image_t *img)
 {
@@ -125,31 +127,16 @@ static int img_get_new_id(const image_t *img)
     return id;
 }
 
-static layer_t *layer_clone(layer_t *other)
-{
-    int len;
-    layer_t *layer;
-    layer = calloc(1, sizeof(*layer));
-    len = sizeof(layer->name) - 1 - strlen(" clone");
-    snprintf(layer->name, sizeof(layer->name), "%.*s clone", len, other->name);
-    layer->visible = other->visible;
-    layer->material = other->material;
-    layer->mesh = mesh_copy(other->mesh);
-    mat4_set_identity(layer->mat);
-    layer->base_id = other->id;
-    layer->base_mesh_key = mesh_get_key(other->mesh);
-    return layer;
-}
-
 // Make sure the layer mesh is up to date.
 void image_update(image_t *img)
 {
     painter_t painter = {};
     uint32_t key;
-    layer_t *layer, *base;
+    layer_t *layer;
+    const layer_t *base;
 
     DL_FOREACH(img->layers, layer) {
-        base = img_get_layer(img, layer->base_id);
+        base = layer->parent;
         if (base && layer->base_mesh_key != mesh_get_key(base->mesh)) {
             mesh_set(layer->mesh, base->mesh);
             mesh_move(layer->mesh, layer->mat);
@@ -286,11 +273,14 @@ void image_delete(image_t *img)
 layer_t *image_add_layer(image_t *img, layer_t *layer)
 {
     img = img ?: goxel.image;
-    if (!layer) {
+    if (!layer)
         layer = layer_new(NULL);
+
+    if (!layer->name[0] || layer_name_exists(img, layer->name)) {
         make_uniq_name(layer->name, sizeof(layer->name), "Layer", img,
                        layer_name_exists);
     }
+
     layer->visible = true;
     layer->id = img_get_new_id(img);
     layer->material = img->active_material;
@@ -330,8 +320,8 @@ void image_delete_layer(image_t *img, layer_t *layer)
 
     // Unclone all layers cloned from this one.
     DL_FOREACH(goxel.image->layers, other) {
-        if (other->base_id == layer->id) {
-            other->base_id = 0;
+        if (other->parent == layer) {
+            other->parent = NULL;
         }
     }
 
@@ -360,33 +350,14 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
     return layer;
 }
 
-layer_t *image_clone_layer(image_t *img, layer_t *other)
-{
-    layer_t *layer;
-    img = img ?: goxel.image;
-    other = other ?: img->active_layer;
-    layer = layer_clone(other);
-    layer->visible = true;
-    layer->id = img_get_new_id(img);
-    DL_APPEND(img->layers, layer);
-    img->active_layer = layer;
-    return layer;
-}
-
-void image_unclone_layer(image_t *img, layer_t *layer)
-{
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
-    layer->base_id = 0;
-    layer->shape = NULL;
-}
-
+/*
 void image_select_parent_layer(image_t *img, layer_t *layer)
 {
     img = img ?: goxel.image;
     layer = layer ?: img->active_layer;
     img->active_layer = img_get_layer(img, layer->base_id);
 }
+*/
 
 void image_merge_visible_layers(image_t *img)
 {
@@ -394,13 +365,13 @@ void image_merge_visible_layers(image_t *img)
     img = img ?: goxel.image;
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
-        image_unclone_layer(img, layer);
+        layer_unclone(layer);
 
         if (last) {
             // Unclone all layers cloned from this one.
             DL_FOREACH(goxel.image->layers, other) {
-                if (other->base_id == last->id) {
-                    other->base_id = 0;
+                if (other->parent == last) {
+                    other->parent = NULL;
                 }
             }
             SWAP(layer->mesh, last->mesh);
@@ -624,7 +595,7 @@ void image_redo(image_t *img)
 
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)
 {
-    return !layer->base_id && !layer->image && !layer->shape;
+    return !layer->parent && !layer->image && !layer->shape;
 }
 
 /*
@@ -696,57 +667,55 @@ ACTION_REGISTER(layer_clear,
 
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
-    .script = "goxel.image.layers.new()",
+    .script = "goxel.image.layers.add(new Layer())",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )
 
 ACTION_REGISTER(img_del_layer,
     .help = "Delete the active layer",
-    .script = "goxel.image.layers.delete()",
+    .script = "goxel.image.layers.remove(goxel.image.layers.active)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
 )
 
 ACTION_REGISTER(img_move_layer_up,
     .help = "Move the active layer up",
-    .script = "goxel.image.layers.move(-1)",
+    .script = "goxel.image.layers.move(goxel.image.layers.active, -1)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_UPWARD,
 )
 
 ACTION_REGISTER(img_move_layer_down,
     .help = "Move the active layer down",
-    .script = "goxel.image.layers.move(+1)",
+    .script = "goxel.image.layers.move(goxel.image.layers.active, +1)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
 )
 
 ACTION_REGISTER(img_duplicate_layer,
     .help = "Duplicate the active layer",
-    .cfunc = image_duplicate_layer,
-    .csig = "vpp",
+    .script = "goxel.image.layers.add(goxel.image.layers.active.copy())",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_clone_layer,
     .help = "Clone the active layer",
-    .cfunc = image_clone_layer,
-    .csig = "vpp",
+    .script = "goxel.image.layers.add(goxel.image.layers.active.clone())",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_unclone_layer,
     .help = "Unclone the active layer",
-    .cfunc = image_unclone_layer,
-    .csig = "vpp",
+    .script = "goxel.image.layers.active.unclone()",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
 ACTION_REGISTER(img_select_parent_layer,
     .help = "Select the parent of a layer",
-    .cfunc = image_select_parent_layer,
-    .csig = "vpp",
+    .script = "let layers = goxel.image.layers;\n"
+              "if (layers.active.parent)\n"
+              "  layers.active = layers.active.parent\n",
     .flags = ACTION_TOUCH_IMAGE,
 )
 

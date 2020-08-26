@@ -40,6 +40,7 @@ struct attribute {
     } member;
 
     JSValue (*getter)(JSContext *ctx, JSValueConst this_val);
+    JSValue (*setter)(JSContext *ctx, JSValueConst this_val, JSValueConst val);
     JSCFunction *fn;
 };
 
@@ -62,6 +63,7 @@ typedef struct {
     list_el_t **ptr;
     void *(*add_fn)(void *parent, void *val);
     void (*delete_fn)(void *parent, void *val);
+    void *(*copy_fn)(void *val);
 } list_t;
 
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
@@ -107,12 +109,42 @@ static void *obj_get_ptr(JSValue val, const klass_t *klass)
     return obj->ptr;
 }
 
-static JSValue js_list_delete(JSContext *ctx, JSValueConst this_val,
+static void *obj_take_ptr(JSValue val, const klass_t *klass)
+{
+    obj_t *obj;
+    obj = JS_GetOpaque(val, klass->id);
+    obj->owned = false;
+    return obj->ptr;
+}
+
+static JSValue js_list_remove(JSContext *ctx, JSValueConst this_val,
                               int argc, JSValueConst *argv)
 {
     list_t *list;
+    list_el_t *el;
     list = obj_get_ptr(this_val, &list_klass);
-    list->delete_fn(list->parent, NULL);
+    el = obj_get_ptr(argv[0], list->klass);
+    list->delete_fn(list->parent, el);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_list_duplicate(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv)
+{
+    JSValue active_val, new_val;
+    list_t *list;
+    list_el_t *el;
+
+    // XXX: to simplify we could let the add_xxx function directly
+    // check if the passed item already exists.
+    list = obj_get_ptr(this_val, &list_klass);
+    active_val = obj_new(ctx, *list->active, list->klass, false);
+    new_val = JS_Invoke(ctx, active_val, JS_NewAtom(ctx, "copy"), 0, NULL);
+    el = obj_take_ptr(new_val, list->klass);
+    list->add_fn(list->parent, el);
+    JS_FreeValue(ctx, active_val);
+    JS_FreeValue(ctx, new_val);
+    *list->active = el;
     return JS_UNDEFINED;
 }
 
@@ -124,9 +156,8 @@ static JSValue js_list_move(JSContext *ctx, JSValueConst this_val,
     list_el_t *el, *other = NULL;
 
     list = obj_get_ptr(this_val, &list_klass);
-    JS_ToInt32(ctx, &d, argv[0]); // TODO: Add error check.
-
-    el = *list->active;
+    el = obj_get_ptr(argv[0], list->klass);
+    JS_ToInt32(ctx, &d, argv[1]); // TODO: Add error check.
     if (d == -1) {
         other = el->next;
         SWAP(other, el);
@@ -139,14 +170,14 @@ static JSValue js_list_move(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue list_new(JSContext *ctx, JSValueConst this_val,
-                        int argc, JSValueConst *argv)
+static JSValue js_list_add(JSContext *ctx, JSValueConst this_val,
+                           int argc, JSValueConst *argv)
 {
     list_t *list;
     list_el_t *el;
-
     list = obj_get_ptr(this_val, &list_klass);
-    el = list->add_fn(list->parent, NULL);
+    el = obj_take_ptr(argv[0], list->klass);
+    el = list->add_fn(list->parent, el);
     return obj_new(ctx, el, list->klass, false);
 }
 
@@ -167,6 +198,17 @@ static JSValue js_list_active(JSContext *ctx, JSValueConst this_val)
     return obj_new(ctx, *list->active, list->klass, false);
 }
 
+static JSValue js_list_active_set(JSContext *ctx, JSValueConst this_val,
+                                  JSValueConst val)
+{
+    list_t *list;
+    list_el_t *el;
+    list = obj_get_ptr(this_val, &list_klass);
+    el = obj_get_ptr(val, list->klass);
+    *list->active = el;
+    return JS_UNDEFINED;
+}
+
 static void js_list_finalizer(JSRuntime *rt, JSValue val)
 {
     list_t *list;
@@ -178,11 +220,12 @@ static void js_list_finalizer(JSRuntime *rt, JSValue val)
 static klass_t list_klass = {
     .def = { "List", .finalizer = js_list_finalizer },
     .attributes = {
-        {"active", .getter=js_list_active},
-        {"delete", .fn=js_list_delete},
+        {"add", .fn=js_list_add},
+        {"active", .getter=js_list_active, .setter=js_list_active_set},
+        {"duplicate", .fn=js_list_duplicate},
         {"length", .getter=list_length_get},
         {"move", .fn=js_list_move},
-        {"new", .fn=list_new},
+        {"remove", .fn=js_list_remove},
         {},
     },
 };
@@ -356,10 +399,50 @@ static void js_layer_finalizer(JSRuntime *rt, JSValue val)
     }
 }
 
+static JSValue js_layer_clone(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
+{
+    layer_t *layer;
+    layer = obj_get_ptr(this_val, &layer_klass);
+    layer = layer_clone(layer);
+    return obj_new(ctx, layer, &layer_klass, true);
+}
+
+static JSValue js_layer_unclone(JSContext *ctx, JSValueConst this_val,
+                                int argc, JSValueConst *argv)
+{
+    layer_t *layer;
+    layer = obj_get_ptr(this_val, &layer_klass);
+    layer_unclone(layer);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_layer_copy(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
+{
+    layer_t *layer;
+    layer = obj_get_ptr(this_val, &layer_klass);
+    layer = layer_copy(layer);
+    return obj_new(ctx, layer, &layer_klass, true);
+}
+
+static JSValue layer_ctor(JSContext *ctx, JSValueConst new_target,
+                          int argc, JSValueConst *argv)
+{
+    layer_t *layer;
+    layer = layer_new(NULL);
+    return obj_new(ctx, layer, &layer_klass, true);
+}
+
 static klass_t layer_klass = {
     .def = { "Layer", .finalizer = js_layer_finalizer },
+    .ctor = layer_ctor,
     .attributes = {
+        {"clone", .fn=js_layer_clone},
+        {"unclone", .fn=js_layer_unclone},
+        {"copy", .fn=js_layer_copy},
         {"name", .flags=ATTR_STR_BUF, MEMBER(layer_t, name)},
+        {"parent", .klass=&layer_klass, MEMBER(layer_t, parent)},
         {"volume", .klass=&volume_klass, MEMBER(layer_t, mesh)},
         {}
     },
@@ -387,7 +470,9 @@ static JSValue obj_attr_getter(JSContext *ctx, JSValueConst this_val,
 
     if (attr->klass && attr->member.size) {
         ptr = obj + attr->member.offset;
-        return obj_new(ctx, *(void**)ptr, attr->klass, false);
+        ptr = *(void**)ptr;
+        if (!ptr) return JS_NULL;
+        return obj_new(ctx, ptr, attr->klass, false);
     }
 
     return JS_NewInt32(ctx, magic);
@@ -447,7 +532,9 @@ static void init_klass(JSContext *ctx, klass_t *klass)
         if (attr->getter) {
             getter = JS_NewCFunction2(ctx, (void*)attr->getter, NULL, 0,
                                       JS_CFUNC_getter, 0);
-            JS_DefinePropertyGetSet(ctx, proto, name, getter, JS_UNDEFINED, 0);
+            setter = JS_NewCFunction2(ctx, (void*)attr->setter, NULL, 0,
+                                      JS_CFUNC_setter, 0);
+            JS_DefinePropertyGetSet(ctx, proto, name, getter, setter, 0);
         } else if (attr->fn) {
             JS_DefinePropertyValue(ctx, proto, name,
                            JS_NewCFunction(ctx, attr->fn, NULL, 0),

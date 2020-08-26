@@ -38,7 +38,7 @@ static void do_move(layer_t *layer, const float mat[4][4])
     mat4_imul(m, mat);
     mat4_itranslate(m, +0.5, +0.5, +0.5);
 
-    if (layer->base_id || layer->image || layer->shape) {
+    if (layer->parent || layer->image || layer->shape) {
         mat4_mul(mat, layer->mat, layer->mat);
         layer->base_mesh_key = 0;
     } else {

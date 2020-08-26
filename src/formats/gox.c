@@ -259,7 +259,7 @@ void save_to_file(const image_t *img, const char *path)
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
     layer_t *layer;
     chunk_t c;
-    int nb_blocks, index, size, bpos[3], material_idx;
+    int nb_blocks, index, size, bpos[3], material_idx, base_id;
     uint64_t uid;
     FILE *out;
     uint8_t *png, *preview;
@@ -333,14 +333,14 @@ void save_to_file(const image_t *img, const char *path)
     DL_FOREACH(img->layers, layer) {
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
-        if (!layer->base_id && !layer->shape) {
+        if (!layer->parent && !layer->shape) {
             iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
             while (mesh_iter(&iter, bpos)) {
                 nb_blocks++;
             }
         }
         chunk_write_int32(&c, out, nb_blocks);
-        if (!layer->base_id && !layer->shape) {
+        if (!layer->parent && !layer->shape) {
             iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
             while (mesh_iter(&iter, bpos)) {
                 mesh_get_block_data(layer->mesh, &iter, bpos, &uid);
@@ -359,8 +359,10 @@ void save_to_file(const image_t *img, const char *path)
                                sizeof(layer->mat));
         chunk_write_dict_value(&c, out, "id", &layer->id,
                                sizeof(layer->id));
-        chunk_write_dict_value(&c, out, "base_id", &layer->base_id,
-                               sizeof(layer->base_id));
+
+        base_id = layer->parent ? layer->parent->id : 0;
+        chunk_write_dict_value(&c, out, "base_id", &base_id, sizeof(base_id));
+
         material_idx = get_material_idx(img, layer->material);
         chunk_write_dict_value(&c, out, "material", &material_idx,
                                sizeof(material_idx));
@@ -595,7 +597,7 @@ int load_from_file(const char *path)
                     if (id) layer->id = id;
                 }
 
-                DICT_CPY("base_id", layer->base_id);
+                DICT_CPY("base_id", layer->parent_id);
                 DICT_CPY("box", layer->box);
 
                 if (strcmp(dict_key, "shape") == 0) {
@@ -656,6 +658,16 @@ int load_from_file(const char *path)
             chunk_read(&c, in, NULL, c.length, __LINE__);
         }
         chunk_read_finish(&c, in);
+    }
+
+    // Set layer parent from parent_id.
+    DL_FOREACH(goxel.image->layers, layer) {
+        if (layer->parent_id) {
+            DL_FOREACH(goxel.image->layers, layer_tmp) {
+                if (layer_tmp->id == layer->parent_id)
+                    layer->parent = layer_tmp;
+            }
+        }
     }
 
     // Free the block hash table.  We do not delete the block data because
