@@ -69,6 +69,7 @@ typedef struct {
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
 
 static klass_t camera_klass;
+static klass_t goxel_klass;
 static klass_t image_klass;
 static klass_t list_klass;
 static klass_t layer_klass;
@@ -231,8 +232,13 @@ static klass_t list_klass = {
     },
 };
 
+static void js_goxel_finalizer(JSRuntime *rt, JSValue val)
+{
+    obj_delete(val, &goxel_klass);
+}
+
 static klass_t goxel_klass = {
-    .def = { "Goxel" },
+    .def = { "Goxel", .finalizer = js_goxel_finalizer },
     .attributes = {
         {"image", .klass=&image_klass, MEMBER(goxel_t, image)},
         {}
