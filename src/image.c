@@ -350,15 +350,6 @@ layer_t *image_duplicate_layer(image_t *img, layer_t *other)
     return layer;
 }
 
-/*
-void image_select_parent_layer(image_t *img, layer_t *layer)
-{
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
-    img->active_layer = img_get_layer(img, layer->base_id);
-}
-*/
-
 void image_merge_visible_layers(image_t *img)
 {
     layer_t *layer, *other, *last = NULL;
@@ -721,11 +712,9 @@ ACTION_REGISTER(img_select_parent_layer,
 
 ACTION_REGISTER(img_merge_visible_layers,
     .help = "Merge all the visible layers",
-    .cfunc = image_merge_visible_layers,
-    .csig = "vp",
+    .script = "goxel.image.mergeVisibleLayers()",
     .flags = ACTION_TOUCH_IMAGE,
 )
-
 
 ACTION_REGISTER(img_new_camera,
     .help = "Add a new camera to the image",

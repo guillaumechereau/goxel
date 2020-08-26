@@ -255,6 +255,15 @@ static JSValue js_image_layers_get(JSContext *ctx, JSValueConst this_val)
     return obj_new(ctx, list, &list_klass, true);
 }
 
+static JSValue js_image_merge_visible_layers(
+        JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    image_t *image;
+    image = obj_get_ptr(this_val, &image_klass);
+    image_merge_visible_layers(image);
+    return JS_UNDEFINED;
+}
+
 static void js_image_finalizer(JSRuntime *rt, JSValue val)
 {
     image_t *image;
@@ -267,6 +276,7 @@ static klass_t image_klass = {
     .def = { "Image", .finalizer = js_image_finalizer },
     .attributes = {
         {"layers", .getter=js_image_layers_get},
+        {"mergeVisibleLayers", .fn=js_image_merge_visible_layers},
         {}
     },
 };
