@@ -848,12 +848,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
             render_img(rend, layer->image, layer->mat, EFFECT_NO_SHADING);
     }
 
-    if ((goxel.tool->id == TOOL_SELECTION) ||
-        (goxel.snap_mask & (SNAP_SELECTION_IN | SNAP_SELECTION_OUT)))
-    {
-        render_box(rend, goxel.selection, NULL,
-                   EFFECT_STRIP | EFFECT_WIREFRAME);
-    }
+    render_box(rend, goxel.selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
 
     // Debug: show the current layer mesh blocks.
     if ((0)) {
