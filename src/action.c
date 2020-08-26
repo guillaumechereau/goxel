@@ -142,7 +142,6 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
     char c;
-    bool b;
     int i, nb;
     int (*func)(const action_t *a, lua_State *l);
     lua_State *l = luaL_newstate();
@@ -164,12 +163,6 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
         }
     }
 
-    if ((action->flags & ACTION_TOGGLE) && (lua_gettop(l) == 0) && (!c)) {
-        func(action, l);
-        b = lua_toboolean(l, 1);
-        lua_settop(l, 0);
-        lua_pushboolean(l, !b);
-    }
     func(action, l);
 
     // Get the return arguments.

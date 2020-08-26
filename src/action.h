@@ -40,8 +40,6 @@
 
 enum {
     ACTION_TOUCH_IMAGE          = 1 << 0,  // Push the undo history.
-    // Toggle actions accept and return a boolean value.
-    ACTION_TOGGLE               = 1 << 1,
     ACTION_CAN_EDIT_SHORTCUT    = 1 << 2,
 };
 
