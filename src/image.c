@@ -578,7 +578,7 @@ void image_redo(image_t *img)
 
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)
 {
-    return !layer->parent && !layer->image && !layer->shape;
+    return !layer->parent && !layer->texture && !layer->shape;
 }
 
 /*
@@ -621,7 +621,7 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
     mesh_accessor_t acc;
 
     image_history_push(img);
-    data = img_read(layer->image->path, &w, &h, &bpp);
+    data = img_read(layer->texture->path, &w, &h, &bpp);
     acc = mesh_get_accessor(layer->mesh);
     for (j = 0; j < w; j++)
     for (i = 0; i < h; i++) {
@@ -635,8 +635,8 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
         memcpy(c, data + (j * w + i) * bpp, bpp);
         mesh_set_at(layer->mesh, &acc, pos, c);
     }
-    texture_delete(layer->image);
-    layer->image = NULL;
+    texture_delete(layer->texture);
+    layer->texture = NULL;
     free(data);
 }
 

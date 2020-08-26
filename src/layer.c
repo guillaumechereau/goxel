@@ -32,7 +32,7 @@ layer_t *layer_new(const char *name)
 void layer_delete(layer_t *layer)
 {
     mesh_delete(layer->mesh);
-    texture_delete(layer->image);
+    texture_delete(layer->texture);
     free(layer);
 }
 
@@ -57,7 +57,7 @@ layer_t *layer_copy(const layer_t *other)
     memcpy(layer->name, other->name, sizeof(layer->name));
     layer->visible = other->visible;
     layer->mesh = mesh_copy(other->mesh);
-    layer->image = texture_copy(other->image);
+    layer->texture = texture_copy(other->texture);
     layer->material = other->material;
     mat4_copy(other->box, layer->box);
     mat4_copy(other->mat, layer->mat);

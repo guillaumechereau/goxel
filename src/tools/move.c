@@ -38,7 +38,7 @@ static void do_move(layer_t *layer, const float mat[4][4])
     mat4_imul(m, mat);
     mat4_itranslate(m, +0.5, +0.5, +0.5);
 
-    if (layer->parent || layer->image || layer->shape) {
+    if (layer->parent || layer->texture || layer->shape) {
         mat4_mul(mat, layer->mat, layer->mat);
         layer->base_mesh_key = 0;
     } else {
@@ -98,7 +98,7 @@ static int gui(tool_t *tool)
     if (gui_input_int("Rot Z", &i, 0, 0))
         mat4_irotate(mat, i * M_PI / 2, 0, 0, 1);
     gui_group_end();
-    if (layer->image && gui_input_int("Scale", &i, 0, 0)) {
+    if (layer->texture && gui_input_int("Scale", &i, 0, 0)) {
         v = pow(2, i);
         mat4_iscale(mat, v, v, v);
     }

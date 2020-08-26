@@ -36,7 +36,7 @@ struct layer {
     float       box[4][4];  // Bounding box.
     float       mat[4][4];
     // For 2d image layers.
-    texture_t   *image;
+    texture_t   *texture;
     // For clone layers:
     int         parent_id; // To remove.  Only used for loading.
     const layer_t *parent;

@@ -100,7 +100,7 @@ void gui_layers_panel(void)
         gui_action_button("img_select_parent_layer", "Select parent", 1, "");
         gui_group_end();
     }
-    if (layer->image) {
+    if (layer->texture) {
         gui_action_button("img_image_layer_to_mesh", "To Mesh", 1, "");
     }
     if (!layer->shape && gui_checkbox("Bounded", &bounded, NULL)) {

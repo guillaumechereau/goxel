@@ -366,9 +366,9 @@ void save_to_file(const image_t *img, const char *path)
         material_idx = get_material_idx(img, layer->material);
         chunk_write_dict_value(&c, out, "material", &material_idx,
                                sizeof(material_idx));
-        if (layer->image) {
-            chunk_write_dict_value(&c, out, "img-path", layer->image->path,
-                               strlen(layer->image->path));
+        if (layer->texture) {
+            chunk_write_dict_value(&c, out, "img-path", layer->texture->path,
+                               strlen(layer->texture->path));
         }
         if (!box_is_null(layer->box))
             chunk_write_dict_value(&c, out, "box", &layer->box,
@@ -589,7 +589,7 @@ int load_from_file(const char *path)
                 DICT_CPY("mat", layer->mat);
 
                 if (strcmp(dict_key, "img-path") == 0) {
-                    layer->image = texture_new_image(dict_value, TF_NEAREST);
+                    layer->texture = texture_new_image(dict_value, TF_NEAREST);
                 }
 
                 typeof(layer->id) id;
