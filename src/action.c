@@ -197,10 +197,3 @@ int action_exec(const action_t *action, const char *sig, ...)
     va_end(ap);
     return ret;
 }
-
-int action_exec_lua(const action_t *action, lua_State *l)
-{
-    int (*func)(const action_t *a, lua_State *l);
-    func = action->func ?: default_function;
-    return func(action, l);
-}
