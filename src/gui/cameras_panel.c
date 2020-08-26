@@ -34,13 +34,13 @@ void gui_cameras_panel(void)
         i++;
     }
     gui_group_end();
-    gui_action_button("img_new_camera", NULL, 0, "");
+    gui_action_button("img_new_camera", NULL, 0);
     gui_same_line();
-    gui_action_button("img_del_camera", NULL, 0, "");
+    gui_action_button("img_del_camera", NULL, 0);
     gui_same_line();
-    gui_action_button("img_move_camera_up", NULL, 0, "");
+    gui_action_button("img_move_camera_up", NULL, 0);
     gui_same_line();
-    gui_action_button("img_move_camera_down", NULL, 0, "");
+    gui_action_button("img_move_camera_down", NULL, 0);
 
     if (!goxel.image->cameras) image_add_camera(goxel.image, NULL);
 
@@ -60,11 +60,11 @@ void gui_cameras_panel(void)
     gui_checkbox("Ortho", &cam->ortho, NULL);
 
     gui_group_begin("Set");
-    gui_action_button("view_left", "left", 0.5, ""); gui_same_line();
-    gui_action_button("view_right", "right", 1.0, "");
-    gui_action_button("view_front", "front", 0.5, ""); gui_same_line();
-    gui_action_button("view_top", "top", 1.0, "");
-    gui_action_button("view_default", "default", 1.0, "");
+    gui_action_button("view_left", "left", 0.5); gui_same_line();
+    gui_action_button("view_right", "right", 1.0);
+    gui_action_button("view_front", "front", 0.5); gui_same_line();
+    gui_action_button("view_top", "top", 1.0);
+    gui_action_button("view_default", "default", 1.0);
     gui_group_end();
 
     // Allow to edit euler angles (Should this be a generic widget?)

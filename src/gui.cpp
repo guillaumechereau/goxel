@@ -1019,12 +1019,10 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax)
     return ret;
 }
 
-bool gui_action_button(const char *id, const char *label, float size,
-                       const char *sig, ...)
+bool gui_action_button(const char *id, const char *label, float size)
 {
     bool ret;
     const action_t *action;
-    va_list ap;
 
     action = action_get(id, true);
     assert(action);
@@ -1032,9 +1030,7 @@ bool gui_action_button(const char *id, const char *label, float size,
     ret = gui_button(label, size, action->icon);
     if (IsItemHovered()) goxel_set_help_text(action_get(id, true)->help);
     if (ret) {
-        va_start(ap, sig);
-        action_execv(action_get(id, true), sig, ap);
-        va_end(ap);
+        action_exec(action_get(id, true), "");
     }
     PopID();
     return ret;
