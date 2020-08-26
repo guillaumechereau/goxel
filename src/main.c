@@ -54,15 +54,11 @@ typedef struct
 {
     char *input;
     char *export;
-    char *script;
-    int script_args_nb;
-    const char *script_args[32];
     float scale;
 } args_t;
 
 #define OPT_HELP 1
-#define OPT_SCRIPT 2
-#define OPT_VERSION 3
+#define OPT_VERSION 2
 
 typedef struct {
     const char *name;
@@ -76,8 +72,6 @@ static const gox_option_t OPTIONS[] = {
     {"export", 'e', required_argument, "FILENAME",
         .help="Export the image to a file"},
     {"scale", 's', required_argument, "FLOAT", .help="Set UI scale"},
-    {"script", OPT_SCRIPT, required_argument, "FILENAME",
-        .help="Run a script and exit"},
     {"help", OPT_HELP, .help="Give this help list"},
     {"version", OPT_VERSION, .help="Print program version"},
     {}
@@ -134,9 +128,6 @@ static void parse_options(int argc, char **argv, args_t *args)
         case 's':
             args->scale = atof(optarg);
             break;
-        case OPT_SCRIPT:
-            args->script = optarg;
-            break;
         case OPT_HELP:
             print_help();
             exit(0);
@@ -148,12 +139,7 @@ static void parse_options(int argc, char **argv, args_t *args)
         }
     }
     if (optind < argc) {
-        if (args->script) {
-            while (optind < argc)
-                args->script_args[args->script_args_nb++] = argv[optind++];
-        } else {
-            args->input = argv[optind];
-        }
+        args->input = argv[optind];
     }
 }
 
@@ -326,11 +312,6 @@ int main(int argc, char **argv)
 
     if (args.input)
         action_exec2("import", "p", args.input);
-
-    if (args.script) {
-        script_run(args.script, args.script_args_nb, args.script_args);
-        goto end;
-    }
 
     if (args.export) {
         if (!args.input) {

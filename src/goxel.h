@@ -652,14 +652,5 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first);
  * Run all the unit tests */
 void tests_run(void);
 
-// Section: script
-
-/*
- * Function: script_run
- * Run a lua script from a file.
- */
-int script_run(const char *filename, int argc, const char **argv);
-
-
 
 #endif // GOXEL_H
