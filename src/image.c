@@ -421,16 +421,6 @@ void image_move_camera(image_t *img, camera_t *cam, int d)
     DL_PREPEND_ELEM(img->cameras, other, cam);
 }
 
-static void image_move_camera_up(image_t *img, camera_t *cam)
-{
-    image_move_camera(img, cam, +1);
-}
-
-static void image_move_camera_down(image_t *img, camera_t *cam)
-{
-    image_move_camera(img, cam, -1);
-}
-
 material_t *image_add_material(image_t *img, material_t *mat)
 {
     img = img ?: goxel.image;
@@ -727,31 +717,21 @@ ACTION_REGISTER(img_new_camera,
 
 ACTION_REGISTER(img_del_camera,
     .help = "Delete the active camera",
-    .cfunc = image_delete_camera,
-    .csig = "vpp",
+    .script = "goxel.image.cameras.remove(goxel.image.cameras.active)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
 )
 
-ACTION_REGISTER(img_move_camera,
-    .help = "Move the active camera",
-    .cfunc = image_move_camera,
-    .csig = "vppi",
-    .flags = ACTION_TOUCH_IMAGE,
-)
-
 ACTION_REGISTER(img_move_camera_up,
     .help = "Move the active camera up",
-    .cfunc = image_move_camera_up,
-    .csig = "vpp",
+    .script = "goxel.image.cameras.move(goxel.image.cameras.active, +1)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_UPWARD,
 )
 
 ACTION_REGISTER(img_move_camera_down,
     .help = "Move the active camera down",
-    .cfunc = image_move_camera_down,
-    .csig = "vpp",
+    .script = "goxel.image.cameras.move(goxel.image.cameras.active, -1)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
 )
