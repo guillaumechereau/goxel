@@ -1093,7 +1093,7 @@ static int search_action_for_format_cb(action_t *a, void *user)
     return 1;
 }
 
-static int goxel_import_file(const char *path)
+int goxel_import_file(const char *path)
 {
     const action_t *a = NULL;
     if (str_endswith(path, ".gox")) {
@@ -1113,7 +1113,7 @@ ACTION_REGISTER(import,
     .flags = ACTION_TOUCH_IMAGE,
 )
 
-static int goxel_export_to_file(const char *path)
+int goxel_export_to_file(const char *path)
 {
     const action_t *a = NULL;
     actions_iter(search_action_for_format_cb, USER_PASS(path, "export_", &a));

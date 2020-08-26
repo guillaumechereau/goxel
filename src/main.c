@@ -311,14 +311,14 @@ int main(int argc, char **argv)
     }
 
     if (args.input)
-        action_exec2("import", "p", args.input);
+        goxel_import_file(args.input);
 
     if (args.export) {
         if (!args.input) {
             LOG_E("trying to export an empty image");
             ret = -1;
         } else {
-            ret = action_exec2("export", "p", args.export);
+            ret = goxel_export_to_file(args.export);
         }
         goto end;
     }
