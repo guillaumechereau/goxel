@@ -379,8 +379,10 @@ void image_merge_visible_layers(image_t *img)
 camera_t *image_add_camera(image_t *img, camera_t *cam)
 {
     img = img ?: goxel.image;
-    if (!cam) {
+    if (!cam)
         cam = camera_new(NULL);
+
+    if (!cam->name[0] || camera_name_exists(img, cam->name)) {
         make_uniq_name(cam->name, sizeof(cam->name), "Camera", img,
                        camera_name_exists);
     }
@@ -718,8 +720,7 @@ ACTION_REGISTER(img_merge_visible_layers,
 
 ACTION_REGISTER(img_new_camera,
     .help = "Add a new camera to the image",
-    .cfunc = image_add_camera,
-    .csig = "vpp",
+    .script = "goxel.image.cameras.add(new Camera())",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )

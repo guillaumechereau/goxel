@@ -68,6 +68,7 @@ typedef struct {
 
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
 
+static klass_t camera_klass;
 static klass_t image_klass;
 static klass_t list_klass;
 static klass_t layer_klass;
@@ -238,6 +239,21 @@ static klass_t goxel_klass = {
     },
 };
 
+static JSValue js_image_cameras_get(JSContext *ctx, JSValueConst this_val)
+{
+    list_t *list;
+    image_t *image;
+
+    image = obj_get_ptr(this_val, &image_klass);
+    list = calloc(1, sizeof(*list));
+    list->klass = &camera_klass;
+    list->parent = image;
+    list->ptr = (void*)&image->cameras;
+    list->active = (void*)&image->active_camera;
+    list->add_fn = (void*)image_add_camera;
+    list->delete_fn = (void*)image_delete_camera;
+    return obj_new(ctx, list, &list_klass, true);
+}
 
 static JSValue js_image_layers_get(JSContext *ctx, JSValueConst this_val)
 {
@@ -275,6 +291,7 @@ static void js_image_finalizer(JSRuntime *rt, JSValue val)
 static klass_t image_klass = {
     .def = { "Image", .finalizer = js_image_finalizer },
     .attributes = {
+        {"cameras", .getter=js_image_cameras_get},
         {"layers", .getter=js_image_layers_get},
         {"mergeVisibleLayers", .fn=js_image_merge_visible_layers},
         {}
@@ -397,6 +414,41 @@ static klass_t volume_klass = {
         {"fill", .fn=js_volume_fill},
         {"setAt", .fn=js_volume_set_at},
         {"save", .fn=js_volume_save},
+        {}
+    },
+};
+
+static JSValue camera_ctor(JSContext *ctx, JSValueConst new_target,
+                           int argc, JSValueConst *argv)
+{
+    camera_t *camera;
+    camera = camera_new(NULL);
+    return obj_new(ctx, camera, &camera_klass, true);
+}
+
+static void js_camera_finalizer(JSRuntime *rt, JSValue val)
+{
+    camera_t *camera;
+    if ((camera = obj_delete(val, &camera_klass))) {
+        camera_delete(camera);
+    }
+}
+
+static JSValue js_camera_copy(JSContext *ctx, JSValueConst this_val,
+                             int argc, JSValueConst *argv)
+{
+    camera_t *camera;
+    camera = obj_get_ptr(this_val, &camera_klass);
+    camera = camera_copy(camera);
+    return obj_new(ctx, camera, &camera_klass, true);
+}
+
+static klass_t camera_klass = {
+    .def = { "Camera", .finalizer = js_camera_finalizer },
+    .ctor = camera_ctor,
+    .attributes = {
+        {"copy", .fn=js_camera_copy},
+        {"name", .flags=ATTR_STR_BUF, MEMBER(camera_t, name)},
         {}
     },
 };
@@ -589,6 +641,7 @@ static void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
                       JS_NewCFunction(ctx, js_print, "log", 1));
     JS_SetPropertyStr(ctx, global_obj, "console", console);
 
+    init_klass(ctx, &camera_klass);
     init_klass(ctx, &list_klass);
     init_klass(ctx, &goxel_klass);
     init_klass(ctx, &image_klass);
