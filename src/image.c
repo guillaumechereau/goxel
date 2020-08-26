@@ -649,22 +649,6 @@ void image_redo(image_t *img)
     debug_print_history(img);
 }
 
-void image_clear_layer(layer_t *layer, const float box[4][4])
-{
-    painter_t painter;
-    layer = layer ?: goxel.image->active_layer;
-    if (!box || box_is_null(box)) {
-        mesh_clear(layer->mesh);
-        return;
-    }
-    painter = (painter_t) {
-        .shape = &shape_cube,
-        .mode = MODE_SUB,
-        .color = {255, 255, 255, 255},
-    };
-    mesh_op(layer->mesh, &painter, box);
-}
-
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)
 {
     return !layer->base_id && !layer->image && !layer->shape;
@@ -732,8 +716,6 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .script = "goxel.image.layers.active.volume.clear()",
-    .cfunc = image_clear_layer,
-    .csig = "vpp",
     .icon = ICON_DELETE,
     .flags = ACTION_TOUCH_IMAGE,
     .default_shortcut = "Delete",
