@@ -1036,24 +1036,6 @@ bool gui_action_button(const char *id, const char *label, float size)
     return ret;
 }
 
-bool gui_action_checkbox(const char *id, const char *label)
-{
-    bool b;
-    const action_t *action = action_get(id, true);
-    action_exec(action, ">b", &b);
-    if (ImGui::Checkbox(label, &b)) {
-        action_exec(action, "b", b);
-        return true;
-    }
-    if (ImGui::IsItemHovered()) {
-        if (!*action->shortcut)
-            goxel_set_help_text(action->help);
-        else
-            goxel_set_help_text("%s (%s)", action->help, action->shortcut);
-    }
-    return false;
-}
-
 static bool _selectable(const char *label, bool *v, const char *tooltip,
                         float w, int icon, int group)
 {

@@ -79,7 +79,6 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax);
 bool gui_bbox(float box[4][4]);
 bool gui_quat(const char *label, float q[4]);
 bool gui_action_button(const char *id, const char *label, float size);
-bool gui_action_checkbox(const char *id, const char *label);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_toggle(const char *name, int *v, int set_v,
                            const char *tooltip, float w);
