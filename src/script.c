@@ -61,6 +61,7 @@ typedef struct {
     list_el_t **active; // Point to parent attribute for active item.
     list_el_t **ptr;
     void *(*add_fn)(void *parent, void *val);
+    void (*delete_fn)(void *parent, void *val);
 } list_t;
 
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
@@ -106,6 +107,38 @@ static void *obj_get_ptr(JSValue val, const klass_t *klass)
     return obj->ptr;
 }
 
+static JSValue js_list_delete(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
+{
+    list_t *list;
+    list = obj_get_ptr(this_val, &list_klass);
+    list->delete_fn(list->parent, NULL);
+    return JS_UNDEFINED;
+}
+
+static JSValue js_list_move(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
+{
+    int32_t d;
+    list_t *list;
+    list_el_t *el, *other = NULL;
+
+    list = obj_get_ptr(this_val, &list_klass);
+    JS_ToInt32(ctx, &d, argv[0]); // TODO: Add error check.
+
+    el = *list->active;
+    if (d == -1) {
+        other = el->next;
+        SWAP(other, el);
+    } else if (el != *list->ptr) {
+        other = el->prev;
+    }
+    if (!other || !el) return JS_UNDEFINED;
+    DL_DELETE(*list->ptr, el);
+    DL_PREPEND_ELEM(*list->ptr, other, el);
+    return JS_UNDEFINED;
+}
+
 static JSValue list_new(JSContext *ctx, JSValueConst this_val,
                         int argc, JSValueConst *argv)
 {
@@ -114,7 +147,7 @@ static JSValue list_new(JSContext *ctx, JSValueConst this_val,
 
     list = obj_get_ptr(this_val, &list_klass);
     el = list->add_fn(list->parent, NULL);
-    return obj_new(ctx, el, list->klass, true);
+    return obj_new(ctx, el, list->klass, false);
 }
 
 static JSValue list_length_get(JSContext *ctx, JSValueConst this_val)
@@ -146,7 +179,9 @@ static klass_t list_klass = {
     .def = { "List", .finalizer = js_list_finalizer },
     .attributes = {
         {"active", .getter=js_list_active},
+        {"delete", .fn=js_list_delete},
         {"length", .getter=list_length_get},
+        {"move", .fn=js_list_move},
         {"new", .fn=list_new},
         {},
     },
@@ -173,6 +208,7 @@ static JSValue js_image_layers_get(JSContext *ctx, JSValueConst this_val)
     list->ptr = (void*)&image->layers;
     list->active = (void*)&image->active_layer;
     list->add_fn = (void*)image_add_layer;
+    list->delete_fn = (void*)image_delete_layer;
     return obj_new(ctx, list, &list_klass, true);
 }
 

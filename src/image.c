@@ -345,33 +345,6 @@ void image_delete_layer(image_t *img, layer_t *layer)
     if (!img->active_layer) img->active_layer = img->layers->prev;
 }
 
-void image_move_layer(image_t *img, layer_t *layer, int d)
-{
-    assert(d == -1 || d == +1);
-    layer_t *other = NULL;
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
-    if (d == -1) {
-        other = layer->next;
-        SWAP(other, layer);
-    } else if (layer != img->layers) {
-        other = layer->prev;
-    }
-    if (!other || !layer) return;
-    DL_DELETE(img->layers, layer);
-    DL_PREPEND_ELEM(img->layers, other, layer);
-}
-
-static void image_move_layer_up(image_t *img, layer_t *layer)
-{
-    image_move_layer(img, layer, -1);
-}
-
-static void image_move_layer_down(image_t *img, layer_t *layer)
-{
-    image_move_layer(img, layer, +1);
-}
-
 layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
@@ -723,39 +696,28 @@ ACTION_REGISTER(layer_clear,
 
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
-    .cfunc = image_add_layer,
-    .csig = "vpp",
+    .script = "goxel.image.layers.new()",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )
 
 ACTION_REGISTER(img_del_layer,
     .help = "Delete the active layer",
-    .cfunc = image_delete_layer,
-    .csig = "vpp",
+    .script = "goxel.image.layers.delete()",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
 )
 
-ACTION_REGISTER(img_move_layer,
-    .help = "Move the active layer",
-    .cfunc = image_move_layer,
-    .csig = "vppi",
-    .flags = ACTION_TOUCH_IMAGE,
-)
-
 ACTION_REGISTER(img_move_layer_up,
     .help = "Move the active layer up",
-    .cfunc = image_move_layer_up,
-    .csig = "vpp",
+    .script = "goxel.image.layers.move(-1)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_UPWARD,
 )
 
 ACTION_REGISTER(img_move_layer_down,
     .help = "Move the active layer down",
-    .cfunc = image_move_layer_down,
-    .csig = "vpp",
+    .script = "goxel.image.layers.move(+1)",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
 )
