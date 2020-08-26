@@ -659,6 +659,7 @@ void tests_run(void);
  * Run a lua script from a file.
  */
 int script_run(const char *filename, int argc, const char **argv);
+int script_run_str(const char *script, const char *filename);
 
 
 

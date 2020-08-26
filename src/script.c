@@ -39,11 +39,6 @@ struct attribute {
         int size;
     } member;
 
-    struct {
-        klass_t *klass;
-        void *(*add)(void *parent, void *val);
-    } list;
-
     JSValue (*getter)(JSContext *ctx, JSValueConst this_val);
     JSCFunction *fn;
 };
@@ -51,7 +46,6 @@ struct attribute {
 struct klass {
     JSClassID id;
     JSClassDef def;
-    JSValue (*create)(JSContext *ctx, void *parent, const attribute_t *attr);
     JSCFunction *ctor;
     attribute_t attributes[];
 };
@@ -62,9 +56,11 @@ struct list_el {
 };
 
 typedef struct {
+    const klass_t *klass;
     void *parent;
+    list_el_t **active; // Point to parent attribute for active item.
     list_el_t **ptr;
-    const attribute_t *attr;
+    void *(*add_fn)(void *parent, void *val);
 } list_t;
 
 #define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
@@ -74,23 +70,40 @@ static klass_t list_klass;
 static klass_t layer_klass;
 static klass_t volume_klass;
 
-static JSValue new_obj_ref(JSContext *ctx, void *obj, const klass_t *klass)
+typedef struct obj {
+    void *ptr;
+    bool owned;
+} obj_t;
+
+static JSValue obj_new(JSContext *ctx, void *ptr, const klass_t *klass,
+                       bool owned)
 {
     JSValue ret;
+    obj_t *obj;
+
+    obj = calloc(1, sizeof(*obj));
+    obj->ptr = ptr;
+    obj->owned = owned;
     ret = JS_NewObjectClass(ctx, klass->id);
     JS_SetOpaque(ret, obj);
     return ret;
 }
 
-static JSValue list_create(JSContext *ctx, void *parent,
-                           const attribute_t *attr)
+static void *obj_delete(JSValue val, const klass_t *klass)
 {
-    list_t *list;
-    list = calloc(1, sizeof(*list));
-    list->parent = parent;
-    list->attr = attr;
-    list->ptr = parent + attr->member.offset;
-    return new_obj_ref(ctx, list, &list_klass);
+    void *ret;
+    obj_t *obj;
+    obj = JS_GetOpaque(val, klass->id);
+    ret = obj->owned ? obj->ptr : NULL;
+    free(obj);
+    return ret;
+}
+
+static void *obj_get_ptr(JSValue val, const klass_t *klass)
+{
+    obj_t *obj;
+    obj = JS_GetOpaque(val, klass->id);
+    return obj->ptr;
 }
 
 static JSValue list_new(JSContext *ctx, JSValueConst this_val,
@@ -99,9 +112,9 @@ static JSValue list_new(JSContext *ctx, JSValueConst this_val,
     list_t *list;
     list_el_t *el;
 
-    list = JS_GetOpaque(this_val, list_klass.id);
-    el = list->attr->list.add(list->parent, NULL);
-    return new_obj_ref(ctx, el, list->attr->list.klass);
+    list = obj_get_ptr(this_val, &list_klass);
+    el = list->add_fn(list->parent, NULL);
+    return obj_new(ctx, el, list->klass, true);
 }
 
 static JSValue list_length_get(JSContext *ctx, JSValueConst this_val)
@@ -109,15 +122,30 @@ static JSValue list_length_get(JSContext *ctx, JSValueConst this_val)
     int length;
     list_t *list;
     list_el_t *el;
-    list = JS_GetOpaque(this_val, list_klass.id);
+    list = obj_get_ptr(this_val, &list_klass);
     DL_COUNT(*list->ptr, el, length);
     return JS_NewInt32(ctx, length);
 }
 
+static JSValue js_list_active(JSContext *ctx, JSValueConst this_val)
+{
+    list_t *list;
+    list = obj_get_ptr(this_val, &list_klass);
+    return obj_new(ctx, *list->active, list->klass, false);
+}
+
+static void js_list_finalizer(JSRuntime *rt, JSValue val)
+{
+    list_t *list;
+    if ((list = obj_delete(val, &list_klass))) {
+        free(list);
+    }
+}
+
 static klass_t list_klass = {
-    .def = { "List" },
-    .create = list_create,
+    .def = { "List", .finalizer = js_list_finalizer },
     .attributes = {
+        {"active", .getter=js_list_active},
         {"length", .getter=list_length_get},
         {"new", .fn=list_new},
         {},
@@ -132,11 +160,34 @@ static klass_t goxel_klass = {
     },
 };
 
+
+static JSValue js_image_layers_get(JSContext *ctx, JSValueConst this_val)
+{
+    list_t *list;
+    image_t *image;
+
+    image = obj_get_ptr(this_val, &image_klass);
+    list = calloc(1, sizeof(*list));
+    list->klass = &layer_klass;
+    list->parent = image;
+    list->ptr = (void*)&image->layers;
+    list->active = (void*)&image->active_layer;
+    list->add_fn = (void*)image_add_layer;
+    return obj_new(ctx, list, &list_klass, true);
+}
+
+static void js_image_finalizer(JSRuntime *rt, JSValue val)
+{
+    image_t *image;
+    if ((image = obj_delete(val, &image_klass))) {
+        image_delete(image);
+    }
+}
+
 static klass_t image_klass = {
-    .def = { "Image" },
+    .def = { "Image", .finalizer = js_image_finalizer },
     .attributes = {
-        {"layers", .klass=&list_klass, MEMBER(image_t, layers),
-         .list={.klass=&layer_klass, .add=(void*)image_add_layer}},
+        {"layers", .getter=js_image_layers_get},
         {}
     },
 };
@@ -166,7 +217,16 @@ static JSValue volume_ctor(JSContext *ctx, JSValueConst new_target,
 {
     mesh_t *mesh;
     mesh = mesh_new();
-    return new_obj_ref(ctx, mesh, &volume_klass);
+    return obj_new(ctx, mesh, &volume_klass, true);
+}
+
+static JSValue js_volume_clear(JSContext *ctx, JSValueConst this_val,
+                               int argc, JSValueConst *argv)
+{
+    mesh_t *mesh;
+    mesh = obj_get_ptr(this_val, &volume_klass);
+    mesh_clear(mesh);
+    return JS_UNDEFINED;
 }
 
 static JSValue js_volume_fill(JSContext *ctx, JSValueConst this_val,
@@ -177,7 +237,7 @@ static JSValue js_volume_fill(JSContext *ctx, JSValueConst this_val,
     uint8_t c[4];
     JSValue args[2], pos_buf, aabb_buf, c_val;
 
-    mesh = JS_GetOpaque(this_val, volume_klass.id);
+    mesh = obj_get_ptr(this_val, &volume_klass);
     get_vec_int(ctx, argv[0], 3, aabb[1]);
 
     aabb_buf = JS_NewArrayBuffer(ctx, (void*)aabb, sizeof(aabb),
@@ -213,7 +273,7 @@ static JSValue js_volume_set_at(JSContext *ctx, JSValueConst this_val,
 
     get_vec_int(ctx, argv[0], 3, pos);
     get_vec_uint8(ctx, argv[1], 4, v);
-    mesh = JS_GetOpaque(this_val, volume_klass.id);
+    mesh = obj_get_ptr(this_val, &volume_klass);
     mesh_set_at(mesh, NULL, pos, v);
     return JS_UNDEFINED;
 }
@@ -224,8 +284,7 @@ static JSValue js_volume_save(JSContext *ctx, JSValueConst this_val,
     mesh_t *mesh;
     const char *path;
 
-    mesh = JS_GetOpaque(this_val, volume_klass.id);
-    (void)mesh;
+    mesh = obj_get_ptr(this_val, &volume_klass);
     path = JS_ToCString(ctx, argv[0]);
     action_exec2("mesh_save", "ps", mesh, path); // XXX: should be removed.
     JS_FreeCString(ctx, path);
@@ -234,8 +293,10 @@ static JSValue js_volume_save(JSContext *ctx, JSValueConst this_val,
 
 static void js_volume_finalizer(JSRuntime *rt, JSValue val)
 {
-    mesh_t *mesh = JS_GetOpaque(val, volume_klass.id);
-    mesh_delete(mesh);
+    mesh_t *mesh;
+    if ((mesh = obj_delete(val, &volume_klass))) {
+        mesh_delete(mesh);
+    }
 }
 
 
@@ -243,6 +304,7 @@ static klass_t volume_klass = {
     .def = { "Volume", .finalizer = js_volume_finalizer },
     .ctor = volume_ctor,
     .attributes = {
+        {"clear", .fn=js_volume_clear},
         {"fill", .fn=js_volume_fill},
         {"setAt", .fn=js_volume_set_at},
         {"save", .fn=js_volume_save},
@@ -250,10 +312,19 @@ static klass_t volume_klass = {
     },
 };
 
+static void js_layer_finalizer(JSRuntime *rt, JSValue val)
+{
+    layer_t *layer;
+    if ((layer = obj_delete(val, &layer_klass))) {
+        layer_delete(layer);
+    }
+}
+
 static klass_t layer_klass = {
-    .def = { "Layer" },
+    .def = { "Layer", .finalizer = js_layer_finalizer },
     .attributes = {
         {"name", .flags=ATTR_STR_BUF, MEMBER(layer_t, name)},
+        {"volume", .klass=&volume_klass, MEMBER(layer_t, mesh)},
         {}
     },
 };
@@ -268,13 +339,10 @@ static JSValue obj_attr_getter(JSContext *ctx, JSValueConst this_val,
 
     proto = JS_GetPrototype(ctx, this_val);
     klass = JS_GetOpaque(proto, 1);
-    obj = JS_GetOpaque(this_val, klass->id);
+    obj = obj_get_ptr(this_val, klass);
     JS_FreeValue(ctx, proto);
 
     attr = &klass->attributes[magic];
-    if (attr->klass && attr->klass->create) {
-        return attr->klass->create(ctx, obj, attr);
-    }
 
     if (attr->flags & ATTR_STR_BUF) {
         ptr = obj + attr->member.offset;
@@ -283,7 +351,7 @@ static JSValue obj_attr_getter(JSContext *ctx, JSValueConst this_val,
 
     if (attr->klass && attr->member.size) {
         ptr = obj + attr->member.offset;
-        return new_obj_ref(ctx, *(void**)ptr, attr->klass);
+        return obj_new(ctx, *(void**)ptr, attr->klass, false);
     }
 
     return JS_NewInt32(ctx, magic);
@@ -394,7 +462,7 @@ static void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
     init_klass(ctx, &layer_klass);
     init_klass(ctx, &volume_klass);
 
-    goxel_obj = new_obj_ref(ctx, &goxel, &goxel_klass);
+    goxel_obj = obj_new(ctx, &goxel, &goxel_klass, false);
     JS_SetPropertyStr(ctx, global_obj, "goxel", goxel_obj);
 
     JS_FreeValue(ctx, global_obj);
@@ -415,14 +483,12 @@ static  void dump_exception(JSContext *ctx)
     JS_FreeValue(ctx, exception_val);
 }
 
-int script_run(const char *filename, int argc, const char **argv)
+int script_run_str(const char *script, const char *filename)
 {
-    char *input;
-    int size;
-    int flags = 0;
     JSRuntime *rt;
     JSContext *ctx;
     JSValue res_val;
+    int flags = 0;
 
     rt = JS_NewRuntime();
     assert(rt);
@@ -430,13 +496,7 @@ int script_run(const char *filename, int argc, const char **argv)
     assert(ctx);
     JS_SetRuntimeInfo(rt, filename);
     js_std_add_helpers(ctx, -1, NULL);
-
-    input = read_file(filename, &size);
-    if (!input) {
-        LOG_E("Cannot read '%d'", filename);
-        return -1;
-    }
-    res_val = JS_Eval(ctx, input, size, filename, flags);
+    res_val = JS_Eval(ctx, script, strlen(script), filename, flags);
     if (JS_IsException(res_val)) {
         dump_exception(ctx);
     }
@@ -444,6 +504,20 @@ int script_run(const char *filename, int argc, const char **argv)
     JS_FreeValue(ctx, res_val);
     JS_FreeContext(ctx);
     JS_FreeRuntime(rt);
-    free(input);
     return 0;
+}
+
+int script_run(const char *filename, int argc, const char **argv)
+{
+    char *input;
+    int size, ret;
+
+    input = read_file(filename, &size);
+    if (!input) {
+        LOG_E("Cannot read '%d'", filename);
+        return -1;
+    }
+    ret = script_run_str(input, filename);
+    free(input);
+    return ret;
 }

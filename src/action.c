@@ -145,7 +145,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     bool b;
     int i, nb;
     int (*func)(const action_t *a, lua_State *l);
-    lua_State *l = luaL_newstate();
+    lua_State *l;
     func = action->func ?: default_function;
 
     if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
@@ -153,7 +153,7 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
     }
 
     reentry++;
-
+    l = luaL_newstate();
     while ((c = *sig++)) {
         if (c == '>') break;
         switch (c) {
@@ -171,7 +171,12 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
         lua_settop(l, 0);
         lua_pushboolean(l, !b);
     }
-    func(action, l);
+
+    if (action->script) {
+        script_run_str(action->script, "action");
+    } else {
+        func(action, l);
+    }
 
     // Get the return arguments.
     nb = c ? (int)strlen(sig) : 0;
@@ -200,6 +205,7 @@ int action_exec(const action_t *action, const char *sig, ...)
 {
     va_list ap;
     int ret;
+
     va_start(ap, sig);
     ret = action_execv(action, sig, ap);
     va_end(ap);

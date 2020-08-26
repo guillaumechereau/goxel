@@ -731,6 +731,7 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
 
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
+    .script = "goxel.image.layers.active.volume.clear()",
     .cfunc = image_clear_layer,
     .csig = "vpp",
     .icon = ICON_DELETE,

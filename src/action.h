@@ -61,6 +61,9 @@ struct action {
     void            *cfunc;
     const char      *csig;
 
+    // Script attached to the action.  Will replace cfunc and func.
+    const char      *script;
+
     // Used for export / import actions.
     struct {
         const char  *name;
