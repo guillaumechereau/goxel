@@ -1150,15 +1150,14 @@ ACTION_REGISTER(export,
     .csig = "vp",
 )
 
-static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
-                                 const float box[4][4])
+static void a_cut_as_new_layer(void)
 {
     layer_t *new_layer;
     painter_t painter;
 
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
-    if (!box) box = (const void*)goxel.selection;
+    image_t *img = goxel.image;
+    layer_t *layer = img->active_layer;
+    const float (*box)[4][4] = &goxel.selection;
 
     new_layer = image_duplicate_layer(img, layer);
     painter = (painter_t) {
@@ -1166,41 +1165,40 @@ static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
     };
-    mesh_op(new_layer->mesh, &painter, box);
+    mesh_op(new_layer->mesh, &painter, *box);
     painter.mode = MODE_SUB;
-    mesh_op(layer->mesh, &painter, box);
-    return new_layer;
+    mesh_op(layer->mesh, &painter, *box);
 }
 
 ACTION_REGISTER(cut_as_new_layer,
     .help = "Cut into a new layer",
-    .cfunc = cut_as_new_layer,
-    .csig = "vppp",
+    .cfunc = a_cut_as_new_layer,
+    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
-static void reset_selection(void)
+static void a_reset_selection(void)
 {
     mat4_copy(mat4_zero, goxel.selection);
 }
 
 ACTION_REGISTER(reset_selection,
     .help = "Reset the selection",
-    .cfunc = reset_selection,
-    .csig = "vp",
+    .cfunc = a_reset_selection,
+    .csig = "v",
 )
 
-static void fill_selection(layer_t *layer)
+static void a_fill_selection(void)
 {
+    layer_t *layer = goxel.image->active_layer;
     if (box_is_null(goxel.selection)) return;
-    layer = layer ?: goxel.image->active_layer;
     mesh_op(layer->mesh, &goxel.painter, goxel.selection);
 }
 
 ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
-    .cfunc = fill_selection,
-    .csig = "vp",
+    .cfunc = a_fill_selection,
+    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
