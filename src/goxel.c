@@ -1015,31 +1015,6 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     texture_delete(fbo);
 }
 
-
-static void export_as(const char *type, const char *path)
-{
-    char id[128];
-    assert(path);
-    // If not provided, try to guess the type from the path extension.
-    if (!type) {
-        type = strrchr(path, '.');
-        if (!type) {
-            LOG_E("Cannot guess file extension");
-            return;
-        }
-        type++;
-    }
-    sprintf(id, "export_as_%s", type);
-    action_exec2(id, "p", path);
-}
-
-ACTION_REGISTER(export_as,
-    .help = "Export the image",
-    .cfunc = export_as,
-    .csig = "vpp",
-)
-
-
 // XXX: we could merge all the set_xxx_text function into a single one.
 void goxel_set_help_text(const char *msg, ...)
 {
