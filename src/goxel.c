@@ -1215,32 +1215,30 @@ ACTION_REGISTER(past,
 #define HS2 (M_SQRT2 / 2.0)
 
 
-static int view_default(const action_t *a, lua_State *l)
+static void a_view_default(void)
 {
     camera_t *camera = get_camera();
     float dist = vec3_norm(camera->mat[3]);
     mat4_set_identity(camera->mat);
     mat4_irotate(camera->mat, M_PI / 4, 1, 0, 0);
     mat4_itranslate(camera->mat, 0, 0, dist);
-    return 0;
 }
 
-static int view_set(const action_t *a, lua_State *l)
+static void a_view_set(void *data)
 {
-    float rz = ((float*)a->data)[0] / 180 * M_PI;
-    float rx = ((float*)a->data)[1] / 180 * M_PI;
+    float rz = ((float*)data)[0] / 180 * M_PI;
+    float rx = ((float*)data)[1] / 180 * M_PI;
     camera_t *camera = get_camera();
 
     mat4_set_identity(camera->mat);
     mat4_itranslate(camera->mat, 0, 0, camera->dist);
     camera_turntable(camera, rz, rx);
-    return 0;
 }
 
 ACTION_REGISTER(view_left,
     .help = "Set camera view to left",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .func = view_set,
+    .cfunc_data = a_view_set,
     .data = (float[]){90, 90},
     .default_shortcut = "Ctrl 3",
 )
@@ -1248,7 +1246,7 @@ ACTION_REGISTER(view_left,
 ACTION_REGISTER(view_right,
     .help = "Set camera view to right",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .func = view_set,
+    .cfunc_data = a_view_set,
     .data = (float[]){-90, 90},
     .default_shortcut = "3",
 )
@@ -1256,7 +1254,7 @@ ACTION_REGISTER(view_right,
 ACTION_REGISTER(view_top,
     .help = "Set camera view to top",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .func = view_set,
+    .cfunc_data = a_view_set,
     .data = (float[]){0, 0},
     .default_shortcut = "7",
 )
@@ -1264,14 +1262,14 @@ ACTION_REGISTER(view_top,
 ACTION_REGISTER(view_default,
     .help = "Set camera view to default",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .func = view_default,
+    .cfunc = a_view_default,
     .default_shortcut = "5",
 )
 
 ACTION_REGISTER(view_front,
     .help = "Set camera view to front",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .func = view_set,
+    .cfunc_data = a_view_set,
     .data = (float[]){0, 90},
     .default_shortcut = "1",
 )

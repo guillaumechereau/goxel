@@ -64,7 +64,10 @@ void actions_iter(int (*f)(action_t *action, void *user), void *user)
 static int default_function(const action_t *a, lua_State *l)
 {
     assert(a->cfunc);
-    a->cfunc();
+    if (a->data)
+        a->cfunc_data(a->data);
+    else
+        a->cfunc();
     return 0;
 }
 

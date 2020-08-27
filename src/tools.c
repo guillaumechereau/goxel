@@ -20,14 +20,13 @@
 
 static const tool_t *g_tools[TOOL_COUNT] = {};
 
-static int tool_set_action(const action_t *a, lua_State *l)
+static void a_tool_set(void *data)
 {
     if (goxel.tool_mesh) {
         mesh_delete(goxel.tool_mesh);
         goxel.tool_mesh = NULL;
     }
-    goxel.tool = (tool_t*)a->data;
-    return 0;
+    goxel.tool = (tool_t*)data;
 }
 
 void tool_register_(tool_t *tool)
@@ -37,7 +36,7 @@ void tool_register_(tool_t *tool)
         .id = tool->action_id,
         .default_shortcut = tool->default_shortcut,
         .help = "set tool",
-        .func = tool_set_action,
+        .cfunc_data = a_tool_set,
         .data = (void*)tool,
         .flags = ACTION_CAN_EDIT_SHORTCUT,
     };
