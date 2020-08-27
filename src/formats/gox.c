@@ -720,12 +720,11 @@ ACTION_REGISTER(open,
     .default_shortcut = "Ctrl O",
 )
 
-static void save_as(const char *path)
+static void a_save_as(void)
 {
-    if (!path) {
-        path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
-        if (!path) return;
-    }
+    const char *path;
+    path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
+    if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
         goxel.image->path = strdup(path);
@@ -737,18 +736,27 @@ static void save_as(const char *path)
 
 ACTION_REGISTER(save_as,
     .help = "Save the image as",
-    .cfunc = save_as,
-    .csig = "vp",
+    .cfunc = a_save_as,
+    .csig = "v",
 )
 
-static void save(const char *path)
+static void a_save(void)
 {
-    save_as(path ?: goxel.image->path);
+    const char *path = goxel.image->path;
+    if (!path) path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
+    if (!path) return;
+    if (path != goxel.image->path) {
+        free(goxel.image->path);
+        goxel.image->path = strdup(path);
+        goxel.image->saved_key = image_get_key(goxel.image);
+    }
+    save_to_file(goxel.image, goxel.image->path);
+    sys_on_saved(path);
 }
 
 ACTION_REGISTER(save,
     .help = "Save the image",
-    .cfunc = save,
-    .csig = "vp",
+    .cfunc = a_save,
+    .csig = "v",
     .default_shortcut = "Ctrl S"
 )
