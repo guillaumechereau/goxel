@@ -701,12 +701,11 @@ error:
     return -1;
 }
 
-static void action_open(const char *path)
+static void a_open(void)
 {
-
-    if (!path)
-        path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
-                                    NULL, NULL);
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
+                                NULL, NULL);
     if (!path) return;
     image_delete(goxel.image);
     goxel.image = image_new();
@@ -715,8 +714,8 @@ static void action_open(const char *path)
 
 ACTION_REGISTER(open,
     .help = "Open an image",
-    .cfunc = action_open,
-    .csig = "vp",
+    .cfunc = a_open,
+    .csig = "v",
     .default_shortcut = "Ctrl O",
 )
 
