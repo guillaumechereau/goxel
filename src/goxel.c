@@ -1077,8 +1077,7 @@ int goxel_import_file(const char *path)
     int err;
 
     if (str_endswith(path, ".gox")) {
-        load_from_file(path);
-        return 0;
+        return load_from_file(path);
     }
     actions_iter(search_action_for_format_cb, USER_PASS(path, "import_", &a));
     if (!a) return -1;
@@ -1088,13 +1087,6 @@ int goxel_import_file(const char *path)
     if (err) return err;
     return 0;
 }
-
-ACTION_REGISTER(import,
-    .help = "Import a file",
-    .cfunc = goxel_import_file,
-    .csig = "ip",
-    .flags = ACTION_TOUCH_IMAGE,
-)
 
 int goxel_export_to_file(const char *path)
 {
@@ -1118,12 +1110,6 @@ int goxel_export_to_file(const char *path)
     sys_on_saved(path);
     return 0;
 }
-
-ACTION_REGISTER(export,
-    .help = "Export to a file",
-    .cfunc = goxel_export_to_file,
-    .csig = "vp",
-)
 
 static void a_cut_as_new_layer(void)
 {
