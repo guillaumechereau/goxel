@@ -201,7 +201,6 @@ static void a_export_as_qubicle(void)
 ACTION_REGISTER(import_qubicle,
     .help = "Import a qubicle file",
     .cfunc = a_qubicle_import,
-    .csig = "v",
     .file_format = {
         .name = "qubicle",
         .ext = "qubicle\0*.qb\0",
@@ -212,7 +211,6 @@ ACTION_REGISTER(import_qubicle,
 ACTION_REGISTER(export_as_qubicle,
     .help = "Save the image as a qubicle 3d file",
     .cfunc = a_export_as_qubicle,
-    .csig = "v",
     .file_format = {
         .name = "qubicle",
         .ext = "qubicle\0*.qb\0",

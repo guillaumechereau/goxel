@@ -58,8 +58,7 @@ struct action {
     void            *data;
 
     // cfunc and csig can be used to directly call any function.
-    void            *cfunc;
-    const char      *csig;
+    void            (*cfunc)(void);
 
     // Used for export / import actions.
     struct {

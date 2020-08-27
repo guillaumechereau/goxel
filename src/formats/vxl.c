@@ -286,7 +286,6 @@ static void a_export_as_vxl(void)
 ACTION_REGISTER(import_vxl,
     .help = "Import a Ace of Spades map file",
     .cfunc = a_import_vxl,
-    .csig = "v",
     .file_format = {
         .name = "vxl",
         .ext = "vxk\0*.vxl\0",
@@ -297,7 +296,6 @@ ACTION_REGISTER(import_vxl,
 ACTION_REGISTER(export_as_vxl,
     .help = "Export the image as a Spades map file",
     .cfunc = a_export_as_vxl,
-    .csig = "v",
     .file_format = {
         .name = "vxl",
         .ext = "vxk\0*.vxl\0",

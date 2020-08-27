@@ -214,7 +214,6 @@ static void a_export_as_obj(void)
 ACTION_REGISTER(export_as_obj,
     .help = "Export the image as a wavefront obj file",
     .cfunc = a_export_as_obj,
-    .csig = "v",
     .file_format = {
         .name = "obj",
         .ext = "obj\0*.obj\0",
@@ -234,7 +233,6 @@ static void a_export_as_ply(void)
 ACTION_REGISTER(export_as_ply,
     .help = "Save the image as a ply file",
     .cfunc = a_export_as_ply,
-    .csig = "v",
     .file_format = {
         .name = "ply",
         .ext = "ply\0*.ply\0",

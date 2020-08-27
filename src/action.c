@@ -60,80 +60,12 @@ void actions_iter(int (*f)(action_t *action, void *user), void *user)
     }
 }
 
-static const void *topointer(lua_State *l, int idx)
-{
-    if (lua_isstring(l, idx))
-        return lua_tostring(l, idx);
-    if (lua_islightuserdata(l, idx))
-        return lua_topointer(l, idx);
-    return *(void**)lua_touserdata(l, idx);
-}
-
 // The default action function will try to call the action cfunc.
 static int default_function(const action_t *a, lua_State *l)
 {
-    int i;
-    void *p;
     assert(a->cfunc);
-    assert(a->csig);
-
-    // Fill any missing arguments with 0 values.
-    for (i = lua_gettop(l); i < strlen(a->csig + 1); i++) {
-        switch (a->csig[i + 1]) {
-            case 'i': lua_pushnumber(l, 0); break;
-            case 'p': lua_pushlightuserdata(l, NULL); break;
-            default: assert(false);
-        }
-    }
-
-    // XXX: clean this up.
-    if (strcmp(a->csig, "v") == 0) {
-        void (*func)(void) = a->cfunc;
-        func();
-    } else if (strcmp(a->csig, "vp") == 0) {
-        void (*func)(const void *) = a->cfunc;
-        func(topointer(l, 1));
-    } else if (strcmp(a->csig, "vpp") == 0) {
-        void (*func)(const void *, const void *) = a->cfunc;
-        func(topointer(l, 1),
-             topointer(l, 2));
-    } else if (strcmp(a->csig, "vpi") == 0) {
-        void (*func)(const void *, int) = a->cfunc;
-        func(topointer(l, 1),
-             lua_tointeger(l, 2));
-    } else if (strcmp(a->csig, "vppp") == 0) {
-        void (*func)(const void *, const void *, const void *) = a->cfunc;
-        func(topointer(l, 1),
-             topointer(l, 2),
-             topointer(l, 3));
-    } else if (strcmp(a->csig, "vppi") == 0) {
-        void (*func)(const void *, const void *, int) = a->cfunc;
-        func(topointer(l, 1),
-             topointer(l, 2),
-             lua_tointeger(l, 3));
-    } else if (strcmp(a->csig, "vpii") == 0) {
-        void (*func)(const void *, int, int) = a->cfunc;
-        func(topointer(l, 1),
-             lua_tointeger(l, 2),
-             lua_tointeger(l, 3));
-    } else if (strcmp(a->csig, "p") == 0) {
-        void *(*func)(void) = a->cfunc;
-        p = func();
-        lua_pushlightuserdata(l, p);
-    } else if (strcmp(a->csig, "pp") == 0) {
-        void *(*func)(const void *) = a->cfunc;
-        p = func(topointer(l, 1));
-        lua_pushlightuserdata(l, p);
-    } else if (strcmp(a->csig, "ip") == 0) {
-        int (*func)(const void *) = a->cfunc;
-        i = func(topointer(l, 1));
-        lua_pushinteger(l, i);
-    } else {
-        LOG_E("Cannot handle sig '%s'", a->csig);
-        assert(false);
-    }
-
-    return a->csig[0] == 'v' ? 0 : 1;
+    a->cfunc();
+    return 0;
 }
 
 int action_execv(const action_t *action, const char *sig, va_list ap)

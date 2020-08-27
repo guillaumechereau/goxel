@@ -144,5 +144,4 @@ static void export_render_buf_to_photos(void)
 
 ACTION_REGISTER(export_render_buf_to_photos,
     .cfunc = export_render_buf_to_photos,
-    .csig = "v",
 )

@@ -584,7 +584,6 @@ static void a_import_vox(void)
 ACTION_REGISTER(export_as_vox,
     .help = "Save the image as a vox 3d file",
     .cfunc = a_export_as_vox,
-    .csig = "v",
     .file_format = {
         .name = "magica voxel",
         .ext = "vox\0*.vox\0",
@@ -595,7 +594,6 @@ ACTION_REGISTER(export_as_vox,
 ACTION_REGISTER(import_vox,
     .help = "Import a magica voxel vox image",
     .cfunc = a_import_vox,
-    .csig = "v",
     .file_format = {
         .name = "magica voxel",
         .ext = "vox\0*.vox\0",

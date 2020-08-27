@@ -418,7 +418,6 @@ static void a_export_as_gltf(void)
 ACTION_REGISTER(export_as_gltf,
     .help = "Save the image as a gltf file",
     .cfunc = a_export_as_gltf,
-    .csig = "v",
     .file_format = {
         .name = "gltf",
         .ext = "glTF2\0*.gltf\0",

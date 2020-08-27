@@ -704,7 +704,6 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
 ACTION_REGISTER(layer_clear,
     .help = "Clear the current layer",
     .cfunc = image_clear_layer,
-    .csig = "v",
     .icon = ICON_DELETE,
     .flags = ACTION_TOUCH_IMAGE,
     .default_shortcut = "Delete",
@@ -718,7 +717,6 @@ static void a_image_add_layer(void)
 ACTION_REGISTER(img_new_layer,
     .help = "Add a new layer to the image",
     .cfunc = a_image_add_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )
@@ -731,7 +729,6 @@ static void a_image_delete_layer(void)
 ACTION_REGISTER(img_del_layer,
     .help = "Delete the active layer",
     .cfunc = a_image_delete_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
 )
@@ -750,7 +747,6 @@ static void a_image_move_layer_down(void)
 ACTION_REGISTER(img_move_layer_up,
     .help = "Move the active layer up",
     .cfunc = a_image_move_layer_up,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_UPWARD,
 )
@@ -758,7 +754,6 @@ ACTION_REGISTER(img_move_layer_up,
 ACTION_REGISTER(img_move_layer_down,
     .help = "Move the active layer down",
     .cfunc = a_image_move_layer_down,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
 )
@@ -771,7 +766,6 @@ static void a_image_duplicate_layer(void)
 ACTION_REGISTER(img_duplicate_layer,
     .help = "Duplicate the active layer",
     .cfunc = a_image_duplicate_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -783,7 +777,6 @@ static void a_image_clone_layer(void)
 ACTION_REGISTER(img_clone_layer,
     .help = "Clone the active layer",
     .cfunc = a_image_clone_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -795,7 +788,6 @@ static void a_image_unclone_layer(void)
 ACTION_REGISTER(img_unclone_layer,
     .help = "Unclone the active layer",
     .cfunc = a_image_unclone_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -809,7 +801,6 @@ static void a_img_select_parent_layer(void)
 ACTION_REGISTER(img_select_parent_layer,
     .help = "Select the parent of a layer",
     .cfunc = a_img_select_parent_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -821,7 +812,6 @@ static void a_img_merge_visible_layers(void)
 ACTION_REGISTER(img_merge_visible_layers,
     .help = "Merge all the visible layers",
     .cfunc = a_img_merge_visible_layers,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -833,7 +823,6 @@ static void a_img_new_camera(void)
 ACTION_REGISTER(img_new_camera,
     .help = "Add a new camera to the image",
     .cfunc = a_img_new_camera,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )
@@ -846,7 +835,6 @@ static void a_img_del_camera(void)
 ACTION_REGISTER(img_del_camera,
     .help = "Delete the active camera",
     .cfunc = a_img_del_camera,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
 )
@@ -856,7 +844,7 @@ static void a_img_move_camera_up(void)
     image_move_camera(goxel.image, goxel.image->active_camera, +1);
 }
 
-static void a_img_move_camera_down(image_t *img, camera_t *cam)
+static void a_img_move_camera_down(void)
 {
     image_move_camera(goxel.image, goxel.image->active_camera, -1);
 }
@@ -864,7 +852,6 @@ static void a_img_move_camera_down(image_t *img, camera_t *cam)
 ACTION_REGISTER(img_move_camera_up,
     .help = "Move the active camera up",
     .cfunc = a_img_move_camera_up,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_UPWARD,
 )
@@ -872,7 +859,6 @@ ACTION_REGISTER(img_move_camera_up,
 ACTION_REGISTER(img_move_camera_down,
     .help = "Move the active camera down",
     .cfunc = a_img_move_camera_down,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
 )
@@ -885,7 +871,6 @@ static void a_img_image_layer_to_mesh(void)
 ACTION_REGISTER(img_image_layer_to_mesh,
     .help = "Turn an image layer into a mesh",
     .cfunc = a_img_image_layer_to_mesh,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -897,7 +882,6 @@ static void a_img_new_shape_layer(void)
 ACTION_REGISTER(img_new_shape_layer,
     .help = "Add a new shape layer to the image",
     .cfunc = a_img_new_shape_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -909,7 +893,6 @@ static void a_img_new_material(void)
 ACTION_REGISTER(img_new_material,
     .help = "Add a new material to the image",
     .cfunc = a_img_new_material,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
 )
@@ -922,7 +905,6 @@ static void a_img_del_material(void)
 ACTION_REGISTER(img_del_material,
     .help = "Delete a material",
     .cfunc = a_img_del_material,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
 )
@@ -930,6 +912,5 @@ ACTION_REGISTER(img_del_material,
 ACTION_REGISTER(img_auto_resize,
     .help = "Auto resize the image to fit the layers",
     .cfunc = a_image_auto_resize,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )

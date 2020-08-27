@@ -1134,7 +1134,6 @@ static void a_cut_as_new_layer(void)
 ACTION_REGISTER(cut_as_new_layer,
     .help = "Cut into a new layer",
     .cfunc = a_cut_as_new_layer,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -1146,7 +1145,6 @@ static void a_reset_selection(void)
 ACTION_REGISTER(reset_selection,
     .help = "Reset the selection",
     .cfunc = a_reset_selection,
-    .csig = "v",
 )
 
 static void a_fill_selection(void)
@@ -1159,7 +1157,6 @@ static void a_fill_selection(void)
 ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
     .cfunc = a_fill_selection,
-    .csig = "v",
     .flags = ACTION_TOUCH_IMAGE,
 )
 
@@ -1204,7 +1201,6 @@ static void past_action(void)
 ACTION_REGISTER(copy,
     .help = "Copy",
     .cfunc = copy_action,
-    .csig = "v",
     .default_shortcut = "Ctrl C",
     .flags = 0,
 )
@@ -1212,7 +1208,6 @@ ACTION_REGISTER(copy,
 ACTION_REGISTER(past,
     .help = "Past",
     .cfunc = past_action,
-    .csig = "v",
     .default_shortcut = "Ctrl V",
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -1289,7 +1284,6 @@ ACTION_REGISTER(quit,
     .help = "Quit the application",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = quit,
-    .csig = "v",
     .default_shortcut = "Ctrl Q",
 )
 
@@ -1300,7 +1294,6 @@ ACTION_REGISTER(undo,
     .help = "Undo",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = undo,
-    .csig = "v",
     .default_shortcut = "Ctrl Z",
     .icon = ICON_ARROW_BACK,
 )
@@ -1309,7 +1302,6 @@ ACTION_REGISTER(redo,
     .help = "Redo",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = redo,
-    .csig = "v",
     .default_shortcut = "Ctrl Y",
     .icon = ICON_ARROW_FORWARD,
 )
@@ -1329,5 +1321,4 @@ ACTION_REGISTER(toggle_mode,
     .help = "Toggle the tool mode (add, sub, paint)",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = toggle_mode,
-    .csig = "v",
 )

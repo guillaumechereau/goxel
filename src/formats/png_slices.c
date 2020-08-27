@@ -67,7 +67,6 @@ static void a_export_as_png_slices(void)
 ACTION_REGISTER(export_as_png_slices,
     .help = "Export the image as a png slices file",
     .cfunc = a_export_as_png_slices,
-    .csig = "v",
     .file_format = {
         .name = "png slices",
         .ext = "png\0*.png\0",

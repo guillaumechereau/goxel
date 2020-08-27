@@ -79,7 +79,6 @@ static void a_export_as_png(void)
 ACTION_REGISTER(export_as_png,
     .help = "Export the image as a png file",
     .cfunc = a_export_as_png,
-    .csig = "v",
     .file_format = {
         .name = "png",
         .ext = "png\0*.png\0",

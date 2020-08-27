@@ -104,7 +104,6 @@ static void a_export_as_pov(void)
 ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
     .cfunc = a_export_as_pov,
-    .csig = "v",
     .file_format = {
         .name = "povray",
         .ext = "povray\0*.povray\0",

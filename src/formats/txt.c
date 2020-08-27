@@ -60,7 +60,6 @@ static void a_export_as_txt(void)
 ACTION_REGISTER(export_as_txt,
     .help = "Export the image as a txt file",
     .cfunc = a_export_as_txt,
-    .csig = "v",
     .file_format = {
         .name = "text",
         .ext = "text\0*.txt\0",

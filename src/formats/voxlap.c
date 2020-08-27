@@ -536,7 +536,6 @@ static void a_kv6_import(void)
 ACTION_REGISTER(import_kv6,
     .help = "Import a slab kv6 image",
     .cfunc = a_kv6_import,
-    .csig = "v",
     .file_format = {
         .name = "kv6",
         .ext = "slab\0*.kv6\0",
@@ -547,7 +546,6 @@ ACTION_REGISTER(import_kv6,
 ACTION_REGISTER(import_kvx,
     .help = "Import a slab kvx image",
     .cfunc = a_kvx_import,
-    .csig = "v",
     .file_format = {
         .name = "kvx",
         .ext = "slab\0*.kvx\0",
@@ -558,7 +556,6 @@ ACTION_REGISTER(import_kvx,
 ACTION_REGISTER(export_as_kvx,
     .help = "Save the image as a slab kvx image",
     .cfunc = a_export_as_kvx,
-    .csig = "v",
     .file_format = {
         .name = "kvx",
         .ext = "slab\0*.kvx\0",
