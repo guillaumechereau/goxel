@@ -18,8 +18,6 @@
 
 #include "goxel.h"
 
-#include "../ext_src/lua/lauxlib.h"
-
 typedef struct {
     UT_hash_handle  hh;
     action_t        action;

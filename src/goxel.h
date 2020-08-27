@@ -40,7 +40,6 @@
 #include "inputs.h"
 #include "layer.h"
 #include "log.h"
-#include "luagoxel.h"
 #include "material.h"
 #include "mesh.h"
 #include "mesh_utils.h"
