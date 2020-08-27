@@ -595,7 +595,7 @@ ACTION_REGISTER(export_as_vox,
 ACTION_REGISTER(import_vox,
     .help = "Import a magica voxel vox image",
     .cfunc = a_import_vox,
-    .csig = "vp",
+    .csig = "v",
     .file_format = {
         .name = "magica voxel",
         .ext = "vox\0*.vox\0",
