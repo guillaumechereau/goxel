@@ -37,6 +37,8 @@
 
 // XXX: this is still pretty experimental.  This might change in the future.
 
+typedef struct image image_t;
+
 
 enum {
     ACTION_TOUCH_IMAGE          = 1 << 0,  // Push the undo history.
@@ -64,6 +66,8 @@ struct action {
         const char  *name;
         const char  *ext;
         void        (*export_gui)(void);
+        int         (*export_func)(const image_t *img, const char *path);
+        int         (*import_func)(image_t *img, const char *path);
     } file_format;
 };
 

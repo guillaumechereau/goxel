@@ -72,7 +72,7 @@ static void swap_color(uint32_t v, uint8_t ret[4])
     ret[3] = o[3];
 }
 
-static int kv6_import(const char *path)
+static int kv6_import(image_t *image, const char *path)
 {
     FILE *file;
     char magic[4];
@@ -87,10 +87,6 @@ static int kv6_import(const char *path)
         uint8_t zpos;
         uint8_t visface;
     } *blocks = NULL;
-
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                        "kv6\0*.kv6\0", NULL, NULL);
-    if (!path) return -1;
 
     file = fopen(path, "rb");
     r = fread(magic, 1, 4, file);
@@ -144,7 +140,7 @@ static int kv6_import(const char *path)
         }
     }
 
-    mesh_blit(goxel.image->active_layer->mesh, (const uint8_t*)cube,
+    mesh_blit(image->active_layer->mesh, (const uint8_t*)cube,
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
 end:
     free(cube);
@@ -155,7 +151,7 @@ end:
     return ret;
 }
 
-static int kvx_import(const char *path)
+static int kvx_import(image_t *image, const char *path)
 {
     FILE *file;
     int i, r, ret = 0, nb, size, lastz = 0, len, visface;
@@ -243,9 +239,9 @@ static int kvx_import(const char *path)
     vec3_set(aabb[0], -px, -py, pz - d);
     vec3_set(aabb[1], w - px, h - py, pz);
 
-    bbox_from_aabb(goxel.image->box, aabb);
-    bbox_from_aabb(goxel.image->active_layer->box, aabb);
-    mesh_blit(goxel.image->active_layer->mesh, (uint8_t*)cube,
+    bbox_from_aabb(image->box, aabb);
+    bbox_from_aabb(image->active_layer->box, aabb);
+    mesh_blit(image->active_layer->mesh, (uint8_t*)cube,
               -px, -py, pz - d, w, h, d, NULL);
 
 end:
@@ -313,7 +309,7 @@ static bool slab_append(slab_t *slab, voxel_t *vox)
 }
 
 
-static void kvx_export(const mesh_t *mesh, const char *path)
+static int kvx_export(const image_t *image, const char *path)
 {
     FILE *file;
     uint8_t (*palette)[4];
@@ -331,11 +327,12 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     uint32_t *xyoffsets;
     bool use_current_palette = false;
     float pivot[3];
+    const mesh_t *mesh = goxel_get_layers_mesh();
 
     UT_icd voxel_icd = {sizeof(voxel_t), NULL, NULL, NULL};
     UT_icd slab_icd = {sizeof(slab_t), NULL, NULL, NULL};
 
-    mat4_copy(goxel.image->box, box);
+    mat4_copy(image->box, box);
     if (box_is_null(box)) mesh_get_box(mesh, true, box);
 
     size[0] = box[0][0] * 2;
@@ -507,42 +504,64 @@ static void kvx_export(const mesh_t *mesh, const char *path)
     free(xyoffsets);
     free(palette);
     fclose(file);
+    return 0;
 }
 
-static void export_as_kvx(const char *path)
+static void a_export_as_kvx(void)
 {
-    path = path ?: sys_get_save_path("kvx\0*.kvx\0", "untitled.kvx");
+    const char *path;
+    path = sys_get_save_path("kvx\0*.kvx\0", "untitled.kvx");
     if (!path) return;
-    kvx_export(goxel_get_layers_mesh(), path);
+    kvx_export(goxel.image, path);
     sys_on_saved(path);
+}
+
+static void a_kvx_import(void)
+{
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
+                                "kvx\0*.kvx\0", NULL, NULL);
+    kvx_import(goxel.image, path);
+}
+
+static void a_kv6_import(void)
+{
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
+                                "kv6\0*.kv6\0", NULL, NULL);
+    if (!path) return;
+    kv6_import(goxel.image, path);
 }
 
 ACTION_REGISTER(import_kv6,
     .help = "Import a slab kv6 image",
-    .cfunc = kv6_import,
-    .csig = "vp",
+    .cfunc = a_kv6_import,
+    .csig = "v",
     .file_format = {
         .name = "kv6",
-        .ext = "*.kv6\0"
+        .ext = "slab\0*.kv6\0",
+        .import_func = kv6_import,
     },
 )
 
 ACTION_REGISTER(import_kvx,
     .help = "Import a slab kvx image",
-    .cfunc = kvx_import,
-    .csig = "vp",
+    .cfunc = a_kvx_import,
+    .csig = "v",
     .file_format = {
         .name = "kvx",
-        .ext = "*.kvx\0"
+        .ext = "slab\0*.kvx\0",
+        .import_func = kvx_import,
     },
 )
 
 ACTION_REGISTER(export_as_kvx,
     .help = "Save the image as a slab kvx image",
-    .cfunc = export_as_kvx,
-    .csig = "vp",
+    .cfunc = a_export_as_kvx,
+    .csig = "v",
     .file_format = {
         .name = "kvx",
-        .ext = "*.kvx\0",
+        .ext = "slab\0*.kvx\0",
+        .export_func = kvx_export,
     },
 )

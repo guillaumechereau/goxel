@@ -393,12 +393,10 @@ static void gltf_export(const image_t *img, const char *path,
     free(g.palette.entries);
 }
 
-static void export_as_gltf(const char *path)
+static int export_as_gltf(const image_t *img, const char *path)
 {
-    path = path ?: sys_get_save_path("gltf\0*.gltf\0", "untitled.gltf");
-    if (!path) return;
-    gltf_export(goxel.image, path, &g_export_options);
-    sys_on_saved(path);
+    gltf_export(img, path, &g_export_options);
+    return 0;
 }
 
 static void export_gui(void)
@@ -407,13 +405,24 @@ static void export_gui(void)
                  "Save colors as a vertex attribute");
 }
 
+// XXX: to remove.
+static void a_export_as_gltf(void)
+{
+    const char *path;
+    path = sys_get_save_path("gltf\0*.gltf\0", "untitled.gltf");
+    if (!path) return;
+    export_as_gltf(goxel.image, path);
+    sys_on_saved(path);
+}
+
 ACTION_REGISTER(export_as_gltf,
     .help = "Save the image as a gltf file",
-    .cfunc = export_as_gltf,
-    .csig = "vp",
+    .cfunc = a_export_as_gltf,
+    .csig = "v",
     .file_format = {
         .name = "gltf",
-        .ext = "*.gltf\0",
+        .ext = "glTF2\0*.gltf\0",
         .export_gui = export_gui,
+        .export_func = export_as_gltf,
     },
 )

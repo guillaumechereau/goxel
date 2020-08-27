@@ -627,9 +627,6 @@ int gox_iter_infos(const char *path,
                                    void *value, void *user),
                    void *user);
 
-void wavefront_export(const mesh_t *mesh, const char *path);
-void ply_export(const mesh_t *mesh, const char *path);
-
 // Section: box_edit
 /*
  * Function: gox_edit

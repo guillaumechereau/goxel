@@ -21,24 +21,21 @@
 #include "goxel.h"
 #include "utils/mustache.h"
 
-static void export_as_pov(const char *path, int w, int h)
+static int export_as_pov(const image_t *image, const char *path)
 {
     FILE *file;
     layer_t *layer;
-    int size, p[3];
+    int size, p[3], w, h;
     char *buf;
     const char *template;
     uint8_t v[4];
     float modelview[4][4], light_dir[3];
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
-    camera_t camera = *goxel.image->active_camera;
+    camera_t camera = *image->active_camera;
     mesh_iterator_t iter;
 
-    w = w ?: goxel.image->export_width;
-    h = h ?: goxel.image->export_height;
-
-    path = path ?: sys_get_save_path("povray\0*.pov\0", "untitled.pov");
-    if (!path) return;
+    w = image->export_width;
+    h = image->export_height;
 
     template = assets_get("asset://data/other/povray_template.pov", NULL);
     assert(template);
@@ -69,7 +66,7 @@ static void export_as_pov(const char *path, int w, int h)
                      -light_dir[0], -light_dir[1], -light_dir[2]);
 
     m_voxels = mustache_add_list(m, "voxels");
-    DL_FOREACH(goxel.image->layers, layer) {
+    DL_FOREACH(image->layers, layer) {
         iter = mesh_get_iterator(layer->mesh, MESH_ITER_VOXELS);
         while (mesh_iter(&iter, p)) {
             mesh_get_at(layer->mesh, &iter, p, v);
@@ -91,15 +88,26 @@ static void export_as_pov(const char *path, int w, int h)
     fwrite(buf, 1, size, file);
     fclose(file);
     free(buf);
+    return 0;
+}
+
+// XXX: to remove.
+static void a_export_as_pov(void)
+{
+    const char *path;
+    path = sys_get_save_path("povray\0*.povray\0", "untitled.povray");
+    if (!path) return;
+    export_as_pov(goxel.image, path);
     sys_on_saved(path);
 }
 
 ACTION_REGISTER(export_as_pov,
     .help = "Save the image as a povray 3d file",
-    .cfunc = export_as_pov,
+    .cfunc = a_export_as_pov,
     .csig = "vpii",
     .file_format = {
         .name = "povray",
-        .ext = "*.povray\0",
+        .ext = "povray\0*.povray\0",
+        .export_func = export_as_pov,
     },
 )

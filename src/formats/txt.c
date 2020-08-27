@@ -19,7 +19,7 @@
 #include "goxel.h"
 #include <errno.h>
 
-static void export_as_txt(const char *path)
+static int export_as_txt(const image_t *image, const char *path)
 {
     FILE *out;
     const mesh_t *mesh = goxel_get_layers_mesh();
@@ -27,13 +27,10 @@ static void export_as_txt(const char *path)
     uint8_t v[4];
     mesh_iterator_t iter;
 
-    path = path ?: sys_get_save_path("text\0*.txt\0", "untitled.txt");
-    if (!path) return;
-
     out = fopen(path, "w");
     if (!out) {
         LOG_E("Cannot save to %s: %s", path, strerror(errno));
-        return;
+        return -1;
     }
     fprintf(out, "# Goxel " GOXEL_VERSION_STR "\n");
     fprintf(out, "# One line per voxel\n");
@@ -47,16 +44,26 @@ static void export_as_txt(const char *path)
                 p[0], p[1], p[2], v[0], v[1], v[2]);
     }
     fclose(out);
+    return 0;
+}
+
+// XXX: to remove.
+static void a_export_as_txt(void)
+{
+    const char *path;
+    path = sys_get_save_path("text\0*.txt\0", "untitled.txt");
+    if (!path) return;
+    export_as_txt(goxel.image, path);
     sys_on_saved(path);
 }
 
 ACTION_REGISTER(export_as_txt,
     .help = "Export the image as a txt file",
-    .cfunc = export_as_txt,
-    .csig = "vp",
+    .cfunc = a_export_as_txt,
+    .csig = "v",
     .file_format = {
         .name = "text",
-        .ext = "*.txt\0",
+        .ext = "text\0*.txt\0",
+        .export_func = export_as_txt,
     },
 )
-

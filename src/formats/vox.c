@@ -338,7 +338,8 @@ static void node_apply_mat(const node_t *node, float mat[4][4])
     }
 }
 
-static int import_layer(const node_t *size, const node_t *xyzi,
+static int import_layer(image_t *image,
+                        const node_t *size, const node_t *xyzi,
                         const node_t *rgba, const node_t *tree,
                         int model_id)
 {
@@ -351,9 +352,9 @@ static int import_layer(const node_t *size, const node_t *xyzi,
 
     // Use the current layer for first shape, then create new layers.
     if (size == tree->children)
-        layer = goxel.image->active_layer;
+        layer = image->active_layer;
     else
-        layer = image_add_layer(goxel.image, NULL);
+        layer = image_add_layer(image, NULL);
 
     for (i = 0; i < xyzi->xyzi.nb; i++) {
         x = xyzi->xyzi.values[i * 4 + 0];
@@ -382,7 +383,7 @@ static int import_layer(const node_t *size, const node_t *xyzi,
     return 0;
 }
 
-static int vox_import(const char *path)
+static int vox_import(image_t *image, const char *path)
 {
     FILE *file;
     char magic[4];
@@ -419,7 +420,7 @@ static int vox_import(const char *path)
         if (strncmp(size_n->id, "SIZE", 4) != 0) continue;
         xyzi_n = size_n->next;
         if (strncmp(xyzi_n->id, "XYZI", 4) != 0) continue;
-        import_layer(size_n, xyzi_n, rgba_n, tree, i);
+        import_layer(image, size_n, xyzi_n, rgba_n, tree, i);
         i++;
     }
 
@@ -459,7 +460,7 @@ static int voxel_cmp(const void *a_, const void *b_)
     return 0;
 }
 
-static void vox_export(const mesh_t *mesh, const char *path)
+static int vox_export(const image_t *image, const char *path)
 {
     FILE *file;
     int children_size, nb_vox = 0, i, pos[3];
@@ -470,7 +471,9 @@ static void vox_export(const mesh_t *mesh, const char *path)
     uint8_t *voxels;
     uint8_t v[4];
     mesh_iterator_t iter;
+    const mesh_t *mesh;
 
+    mesh = goxel_get_layers_mesh();
     palette = calloc(256, sizeof(*palette));
     for (i = 0; i < 256; i++)
         hexcolor(VOX_DEFAULT_PALETTE[i], palette[i]);
@@ -556,33 +559,47 @@ static void vox_export(const mesh_t *mesh, const char *path)
 
     fclose(file);
     free(palette);
+    return 0;
 }
 
-static void export_as_vox(const char *path)
+static void a_export_as_vox(void)
 {
-    path = path ?: sys_get_save_path("magica voxel\0*.vox\0", "untitled.vox");
+    const char *path;
+    path = sys_get_save_path("magica voxel\0*.vox\0", "untitled.vox");
     if (!path) return;
-    vox_export(goxel_get_layers_mesh(), path);
+    vox_export(goxel.image, path);
     sys_on_saved(path);
 }
 
+static void a_import_vox(void)
+{
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
+                                "qubicle\0*.qb\0", NULL, NULL);
+    if (!path) return;
+    vox_import(goxel.image, path);
+}
+
+
 ACTION_REGISTER(export_as_vox,
     .help = "Save the image as a vox 3d file",
-    .cfunc = export_as_vox,
-    .csig = "vp",
+    .cfunc = a_export_as_vox,
+    .csig = "v",
     .file_format = {
         .name = "magica voxel",
-        .ext = "*.vox\0",
+        .ext = "vox\0*.vox\0",
+        .export_func = vox_export,
     },
 )
 
 ACTION_REGISTER(import_vox,
     .help = "Import a magica voxel vox image",
-    .cfunc = vox_import,
+    .cfunc = a_import_vox,
     .csig = "vp",
     .file_format = {
         .name = "magica voxel",
-        .ext = "*.vox\0",
+        .ext = "vox\0*.vox\0",
+        .import_func = vox_import,
     },
 )
 

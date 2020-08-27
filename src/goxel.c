@@ -1085,10 +1085,13 @@ static int search_action_for_format_cb(action_t *a, void *user)
 {
     const char *path = USER_GET(user, 0);
     const char *type = USER_GET(user, 1);
+    const char *ext;
     const action_t **ret = USER_GET(user, 2);
-    if (!a->file_format.ext) return 0;
+    ext = a->file_format.ext;
+    if (!ext) return 0;
     if (!str_startswith(a->id, type)) return 0;
-    if (!str_endswith(path, a->file_format.ext + 1)) return 0;
+    ext += strlen(ext) + 2; // Pick the string after '*.'.
+    if (!str_endswith(path, ext)) return 0;
     *ret = a;
     return 1;
 }
@@ -1096,13 +1099,18 @@ static int search_action_for_format_cb(action_t *a, void *user)
 int goxel_import_file(const char *path)
 {
     const action_t *a = NULL;
+    int err;
+
     if (str_endswith(path, ".gox")) {
         load_from_file(path);
         return 0;
     }
     actions_iter(search_action_for_format_cb, USER_PASS(path, "import_", &a));
     if (!a) return -1;
-    action_exec(a, "p", path);
+
+    assert(a->file_format.import_func);
+    err = a->file_format.import_func(goxel.image, path);
+    if (err) return err;
     return 0;
 }
 
@@ -1116,9 +1124,24 @@ ACTION_REGISTER(import,
 int goxel_export_to_file(const char *path)
 {
     const action_t *a = NULL;
+    char name[128];
+    const char *ext;
+    int err;
+
     actions_iter(search_action_for_format_cb, USER_PASS(path, "export_", &a));
     if (!a) return -1;
-    return action_exec(a, "p", path);
+
+    assert(a->file_format.export_func);
+    if (!path) {
+        ext = a->file_format.ext;
+        snprintf(name, sizeof(name), "Untitled%s", ext + strlen(ext) + 2);
+        path = sys_get_save_path(ext, "untitled.gltf");
+    }
+    if (!path) return -1;
+    err = a->file_format.export_func(goxel.image, path);
+    if (err) return err;
+    sys_on_saved(path);
+    return 0;
 }
 
 ACTION_REGISTER(export,

@@ -66,7 +66,7 @@ static int lines_add(UT_array *lines, const line_t *line, int search_nb)
     return utarray_len(lines);
 }
 
-static void export(const mesh_t *mesh, const char *path, bool ply)
+static int export(const mesh_t *mesh, const char *path, bool ply)
 {
     // XXX: Merge faces that can be merged into bigger ones.
     //      Allow to chose between quads or triangles.
@@ -187,69 +187,57 @@ static void export(const mesh_t *mesh, const char *path, bool ply)
     utarray_free(lines_v);
     utarray_free(lines_vn);
     free(verts);
+    return 0;
 }
 
-void wavefront_export(const mesh_t *mesh, const char *path)
+static int wavefront_export(const image_t *image, const char *path)
 {
-    export(mesh, path, false);
+    const mesh_t *mesh = goxel_get_layers_mesh();
+    return export(mesh, path, false);
 }
 
-void ply_export(const mesh_t *mesh, const char *path)
+int ply_export(const image_t *image, const char *path)
 {
-    export(mesh, path, true);
+    const mesh_t *mesh = goxel_get_layers_mesh();
+    return export(mesh, path, true);
 }
 
-static void export_as_obj(const char *path)
+static void a_export_as_obj(void)
 {
-    path = path ?: sys_get_save_path("obj\0*.obj\0", "untitled.obj");
+    const char *path;
+    path = sys_get_save_path("obj\0*.obj\0", "untitled.obj");
     if (!path) return;
-    wavefront_export(goxel_get_layers_mesh(), path);
+    wavefront_export(goxel.image, path);
     sys_on_saved(path);
 }
 
-ACTION_REGISTER(mesh_export_as_obj,
-    .help = "Export the mesh as a wavefront obj file",
-    .cfunc = wavefront_export,
-    .csig = "vpp",
-    .file_format = {
-        .name = "obj",
-        .ext = "*.obj\0",
-    },
-)
-
 ACTION_REGISTER(export_as_obj,
     .help = "Export the image as a wavefront obj file",
-    .cfunc = export_as_obj,
-    .csig = "vp",
+    .cfunc = a_export_as_obj,
+    .csig = "v",
     .file_format = {
         .name = "obj",
-        .ext = "*.obj\0",
+        .ext = "obj\0*.obj\0",
+        .export_func = wavefront_export,
     },
 )
 
-static void export_as_ply(const char *path)
+static void a_export_as_ply(void)
 {
-    path = path ?: sys_get_save_path("ply\0*.ply\0", "untitled.ply");
+    const char *path;
+    path = sys_get_save_path("ply\0*.ply\0", "untitled.ply");
     if (!path) return;
-    ply_export(goxel_get_layers_mesh(), path);
+    ply_export(goxel.image, path);
+    sys_on_saved(path);
 }
-
-ACTION_REGISTER(mesh_export_as_ply,
-    .help = "Export the mesh as a ply file",
-    .cfunc = ply_export,
-    .csig = "vpp",
-    .file_format = {
-        .name = "ply",
-        .ext = "*.ply\0",
-    },
-)
 
 ACTION_REGISTER(export_as_ply,
     .help = "Save the image as a ply file",
-    .cfunc = export_as_ply,
-    .csig = "vp",
+    .cfunc = a_export_as_ply,
+    .csig = "v",
     .file_format = {
         .name = "ply",
-        .ext = "*.ply\0",
+        .ext = "ply\0*.ply\0",
+        .export_func = ply_export,
     },
 )
