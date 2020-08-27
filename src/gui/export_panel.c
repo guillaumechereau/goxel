@@ -57,7 +57,7 @@ void gui_export_panel(void)
     if (action->file_format.export_gui)
         action->file_format.export_gui();
     if (gui_button("Export", 1, 0))
-        action_exec(action, "");
+        action_exec(action);
 }
 
 #endif // GUI_CUSTOM_EXPORT_PANEL

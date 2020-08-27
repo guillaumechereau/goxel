@@ -344,7 +344,7 @@ void goxel_reset(void)
     vec4_set(goxel.grid_color, 255, 255, 255, 127);
     vec4_set(goxel.image_box_color, 204, 204, 255, 255);
 
-    action_exec2("tool_set_brush", "");
+    action_exec2("tool_set_brush");
     goxel.tool_radius = 0.5;
     goxel.painter = (painter_t) {
         .shape = &shape_cube,

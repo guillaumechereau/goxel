@@ -22,8 +22,6 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
-#include "luagoxel.h"
-
 // #### Action #################
 
 // We support some basic reflexion of functions.  We do this by registering the
@@ -54,7 +52,6 @@ struct action {
     const char      *default_shortcut;
     char            shortcut[8];    // Can be changed at runtime.
     int             icon;           // Optional icon id.
-    int             (*func)(const action_t *a, lua_State *l);
     void            *data;
 
     // cfunc and csig can be used to directly call any function.
@@ -75,13 +72,13 @@ struct action {
 
 void action_register(const action_t *action);
 action_t *action_get(const char *id, bool assert_exists);
-int action_exec(const action_t *action, const char *sig, ...);
-int action_execv(const action_t *action, const char *sig, va_list ap);
+int action_exec(const action_t *action);
 void actions_iter(int (*f)(action_t *action, void *user), void *user);
 
 // Convenience macro to call action_exec directly from an action id.
-#define action_exec2(id, sig, ...) \
-    action_exec(action_get(id, true), sig, ##__VA_ARGS__)
+// XXX: make it a function.
+#define action_exec2(id) \
+    action_exec(action_get(id, true))
 
 
 // Convenience macro to register an action from anywere in a c file.

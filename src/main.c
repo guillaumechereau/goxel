@@ -46,8 +46,9 @@ void on_char(GLFWwindow *win, unsigned int c)
 
 void on_drop(GLFWwindow* win, int count, const char** paths)
 {
-    for (int i = 0;  i < count;  i++)
-        action_exec2("import", "p", paths[i]);
+    int i;
+    for (i = 0;  i < count;  i++)
+        goxel_import_file(paths[i]);
 }
 
 typedef struct

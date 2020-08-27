@@ -34,7 +34,7 @@ static int import_menu_action_callback(action_t *a, void *user)
 {
     if (!a->file_format.name) return 0;
     if (!str_startswith(a->id, "import_")) return 0;
-    if (gui_menu_item(NULL, a->file_format.name, true)) action_exec(a, "");
+    if (gui_menu_item(NULL, a->file_format.name, true)) action_exec(a);
     return 0;
 }
 
@@ -42,7 +42,7 @@ static int export_menu_action_callback(action_t *a, void *user)
 {
     if (!a->file_format.name) return 0;
     if (!str_startswith(a->id, "export_")) return 0;
-    if (gui_menu_item(NULL, a->file_format.name, true)) action_exec(a, "");
+    if (gui_menu_item(NULL, a->file_format.name, true)) action_exec(a);
     return 0;
 }
 

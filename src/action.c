@@ -60,27 +60,11 @@ void actions_iter(int (*f)(action_t *action, void *user), void *user)
     }
 }
 
-// The default action function will try to call the action cfunc.
-static int default_function(const action_t *a, lua_State *l)
-{
-    assert(a->cfunc);
-    if (a->data)
-        a->cfunc_data(a->data);
-    else
-        a->cfunc();
-    return 0;
-}
-
-int action_execv(const action_t *action, const char *sig, va_list ap)
+int action_exec(const action_t *action)
 {
     assert(action);
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
-    char c;
-    int i, nb;
-    int (*func)(const action_t *a, lua_State *l);
-    lua_State *l = luaL_newstate();
-    func = action->func ?: default_function;
 
     if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
         image_history_push(goxel.image);
@@ -88,47 +72,11 @@ int action_execv(const action_t *action, const char *sig, va_list ap)
 
     reentry++;
 
-    while ((c = *sig++)) {
-        if (c == '>') break;
-        switch (c) {
-            case 'i': lua_pushnumber(l, va_arg(ap, int)); break;
-            case 'b': lua_pushboolean(l, va_arg(ap, int)); break;
-            case 'p': lua_pushlightuserdata(l, va_arg(ap, void*)); break;
-            default: assert(false);
-        }
-    }
-
-    func(action, l);
-
-    // Get the return arguments.
-    nb = c ? (int)strlen(sig) : 0;
-    for (i = 0; i < nb; i++) {
-        c = sig[i];
-        switch (c) {
-            case 'i':
-                *va_arg(ap, int*) = lua_tointeger(l, -nb + i + 1);
-                break;
-            case 'b':
-                *va_arg(ap, bool*) = lua_toboolean(l, -nb + i + 1);
-                break;
-            case 'p':
-                *va_arg(ap, void**) = lua_touserdata(l, -nb + i + 1);
-                break;
-            default: assert(false);
-        }
-    }
+    if (action->data)
+        action->cfunc_data(action->data);
+    else
+        action->cfunc();
 
     reentry--;
-    lua_close(l);
     return 0;
-}
-
-int action_exec(const action_t *action, const char *sig, ...)
-{
-    va_list ap;
-    int ret;
-    va_start(ap, sig);
-    ret = action_execv(action, sig, ap);
-    va_end(ap);
-    return ret;
 }

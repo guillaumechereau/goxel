@@ -68,7 +68,7 @@ void gui_tools_panel(void)
                 sprintf(label, "%s (%s)", tool->name, action->shortcut);
         }
         if (gui_selectable_icon(label, &v, values[i].icon)) {
-            action_exec(action, "");
+            action_exec(action);
         }
         auto_grid(nb, i, GUI_TOOLS_COLUMNS_NB);
     }

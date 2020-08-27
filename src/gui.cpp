@@ -590,7 +590,7 @@ static int check_action_shortcut(action_t *action, void *user)
     }
     if (    (check_char && isCharPressed(s[0])) ||
             (check_key && ImGui::IsKeyPressed(s[0], false))) {
-        action_exec(action, "");
+        action_exec(action);
         return 1;
     }
     return 0;
@@ -746,7 +746,7 @@ void gui_iter(const inputs_t *inputs)
 
     // Handle the shortcuts.  XXX: this should be done with actions.
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
-        action_exec2("layer_clear", "");
+        action_exec2("layer_clear");
 
     if (!io.WantCaptureKeyboard) {
         float last_tool_radius = goxel.tool_radius;
@@ -1030,7 +1030,7 @@ bool gui_action_button(const char *id, const char *label, float size)
     ret = gui_button(label, size, action->icon);
     if (IsItemHovered()) goxel_set_help_text(action_get(id, true)->help);
     if (ret) {
-        action_exec(action_get(id, true), "");
+        action_exec(action_get(id, true));
     }
     PopID();
     return ret;
@@ -1632,7 +1632,7 @@ bool gui_menu_item(const char *action, const char *label, bool enabled)
         assert(a);
     }
     if (ImGui::MenuItem(label, a ? a->shortcut : NULL, false, enabled)) {
-        if (a) action_exec(a, "");
+        if (a) action_exec(a);
         return true;
     }
     return false;

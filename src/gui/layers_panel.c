@@ -89,7 +89,7 @@ void gui_layers_panel(void)
         gui_action_button("img_unclone_layer", "To mesh", 1);
 
     if (gui_action_button("img_new_shape_layer", "New Shape Layer", 1)) {
-        action_exec2("tool_set_move", "");
+        action_exec2("tool_set_move");
     }
 
     gui_group_end();
