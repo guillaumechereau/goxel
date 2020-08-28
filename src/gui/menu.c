@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#include "file_format.h"
+
 int gui_settings_popup(void *data);
 int gui_about_popup(void *data);
 
@@ -30,20 +32,16 @@ static void import_image_plane(void)
     goxel_import_image_plane(path);
 }
 
-static int import_menu_action_callback(action_t *a, void *user)
+static void import_menu_callback(void *user, const file_format_t *f)
 {
-    if (!a->file_format.name) return 0;
-    if (!str_startswith(a->id, "import_")) return 0;
-    if (gui_menu_item(NULL, a->file_format.name, true)) action_exec(a);
-    return 0;
+    if (gui_menu_item(NULL, f->name, true))
+        goxel_import_file(NULL, f->name);
 }
 
-static int export_menu_action_callback(action_t *a, void *user)
+static void export_menu_callback(void *user, const file_format_t *f)
 {
-    if (!a->file_format.name) return 0;
-    if (!str_startswith(a->id, "export_")) return 0;
-    if (gui_menu_item(NULL, a->file_format.name, true)) action_exec(a);
-    return 0;
+    if (gui_menu_item(NULL, f->name, true))
+        goxel_export_to_file(NULL, f->name);
 }
 
 void gui_menu(void)
@@ -56,11 +54,11 @@ void gui_menu(void)
         if (gui_menu_begin("Import...")) {
             if (gui_menu_item(NULL, "image plane", true))
                 import_image_plane();
-            actions_iter(import_menu_action_callback, NULL);
+            file_format_iter("r", NULL, import_menu_callback);
             gui_menu_end();
         }
         if (gui_menu_begin("Export As..")) {
-            actions_iter(export_menu_action_callback, NULL);
+            file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
         }
         gui_menu_item("quit", "Quit", true);

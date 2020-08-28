@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "file_format.h"
 
 // Load qubicle files.
 
@@ -180,40 +181,9 @@ static int qubicle_export(const image_t *img, const char *path)
     return 0;
 }
 
-static void a_qubicle_import(void)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                "qubicle\0*.qb\0", NULL, NULL);
-    if (!path) return;
-    qubicle_import(goxel.image, path);
-}
-
-static void a_export_as_qubicle(void)
-{
-    const char *path;
-    path = sys_get_save_path("qubicle\0*.qb\0", "untitled.qb");
-    if (!path) return;
-    qubicle_export(goxel.image, path);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(import_qubicle,
-    .help = "Import a qubicle file",
-    .cfunc = a_qubicle_import,
-    .file_format = {
-        .name = "qubicle",
-        .ext = "qubicle\0*.qb\0",
-        .import_func = qubicle_import,
-    },
-)
-
-ACTION_REGISTER(export_as_qubicle,
-    .help = "Save the image as a qubicle 3d file",
-    .cfunc = a_export_as_qubicle,
-    .file_format = {
-        .name = "qubicle",
-        .ext = "qubicle\0*.qb\0",
-        .export_func = qubicle_export,
-    },
+FILE_FORMAT_REGISTER(qubicle,
+    .name = "qubicle",
+    .ext = "qubicle\0*.qb\0",
+    .import_func = qubicle_import,
+    .export_func = qubicle_export,
 )

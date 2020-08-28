@@ -18,6 +18,7 @@
 
 #include "goxel.h"
 #include "xxhash.h"
+#include "file_format.h"
 
 #include "shader_cache.h"
 
@@ -1056,56 +1057,34 @@ void goxel_on_low_memory(void)
     render_on_low_memory(&goxel.rend);
 }
 
-static int search_action_for_format_cb(action_t *a, void *user)
+int goxel_import_file(const char *path, const char *format)
 {
-    const char *path = USER_GET(user, 0);
-    const char *type = USER_GET(user, 1);
-    const char *ext;
-    const action_t **ret = USER_GET(user, 2);
-    ext = a->file_format.ext;
-    if (!ext) return 0;
-    if (!str_startswith(a->id, type)) return 0;
-    ext += strlen(ext) + 2; // Pick the string after '*.'.
-    if (!str_endswith(path, ext)) return 0;
-    *ret = a;
-    return 1;
-}
-
-int goxel_import_file(const char *path)
-{
-    const action_t *a = NULL;
+    const file_format_t *f;
     int err;
 
     if (str_endswith(path, ".gox")) {
         return load_from_file(path);
     }
-    actions_iter(search_action_for_format_cb, USER_PASS(path, "import_", &a));
-    if (!a) return -1;
-
-    assert(a->file_format.import_func);
-    err = a->file_format.import_func(goxel.image, path);
+    f = file_format_for_path(path, format, "r");
+    if (!f) return -1;
+    err = f->import_func(goxel.image, path);
     if (err) return err;
     return 0;
 }
 
-int goxel_export_to_file(const char *path)
+int goxel_export_to_file(const char *path, const char *format)
 {
-    const action_t *a = NULL;
+    const file_format_t *f;
     char name[128];
-    const char *ext;
     int err;
-
-    actions_iter(search_action_for_format_cb, USER_PASS(path, "export_", &a));
-    if (!a) return -1;
-
-    assert(a->file_format.export_func);
+    f = file_format_for_path(path, format, "w");
+    if (!f) return -1;
     if (!path) {
-        ext = a->file_format.ext;
-        snprintf(name, sizeof(name), "Untitled%s", ext + strlen(ext) + 2);
-        path = sys_get_save_path(ext, "untitled.gltf");
+        snprintf(name, sizeof(name), "Untitled%s", f->ext + strlen(f->ext) + 2);
+        path = sys_get_save_path(f->ext, name);
+        if (!path) return -1;
     }
-    if (!path) return -1;
-    err = a->file_format.export_func(goxel.image, path);
+    err = f->export_func(goxel.image, path);
     if (err) return err;
     sys_on_saved(path);
     return 0;

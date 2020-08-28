@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "file_format.h"
 
 // XXX: this function has to be rewritten.
 static int png_export(const image_t *img, const char *path, int w, int h)
@@ -66,23 +67,9 @@ static int export_as_png(const image_t *img, const char *path)
     return 0;
 }
 
-// XXX: to remove.
-static void a_export_as_png(void)
-{
-    const char *path;
-    path = sys_get_save_path("png\0*.png\0", "untitled.png");
-    if (!path) return;
-    export_as_png(goxel.image, path);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(export_as_png,
-    .help = "Export the image as a png file",
-    .cfunc = a_export_as_png,
-    .file_format = {
-        .name = "png",
-        .ext = "png\0*.png\0",
-        .export_gui = export_gui,
-        .export_func = export_as_png,
-    },
+FILE_FORMAT_REGISTER(png,
+    .name = "png",
+    .ext = "png\0*.png\0",
+    .export_gui = export_gui,
+    .export_func = export_as_png,
 )

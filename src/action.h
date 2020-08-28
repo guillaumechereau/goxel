@@ -59,15 +59,6 @@ struct action {
         void            (*cfunc)(void);
         void            (*cfunc_data)(void *data);
     };
-
-    // Used for export / import actions.
-    struct {
-        const char  *name;
-        const char  *ext;
-        void        (*export_gui)(void);
-        int         (*export_func)(const image_t *img, const char *path);
-        int         (*import_func)(image_t *img, const char *path);
-    } file_format;
 };
 
 void action_register(const action_t *action);

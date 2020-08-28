@@ -42,7 +42,7 @@ static void test_file(const char *b64_data, uint32_t crc32)
     fwrite(data, data_size, 1, file);
     fclose(file);
     free(data);
-    err = goxel_import_file("/tmp/goxel_test.gox");
+    err = goxel_import_file("/tmp/goxel_test.gox", NULL);
     TEST(err == 0);
     TEST(mesh_crc32(goxel.image->active_layer->mesh) == crc32);
     image_delete(goxel.image);
@@ -123,7 +123,7 @@ static void test_load_corrupt(void)
     if (DEFINED(WIN32)) return; // Don't test on Windows for the moment!
     file = fopen("/tmp/goxel_test.gox", "w");
     fclose(file);
-    err = goxel_import_file("/tmp/goxel_test.gox");
+    err = goxel_import_file("/tmp/goxel_test.gox", NULL);
     TEST(err != 0);
 }
 

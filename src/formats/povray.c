@@ -19,6 +19,7 @@
 // Povray export support.
 
 #include "goxel.h"
+#include "file_format.h"
 #include "utils/mustache.h"
 
 static int export_as_pov(const image_t *image, const char *path)
@@ -91,22 +92,8 @@ static int export_as_pov(const image_t *image, const char *path)
     return 0;
 }
 
-// XXX: to remove.
-static void a_export_as_pov(void)
-{
-    const char *path;
-    path = sys_get_save_path("povray\0*.povray\0", "untitled.povray");
-    if (!path) return;
-    export_as_pov(goxel.image, path);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(export_as_pov,
-    .help = "Save the image as a povray 3d file",
-    .cfunc = a_export_as_pov,
-    .file_format = {
-        .name = "povray",
-        .ext = "povray\0*.povray\0",
-        .export_func = export_as_pov,
-    },
+FILE_FORMAT_REGISTER(povray,
+    .name = "povray",
+    .ext = "povray\0*.povray\0",
+    .export_func = export_as_pov,
 )

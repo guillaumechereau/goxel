@@ -610,8 +610,8 @@ void goxel_set_hint_text(const char *msg, ...);
 
 void goxel_import_image_plane(const char *path);
 
-int goxel_import_file(const char *path);
-int goxel_export_to_file(const char *path);
+int goxel_import_file(const char *path, const char *format);
+int goxel_export_to_file(const char *path, const char *format);
 
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);

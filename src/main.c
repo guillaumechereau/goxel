@@ -48,7 +48,7 @@ void on_drop(GLFWwindow* win, int count, const char** paths)
 {
     int i;
     for (i = 0;  i < count;  i++)
-        goxel_import_file(paths[i]);
+        goxel_import_file(paths[i], NULL);
 }
 
 typedef struct
@@ -312,14 +312,14 @@ int main(int argc, char **argv)
     }
 
     if (args.input)
-        goxel_import_file(args.input);
+        goxel_import_file(args.input, NULL);
 
     if (args.export) {
         if (!args.input) {
             LOG_E("trying to export an empty image");
             ret = -1;
         } else {
-            ret = goxel_export_to_file(args.export);
+            ret = goxel_export_to_file(args.export, NULL);
         }
         goto end;
     }

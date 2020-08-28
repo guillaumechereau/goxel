@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "file_format.h"
 
 typedef struct {
     union {
@@ -202,40 +203,14 @@ int ply_export(const image_t *image, const char *path)
     return export(mesh, path, true);
 }
 
-static void a_export_as_obj(void)
-{
-    const char *path;
-    path = sys_get_save_path("obj\0*.obj\0", "untitled.obj");
-    if (!path) return;
-    wavefront_export(goxel.image, path);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(export_as_obj,
-    .help = "Export the image as a wavefront obj file",
-    .cfunc = a_export_as_obj,
-    .file_format = {
-        .name = "obj",
-        .ext = "obj\0*.obj\0",
-        .export_func = wavefront_export,
-    },
+FILE_FORMAT_REGISTER(obj,
+    .name = "obj",
+    .ext = "obj\0*.obj\0",
+    .export_func = wavefront_export,
 )
 
-static void a_export_as_ply(void)
-{
-    const char *path;
-    path = sys_get_save_path("ply\0*.ply\0", "untitled.ply");
-    if (!path) return;
-    ply_export(goxel.image, path);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(export_as_ply,
-    .help = "Save the image as a ply file",
-    .cfunc = a_export_as_ply,
-    .file_format = {
-        .name = "ply",
-        .ext = "ply\0*.ply\0",
-        .export_func = ply_export,
-    },
+FILE_FORMAT_REGISTER(ply,
+    .name = "ply",
+    .ext = "ply\0*.ply\0",
+    .export_func = ply_export,
 )

@@ -18,6 +18,7 @@
 
 
 #include "goxel.h"
+#include "file_format.h"
 #include "utils/json.h"
 
 enum {
@@ -405,23 +406,9 @@ static void export_gui(void)
                  "Save colors as a vertex attribute");
 }
 
-// XXX: to remove.
-static void a_export_as_gltf(void)
-{
-    const char *path;
-    path = sys_get_save_path("gltf\0*.gltf\0", "untitled.gltf");
-    if (!path) return;
-    export_as_gltf(goxel.image, path);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(export_as_gltf,
-    .help = "Save the image as a gltf file",
-    .cfunc = a_export_as_gltf,
-    .file_format = {
-        .name = "gltf",
-        .ext = "glTF2\0*.gltf\0",
-        .export_gui = export_gui,
-        .export_func = export_as_gltf,
-    },
+FILE_FORMAT_REGISTER(gltf,
+    .name = "gltf",
+    .ext = "glTF2\0*.gltf\0",
+    .export_gui = export_gui,
+    .export_func = export_as_gltf,
 )

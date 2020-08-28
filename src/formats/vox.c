@@ -19,6 +19,7 @@
 // Magica voxel vox format support.
 
 #include "goxel.h"
+#include "file_format.h"
 #include <limits.h>
 
 static const uint32_t VOX_DEFAULT_PALETTE[256];
@@ -562,43 +563,11 @@ static int vox_export(const image_t *image, const char *path)
     return 0;
 }
 
-static void a_export_as_vox(void)
-{
-    const char *path;
-    path = sys_get_save_path("magica voxel\0*.vox\0", "untitled.vox");
-    if (!path) return;
-    vox_export(goxel.image, path);
-    sys_on_saved(path);
-}
-
-static void a_import_vox(void)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                "qubicle\0*.qb\0", NULL, NULL);
-    if (!path) return;
-    vox_import(goxel.image, path);
-}
-
-
-ACTION_REGISTER(export_as_vox,
-    .help = "Save the image as a vox 3d file",
-    .cfunc = a_export_as_vox,
-    .file_format = {
-        .name = "magica voxel",
-        .ext = "vox\0*.vox\0",
-        .export_func = vox_export,
-    },
-)
-
-ACTION_REGISTER(import_vox,
-    .help = "Import a magica voxel vox image",
-    .cfunc = a_import_vox,
-    .file_format = {
-        .name = "magica voxel",
-        .ext = "vox\0*.vox\0",
-        .import_func = vox_import,
-    },
+FILE_FORMAT_REGISTER(vox,
+    .name = "Magica Voxel",
+    .ext = "vox\0*.vox\0",
+    .import_func = vox_import,
+    .export_func = vox_export,
 )
 
 

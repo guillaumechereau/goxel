@@ -23,6 +23,7 @@
  */
 
 #include "goxel.h"
+#include "file_format.h"
 
 /*
  * Structure that represents a single voxel and visible faces.
@@ -507,58 +508,15 @@ static int kvx_export(const image_t *image, const char *path)
     return 0;
 }
 
-static void a_export_as_kvx(void)
-{
-    const char *path;
-    path = sys_get_save_path("kvx\0*.kvx\0", "untitled.kvx");
-    if (!path) return;
-    kvx_export(goxel.image, path);
-    sys_on_saved(path);
-}
-
-static void a_kvx_import(void)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                "kvx\0*.kvx\0", NULL, NULL);
-    kvx_import(goxel.image, path);
-}
-
-static void a_kv6_import(void)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                "kv6\0*.kv6\0", NULL, NULL);
-    if (!path) return;
-    kv6_import(goxel.image, path);
-}
-
-ACTION_REGISTER(import_kv6,
-    .help = "Import a slab kv6 image",
-    .cfunc = a_kv6_import,
-    .file_format = {
-        .name = "kv6",
-        .ext = "slab\0*.kv6\0",
-        .import_func = kv6_import,
-    },
+FILE_FORMAT_REGISTER(kv6,
+    .name = "kv6",
+    .ext = "slab\0*.kv6\0",
+    .import_func = kv6_import,
 )
 
-ACTION_REGISTER(import_kvx,
-    .help = "Import a slab kvx image",
-    .cfunc = a_kvx_import,
-    .file_format = {
-        .name = "kvx",
-        .ext = "slab\0*.kvx\0",
-        .import_func = kvx_import,
-    },
-)
-
-ACTION_REGISTER(export_as_kvx,
-    .help = "Save the image as a slab kvx image",
-    .cfunc = a_export_as_kvx,
-    .file_format = {
-        .name = "kvx",
-        .ext = "slab\0*.kvx\0",
-        .export_func = kvx_export,
-    },
+FILE_FORMAT_REGISTER(kvx,
+    .name = "kvx",
+    .ext = "slab\0*.kvx\0",
+    .import_func = kvx_import,
+    .export_func = kvx_export,
 )

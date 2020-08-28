@@ -19,6 +19,7 @@
 // Support for Ace of Spades map files (vxl)
 
 #include "goxel.h"
+#include "file_format.h"
 
 #define READ(type, file) \
     ({ type v; size_t r = fread(&v, sizeof(v), 1, file); (void)r; v;})
@@ -264,41 +265,9 @@ static int export_as_vxl(const image_t *image, const char *path)
     return 0;
 }
 
-static void a_import_vxl(void)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                "vxl\0*.vxl\0", NULL, NULL);
-    if (!path) return;
-    vxl_import(goxel.image, path);
-}
-
-static void a_export_as_vxl(void)
-{
-    const char *path;
-    path = sys_get_save_path("vxl\0*.vxl\0", "untitled.vxl");
-    if (!path) return;
-    export_as_vxl(goxel.image, path);
-    sys_on_saved(path);
-}
-
-
-ACTION_REGISTER(import_vxl,
-    .help = "Import a Ace of Spades map file",
-    .cfunc = a_import_vxl,
-    .file_format = {
-        .name = "vxl",
-        .ext = "vxk\0*.vxl\0",
-        .import_func = vxl_import,
-    },
-)
-
-ACTION_REGISTER(export_as_vxl,
-    .help = "Export the image as a Spades map file",
-    .cfunc = a_export_as_vxl,
-    .file_format = {
-        .name = "vxl",
-        .ext = "vxk\0*.vxl\0",
-        .export_func = export_as_vxl,
-    },
+FILE_FORMAT_REGISTER(vxl,
+    .name = "vxl",
+    .ext = "vxk\0*.vxl\0",
+    .import_func = vxl_import,
+    .export_func = export_as_vxl,
 )

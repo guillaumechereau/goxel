@@ -17,18 +17,14 @@
  */
 
 #include "goxel.h"
+#include "file_format.h"
 
 #ifndef GUI_CUSTOM_EXPORT_PANEL
 
-typedef struct {
-    const char *name;
-    const char *action;
-} format_t;
+#if 0
 
-/* XXX: hardcoded list for the moment, but would be better to get it
- * automatically from the actions.  The problem is that it has to be sorted
- * somehow. */
-static const format_t FORMATS[] = {
+Keep this here as a reference until I fix file format names and order.
+
     {"glTF (.gltf)", "export_as_gltf"},
     {"Wavefront (.obj)", "export_as_obj"},
     {"Stanford (.pny)", "export_as_ply"},
@@ -40,24 +36,42 @@ static const format_t FORMATS[] = {
     {"Png slices (.png)", "export_as_png_slices"},
     {"Plain text (.txt)", "export_as_txt"},
 
-};
+#endif
+
+static const file_format_t *g_current = NULL;
+
+static const char *make_label(const file_format_t *f, char *buf, int len)
+{
+    const char *ext = f->ext + strlen(f->ext) + 2;
+    snprintf(buf, len, "%s (%s)", f->name, ext);
+    return buf;
+}
+
+static void on_format(void *user, const file_format_t *f)
+{
+    char label[128];
+    make_label(f, label, sizeof(label));
+    if (gui_combo_item(label, f == g_current)) {
+        g_current = f;
+    }
+}
 
 void gui_export_panel(void)
 {
-    static int format = 0;
-    const char *names[ARRAY_SIZE(FORMATS)];
-    int i;
-    action_t *action;
-
-    for (i = 0; i < ARRAY_SIZE(FORMATS); i++) names[i] = FORMATS[i].name;
+    char label[128];
     gui_text("Export as");
-    gui_combo("Export as", &format, names, ARRAY_SIZE(FORMATS));
-    action = action_get(FORMATS[format].action, true);
+    if (!g_current) g_current = file_formats; // First one.
 
-    if (action->file_format.export_gui)
-        action->file_format.export_gui();
+    make_label(g_current, label, sizeof(label));
+    if (gui_combo_begin("Export as", label)) {
+        file_format_iter("w", NULL, on_format);
+        gui_combo_end();
+    }
+
+    if (g_current->export_gui)
+        g_current->export_gui();
     if (gui_button("Export", 1, 0))
-        action_exec(action);
+        goxel_export_to_file(NULL, g_current->name);
 }
 
 #endif // GUI_CUSTOM_EXPORT_PANEL

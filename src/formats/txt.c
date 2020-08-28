@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "file_format.h"
 #include <errno.h>
 
 static int export_as_txt(const image_t *image, const char *path)
@@ -47,22 +48,8 @@ static int export_as_txt(const image_t *image, const char *path)
     return 0;
 }
 
-// XXX: to remove.
-static void a_export_as_txt(void)
-{
-    const char *path;
-    path = sys_get_save_path("text\0*.txt\0", "untitled.txt");
-    if (!path) return;
-    export_as_txt(goxel.image, path);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(export_as_txt,
-    .help = "Export the image as a txt file",
-    .cfunc = a_export_as_txt,
-    .file_format = {
-        .name = "text",
-        .ext = "text\0*.txt\0",
-        .export_func = export_as_txt,
-    },
+FILE_FORMAT_REGISTER(txt,
+    .name = "text",
+    .ext = "text\0*.txt\0",
+    .export_func = export_as_txt,
 )
