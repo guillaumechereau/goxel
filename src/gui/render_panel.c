@@ -102,7 +102,8 @@ void gui_render_panel(void)
             gui_color_small("Color", pt->floor.color);
 
             gui_text("Material");
-            if (gui_combo_begin("##material", pt->floor.material)) {
+            if (gui_combo_begin("##material",
+                    pt->floor.material ? pt->floor.material->name : NULL)) {
                 DL_FOREACH(goxel.image->materials, material) {
                     if (gui_combo_item(material->name,
                             material == pt->floor.material)) {

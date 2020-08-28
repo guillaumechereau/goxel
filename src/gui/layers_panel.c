@@ -122,7 +122,8 @@ void gui_layers_panel(void)
     }
 
     gui_text("Material");
-    if (gui_combo_begin("##material", layer->material)) {
+    if (gui_combo_begin("##material",
+                        layer->material ? layer->material->name : NULL)) {
         DL_FOREACH(goxel.image->materials, material) {
             if (gui_combo_item(material->name, material == layer->material))
                 layer->material = material;

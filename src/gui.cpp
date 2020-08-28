@@ -1330,7 +1330,7 @@ bool gui_combo(const char *label, int *v, const char **names, int nb)
     return ret;
 }
 
-bool gui_combo_begin(const char *label, const void *current)
+bool gui_combo_begin(const char *label, const char *preview)
 {
     bool ret;
     const theme_t *theme = theme_get();
@@ -1340,7 +1340,7 @@ bool gui_combo_begin(const char *label, const void *current)
                         ImVec2(0, (theme->sizes.item_height - font_size) / 2));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WIDGET, INNER, 0));
     ImGui::PushItemWidth(-1);
-    ret = ImGui::BeginCombo(label, (const char*)current);
+    ret = ImGui::BeginCombo(label, preview);
 
     if (!ret) {
         ImGui::PopItemWidth();
