@@ -75,11 +75,10 @@ action_t *action_get(const char *id, bool assert_exists);
 int action_exec(const action_t *action);
 void actions_iter(int (*f)(action_t *action, void *user), void *user);
 
-// Convenience macro to call action_exec directly from an action id.
-// XXX: make it a function.
-#define action_exec2(id) \
-    action_exec(action_get(id, true))
-
+inline void action_exec2(const char *id)
+{
+    action_exec(action_get(id, true));
+}
 
 // Convenience macro to register an action from anywere in a c file.
 #define ACTION_REGISTER(id_, ...) \
