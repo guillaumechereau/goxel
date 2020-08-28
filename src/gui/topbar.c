@@ -33,11 +33,11 @@ static int gui_mode_select(void)
 
 void gui_top_bar(void)
 {
-    gui_action_button("undo", NULL, 0);
+    gui_action_button(ACTION_undo, NULL, 0);
     gui_same_line();
-    gui_action_button("redo", NULL, 0);
+    gui_action_button(ACTION_redo, NULL, 0);
     gui_same_line();
-    gui_action_button("layer_clear", NULL, 0);
+    gui_action_button(ACTION_layer_clear, NULL, 0);
     gui_same_line();
     gui_mode_select();
     gui_same_line();

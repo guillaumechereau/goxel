@@ -22,6 +22,8 @@
 #include <stdarg.h>
 #include <stdbool.h>
 
+#include "actions.h"
+
 // #### Action #################
 
 // We support some basic reflexion of functions.  We do this by registering the
@@ -46,6 +48,7 @@ enum {
 // Represent an action.
 typedef struct action action_t;
 struct action {
+    int             idx;
     const char      *id;            // Globally unique id.
     const char      *help;          // Help text.
     int             flags;
@@ -61,12 +64,16 @@ struct action {
     };
 };
 
-void action_register(const action_t *action);
-action_t *action_get(const char *id, bool assert_exists);
+void action_register(const action_t *action, int idx);
+
+action_t *action_get(int idx, bool assert_exists);
+action_t *action_get_by_name(const char *name);
+
 int action_exec(const action_t *action);
+
 void actions_iter(int (*f)(action_t *action, void *user), void *user);
 
-inline void action_exec2(const char *id)
+inline void action_exec2(int id)
 {
     action_exec(action_get(id, true));
 }
@@ -76,7 +83,7 @@ inline void action_exec2(const char *id)
     static const action_t GOX_action_##id_ = {.id = #id_, __VA_ARGS__}; \
     static void GOX_register_action_##id_(void) __attribute__((constructor)); \
     static void GOX_register_action_##id_(void) { \
-        action_register(&GOX_action_##id_); \
+        action_register(&GOX_action_##id_, ACTION_##id_); \
     }
 
 #endif // ACTION_H

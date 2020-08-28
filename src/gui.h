@@ -78,7 +78,7 @@ bool gui_input_float(const char *label, float *v, float step,
 bool gui_angle(const char *id, float *v, int vmin, int vmax);
 bool gui_bbox(float box[4][4]);
 bool gui_quat(const char *label, float q[4]);
-bool gui_action_button(const char *id, const char *label, float size);
+bool gui_action_button(int id, const char *label, float size);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_toggle(const char *name, int *v, int set_v,
                            const char *tooltip, float w);
@@ -152,7 +152,7 @@ void gui_popup_body_end(void);
 
 bool gui_menu_begin(const char *label);
 void gui_menu_end(void);
-bool gui_menu_item(const char *action, const char *label, bool enabled);
+bool gui_menu_item(int action, const char *label, bool enabled);
 
 void gui_tooltip(const char *str);
 

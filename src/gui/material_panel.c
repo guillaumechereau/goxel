@@ -40,9 +40,9 @@ void gui_material_panel(void)
     }
     gui_group_end();
 
-    gui_action_button("img_new_material", NULL, 0);
+    gui_action_button(ACTION_img_new_material, NULL, 0);
     gui_same_line();
-    gui_action_button("img_del_material", NULL, 0);
+    gui_action_button(ACTION_img_del_material, NULL, 0);
 
     mat = goxel.image->active_material;
     if (!mat) return;

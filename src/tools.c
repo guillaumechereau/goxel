@@ -40,7 +40,7 @@ void tool_register_(tool_t *tool)
         .data = (void*)tool,
         .flags = ACTION_CAN_EDIT_SHORTCUT,
     };
-    action_register(&action);
+    action_register(&action, tool->action_idx);
     g_tools[tool->id] = tool;
 }
 

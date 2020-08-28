@@ -64,18 +64,18 @@ void gui_layers_panel(void)
         i++;
     }
     gui_group_end();
-    gui_action_button("img_new_layer", NULL, 0);
+    gui_action_button(ACTION_img_new_layer, NULL, 0);
     gui_same_line();
-    gui_action_button("img_del_layer", NULL, 0);
+    gui_action_button(ACTION_img_del_layer, NULL, 0);
     gui_same_line();
-    gui_action_button("img_move_layer_up", NULL, 0);
+    gui_action_button(ACTION_img_move_layer_up, NULL, 0);
     gui_same_line();
-    gui_action_button("img_move_layer_down", NULL, 0);
+    gui_action_button(ACTION_img_move_layer_down, NULL, 0);
 
     gui_group_begin(NULL);
-    gui_action_button("img_duplicate_layer", "Duplicate", 1);
-    gui_action_button("img_clone_layer", "Clone", 1);
-    gui_action_button("img_merge_visible_layers", "Merge visible", 1);
+    gui_action_button(ACTION_img_duplicate_layer, "Duplicate", 1);
+    gui_action_button(ACTION_img_clone_layer, "Clone", 1);
+    gui_action_button(ACTION_img_merge_visible_layers, "Merge visible", 1);
 
     layer = goxel.image->active_layer;
     bounded = !box_is_null(layer->box);
@@ -86,22 +86,22 @@ void gui_layers_panel(void)
         mesh_crop(layer->mesh, goxel.image->box);
     }
     if (layer->shape)
-        gui_action_button("img_unclone_layer", "To mesh", 1);
+        gui_action_button(ACTION_img_unclone_layer, "To mesh", 1);
 
-    if (gui_action_button("img_new_shape_layer", "New Shape Layer", 1)) {
-        action_exec2("tool_set_move");
+    if (gui_action_button(ACTION_img_new_shape_layer, "New Shape Layer", 1)) {
+        action_exec2(ACTION_tool_set_move);
     }
 
     gui_group_end();
 
     if (layer->base_id) {
         gui_group_begin(NULL);
-        gui_action_button("img_unclone_layer", "Unclone", 1);
-        gui_action_button("img_select_parent_layer", "Select parent", 1);
+        gui_action_button(ACTION_img_unclone_layer, "Unclone", 1);
+        gui_action_button(ACTION_img_select_parent_layer, "Select parent", 1);
         gui_group_end();
     }
     if (layer->image) {
-        gui_action_button("img_image_layer_to_mesh", "To Mesh", 1);
+        gui_action_button(ACTION_img_image_layer_to_mesh, "To Mesh", 1);
     }
     if (!layer->shape && gui_checkbox("Bounded", &bounded, NULL)) {
         if (bounded) {

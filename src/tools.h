@@ -51,6 +51,7 @@ typedef struct tool tool_t;
 struct tool {
     int id;
     const char *action_id;
+    int action_idx;
     int (*iter_fn)(tool_t *tool, const painter_t *painter,
                    const float viewport[4]);
     int (*gui_fn)(tool_t *tool);
@@ -63,6 +64,7 @@ struct tool {
 #define TOOL_REGISTER(id_, name_, klass_, ...) \
     static klass_ GOX_tool_##id_ = {\
             .tool = { \
+                .action_idx = ACTION_tool_set_##name_, \
                 .id = id_, .action_id = "tool_set_" #name_, __VA_ARGS__ \
             } \
         }; \

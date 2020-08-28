@@ -34,25 +34,25 @@ static void import_image_plane(void)
 
 static void import_menu_callback(void *user, const file_format_t *f)
 {
-    if (gui_menu_item(NULL, f->name, true))
+    if (gui_menu_item(0, f->name, true))
         goxel_import_file(NULL, f->name);
 }
 
 static void export_menu_callback(void *user, const file_format_t *f)
 {
-    if (gui_menu_item(NULL, f->name, true))
+    if (gui_menu_item(0, f->name, true))
         goxel_export_to_file(NULL, f->name);
 }
 
 void gui_menu(void)
 {
     if (gui_menu_begin("File")) {
-        gui_menu_item("save", "Save",
+        gui_menu_item(ACTION_save, "Save",
                 image_get_key(goxel.image) != goxel.image->saved_key);
-        gui_menu_item("save_as", "Save as", true);
-        gui_menu_item("open", "Open", true);
+        gui_menu_item(ACTION_save_as, "Save as", true);
+        gui_menu_item(ACTION_open, "Open", true);
         if (gui_menu_begin("Import...")) {
-            if (gui_menu_item(NULL, "image plane", true))
+            if (gui_menu_item(0, "image plane", true))
                 import_image_plane();
             file_format_iter("r", NULL, import_menu_callback);
             gui_menu_end();
@@ -61,30 +61,30 @@ void gui_menu(void)
             file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
         }
-        gui_menu_item("quit", "Quit", true);
+        gui_menu_item(ACTION_quit, "Quit", true);
         gui_menu_end();
     }
     if (gui_menu_begin("Edit")) {
-        gui_menu_item("layer_clear", "Clear", true);
-        gui_menu_item("undo", "Undo", true);
-        gui_menu_item("redo", "Redo", true);
-        gui_menu_item("copy", "Copy", true);
-        gui_menu_item("past", "Paste", true);
-        if (gui_menu_item(NULL, "Settings", true))
+        gui_menu_item(ACTION_layer_clear, "Clear", true);
+        gui_menu_item(ACTION_undo, "Undo", true);
+        gui_menu_item(ACTION_redo, "Redo", true);
+        gui_menu_item(ACTION_copy, "Copy", true);
+        gui_menu_item(ACTION_past, "Paste", true);
+        if (gui_menu_item(0, "Settings", true))
             gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
                            NULL, gui_settings_popup);
         gui_menu_end();
     }
     if (gui_menu_begin("View")) {
-        gui_menu_item("view_left", "Left", true);
-        gui_menu_item("view_right", "Right", true);
-        gui_menu_item("view_front", "Front", true);
-        gui_menu_item("view_top", "Top", true);
-        gui_menu_item("view_default", "Default", true);
+        gui_menu_item(ACTION_view_left, "Left", true);
+        gui_menu_item(ACTION_view_right, "Right", true);
+        gui_menu_item(ACTION_view_front, "Front", true);
+        gui_menu_item(ACTION_view_top, "Top", true);
+        gui_menu_item(ACTION_view_default, "Default", true);
         gui_menu_end();
     }
     if (gui_menu_begin("Help")) {
-        if (gui_menu_item(NULL, "About", true))
+        if (gui_menu_item(0, "About", true))
             gui_open_popup("About", 0, NULL, gui_about_popup);
         gui_menu_end();
     }

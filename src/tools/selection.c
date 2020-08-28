@@ -163,13 +163,13 @@ static int gui(tool_t *tool)
               (const char*[]) {"Resize", "Move"}, 2);
 
     gui_group_begin(NULL);
-    if (gui_action_button("reset_selection", "Reset", 1.0)) {
+    if (gui_action_button(ACTION_reset_selection, "Reset", 1.0)) {
         gui_group_end();
         return 0;
     }
-    gui_action_button("fill_selection", "Fill", 1.0);
-    gui_action_button("layer_clear", "Clear", 1.0);
-    gui_action_button("cut_as_new_layer", "Cut as new layer", 1.0);
+    gui_action_button(ACTION_fill_selection, "Fill", 1.0);
+    gui_action_button(ACTION_layer_clear, "Clear", 1.0);
+    gui_action_button(ACTION_cut_as_new_layer, "Cut as new layer", 1.0);
     gui_group_end();
 
     x_mag = fabs(get_magnitude(*box, 0));

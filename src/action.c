@@ -26,28 +26,40 @@ typedef struct {
 // Global hash of all the actions.
 static action_hash_item_t *g_actions = NULL;
 
-void action_register(const action_t *action)
+void action_register(const action_t *action, int idx)
 {
     action_hash_item_t *item;
+    assert(idx);
     item = calloc(1, sizeof(*item));
     item->action = *action;
+    item->action.idx = idx;
     assert(!*item->action.shortcut);
     if (item->action.default_shortcut) {
         assert(strlen(action->default_shortcut) < sizeof(action->shortcut));
         strcpy(item->action.shortcut, item->action.default_shortcut);
     }
-    HASH_ADD_KEYPTR(hh, g_actions, action->id, strlen(action->id), item);
+    HASH_ADD_INT(g_actions, action.idx, item);
 }
 
-action_t *action_get(const char *id, bool assert_exists)
+action_t *action_get(int id, bool assert_exists)
 {
     action_hash_item_t *item;
-    HASH_FIND_STR(g_actions, id, item);
+    HASH_FIND_INT(g_actions, &id, item);
     if (!item && assert_exists) {
         LOG_E("Cannot find action %s", id);
         assert(false);
     }
     return item ? &item->action : NULL;
+}
+
+action_t *action_get_by_name(const char *name)
+{
+    action_hash_item_t *item, *tmp;
+    HASH_ITER(hh, g_actions, item, tmp) {
+        if (strcmp(name, item->action.id) == 0)
+            return &item->action;
+    }
+    return NULL;
 }
 
 void actions_iter(int (*f)(action_t *action, void *user), void *user)

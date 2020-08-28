@@ -746,7 +746,7 @@ void gui_iter(const inputs_t *inputs)
 
     // Handle the shortcuts.  XXX: this should be done with actions.
     if (ImGui::IsKeyPressed(KEY_DELETE, false))
-        action_exec2("layer_clear");
+        action_exec2(ACTION_layer_clear);
 
     if (!io.WantCaptureKeyboard) {
         float last_tool_radius = goxel.tool_radius;
@@ -1019,7 +1019,7 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax)
     return ret;
 }
 
-bool gui_action_button(const char *id, const char *label, float size)
+bool gui_action_button(int id, const char *label, float size)
 {
     bool ret;
     const action_t *action;
@@ -1624,7 +1624,7 @@ void gui_menu_end(void)
     return ImGui::EndMenu();
 }
 
-bool gui_menu_item(const char *action, const char *label, bool enabled)
+bool gui_menu_item(int action, const char *label, bool enabled)
 {
     const action_t *a = NULL;
     if (action) {
