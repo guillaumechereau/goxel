@@ -78,6 +78,8 @@ enum {
     X(tool_set_fuzzy_select),
     X(tool_set_line),
     X(tool_set_move),
+
+    ACTION_COUNT
 };
 
 #undef X
