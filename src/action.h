@@ -23,6 +23,7 @@
 #include <stdbool.h>
 
 #include "actions.h"
+#include "image.h"
 
 // #### Action #################
 
@@ -36,9 +37,6 @@
 // scripting engine on top of goxel quite easily.
 
 // XXX: this is still pretty experimental.  This might change in the future.
-
-typedef struct image image_t;
-
 
 enum {
     ACTION_TOUCH_IMAGE          = 1 << 0,  // Push the undo history.

@@ -19,7 +19,7 @@
 #ifndef FILE_FORMAT_H
 #define FILE_FORMAT_H
 
-typedef struct image image_t;
+#include "image.h"
 
 typedef struct file_format file_format_t;
 struct file_format
