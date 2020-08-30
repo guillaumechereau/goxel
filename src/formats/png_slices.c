@@ -28,7 +28,7 @@ static int export_as_png_slices(const image_t *image, const char *path)
     uint8_t *img;
     mesh_iterator_t iter = {0};
 
-    mesh = goxel_get_layers_mesh();
+    mesh = goxel_get_layers_mesh(image);
     mat4_copy(image->box, box);
     if (box_is_null(box)) mesh_get_box(mesh, true, box);
     w = box[0][0] * 2;

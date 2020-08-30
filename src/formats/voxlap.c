@@ -328,7 +328,7 @@ static int kvx_export(const image_t *image, const char *path)
     uint32_t *xyoffsets;
     bool use_current_palette = false;
     float pivot[3];
-    const mesh_t *mesh = goxel_get_layers_mesh();
+    const mesh_t *mesh = goxel_get_layers_mesh(image);
 
     UT_icd voxel_icd = {sizeof(voxel_t), NULL, NULL, NULL};
     UT_icd slab_icd = {sizeof(slab_t), NULL, NULL, NULL};

@@ -226,7 +226,7 @@ int goxel_unproject(const float viewport[4],
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_MESH) {
             r = goxel_unproject_on_mesh(viewport, pos,
-                                        goxel_get_layers_mesh(), p, n);
+                            goxel_get_layers_mesh(goxel.image), p, n);
         }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(viewport, pos,
@@ -456,7 +456,7 @@ int goxel_iter(inputs_t *inputs)
     gui_iter(inputs);
 
     if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
-        mesh_key = mesh_get_key(goxel_get_render_mesh());
+        mesh_key = mesh_get_key(goxel_get_render_mesh(goxel.image));
         if (goxel.last_mesh_key != mesh_key) {
             if (goxel.last_mesh_key) {
                 pitch = goxel.painter.mode == MODE_OVER ? 1.0 :
@@ -645,7 +645,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
         camera->dist *= pow(1.1, -inputs->mouse_wheel);
         // Auto adjust the camera rotation position.
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
-                                    goxel_get_layers_mesh(), p, n)) {
+                                goxel_get_layers_mesh(goxel.image), p, n)) {
             camera_set_target(camera, p);
         }
         return;
@@ -671,7 +671,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     // XXX: this should be an action!
     if (inputs->keys['C']) {
         if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
-                                    goxel_get_layers_mesh(), p, n)) {
+                                goxel_get_layers_mesh(goxel.image), p, n)) {
             camera_set_target(camera, p);
         }
     }
@@ -865,10 +865,10 @@ void goxel_render_view(const float viewport[4], bool render_mode)
         float b[4][4];
         uint8_t c[4];
         vec4_set(c, 0, 255, 0, 80);
-        mesh_get_box(goxel_get_layers_mesh(), true, b);
+        mesh_get_box(goxel_get_layers_mesh(goxel.image), true, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
         vec4_set(c, 0, 255, 255, 80);
-        mesh_get_box(goxel_get_layers_mesh(), false, b);
+        mesh_get_box(goxel_get_layers_mesh(goxel.image), false, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
     }
     if (goxel.snap_mask & SNAP_PLANE)
@@ -889,13 +889,13 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
 void image_update(image_t *img);
 
-const mesh_t *goxel_get_layers_mesh(void)
+const mesh_t *goxel_get_layers_mesh(const image_t *img)
 {
     uint32_t key = 0, k;
     layer_t *layer;
 
-    image_update(goxel.image);
-    DL_FOREACH(goxel.image->layers, layer) {
+    image_update((image_t*)img);
+    DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         if (!layer->mesh) continue;
         k = layer_get_key(layer);
@@ -905,7 +905,7 @@ const mesh_t *goxel_get_layers_mesh(void)
         goxel.layers_mesh_hash = key;
         if (!goxel.layers_mesh_) goxel.layers_mesh_ = mesh_new();
         mesh_clear(goxel.layers_mesh_);
-        DL_FOREACH(goxel.image->layers, layer) {
+        DL_FOREACH(img->layers, layer) {
             if (!layer->visible) continue;
             mesh_merge(goxel.layers_mesh_, layer->mesh, MODE_OVER, NULL);
         }
@@ -913,16 +913,16 @@ const mesh_t *goxel_get_layers_mesh(void)
     return goxel.layers_mesh_;
 }
 
-const mesh_t *goxel_get_render_mesh(void)
+const mesh_t *goxel_get_render_mesh(const image_t *img)
 {
     uint32_t key, k;
     const mesh_t *mesh;
     layer_t *layer;
 
     if (!goxel.tool_mesh)
-        return goxel_get_layers_mesh();
+        return goxel_get_layers_mesh(img);
 
-    key = mesh_get_key(goxel_get_layers_mesh());
+    key = mesh_get_key(goxel_get_layers_mesh(img));
     k = mesh_get_key(goxel.tool_mesh);
     key = XXH32(&k, sizeof(k), key);
     if (key != goxel.render_mesh_hash) {
@@ -998,7 +998,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     camera->aspect = (float)w / h;
     camera_update(camera);
 
-    mesh = goxel_get_layers_mesh();
+    mesh = goxel_get_layers_mesh(goxel.image);
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
     mat4_copy(camera->view_mat, rend.view_mat);

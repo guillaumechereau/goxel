@@ -678,7 +678,7 @@ int load_from_file(const char *path)
 
     // Set default image box if we didn't have one.
     if (box_is_null(goxel.image->box)) {
-        mesh_get_bbox(goxel_get_layers_mesh(), aabb, true);
+        mesh_get_bbox(goxel_get_layers_mesh(goxel.image), aabb, true);
         if (aabb[0][0] > aabb[1][0]) {
             aabb[0][0] = -16;
             aabb[0][1] = -16;

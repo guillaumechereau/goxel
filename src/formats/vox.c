@@ -474,7 +474,7 @@ static int vox_export(const image_t *image, const char *path)
     mesh_iterator_t iter;
     const mesh_t *mesh;
 
-    mesh = goxel_get_layers_mesh();
+    mesh = goxel_get_layers_mesh(image);
     palette = calloc(256, sizeof(*palette));
     for (i = 0; i < 256; i++)
         hexcolor(VOX_DEFAULT_PALETTE[i], palette[i]);

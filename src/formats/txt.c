@@ -23,7 +23,7 @@
 static int export_as_txt(const image_t *image, const char *path)
 {
     FILE *out;
-    const mesh_t *mesh = goxel_get_layers_mesh();
+    const mesh_t *mesh = goxel_get_layers_mesh(image);
     int p[3];
     uint8_t v[4];
     mesh_iterator_t iter;

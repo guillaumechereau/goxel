@@ -193,13 +193,13 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
 
 static int wavefront_export(const image_t *image, const char *path)
 {
-    const mesh_t *mesh = goxel_get_layers_mesh();
+    const mesh_t *mesh = goxel_get_layers_mesh(image);
     return export(mesh, path, false);
 }
 
 int ply_export(const image_t *image, const char *path)
 {
-    const mesh_t *mesh = goxel_get_layers_mesh();
+    const mesh_t *mesh = goxel_get_layers_mesh(image);
     return export(mesh, path, true);
 }
 

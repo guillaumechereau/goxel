@@ -588,8 +588,8 @@ void goxel_render_export_view(const float viewport[4]);
 void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          bool capture_keys);
 
-const mesh_t *goxel_get_layers_mesh(void);
-const mesh_t *goxel_get_render_mesh(void);
+const mesh_t *goxel_get_layers_mesh(const image_t *img);
+const mesh_t *goxel_get_render_mesh(const image_t *img);
 
 /*
  * Function: goxel_get_render_layers

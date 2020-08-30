@@ -28,7 +28,7 @@ int tool_color_picker_iter(tool_t *tool, const painter_t *painter,
                            const float viewport[4])
 {
     uint8_t color[4];
-    const mesh_t *mesh = goxel_get_layers_mesh();
+    const mesh_t *mesh = goxel_get_layers_mesh(goxel.image);
     cursor_t *curs = &goxel.cursor;
     int pi[3] = {floor(curs->pos[0]),
                  floor(curs->pos[1]),
