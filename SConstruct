@@ -22,7 +22,7 @@ import sys
 vars = Variables('settings.py')
 vars.AddVariables(
     EnumVariable('mode', 'Build mode', 'debug',
-        allowed_values=('debug', 'release', 'profile')),
+        allowed_values=('debug', 'release', 'profile', 'analyze')),
     BoolVariable('werror', 'Warnings as error', True),
     BoolVariable('sound', 'Enable sound', False),
     BoolVariable('yocto', 'Enable yocto renderer', True),
@@ -33,6 +33,14 @@ target_os = str(Platform())
 
 env = Environment(variables = vars, ENV = os.environ)
 conf = env.Configure()
+
+if env['mode'] == 'analyze':
+    # Make sure clang static analyzer has a chance to override de compiler
+    # and set CCC settings
+    env["CC"] = os.getenv("CC") or env["CC"]
+    env["CXX"] = os.getenv("CXX") or env["CXX"]
+    env["ENV"].update(x for x in os.environ.items() if x[0].startswith("CCC_"))
+
 
 if os.environ.get('CC') == 'clang':
     env.Replace(CC='clang', CXX='clang++')
@@ -61,12 +69,11 @@ env.Append(
 if env['werror']:
     env.Append(CCFLAGS='-Werror')
 
+if env['mode'] not in ['debug', 'analyze']:
+    env.Append(CPPDEFINES='NDEBUG', CCFLAGS='-Ofast')
 
 if env['mode'] == 'debug':
     env.Append(CCFLAGS=['-O0'])
-else:
-    env.Append(CCFLAGS='-O3', CPPDEFINES='NDEBUG')
-    if env['CC'] == 'gcc': env.Append(CCFLAGS='-Ofast')
 
 if env['mode'] in ('profile', 'debug'):
     env.Append(CCFLAGS='-g')
