@@ -129,6 +129,8 @@ static layer_t *layer_clone(layer_t *other)
 {
     int len;
     layer_t *layer;
+
+    assert(other);
     layer = calloc(1, sizeof(*layer));
     len = sizeof(layer->name) - 1 - strlen(" clone");
     snprintf(layer->name, sizeof(layer->name), "%.*s clone", len, other->name);
@@ -285,7 +287,7 @@ void image_delete(image_t *img)
 
 layer_t *image_add_layer(image_t *img, layer_t *layer)
 {
-    img = img ?: goxel.image;
+    assert(img);
     if (!layer) {
         layer = layer_new(NULL);
         make_uniq_name(layer->name, sizeof(layer->name), "Layer", img,
@@ -302,7 +304,7 @@ layer_t *image_add_layer(image_t *img, layer_t *layer)
 layer_t *image_add_shape_layer(image_t *img)
 {
     layer_t *layer;
-    img = img ?: goxel.image;
+    assert(img);
     layer = layer_new("shape");
     layer->visible = true;
     layer->shape = &shape_sphere;
@@ -323,8 +325,8 @@ layer_t *image_add_shape_layer(image_t *img)
 void image_delete_layer(image_t *img, layer_t *layer)
 {
     layer_t *other;
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
+    assert(img);
+    assert(layer);
     DL_DELETE(img->layers, layer);
     if (layer == img->active_layer) img->active_layer = NULL;
 
@@ -347,10 +349,11 @@ void image_delete_layer(image_t *img, layer_t *layer)
 
 static void image_move_layer(image_t *img, layer_t *layer, int d)
 {
-    assert(d == -1 || d == +1);
     layer_t *other = NULL;
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
+
+    assert(img);
+    assert(layer);
+    assert(d == -1 || d == +1);
     if (d == -1) {
         other = layer->next;
         SWAP(other, layer);
@@ -365,8 +368,8 @@ static void image_move_layer(image_t *img, layer_t *layer, int d)
 layer_t *image_duplicate_layer(image_t *img, layer_t *other)
 {
     layer_t *layer;
-    img = img ?: goxel.image;
-    other = other ?: img->active_layer;
+    assert(img);
+    assert(other);
     layer = layer_copy(other);
     make_uniq_name(layer->name, sizeof(layer->name), other->name, img,
                    layer_name_exists);
@@ -382,6 +385,7 @@ layer_t *image_clone_layer(image_t *img, layer_t *other)
     layer_t *layer;
     img = img ?: goxel.image;
     other = other ?: img->active_layer;
+    assert(img && other);
     layer = layer_clone(other);
     layer->visible = true;
     layer->id = img_get_new_id(img);
@@ -392,8 +396,8 @@ layer_t *image_clone_layer(image_t *img, layer_t *other)
 
 void image_unclone_layer(image_t *img, layer_t *layer)
 {
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
+    assert(img);
+    assert(layer);
     layer->base_id = 0;
     layer->shape = NULL;
 }
@@ -401,7 +405,7 @@ void image_unclone_layer(image_t *img, layer_t *layer)
 void image_merge_visible_layers(image_t *img)
 {
     layer_t *layer, *other, *last = NULL;
-    img = img ?: goxel.image;
+    assert(img);
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
         image_unclone_layer(img, layer);
@@ -426,7 +430,7 @@ void image_merge_visible_layers(image_t *img)
 
 camera_t *image_add_camera(image_t *img, camera_t *cam)
 {
-    img = img ?: goxel.image;
+    assert(img);
     if (!cam) {
         cam = camera_new(NULL);
         make_uniq_name(cam->name, sizeof(cam->name), "Camera", img,
@@ -569,6 +573,7 @@ void image_history_resize(image_t *img, int size)
 
         // XXX: do that in a function!
         DL_FOREACH_SAFE(hist->layers, layer, layer_tmp) {
+            assert(layer);
             DL_DELETE(hist->layers, layer);
             layer_delete(layer);
         }
@@ -677,8 +682,8 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
     int i, j, w, h, bpp = 0, pos[3];
     uint8_t c[4];
     float p[3];
-    img = img ?: goxel.image;
-    layer = layer ?: img->active_layer;
+    assert(img);
+    assert(layer);
     mesh_accessor_t acc;
 
     image_history_push(img);

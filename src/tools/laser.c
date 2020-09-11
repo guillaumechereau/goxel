@@ -55,7 +55,7 @@ static int iter(tool_t *tool, const painter_t *painter,
     curs->snap_mask = SNAP_CAMERA;
     curs->snap_offset = 0;
     float v[4];
-    float view_mat_inv[4][4];
+    float view_mat_inv[4][4] = {};
     camera_t *camera = goxel.image->active_camera;
 
     if (!laser->gestures.drag.type) {
