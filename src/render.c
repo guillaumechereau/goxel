@@ -40,8 +40,7 @@
 // memory is used, so we get an idea of how much we need that.
 
 enum {
-    ITEM_BLOCK,
-    ITEM_MESH,
+    ITEM_MESH = 1,
     ITEM_MODEL3D,
     ITEM_GRID,
 };
@@ -1061,18 +1060,18 @@ void render_submit(renderer_t *rend, const float viewport[4],
         case ITEM_MESH:
             render_mesh_(rend, item->mesh, &item->material, item->effects,
                          shadow_mvp);
-            DL_DELETE(rend->items, item);
             mesh_delete(item->mesh);
             break;
         case ITEM_MODEL3D:
             render_model_item(rend, item, viewport);
-            DL_DELETE(rend->items, item);
             break;
         case ITEM_GRID:
             render_grid_item(rend, item);
-            DL_DELETE(rend->items, item);
             break;
+        default:
+            assert(false);
         }
+        DL_DELETE(rend->items, item);
         texture_delete(item->tex);
         free(item);
     }
