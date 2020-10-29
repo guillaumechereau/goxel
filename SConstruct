@@ -136,4 +136,4 @@ env.Append(
     LINKFLAGS=os.environ.get("LDFLAGS", "").split()
 )
 
-env.Program(target='goxel', source=sources)
+env.Program(target='goxel', source=sorted(sources))
