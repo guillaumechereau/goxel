@@ -83,6 +83,11 @@ static int qubicle_import(image_t *image, const char *path)
         vec3_set(bbox[1], pos[0] + w, pos[1] + h, pos[2] + d);
         apply_orientation(orientation, bbox[0]);
         apply_orientation(orientation, bbox[1]);
+        if (bbox[1][1] < bbox[0][1]) {
+            SWAP(bbox[1][1], bbox[0][1]);
+            bbox[0][1] += 1;
+            bbox[1][1] += 1;
+        }
         bbox_from_aabb(layer->box, bbox);
 
         if (compression == 0) {
