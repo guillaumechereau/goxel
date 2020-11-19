@@ -41,7 +41,9 @@ Fisherman house, made with Goxel by
 Licence
 -------
 
-Goxel is released under the GPL3 licence.
+Goxel is released under the GNU GPL3 licence.  If you want to use the code
+with a commercial project please contact me: I am willing to provide a
+version of the code under a commercial license.
 
 
 Features
