@@ -67,6 +67,7 @@ enum {
     X(open),
     X(save_as),
     X(save),
+    X(reset),
 
     X(tool_set_brush),
     X(tool_set_laser),
