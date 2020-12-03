@@ -142,8 +142,8 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
     ALLOC(g->data->nodes, 1 + nb_blocks + DL_SIZE(img->layers));
     ALLOC(g->data->meshes, nb_blocks);
     ALLOC(g->data->accessors, nb_blocks * 4);
-    ALLOC(g->data->buffers, nb_blocks * 2);
-    ALLOC(g->data->buffer_views, nb_blocks * 2);
+    ALLOC(g->data->buffers, nb_blocks * 2 + 1);
+    ALLOC(g->data->buffer_views, nb_blocks * 2 + 1);
     ALLOC(g->data->images, 1);
     ALLOC(g->data->textures, 1);
 }
@@ -431,6 +431,8 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
     uint8_t c[4];
     uint8_t (*data)[3];
     uint8_t *png;
+    cgltf_buffer *buffer;
+    cgltf_buffer_view *buffer_view;
     cgltf_image *image;
     cgltf_texture *texture;
 
@@ -448,11 +450,18 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
         memcpy(data[i], g->palette.entries[i].color, 3);
     png = img_write_to_mem((void*)data, s, s, 3, &size);
     free(data);
+    buffer = add_item(g->data, buffers);
+    buffer->size = size;
+    buffer->uri = data_new(png, size, NULL);
+    buffer_view = add_item(g->data, buffer_views);
+    buffer_view->buffer = buffer;
+    buffer_view->size = size;
     image = add_item(g->data, images);
-    image->uri = data_new(png, size, "image/png");
-    free(png);
+    image->mime_type = strdup("image/png");
+    image->buffer_view = buffer_view;
     texture = add_item(g->data, textures);
     texture->image = image;
+    free(png);
 }
 
 static void gltf_export(const image_t *img, const char *path,
