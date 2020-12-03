@@ -148,10 +148,7 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
     ALLOC(g->data->textures, 1);
 }
 
-// To remove.
-#define add_item(data, list) ({ \
-    &data->list[data->list##_count++]; \
-})
+#define add_item(data, list) ({ &data->list[data->list##_count++]; })
 
 // Create a buffer view and attribute.
 static void make_attribute(gltf_t *g, cgltf_buffer_view *buffer_view,
