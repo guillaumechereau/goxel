@@ -20,32 +20,16 @@
 #include "goxel.h"
 #include "file_format.h"
 #include "utils/json.h"
+#include "utils/vec.h"
 
-enum {
-    GLTF_BYTE = 5120,
-    GLTF_UNSIGNED_BYTE = 5121,
-    GLTF_SHORT = 5122,
-    GLTF_UNSIGNED_SHORT = 5123,
-    GLTF_UNSIGNED_INT = 5125,
-    GLTF_FLOAT = 5126,
-};
-
-typedef json_value json_t;
+#define CGLTF_IMPLEMENTATION
+#define CGLTF_WRITE_IMPLEMENTATION
+#include "../ext_src/cgltf/cgltf_write.h"
 
 typedef struct {
-    json_t *root;
-    json_t *asset;
-    json_t *buffers;
-    json_t *buffer_views;
-    json_t *meshes;
-    json_t *accessors;
-    json_t *nodes;
-    json_t *scenes;
-    json_t *materials;
-    json_t *images;
-    json_t *textures;
-
+    cgltf_data *data;
     palette_t palette;
+    cgltf_material *default_mat;
 } gltf_t;
 
 typedef struct {
@@ -79,79 +63,153 @@ static int next_pow2(int x)
     return x;
 }
 
-static void gltf_init(gltf_t *g, const export_options_t *options)
+static size_t base64_encode(const uint8_t *data, size_t len, char *buf)
 {
-    g->root = json_object_new(0);
-    g->asset = json_object_push(g->root, "asset", json_object_new(0));
-    json_object_push(g->asset, "version", json_string_new("2.0"));
-    json_object_push(g->asset, "generator", json_string_new("goxel"));
+    const char table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+                          'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+                          'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                          'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+                          'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                          'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                          'w', 'x', 'y', 'z', '0', '1', '2', '3',
+                          '4', '5', '6', '7', '8', '9', '+', '/'};
+    const int mod_table[] = {0, 2, 1};
+    uint32_t a, b, c, triple;
+    int i, j;
+    size_t out_len = 4 * ((len + 2) / 3);
+    if (!buf) return out_len;
+    for (i = 0, j = 0; i < len;) {
+        a = i < len ? data[i++] : 0;
+        b = i < len ? data[i++] : 0;
+        c = i < len ? data[i++] : 0;
+        triple = (a << 0x10) + (b << 0x08) + c;
 
-    g->buffers = json_object_push(g->root, "buffers", json_array_new(0));
-    g->buffer_views = json_object_push(g->root, "bufferViews",
-                                       json_array_new(0));
-    g->meshes = json_object_push(g->root, "meshes", json_array_new(0));
-    g->accessors = json_object_push(g->root, "accessors", json_array_new(0));
-    g->nodes = json_object_push(g->root, "nodes", json_array_new(0));
-    g->scenes = json_object_push(g->root, "scenes", json_array_new(0));
-    g->materials = json_object_push(g->root, "materials", json_array_new(0));
-
-    if (!options->vertex_color) {
-        g->images = json_object_push(g->root, "images", json_array_new(0));
-        g->textures = json_object_push(g->root, "textures", json_array_new(0));
+        buf[j++] = table[(triple >> 3 * 6) & 0x3F];
+        buf[j++] = table[(triple >> 2 * 6) & 0x3F];
+        buf[j++] = table[(triple >> 1 * 6) & 0x3F];
+        buf[j++] = table[(triple >> 0 * 6) & 0x3F];
     }
+    for (i = 0; i < mod_table[len % 3]; i++)
+        buf[out_len - 1 - i] = '=';
+
+    return out_len;
 }
+
+static char *data_new(const void *data, uint32_t len, const char *mime)
+{
+    char *string;
+    if (!mime) mime = "application/octet-stream";
+    string = calloc(strlen("data:") + strlen(mime) + strlen(";base64,") +
+                    base64_encode(data, len, NULL) + 1, 1);
+    sprintf(string, "data:%s;base64,", mime);
+    base64_encode(data, len, string + strlen(string));
+    return string;
+}
+
+#define DL_SIZE(head) ({ \
+    int size = 0; \
+    typeof(*(head)) *tmp; \
+    DL_COUNT(head, tmp, size); \
+    size; \
+})
+
+#define ALLOC(array, size) ({ array = calloc(size, sizeof(*(array))); })
+
+static void gltf_init(gltf_t *g, const export_options_t *options,
+                      const image_t *img)
+{
+    const layer_t *layer;
+    mesh_iterator_t iter;
+    int bpos[3], nb_blocks = 0;
+
+    g->data = calloc(1, sizeof(*g->data));
+    g->data->memory.free = &cgltf_default_free;
+    g->data->asset.version = strdup("2.0");
+    g->data->asset.generator = strdup("goxel");
+
+    // Count the total number of blocks.
+    DL_FOREACH(img->layers, layer) {
+        iter = mesh_get_iterator(layer->mesh,
+                MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
+        while (mesh_iter(&iter, bpos)) {
+            nb_blocks++;
+        }
+    }
+
+    // Initialize all the gltf base object arrays.
+    ALLOC(g->data->materials, DL_SIZE(img->materials) + 1);
+    ALLOC(g->data->scenes, 1);
+    ALLOC(g->data->nodes, 1 + nb_blocks + DL_SIZE(img->layers));
+    ALLOC(g->data->meshes, nb_blocks);
+    ALLOC(g->data->accessors, nb_blocks * 4);
+    ALLOC(g->data->buffers, nb_blocks * 2 + 1);
+    ALLOC(g->data->buffer_views, nb_blocks * 2 + 1);
+    ALLOC(g->data->images, 1);
+    ALLOC(g->data->textures, 1);
+}
+
+#define add_item(data, list) ({ &data->list[data->list##_count++]; })
 
 // Create a buffer view and attribute.
-static void make_attribute(gltf_t *g, json_t *buffer_view, json_t *attributes,
+static void make_attribute(gltf_t *g, cgltf_buffer_view *buffer_view,
+                           cgltf_primitive *primitive,
                            const char *name,
-                           int component_type, const char *type,
-                           bool normalized, int nb, int ofs,
+                           cgltf_component_type component_type,
+                           cgltf_type type,
+                           bool normalized, int count, int ofs,
                            const float v_min[3], const float v_max[3])
 {
-    json_t *accessor;
+    cgltf_accessor *accessor;
+    cgltf_attribute *attribute;
 
-    accessor = json_array_push(g->accessors, json_object_new(0));
-    json_object_push_int(accessor, "bufferView", json_index(buffer_view));
-    json_object_push_int(accessor, "componentType", component_type);
-    json_object_push_int(accessor, "byteOffset", ofs);
-    json_object_push_string(accessor, "type", type);
-    json_object_push_int(accessor, "count", nb);
-    if (normalized) json_object_push_bool(accessor, "normalized", true);
-
-    if (v_min)
-        json_object_push(accessor, "min", json_float_array_new(v_min, 3));
-    if (v_max)
-        json_object_push(accessor, "max", json_float_array_new(v_max, 3));
-
-    json_object_push_int(attributes, name, json_index(accessor));
+    accessor = add_item(g->data, accessors);
+    accessor->buffer_view = buffer_view;
+    accessor->component_type = component_type;
+    accessor->offset = ofs;
+    accessor->type = type;
+    accessor->count = count;
+    accessor->normalized = normalized;
+    if (v_min) {
+        vec3_copy(v_min, accessor->min);
+        accessor->has_min = true;
+    }
+    if (v_max) {
+        vec3_copy(v_max, accessor->max);
+        accessor->has_max = true;
+    }
+    attribute = add_item(primitive, attributes);
+    attribute->data = accessor;
+    attribute->name = strdup(name);
+    cgltf_parse_attribute_type(name, &attribute->type, &attribute->index);
 }
 
-static void make_quad_indices(gltf_t *g, json_t *primitive, int nb, int size)
+static void make_quad_indices(gltf_t *g, cgltf_primitive *primitive,
+                              int nb, int size)
 {
-    json_t *buffer, *buffer_view, *accessor;
+    cgltf_buffer *buffer;
+    cgltf_buffer_view *buffer_view;
+    cgltf_accessor *accessor;
     uint16_t *data;
     int i;
 
     data = calloc(nb * 6, sizeof(*data));
     for (i = 0; i < nb * 6; i++)
         data[i] = (i / 6) * 4 + ((int[]){0, 1, 2, 2, 3, 0})[i % 6];
-    buffer = json_array_push(g->buffers, json_object_new(0));
-    json_object_push_int(buffer, "byteLength", nb * 6 * sizeof(*data));
-    json_object_push(buffer, "uri",
-            json_data_new(data, nb * 6 * sizeof(*data), NULL));
+    buffer = add_item(g->data, buffers);
+    buffer->size = nb * 6 * sizeof(*data);
+    buffer->uri = data_new(data, nb * 6 * sizeof(*data), NULL);
     free(data);
-    buffer_view = json_array_push(g->buffer_views, json_object_new(0));
-    json_object_push_int(buffer_view, "buffer", json_index(buffer));
-    json_object_push_int(buffer_view, "byteLength", nb * 6 * sizeof(*data));
-    json_object_push_int(buffer_view, "target", 34963);
+    buffer_view = add_item(g->data, buffer_views);
+    buffer_view->buffer = buffer;
+    buffer_view->size = nb * 6 * sizeof(*data);
+    buffer_view->type = cgltf_buffer_view_type_indices;
 
-    accessor = json_array_push(g->accessors, json_object_new(0));
-    json_object_push_int(accessor, "bufferView", json_index(buffer_view));
-    json_object_push_int(accessor, "componentType", GLTF_UNSIGNED_SHORT);
-    json_object_push_int(accessor, "count", nb * 6);
-    json_object_push_string(accessor, "type", "SCALAR");
-
-    json_object_push_int(primitive, "indices", json_index(accessor));
+    accessor = add_item(g->data, accessors);
+    accessor->buffer_view = buffer_view;
+    accessor->component_type = cgltf_component_type_r_16u;
+    accessor->count = nb * 6;
+    accessor->type = cgltf_type_scalar;
+    primitive->indices = accessor;
 }
 
 static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
@@ -220,20 +278,63 @@ static int get_material_idx(const image_t *img, const material_t *mat)
     return 0;
 }
 
-static void save_layer(gltf_t *g, json_t *root_node_children,
+static cgltf_material *save_material(
+        gltf_t *g, const material_t *mat, const export_options_t *options)
+{
+    cgltf_material *material;
+    cgltf_pbr_metallic_roughness *pbr;
+
+    material = add_item(g->data, materials);
+    material->alpha_cutoff = 0.5;
+    material->has_pbr_metallic_roughness = true;
+    pbr = &material->pbr_metallic_roughness;
+    material->name = strdup(mat->name);
+    vec3_copy(mat->emission, material->emissive_factor);
+    vec4_copy(mat->base_color, pbr->base_color_factor);
+    pbr->metallic_factor = mat->metallic;
+    pbr->roughness_factor = mat->roughness;
+
+    if (!options->vertex_color) {
+        pbr->base_color_texture.texture = &g->data->textures[0];
+        pbr->base_color_texture.scale = 1;
+    }
+    return material;
+}
+
+static cgltf_material *get_default_mat(
+        gltf_t *g, const export_options_t *options)
+{
+    material_t mat;
+    if (!g->default_mat) {
+        mat = (material_t) {
+            .base_color = {1, 1, 1, 1},
+            .metallic = 1,
+            .roughness = 1,
+        };
+        g->default_mat = save_material(g, &mat, options);
+    }
+    return g->default_mat;
+}
+
+static void save_layer(gltf_t *g, cgltf_node *root_node,
                        const image_t *img, const layer_t *layer,
                        const export_options_t *options)
 {
-    json_t *gmesh, *buffer, *primitives, *primitive, *attributes, *node,
-           *buffer_view;
+    cgltf_mesh *gmesh;
+    cgltf_primitive *primitive;
+    cgltf_buffer *buffer;
+    cgltf_node *node, *layer_node;
+    cgltf_buffer_view *buffer_view;
     mesh_iterator_t iter;
     int nb_elems, bpos[3], size = 0, subdivide;
     voxel_vertex_t *verts;
     const int N = BLOCK_SIZE;
     gltf_vertex_t *gverts;
-    int buf_size;
+    int buf_size, start_nodes_count, i;
     float pos_min[3], pos_max[3];
     mesh_t *mesh = layer->mesh;
+
+    start_nodes_count = g->data->nodes_count;
 
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     gverts = calloc(N * N * N * 6 * 4, sizeof(*gverts));
@@ -250,54 +351,72 @@ static void save_layer(gltf_t *g, json_t *root_node_children,
         get_pos_min_max(gverts, nb_elems * size, pos_min, pos_max);
         buf_size = nb_elems * size * sizeof(*gverts);
 
-        buffer = json_array_push(g->buffers, json_object_new(0));
-        json_object_push_int(buffer, "byteLength", buf_size);
-        json_object_push(buffer, "uri", json_data_new(gverts, buf_size, NULL));
-        gmesh = json_array_push(g->meshes, json_object_new(0));
-        primitives = json_object_push(gmesh, "primitives", json_array_new(0));
-        primitive = json_array_push(primitives, json_object_new(0));
-        attributes = json_object_push(primitive, "attributes",
-                                      json_object_new(0));
-        json_object_push_int(primitive, "material",
-                             get_material_idx(img, layer->material));
+        buffer = add_item(g->data, buffers);
+        buffer->size = buf_size;
+        buffer->uri = data_new(gverts, buf_size, NULL);
+        gmesh = add_item(g->data, meshes);
+        ALLOC(gmesh->primitives, 1);
+        primitive = add_item(gmesh, primitives);
+        primitive->type = cgltf_primitive_type_triangles;
+        ALLOC(primitive->attributes, 3);
+        if (layer->material) {
+            primitive->material = g->data->materials +
+                                      get_material_idx(img, layer->material);
+        } else {
+            primitive->material = get_default_mat(g, options);
+        }
 
         if (size == 4)
             make_quad_indices(g, primitive, nb_elems, size);
 
-        buffer_view = json_array_push(g->buffer_views, json_object_new(0));
-        json_object_push_int(buffer_view, "buffer", json_index(buffer));
-        json_object_push_int(buffer_view, "byteLength", buf_size);
-        json_object_push_int(buffer_view, "byteStride", sizeof(gltf_vertex_t));
-        json_object_push_int(buffer_view, "target", 34962);
+        buffer_view = add_item(g->data, buffer_views);
+        buffer_view->buffer = buffer;
+        buffer_view->size = buf_size;
+        buffer_view->stride = sizeof(gltf_vertex_t);
+        buffer_view->type = cgltf_buffer_view_type_vertices;
 
-        make_attribute(g, buffer_view, attributes,
-                       "POSITION", GLTF_FLOAT, "VEC3", false,
+        make_attribute(g, buffer_view, primitive,
+                       "POSITION",
+                       cgltf_component_type_r_32f,
+                       cgltf_type_vec3, false,
                        nb_elems * size, offsetof(gltf_vertex_t, pos),
                        pos_min, pos_max);
-        make_attribute(g, buffer_view, attributes,
-                       "NORMAL", GLTF_FLOAT, "VEC3", false,
+        make_attribute(g, buffer_view, primitive,
+                       "NORMAL",
+                       cgltf_component_type_r_32f,
+                       cgltf_type_vec3, false,
                        nb_elems * size, offsetof(gltf_vertex_t, normal),
                        NULL, NULL);
 
         if (options->vertex_color) {
-            make_attribute(g, buffer_view, attributes,
-                           "COLOR_0", GLTF_UNSIGNED_BYTE, "VEC4", true,
+            make_attribute(g, buffer_view, primitive,
+                           "COLOR_0",
+                           cgltf_component_type_r_8u,
+                           cgltf_type_vec4, true,
                            nb_elems * size, offsetof(gltf_vertex_t, color),
                            NULL, NULL);
         } else {
-            make_attribute(g, buffer_view, attributes,
-                           "TEXCOORD_0", GLTF_FLOAT, "VEC2", false,
+            make_attribute(g, buffer_view, primitive,
+                           "TEXCOORD_0",
+                           cgltf_component_type_r_32f, cgltf_type_vec2, false,
                            nb_elems * size, offsetof(gltf_vertex_t, texcoord),
                            NULL, NULL);
         }
-
-        node = json_array_push(g->nodes, json_object_new(0));
-        json_object_push(node, "translation", json_int_array_new(bpos, 3));
-        json_object_push_int(node, "mesh", json_index(gmesh));
-        json_array_push(root_node_children, json_integer_new(json_index(node)));
+        node = add_item(g->data, nodes);
+        vec3_set(node->translation, bpos[0], bpos[1], bpos[2]);
+        node->has_translation = true;
+        node->mesh = gmesh;
     }
     free(verts);
     free(gverts);
+
+    // Add all the new created nodes into a single layer node.
+    layer_node = add_item(g->data, nodes);
+    ALLOC(layer_node->children, g->data->nodes_count - start_nodes_count);
+    for (i = start_nodes_count; i < g->data->nodes_count - 1; i++) {
+        *add_item(layer_node, children) = &g->data->nodes[i];
+    }
+    *add_item(root_node, children) = layer_node;
 }
 
 static void create_palette_texture(gltf_t *g, const image_t *img)
@@ -309,7 +428,10 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
     uint8_t c[4];
     uint8_t (*data)[3];
     uint8_t *png;
-    json_t *image, *texture;
+    cgltf_buffer *buffer;
+    cgltf_buffer_view *buffer_view;
+    cgltf_image *image;
+    cgltf_texture *texture;
 
     DL_FOREACH(img->layers, layer) {
         iter = mesh_get_iterator(layer->mesh, 0);
@@ -325,72 +447,56 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
         memcpy(data[i], g->palette.entries[i].color, 3);
     png = img_write_to_mem((void*)data, s, s, 3, &size);
     free(data);
-    image = json_array_push(g->images, json_object_new(0));
-    json_object_push(image, "uri", json_data_new(png, size, "image/png"));
+    buffer = add_item(g->data, buffers);
+    buffer->size = size;
+    buffer->uri = data_new(png, size, NULL);
+    buffer_view = add_item(g->data, buffer_views);
+    buffer_view->buffer = buffer;
+    buffer_view->size = size;
+    image = add_item(g->data, images);
+    image->mime_type = strdup("image/png");
+    image->buffer_view = buffer_view;
+    texture = add_item(g->data, textures);
+    texture->image = image;
     free(png);
-
-    texture = json_array_push(g->textures, json_object_new(0));
-    json_object_push_int(texture, "source", 0);
 }
 
 static void gltf_export(const image_t *img, const char *path,
                         const export_options_t *options)
 {
-    char *json_buf;
     gltf_t g = {};
-    FILE *file;
-    json_serialize_opts opts = {.indent_size = 4};
     const layer_t *layer;
-    json_t *root_node, *root_node_children, *scene, *scene_nodes, *material,
-           *pbr, *tex;
+    cgltf_scene *scene;
+    cgltf_node *root_node;
     material_t *mat;
 
-    gltf_init(&g, options);
+    gltf_init(&g, options, img);
 
     if (!options->vertex_color)
         create_palette_texture(&g, img);
 
     DL_FOREACH(img->materials, mat) {
-        material = json_array_push(g.materials, json_object_new(0));
-        json_object_push_string(material, "name", mat->name);
-        json_object_push(material, "emissiveFactor",
-                         json_float_array_new(mat->emission, 3));
-        pbr = json_object_push(material, "pbrMetallicRoughness",
-                               json_object_new(0));
-        json_object_push(pbr, "baseColorFactor",
-                         json_float_array_new(mat->base_color, 4));
-        json_object_push_float(pbr, "metallicFactor", mat->metallic);
-        json_object_push_float(pbr, "roughnessFactor", mat->roughness);
-
-        if (!options->vertex_color) {
-            tex = json_object_push(pbr, "baseColorTexture", json_object_new(0));
-            json_object_push_int(tex, "index", 0);
-        }
+        save_material(&g, mat, options);
     }
 
-    root_node = json_array_push(g.nodes, json_object_new(0));
-    root_node_children = json_object_push(root_node, "children",
-                                          json_array_new(0));
-    json_object_push(root_node, "matrix", json_int_array_new((int[]) {
-        1, 0,  0, 0,
-        0, 0, -1, 0,
-        0, 1,  0, 0,
-        0, 0,  0, 1
-    }, 16));
-    scene = json_array_push(g.scenes, json_object_new(0));
-    scene_nodes = json_object_push(scene, "nodes", json_array_new(0));
-    json_array_push(scene_nodes, json_integer_new(json_index(root_node)));
+    root_node = add_item(g.data, nodes);
+    mat4_set((void*)root_node->matrix,
+             1, 0,  0, 0,
+             0, 0, -1, 0,
+             0, 1,  0, 0,
+             0, 0,  0, 1);
+    root_node->has_matrix = true;
+    scene = add_item(g.data, scenes);
+    ALLOC(scene->nodes, 1);
+    *add_item(scene, nodes) = root_node;
 
+    ALLOC(root_node->children, DL_SIZE(img->layers));
     DL_FOREACH(img->layers, layer) {
-        save_layer(&g, root_node_children, img, layer, options);
+        save_layer(&g, root_node, img, layer, options);
     }
-    json_buf = malloc(json_measure_ex(g.root, opts));
-    json_serialize_ex(json_buf, g.root, opts);
-    file = fopen(path, "w");
-    fwrite(json_buf, 1, strlen(json_buf), file);
-    free(json_buf);
-    fclose(file);
-    json_builder_free(g.root);
+
+    cgltf_write_file(NULL, path, g.data);
+    cgltf_free(g.data);
     free(g.palette.entries);
 }
 

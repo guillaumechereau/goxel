@@ -92,6 +92,18 @@ DECL void vec2_set(float v[S 2], float x, float y)
 #define vec4_set(v, x, y, z, w) do { \
     (v)[0] = (x); (v)[1] = (y); (v)[2] = (z); (v)[3] = (w); } while(0)
 
+DECL void mat4_set(float m[4][4],
+                   float a00, float a01, float a02, float a03,
+                   float a10, float a11, float a12, float a13,
+                   float a20, float a21, float a22, float a23,
+                   float a30, float a31, float a32, float a33)
+{
+    vec4_set(m[0], a00, a01, a02, a03);
+    vec4_set(m[1], a10, a11, a12, a13);
+    vec4_set(m[2], a20, a21, a22, a23);
+    vec4_set(m[3], a30, a31, a32, a33);
+}
+
 DECL void vec2_copy(const float a[S 2], float out[S 2])
 {
     out[0] = a[0];
