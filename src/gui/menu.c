@@ -47,6 +47,7 @@ static void export_menu_callback(void *user, const file_format_t *f)
 void gui_menu(void)
 {
     if (gui_menu_begin("File")) {
+        gui_menu_item(ACTION_reset, "New", true);
         gui_menu_item(ACTION_save, "Save",
                 image_get_key(goxel.image) != goxel.image->saved_key);
         gui_menu_item(ACTION_save_as, "Save as", true);

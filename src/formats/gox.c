@@ -756,3 +756,14 @@ ACTION_REGISTER(save,
     .cfunc = a_save,
     .default_shortcut = "Ctrl S"
 )
+
+static void a_reset(void)
+{
+    goxel_reset();
+}
+
+ACTION_REGISTER(reset,
+    .help = "New",
+    .cfunc = a_reset,
+    .default_shortcut = "Ctrl N"
+)

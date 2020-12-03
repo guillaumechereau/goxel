@@ -744,7 +744,7 @@ static void render_pathtrace_view(const float viewport[4])
 
 static void render_axis_arrows(const float viewport[4])
 {
-    float rot[4][4], a[3], b[3];
+    float rot[4][4], a[3], b[3], l[3];
     const float AXIS[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     uint8_t color[4];
     int i;
@@ -763,6 +763,57 @@ static void render_axis_arrows(const float viewport[4])
         mat4_mul_vec3(rot, b, b);
         vec3_add(a, b, b);
         render_line(&goxel.rend, a, b, color, EFFECT_PROJ_SCREEN);
+
+        vec3_mul(AXIS[i], size * 0.5, l);
+        mat4_mul_vec3(rot, l, l);
+        vec3_add(b, l, l);
+
+        // X letter
+        if (i == 0) {
+            float t1[3], t2[3];
+
+            vec3_set(t1, l[0] - 5, l[1] + 10, l[2]);
+            vec3_set(t2, l[0] + 5, l[1] - 10, l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+
+            vec3_set(t1, l[0] + 5, l[1] + 10, l[2]);
+            vec3_set(t2, l[0] - 5, l[1] - 10, l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+        }
+
+        // Y letter
+        if (i == 1) {
+            float t1[3], t2[3];
+
+            vec3_set(t1, l[0] - 5, l[1] + 10, l[2]);
+            vec3_set(t2, l[0], l[1], l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+
+            vec3_set(t1, l[0] + 5, l[1] + 10, l[2]);
+            vec3_set(t2, l[0], l[1], l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+
+            vec3_set(t1, l[0], l[1] - 10, l[2]);
+            vec3_set(t2, l[0], l[1], l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+        }
+
+        // Z letter
+        if (i == 2) {
+            float t1[3], t2[3];
+
+            vec3_set(t1, l[0] - 5, l[1] + 10, l[2]);
+            vec3_set(t2, l[0] + 5, l[1] + 10, l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+
+            vec3_set(t1, l[0] + 5, l[1] + 10, l[2]);
+            vec3_set(t2, l[0] - 5, l[1] - 10, l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+
+            vec3_set(t1, l[0] - 5, l[1] - 10, l[2]);
+            vec3_set(t2, l[0] + 5, l[1] - 10, l[2]);
+            render_line(&goxel.rend, t1, t2, color, EFFECT_PROJ_SCREEN);
+        }
     }
 }
 
