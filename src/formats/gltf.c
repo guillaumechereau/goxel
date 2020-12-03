@@ -407,6 +407,7 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
         }
         node = add_item(g->data, nodes);
         vec3_set(node->translation, bpos[0], bpos[1], bpos[2]);
+        node->has_translation = true;
         node->mesh = gmesh;
     }
     free(verts);
@@ -478,6 +479,7 @@ static void gltf_export(const image_t *img, const char *path,
              0, 0, -1, 0,
              0, 1,  0, 0,
              0, 0,  0, 1);
+    root_node->has_matrix = true;
     scene = add_item(g.data, scenes);
     ALLOC(scene->nodes, 1);
     *add_item(scene, nodes) = root_node;
