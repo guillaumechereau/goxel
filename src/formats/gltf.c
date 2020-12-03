@@ -29,6 +29,7 @@
 typedef struct {
     cgltf_data *data;
     palette_t palette;
+    cgltf_material *default_mat;
 } gltf_t;
 
 typedef struct {
@@ -136,11 +137,10 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
     }
 
     // Initialize all the gltf base object arrays.
-    ALLOC(g->data->materials, DL_SIZE(img->materials));
+    ALLOC(g->data->materials, DL_SIZE(img->materials) + 1);
     ALLOC(g->data->scenes, 1);
     ALLOC(g->data->nodes, 1 + nb_blocks + DL_SIZE(img->layers));
     ALLOC(g->data->meshes, nb_blocks);
-    // ALLOC(g->data->primitives, nb_blocks);
     ALLOC(g->data->accessors, nb_blocks * 4);
     ALLOC(g->data->buffers, nb_blocks * 2);
     ALLOC(g->data->buffer_views, nb_blocks * 2);
@@ -281,6 +281,44 @@ static int get_material_idx(const image_t *img, const material_t *mat)
     return 0;
 }
 
+static cgltf_material *save_material(
+        gltf_t *g, const material_t *mat, const export_options_t *options)
+{
+    cgltf_material *material;
+    cgltf_pbr_metallic_roughness *pbr;
+
+    material = add_item(g->data, materials);
+    material->alpha_cutoff = 0.5;
+    material->has_pbr_metallic_roughness = true;
+    pbr = &material->pbr_metallic_roughness;
+    material->name = strdup(mat->name);
+    vec3_copy(mat->emission, material->emissive_factor);
+    vec4_copy(mat->base_color, pbr->base_color_factor);
+    pbr->metallic_factor = mat->metallic;
+    pbr->roughness_factor = mat->roughness;
+
+    if (!options->vertex_color) {
+        pbr->base_color_texture.texture = &g->data->textures[0];
+        pbr->base_color_texture.scale = 1;
+    }
+    return material;
+}
+
+static cgltf_material *get_default_mat(
+        gltf_t *g, const export_options_t *options)
+{
+    material_t mat;
+    if (!g->default_mat) {
+        mat = (material_t) {
+            .base_color = {1, 1, 1, 1},
+            .metallic = 1,
+            .roughness = 1,
+        };
+        g->default_mat = save_material(g, &mat, options);
+    }
+    return g->default_mat;
+}
+
 static void save_layer(gltf_t *g, cgltf_node *root_node,
                        const image_t *img, const layer_t *layer,
                        const export_options_t *options)
@@ -327,6 +365,8 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
         if (layer->material) {
             primitive->material = g->data->materials +
                                       get_material_idx(img, layer->material);
+        } else {
+            primitive->material = get_default_mat(g, options);
         }
 
         if (size == 4)
@@ -421,8 +461,6 @@ static void gltf_export(const image_t *img, const char *path,
     const layer_t *layer;
     cgltf_scene *scene;
     cgltf_node *root_node;
-    cgltf_material *material;
-    cgltf_pbr_metallic_roughness *pbr;
     material_t *mat;
 
     gltf_init(&g, options, img);
@@ -431,20 +469,7 @@ static void gltf_export(const image_t *img, const char *path,
         create_palette_texture(&g, img);
 
     DL_FOREACH(img->materials, mat) {
-        material = add_item(g.data, materials);
-        material->name = strdup(mat->name);
-        material->alpha_cutoff = 0.5;
-        vec3_copy(mat->emission, material->emissive_factor);
-        material->has_pbr_metallic_roughness = true;
-        pbr = &material->pbr_metallic_roughness;
-        vec4_copy(mat->base_color, pbr->base_color_factor);
-        pbr->metallic_factor = mat->metallic;
-        pbr->roughness_factor = mat->roughness;
-
-        if (!options->vertex_color) {
-            pbr->base_color_texture.texture = &g.data->textures[0];
-            pbr->base_color_texture.scale = 1;
-        }
+        save_material(&g, mat, options);
     }
 
     root_node = add_item(g.data, nodes);
