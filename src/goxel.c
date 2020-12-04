@@ -778,7 +778,7 @@ static void render_axis_arrows(const float viewport[4])
         vec3_add(a, b, b);
         render_line(&goxel.rend, a, b, color, EFFECT_PROJ_SCREEN);
 
-        vec3_mul(AXIS[i], size * 0.5, l);
+        vec3_mul(AXIS[i], size * 0.4, l);
         mat4_mul_vec3(rot, l, l);
         vec3_add(b, l, l);
 
