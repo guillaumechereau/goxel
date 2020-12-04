@@ -37,7 +37,7 @@ static inline void hexcolor(uint32_t v, uint8_t out[4])
 #define WRITE(type, v, file) \
     ({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
 
-#define ERROR(msg) do { LOG_E("%s", msg); goto error; } while (0);
+#define FILE_ERROR(msg) do { LOG_E("%s", msg); goto error; } while (0);
 
 // Import the old magica voxel file format:
 //
@@ -396,7 +396,7 @@ static int vox_import(image_t *image, const char *path)
     if (!path) return -1;
     file = fopen(path, "rb");
     r = fread(magic, 1, 4, file);
-    if (r != 4) ERROR("Cannot read file");
+    if (r != 4) FILE_ERROR("Cannot read file");
 
     if (strncmp(magic, "VOX ", 4) != 0) {
         LOG_D("Old style magica voxel file");
@@ -404,7 +404,7 @@ static int vox_import(image_t *image, const char *path)
         return vox_import_old(path);
     }
 
-    if (strncmp(magic, "VOX ", 4) != 0) ERROR("Wrong magic string");
+    if (strncmp(magic, "VOX ", 4) != 0) FILE_ERROR("Wrong magic string");
     version = READ(uint32_t, file);
     if (version != 150) LOG_W("Magica voxel file version %d!", version);
     tree = read_node(file);
