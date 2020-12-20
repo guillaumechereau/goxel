@@ -180,7 +180,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     float box[4][4];
     bool shift = curs->flags & CURSOR_SHIFT;
 
-    if (gest->state == GESTURE_END) {
+    if (gest->state == GESTURE_END || !curs->snaped) {
         mesh_delete(goxel.tool_mesh);
         goxel.tool_mesh = NULL;
         return 0;
