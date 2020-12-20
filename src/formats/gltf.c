@@ -441,7 +441,7 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
         }
     }
 
-    s = max(next_pow2(ceil(log2(g->palette.size))), 16);
+    s = max(next_pow2(ceil(sqrt(g->palette.size))), 16);
     data = calloc(s * s, sizeof(*data));
     for (i = 0; i < g->palette.size; i++)
         memcpy(data[i], g->palette.entries[i].color, 3);
