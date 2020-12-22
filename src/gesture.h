@@ -68,6 +68,14 @@ enum {
     GESTURE_FAILED,
 };
 
+enum {
+    GESTURE_LMB     = 1 << 0,
+    GESTURE_MMB     = 1 << 1,
+    GESTURE_RMB     = 1 << 2,
+    GESTURE_SHIFT   = 1 << 3,
+    GESTURE_CTRL    = 1 << 4,
+};
+
 /*
  * Type: gesture_t
  * Structure used to handle a given gesture.
@@ -81,6 +89,7 @@ struct gesture
     float   viewport[4];
     float   pos[2];
     float   start_pos[2][2];
+    float   last_pos[2];
     float   pinch;
     float   rotation;
     int     (*callback)(const gesture_t *gest, void *user);

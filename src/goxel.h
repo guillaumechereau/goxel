@@ -525,13 +525,9 @@ typedef struct goxel
 
     int        view_effects; // EFFECT_WIREFRAME | EFFECT_GRID | EFFECT_EDGES
 
-    struct {
-        gesture_t drag;
-        gesture_t pan;
-        gesture_t rotate;
-        gesture_t hover;
-        gesture_t pinch;
-    } gestures;
+    // All the gestures we listen to.  Up to 16.
+    gesture_t *gestures[16];
+    int gestures_count;
 
     pathtracer_t pathtracer;
 

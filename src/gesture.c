@@ -23,6 +23,16 @@
 // XXX: this value should be set depending on the screen resolution.
 static float g_start_dist = 8;
 
+static bool test_button(const inputs_t *inputs, const touch_t *touch, int mask)
+{
+    if (mask & GESTURE_SHIFT && !inputs->keys[KEY_LEFT_SHIFT]) return false;
+    if (mask & GESTURE_CTRL && !inputs->keys[KEY_CONTROL]) return false;
+    if ((mask & GESTURE_LMB) && !touch->down[0]) return false;
+    if ((mask & GESTURE_MMB) && !touch->down[1]) return false;
+    if ((mask & GESTURE_RMB) && !touch->down[2]) return false;
+    return true;
+}
+
 static bool rect_contains(const float rect[4], const float pos[2])
 {
     return pos[0] >= rect[0] && pos[0] < rect[0] + rect[2] &&
@@ -60,9 +70,10 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
     if (gest->type == GESTURE_DRAG) {
         switch (gest->state) {
         case GESTURE_POSSIBLE:
-            if (nb_ts == 1 && ts[0].down[gest->button]) {
+            if (nb_ts == 1 && test_button(inputs, &ts[0], gest->button)) {
                 vec2_copy(ts[0].pos, gest->start_pos[0]);
                 vec2_copy(gest->start_pos[0], gest->pos);
+                vec2_copy(gest->start_pos[0], gest->last_pos);
                 if (!rect_contains(gest->viewport, gest->pos)) {
                     gest->state = GESTURE_FAILED;
                     break;
@@ -84,7 +95,7 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
         case GESTURE_UPDATE:
             vec2_copy(ts[0].pos, gest->pos);
             gest->state = GESTURE_UPDATE;
-            if (!ts[0].down[gest->button])
+            if (!test_button(inputs, &ts[0], gest->button))
                 gest->state = GESTURE_END;
             break;
         }
@@ -94,13 +105,13 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
         vec2_copy(ts[0].pos, gest->pos);
         switch (gest->state) {
         case GESTURE_POSSIBLE:
-            if (ts[0].down[gest->button]) {
+            if (test_button(inputs, &ts[0], gest->button)) {
                 vec2_copy(ts[0].pos, gest->start_pos[0]);
                 gest->state = GESTURE_RECOGNISED;
             }
             break;
         case GESTURE_RECOGNISED:
-            if (!ts[0].down[gest->button])
+            if (!test_button(inputs, &ts[0], gest->button))
                 gest->state = GESTURE_TRIGGERED;
             break;
         }
@@ -194,6 +205,7 @@ int gesture_update(int nb, gesture_t *gestures[],
                 gest->state == GESTURE_TRIGGERED)
         {
             gest->callback(gest, user);
+            vec2_copy(gest->pos, gest->last_pos);
             triggered = gest;
             break;
         }

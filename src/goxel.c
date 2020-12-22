@@ -282,6 +282,7 @@ end:
 
 static int on_drag(const gesture_t *gest, void *user);
 static int on_pan(const gesture_t *gest, void *user);
+static int on_zoom(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
 static int on_hover(const gesture_t *gest, void *user);
 
@@ -292,6 +293,18 @@ static void goxel_init_sound()
     sound_register("build", assets_get("asset://data/sounds/build.wav", NULL));
     sound_register("click", assets_get("asset://data/sounds/click.wav", NULL));
 #endif
+}
+
+static void goxel_add_gesture(int type, int button,
+                              int (*fn)(const gesture_t *gest, void *user))
+{
+    goxel.gestures[goxel.gestures_count] = calloc(1, sizeof(gesture_t));
+    *goxel.gestures[goxel.gestures_count] = (gesture_t) {
+        .type = type,
+        .button = button,
+        .callback = fn,
+    };
+    goxel.gestures_count++;
 }
 
 KEEPALIVE
@@ -308,25 +321,12 @@ void goxel_init(void)
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
 
-    goxel.gestures.drag = (gesture_t) {
-        .type = GESTURE_DRAG,
-        .button = 0,
-        .callback = on_drag,
-    };
-    goxel.gestures.pan = (gesture_t) {
-        .type = GESTURE_DRAG,
-        .button = 2,
-        .callback = on_pan,
-    };
-    goxel.gestures.rotate = (gesture_t) {
-        .type = GESTURE_DRAG,
-        .button = 1,
-        .callback = on_rotate,
-    };
-    goxel.gestures.hover = (gesture_t) {
-        .type = GESTURE_HOVER,
-        .callback = on_hover,
-    };
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_RMB, on_pan);
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_SHIFT, on_pan);
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_CTRL, on_zoom);
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB, on_rotate);
+    goxel_add_gesture(GESTURE_HOVER, 0, on_hover);
 
     goxel_reset();
 }
@@ -583,6 +583,24 @@ static int on_rotate(const gesture_t *gest, void *user)
     return 0;
 }
 
+static int on_zoom(const gesture_t *gest, void *user)
+{
+    float p[3], n[3];
+    double zoom;
+    camera_t *camera = get_camera();
+
+    zoom = (gest->pos[1] - gest->last_pos[1]) / 10.0;
+    mat4_itranslate(camera->mat, 0, 0,
+            -camera->dist * (1 - pow(1.1, -zoom)));
+    camera->dist *= pow(1.1, -zoom);
+    // Auto adjust the camera rotation position.
+    if (goxel_unproject_on_mesh(gest->viewport, gest->pos,
+                                goxel_get_layers_mesh(goxel.image), p, n)) {
+        camera_set_target(camera, p);
+    }
+    return 0;
+}
+
 static int on_hover(const gesture_t *gest, void *user)
 {
     cursor_t *c = &goxel.cursor;
@@ -607,13 +625,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     camera_t *camera = get_camera();
 
     painter_t painter = goxel.painter;
-    gesture_t *gests[] = {&goxel.gestures.drag,
-                          &goxel.gestures.pan,
-                          &goxel.gestures.rotate,
-                          &goxel.gestures.pinch,
-                          &goxel.gestures.hover};
-
-    gesture_update(ARRAY_SIZE(gests), gests, inputs, viewport, NULL);
+    gesture_update(goxel.gestures_count, goxel.gestures,
+                   inputs, viewport, NULL);
     set_flag(&goxel.cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
     set_flag(&goxel.cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
 
