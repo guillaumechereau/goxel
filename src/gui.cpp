@@ -525,10 +525,15 @@ static void gui_init(void)
     if (!gui) {
         gui = (gui_t*)calloc(1, sizeof(*gui));
         init_ImGui();
-        gui->gestures.drag.type = GESTURE_DRAG;
-        gui->gestures.drag.callback = on_gesture;
-        gui->gestures.hover.type = GESTURE_HOVER;
-        gui->gestures.hover.callback = on_gesture;
+        gui->gestures.drag = (gesture_t) {
+            .type = GESTURE_DRAG,
+            .button = GESTURE_LMB,
+            .callback = on_gesture,
+        };
+        gui->gestures.hover = (gesture_t) {
+            .type = GESTURE_HOVER,
+            .callback = on_gesture,
+        };
         goxel.gui.panel_width = GUI_PANEL_WIDTH_NORMAL;
     }
 
