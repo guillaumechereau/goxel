@@ -668,7 +668,7 @@ void gui_iter(const inputs_t *inputs)
 
     io.DisplayFramebufferScale = ImVec2(goxel.screen_scale,
                                         goxel.screen_scale);
-    io.DeltaTime = 1.0 / 60;
+    io.DeltaTime = goxel.delta_time;
     gui->inputs = inputs;
 
     if (inputs) {
