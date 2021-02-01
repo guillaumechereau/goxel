@@ -132,6 +132,9 @@ static int vxl_import(image_t *image, const char *path)
 static int is_surface(int x, int y, int z, uint8_t map[512][512][64])
 {
    if (map[x][y][z]==0) return 0;
+   if (x == 0 || x == 511) return 1;
+   if (y == 0 || y == 511) return 1;
+   if (z == 0 || z == 63) return 1;
    if (x   >   0 && map[x-1][y][z]==0) return 1;
    if (x+1 < 512 && map[x+1][y][z]==0) return 1;
    if (y   >   0 && map[x][y-1][z]==0) return 1;
@@ -267,7 +270,7 @@ static int export_as_vxl(const image_t *image, const char *path)
 
 FILE_FORMAT_REGISTER(vxl,
     .name = "vxl",
-    .ext = "vxk\0*.vxl\0",
+    .ext = "vxl\0*.vxl\0",
     .import_func = vxl_import,
     .export_func = export_as_vxl,
 )
