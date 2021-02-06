@@ -4,3 +4,8 @@ title = "Goxel 3D Voxel Editor"
 
 [params]
   lastReleaseVersion = "0.10.7"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true

@@ -7,14 +7,14 @@ Title = "Download"
 ## Desktop
 
 The current stable version of Goxel for desktop is
-**{{% current-version %}}**
+**{{< current-version >}}**
 
-[Read the release notes](/releases/{{% current-version %}}).
+[Read the release notes](/releases/{{< current-version >}}).
 
-<a href="{{% download-link os="windows" %}}"
+<a href="{{< download-link os="windows" >}}"
    class="button is-large is-link">Download for Windows</a>
 
-<a href="{{% download-link os="mac" %}}"
+<a href="{{< download-link os="mac" >}}"
    class="button is-large is-link">Download for MacOS</a>
 
 ## iOS
