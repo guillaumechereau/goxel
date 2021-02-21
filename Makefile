@@ -37,7 +37,7 @@ PREFIX ?= /usr/local
 
 .PHONY: install
 install:
-	install -Dm744 goxel $(DESTDIR)$(PREFIX)/bin/goxel
+	install -Dm755 goxel $(DESTDIR)$(PREFIX)/bin/goxel
 	for size in 16 24 32 48 64 128 256; do
 	    install -Dm644 data/icons/icon$${size}.png \
 	        $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/icons/hicolor/ \
