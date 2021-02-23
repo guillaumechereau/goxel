@@ -3,7 +3,7 @@
 	<id>io.github.guillaumechereau.Goxel.desktop</id>
 	<name>Goxel</name>
 	<project_license>GPL-3.0-only</project_license>
-	<metadata_license>GPL-3.0-only</metadata_license>
+	<metadata_license>CC0-1.0</metadata_license>
 	<summary>Open Source 3D voxel editor</summary>
 	<developer_name>Guillaume Chereau</developer_name>
 	<description>
@@ -15,41 +15,17 @@
 			<li>Unlimited scene size: You can create voxel images as big as you want.</li>
 			<li>Layers support: Decompose your image into several layers for easy editing.</li>
 			<li>Many export formats: Goxel can export to obj, pyl, magica voxel, png, qubicle, povray, and more.</li>
-		​</ul>
+		</ul>
 	</description>
 	<screenshots>
-		<screenshot>
-			<caption>Marching Cube Rendering: Support for smooth rendering of voxels using the marching cube algorithm.</caption>
-			<image type="source">https://guillaumechereau.github.io/goxel/images/screenshots/marching-cube.png</image>
-		</screenshot>
-		<screenshot>
-			<caption>Procedural rendering tool: It is possible to programatically generate shapes using goxel procedural language, inspired by ContextFree. </caption>
-			<image type="source">https://guillaumechereau.github.io/goxel/images/screenshots/procedural.png</image>
-		</screenshot>
-		<screenshot>
-			<caption>Laser tool: Carve in real time into the volume.</caption>
-			<image type="source">https://guillaumechereau.github.io/goxel/images/screenshots/laser.png</image>
-		</screenshot>
-		<screenshot>
-			<caption>Layers panel: You can stack as many layers as you want. Layers can be edited independently, so that you can use one per part of your image.</caption>
-			<image type="source">https://guillaumechereau.github.io/goxel/images/screenshots/layers.png</image>
-		</screenshot>
-		<screenshot>
-			<caption>Plane: You can import a 2D image into Goxel, to use as a reference for your model.</caption>
-			<image type="source">https://guillaumechereau.github.io/goxel/images/screenshots/image-plane.png</image>
-		</screenshot>
-		<screenshot>
-			<caption>Palettes panel: Goxel comes with a set of predefined color palettes.</caption>
-			<image type="source">https://guillaumechereau.github.io/goxel/images/screenshots/palettes.png</image>
-		</screenshot>
 		<screenshot type="default">
-			<caption>Selection tool: Allow to operate on a portion of the image.</caption>
-			<image type="source">https://guillaumechereau.github.io/goxel/images/screenshots/selection.png</image>
+			<image type="source">https://github.com/guillaumechereau/goxel/raw/b06a56c3c10fa54d5616367195251d84ff95124f/screenshots/screenshot-plane.png</image>
 		</screenshot>
 	</screenshots>
 	<releases>
-		<release version="v0.7.3" date="2018-03-01"/>
+		<release version="v0.10.6" date="2020-06-09"/>
 	</releases>
-	<url type="homepage">https://guillaumechereau.github.io/goxel/</url>
+	<url type="homepage">https://goxel.xyz/</url>
 	<url type="bugtracker">https://github.com/guillaumechereau/goxel/issues</url>
+	<content_rating type="oars-1.1" />
 </component>
