@@ -129,6 +129,7 @@ bool gui_need_full_version(void);
 enum {
     GUI_POPUP_FULL      = 1 << 0,
     GUI_POPUP_RESIZE    = 1 << 1,
+    GUI_POPUP_FREE_DATA = 1 << 2,
 };
 
 
@@ -139,16 +140,17 @@ enum {
  * Parameters:
  *    title - The title of the popup.
  *    flags - Union of <GUI_POPUP_FLAGS> values.
- *    data  - Data passed to the popup.  It will be automatically released
- *            by the gui.
+ *    data  - Data passed to the popup. It will be released by the gui if flag
+ *            GUI_POPUP_FREE_DATA is set
  *    func  - The popup function, that render the popup gui.  Should return
  *            a non zero value to close the popup.
  */
 void gui_open_popup(const char *title, int flags, void *data,
                     int (*func)(void *data));
-void gui_on_popup_closed(void (*func)(int v));
+void gui_on_popup_closed(void (*func)(int v, void *data));
 void gui_popup_body_begin(void);
 void gui_popup_body_end(void);
+bool gui_is_popup_open(int (*popupFunc)(void *data));
 
 bool gui_menu_begin(const char *label);
 void gui_menu_end(void);

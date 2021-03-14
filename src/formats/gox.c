@@ -77,6 +77,9 @@
  *          intensity: float
  */
 
+extern int gui_close_image_popup(void *data);
+extern void gui_close_image_popup_closed(int result, void *data);
+
 // We create a hash table of all the blocks, so that blocks with the same
 // ids get written only once.
 typedef struct {
@@ -701,6 +704,17 @@ error:
     return -1;
 }
 
+static void save_modified_before_action(void (*continueFncPtr)(void))
+{
+    if (image_get_key(goxel.image) != goxel.image->saved_key) {
+        gui_open_popup("Close Unsaved Image", 0, continueFncPtr,
+                gui_close_image_popup);
+        gui_on_popup_closed(gui_close_image_popup_closed);
+    } else {
+        continueFncPtr();
+    }
+}
+
 static void a_open(void)
 {
     const char *path;
@@ -712,9 +726,14 @@ static void a_open(void)
     load_from_file(path);
 }
 
+static void a_protected_open(void)
+{
+    save_modified_before_action(a_open);
+}
+
 ACTION_REGISTER(open,
     .help = "Open an image",
-    .cfunc = a_open,
+    .cfunc = a_protected_open,
     .default_shortcut = "Ctrl O",
 )
 
@@ -726,9 +745,9 @@ static void a_save_as(void)
     if (path != goxel.image->path) {
         free(goxel.image->path);
         goxel.image->path = strdup(path);
-        goxel.image->saved_key = image_get_key(goxel.image);
     }
     save_to_file(goxel.image, goxel.image->path);
+    goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
 }
 
@@ -745,9 +764,9 @@ static void a_save(void)
     if (path != goxel.image->path) {
         free(goxel.image->path);
         goxel.image->path = strdup(path);
-        goxel.image->saved_key = image_get_key(goxel.image);
     }
     save_to_file(goxel.image, goxel.image->path);
+    goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
 }
 
@@ -762,8 +781,13 @@ static void a_reset(void)
     goxel_reset();
 }
 
+static void a_protected_reset(void)
+{
+    save_modified_before_action(a_reset);
+}
+
 ACTION_REGISTER(reset,
     .help = "New",
-    .cfunc = a_reset,
+    .cfunc = a_protected_reset,
     .default_shortcut = "Ctrl N"
 )

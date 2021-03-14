@@ -24,6 +24,9 @@
 #endif
 #include <GLFW/glfw3.h>
 
+extern int gui_close_image_popup(void *data);
+extern void gui_close_image_popup_closed(int result, void *data);
+
 static inputs_t     *g_inputs = NULL;
 static GLFWwindow   *g_window = NULL;
 static float        g_scale = 1;
@@ -49,6 +52,30 @@ void on_drop(GLFWwindow* win, int count, const char** paths)
     int i;
     for (i = 0;  i < count;  i++)
         goxel_import_file(paths[i], NULL);
+}
+
+void force_quit(void)
+{
+    glfwSetWindowShouldClose(g_window, GLFW_TRUE);
+}
+
+void on_close(GLFWwindow* win)
+{
+    if (image_get_key(goxel.image) != goxel.image->saved_key) {
+        glfwSetWindowShouldClose(win, GLFW_FALSE);
+
+        // Additionally check this popup is not already opened
+        // Usually user can't open same modal popup twice. But in this case
+        // it's still possible to close app with blocking modal popup.
+        if (gui_is_popup_open(gui_close_image_popup))
+            return;
+
+        gui_open_popup("Close Unsaved Image", 0, force_quit,
+                gui_close_image_popup);
+        gui_on_popup_closed(gui_close_image_popup_closed);
+    } else {
+        force_quit();
+    }
 }
 
 typedef struct
@@ -213,7 +240,10 @@ static void start_main_loop(void (*func)(void))
 {
     while (!glfwWindowShouldClose(g_window)) {
         func();
-        if (goxel.quit) break;
+        if (goxel.quit) {
+            goxel.quit = false;
+            on_close(g_window);
+        }
     }
     glfwTerminate();
 }
@@ -298,6 +328,7 @@ int main(int argc, char **argv)
         glfwSetScrollCallback(window, on_scroll);
     glfwSetDropCallback(window, on_drop);
     glfwSetCharCallback(window, on_char);
+    glfwSetWindowCloseCallback(window, on_close);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
     set_window_icon(window);
 

@@ -265,7 +265,7 @@ typedef struct gui_t {
     struct {
         const char *title;
         int       (*func)(void *data);
-        void      (*on_closed)(int);
+        void      (*on_closed)(int, void* data);
         int         flags;
         void       *data; // Automatically released when popup close.
         bool        opened;
@@ -639,10 +639,11 @@ static void render_popups(int index)
             gui->popup_count--;
             popup->title = NULL;
             popup->func = NULL;
-            free(popup->data);
-            popup->data = NULL;
-            if (popup->on_closed) popup->on_closed(r);
+            if (popup->on_closed) popup->on_closed(r, popup->data);
             popup->on_closed = NULL;
+            if (popup->flags & GUI_POPUP_FREE_DATA)
+                free(popup->data);
+            popup->data = NULL;
             popup->opened = false;
         }
         render_popups(index + 1);
@@ -1434,7 +1435,7 @@ void gui_open_popup(const char *title, int flags, void *data,
     popup->data = data;
 }
 
-void gui_on_popup_closed(void (*func)(int))
+void gui_on_popup_closed(void (*func)(int, void*))
 {
     gui->popup[gui->popup_count - 1].on_closed = func;
 }
@@ -1445,6 +1446,14 @@ void gui_popup_body_begin(void) {
 
 void gui_popup_body_end(void) {
     ImGui::EndChild();
+}
+
+bool gui_is_popup_open(int (*popupFunc)(void *data))
+{
+    for (int i = 0; i < gui->popup_count; i++)
+        if (gui->popup[i].func == popupFunc)
+            return true;
+    return false;
 }
 
 void gui_alert(const char *title, const char *msg)
