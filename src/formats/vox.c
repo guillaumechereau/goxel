@@ -163,9 +163,9 @@ static void on_trn_dict(void *user, const char *key, int size,
         x = (v >> 0) & 3;
         y = (v >> 2) & 3;
         z = 3 - x - y;
-        node->ntrn.rot[0][x] = ((v >> 4) & 1) ? -1 : +1;
-        node->ntrn.rot[1][y] = ((v >> 5) & 1) ? -1 : +1;
-        node->ntrn.rot[2][z] = ((v >> 6) & 1) ? -1 : +1;
+        node->ntrn.rot[x][0] = ((v >> 4) & 1) ? -1 : +1;
+        node->ntrn.rot[y][1] = ((v >> 5) & 1) ? -1 : +1;
+        node->ntrn.rot[z][2] = ((v >> 6) & 1) ? -1 : +1;
     }
     if (strcmp(key, "_t") == 0) {
         node->ntrn.has_trans = true;
