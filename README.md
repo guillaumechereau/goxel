@@ -2,7 +2,7 @@
 Goxel
 =====
 
-Version 0.10.6
+Version 0.10.7
 
 By Guillaume Chereau <guillaume@noctua-software.com>
 
@@ -73,8 +73,10 @@ Building
 --------
 
 The building system uses scons.  You can compile in debug with 'scons', and in
-release with 'scons mode=release'.  On Windows, I only tried to build with
-msys2.  The code is in C99, using some gnu extensions, so it does not compile
+release with 'scons mode=release'.  On Windows, currently possible to build
+with [msys2](https://www.msys2.org/) or try prebuilt
+[goxel](https://packages.msys2.org/base/mingw-w64-goxel) package directly.
+The code is in C99, using some gnu extensions, so it does not compile
 with msvc.
 
 # Linux/BSD
