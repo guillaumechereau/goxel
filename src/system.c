@@ -295,3 +295,17 @@ void sys_on_saved(const char *path)
     LOG_I("Saved %s", path);
 }
 #endif
+
+#ifdef ANDROID
+
+const char *sys_get_save_path(const char *filters, const char *default_name)
+{
+    return NULL;
+}
+
+void sys_on_saved(const char *path)
+{
+    LOG_I("Saved %s", path);
+}
+
+#endif
