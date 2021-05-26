@@ -295,8 +295,8 @@ static void goxel_init_sound()
 #endif
 }
 
-static void goxel_add_gesture(int type, int button,
-                              int (*fn)(const gesture_t *gest, void *user))
+void goxel_add_gesture(int type, int button,
+                       int (*fn)(const gesture_t *gest, void *user))
 {
     goxel.gestures[goxel.gestures_count] = calloc(1, sizeof(gesture_t));
     *goxel.gestures[goxel.gestures_count] = (gesture_t) {
