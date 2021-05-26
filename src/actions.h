@@ -80,6 +80,8 @@ enum {
     X(tool_set_line),
     X(tool_set_move),
 
+    X(export_to_photos),
+
     ACTION_COUNT
 };
 
