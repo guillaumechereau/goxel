@@ -101,6 +101,7 @@ const char *noc_file_dialog_open(int flags,
     if (flags & NOC_FILE_DIALOG_DIR)
         action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
 
+    gtk_disable_setlocale();
     gtk_init_check(NULL, NULL);
     dialog = gtk_file_chooser_dialog_new(
             flags & NOC_FILE_DIALOG_SAVE ? "Save File" : "Open File",
