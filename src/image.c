@@ -691,7 +691,7 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
     acc = mesh_get_accessor(layer->mesh);
     for (y = 0; y < h; y++)
     for (x = 0; x < w; x++) {
-        vec3_set(p, 0.5 - x / (float)w, 1.0 - (y / (float)h) - 0.5, 0);
+        vec3_set(p, (x / (float)w) - 0.5, - ((y + 1) / (float)h) + 0.5, 0);
         mat4_mul_vec3(layer->mat, p, p);
         pos[0] = round(p[0]);
         pos[1] = round(p[1]);
