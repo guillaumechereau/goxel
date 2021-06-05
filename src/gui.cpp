@@ -1617,7 +1617,9 @@ bool gui_palette_entry(const uint8_t color[4], uint8_t target[4])
 
 bool gui_menu_begin(const char *label)
 {
-    return ImGui::BeginMenu(label);
+    bool ret = ImGui::BeginMenu(label);
+    if (ret) gui->capture_mouse = true;
+    return ret;
 }
 
 void gui_menu_end(void)
