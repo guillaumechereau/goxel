@@ -432,6 +432,7 @@ static void init_ImGui(void)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = 1.0f/60.0f;
+    io.IniFilename = "goxel.ini";
 
     io.KeyMap[ImGuiKey_Tab]         = KEY_TAB;
     io.KeyMap[ImGuiKey_LeftArrow]   = KEY_LEFT;
