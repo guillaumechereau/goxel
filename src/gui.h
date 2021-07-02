@@ -125,6 +125,7 @@ bool gui_palette_entry(const uint8_t color[4], uint8_t target[4]);
 
 bool gui_need_full_version(void);
 
+void gui_query_quit(void);
 
 enum {
     GUI_POPUP_FULL      = 1 << 0,

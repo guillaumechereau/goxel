@@ -53,7 +53,6 @@ void on_drop(GLFWwindow* win, int count, const char** paths)
 
 void on_close(GLFWwindow *win)
 {
-    void gui_query_quit(void);
     glfwSetWindowShouldClose(win, GLFW_FALSE);
     gui_query_quit();
 }

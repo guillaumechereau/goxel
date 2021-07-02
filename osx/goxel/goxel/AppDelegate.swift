@@ -26,7 +26,7 @@ class GoxNSApplication: NSApplication {
     }
 }
 
-class GoxNSOpenGLView: NSOpenGLView {
+class GoxNSOpenGLView: NSOpenGLView, NSWindowDelegate {
     override func awakeFromNib()
     {
         let attr = [
@@ -47,6 +47,7 @@ class GoxNSOpenGLView: NSOpenGLView {
         self.openGLContext = context
         self.openGLContext?.makeCurrentContext()
         self.window?.acceptsMouseMovedEvents = true
+        self.window?.delegate = self
     }
     
     func appDelegate () -> AppDelegate
@@ -183,6 +184,11 @@ class GoxNSOpenGLView: NSOpenGLView {
     override func flagsChanged(with event: NSEvent) {
         appDelegate().inputs.keys.340 = event.modifierFlags.contains(.shift)
         appDelegate().inputs.keys.341 = event.modifierFlags.contains(.command)
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        gui_query_quit()
+        return false
     }
 }
 
