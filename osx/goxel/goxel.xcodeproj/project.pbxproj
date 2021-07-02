@@ -43,6 +43,7 @@
 		F037D5D61EA6069A00C96D10 /* shape.c in Sources */ = {isa = PBXBuildFile; fileRef = F037D5CE1EA6069A00C96D10 /* shape.c */; };
 		F03B4387224CCDDF00798CAB /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F03B4385224CCDDF00798CAB /* pathtracer.cpp */; };
 		F03B4388224CCDDF00798CAB /* yocto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F03B4386224CCDDF00798CAB /* yocto.cpp */; };
+		F05E2DD9268F451D00E47D33 /* quit.c in Sources */ = {isa = PBXBuildFile; fileRef = F05E2DD8268F451D00E47D33 /* quit.c */; };
 		F06C683C1D2EAECC00887FCE /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C68391D2EAECC00887FCE /* camera.c */; };
 		F06C683D1D2EAECC00887FCE /* quantization.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C683A1D2EAECC00887FCE /* quantization.c */; };
 		F076EA362284162400B74F0C /* light_panel.c in Sources */ = {isa = PBXBuildFile; fileRef = F076EA352284162400B74F0C /* light_panel.c */; };
@@ -145,6 +146,7 @@
 		F037D5CE1EA6069A00C96D10 /* shape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shape.c; sourceTree = "<group>"; };
 		F03B4385224CCDDF00798CAB /* pathtracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pathtracer.cpp; sourceTree = "<group>"; };
 		F03B4386224CCDDF00798CAB /* yocto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yocto.cpp; sourceTree = "<group>"; };
+		F05E2DD8268F451D00E47D33 /* quit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = quit.c; path = gui/quit.c; sourceTree = "<group>"; };
 		F06C68391D2EAECC00887FCE /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
 		F06C683A1D2EAECC00887FCE /* quantization.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = quantization.c; sourceTree = "<group>"; };
 		F076EA352284162400B74F0C /* light_panel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = light_panel.c; sourceTree = "<group>"; };
@@ -341,6 +343,7 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F05E2DD8268F451D00E47D33 /* quit.c */,
 				F0E5DB2624FBB0D600010FDD /* file_format.c */,
 				F0E5DB2724FBB0D600010FDD /* file_format.h */,
 				F0C37C8B2317CBDE000EF45F /* xxhash.c */,
@@ -540,6 +543,7 @@
 				F0C37C8C2317CBDE000EF45F /* xxhash.c in Sources */,
 				F00FC332226B2FCF0002F251 /* about.c in Sources */,
 				F0ACA2A42271ACEA00376C82 /* json.c in Sources */,
+				F05E2DD9268F451D00E47D33 /* quit.c in Sources */,
 				F0A160031E962F1300C6EF33 /* voxlap.c in Sources */,
 				F07DEA101BD0F31500BAA1AD /* system.c in Sources */,
 				F09482FE22994752005DE2C5 /* layer.c in Sources */,

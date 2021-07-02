@@ -51,6 +51,13 @@ void on_drop(GLFWwindow* win, int count, const char** paths)
         goxel_import_file(paths[i], NULL);
 }
 
+void on_close(GLFWwindow *win)
+{
+    void gui_query_quit(void);
+    glfwSetWindowShouldClose(win, GLFW_FALSE);
+    gui_query_quit();
+}
+
 typedef struct
 {
     char *input;
@@ -282,6 +289,7 @@ int main(int argc, char **argv)
         glfwSetScrollCallback(window, on_scroll);
     glfwSetDropCallback(window, on_drop);
     glfwSetCharCallback(window, on_char);
+    glfwSetWindowCloseCallback(window, on_close);
     glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
     set_window_icon(window);
 

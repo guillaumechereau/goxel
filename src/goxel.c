@@ -1324,7 +1324,8 @@ ACTION_REGISTER(view_front,
 
 static void quit(void)
 {
-    goxel.quit = true;
+    void gui_query_quit(void);
+    gui_query_quit();
 }
 ACTION_REGISTER(quit,
     .help = "Quit the application",
