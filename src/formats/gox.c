@@ -726,9 +726,9 @@ static void a_save_as(void)
     if (path != goxel.image->path) {
         free(goxel.image->path);
         goxel.image->path = strdup(path);
-        goxel.image->saved_key = image_get_key(goxel.image);
     }
     save_to_file(goxel.image, goxel.image->path);
+    goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
 }
 
@@ -745,9 +745,9 @@ static void a_save(void)
     if (path != goxel.image->path) {
         free(goxel.image->path);
         goxel.image->path = strdup(path);
-        goxel.image->saved_key = image_get_key(goxel.image);
     }
     save_to_file(goxel.image, goxel.image->path);
+    goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
 }
 
