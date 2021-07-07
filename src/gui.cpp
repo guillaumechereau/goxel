@@ -585,6 +585,8 @@ static int check_action_shortcut(action_t *action, void *user)
         if (!str_startswith(s, "Ctrl")) return 0;
         s += strlen("Ctrl ");
         check_char = false;
+    } else {
+        if (str_startswith(s, "Ctrl")) return 0;
     }
     if (io.KeyShift) {
         check_key = false;
