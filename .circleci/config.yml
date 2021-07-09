@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.2-stretch-browsers
+    steps:
+      - checkout
+      - run: mkdir -p /tmp/artifacts
+      - run: sudo apt-get install help2man libgtk-3-dev scons uthash-dev libglfw3 libglfw3-dev
+
+      - run: scons debug=0 -j 8 --no-cache
+
+      - run: help2man -N --no-discard-stderr --no-info -n "3D voxel editor" ./goxel
+      - run: ./goxel ./examples/example1.gox -e /tmp/artifacts/example1.png
+
+      - store_artifacts:
+          path: /tmp/artifacts
