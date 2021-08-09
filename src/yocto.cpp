@@ -47,6 +47,12 @@
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_WRITE_STATIC
 
+// Fix compilation on Windows.
+#ifdef NOMINMAX
+#undef NOMINMAX
+#endif
+
+
 #include "../ext_src/yocto/yocto_bvh.cpp"
 #include "../ext_src/yocto/yocto_image.cpp"
 #include "../ext_src/yocto/yocto_scene.cpp"
