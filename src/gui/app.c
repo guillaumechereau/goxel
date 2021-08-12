@@ -128,7 +128,7 @@ static void render_view(void *user, const float viewport[4])
 }
 
 // Compact gui, where all the panels are rendered on top of the canvas.
-static void gui_compact(void)
+static void gui_compact(const float safe_rect[4])
 {
     bool has_mouse, has_keyboard;
     inputs_t inputs;
@@ -141,24 +141,29 @@ static void gui_compact(void)
         theme->sizes.item_padding_h * 2;
     float alpha = 0.85;
 
-    gui_canvas(0, top_bar_height, -1, -1,
+    gui_canvas(safe_rect[0] + 1, safe_rect[1] + 1,
+               safe_rect[2] - 1, safe_rect[3] - 1,
                &inputs, &has_mouse, &has_keyboard,
                NULL, render_view);
 
     if (GUI_HAS_ROTATION_BAR) {
         gui_window_begin("rotation_bar",
-                         -theme->sizes.item_height, top_bar_height, -1, -1,
-                         0.0, false);
+                safe_rect[0] + safe_rect[2] - theme->sizes.item_height,
+                top_bar_height + safe_rect[1],
+                theme->sizes.item_height,
+                safe_rect[3] - top_bar_height,
+                alpha, false);
         gui_rotation_bar();
         has_mouse &= !gui_window_end();
     }
 
-    gui_window_begin("top_bar", 0, 0, 0, top_bar_height, alpha, false);
+    gui_window_begin("top_bar", safe_rect[0], safe_rect[1],
+                     safe_rect[2], top_bar_height, alpha, false);
     gui_top_bar();
     has_mouse &= !gui_window_end();
 
-    gui_window_begin("left_panel", 0,
-            theme->sizes.icons_height + theme->sizes.item_padding_h * 2,
+    gui_window_begin("left_panel",
+            safe_rect[0], top_bar_height + safe_rect[1],
             left_panel_width, 0, alpha, touch_scroll);
     render_left_panel();
     has_mouse &= !gui_window_end();
@@ -167,7 +172,7 @@ static void gui_compact(void)
         goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
 }
 
-void gui_app(void)
+void gui_app(const float safe_rect[4])
 {
     inputs_t inputs;
     bool has_mouse, has_keyboard;
@@ -183,7 +188,7 @@ void gui_app(void)
     float alpha = 1;
 
     if (GUI_COMPACT) {
-        gui_compact();
+        gui_compact(safe_rect);
         return;
     }
 

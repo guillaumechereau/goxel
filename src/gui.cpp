@@ -23,7 +23,7 @@
 extern "C" {
 #include "goxel.h"
 
-void gui_app(void);
+void gui_app(const float safe_rect[4]);
 void gui_render_panel(void);
 void gui_menu(void);
 }
@@ -664,6 +664,7 @@ void gui_iter(const inputs_t *inputs)
     float display_rect[4] = {
         0.f, 0.f, (float)goxel.screen_size[0], (float)goxel.screen_size[1]};
     float font_size = ImGui::GetFontSize();
+    float safe_rect[4];
 
     io.DisplaySize = ImVec2((float)goxel.screen_size[0],
                             (float)goxel.screen_size[1]);
@@ -731,10 +732,8 @@ void gui_iter(const inputs_t *inputs)
                                     ImGuiWindowFlags_NoBringToFrontOnFocus |
                                     (GUI_HAS_MENU ? ImGuiWindowFlags_MenuBar : 0);
 
-    ImGui::SetNextWindowSize(ImVec2(
-        io.DisplaySize.x - (gui->margins.left + gui->margins.right),
-        io.DisplaySize.y - gui->margins.top));
-    ImGui::SetNextWindowPos(ImVec2(gui->margins.left, gui->margins.top));
+    ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y));
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::Begin("Goxel", NULL, window_flags);
 
     render_popups(0);
@@ -743,7 +742,11 @@ void gui_iter(const inputs_t *inputs)
 
     if (GUI_HAS_MENU) render_menu();
 
-    gui_app();
+    safe_rect[0] = gui->margins.left;
+    safe_rect[1] = gui->margins.top;
+    safe_rect[2] = io.DisplaySize.x - gui->margins.left - gui->margins.right;
+    safe_rect[3] = io.DisplaySize.y - gui->margins.top - gui->margins.bottom;
+    gui_app(safe_rect);
 
     ImGui::End();
 
