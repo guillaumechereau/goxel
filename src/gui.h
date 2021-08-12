@@ -45,7 +45,7 @@ void gui_request_panel_width(float width);
 
 bool gui_panel_header(const char *label);
 
-void gui_canvas(float x, float y, float w, float h,
+void gui_canvas(float w, float h,
                 inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
                 void *user,
                 void (*render)(void *user, const float viewport[4]));
@@ -61,10 +61,6 @@ void gui_group_end(void);
 
 void gui_div_begin(void);
 void gui_div_end(void);
-
-void gui_window_begin(const char *id, float x, float y, float w, float h,
-                      float alpha, bool touchscroll);
-bool gui_window_end(void);
 
 void gui_child_begin(const char *id, float w, float h);
 void gui_child_end(void);
@@ -154,6 +150,9 @@ void gui_popup_body_end(void);
 bool gui_menu_begin(const char *label);
 void gui_menu_end(void);
 bool gui_menu_item(int action, const char *label, bool enabled);
+
+void gui_scrollable_begin(int width);
+void gui_scrollable_end(void);
 
 void gui_tooltip(const char *str);
 

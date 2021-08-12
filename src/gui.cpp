@@ -20,10 +20,14 @@
 #   define GUI_HAS_MENU 1
 #endif
 
+#ifndef GUI_HAS_SCROLLBARS
+#   define GUI_HAS_SCROLLBARS 1
+#endif
+
 extern "C" {
 #include "goxel.h"
 
-void gui_app(const float safe_rect[4]);
+void gui_app(void);
 void gui_render_panel(void);
 void gui_menu(void);
 }
@@ -664,7 +668,6 @@ void gui_iter(const inputs_t *inputs)
     float display_rect[4] = {
         0.f, 0.f, (float)goxel.screen_size[0], (float)goxel.screen_size[1]};
     float font_size = ImGui::GetFontSize();
-    float safe_rect[4];
 
     io.DisplaySize = ImVec2((float)goxel.screen_size[0],
                             (float)goxel.screen_size[1]);
@@ -732,8 +735,10 @@ void gui_iter(const inputs_t *inputs)
                                     ImGuiWindowFlags_NoBringToFrontOnFocus |
                                     (GUI_HAS_MENU ? ImGuiWindowFlags_MenuBar : 0);
 
-    ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x, io.DisplaySize.y));
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    ImGui::SetNextWindowSize(ImVec2(
+        io.DisplaySize.x - (gui->margins.left + gui->margins.right),
+        io.DisplaySize.y - gui->margins.top));
+    ImGui::SetNextWindowPos(ImVec2(gui->margins.left, gui->margins.top));
     ImGui::Begin("Goxel", NULL, window_flags);
 
     render_popups(0);
@@ -742,11 +747,7 @@ void gui_iter(const inputs_t *inputs)
 
     if (GUI_HAS_MENU) render_menu();
 
-    safe_rect[0] = gui->margins.left;
-    safe_rect[1] = gui->margins.top;
-    safe_rect[2] = io.DisplaySize.x - gui->margins.left - gui->margins.right;
-    safe_rect[3] = io.DisplaySize.y - gui->margins.top - gui->margins.bottom;
-    gui_app(safe_rect);
+    gui_app();
 
     ImGui::End();
 
@@ -836,109 +837,6 @@ void gui_child_begin(const char *id, float w, float h)
 void gui_child_end(void)
 {
     ImGui::EndChild();
-}
-
-void gui_window_begin(const char *id, float x, float y, float w, float h,
-                      float alpha, bool touch_scroll)
-{
-    int flags = ImGuiWindowFlags_NoTitleBar |
-                ImGuiWindowFlags_NoMove |
-                ImGuiWindowFlags_NoCollapse |
-                ImGuiWindowFlags_NoSavedSettings |
-                ImGuiWindowFlags_NoResize |
-                ImGuiWindowFlags_NoNav;
-    float max_h;
-
-    if (touch_scroll) {
-        if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
-            gui->is_scrolling = false;
-        flags |= ImGuiWindowFlags_NoScrollbar;
-        if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
-    }
-
-    if (x < 0)
-        x = ImGui::GetIO().DisplaySize.x + x;
-    if (y < 0)
-        y = ImGui::GetIO().DisplaySize.y + y;
-
-    if (h == 0) {
-        max_h = ImGui::GetIO().DisplaySize.y - y;
-        ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
-    }
-    if (w < 0)
-        w = ImGui::GetIO().DisplaySize.x - x + w;
-    if (h < 0)
-        h = ImGui::GetIO().DisplaySize.y - y + h;
-
-    ImGui::SetNextWindowPos(ImVec2(x, y));
-    ImGui::SetNextWindowSize(ImVec2(w, h));
-    ImGui::SetNextWindowBgAlpha(alpha);
-
-    ImGui::Begin(id, NULL, flags);
-    ImGui::BeginGroup();
-
-    if (touch_scroll) {
-        ImGuiStorage* storage = ImGui::GetStateStorage();
-        storage->SetBool(ImGui::GetID("touch_scroll"), true);
-    }
-}
-
-bool gui_window_end(void)
-{
-    // XXX: make this attribute of the item instead, so that we can use
-    // several scrollable widgets.
-    static float scroll_y = 0;
-    static float x, y;
-    static float last_y;
-    static float speed = 0;
-    static int state; // 0: possible, 1: scrolling, 2: cancel.
-    bool ret = false;
-    bool touch_scroll;
-
-    ImGui::EndGroup();
-
-    if (ImGui::IsItemClicked()) gui->capture_mouse = true;
-
-    ImGuiStorage* storage = ImGui::GetStateStorage();
-    touch_scroll = storage->GetBool(ImGui::GetID("touch_scroll"), false);
-    if (touch_scroll) {
-        if (ImGui::IsItemClicked()) {
-            ret = true;
-            state = 0;
-            speed = 0;
-            y = ImGui::GetMousePos().y;
-            x = ImGui::GetMousePos().x;
-            last_y = y;
-            scroll_y = ImGui::GetScrollY();
-        }
-
-        if (gui->is_scrolling || (ImGui::IsItemHovered() && ImGui::IsAnyMouseDown())) {
-            ret = true;
-            if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
-                state = 2;
-            if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
-                state = 1;
-                gui->is_scrolling = true;
-            }
-            if (state == 1) {
-                speed = mix(speed, last_y - ImGui::GetMousePos().y, 0.5);
-                last_y = ImGui::GetMousePos().y;
-                ImGui::ClearActiveID();
-                ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
-            }
-        } else if (speed) {
-            ImGui::SetScrollY(ImGui::GetScrollY() + speed);
-            speed *= 0.95;
-            if (fabs(speed) < 1) speed = 0;
-        }
-    }
-    ret |= ImGui::IsWindowHovered(
-            ImGuiHoveredFlags_RootAndChildWindows |
-            ImGuiHoveredFlags_AllowWhenBlockedByPopup |
-            ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-
-    ImGui::End();
-    return ret;
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -1646,6 +1544,65 @@ bool gui_menu_item(int action, const char *label, bool enabled)
     return false;
 }
 
+void gui_scrollable_begin(int width)
+{
+    ImGuiWindowFlags flags = 0;
+
+    if (!GUI_HAS_SCROLLBARS) {
+        if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
+            gui->is_scrolling = false;
+        flags |= ImGuiWindowFlags_NoScrollbar;
+        if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
+    }
+
+    ImGui::BeginChild("#scroll", ImVec2(width, 0), true, flags);
+    ImGui::BeginGroup();
+}
+
+void gui_scrollable_end(void)
+{
+    // XXX: make this attribute of the item instead, so that we can use
+    // several scrollable widgets.
+    static float scroll_y = 0;
+    static float x, y;
+    static float last_y;
+    static float speed = 0;
+    static int state; // 0: possible, 1: scrolling, 2: cancel.
+
+    ImGui::EndGroup();
+
+    if (!GUI_HAS_SCROLLBARS) {
+        if (ImGui::IsItemClicked()) {
+            state = 0;
+            speed = 0;
+            y = ImGui::GetMousePos().y;
+            x = ImGui::GetMousePos().x;
+            last_y = y;
+            scroll_y = ImGui::GetScrollY();
+        }
+
+        if (ImGui::IsItemHovered()) {
+            if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
+                state = 2;
+            if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
+                state = 1;
+                gui->is_scrolling = true;
+            }
+            if (state == 1) {
+                speed = mix(speed, last_y - ImGui::GetMousePos().y, 0.5);
+                last_y = ImGui::GetMousePos().y;
+                ImGui::ClearActiveID();
+                ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
+            }
+        } else if (speed) {
+            ImGui::SetScrollY(ImGui::GetScrollY() + speed);
+            speed *= 0.95;
+            if (fabs(speed) < 1) speed = 0;
+        }
+    }
+    ImGui::EndChild();
+}
+
 void gui_tooltip(const char *str)
 {
     if (gui->is_scrolling) return;
@@ -1716,28 +1673,27 @@ static void gui_canvas_(const ImDrawList* parent_list, const ImDrawCmd* cmd)
     GL(glViewport(0, 0, width * scale, height * scale));
 }
 
-void gui_canvas(float x, float y, float w, float h,
+void gui_canvas(float w, float h,
                 inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
                 void *user,
                 void (*render)(void *user, const float viewport[4]))
 {
     int i;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
+    ImVec2 canvas_size = ImGui::GetContentRegionAvail();
     ImGuiIO& io = ImGui::GetIO();
     bool hovered;
 
-    ImGui::SetCursorPos(ImVec2(x, y));
-
-    if (w < 0) w = ImGui::GetContentRegionAvail().x + w + 1;
-    if (h < 0) h = ImGui::GetContentRegionAvail().y + h + 1;
-
+    if (h < 0) canvas_size.y += h;
     vec4_set(gui->view.rect,
-             x, goxel.screen_size[1] - (y + h),
-             w, h);
+             canvas_pos.x,
+             goxel.screen_size[1] - (canvas_pos.y + canvas_size.y),
+             canvas_size.x, canvas_size.y);
     gui->view.user = user;
     gui->view.render = render;
     draw_list->AddCallback(gui_canvas_, &gui->view);
-    ImGui::InvisibleButton("canvas", ImVec2(w, h));
+    ImGui::InvisibleButton("canvas", canvas_size);
     hovered = ImGui::IsItemHovered();
 
     if (    gui->inputs &&
