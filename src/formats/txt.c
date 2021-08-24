@@ -20,6 +20,46 @@
 #include "file_format.h"
 #include <errno.h>
 
+static int import_as_txt(image_t *image, const char *path)
+{
+    FILE *file;
+    char line[2048];
+    layer_t *layer;
+    mesh_iterator_t iter = {0};
+    int pos[3];
+    unsigned int c[4];
+    char *token;
+
+    LOG_I("Reading text file. One line per voxel. Format should be: X Y Z RRGGBB");
+    file = fopen(path, "r");
+
+    //Checks if file is empty
+    if (file == NULL) {
+        LOG_E("Can not open file for reading: %s", path);
+        return 1;
+    }
+
+    layer = image->active_layer;
+
+    while (fgets(line, 2048, file)) {
+        token = strtok(line, " "); // get first token (X)
+        if (strcmp(token, "#") == 0)
+            continue;
+        pos[0] = atoi(token);
+        token = strtok(NULL, " "); // get second token (Y)
+        pos[1] = atoi(token);
+        token = strtok(NULL, " "); // get third token (Z)
+        pos[2] = atoi(token);
+        token = strtok(NULL, " "); // get forth token (RRGGBB)
+        sscanf(token, "%02x%02x%02x", &c[0], &c[1], &c[2]);
+        mesh_set_at(layer->mesh, &iter, pos, (uint8_t[]){c[0], c[1], c[2], 255});
+    }
+
+    fclose(file);
+    return 0;
+}
+
+
 static int export_as_txt(const image_t *image, const char *path)
 {
     FILE *out;
@@ -51,5 +91,6 @@ static int export_as_txt(const image_t *image, const char *path)
 FILE_FORMAT_REGISTER(txt,
     .name = "text",
     .ext = "text\0*.txt\0",
+    .import_func = import_as_txt,
     .export_func = export_as_txt,
 )
