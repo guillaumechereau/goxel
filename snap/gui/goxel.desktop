@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
-Name=goxel
+Name=Goxel
 GenericName=Voxel graphics editor
 Comment=3D Voxel Editor
 Exec=goxel
