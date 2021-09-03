@@ -1,3 +1,4 @@
+
 Goxel
 =====
 
@@ -8,6 +9,8 @@ By Guillaume Chereau <guillaume@noctua-software.com>
 [![Build Status](
     https://travis-ci.org/guillaumechereau/goxel.svg?branch=master)](
     https://travis-ci.org/guillaumechereau/goxel)
+[![Snap Status](https://build.snapcraft.io/badge/guillaumechereau/goxel.svg)](https://build.snapcraft.io/user/guillaumechereau/goxel)
+[![DebianBadge](https://badges.debian.net/badges/debian/unstable/goxel/version.svg)](https://packages.debian.org/unstable/goxel)
 
 Official webpage: https://goxel.xyz
 
@@ -17,7 +20,6 @@ About
 You can use goxel to create voxel graphics (3D images formed of cubes).  It
 works on Linux, BSD, Windows and macOS.
 
-[![Packaging status](https://repology.org/badge/vertical-allrepos/goxel.svg)](https://repology.org/project/goxel/versions)
 
 Download
 --------
