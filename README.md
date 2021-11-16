@@ -82,15 +82,15 @@ with msvc.
 
 Install dependencies using your package manager.  On Debian/Ubuntu:
 
-    - scons
-    - pkg-config
-    - libglfw3-dev
-    - libgtk-3-dev
+```
+sudo apt install scons pkg-config libglfw3-dev libgtk-3-dev
+```
 
 Then to build, run the command:
 
+    ```
     make release
-
+    ```
 # Windows
 
 You need to install msys2 mingw, and the following packages:
