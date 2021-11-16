@@ -88,9 +88,9 @@ sudo apt install scons pkg-config libglfw3-dev libgtk-3-dev
 
 Then to build, run the command:
 
-    ```
-    make release
-    ```
+```
+make release
+```
 # Windows
 
 You need to install msys2 mingw, and the following packages:
