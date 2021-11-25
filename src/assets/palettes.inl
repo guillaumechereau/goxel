@@ -2373,6 +2373,28 @@
     "255 101 101	Untitled\n"
     ""
 },
+{.path = "data/palettes/Pico8.gpl", .size = 374, .data =
+    "GIMP Palette\n"
+    "Name: Pico8\n"
+    "Columns: 8\n"
+    "#\n"
+    "  0  0  0    #000000\n"
+    " 29  43  83  #1D2B53\n"
+    "126  37  83  #7E2553\n"
+    "  0 135  81  #008751\n"
+    "171  82  54  #AB5236\n"
+    " 95  87  79  #5F574F\n"
+    "194 195 199  #C2C3C7\n"
+    "255 241 232  #FFF1E8\n"
+    "255   0  77  #FF004D\n"
+    "255 163   0  #FFA300\n"
+    "255 236  39  #FFEC27\n"
+    "  0 228  54  #00E436\n"
+    " 41 173 255  #29ADFF\n"
+    "131 118 156  #83769C\n"
+    "255 119 168  #FF77A8\n"
+    "255 204 170  #FFCCAA"
+},
 {.path = "data/palettes/Plasma.gpl", .size = 3111, .data =
     "GIMP Palette\n"
     "Name: Plasma\n"
