@@ -25,7 +25,7 @@ from collections import namedtuple
 import os
 
 if os.path.dirname(__file__) != "./tools":
-    print "Should be run from goxel root directory"
+    print ("Should be run from goxel root directory")
     sys.exit(-1)
 
 TYPES = {
@@ -41,7 +41,7 @@ TYPES = {
     "lua":   { "text": True },
 }
 GROUPS = ['fonts', 'icons', 'images', 'other', 'palettes', 'progs',
-          'shaders', 'sounds', 'themes', 'samples', 'mobile']
+            'shaders', 'sounds', 'themes', 'samples', 'mobile']
 TEMPLATE = '{{.path = "{path}", .size = {size}, .data =\n{data}\n}},'
 File = namedtuple('File', 'path name data size')
 
