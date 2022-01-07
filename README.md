@@ -115,3 +115,10 @@ mostly to allow me to distribute the mobile branch goxel under a non GPL
 licence.
 
 Also, please read the [contributing document](CONTRIBUTING.md).
+
+
+Donations
+---------
+
+I you feel like it, you can support the development of Goxel with a donation at
+the following bitcoin address: 1QCQeWTi6Xnh3UJbwhLMgSZQAypAouTVrY
