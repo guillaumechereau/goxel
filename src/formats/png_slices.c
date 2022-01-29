@@ -23,7 +23,7 @@ static int export_as_png_slices(const image_t *image, const char *path)
 {
     float box[4][4];
     const mesh_t *mesh;
-    int order = 2; // TODO: make this a setting in the export panel
+    int order = 0; // TODO: make this a setting in the export panel
     int perm[6][3] = {
         { 0, 1, 2 },
         { 0, 2, 1 },
