@@ -12,13 +12,11 @@ The current stable version of Goxel for desktop is
 [Read the release notes](/releases/{{< current-version >}}).
 
 <a href="{{< download-link os="windows" >}}"
-   class="button is-large is-link">Windows</a>
+   class="button is-large is-link">Download for Windows</a>
 
 <a href="{{< download-link os="mac" >}}"
-   class="button is-large is-link">MacOS</a>
+   class="button is-large is-link">Download for MacOS</a>
 
-<a href="{{< download-link os="linux" >}}"
-   class="button is-large is-link">Linux</a>
 ## iOS
 
 The last iOS version is available from iTune.
