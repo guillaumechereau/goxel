@@ -1,5 +1,26 @@
-src/assets/sounds.inl binary
-src/assets/samples.inl binary
-src/assets/images.inl binary
-src/assets/icons.inl binary
-src/assets/fonts.inl binary
+# Default
+*        text linguist-vendored=false
+
+# Sources
+*.c      text linguist-language=c         diff=c
+*.h      text linguist-language=c         diff=c
+*.inl    text linguist-language=c         diff=c
+*.cpp    text linguist-language=c++       diff=c++
+
+# Files To Not Include
+*.bat    linguist-vendored=true
+*.sh     linguist-vendored=true
+*.md     linguist-vendored=true
+*.vs     linguist-vendored=true
+*.fs     linguist-vendored=true
+Makefile linguist-vendored=true
+
+# Binaries, Object Files & Executables
+*.lib   binary
+*.o     binary
+*.out   binary
+*.exe   binary
+*.otf   binary
+*.ttf   binary
+*.png   binary
+*.ico   binary

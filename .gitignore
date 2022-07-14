@@ -4,7 +4,7 @@
 *.obj
 .sconsign.dblite
 /.sconf_temp
-/goxel
+/goxel2
 /imgui.ini
 /config.log
 .DS_Store
