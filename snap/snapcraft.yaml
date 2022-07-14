@@ -5,6 +5,7 @@ description: |
   You can use goxel2 to create voxel graphics (3D images formed of cubes). 
   It works on Linux, Windows and macOS.
 
+base: core20
 confinement: strict
 
 architectures:
