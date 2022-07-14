@@ -7,6 +7,10 @@ description: |
 
 confinement: strict
 
+architectures:
+  - build-on: amd64
+    run-on: amd64
+
 apps:
   goxel:
     command: desktop-launch $SNAP/goxel2

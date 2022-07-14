@@ -1,10 +1,10 @@
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
-Name=Goxel
+Name=Goxel2
 GenericName=Voxel graphics editor
-Comment=3D Voxel Editor
-Exec=goxel
+Comment=A 3D Voxel Art Editor
+Exec=goxel2
 Icon=${SNAP}/icon.png
 Type=Application
 Categories=Graphics;3DGraphics;
