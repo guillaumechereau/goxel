@@ -1,0 +1,35 @@
+name: Continous Release Action
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  Build-For-Linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Install GLFW3, PKG Config, Git, Gtk3 & SCONS
+      run: |
+        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
+
+    - name: Build Goxel
+      run: make release
+
+  Build-For-OSX:
+    runs-on: macos-11
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Build Goxel
+      run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
+
+  Success:
+    needs: [Build-For-Linux, Build-For-OSX]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
