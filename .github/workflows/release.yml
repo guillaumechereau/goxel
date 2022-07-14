@@ -41,7 +41,7 @@ jobs:
       run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
 
     - name: Create Zip
-      run: cd ./osx/goxel/build/Release/ && zip -r goxel2-osx.zip ./goxel.app
+      run: cd ./osx/goxel/build/Release/ && zip -r ../../../../goxel2-osx.zip ./goxel.app
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
