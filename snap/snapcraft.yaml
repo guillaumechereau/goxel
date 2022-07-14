@@ -31,6 +31,8 @@ parts:
       cp goxel2 $SNAPCRAFT_PART_INSTALL
       cp icon.png $SNAPCRAFT_PART_INSTALL
     build-packages:
+      - clang
+      - make
       - scons
       - pkg-config
       - libglfw3-dev
