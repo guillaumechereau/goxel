@@ -1,39 +1,15 @@
-#include "goxel.h"
-#include <getopt.h>
-
 #ifdef GLES2
 #   define GLFW_INCLUDE_ES2
 #endif
 
 #include <GLFW/glfw3.h>
+#include <getopt.h>
+
+#include "goxel.h"
 
 static inputs_t     *g_inputs = NULL;
 static GLFWwindow   *g_window = NULL;
 static float        g_scale = 1;
-
-static void on_glfw_error(int code, const char *msg) {
-	fprintf(stderr, "glfw error %d (%s)\n", code, msg);
-	assert(false);
-}
-
-void on_scroll(GLFWwindow *win, double x, double y) {
-	g_inputs->mouse_wheel = y;
-}
-
-void on_char(GLFWwindow *win, unsigned int c) {
-	inputs_insert_char(g_inputs, c);
-}
-
-void on_drop(GLFWwindow* win, int count, const char** paths) {
-	int i;
-	for (i = 0;  i < count;  i++)
-		goxel_import_file(paths[i], NULL);
-}
-
-void on_close(GLFWwindow *win) {
-	glfwSetWindowShouldClose(win, GLFW_FALSE);
-	gui_query_quit();
-}
 
 typedef struct {
 	char *input;
@@ -61,28 +37,28 @@ static const gox_option_t OPTIONS[] = {
 	{}
 };
 
-static void print_help(void) {
-	const gox_option_t *opt;
-	char buf[128];
+static void on_glfw_error(int code, const char *msg) {
+	fprintf(stderr, "glfw error %d (%s)\n", code, msg);
+	assert(false);
+}
 
-	printf("Usage: goxel2 [OPTION...] [INPUT]\n");
-	printf("a 3D voxel art editor\n");
-	printf("\n");
+void on_scroll(GLFWwindow *win, double x, double y) {
+	g_inputs->mouse_wheel = y;
+}
 
-	for (opt = OPTIONS; opt->name; opt++) {
-		if (opt->val >= 'a')
-			printf("  -%c, ", opt->val);
-		else
-			printf("      ");
+void on_char(GLFWwindow *win, unsigned int c) {
+	inputs_insert_char(g_inputs, c);
+}
 
-		if (opt->has_arg)
-			snprintf(buf, sizeof(buf), "--%s=%s", opt->name, opt->arg_name);
-		else
-			snprintf(buf, sizeof(buf), "--%s", opt->name);
-		printf("%-23s %s\n", buf, opt->help);
-	}
-	printf("\n");
-	printf("Report bugs to <guillaume@noctua-software.com>.\n");
+void on_drop(GLFWwindow* win, int count, const char** paths) {
+	int i;
+	for (i = 0;  i < count;  i++)
+		goxel_import_file(paths[i], NULL);
+}
+
+void on_close(GLFWwindow *win) {
+	glfwSetWindowShouldClose(win, GLFW_FALSE);
+	gui_query_quit();
 }
 
 static void parse_options(int argc, char **argv, args_t *args) {
@@ -110,11 +86,32 @@ static void parse_options(int argc, char **argv, args_t *args) {
 		case 's':
 			args->scale = atof(optarg);
 			break;
-		case OPT_HELP:
-			print_help();
+		case OPT_HELP: {
+			const gox_option_t *opt;
+			char buf[128];
+
+			printf("Usage: goxel2 [OPTION...] [INPUT]\n");
+			printf("a 3D voxel art editor\n");
+			printf("\n");
+
+			for (opt = OPTIONS; opt->name; opt++) {
+				if (opt->val >= 'a')
+					printf("  -%c, ", opt->val);
+				else
+					printf("      ");
+
+				if (opt->has_arg)
+					snprintf(buf, sizeof(buf), "--%s=%s", opt->name, opt->arg_name);
+				else
+					snprintf(buf, sizeof(buf), "--%s", opt->name);
+				printf("%-23s %s\n", buf, opt->help);
+			}
+			printf("\n");
+			printf("Report bugs to <guillaume@noctua-software.com>.\n");
 			exit(0);
+		}
 		case OPT_VERSION:
-			printf("Goxel " GOXEL_VERSION_STR "\n");
+			printf("Goxel2 " GOXEL_VERSION_STR "\n");
 			exit(0);
 		case '?':
 			exit(-1);
@@ -179,19 +176,22 @@ int main(int argc, char **argv) {
 	glfwSetErrorCallback(on_glfw_error);
 	glfwInit();
 	glfwWindowHint(GLFW_SAMPLES, 4);
+
 	monitor = glfwGetPrimaryMonitor();
 	mode = glfwGetVideoMode(monitor);
+
 	if (mode) {
 		width = mode->width ?: 640;
 		height = mode->height ?: 480;
 	}
+
 	window = glfwCreateWindow(width, height, "Goxel2", NULL, NULL);
 	assert(window);
 	g_window = window;
+
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1); // No Swap Interval, Swap ASAP
-	if (!DEFINED(EMSCRIPTEN))
-		glfwSetScrollCallback(window, on_scroll);
+	glfwSetScrollCallback(window, on_scroll);
 	glfwSetDropCallback(window, on_drop);
 	glfwSetCharCallback(window, on_char);
 	glfwSetWindowCloseCallback(window, on_close);
@@ -218,7 +218,10 @@ int main(int argc, char **argv) {
 		} else {
 			ret = goxel_export_to_file(args.export, NULL);
 		}
-		goto end;
+
+		glfwTerminate();
+		goxel_release();
+		return ret;
 	}
 
 	while (!glfwWindowShouldClose(g_window)) {
@@ -227,12 +230,15 @@ int main(int argc, char **argv) {
 		double xpos, ypos;
 		float scale;
 
-		if (
-			!glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
-			glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)
-		) {
+		// If Window is Not Visible Or Iconified Don't Render Anything
+		if (!glfwGetWindowAttrib(g_window, GLFW_VISIBLE) || glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
 			glfwWaitEvents();
-			goto end2;
+			glfwPollEvents();
+
+			if (goxel.quit) {
+				break;
+			}
+			continue;
 		}
 		// The input struct gets all the values in framebuffer coordinates,
 		// On retina display, this might not be the same as the window
@@ -265,13 +271,11 @@ int main(int argc, char **argv) {
 
 		memset(g_inputs, 0, sizeof(*g_inputs));
 		glfwSwapBuffers(g_window);
-	end2:
 		glfwPollEvents();
 
 		if (goxel.quit) break;
 	}
-	glfwTerminate();
-end:
+
 	glfwTerminate();
 	goxel_release();
 	return ret;
