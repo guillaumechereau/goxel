@@ -19,11 +19,8 @@ jobs:
 
       - name: Build
         run: |
-          gcc --version
-          g++ --version
-
-        # make release
-        # ls
+          make release
+          ls
 
   # Build-For-Linux:
   #   runs-on: ubuntu-latest

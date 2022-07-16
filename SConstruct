@@ -27,6 +27,8 @@ if env['mode'] == 'analyze':
 
 if os.environ.get('CC') == 'clang':
     env.Replace(CC='clang', CXX='clang++')
+else:
+    env.Replace(CC='gcc', CXX='g++')
 
 # Hack for gcc <= 5, since pragma diagnostic push doesn't seem to work.
 if env['CCVERSION'] and int(env['CCVERSION'].split('.')[0]) <= 5:
