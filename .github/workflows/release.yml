@@ -7,6 +7,31 @@ on:
         description: 'Version number Eg: 4.2.0' 
 
 jobs:
+  Build-For-Windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
+
+      - name: Build Goxel
+        run: |
+          make release
+          mv goxel2.exe goxel2-win32.exe
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: win_binary
+          path: goxel2-win32.exe
+          if-no-files-found: error
+
   Build-For-Linux:
     runs-on: ubuntu-latest
     steps:
@@ -65,6 +90,11 @@ jobs:
       with:
         name: linux_binary
 
+    - name: Download Linux build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: win_binary
+
     - name: Download OSX build artifacts
       uses: actions/download-artifact@v2
       with:
@@ -78,6 +108,6 @@ jobs:
         prerelease: false
         title: "Goxel v${{github.event.inputs.version}}"
         files: |
+          goxel2-win32.exe
           goxel2-linux.elf
           goxel2-osx.zip
-

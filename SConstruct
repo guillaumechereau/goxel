@@ -46,10 +46,16 @@ if env['mode'] == 'debug' and target_os == 'posix':
 # CFLAGS    : only C
 # CXXFLAGS  : only C++
 env.Append(
-    CFLAGS=['-std=gnu99'],#, '-Wall',
-            #'-Wno-unknow-pragma', '-Wno-unknown-warning-option'],
-    CXXFLAGS=['-std=gnu++17']#, '-Wall', '-Wno-narrowing']
+    CFLAGS=['-std=gnu99'],
+    CXXFLAGS=['-std=gnu++17']
 )
+
+# Add Some More Flags Only If The OS is not msys (it causes building issues)
+if target_os != 'msys':
+    env.Append(
+        CFLAGS=['-Wall', '-Wno-unknow-pragma', '-Wno-unknown-warning-option'],
+        CXXFLAGS=['-Wall', '-Wno-narrowing']
+    )
 
 if env['werror']:
     env.Append(CCFLAGS='-Werror')
