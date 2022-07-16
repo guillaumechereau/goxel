@@ -1,52 +1,17 @@
+# Goxel2
 
-Goxel
-=====
+![Build](https://github.com/pegvin/goxel2/actions/workflows/release.yml/badge.svg)
 
-Version 0.10.7
+Official webpage: https://pegvin.github.io/goxel2/
 
-By Guillaume Chereau <guillaume@noctua-software.com>
+---
+# About
 
-[![Build Status](
-    https://travis-ci.org/guillaumechereau/goxel.svg?branch=master)](
-    https://travis-ci.org/guillaumechereau/goxel)
-[![DebianBadge](https://badges.debian.net/badges/debian/unstable/goxel/version.svg)](https://packages.debian.org/unstable/goxel)
+You can use goxel to create voxel graphics (3D images formed of cubes). It
+works on Windows, Linux and macOS.
 
-Official webpage: https://goxel.xyz
-
-About
------
-
-You can use goxel to create voxel graphics (3D images formed of cubes).  It
-works on Linux, BSD, Windows and macOS.
-
-
-Download
---------
-
-The last release files can be downloaded from [there](
-https://github.com/guillaumechereau/goxel/releases/latest).
-
-Goxel is also available for [iOS](
-https://itunes.apple.com/us/app/goxel-3d-voxel-editor/id1259097826) and
-[Android](
-https://play.google.com/store/apps/details?id=com.noctuasoftware.goxel).
-
-
-![goxel screenshot 0](https://goxel.xyz/gallery/thibault-fisherman-house.jpg)
-Fisherman house, made with Goxel by
-[Thibault Simar](https://www.artstation.com/exm)
-
-
-Licence
--------
-
-Goxel is released under the GNU GPL3 licence.  If you want to use the code
-with a commercial project please contact me: I am willing to provide a
-version of the code under a commercial license.
-
-
-Features
---------
+---
+# Features
 
 - 24 bits RGB colors.
 - Unlimited scene size.
@@ -57,6 +22,17 @@ Features
 - Export to obj, pyl, png, magica voxel, qubicle.
 - Ray tracing.
 
+---
+# Todo
+- [ ] Fix High CPU Usage On Idle
+- [ ] Fix Key Mapping in Settings
+- [ ] Improve UI
+- [ ] Create A Updater To Check For Updates
+
+---
+# Download
+
+You can download latest stable release from [here](https://github.com/pegvin/goxel2/releases/latest), For Many Reasons Goxel2 Has Dropped Support For Android, IOS & Web.
 
 Usage
 -----
@@ -80,7 +56,7 @@ with msvc.
 
 # Linux/BSD
 
-Install dependencies using your package manager.  On Debian/Ubuntu:
+Install dependencies using your package manager. On Debian/Ubuntu:
 
     - scons
     - pkg-config
@@ -106,19 +82,5 @@ Then to build:
     make release
 
 
-Contributing
-------------
-
-In order for your contribution to Goxel to be accepted, you have to sign the
-[Goxel Contributor License Agreement (CLA)](doc/cla/sign-cla.md).  This is
-mostly to allow me to distribute the mobile branch goxel under a non GPL
-licence.
-
-Also, please read the [contributing document](CONTRIBUTING.md).
-
-
-Donations
----------
-
-I you feel like it, you can support the development of Goxel with a donation at
-the following bitcoin address: 1QCQeWTi6Xnh3UJbwhLMgSZQAypAouTVrY
+---
+# Thanks
