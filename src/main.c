@@ -13,8 +13,8 @@ static float        g_scale = 1;
 
 typedef struct {
 	char *input;
-	char *export;
-	float scale;
+	char *export; // File Path To Save To
+	float scale; // UI Scale
 } args_t;
 
 #define OPT_HELP 1
