@@ -53,7 +53,7 @@ env.Append(
 # Add Some More Flags Only If The OS is not msys (it causes building issues)
 if target_os != 'msys':
     env.Append(
-        CFLAGS=['-Wall', '-Wno-unknow-pragma', '-Wno-unknown-warning-option'],
+        CFLAGS=['-Wall', '-Wno-unknown-pragma', '-Wno-unknown-warning-option'],
         CXXFLAGS=['-Wall', '-Wno-narrowing']
     )
 
