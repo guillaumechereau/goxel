@@ -4,6 +4,24 @@ on:
     branches: [ master ]
 
 jobs:
+  Build-For-Windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
+
+      - name: Build
+        run: |
+          make release
+          ls
+
   Build-For-Linux:
     runs-on: ubuntu-latest
     steps:
@@ -27,7 +45,7 @@ jobs:
       run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
 
   Success:
-    needs: [Build-For-Linux, Build-For-OSX]
+    needs: [Build-For-Windows] #[Build-For-Linux, Build-For-OSX]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
