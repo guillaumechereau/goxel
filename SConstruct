@@ -25,8 +25,11 @@ if env['mode'] == 'analyze':
     env["ENV"].update(x for x in os.environ.items() if x[0].startswith("CCC_"))
 
 
-if os.environ.get('CC') == 'clang':
-    env.Replace(CC='clang', CXX='clang++')
+# Commented Out To Only Use Clang
+# if os.environ.get('CC') == 'clang':
+#     env.Replace(CC='clang', CXX='clang++')
+
+env.Replace(CC='clang', CXX='clang++')
 
 # Hack for gcc <= 5, since pragma diagnostic push doesn't seem to work.
 if env['CCVERSION'] and int(env['CCVERSION'].split('.')[0]) <= 5:
