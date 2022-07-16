@@ -140,8 +140,9 @@ static void loop_function(void)
     double xpos, ypos;
     float scale;
 
-    if (    !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
-             glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
+    if (
+        !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
+        glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
         glfwWaitEvents();
         goto end;
     }
@@ -180,26 +181,17 @@ end:
     glfwPollEvents();
 }
 
-#ifndef __EMSCRIPTEN__
-static void start_main_loop(void (*func)(void))
-{
+static void start_main_loop(void (*func)(void)) {
     while (!glfwWindowShouldClose(g_window)) {
         func();
         if (goxel.quit) break;
     }
     glfwTerminate();
 }
-#else
-static void start_main_loop(void (*func)(void))
-{
-    emscripten_set_main_loop(func, 0, 1);
-}
-#endif
 
 #if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 2
 
-static void load_icon(GLFWimage *image, const char *path)
-{
+static void load_icon(GLFWimage *image, const char *path) {
     uint8_t *img;
     int w, h, bpp = 0, size;
     const void *data;
@@ -262,10 +254,11 @@ int main(int argc, char **argv)
         width = mode->width ?: 640;
         height = mode->height ?: 480;
     }
-    window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
+    window = glfwCreateWindow(width, height, "Goxel2", NULL, NULL);
     assert(window);
     g_window = window;
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(0); // No Swap Interval, Swap ASAP
     if (!DEFINED(EMSCRIPTEN))
         glfwSetScrollCallback(window, on_scroll);
     glfwSetDropCallback(window, on_drop);

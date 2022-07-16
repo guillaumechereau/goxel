@@ -106,12 +106,7 @@
 
 // #############################
 
-#ifdef __EMSCRIPTEN__
-#   include <emscripten.h>
-#   define KEEPALIVE EMSCRIPTEN_KEEPALIVE
-#else
-#   define KEEPALIVE
-#endif
+#define KEEPALIVE
 
 // ####### Section: Utils ################################################
 

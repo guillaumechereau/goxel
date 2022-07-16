@@ -22,7 +22,7 @@ static double get_log_time()
 void dolog(int level, const char *msg,
            const char *func, const char *file, int line, ...)
 {
-    const bool use_colors = !DEFINED(__APPLE__) && !DEFINED(__EMSCRIPTEN__);
+    const bool use_colors = !DEFINED(__APPLE__);
     char *msg_formatted, *full_msg;
     const char *format;
     char time_str[32] = "";
