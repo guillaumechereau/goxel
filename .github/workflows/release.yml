@@ -76,14 +76,14 @@ jobs:
         if-no-files-found: error
 
   Create-Release:
-    needs: [Build-For-Linux, Build-For-OSX]
+    needs: [Build-For-Linux, Build-For-OSX, Build-For-Windows]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
 
     - name: Clean previous binaries
-      run: rm -f goxel goxel2-osx.zip
+      run: rm -f goxel2-linux.elf goxel2-win32.exe goxel2-osx.zip
 
     - name: Download Linux build artifacts
       uses: actions/download-artifact@v2
