@@ -1,11 +1,11 @@
+#include "goxel.h"
+
 #ifdef GLES2
 #   define GLFW_INCLUDE_ES2
 #endif
 
 #include <GLFW/glfw3.h>
 #include <getopt.h>
-
-#include "goxel.h"
 
 static inputs_t     *g_inputs = NULL;
 static GLFWwindow   *g_window = NULL;
