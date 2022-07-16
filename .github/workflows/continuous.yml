@@ -15,39 +15,42 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: mingw-w64-x86_64-clang mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
 
       - name: Build
         run: |
-          make release
-          ls
+          gcc --version
+          g++ --version
 
-  Build-For-Linux:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Check out
-      uses: actions/checkout@v2
+        # make release
+        # ls
 
-    - name: Install GLFW3, PKG Config, Git, Gtk3 & SCONS
-      run: |
-        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
+  # Build-For-Linux:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Check out
+  #     uses: actions/checkout@v2
 
-    - name: Build Goxel
-      run: make release
+  #   - name: Install GLFW3, PKG Config, Git, Gtk3 & SCONS
+  #     run: |
+  #       sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
 
-  Build-For-OSX:
-    runs-on: macos-11
-    steps:
-    - name: Check out
-      uses: actions/checkout@v2
+  #   - name: Build Goxel
+  #     run: make release
 
-    - name: Build Goxel
-      run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
+  # Build-For-OSX:
+  #   runs-on: macos-11
+  #   steps:
+  #   - name: Check out
+  #     uses: actions/checkout@v2
 
-  Success:
-    needs: [Build-For-Windows] #[Build-For-Linux, Build-For-OSX]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+  #   - name: Build Goxel
+  #     run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
+
+  # Success:
+  #   needs: [Build-For-Linux, Build-For-OSX, Build-For-Windows]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Checkout
+  #     uses: actions/checkout@v2
 
