@@ -13,7 +13,7 @@ static float        g_scale = 1;
 
 typedef struct {
 	char *input;
-	char *export; // File Path To Save To
+	char *export_path; // File Path To Save To
 	float scale; // UI Scale
 } args_t;
 
@@ -66,7 +66,7 @@ static void parse_options(int argc, char **argv, args_t *args) {
 	const gox_option_t *opt;
 	struct option long_options[ARRAY_SIZE(OPTIONS)] = {};
 
-	for (i = 0; i < ARRAY_SIZE(OPTIONS); i++) {
+	for (i = 0; i < (int)ARRAY_SIZE(OPTIONS); i++) {
 		opt = &OPTIONS[i];
 		long_options[i] = (struct option) {
 			opt->name,
@@ -81,7 +81,7 @@ static void parse_options(int argc, char **argv, args_t *args) {
 		if (c == -1) break;
 		switch (c) {
 		case 'e':
-			args->export = optarg;
+			args->export_path = optarg;
 			break;
 		case 's':
 			args->scale = atof(optarg);
@@ -129,7 +129,7 @@ static void parse_options(int argc, char **argv, args_t *args) {
 		const void *data;
 		data = assets_get(path, &size);
 		assert(data);
-		img = img_read_from_mem(data, size, &w, &h, &bpp);
+		img = img_read_from_mem((const char*)data, size, &w, &h, &bpp);
 		assert(img);
 		assert(bpp == 4);
 		image->width = w;
@@ -211,12 +211,12 @@ int main(int argc, char **argv) {
 	if (args.input)
 		goxel_import_file(args.input, NULL);
 
-	if (args.export) {
+	if (args.export_path) {
 		if (!args.input) {
 			LOG_E("trying to export an empty image");
 			ret = -1;
 		} else {
-			ret = goxel_export_to_file(args.export, NULL);
+			ret = goxel_export_to_file(args.export_path, NULL);
 		}
 
 		glfwTerminate();
@@ -224,14 +224,33 @@ int main(int argc, char **argv) {
 		return ret;
 	}
 
+#ifndef NDEBUG
+	double lastTime = glfwGetTime();
+	int nbFrames = 0; // Number Of Frames Rendered
+#endif
+
 	while (!glfwWindowShouldClose(g_window)) {
+#ifndef NDEBUG
+		double currentTime = glfwGetTime();
+		nbFrames++;
+		if (currentTime - lastTime >= 1.0) {
+			printf("%f ms/frame\n", 1000.0 / (double)nbFrames);
+			nbFrames = 0;
+			lastTime += 1.0;
+		}
+#endif
+
 		int fb_size[2], win_size[2];
 		int i;
 		double xpos, ypos;
 		float scale;
 
 		// If Window is Not Visible Or Iconified Don't Render Anything
-		if (!glfwGetWindowAttrib(g_window, GLFW_VISIBLE) || glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
+		if (
+			!glfwGetWindowAttrib(g_window, GLFW_FOCUSED) ||
+			!glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
+			glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)
+		) {
 			glfwWaitEvents();
 			glfwPollEvents();
 
