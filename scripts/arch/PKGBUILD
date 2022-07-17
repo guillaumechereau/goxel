@@ -11,11 +11,6 @@ makedepends=(git make tar curl scons pkg-config)
 optdepends=()
 provides=('goxel2')
 conflicts=('goxel2')
-# source=(
-# 	"git+https://github.com/pegvin/goxel2.git"
-# 	"goxel2.desktop"
-# )
-# md5sums=('SKIP' 'SKIP')
 
 # Name of the directory the cloned repository will be in.
 _gitname=goxel2
