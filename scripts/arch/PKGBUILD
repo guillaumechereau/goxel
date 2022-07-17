@@ -1,4 +1,4 @@
-# Maintainer: Aditya Mishra <youremail@domain.com>
+# Maintainer: Aditya Mishra <https://github.com/pegvin/goxel2/issues>
 pkgname=goxel2-git
 pkgver=0.11.1
 pkgrel=1 # Update if you changed something but that is so minor change you don't want to change the version
