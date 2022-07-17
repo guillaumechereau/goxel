@@ -105,7 +105,7 @@ typedef struct {
 #endif
 
 #define CGLTF_SPRINTF(...) { \
-		context->tmp = snprintf ( context->cursor, context->remaining, __VA_ARGS__ ); \
+		context->tmp = snprintf(context->cursor, context->remaining, __VA_ARGS__); \
 		context->chars_written += context->tmp; \
 		if (context->cursor) { \
 			context->cursor += context->tmp; \
@@ -113,7 +113,7 @@ typedef struct {
 		} }
 
 #define CGLTF_SNPRINTF(length, ...) { \
-		context->tmp = snprintf ( context->cursor, CGLTF_MIN(length + 1, context->remaining), __VA_ARGS__ ); \
+		context->tmp = snprintf(context->cursor, CGLTF_MIN(length + 1, context->remaining), __VA_ARGS__); \
 		context->chars_written += length; \
 		if (context->cursor) { \
 			context->cursor += length; \
