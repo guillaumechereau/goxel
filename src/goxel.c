@@ -407,7 +407,7 @@ void goxel_release_graphics(void)
 static void update_window_title(void)
 {
     char buf[1024];
-    sprintf(buf, "Goxel %s%s %s", GOXEL_VERSION_STR, DEBUG ? " (debug)" : "",
+    sprintf(buf, "Goxel2 %s%s %s", GOXEL_VERSION_STR, DEBUG ? " (debug)" : "",
             goxel.image->path ?: "");
     sys_set_window_title(buf);
 }

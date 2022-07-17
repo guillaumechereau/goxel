@@ -107,7 +107,7 @@ static void parse_options(int argc, char **argv, args_t *args) {
 				printf("%-23s %s\n", buf, opt->help);
 			}
 			printf("\n");
-			printf("Report bugs to <guillaume@noctua-software.com>.\n");
+			printf("Report bugs to https://github.com/pegvin/goxel2/issues\n");
 			exit(0);
 		}
 		case OPT_VERSION:
