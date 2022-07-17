@@ -48,17 +48,6 @@ jobs:
     - name: Strip Debug Info & Change FileName
       run: strip ./goxel2 && mv ./goxel2 ./goxel2-linux.elf
 
-    - name: Publish AUR package
-      uses: KSXGitHub/github-actions-deploy-aur@<TAG>
-      with:
-        pkgname: goxel2-git
-        pkgbuild: ./scripts/arch/PKGBUILD
-        commit_username: ${{ secrets.AUR_USERNAME }}
-        commit_email: ${{ secrets.AUR_EMAIL }}
-        ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-        commit_message: Update AUR package
-        ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
-
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:

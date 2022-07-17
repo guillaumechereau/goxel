@@ -1,4 +1,4 @@
-name: Continous Release Action
+name: Continous Release
 on:
   push:
     branches: [ master ]
