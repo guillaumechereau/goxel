@@ -20,7 +20,6 @@ static void toggle_layer_only_visible(layer_t *layer)
     layer->visible = true;
 }
 
-
 void gui_layers_panel(void)
 {
     layer_t *layer;
@@ -55,6 +54,8 @@ void gui_layers_panel(void)
     gui_action_button(ACTION_img_move_layer_down, NULL, 0);
 
     gui_group_begin(NULL);
+    gui_action_button(ACTION_img_hide_all_layers, "Hide All", 1);
+    gui_action_button(ACTION_img_show_all_layers, "Show All", 1);
     gui_action_button(ACTION_img_duplicate_layer, "Duplicate", 1);
     gui_action_button(ACTION_img_clone_layer, "Clone", 1);
     gui_action_button(ACTION_img_merge_visible_layers, "Merge visible", 1);

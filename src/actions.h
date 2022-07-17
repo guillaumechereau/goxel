@@ -18,6 +18,8 @@ enum {
     X(img_move_layer_down),
     X(img_duplicate_layer),
     X(img_clone_layer),
+    X(img_hide_all_layers),
+    X(img_show_all_layers),
     X(img_unclone_layer),
     X(img_select_parent_layer),
     X(img_merge_visible_layers),

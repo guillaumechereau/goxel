@@ -409,6 +409,33 @@ void image_merge_visible_layers(image_t *img)
     if (last) img->active_layer = last;
 }
 
+void a_hide_all_layers(void) {
+    layer_t *layer = NULL;
+    assert(goxel.image);
+    DL_FOREACH(goxel.image->layers, layer) {
+        layer->visible = false;
+    }
+}
+
+void a_show_all_layers(void) {
+    layer_t *layer = NULL;
+    assert(goxel.image);
+    DL_FOREACH(goxel.image->layers, layer) {
+        layer->visible = true;
+    }
+}
+
+ACTION_REGISTER(img_hide_all_layers,
+    .help = "Hide All Layers",
+    .cfunc = a_hide_all_layers,
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+ACTION_REGISTER(img_show_all_layers,
+    .help = "Show All Layers",
+    .cfunc = a_show_all_layers,
+    .flags = ACTION_TOUCH_IMAGE,
+)
 
 camera_t *image_add_camera(image_t *img, camera_t *cam)
 {
