@@ -15,7 +15,7 @@ architectures:
 
 apps:
   goxel:
-    command: desktop-launch $SNAP/goxel2
+    command: $SNAP/goxel2
     plugs:
       - x11
       - opengl
@@ -23,7 +23,6 @@ apps:
 
 parts:
   goxel:
-    after: [desktop-gtk3]
     source: .
     plugin: nil
     override-build: |
