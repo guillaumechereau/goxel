@@ -25,7 +25,7 @@ jobs:
         commit_email: ${{ secrets.AUR_EMAIL }}
         ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         commit_message: Update AUR package
+        force_push: 'true'
         ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
-
 
 # NOTE - This Workflow is only meant to run after the release.yml has been run successfully
