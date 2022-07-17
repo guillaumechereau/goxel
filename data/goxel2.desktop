@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Goxel2
+Comment=A cross-platform 3D voxel editor.
+GenericName=Voxel graphics editor
+TryExec=goxel2
+Exec=goxel2
+Icon=goxel2
+Type=Application
+Categories=Graphics;3DGraphics;
