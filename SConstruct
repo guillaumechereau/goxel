@@ -113,10 +113,6 @@ env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
 env.Append(CPPPATH=['ext_src/xxhash'])
 
-if env['sound']:
-    env.Append(LIBS='openal')
-    env.Append(CPPDEFINES='SOUND=1')
-
 if not env['yocto']:
     env.Append(CPPDEFINES='YOCTO=0')
 
