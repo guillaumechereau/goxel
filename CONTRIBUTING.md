@@ -1,17 +1,16 @@
-# Contributing to Goxel
-
-Please read this file first before making a pull request to Goxel.
+# Contributing to Goxel2
 
 
-## CLA
+Thanks alot if you considered to contribute to goxel2, contributing to goxel2 isn't hard just ensure these things:
 
-In your first pull request, you must add your name in a CLA file in
-'doc/cla/individual'.  This gives me the right to release special version of
-Goxel under a commercial licence.  It doesn't change the license of the current
-code.  See:
-https://github.com/guillaumechereau/goxel/blob/master/doc/cla/sign-cla.md
-For more information about that.
+- Fake Patches Which Are Intended To Introduce New Bugs Will Not Be Tolerated
+- Not Neccessary But If Possible Please Follow The Below Given Coding Style
+- Not Neccessary But If Possible Make Sure To Use English in Comments or Anywhere in the Repository
+- Make Sure you abide by the [Code of Conduct](CODE_OF_CONDUCT.md)
 
+Contribution is not always has to be in form of Code, helping people in [Issues](https://github.com/pegvin/goxel2/issues) or in [Discussions](https://github.com/pegvin/goxel2/discussions).
+
+all the contributors who made contributions in form of code will be list in the [AUTHORS](AUTHORS.md) file.
 
 ## Coding style
 
@@ -20,72 +19,43 @@ request that doesn't.  The coding style is almost the one used by the linux
 kernel, but using four spaces for indentation (I also accept typedef).  When in
 doubt, just look at other part of the code.  The most important rules are:
 
-- Use 4 spaces indentations.  No tabs characters anywhere in the code.
-
-- 80 columns max line width.
-
+- Use tabs characters if possible.
 - No trailing white space.
+- Please Try to use [Camel Case](https://en.wikipedia.org/wiki/Camel_case) but others are allowed too
+- Please Try to define functions and stuff like below given
 
-- function and variable names all in lowercase, with underscore to separate
-  parts if needed:
-
-      int nb_block; // Good
-      int nbBlock;  // Bad
-
-- K&R style braces (opening brace on same line):
-
-      if (something) {
-          ...
-      } else {
-          ...
-      }
-
-- Except for functions, where we put the opening brace on the next line:
-
-      int my_func(void)
-      {
-          ...
-          return 0;
-      }
-
-- I also accept exceptions to the K&R braces for multi line conditions
-  (but that should be avoided if possible by making the condition shorter):
-
-      if (a_very_long_condition ||
-          that_uses_several_lines)
-      {
-          ...
-      }
+```c
+int my_func(void) {
+    ...
+    return 0;
+}
+```
 
 - No space between function and argument parenthesis:
 
-      func(10, 20) // Good
-      func (10, 20) // BAD!
-
+```c
+func(10, 20) // Good
+func (10, 20) // BAD!
+```
 
 - One space after keywords, except `sizeof`:
 
-      if (something) // Good
-      if(something)  // BAD
+```c
+if (something) // Good
+if(something)  // BAD
+```
 
 - One space around binary operators, no space after unary operators and
   before postfix operators.
 
-      x = 10 + 20 * 3; // Good
-      x = 10+20*3; // BAD
-      x++;  // Good
-      x ++; // BAD
-      y = &x; // Good
-      y = & x; // VERY BAD
-
-- Use 'C' style variable declarations:
-
-      int *x; // Good
-      int* x; // BAD
-
-- Put all the variable declarations on top of the function, so that we can
-  see them all at the same place.
-
+```c
+x = 10 + 20 * 3; // Good
+x = 10+20*3; // BAD
+x++;  // Good
+x ++; // BAD
+y = &x; // Good
+y = & x; // VERY BAD
+```
 
 ## Git commit style
 
