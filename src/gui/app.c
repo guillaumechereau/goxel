@@ -50,12 +50,6 @@ static const struct {
 #endif
 };
 
-
-static void on_click(void) {
-    if (DEFINED(GUI_SOUND))
-        sound_play("click", 1.0, 1.0);
-}
-
 static void render_left_panel(void)
 {
     int i, current_i = 0;
@@ -77,7 +71,6 @@ static void render_left_panel(void)
         selected = (goxel.gui.current_panel == PANELS[i].fn);
         if (selected) current_i = i;
         if (gui_tab(PANELS[i].name, PANELS[i].icon, &selected)) {
-            on_click();
             goxel.gui.current_panel = selected ? PANELS[i].fn : NULL;
             current_i = goxel.gui.current_panel ? i : 0;
         }

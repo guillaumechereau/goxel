@@ -9,10 +9,8 @@
 /* Begin PBXBuildFile section */
 		F00FC312226B2F7C0002F251 /* ini.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC2FC226B2F7B0002F251 /* ini.c */; };
 		F00FC313226B2F7C0002F251 /* gl.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC2FD226B2F7B0002F251 /* gl.c */; };
-		F00FC314226B2F7C0002F251 /* sound_openal.inl in Resources */ = {isa = PBXBuildFile; fileRef = F00FC2FE226B2F7B0002F251 /* sound_openal.inl */; };
 		F00FC315226B2F7C0002F251 /* texture.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC301226B2F7B0002F251 /* texture.c */; };
 		F00FC316226B2F7C0002F251 /* mustache.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC308226B2F7B0002F251 /* mustache.c */; };
-		F00FC317226B2F7C0002F251 /* sound.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC309226B2F7B0002F251 /* sound.c */; };
 		F00FC318226B2F7C0002F251 /* vec.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC30A226B2F7B0002F251 /* vec.c */; };
 		F00FC319226B2F7C0002F251 /* b64.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC30D226B2F7B0002F251 /* b64.c */; };
 		F00FC31A226B2F7C0002F251 /* cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC30E226B2F7B0002F251 /* cache.c */; };
@@ -98,12 +96,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		F00FC2F9226B2F7B0002F251 /* sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sound.h; sourceTree = "<group>"; };
 		F00FC2FA226B2F7B0002F251 /* box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = box.h; sourceTree = "<group>"; };
 		F00FC2FB226B2F7B0002F251 /* mustache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mustache.h; sourceTree = "<group>"; };
 		F00FC2FC226B2F7B0002F251 /* ini.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ini.c; sourceTree = "<group>"; };
 		F00FC2FD226B2F7B0002F251 /* gl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gl.c; sourceTree = "<group>"; };
-		F00FC2FE226B2F7B0002F251 /* sound_openal.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sound_openal.inl; sourceTree = "<group>"; };
 		F00FC2FF226B2F7B0002F251 /* vec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec.h; sourceTree = "<group>"; };
 		F00FC301226B2F7B0002F251 /* texture.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = texture.c; sourceTree = "<group>"; };
 		F00FC302226B2F7B0002F251 /* cache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cache.h; sourceTree = "<group>"; };
@@ -113,7 +109,6 @@
 		F00FC306226B2F7B0002F251 /* img.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = img.h; sourceTree = "<group>"; };
 		F00FC307226B2F7B0002F251 /* ini.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ini.h; sourceTree = "<group>"; };
 		F00FC308226B2F7B0002F251 /* mustache.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mustache.c; sourceTree = "<group>"; };
-		F00FC309226B2F7B0002F251 /* sound.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sound.c; sourceTree = "<group>"; };
 		F00FC30A226B2F7B0002F251 /* vec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vec.c; sourceTree = "<group>"; };
 		F00FC30B226B2F7B0002F251 /* gl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gl.h; sourceTree = "<group>"; };
 		F00FC30C226B2F7B0002F251 /* texture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = texture.h; sourceTree = "<group>"; };
@@ -239,12 +234,10 @@
 				F0DC02A222EEE274007E2F17 /* box.c */,
 				F0ACA2A32271ACEA00376C82 /* json.c */,
 				F0ACA2A22271ACEA00376C82 /* json.h */,
-				F00FC2F9226B2F7B0002F251 /* sound.h */,
 				F00FC2FA226B2F7B0002F251 /* box.h */,
 				F00FC2FB226B2F7B0002F251 /* mustache.h */,
 				F00FC2FC226B2F7B0002F251 /* ini.c */,
 				F00FC2FD226B2F7B0002F251 /* gl.c */,
-				F00FC2FE226B2F7B0002F251 /* sound_openal.inl */,
 				F00FC2FF226B2F7B0002F251 /* vec.h */,
 				F00FC301226B2F7B0002F251 /* texture.c */,
 				F00FC302226B2F7B0002F251 /* cache.h */,
@@ -254,7 +247,6 @@
 				F00FC306226B2F7B0002F251 /* img.h */,
 				F00FC307226B2F7B0002F251 /* ini.h */,
 				F00FC308226B2F7B0002F251 /* mustache.c */,
-				F00FC309226B2F7B0002F251 /* sound.c */,
 				F00FC30A226B2F7B0002F251 /* vec.c */,
 				F00FC30B226B2F7B0002F251 /* gl.h */,
 				F00FC30C226B2F7B0002F251 /* texture.h */,
@@ -516,7 +508,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F00FC314226B2F7C0002F251 /* sound_openal.inl in Resources */,
 				F07DE9D51BD0F03900BAA1AD /* Assets.xcassets in Resources */,
 				F07DE9D81BD0F03900BAA1AD /* MainMenu.xib in Resources */,
 			);
@@ -588,7 +579,6 @@
 				F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */,
 				F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */,
 				F03B4388224CCDDF00798CAB /* yocto.cpp in Sources */,
-				F00FC317226B2F7C0002F251 /* sound.c in Sources */,
 				F00FC31A226B2F7C0002F251 /* cache.c in Sources */,
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
 				F0ACA2A12271ACD400376C82 /* gltf.c in Sources */,

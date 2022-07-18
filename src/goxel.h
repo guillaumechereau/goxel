@@ -43,7 +43,6 @@
 #include "utils/gl.h"
 #include "utils/img.h"
 #include "utils/plane.h"
-#include "utils/sound.h"
 #include "utils/texture.h"
 #include "utils/vec.h"
 
@@ -508,10 +507,6 @@ typedef struct goxel
     int gestures_count;
 
     pathtracer_t pathtracer;
-
-    // Used to check if the active mesh changed to play tick sound.
-    uint64_t    last_mesh_key;
-    double      last_click_time;
 
     // Some stats for the UI.
     struct {
