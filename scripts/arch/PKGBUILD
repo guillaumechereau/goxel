@@ -1,6 +1,6 @@
 # Maintainer: Aditya Mishra <https://github.com/pegvin/goxel2/issues>
 pkgname=goxel2-git
-pkgver=0.11.1
+pkgver=0.12.1
 pkgrel=2 # Update if you changed something but that is so minor change you don't want to change the version
 pkgdesc="a cross-platform 3d voxel art editor"
 arch=('i686' 'x86_64')
