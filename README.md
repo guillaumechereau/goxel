@@ -24,6 +24,7 @@ works on Windows, Linux and macOS.
 
 ---
 # Todo
+- [ ] Lua for scripting
 - [ ] Fix High CPU Usage On Idle
 - [ ] Fix Key Mapping in Settings
 - [ ] Improve UI
