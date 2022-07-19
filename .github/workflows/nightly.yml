@@ -1,4 +1,4 @@
-name: Continous Release
+name: nightly
 on:
   push:
     branches: [ master ]
