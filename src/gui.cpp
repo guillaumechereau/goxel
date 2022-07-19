@@ -134,7 +134,7 @@ namespace ImGui {
                 ImGui::GetContentRegionAvail().x -
                 button_sz.x - style.ItemSpacing.x);
 
-        input_active = ImGui::TempInputTextIsActive(ImGui::GetID(""));
+        input_active = ImGui::TempInputIsActive(ImGui::GetID(""));
         text_color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
         if (!input_active)
             text_color = ImVec4(0, 0, 0, 0);

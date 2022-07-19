@@ -17,6 +17,7 @@
 
 #include "../ext_src/imgui/imgui.cpp"
 #include "../ext_src/imgui/imgui_draw.cpp"
+#include "../ext_src/imgui/imgui_tables.cpp"
 #include "../ext_src/imgui/imgui_widgets.cpp"
 
 #ifdef __clang__
