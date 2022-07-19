@@ -36,8 +36,8 @@ void gui_menu(void);
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
-#include "../ext_src/imgui/imgui.h"
-#include "../ext_src/imgui/imgui_internal.h"
+#include "../lib/imgui/imgui.h"
+#include "../lib/imgui/imgui_internal.h"
 
 #ifndef __clang__
 #pragma GCC diagnostic pop

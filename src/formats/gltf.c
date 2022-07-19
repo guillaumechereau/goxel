@@ -5,7 +5,7 @@
 
 #define CGLTF_IMPLEMENTATION
 #define CGLTF_WRITE_IMPLEMENTATION
-#include "../ext_src/cgltf/cgltf_write.h"
+#include "../lib/cgltf/cgltf_write.h"
 
 typedef struct {
     cgltf_data *data;

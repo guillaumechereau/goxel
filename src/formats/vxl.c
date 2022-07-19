@@ -33,7 +33,7 @@ static int vxl_import(image_t *image, const char *path)
     // The algo is based on
     // https://silverspaceship.com/aosmap/aos_file_format.html
     // From Sean Barrett (the same person that wrote the code used in
-    // ext_src/stb!).
+    // lib/stb!).
     int ret = 0, size;
     int w = 512, h = 512, d = 64, x, y, z;
     uint8_t (*cube)[4] = NULL;

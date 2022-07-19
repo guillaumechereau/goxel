@@ -13,9 +13,9 @@
 #define YOCTO_EMBREE 0
 #define STB_IMAGE_STATIC
 
-#include "../ext_src/yocto/yocto_bvh.h"
-#include "../ext_src/yocto/yocto_scene.h"
-#include "../ext_src/yocto/yocto_trace.h"
+#include "../lib/yocto/yocto_bvh.h"
+#include "../lib/yocto/yocto_scene.h"
+#include "../lib/yocto/yocto_trace.h"
 
 #ifndef __clang__
 #pragma GCC diagnostic pop

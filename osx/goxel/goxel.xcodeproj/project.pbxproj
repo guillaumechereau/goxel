@@ -320,7 +320,7 @@
 		F07DE9D11BD0F03900BAA1AD /* goxel */ = {
 			isa = PBXGroup;
 			children = (
-				F07DEA151BD0F33A00BAA1AD /* ext_src */,
+				F07DEA151BD0F33A00BAA1AD /* lib */,
 				F07DE9E31BD0F31500BAA1AD /* src */,
 				F07DE9D21BD0F03900BAA1AD /* AppDelegate.swift */,
 				F07DE9D41BD0F03900BAA1AD /* Assets.xcassets */,
@@ -380,7 +380,7 @@
 			path = ../../../src;
 			sourceTree = "<group>";
 		};
-		F07DEA151BD0F33A00BAA1AD /* ext_src */ = {
+		F07DEA151BD0F33A00BAA1AD /* lib */ = {
 			isa = PBXGroup;
 			children = (
 				F0C37C8D2317CBF2000EF45F /* xxhash */,
@@ -388,8 +388,8 @@
 				F07DEA211BD0F33A00BAA1AD /* stb */,
 				F07DEA271BD0F33A00BAA1AD /* uthash */,
 			);
-			name = ext_src;
-			path = ../../../ext_src;
+			name = lib;
+			path = ../../../lib;
 			sourceTree = "<group>";
 		};
 		F07DEA211BD0F33A00BAA1AD /* stb */ = {

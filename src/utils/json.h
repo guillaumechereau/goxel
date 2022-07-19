@@ -1,8 +1,8 @@
 #ifndef JSON_H
 #define JSON_H
 
-#include "../../ext_src/json/json.h"
-#include "../../ext_src/json/json-builder.h"
+#include "../../lib/json/json.h"
+#include "../../lib/json/json-builder.h"
 
 #include <stdbool.h>
 

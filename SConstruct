@@ -96,8 +96,8 @@ if target_os == 'msys':
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32',
                      'z', 'tre', 'intl', 'iconv'],
                LINKFLAGS='--static')
-    sources += glob.glob('ext_src/glew/glew.c')
-    env.Append(CPPPATH=['ext_src/glew'])
+    sources += glob.glob('lib/glew/glew.c')
+    env.Append(CPPPATH=['lib/glew'])
     env.Append(CPPDEFINES=['GLEW_STATIC', 'FREE_WINDOWS'])
 
 # OSX Compilation support.
@@ -107,10 +107,10 @@ if target_os == 'darwin':
     env.Append(LIBS=['m', 'glfw', 'objc'])
 
 # Add external libs.
-env.Append(CPPPATH=['ext_src/uthash'])
-env.Append(CPPPATH=['ext_src/stb'])
-env.Append(CPPPATH=['ext_src/noc'])
-env.Append(CPPPATH=['ext_src/xxhash'])
+env.Append(CPPPATH=['lib/uthash'])
+env.Append(CPPPATH=['lib/stb'])
+env.Append(CPPPATH=['lib/noc'])
+env.Append(CPPPATH=['lib/xxhash'])
 
 if not env['yocto']:
     env.Append(CPPDEFINES='YOCTO=0')

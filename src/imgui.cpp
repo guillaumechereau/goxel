@@ -15,10 +15,10 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
-#include "../ext_src/imgui/imgui.cpp"
-#include "../ext_src/imgui/imgui_draw.cpp"
-#include "../ext_src/imgui/imgui_tables.cpp"
-#include "../ext_src/imgui/imgui_widgets.cpp"
+#include "../lib/imgui/imgui.cpp"
+#include "../lib/imgui/imgui_draw.cpp"
+#include "../lib/imgui/imgui_tables.cpp"
+#include "../lib/imgui/imgui_widgets.cpp"
 
 #ifdef __clang__
 #pragma GCC diagnostic pop

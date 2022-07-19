@@ -35,11 +35,11 @@
 #endif
 
 
-#include "../ext_src/yocto/yocto_bvh.cpp"
-#include "../ext_src/yocto/yocto_image.cpp"
-#include "../ext_src/yocto/yocto_scene.cpp"
-#include "../ext_src/yocto/yocto_shape.cpp"
-#include "../ext_src/yocto/yocto_trace.cpp"
+#include "../lib/yocto/yocto_bvh.cpp"
+#include "../lib/yocto/yocto_image.cpp"
+#include "../lib/yocto/yocto_scene.cpp"
+#include "../lib/yocto/yocto_shape.cpp"
+#include "../lib/yocto/yocto_trace.cpp"
 
 #pragma GCC diagnostic pop
 
