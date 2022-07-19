@@ -1,13 +1,16 @@
 #!/usr/bin/python
 
+# Run With Python 2.7 Interpreter
+
 # Read all the files in 'data', and create assets.inl with all the data.  For
 # text file, we try to keep the data as a string, for binary files we store it
 # into a uint8_t array.
 
 from collections import namedtuple
 import os
+import sys
 
-if os.path.dirname(__file__) != "./tools":
+if os.path.dirname(__file__) != "tools":
     print "Should be run from goxel root directory"
     sys.exit(-1)
 

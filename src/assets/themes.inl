@@ -7,7 +7,7 @@
     "background=#2D2D2DFF\n"
     "outline=#FF\n"
     "inner=#595959FF\n"
-    "inner_selected=#568BDBFF\n"
+    "inner_selected=#0F87FAFF\n"
     "text=#CCCCCCFF\n"
     "text_selected=#FFFFFFFF\n"
     "\n"
