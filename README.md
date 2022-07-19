@@ -2,8 +2,10 @@
 
 [![Stable Release](https://github.com/pegvin/goxel2/actions/workflows/release.yml/badge.svg)](https://github.com/pegvin/goxel2/releases)
 [![Nightly Release](https://github.com/pegvin/goxel2/actions/workflows/nightly.yml/badge.svg)](https://github.com/pegvin/goxel2/actions/workflows/nightly.yml)
+
 [![Open Issues](https://img.shields.io/github/issues/pegvin/goxel2)](https://github.com/pegvin/goxel2/issues)
 [![AUR Badge](https://img.shields.io/aur/version/goxel2-git?label=AUR)](https://aur.archlinux.org/packages/goxel2-git)
+[![Discord Chat](https://img.shields.io/discord/998971119623209090?color=7289DA&label=discord)](https://discord.gg/YXx3afnzzW)
 
 Official webpage: https://pegvin.github.io/goxel2
 
