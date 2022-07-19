@@ -1,4 +1,4 @@
-name: Create release
+name: stable
 on: 
   workflow_dispatch:
     inputs: 
@@ -100,7 +100,7 @@ jobs:
       with:
         name: osx_binary
 
-    - name: Update/Create Continous Release
+    - name: Update/Create Release
       uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
