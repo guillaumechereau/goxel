@@ -1,6 +1,7 @@
 # Goxel2
 
-![Build](https://github.com/pegvin/goxel2/actions/workflows/release.yml/badge.svg)
+![Stable Release](https://github.com/pegvin/goxel2/actions/workflows/release.yml/badge.svg)
+![Nightly Release](https://github.com/pegvin/goxel2/actions/workflows/nightly.yml/badge.svg)
 
 Official webpage: https://pegvin.github.io/goxel2/
 
