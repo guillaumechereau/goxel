@@ -18,11 +18,10 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git mingw-w64-x86_64-python mingw-w64-x86_64-fontforge scons make git
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git mingw-w64-x86_64-python scons make git
 
       - name: Build Goxel
         run: |
-          python3 tools/create_font.py
           python3 tools/create_assets.py
           make release
           mv goxel2.exe goxel2-win32.exe
@@ -40,13 +39,12 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install GLFW3, PKG Config, Git, Gtk3-dev, fontforge & SCONS
+    - name: Install GLFW3, PKG Config, Git, Gtk3-dev & SCONS
       run: |
-        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev fontforge scons
+        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
 
     - name: Generate Assets
       run: |
-        python3 tools/create_font.py
         python3 tools/create_assets.py
 
     - name: Build Goxel
@@ -69,12 +67,8 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install FontForge
-      run: brew install fontforge
-
     - name: Generate Assets
       run: |
-        python3 tools/create_font.py
         python3 tools/create_assets.py
 
     - name: Build Goxel
