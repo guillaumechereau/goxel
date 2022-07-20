@@ -12,3 +12,5 @@ xcuserdata/
 /todo
 /.vimrc
 .SRCINFO
+*.min.ttf
+src/assets/*.inl
