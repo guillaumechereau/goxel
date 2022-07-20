@@ -393,9 +393,9 @@ static void load_fonts_texture()
     };
     conf.FontDataOwnedByAtlas = false;
 
-    data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
+    data = assets_get("asset://data/fonts/Montserrat-Medium.min.ttf", &data_size);
     assert(data);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14 * scale,
+    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 15 * scale,
                                    &conf, ranges);
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
