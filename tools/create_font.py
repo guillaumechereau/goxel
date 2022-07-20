@@ -13,7 +13,7 @@
 import fontforge
 import unicodedata
 
-PATH = "./data/fonts/Montserrat-Regular.ttf"
+PATH = "./data/fonts/Montserrat-Medium.ttf"
 
 CHARS = (
 	u"abcdefghijklmnopqrstuvwxyz"
@@ -36,4 +36,4 @@ font.selection.invert()
 for i in font.selection.byGlyphs:
 	font.removeGlyph(i)
 
-font.generate("data/fonts/Montserrat-Minified.ttf")
+font.generate("data/fonts/Montserrat-Medium.min.ttf")
