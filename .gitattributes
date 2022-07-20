@@ -4,7 +4,6 @@
 # Sources
 *.c      text linguist-language=c         diff=c
 *.h      text linguist-language=c         diff=c
-*.inl    text linguist-language=c         diff=c
 *.cpp    text linguist-language=c++       diff=c++
 
 # Files To Not Include
@@ -24,3 +23,4 @@ Makefile linguist-vendored=true
 *.ttf   binary
 *.png   binary
 *.ico   binary
+*.inl   binary
