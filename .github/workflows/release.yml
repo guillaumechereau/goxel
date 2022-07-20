@@ -18,10 +18,12 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git mingw-w64-x86_64-python mingw-w64-x86_64-fontforge scons make git
 
       - name: Build Goxel
         run: |
+          python3 tools/create-font.py
+          python3 tools/create-assets.py
           make release
           mv goxel2.exe goxel2-win32.exe
 
@@ -38,9 +40,14 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install GLFW3, PKG Config, Git, Gtk3 & SCONS
+    - name: Install GLFW3, PKG Config, Git, Gtk3-dev, fontforge & SCONS
       run: |
-        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
+        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev fontforge scons
+
+    - name: Generate Assets
+      run: |
+        python3 tools/create-font.py
+        python3 tools/create-assets.py
 
     - name: Build Goxel
       run: make release
@@ -61,6 +68,14 @@ jobs:
     steps:
     - name: Check out
       uses: actions/checkout@v2
+
+    - name: Install FontForge
+      run: brew install fontforge
+
+    - name: Generate Assets
+      run: |
+        python3 tools/create-font.py
+        python3 tools/create-assets.py
 
     - name: Build Goxel
       run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
