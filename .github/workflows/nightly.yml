@@ -4,6 +4,23 @@ on:
     branches: [ master ]
 
 jobs:
+  Generate-Assets:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Generate Assets
+      run: |
+        python3 tools/create_assets.py
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: generated_assets
+        path: ./src/assets/
+        if-no-files-found: error
+
   Build-For-Windows:
     runs-on: windows-latest
     defaults:
@@ -15,11 +32,15 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git mingw-w64-x86_64-python scons make git
+          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
+
+      - name: Download Assets
+        uses: actions/download-artifact@v2
+        with:
+          name: generated_assets
 
       - name: Build Goxel
         run: |
-          python3 tools/create_assets.py
           make release
           mv goxel2.exe goxel2-win32.exe
 
@@ -33,9 +54,10 @@ jobs:
       run: |
         sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
 
-    - name: Generate Assets
-      run: |
-        python3 tools/create_assets.py
+    - name: Download Assets
+      uses: actions/download-artifact@v2
+      with:
+        name: generated_assets
 
     - name: Build Goxel
       run: make release
@@ -46,9 +68,10 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Generate Assets
-      run: |
-        python3 tools/create_assets.py
+    - name: Download Assets
+      uses: actions/download-artifact@v2
+      with:
+        name: generated_assets
 
     - name: Build Goxel
       run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
