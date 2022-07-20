@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Required Python v3 Interpreter with pillow module installed
+# Requires Python v3 Interpreter with pillow module installed
 
 # ************************************************************************
 # Create the icon atlas image from all the icons svg files
