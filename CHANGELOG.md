@@ -3,6 +3,11 @@ the changelog is updated after every release.
 
 ---
 
+- [v0.13.2](https://github.com/pegvin/goxel2/releases/tag/v0.13.2)
+	- Move To Latest ImGui Version - v1.88
+	- Switch To [Montserrat Font](https://fonts.google.com/specimen/Montserrat) - Medium Version For UI
+	- Tweak Default Font Size To 15px Times The Scale
+
 - [v0.12.1](https://github.com/pegvin/goxel2/releases/tag/v0.12.1)
 	- New Dark Theme
 	- Performance Fixes (Reduce CPU Usage)
