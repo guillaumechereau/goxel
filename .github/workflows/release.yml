@@ -22,8 +22,8 @@ jobs:
 
       - name: Build Goxel
         run: |
-          python3 tools/create-font.py
-          python3 tools/create-assets.py
+          python3 tools/create_font.py
+          python3 tools/create_assets.py
           make release
           mv goxel2.exe goxel2-win32.exe
 
@@ -46,8 +46,8 @@ jobs:
 
     - name: Generate Assets
       run: |
-        python3 tools/create-font.py
-        python3 tools/create-assets.py
+        python3 tools/create_font.py
+        python3 tools/create_assets.py
 
     - name: Build Goxel
       run: make release
@@ -74,8 +74,8 @@ jobs:
 
     - name: Generate Assets
       run: |
-        python3 tools/create-font.py
-        python3 tools/create-assets.py
+        python3 tools/create_font.py
+        python3 tools/create_assets.py
 
     - name: Build Goxel
       run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
