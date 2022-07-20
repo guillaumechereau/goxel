@@ -42,12 +42,10 @@ void gui_render_panel(void)
         pt->force_restart = true;
     }
     if (pt->status) {
-        gui_text("%d/100", (int)(pt->progress * 100));
+        gui_text("%d%%", (int)(pt->progress * 100));
     }
-    if (    pt->status == PT_FINISHED &&
-            gui_button("Save to album", -1, 0) &&
-            gui_need_full_version())
-    {
+
+    if (pt->status == PT_FINISHED && gui_button("Save to album", -1, 0) && gui_need_full_version()) {
         action_exec2(ACTION_export_render_buf_to_photos);
     }
 
