@@ -4,65 +4,83 @@ on:
     branches: [ master ]
 
 jobs:
-  windows_x86_64:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
+#   windows_x86_64:
+#     runs-on: windows-latest
+#     defaults:
+#       run:
+#         shell: msys2 {0}
+#     steps:
+#       - uses: actions/checkout@v2
+#       - uses: msys2/setup-msys2@v2
+#         with:
+#           msystem: MINGW64
+#           update: true
+#           install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make git
 
-      - name: Build Goxel
-        run: |
-          make release
+#       - name: Build Goxel
+#         run: |
+#           make release
 
-  windows_i686:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-i686-gcc mingw-w64-i686-glfw mingw-w64-i686-libtre-git scons make
+#   windows_i686:
+#     runs-on: windows-latest
+#     defaults:
+#       run:
+#         shell: msys2 {0}
+#     steps:
+#       - uses: actions/checkout@v2
+#       - uses: msys2/setup-msys2@v2
+#         with:
+#           msystem: MINGW64
+#           update: true
+#           install: mingw-w64-i686-gcc mingw-w64-i686-glfw mingw-w64-i686-libtre-git scons make
 
-      - name: Build Goxel
-        run: |
-          export PATH=/mingw32/bin/:$PATH
-          make release
+#       - name: Build Goxel
+#         run: |
+#           export PATH=/mingw32/bin/:$PATH
+#           make release
 
-  linux_x86_64:
+#   linux_x86_64:
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Check out
+#       uses: actions/checkout@v2
+
+#     - name: Install GLFW3, PKG Config, Git, Gtk3-dev & SCONS
+#       run: |
+#         sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
+
+#     - name: Build Goxel
+#       run: make release
+
+
+  linux_i686:
     runs-on: ubuntu-latest
     steps:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Install GLFW3, PKG Config, Git, Gtk3-dev & SCONS
-      run: |
-        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
+    - name: Store GCC information in a file
+      uses: paulproteus/ubuntu-18.04-x86@0.1
+      with:
+        command: |
+          sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev scons
+          make release
+          ls
 
-    - name: Build Goxel
-      run: make release
+    - name: Run LS
+      run: ls
 
-  Build-For-OSX:
-    runs-on: macos-11
-    steps:
-    - name: Check out
-      uses: actions/checkout@v2
+#   Build-For-OSX:
+#     runs-on: macos-11
+#     steps:
+#     - name: Check out
+#       uses: actions/checkout@v2
 
-    - name: Build Goxel
-      run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
+#     - name: Build Goxel
+#       run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
 
   Success:
-    needs: [linux_x86_64, Build-For-OSX, windows_x86_64, windows_i686]
+    needs: [linux_i686] #[linux_x86_64, Build-For-OSX, windows_x86_64, windows_i686]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
