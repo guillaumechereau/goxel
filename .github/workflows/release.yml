@@ -122,7 +122,7 @@ jobs:
         if-no-files-found: error
 
   Create-Release:
-    needs: [linux_x86_64, Build-For-OSX, windows_x86_64, windows_i686]
+    needs: [linux_x86_64, linux_i686, Build-For-OSX, windows_x86_64, windows_i686]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
