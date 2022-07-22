@@ -56,7 +56,8 @@ if target_os != 'msys':
         CXXFLAGS=['-Wall', '-Wno-narrowing']
     )
 
-if env['werror']:
+# Use -Werror only in debug/analyze
+if env['werror'] and env['mode'] in ['debug', 'analyze']:
     env.Append(CCFLAGS='-Werror')
 
 if env['mode'] not in ['debug', 'analyze']:
