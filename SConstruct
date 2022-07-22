@@ -5,7 +5,7 @@ import sys
 vars = Variables('settings.py')
 vars.AddVariables(
     EnumVariable('mode', 'Build mode', 'debug',
-        allowed_values=('debug', 'release', 'profile', 'analyze')),
+        allowed_values=('debug', 'release', 'profile')),
     BoolVariable('werror', 'Warnings as error', True),
     BoolVariable('yocto', 'Enable yocto renderer', True),
     PathVariable('config_file', 'Config file to use', 'src/config.h'),
@@ -16,22 +16,10 @@ target_os = str(Platform())
 env = Environment(variables = vars, ENV = os.environ)
 conf = env.Configure()
 
-if env['mode'] == 'analyze':
-    # Make sure clang static analyzer has a chance to override de compiler
-    # and set CCC settings
-    env["CC"] = os.getenv("CC") or env["CC"]
-    env["CXX"] = os.getenv("CXX") or env["CXX"]
-    env["ENV"].update(x for x in os.environ.items() if x[0].startswith("CCC_"))
-
-
 if os.environ.get('CC') == 'clang':
     env.Replace(CC='clang', CXX='clang++')
 else:
     env.Replace(CC='gcc', CXX='g++')
-
-# Hack for gcc <= 5, since pragma diagnostic push doesn't seem to work.
-if env['CCVERSION'] and int(env['CCVERSION'].split('.')[0]) <= 5:
-    env.Append(CCFLAGS=['-Wno-unused-function'])
 
 # Asan & Ubsan (need to come first).
 if env['mode'] == 'debug' and target_os == 'posix':
