@@ -93,6 +93,7 @@ make release
 | xxHash            | [BSD 2-Clause](https://github.com/Cyan4973/xxHash)         |
 | cgltf             | [MIT](https://github.com/jkuhlmann/cgltf)                  |
 | imgui             | [MIT](https://github.com/ocornut/imgui)                    |
+| libvxl            | [MIT](https://github.com/xtreme8000/libvxl)                |
 | noc_file_dialog   | [MIT](https://github.com/guillaumechereau/noc)             |
 | yocto-gl          | [MIT](https://github.com/xelatihy/yocto-gl)                |
 | stb               | [MIT & Unlicense](https://github.com/nothings/stb)         |
