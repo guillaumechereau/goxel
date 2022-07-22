@@ -7,7 +7,7 @@ on:
         description: 'Version number Eg: 4.2.0' 
 
 jobs:
-  Build-For-Windows:
+  windows_x86_64:
     runs-on: windows-latest
     defaults:
       run:
@@ -23,13 +23,38 @@ jobs:
       - name: Build Goxel
         run: |
           make release
-          mv goxel2.exe goxel2-win32.exe
+          mv goxel2.exe goxel2-x86_64.exe
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: win_binary
-          path: goxel2-win32.exe
+          name: win_x86_64_binary
+          path: goxel2-x86_64.exe
+          if-no-files-found: error
+
+  windows_i686:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-i686-gcc mingw-w64-i686-glfw mingw-w64-i686-libtre-git scons make
+
+      - name: Build Goxel
+        run: |
+          make release
+          mv goxel2.exe goxel2-i686.exe
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: win_i686_binary
+          path: goxel2-i686.exe
           if-no-files-found: error
 
   Build-For-Linux:
@@ -76,7 +101,7 @@ jobs:
         if-no-files-found: error
 
   Create-Release:
-    needs: [Build-For-Linux, Build-For-OSX, Build-For-Windows]
+    needs: [linux_x86_64, Build-For-OSX, windows_x86_64, windows_i686]
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -88,12 +113,17 @@ jobs:
     - name: Download Linux build artifacts
       uses: actions/download-artifact@v2
       with:
-        name: linux_binary
+        name: win_x86_64_binary
 
     - name: Download Linux build artifacts
       uses: actions/download-artifact@v2
       with:
-        name: win_binary
+        name: win_i686_binary
+
+    - name: Download Linux build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: linux_binary
 
     - name: Download OSX build artifacts
       uses: actions/download-artifact@v2
@@ -108,6 +138,8 @@ jobs:
         prerelease: false
         title: "Goxel v${{github.event.inputs.version}}"
         files: |
-          goxel2-win32.exe
+          goxel2-x86_64.exe
+          goxel2-i686.exe
           goxel2-linux.elf
           goxel2-osx.zip
+
