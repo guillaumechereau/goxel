@@ -4,7 +4,7 @@
 
 #include "goxel.h"
 #include "file_format.h"
-#include "libvxl.h"
+#include "../../lib/libvxl/libvxl.h" // Using the Relative path cause i don't have money to buy a mac and change stuff for osx
 
 #define RGB(r, g, b) (((b) << 16) | ((g) << 8) | (r))
 #define RED(c) ((c)&0xFF)
