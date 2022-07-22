@@ -89,4 +89,24 @@ Then to build:
 
 
 ---
+
+## Credits & Licenses
+
+|       Item        |                          License                           |
+|-------------------|------------------------------------------------------------|
+| Goxel             | [GPL v3.0](https://github.com/guillaumechereau/goxel)      |
+| inih              | [BSD 3-Clause](https://github.com/benhoyt/inih)            |
+| json-parser       | [BSD 2-Clause](https://github.com/udp/json-parser)         |
+| xxHash            | [BSD 2-Clause](https://github.com/Cyan4973/xxHash)         |
+| cgltf             | [MIT](https://github.com/jkuhlmann/cgltf)                  |
+| imgui             | [MIT](https://github.com/ocornut/imgui)                    |
+| noc_file_dialog   | [MIT](https://github.com/guillaumechereau/noc)             |
+| yocto-gl          | [MIT](https://github.com/xelatihy/yocto-gl)                |
+| stb               | [MIT & Unlicense](https://github.com/nothings/stb)         |
+| Montserrat font   | [Open Font](https://fonts.google.com/specimen/Montserrat)  |
+| glew              | [Custom](https://github.com/nigels-com/glew)               |
+| uthash            | [Custom](https://github.com/troydhanson/uthash)            |
+
+---
+
 # Thanks
