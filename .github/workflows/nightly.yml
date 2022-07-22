@@ -36,6 +36,7 @@ jobs:
 
       - name: Build Goxel
         run: |
+          export PATH=/mingw32/bin/:$PATH
           make release
 
   linux_x86_64:

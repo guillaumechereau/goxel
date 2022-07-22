@@ -47,6 +47,7 @@ jobs:
 
       - name: Build Goxel
         run: |
+          export PATH=/mingw32/bin/:$PATH
           make release
           mv goxel2.exe goxel2-i686.exe
 
