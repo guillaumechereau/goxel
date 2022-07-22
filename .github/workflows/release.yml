@@ -58,7 +58,7 @@ jobs:
           path: goxel2-i686.exe
           if-no-files-found: error
 
-  Build-For-Linux:
+  linux_x86_64:
     runs-on: ubuntu-latest
     steps:
     - name: Check out
@@ -72,15 +72,35 @@ jobs:
       run: make release
 
     - name: Strip Debug Info & Change FileName
-      run: strip ./goxel2 && mv ./goxel2 ./goxel2-linux.elf
+      run: strip ./goxel2 && mv ./goxel2 ./goxel2-x86_64.elf
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: linux_binary
-        path: goxel2-linux.elf
+        name: linux_x86_64_binary
+        path: goxel2-x86_64.elf
         if-no-files-found: error
 
+  linux_i686:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+
+    - name: Setup Ubuntu 18.04 x86 & Build
+      uses: paulproteus/ubuntu-18.04-x86@0.1
+      with:
+        command: apt-get update -y && apt-get install -y libglfw3-dev pkg-config git libgtk-3-dev scons && make release && ls
+
+    - name: Strip Debug Info & Change FileName
+      run: strip ./goxel2 && mv ./goxel2 ./goxel2-i686.elf
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: linux_i686_binary
+        path: goxel2-i686.elf
+        if-no-files-found: error
 
   Build-For-OSX:
     runs-on: macos-11
@@ -124,7 +144,12 @@ jobs:
     - name: Download Linux build artifacts
       uses: actions/download-artifact@v2
       with:
-        name: linux_binary
+        name: linux_x86_64_binary
+
+    - name: Download Linux build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: linux_i686_binary
 
     - name: Download OSX build artifacts
       uses: actions/download-artifact@v2
@@ -140,7 +165,8 @@ jobs:
         title: "Goxel v${{github.event.inputs.version}}"
         files: |
           goxel2-x86_64.exe
+          goxel2-x86_64.elf
+          goxel2-i686.elf
           goxel2-i686.exe
-          goxel2-linux.elf
           goxel2-osx.zip
 

@@ -58,7 +58,7 @@ jobs:
     - name: Check out
       uses: actions/checkout@v2
 
-    - name: Build
+    - name: Setup Ubuntu 18.04 x86
       uses: paulproteus/ubuntu-18.04-x86@0.1
       with:
         command: apt-get update -y && apt-get install -y libglfw3-dev pkg-config git libgtk-3-dev scons && make release && ls
