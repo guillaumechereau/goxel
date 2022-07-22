@@ -111,6 +111,7 @@ env.Append(CPPPATH=['lib/uthash'])
 env.Append(CPPPATH=['lib/stb'])
 env.Append(CPPPATH=['lib/noc'])
 env.Append(CPPPATH=['lib/xxhash'])
+env.Append(CPPPATH=['lib/libvxl'])
 
 if not env['yocto']:
     env.Append(CPPDEFINES='YOCTO=0')
