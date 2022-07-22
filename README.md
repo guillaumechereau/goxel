@@ -10,13 +10,7 @@
 Official webpage: https://pegvin.github.io/goxel2
 
 ---
-# About
-
-You can use goxel to create voxel graphics (3D images formed of cubes). It
-works on Windows, Linux and macOS.
-
----
-# Features
+## Features
 
 - 24 bits RGB colors.
 - Unlimited scene size.
@@ -28,7 +22,10 @@ works on Windows, Linux and macOS.
 - Ray tracing.
 
 ---
-# Todo
+##
+
+---
+## Todo
 - [ ] Lua for scripting
 - [ ] Fix High CPU Usage On Idle
 - [ ] Fix Key Mapping in Settings
@@ -36,12 +33,12 @@ works on Windows, Linux and macOS.
 - [ ] Create A Updater To Check For Updates
 
 ---
-# Download
+## Download
 
 You can download latest stable release from [here](https://github.com/pegvin/goxel2/releases/latest), For Many Reasons Goxel2 Has Dropped Support For Android, IOS & Web.
 
-Usage
------
+---
+## Usage
 
 - Left click: apply selected tool operation.
 - Middle click: rotate the view.
@@ -50,43 +47,39 @@ Usage
 - Mouse wheel: zoom in and out.
 
 
-Building
---------
+---
+## Building from source
 
 The building system uses scons.  You can compile in debug with 'scons', and in
 release with 'scons mode=release'.  On Windows, currently possible to build
 with [msys2](https://www.msys2.org/) or try prebuilt
-[goxel](https://packages.msys2.org/base/mingw-w64-goxel) package directly.
+[goxel2](https://github.com/pegvin/goxel2/releases/latest) package directly.
 The code is in C99, using some gnu extensions, so it does not compile
 with msvc.
 
 # Linux/BSD
 
-Install dependencies using your package manager. On Debian/Ubuntu:
+Install dependencies using your package manager.
 
-    - scons
-    - pkg-config
-    - libglfw3-dev
-    - libgtk-3-dev
+- On Debian/Ubuntu:
 
-Then to build, run the command:
+```bash
+sudo apt-get install scons pkg-config libglfw3-dev libgtk-3-dev
+```
 
-    make release
+- On Windows:
 
-# Windows
+You need to install [msys2](https://www.msys2.org/), and the following packages:
 
-You need to install msys2 mingw, and the following packages:
+```bash
+pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git scons make
+```
 
-    pacman -S mingw-w64-x86_64-gcc
-    pacman -S mingw-w64-x86_64-glfw
-    pacman -S mingw-w64-x86_64-libtre-git
-    pacman -S scons
-    pacman -S make
+and then to finally build, run the command:
 
-Then to build:
-
-    make release
-
+```bash
+make release
+```
 
 ---
 
