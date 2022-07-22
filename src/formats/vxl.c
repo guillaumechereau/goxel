@@ -1,258 +1,120 @@
 // Support for Ace of Spades map files (vxl)
+// Original Author: https://github.com/guillaumechereau
+// Improved By: https://github.com/xtreme8000
 
 #include "goxel.h"
 #include "file_format.h"
+#include "libvxl.h"
 
-#define READ(type, file) \
-    ({ type v; size_t r = fread(&v, sizeof(v), 1, file); (void)r; v;})
+#define RGB(r, g, b) (((b) << 16) | ((g) << 8) | (r))
+#define RED(c) ((c)&0xFF)
+#define GREEN(c) (((c) >> 8) & 0xFF)
+#define BLUE(c) (((c) >> 16) & 0xFF)
 
-#define raise(msg) do { \
-        LOG_E(msg); \
-        ret = -1; \
-        goto end; \
-    } while (0)
+static int import_vxl(image_t* image, const char* path) {
+	if (!path) {
+		return -1;
+	}
 
-static inline int AT(int x, int y, int z) {
-    x = 511 - x;
-    z = 63 - z;
-    return x + y * 512 + z * 512 * 512;
+	int file_size;
+	void* file_data = read_file(path, &file_size);
+
+	size_t map_size, map_depth;
+
+	if(!libvxl_size(&map_size, &map_depth, file_data, file_size)) {
+		return -1;
+	}
+
+	struct libvxl_map map;
+
+	if(!libvxl_create(&map, map_size, map_size, map_depth, file_data, file_size)) {
+		return -1;
+	}
+
+	mesh_iterator_t it = mesh_get_iterator(image->active_layer->mesh, MESH_ITER_VOXELS);
+
+	for (size_t x = 0; x < map_size; x++) {
+		for (size_t y = 0; y < map_size; y++) {
+			for (size_t z = 0; z < map_depth; z++) {
+				if (libvxl_map_issolid(&map, x, y, z)) {
+					uint32_t color = libvxl_map_get(&map, x, y, z);
+					mesh_set_at(
+						image->active_layer->mesh, &it,
+						(int[3]) {map_size / 2 - 1 - x,
+						y - map_size / 2,
+						map_depth / 2 - 1 - z},
+						(uint8_t[4]) { BLUE(color), GREEN(color), RED(color), 0xFF }
+					);
+				}
+			}
+		}
+	}
+
+	libvxl_free(&map);
+
+	if(!box_is_null(image->box)) {
+		bbox_from_extents(
+			image->box,
+			vec3_zero,
+			map_size / 2.0F,
+			map_size / 2.0F,
+			map_depth / 2.0F
+		);
+	}
+
+	return 0;
 }
 
-static void swap_color(uint32_t v, uint8_t ret[4])
-{
-    uint8_t o[4];
-    memcpy(o, &v, 4);
-    ret[0] = o[2];
-    ret[1] = o[1];
-    ret[2] = o[0];
-    ret[3] = o[3];
-}
+static int export_as_vxl(const image_t* image, const char* path) {
+	if (!path) {
+		return -1;
+	}
 
-static int vxl_import(image_t *image, const char *path)
-{
-    // The algo is based on
-    // https://silverspaceship.com/aosmap/aos_file_format.html
-    // From Sean Barrett (the same person that wrote the code used in
-    // lib/stb!).
-    int ret = 0, size;
-    int w = 512, h = 512, d = 64, x, y, z;
-    uint8_t (*cube)[4] = NULL;
-    uint8_t *data, *v;
+	const mesh_t* mesh = goxel_get_layers_mesh(image);
 
-    uint32_t *color;
-    int i;
-    int number_4byte_chunks;
-    int top_color_start;
-    int top_color_end;
-    int bottom_color_start;
-    int bottom_color_end; // exclusive
-    int len_top;
-    int len_bottom;
+	int bbox[2][3];
+	if (!mesh_get_bbox(mesh, bbox, true)) {
+		return -1;
+	}
 
-    if (!path) return -1;
+	struct libvxl_map map;
 
-    cube = calloc(w * h * d, sizeof(*cube));
-    data = (void*)read_file(path, &size);
-    v = data;
+	if (!libvxl_create(
+			&map,
+			bbox[1][0] - bbox[0][0],
+			bbox[1][1] - bbox[0][1],
+			bbox[1][2] - bbox[0][2],
+			NULL, 0 )) {
+		return -1;
+	}
 
-    for (y = 0; y < h; y++)
-    for (x = 0; x < w; x++) {
+	int pos[3];
+	mesh_iterator_t it = mesh_get_iterator(mesh, MESH_ITER_SKIP_EMPTY);
 
-        for (z = 0; z < 64; z++)
-            cube[AT(x, y, z)][3] = 255;
+	while(mesh_iter(&it, pos)) {
+		uint8_t color[4];
+		mesh_get_at(mesh, &it, pos, color);
 
-        z = 0;
-        while (true) {
-            number_4byte_chunks = v[0];
-            top_color_start = v[1];
-            top_color_end = v[2];
+		if (color[3] > 0) {
+			libvxl_map_set(
+				&map,
+				bbox[1][0] - 1 - pos[0],
+				pos[1] - bbox[0][1],
+				bbox[1][2] - 1 - pos[2],
+				RGB(color[2], color[1], color[0])
+			);
+		}
+	}
 
-            for (i = z; i < top_color_start; i++)
-                cube[AT(x, y, i)][3] = 0;
+	libvxl_writefile(&map, (char*)path);
+	libvxl_free(&map);
 
-            color = (uint32_t*)(v + 4);
-            for (z = top_color_start; z <= top_color_end; z++) {
-                CHECK(z >= 0 && z < d);
-                swap_color(*color++, cube[AT(x, y, z)]);
-            }
-
-            len_bottom = top_color_end - top_color_start + 1;
-
-            // check for end of data marker
-            if (number_4byte_chunks == 0) {
-                // infer ACTUAL number of 4-byte chunks from the length of the
-                // color data
-                v += 4 * (len_bottom + 1);
-                break;
-            }
-
-            // infer the number of bottom colors in next span from chunk length
-            len_top = (number_4byte_chunks-1) - len_bottom;
-
-            // now skip the v pointer past the data to the beginning of the
-            // next span
-            v += v[0] * 4;
-
-            bottom_color_end   = v[3]; // aka air start
-            bottom_color_start = bottom_color_end - len_top;
-
-            for(z = bottom_color_start; z < bottom_color_end; z++)
-                swap_color(*color++, cube[AT(x, y, z)]);
-        }
-    }
-
-    mesh_blit(image->active_layer->mesh, (uint8_t*)cube,
-              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
-    if (box_is_null(image->box)) {
-        bbox_from_extents(image->box, vec3_zero, w / 2, h / 2, d / 2);
-    }
-    free(cube);
-    free(data);
-    return ret;
-}
-
-static int is_surface(int x, int y, int z, uint8_t map[512][512][64])
-{
-   if (map[x][y][z]==0) return 0;
-   if (x == 0 || x == 511) return 1;
-   if (y == 0 || y == 511) return 1;
-   if (z == 0 || z == 63) return 1;
-   if (x   >   0 && map[x-1][y][z]==0) return 1;
-   if (x+1 < 512 && map[x+1][y][z]==0) return 1;
-   if (y   >   0 && map[x][y-1][z]==0) return 1;
-   if (y+1 < 512 && map[x][y+1][z]==0) return 1;
-   if (z   >   0 && map[x][y][z-1]==0) return 1;
-   if (z+1 <  64 && map[x][y][z+1]==0) return 1;
-   return 0;
-}
-
-static void write_color(FILE *f, uint32_t color)
-{
-    uint8_t c[4];
-    memcpy(c, &color, 4);
-    fputc(c[2], f);
-    fputc(c[1], f);
-    fputc(c[0], f);
-    fputc(c[3], f);
-}
-
-#define MAP_Z  64
-void write_map(const char *filename,
-               uint8_t map[512][512][64],
-               uint32_t color[512][512][64])
-{
-    int i,j,k;
-    FILE *f = fopen(filename, "wb");
-
-    for (j = 0; j < 512; ++j) {
-        for (i=0; i < 512; ++i) {
-            k = 0;
-            while (k < MAP_Z) {
-                int z;
-                int air_start;
-                int top_colors_start;
-                int top_colors_end; // exclusive
-                int bottom_colors_start;
-                int bottom_colors_end; // exclusive
-                int top_colors_len;
-                int bottom_colors_len;
-                int colors;
-
-                // find the air region
-                air_start = k;
-                while (k < MAP_Z && !map[i][j][k])
-                    ++k;
-
-                // find the top region
-                top_colors_start = k;
-                while (k < MAP_Z && is_surface(i,j,k,map))
-                    ++k;
-                top_colors_end = k;
-
-                // now skip past the solid voxels
-                while (k < MAP_Z && map[i][j][k] && !is_surface(i,j,k,map))
-                    ++k;
-
-                // at the end of the solid voxels, we have colored voxels.
-                // in the "normal" case they're bottom colors; but it's
-                // possible to have air-color-solid-color-solid-color-air,
-                // which we encode as air-color-solid-0, 0-color-solid-air
-
-                // so figure out if we have any bottom colors at this point
-                bottom_colors_start = k;
-
-                z = k;
-                while (z < MAP_Z && is_surface(i,j,z,map))
-                    ++z;
-
-                if (z == MAP_Z || 0)
-                    ; // in this case, the bottom colors of this span are
-                      // empty, because we'l emit as top colors
-                else {
-                    // otherwise, these are real bottom colors so we can write
-                    // them
-                    while (is_surface(i,j,k,map))
-                        ++k;
-                }
-                bottom_colors_end = k;
-
-                // now we're ready to write a span
-                top_colors_len    = top_colors_end    - top_colors_start;
-                bottom_colors_len = bottom_colors_end - bottom_colors_start;
-
-                colors = top_colors_len + bottom_colors_len;
-
-                if (k == MAP_Z)
-                    fputc(0,f); // last span
-                else
-                    fputc(colors+1, f);
-
-                fputc(top_colors_start, f);
-                fputc(top_colors_end-1, f);
-                fputc(air_start, f);
-
-                for (z=0; z < top_colors_len; ++z)
-                    write_color(f, color[i][j][top_colors_start + z]);
-                for (z=0; z < bottom_colors_len; ++z)
-                    write_color(f, color[i][j][bottom_colors_start + z]);
-            }
-        }
-    }
-    fclose(f);
-}
-
-static int export_as_vxl(const image_t *image, const char *path)
-{
-    uint8_t (*map)[512][512][64];
-    uint32_t (*color)[512][512][64];
-    const mesh_t *mesh = goxel_get_layers_mesh(image);
-    mesh_iterator_t iter = {0};
-    uint8_t c[4];
-    int x, y, z, pos[3];
-    assert(path);
-
-    map = calloc(1, sizeof(*map));
-    color = calloc(1, sizeof(*color));
-    for (z = 0; z < 64; z++)
-    for (y = 0; y < 512; y++)
-    for (x = 0; x < 512; x++) {
-        pos[0] = 256 - x;
-        pos[1] = y - 256;
-        pos[2] = 31 - z;
-        mesh_get_at(mesh, &iter, pos, c);
-        if (c[3] <= 127) continue;
-        (*map)[x][y][z] = 1;
-        memcpy(&((*color)[x][y][z]), c, 4);
-    }
-    write_map(path, *map, *color);
-    free(map);
-    free(color);
-    return 0;
+	return 0;
 }
 
 FILE_FORMAT_REGISTER(vxl,
-    .name = "vxl",
-    .ext = "vxl\0*.vxl\0",
-    .import_func = vxl_import,
-    .export_func = export_as_vxl,
+	.name = "vxl",
+	.ext = "vxl\0*.vxl\0",
+	.import_func = import_vxl,
+	.export_func = export_as_vxl
 )
