@@ -2,6 +2,7 @@ name: nightly
 on:
   push:
     branches: [ master ]
+  pull_request:
 
 jobs:
   windows_x86_64:
