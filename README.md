@@ -27,7 +27,11 @@ Official webpage: https://pegvin.github.io/goxel2
 ---
 ## Todo
 - [ ] Lua for scripting
-- [ ] Fix High CPU Usage On Idle
+- [ ] Fix High Resource Usage
+	- [ ] CPU
+	- [ ] GPU
+	- [ ] RAM
+
 - [ ] Fix Key Mapping in Settings
 - [ ] Improve UI
 - [ ] Create A Updater To Check For Updates
