@@ -1,10 +1,17 @@
 name: stable
 on: 
   workflow_dispatch:
-    inputs: 
+    inputs:
+      is_prerelease:
+        description: "is this release a pre-release?"
+        required: false
+        default: false
+        type: boolean 
+
       version: 
-        type: text
-        description: 'Version number Eg: 4.2.0' 
+        type: string
+        required: true
+        description: 'Version number without "v" Eg: 0.12.2'
 
 jobs:
   windows_x86_64:
@@ -161,12 +168,12 @@ jobs:
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: "v${{github.event.inputs.version}}"
-        prerelease: false
+        prerelease: ${{github.event.inputs.is_prerelease}}
         title: "Goxel v${{github.event.inputs.version}}"
         files: |
           goxel2-x86_64.exe
+          goxel2-i686.exe
           goxel2-x86_64.elf
           goxel2-i686.elf
-          goxel2-i686.exe
           goxel2-osx.zip
 
