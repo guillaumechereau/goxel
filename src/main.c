@@ -243,8 +243,9 @@ int main(int argc, char **argv) {
 			ret = goxel_export_to_file(args.export_path, NULL);
 		}
 
-		glfwTerminate();
 		goxel_release();
+		glfwDestroyWindow(window);
+		glfwTerminate();
 		return ret;
 	}
 
@@ -299,7 +300,8 @@ int main(int argc, char **argv) {
 		if (goxel.quit) break;
 	}
 
-	glfwTerminate();
 	goxel_release();
+	glfwDestroyWindow(window);
+	glfwTerminate();
 	return ret;
 }
