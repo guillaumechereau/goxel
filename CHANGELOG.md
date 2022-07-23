@@ -3,6 +3,11 @@ the changelog is updated after every release.
 
 ---
 
+- [v0.14.2](https://github.com/pegvin/goxel2/releases/tag/v0.14.2)
+	- Add i686 (x32) Builds For Windows & Linux
+	- Add Better Support For Ace Of Spades (.vxl) Format & Similar Games (by [xtreme8000](https://github.com/xtreme8000))
+	- Fix UI Glitches
+
 - [v0.13.2](https://github.com/pegvin/goxel2/releases/tag/v0.13.2)
 	- Move To Latest ImGui Version - v1.88
 	- Switch To [Montserrat Font](https://fonts.google.com/specimen/Montserrat) - Medium Version For UI
