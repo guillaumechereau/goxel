@@ -30,11 +30,11 @@ static const char *get_user_dir(void *user)
     if (!*ret) {
         home = getenv("XDG_CONFIG_HOME");
         if (home) {
-            snprintf(ret, sizeof(ret), "%s/goxel", home);
+            snprintf(ret, sizeof(ret), "%s/goxel2", home);
         } else {
             home = getenv("HOME");
             if (!home) home = getpwuid(getuid())->pw_dir;
-            snprintf(ret, sizeof(ret), "%s/.config/goxel", home);
+            snprintf(ret, sizeof(ret), "%s/.config/goxel2", home);
         }
     }
     return ret;
@@ -200,7 +200,7 @@ void sys_set_window_title(const char *title)
  * Function: sys_get_user_dir
  * Return the user config directory for goxel
  *
- * On linux, this should be $HOME/.config/goxel.
+ * On linux, this should be $HOME/.config/goxel2.
  */
 const char *sys_get_user_dir(void)
 {
