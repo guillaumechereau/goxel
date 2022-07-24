@@ -585,8 +585,10 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
 
     GL(glEnable(GL_DEPTH_TEST));
     GL(glDepthFunc(GL_LEQUAL));
+
     GL(glEnable(GL_CULL_FACE));
     GL(glCullFace(GL_BACK));
+    GL(glFrontFace(GL_CCW));
 
     GL(glActiveTexture(GL_TEXTURE0));
     GL(glBindTexture(GL_TEXTURE_2D, g_bump_tex));
