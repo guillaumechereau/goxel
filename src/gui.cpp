@@ -59,7 +59,7 @@ static inline ImVec4 color_lighten(ImVec4 c, float k)
 namespace ImGui {
 	void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
 				 float thickness = 1,
-				 int rounding_corners_flags = ~0)
+				 int rounding_corners_flags = ImDrawFlags_RoundCornersAll)
 	{
 		ImGuiContext& g = *GImGui;
 		const ImGuiStyle& style = g.Style;
@@ -80,7 +80,7 @@ namespace ImGui {
 	}
 
 	void GoxBox(ImVec2 pos, ImVec2 size, bool selected,
-				int rounding_corners_flags = ~0)
+				int rounding_corners_flags = ImDrawFlags_RoundCornersAll)
 	{
 		ImGuiContext& g = *GImGui;
 		const ImGuiStyle& style = g.Style;
@@ -680,8 +680,7 @@ void gui_iter(const inputs_t *inputs)
 	io.DisplaySize = ImVec2((float)goxel.screen_size[0],
 							(float)goxel.screen_size[1]);
 
-	io.DisplayFramebufferScale = ImVec2(goxel.screen_scale,
-										goxel.screen_scale);
+	io.DisplayFramebufferScale = ImVec2(goxel.screen_scale, goxel.screen_scale);
 	io.DeltaTime = goxel.delta_time;
 	gui->inputs = inputs;
 
