@@ -494,12 +494,13 @@ typedef struct goxel
     char       *help_text;  // Seen in the bottom of the screen.
     char       *hint_text;  // Seen in the bottom of the screen.
 
-    double     delta_time;  // Elapsed time since last frame (sec)
-    int        frame_count; // Global frames counter.
-    double     frame_time;  // Clock time at beginning of the frame (sec)
-    double     fps;         // Average fps.
-    bool       quit;        // Set to true to quit the application.
+    // These Are Calculated in Main Loop, i.e main.c
+    double     delta_time;   // Elapsed time since last frame (sec)
+    double     frame_time;   // Clock time at beginning of the frame (sec)
+    double     fps;          // Average fps.
+    bool       vsyncEnabled; // Whether VSync is Enabled Or Not.
 
+    bool       quit;        // Set to true to quit the application.
     int        view_effects; // EFFECT_WIREFRAME | EFFECT_GRID | EFFECT_EDGES
 
     // All the gestures we listen to.  Up to 16.
@@ -515,6 +516,7 @@ typedef struct goxel
         float viewport[4];
     } gui;
 
+    bool editorLocked;
 } goxel_t;
 
 // the global goxel instance.

@@ -16,7 +16,6 @@ static int shortcut_callback(action_t *action, void *user)
     return 0;
 }
 
-
 int gui_settings_popup(void *data)
 {
     const char **names;
@@ -69,7 +68,7 @@ int gui_settings_popup(void *data)
 #endif
     if (gui_collapsing_header("Paths", false)) {
         gui_text("Palettes: %s/palettes", sys_get_user_dir());
-        gui_text("Progs: %s/progs", sys_get_user_dir());
+        gui_text("Config: %s/settings.ini", sys_get_user_dir());
     }
 
     if (gui_collapsing_header("Shortcuts", false)) {
@@ -79,6 +78,8 @@ int gui_settings_popup(void *data)
         gui_separator();
         gui_columns(1);
     }
+
+    gui_checkbox("Vsync Enabled", &goxel.vsyncEnabled, "Changes will be applied after restarting the application.");
 
     gui_popup_body_end();
     if (gui_button("Save", 0, 0))
@@ -92,9 +93,12 @@ static int settings_ini_handler(void *user, const char *section,
                                 int lineno)
 {
     action_t *a;
-    if (strcmp(section, "ui") == 0) {
+    if (strcmp(section, "general") == 0) {
         if (strcmp(name, "theme") == 0) {
             theme_set(value);
+        }
+        if (strcmp(name, "vsync") == 0) {
+            goxel.vsyncEnabled = strcmp(value, "true") == 0 ? true : false;
         }
     }
     if (strcmp(section, "shortcuts") == 0) {
@@ -133,8 +137,9 @@ void settings_save(void)
         LOG_E("Cannot save settings to %s: %s", path, strerror(errno));
         return;
     }
-    fprintf(file, "[ui]\n");
+    fprintf(file, "[general]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
+    fprintf(file, "vsync=%s\n", goxel.vsyncEnabled == true ? "true" : "false");
 
     fprintf(file, "[shortcuts]\n");
     actions_iter(shortcut_save_callback, file);
