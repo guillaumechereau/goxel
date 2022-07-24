@@ -1,5 +1,4 @@
 #include "goxel.h"
-#include "framecap.h"
 
 #ifdef GLES2
 #   define GLFW_INCLUDE_ES2
@@ -208,7 +207,6 @@ int main(int argc, char **argv) {
 	g_window = window;
 
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(0); // No Swap Interval, Swap ASAP
 	glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, false);
 	glfwGetWindowSize(g_window, &g_WinSize[0], &g_WinSize[1]);
 	set_window_icon(window);
@@ -252,9 +250,40 @@ int main(int argc, char **argv) {
 	g_inputs = &inputs;
 	int i;
 
-	framecap_init();
+	glfwSwapInterval(goxel.vsyncEnabled == true ? 1 : 0); // No Swap Interval, Swap ASAP
+
+#ifndef NDEBUG
+	char title[256];
+#endif
+
+	double prevTime = 0.0;
+	double currTime = 0.0;
+	double timeDiff;
+	unsigned int counter = 0;
+
+	goxel.delta_time = 0.0;
+	goxel.frame_time = 0.0;
+	goxel.fps = 0.0;
+
 	while (!glfwWindowShouldClose(g_window)) {
-		framecap_sleep();
+		currTime = glfwGetTime();
+		timeDiff = currTime - prevTime;
+		counter++;
+
+		if (timeDiff >= 1.0 / 30.0) {
+			goxel.delta_time = timeDiff;
+			goxel.fps = (1.0 / timeDiff) * counter;
+			goxel.frame_time = (timeDiff / counter) * 1000;
+
+#ifndef NDEBUG
+			sprintf(title, "Goxel2 - %f fps | %f ms", goxel.fps, goxel.frame_time);
+			glfwSetWindowTitle(window, title);
+#endif
+
+			prevTime = currTime;
+			counter = 0;
+		}
+
 		glfwPollEvents();
 
 		// If Window is Not Visible, Focused Or Iconified Don't Render Anything
