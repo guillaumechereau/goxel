@@ -1,7 +1,6 @@
 #include "goxel.h"
 #include "xxhash.h"
 #include "file_format.h"
-
 #include "shader_cache.h"
 
 #include <stdarg.h>
@@ -403,17 +402,12 @@ static void update_window_title(void)
 }
 
 KEEPALIVE
-int goxel_iter(inputs_t *inputs)
-{
-    double time = sys_get_time();
+int goxel_iter(inputs_t *inputs) {
     camera_t *camera = get_camera();
 
     if (!goxel.graphics_initialized)
         goxel_create_graphics();
 
-    goxel.delta_time = time - goxel.frame_time;
-    goxel.fps = mix(goxel.fps, 1.0 / goxel.delta_time, 0.1);
-    goxel.frame_time = time;
     goxel_set_help_text(NULL);
     goxel_set_hint_text(NULL);
     goxel.screen_size[0] = inputs->window_size[0];
@@ -421,14 +415,15 @@ int goxel_iter(inputs_t *inputs)
     goxel.screen_scale = inputs->scale;
     goxel.rend.fbo = inputs->framebuffer;
     goxel.rend.scale = inputs->scale;
-    camera_update(camera);
-    mat4_copy(camera->view_mat, goxel.rend.view_mat);
-    mat4_copy(camera->proj_mat, goxel.rend.proj_mat);
+
+    if (goxel.editorLocked == false) {
+        camera_update(camera);
+        mat4_copy(camera->view_mat, goxel.rend.view_mat);
+        mat4_copy(camera->proj_mat, goxel.rend.proj_mat);
+    }
+
     gui_iter(inputs);
-
     update_window_title();
-
-    goxel.frame_count++;
 
     if (goxel.request_test_graphic_release) {
         goxel_release_graphics();
@@ -459,6 +454,9 @@ static void set_cursor_hint(cursor_t *curs)
 
 static int on_drag(const gesture_t *gest, void *user)
 {
+    if (goxel.editorLocked == true)
+        return 0;
+
     cursor_t *c = &goxel.cursor;
     if (gest->state == GESTURE_BEGIN)
         c->flags |= CURSOR_PRESSED;
@@ -497,6 +495,9 @@ static bool unproject_delta(const float win[3], const float model[4][4],
 
 static int on_pan(const gesture_t *gest, void *user)
 {
+    if (goxel.editorLocked == true)
+        return 0;
+
     camera_t *camera = get_camera();
     if (gest->state == GESTURE_BEGIN) {
         mat4_copy(camera->mat, goxel.move_origin.camera_mat);
@@ -520,6 +521,9 @@ static int on_pan(const gesture_t *gest, void *user)
 
 static int on_rotate(const gesture_t *gest, void *user)
 {
+    if (goxel.editorLocked == true)
+        return 0;
+
     float x1, y1, x2, y2, x_rot, z_rot;
     camera_t *camera = get_camera();
 
@@ -542,6 +546,10 @@ static int on_rotate(const gesture_t *gest, void *user)
 
 static int on_zoom(const gesture_t *gest, void *user)
 {
+    if (goxel.editorLocked == true) {
+        return 0;
+    }
+
     float p[3], n[3];
     double zoom;
     camera_t *camera = get_camera();
@@ -560,6 +568,9 @@ static int on_zoom(const gesture_t *gest, void *user)
 
 static int on_hover(const gesture_t *gest, void *user)
 {
+    if (goxel.editorLocked == true)
+        return 0;
+
     cursor_t *c = &goxel.cursor;
     c->snaped = goxel_unproject(gest->viewport, gest->pos, c->snap_mask,
                                 c->snap_offset, c->pos, c->normal);
@@ -608,6 +619,10 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     if (!goxel.no_edit) {
         tool_iter(goxel.tool, &painter, viewport);
     }
+
+
+    if (goxel.editorLocked == true)
+        return;
 
     if (inputs->mouse_wheel) {
         mat4_itranslate(camera->mat, 0, 0,

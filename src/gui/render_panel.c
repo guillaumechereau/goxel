@@ -18,29 +18,39 @@ void gui_render_panel(void)
         goxel.image->export_width = goxel.gui.viewport[2];
         goxel.image->export_height = goxel.gui.viewport[3];
     }
+
     gui_enabled_begin(goxel.image->export_custom_size);
+
     i = goxel.image->export_width;
     if (gui_input_int("w", &i, 1, maxsize))
         goxel.image->export_width = clamp(i, 1, maxsize);
+
     i = goxel.image->export_height;
     if (gui_input_int("h", &i, 1, maxsize))
         goxel.image->export_height = clamp(i, 1, maxsize);
+
     gui_enabled_end();
     gui_group_end();
 
+    gui_checkbox("Lock Editor", &goxel.editorLocked, "Lock Editor To Prevent Re-Rendering Accidentally");
+
     gui_input_int("Samples", &pt->num_samples, 1, 10000);
 
-    if (pt->status == PT_STOPPED && gui_button("Start", 1, 0))
+    if (pt->status == PT_STOPPED && gui_button("Start", 1, 0)) {
         pt->status = PT_RUNNING;
+    }
+
     if (pt->status == PT_RUNNING && gui_button("Stop", 1, 0)) {
         pathtracer_stop(pt);
         pt->status = PT_STOPPED;
     }
+
     if (pt->status == PT_FINISHED && gui_button("Restart", 1, 0)) {
         pt->status = PT_RUNNING;
         pt->progress = 0;
         pt->force_restart = true;
     }
+
     if (pt->status) {
         gui_text("%d%%", (int)(pt->progress * 100));
     }
@@ -52,12 +62,9 @@ void gui_render_panel(void)
     if (gui_collapsing_header("World", false)) {
         gui_push_id("world");
         gui_group_begin(NULL);
-        gui_selectable_toggle("None", &pt->world.type, PT_WORLD_NONE,
-                              NULL, -1);
-        gui_selectable_toggle("Uniform", &pt->world.type, PT_WORLD_UNIFORM,
-                              NULL, -1);
-        gui_selectable_toggle("Sky", &pt->world.type, PT_WORLD_SKY,
-                              NULL, -1);
+        gui_selectable_toggle("None", &pt->world.type, PT_WORLD_NONE, NULL, -1);
+        gui_selectable_toggle("Uniform", &pt->world.type, PT_WORLD_UNIFORM, NULL, -1);
+        gui_selectable_toggle("Sky", &pt->world.type, PT_WORLD_SKY, NULL, -1);
         gui_group_end();
         if (pt->world.type) {
             gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
@@ -101,8 +108,7 @@ void gui_render_panel(void)
         gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
         gui_angle("Yaw", &goxel.rend.light.yaw, 0, 360);
         gui_checkbox("Fixed", &goxel.rend.light.fixed, NULL);
-        gui_input_float("Intensity", &goxel.rend.light.intensity,
-                        0.1, 0, 10, NULL);
+        gui_input_float("Intensity", &goxel.rend.light.intensity, 0.1, 0, 10, NULL);
         gui_group_end();
     }
 }
