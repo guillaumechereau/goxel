@@ -15,6 +15,7 @@ Official webpage: https://pegvin.github.io/goxel2
 - 24 bits RGB colors.
 - Unlimited scene size.
 - Unlimited undo buffer.
+- Available For x64 & x86 Based Systems.
 - Layers.
 - Marching Cube rendering.
 - Procedural rendering.
@@ -26,7 +27,7 @@ Official webpage: https://pegvin.github.io/goxel2
 
 ---
 ## Todo
-- [ ] Lua for scripting
+- [ ] Lua/Julia for scripting
 - [ ] Fix High Resource Usage
 	- [ ] CPU
 	- [ ] GPU
