@@ -65,6 +65,7 @@ enum {
     X(tool_set_move),
 
     X(export_to_photos),
+    X(open_run_lua_plugin),
 
     ACTION_COUNT
 };

@@ -95,7 +95,10 @@ if target_os == 'darwin':
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
     env.Append(LIBS=['m', 'glfw', 'objc'])
 
+env.Append(LIBS=['Lua544'], LIBPATH='lib/lua-5.4.4/build/')
+
 # Add external libs.
+env.Append(CPPPATH=['lib/lua-5.4.4'])
 env.Append(CPPPATH=['lib/uthash'])
 env.Append(CPPPATH=['lib/stb'])
 env.Append(CPPPATH=['lib/noc'])

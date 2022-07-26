@@ -44,6 +44,7 @@ void gui_menu(void)
             file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
         }
+        gui_menu_item(ACTION_open_run_lua_plugin, "Open & Run Lua Plugin", true);
         gui_menu_item(ACTION_quit, "Quit", true);
         gui_menu_end();
     }
