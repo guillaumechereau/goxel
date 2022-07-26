@@ -30,6 +30,7 @@ void gui_menu(void)
 {
     if (gui_menu_begin("File")) {
         gui_menu_item(ACTION_reset, "New", true);
+        gui_menu_item(ACTION_open_run_lua_plugin, "Run Plugin", true);
         gui_menu_item(ACTION_save, "Save",
                 image_get_key(goxel.image) != goxel.image->saved_key);
         gui_menu_item(ACTION_save_as, "Save as", true);
@@ -44,7 +45,6 @@ void gui_menu(void)
             file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
         }
-        gui_menu_item(ACTION_open_run_lua_plugin, "Open & Run Lua Plugin", true);
         gui_menu_item(ACTION_quit, "Quit", true);
         gui_menu_end();
     }
