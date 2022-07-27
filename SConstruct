@@ -96,13 +96,11 @@ if target_os == 'darwin':
     env.Append(LIBS=['m', 'glfw', 'objc'])
 
 # Add external libs.
-env.Append(CPPPATH=['lib/lua-5.4.4'])
 env.Append(CPPPATH=['lib/uthash'])
 env.Append(CPPPATH=['lib/stb'])
 env.Append(CPPPATH=['lib/noc'])
 env.Append(CPPPATH=['lib/xxhash'])
 env.Append(CPPPATH=['lib/libvxl'])
-env.Append(LIBS=['Lua544'], LIBPATH='lib/lua-5.4.4/build/')
 
 if not env['yocto']:
     env.Append(CPPDEFINES='YOCTO=0')
