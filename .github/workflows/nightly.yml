@@ -12,6 +12,9 @@ jobs:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -29,6 +32,9 @@ jobs:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -43,8 +49,9 @@ jobs:
   linux_x86_64:
     runs-on: ubuntu-latest
     steps:
-    - name: Check out
       uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Install GLFW3, PKG Config, Git, Gtk3, LibPNG & SCONS
       run: |
@@ -56,8 +63,9 @@ jobs:
   linux_i686:
     runs-on: ubuntu-latest
     steps:
-    - name: Check out
       uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Setup Ubuntu 18.04 x86
       uses: paulproteus/ubuntu-18.04-x86@0.1
@@ -74,8 +82,9 @@ jobs:
   Build-For-OSX:
     runs-on: macos-11
     steps:
-    - name: Check out
       uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Build Goxel
       run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
@@ -86,3 +95,5 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        submodules: recursive
