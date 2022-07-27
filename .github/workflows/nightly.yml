@@ -90,8 +90,14 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Install Scons
+      run: brew install scons
+
+    - name: Build Lua
+      run: make lua
+
     - name: Build Goxel
-      run: make lua && cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
+      run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
 
   Success:
     needs: [linux_x86_64, linux_i686, Build-For-OSX, windows_x86_64, windows_i686]
