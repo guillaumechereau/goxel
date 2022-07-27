@@ -53,6 +53,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+
 #define GOXEL_VERSION_STR "0.14.2"
 #ifndef GOXEL_DEFAULT_THEME
 #   define GOXEL_DEFAULT_THEME "dark"
@@ -517,6 +521,8 @@ typedef struct goxel
     } gui;
 
     bool editorLocked;
+
+    lua_State *L_State; // Global Lua VM State, Get's Initialized & Freed in goxel_init & goxel_release
 } goxel_t;
 
 // the global goxel instance.

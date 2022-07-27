@@ -291,6 +291,8 @@ void goxel_init(void)
             break;
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
+    goxel.L_State = luaL_newstate();
+    luaL_openlibs(goxel.L_State);
 
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_RMB, on_pan);
@@ -365,6 +367,8 @@ void goxel_reset(void)
 void goxel_release(void)
 {
     pathtracer_stop(&goxel.pathtracer);
+    lua_close(goxel.L_State);
+    goxel.L_State = NULL;
     gui_release();
 }
 
@@ -1293,10 +1297,10 @@ ACTION_REGISTER(view_front,
     .default_shortcut = "1",
 )
 
-static void quit(void)
-{
+static void quit(void) {
     gui_query_quit();
 }
+
 ACTION_REGISTER(quit,
     .help = "Quit the application",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
