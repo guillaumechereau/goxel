@@ -53,9 +53,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+#include "../lib/lua-5.4.4/src/lua.h"
+#include "../lib/lua-5.4.4/src/lauxlib.h"
+#include "../lib/lua-5.4.4/src/lualib.h"
 
 #define GOXEL_VERSION_STR "0.14.2"
 #ifndef GOXEL_DEFAULT_THEME
