@@ -90,8 +90,8 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Install Scons
-      run: brew install scons dylibbundler
+    - name: Install scons, dylibbundler, glfw3 & tre
+      run: brew install scons dylibbundler glfw tre
 
     - name: Build
       run: make release
