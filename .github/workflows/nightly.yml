@@ -125,7 +125,7 @@ jobs:
 
     - name: Put Dylibs
       run: |
-        dylibbundler -od -b -x --no-codesign ./goxel2.app/Contents/MacOS/goxel2 -d ./goxel2.app/Contents/libs/
+        dylibbundler -od -b -ns -x ./goxel2.app/Contents/MacOS/goxel2 -d ./goxel2.app/Contents/libs/
 
     - name: Create Zip
       run: zip -r goxel2-osx.zip ./goxel2.app
