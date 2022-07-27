@@ -5,83 +5,83 @@ on:
   pull_request:
 
 jobs:
-  windows_x86_64:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
+  # windows_x86_64:
+  #   runs-on: windows-latest
+  #   defaults:
+  #     run:
+  #       shell: msys2 {0}
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         submodules: recursive
 
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git mingw-w64-x86_64-libpng scons make git
+  #     - uses: msys2/setup-msys2@v2
+  #       with:
+  #         msystem: MINGW64
+  #         update: true
+  #         install: mingw-w64-x86_64-gcc mingw-w64-x86_64-glfw mingw-w64-x86_64-libtre-git mingw-w64-x86_64-libpng scons make git
 
-      - name: Build Goxel
-        run: |
-          make release
+  #     - name: Build Goxel
+  #       run: |
+  #         make release
 
-  windows_i686:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
+  # windows_i686:
+  #   runs-on: windows-latest
+  #   defaults:
+  #     run:
+  #       shell: msys2 {0}
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         submodules: recursive
 
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-i686-gcc mingw-w64-i686-glfw mingw-w64-i686-libtre-git mingw-w64-i686-libpng scons make
+  #     - uses: msys2/setup-msys2@v2
+  #       with:
+  #         msystem: MINGW64
+  #         update: true
+  #         install: mingw-w64-i686-gcc mingw-w64-i686-glfw mingw-w64-i686-libtre-git mingw-w64-i686-libpng scons make
 
-      - name: Build Goxel
-        run: |
-          export PATH=/mingw32/bin/:$PATH
-          make release
+  #     - name: Build Goxel
+  #       run: |
+  #         export PATH=/mingw32/bin/:$PATH
+  #         make release
 
-  linux_x86_64:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+  # linux_x86_64:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
 
-    - name: Install GLFW3, PKG Config, Git, Gtk3, LibPNG & SCONS
-      run: |
-        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons
+  #   - name: Install GLFW3, PKG Config, Git, Gtk3, LibPNG & SCONS
+  #     run: |
+  #       sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons
 
-    - name: Build Goxel
-      run: |
-        make release
+  #   - name: Build Goxel
+  #     run: |
+  #       make release
 
-  linux_i686:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+  # linux_i686:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
 
-    - name: Setup Ubuntu 18.04 x86
-      uses: paulproteus/ubuntu-18.04-x86@0.1
-      with:
-        command: |
-          apt-get update -y
-          apt-get install -y snap libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons
-          make release
+  #   - name: Setup Ubuntu 18.04 x86
+  #     uses: paulproteus/ubuntu-18.04-x86@0.1
+  #     with:
+  #       command: |
+  #         apt-get update -y
+  #         apt-get install -y snap libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons
+  #         make release
 
-    - name: Exit if file not exists
-      run: |
-        if [ ! -e ./goxel2 ]; then
-            echo "goxel2 executable not found"
-            exit 1
-        fi
+  #   - name: Exit if file not exists
+  #     run: |
+  #       if [ ! -e ./goxel2 ]; then
+  #           echo "goxel2 executable not found"
+  #           exit 1
+  #       fi
 
   osx_x86_64:
     runs-on: macos-11
@@ -91,13 +91,57 @@ jobs:
         submodules: recursive
 
     - name: Install Scons
-      run: brew install scons
+      run: brew install scons dylibbundler
 
-    - name: Build Goxel
-      run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
+    - name: Build
+      run: make release
+
+    - name: Generate .icns
+      run: |
+        mkdir goxel2.iconset
+        sips -z 16 16     icon.png --out goxel2.iconset/icon_16x16.png
+        sips -z 32 32     icon.png --out goxel2.iconset/icon_16x16@2x.png
+        sips -z 32 32     icon.png --out goxel2.iconset/icon_32x32.png
+        sips -z 64 64     icon.png --out goxel2.iconset/icon_32x32@2x.png
+        sips -z 128 128   icon.png --out goxel2.iconset/icon_128x128.png
+        sips -z 256 256   icon.png --out goxel2.iconset/icon_128x128@2x.png
+        sips -z 256 256   icon.png --out goxel2.iconset/icon_256x256.png
+        sips -z 512 512   icon.png --out goxel2.iconset/icon_256x256@2x.png
+        sips -z 512 512   icon.png --out goxel2.iconset/icon_512x512.png
+        cp icon.png goxel2.iconset/icon_512x512@2x.png
+        iconutil -c icns -o goxel2.icns goxel2.iconset
+        rm -R goxel2.iconset
+
+    - name: Create Apple Bundle
+      run: |
+        mkdir goxel2.app
+        mkdir goxel2.app/Contents
+        mkdir goxel2.app/Contents/libs
+        mkdir goxel2.app/Contents/MacOS
+        mkdir goxel2.app/Contents/Resources
+        cp ./goxel2 ./goxel2.app/Contents/MacOS/
+        cp ./goxel2.icns ./goxel2.app/Contents/Resources/goxel2.icns
+        cp ./Info.plist ./goxel2.app/Contents/
+
+    - name: Put Dylibs
+      run: |
+        dylibbundler -od -b -x --no-codesign ./goxel2.app/Contents/MacOS/goxel2 -d ./goxel2.app/Contents/libs/
+
+    - name: Create Zip
+      run: zip -r goxel2-osx.zip ./goxel2.app
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: osx_binary
+        path: ./goxel2-osx.zip
+        if-no-files-found: error
+
+    # - name: Build Goxel
+    #   run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
 
   Success:
-    needs: [linux_x86_64, linux_i686, osx_x86_64, windows_x86_64, windows_i686]
+    needs: osx_x86_64 #[linux_x86_64, linux_i686, osx_x86_64, windows_x86_64, windows_i686]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

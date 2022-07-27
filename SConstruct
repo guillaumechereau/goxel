@@ -16,7 +16,7 @@ target_os = str(Platform())
 env = Environment(variables = vars, ENV = os.environ)
 conf = env.Configure()
 
-if os.environ.get('CC') == 'clang':
+if os.environ.get('CC') == 'clang' or target_os == 'darwin':
     env.Replace(CC='clang', CXX='clang++')
 else:
     env.Replace(CC='gcc', CXX='g++')
