@@ -15,8 +15,3 @@ run:
 
 clean:
 	scons -c
-	rm -rf lib/lua-5.4.4/build
-
-lua:
-	cd lib/lua-5.4.4/
-	make

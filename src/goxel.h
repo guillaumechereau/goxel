@@ -46,16 +46,17 @@
 #include "utils/texture.h"
 #include "utils/vec.h"
 
+// We Just Put Lua Source Code into lua-5.4.4 So we don't need to handle building it and stuff on OSX & other platforms
+#include "lua-5.4.4/lua.h"
+#include "lua-5.4.4/lauxlib.h"
+#include "lua-5.4.4/lualib.h"
+
 #include <float.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "../lib/lua-5.4.4/src/lua.h"
-#include "../lib/lua-5.4.4/src/lauxlib.h"
-#include "../lib/lua-5.4.4/src/lualib.h"
 
 #define GOXEL_VERSION_STR "0.14.2"
 #ifndef GOXEL_DEFAULT_THEME
