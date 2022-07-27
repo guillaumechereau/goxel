@@ -23,6 +23,7 @@ jobs:
 
       - name: Build Goxel
         run: |
+          make lua
           make release
 
   windows_i686:
@@ -44,6 +45,7 @@ jobs:
       - name: Build Goxel
         run: |
           export PATH=/mingw32/bin/:$PATH
+          make lua
           make release
 
   linux_x86_64:
@@ -58,7 +60,9 @@ jobs:
         sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons
 
     - name: Build Goxel
-      run: make release
+      run: |
+        make lua
+        make release
 
   linux_i686:
     runs-on: ubuntu-latest
@@ -70,7 +74,7 @@ jobs:
     - name: Setup Ubuntu 18.04 x86
       uses: paulproteus/ubuntu-18.04-x86@0.1
       with:
-        command: apt-get update -y && apt-get install -y libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons && make release && ls
+        command: apt-get update -y && apt-get install -y libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons && make lua && make release && ls
 
     - name: Exit if file not exists
       run: |
@@ -87,7 +91,7 @@ jobs:
         submodules: recursive
 
     - name: Build Goxel
-      run: cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
+      run: make lua && cd osx/goxel && xcodebuild -configuration "Release" -destination 'platform=macOS' build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO && cd ../..
 
   Success:
     needs: [linux_x86_64, linux_i686, Build-For-OSX, windows_x86_64, windows_i686]
