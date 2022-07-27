@@ -74,7 +74,13 @@ jobs:
     - name: Setup Ubuntu 18.04 x86
       uses: paulproteus/ubuntu-18.04-x86@0.1
       with:
-        command: apt-get update -y && apt-get install -y libglfw3-dev cmake pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons && cd lib/lua-5.4.4/ && mkdir build && cmake -B build && cmake --build build && cd ../../ && make release && ls
+        command: |
+          wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+          apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+          apt-get update -y
+          apt-get install -y cmake libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons
+          make lua
+          make release
 
     - name: Exit if file not exists
       run: |
