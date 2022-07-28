@@ -13,18 +13,13 @@ Official webpage: https://pegvin.github.io/goxel2
 ---
 ## Features
 
-- 24 bits RGB colors.
-- Unlimited scene size.
-- Unlimited undo buffer.
-- Available For x64 & x86 Based Systems.
 - Layers.
-- Marching Cube rendering.
-- Procedural rendering.
-- Export to obj, pyl, png, magica voxel, qubicle.
 - Ray tracing.
-
----
-##
+- Unlimited scene size.
+- Marching Cube rendering.
+- Available For x64 & x86 Based Systems.
+- Extendable using Lua (WIP)
+- Export to obj, pyl, png, magica voxel, qubicle & many more.
 
 ---
 ## Todo
