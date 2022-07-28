@@ -11,6 +11,11 @@
 #   define NOMINMAX
 #endif
 
+// We Just Put Lua Source Code into lua-5.4.4 So we don't need to handle building it and stuff on OSX & other platforms
+#include "lua-5.4.4/lua.h"
+#include "lua-5.4.4/lauxlib.h"
+#include "lua-5.4.4/lualib.h"
+
 #include "action.h"
 #include "assets.h"
 #include "block_def.h"
@@ -37,6 +42,7 @@
 #include "utarray.h"
 #include "uthash.h"
 #include "utlist.h"
+#include "exposed_funcs.h"
 
 #include "utils/box.h"
 #include "utils/cache.h"
@@ -45,11 +51,6 @@
 #include "utils/plane.h"
 #include "utils/texture.h"
 #include "utils/vec.h"
-
-// We Just Put Lua Source Code into lua-5.4.4 So we don't need to handle building it and stuff on OSX & other platforms
-#include "lua-5.4.4/lua.h"
-#include "lua-5.4.4/lauxlib.h"
-#include "lua-5.4.4/lualib.h"
 
 #include <float.h>
 #include <stdarg.h>
