@@ -63,7 +63,7 @@ with [msys2](https://www.msys2.org/) or try prebuilt
 The code is in C99, using some gnu extensions, so it does not compile
 with msvc.
 
-# Linux/BSD
+### Linux/BSD
 
 Install dependencies using your package manager.
 
@@ -73,7 +73,7 @@ Install dependencies using your package manager.
 sudo apt-get install scons pkg-config libglfw3-dev libgtk-3-dev
 ```
 
-- On Windows:
+### Windows:
 
 You need to install [msys2](https://www.msys2.org/), and the following packages:
 
@@ -86,6 +86,30 @@ and then to finally build, run the command:
 ```bash
 make release
 ```
+
+---
+
+## Project layout
+
+```
+    ├─ .github/         GitHub related configurations & workflows
+    ├─ aur/             AUR's Repository
+    ├─ data/            Configurations & Data (which are converted to C Arrays)
+    ├─ lib/             Third-party Libraries
+    ├─ screenshots/     Some Screenshots of the application
+    ├─ tools/           contains python scripts which convert all of the data inside sub-dirs in 'data' dir
+    ├─ src/             application source code (see src/nvim/README.md)
+    │  ├─ assets/       converted contents of 'data' folder
+    │  ├─ formats/      handlers for different file formats
+    │  ├─ gui/          contains different gui items
+    │  ├─ lua-5.4.4/    lua's source code
+    │  ├─ tools/        algorithms & functions for different tools like brush
+    │  └─ utils/        simple utility functions & macros
+    ├─ SConstruct/      scons configuration file
+    └─ icon.png         main icon which is converted to .icns on github actions
+```
+
+some files/directories might not be included here because they are pretty self-explainatory
 
 ---
 
