@@ -291,8 +291,12 @@ void goxel_init(void)
             break;
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
-    goxel.L_State = luaL_newstate();
-    luaL_openlibs(goxel.L_State);
+
+    lua_State* L = luaL_newstate();
+    goxel.L_State = L;
+    luaL_openlibs(L);
+    lua_register(L, "GoxCreateBoxAt", lua_GoxCreateBoxAt);
+    lua_register(L, "GoxRemoveBoxAt", lua_GoxRemoveBoxAt);
 
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_RMB, on_pan);
