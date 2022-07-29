@@ -2,6 +2,7 @@
  * Section: Model3d
  *
  * Functions to render 3d vertex models, like cube, plane, etc.
+ * not to be confused with .m3d format
  */
 
 #ifndef MODEL3D_H
