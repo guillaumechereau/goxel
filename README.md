@@ -18,19 +18,19 @@ Official webpage: https://pegvin.github.io/goxel2
 - Unlimited scene size.
 - Marching Cube rendering.
 - Available For x64 & x86 Based Systems.
-- Extendable using Lua (WIP)
+- Extendable using Lua.
 - Export to obj, pyl, png, magica voxel, qubicle & many more.
 
 ---
 ## Todo
-- [ ] Lua/Julia for scripting
+- [x] Lua for scripting
+- [x] Improve UI
 - [ ] Fix High Resource Usage
 	- [ ] CPU
 	- [ ] GPU
 	- [ ] RAM
 
 - [ ] Fix Key Mapping in Settings
-- [ ] Improve UI
 - [ ] Create A Updater To Check For Updates
 
 ---
@@ -47,6 +47,9 @@ You can download latest stable release from [here](https://github.com/pegvin/gox
 - Left/Right arrow: rotate the view.
 - Mouse wheel: zoom in and out.
 
+---
+## API
+goxel2 can be extended via Lua, [Read more...](https://github.com/pegvin/goxel2/wiki/Lua-API)
 
 ---
 ## Building from source
@@ -62,13 +65,19 @@ with msvc.
 
 Install dependencies using your package manager.
 
-- On Debian/Ubuntu:
+- On Debian & it's children:
 
 ```bash
 sudo apt-get install scons pkg-config libglfw3-dev libgtk-3-dev
 ```
 
-### Windows:
+- On Arch & it's children:
+
+```bash
+sudo pacman -S scons pkg-config glfw gtk3
+```
+
+### Windows
 
 You need to install [msys2](https://www.msys2.org/), and the following packages:
 
