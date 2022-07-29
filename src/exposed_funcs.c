@@ -1,6 +1,6 @@
 #include "exposed_funcs.h"
 
-int lua_GoxCreateBox(lua_State* L) {
+int lua_GoxCreateBoxAt(lua_State* L) {
 	int x, y, z;
 	x = (int)lua_tonumber(L, 1);
 	y = (int)lua_tonumber(L, 2);
@@ -14,11 +14,11 @@ int lua_GoxCreateBox(lua_State* L) {
 		(uint8_t[4]) { 0xFF, 0xFF, 0xFF, 0xFF } // Color
 	);
 
-	printf("[C] - GoxCreateBox(%d, %d, %d);\n", x, y, z);
+	printf("[C] - GoxCreateBoxAt(%d, %d, %d);\n", x, y, z);
 	return 3;
 }
 
-int lua_GoxRemoveBox(lua_State* L) {
+int lua_GoxRemoveBoxAt(lua_State* L) {
 	int x, y, z;
 	x = (int)lua_tonumber(L, 1);
 	y = (int)lua_tonumber(L, 2);
@@ -31,7 +31,7 @@ int lua_GoxRemoveBox(lua_State* L) {
 		(int[3]) { x, y, z } // Position
 	);
 
-	printf("[C] - GoxRemoveBox(%d, %d, %d);\n", x, y, z);
+	printf("[C] - GoxRemoveBoxAt(%d, %d, %d);\n", x, y, z);
 	return 3;
 }
 
