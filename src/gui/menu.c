@@ -92,6 +92,15 @@ void gui_menu(void)
         if (gui_menu_item(0, "About", true))
             gui_open_popup("About", 0, NULL, gui_about_popup);
 
+        if (gui_menu_item(0, "Discord", true))
+            OpenUrlInBrowser("https://discord.gg/YXx3afnzzW");
+
+        if (gui_menu_item(0, "Discussions", true))
+            OpenUrlInBrowser("https://github.com/pegvin/goxel2/discussions");
+
+        if (gui_menu_item(0, "How To Lua?", true))
+            OpenUrlInBrowser("https://github.com/pegvin/goxel2/wiki/Lua-API");
+
         if (gui_menu_item(0, "Found a bug?", true))
             OpenUrlInBrowser("https://github.com/pegvin/goxel2/issues/new/choose");
 
