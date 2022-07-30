@@ -125,6 +125,7 @@ some files/directories might not be included here because they are pretty self-e
 | inih              | [BSD 3-Clause](https://github.com/benhoyt/inih)            |
 | json-parser       | [BSD 2-Clause](https://github.com/udp/json-parser)         |
 | xxHash            | [BSD 2-Clause](https://github.com/Cyan4973/xxHash)         |
+| Vector3 Lua Lib   | [BSD 2-Clause](https://github.com/topameng/CsToLua/blob/master/tolua/Assets/Lua/Vector3.lua)      |
 | cgltf             | [MIT](https://github.com/jkuhlmann/cgltf)                  |
 | imgui             | [MIT](https://github.com/ocornut/imgui)                    |
 | libvxl            | [MIT](https://github.com/xtreme8000/libvxl)                |
