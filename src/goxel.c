@@ -298,6 +298,9 @@ void goxel_init(void)
     lua_register(L, "GoxCreateBoxAt", lua_GoxCreateBoxAt);
     lua_register(L, "GoxRemoveBoxAt", lua_GoxRemoveBoxAt);
 
+    // Vector3 Math Library
+    luaL_dostring(L, assets_get("asset://data/other/vector3.lua", NULL));
+
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_RMB, on_pan);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_SHIFT, on_pan);
