@@ -11,7 +11,7 @@
 #   define NOMINMAX
 #endif
 
-#define GOXEL_VERSION_STR "0.14.2" // Make sure to update it in data/lua/init.lua
+#define GOXEL_VERSION_STR "0.15.0"
 
 // We Just Put Lua Source Code into lua-5.4.4 So we don't need to handle building it and stuff on OSX & other platforms
 #include "lua-5.4.4/lua.h"
