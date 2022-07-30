@@ -38,6 +38,7 @@ static asset_t ASSETS[] = {
 #include "assets/icons.inl"
 #include "assets/images.inl"
 #include "assets/other.inl"
+#include "assets/lua.inl"
 #include "assets/palettes.inl"
 #include "assets/progs.inl"
 #include "assets/shaders.inl"

@@ -11,6 +11,8 @@
 #   define NOMINMAX
 #endif
 
+#define GOXEL_VERSION_STR "0.14.2" // Make sure to update it in data/lua/init.lua
+
 // We Just Put Lua Source Code into lua-5.4.4 So we don't need to handle building it and stuff on OSX & other platforms
 #include "lua-5.4.4/lua.h"
 #include "lua-5.4.4/lauxlib.h"
@@ -59,7 +61,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GOXEL_VERSION_STR "0.14.2"
 #ifndef GOXEL_DEFAULT_THEME
 #   define GOXEL_DEFAULT_THEME "dark"
 #endif
@@ -523,8 +524,6 @@ typedef struct goxel
     } gui;
 
     bool editorLocked;
-
-    lua_State *L_State; // Global Lua VM State, Get's Initialized & Freed in goxel_init & goxel_release
 } goxel_t;
 
 // the global goxel instance.

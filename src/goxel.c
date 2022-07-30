@@ -1,6 +1,7 @@
 #include "goxel.h"
 #include "xxhash.h"
 #include "file_format.h"
+#include "lua_plugins.h"
 #include "shader_cache.h"
 
 #include <stdarg.h>
@@ -292,15 +293,6 @@ void goxel_init(void)
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
 
-    lua_State* L = luaL_newstate();
-    goxel.L_State = L;
-    luaL_openlibs(L);
-    lua_register(L, "GoxCreateBoxAt", lua_GoxCreateBoxAt);
-    lua_register(L, "GoxRemoveBoxAt", lua_GoxRemoveBoxAt);
-
-    // Vector3 Math Library
-    luaL_dostring(L, assets_get("asset://data/other/vector3.lua", NULL));
-
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_RMB, on_pan);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_SHIFT, on_pan);
@@ -374,8 +366,7 @@ void goxel_reset(void)
 void goxel_release(void)
 {
     pathtracer_stop(&goxel.pathtracer);
-    lua_close(goxel.L_State);
-    goxel.L_State = NULL;
+    ReleaseAllLuaVMs();
     gui_release();
 }
 

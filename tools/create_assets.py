@@ -21,6 +21,7 @@ if CWD != PROJECT_ROOT:
 TYPES = {
 	"png":   { "text": False, },
 	"goxcf": { "text": True,  },
+	"lua":   { "text": True,  },
 	"gpl":   { "text": True,  },
 	"pov":   { "text": True,  },
 	"ttf":   { "text": False  },
@@ -35,7 +36,7 @@ GROUPS = [
 	'fonts', 'icons', 'images',
 	'other', 'palettes', 'progs',
 	'shaders', 'sounds', 'themes',
-	'samples', 'mobile'
+	'samples', 'mobile', 'lua'
 ]
 
 TEMPLATE = '{{\n\t.path = "{path}",\n\t.size = {size},\n\t.data = {data}\n}},\n\n'
