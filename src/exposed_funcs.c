@@ -2,7 +2,7 @@
 
 unsigned char SelectedColor[4] = { 255, 255, 255, 255 };
 
-int lua_GoxSetBoxColor(lua_State* L) {
+int lua_GoxSetColor(lua_State* L) {
 	int NewColor[3], isNum;
 
 	for (int i = 0; i < 3; ++i) {
@@ -20,7 +20,7 @@ int lua_GoxSetBoxColor(lua_State* L) {
 		}
 	}
 
-	printf("[C] - GoxSetBoxColor(%d, %d, %d);\n", SelectedColor[0], SelectedColor[1], SelectedColor[2]);
+	printf("[C] - GoxSetColor(%d, %d, %d);\n", SelectedColor[0], SelectedColor[1], SelectedColor[2]);
 	return 3;
 }
 

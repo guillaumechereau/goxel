@@ -29,7 +29,7 @@ lua_State* NewLuaVM() {
 	luaL_openlibs(L);
 	lua_register(L, "GoxCreateBoxAt", lua_GoxCreateBoxAt);
 	lua_register(L, "GoxRemoveBoxAt", lua_GoxRemoveBoxAt);
-	lua_register(L, "GoxSetBoxColor", lua_GoxSetBoxColor);
+	lua_register(L, "GoxSetColor", lua_GoxSetColor);
 
 	// Vector3 Math Library
 	check_lua(L, luaL_dostring(L, assets_get("asset://data/lua/vector3.lua", NULL)));
