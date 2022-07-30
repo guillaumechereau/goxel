@@ -56,6 +56,14 @@ static inline ImVec4 color_lighten(ImVec4 c, float k)
 	return c;
 }
 
+static inline ImVec4 color_darken(ImVec4 c, float k)
+{
+	c.x /= k;
+	c.y /= k;
+	c.z /= k;
+	return c;
+}
+
 namespace ImGui {
 	void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
 				 float thickness = 1,
@@ -271,6 +279,7 @@ static bool isCharPressed(int c)
 	return g.IO.InputQueueCharacters[0] == c;
 }
 
+// Simple Macro to get color from themes
 #define COLOR(g, c, s) ({ \
 		uint8_t c_[4]; \
 		theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s), c_); \
@@ -646,7 +655,9 @@ static void render_popups(int index)
 	}
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+	ImGui::PushStyleColor(ImGuiCol_Text, COLOR(TITLEBAR, TEXT, 0));
 	if (ImGui::BeginPopupModal(popup->title, NULL, flags)) {
+		ImGui::PopStyleColor(); // Pop The Text Color We Pushed Above Because we only want it to be applied on the titlebar
 		typeof(popup->func) func = popup->func;
 		if ((r = func(popup->data))) {
 			ImGui::CloseCurrentPopup();
@@ -719,16 +730,17 @@ void gui_iter(const inputs_t *inputs)
 
 	style.Colors[ImGuiCol_WindowBg] = COLOR(BASE, BACKGROUND, 0);
 	style.Colors[ImGuiCol_PopupBg] = COLOR(BASE, BACKGROUND, 0);
-	style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
+	style.Colors[ImGuiCol_Header] = color_darken(COLOR(MENU, INNER, 0), 1.5);
 	style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, 0);
 	style.Colors[ImGuiCol_Button] = COLOR(BASE, INNER, 0);
 	style.Colors[ImGuiCol_FrameBg] = COLOR(BASE, INNER, 0);
 	style.Colors[ImGuiCol_ButtonActive] = COLOR(BASE, INNER, 1);
-	style.Colors[ImGuiCol_ButtonHovered] =
-		color_lighten(COLOR(BASE, INNER, 0), 1.2);
+	style.Colors[ImGuiCol_ButtonHovered] = color_darken(COLOR(BASE, INNER, 0), 1.1);
 	style.Colors[ImGuiCol_CheckMark] = COLOR(WIDGET, INNER, 1);
 	style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, 0);
 	style.Colors[ImGuiCol_Border] = COLOR(BASE, OUTLINE, 0);
+	style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0, 0.0, 0.0, 0.3);
+	style.Colors[ImGuiCol_TitleBgActive] = COLOR(TITLEBAR, BACKGROUND, 0);
 
 	ImGui::NewFrame();
 

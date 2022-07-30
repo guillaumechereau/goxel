@@ -2,14 +2,14 @@
 
 {
 	.path = "data/themes/dark.ini",
-	.size = 212,
-	.data = "[theme]\nname=dark\n\n[base]\nbackground=#2D2D2DFF\noutline=#FF\ninner=#595959FF\ninner_selected=#0F87FAFF\ntext=#CCCCCCFF\ntext_selected=#FFFFFFFF\n\n[widget]\n\n[tab]\nbackground=#FF\ninner=#2D2D2DFF\n\n[menu]\ninner=#353535FF\n"
+	.size = 260,
+	.data = "[theme]\nname=dark\n\n[base]\nbackground=#2D2D2DFF\noutline=#FF\ninner=#595959FF\ninner_selected=#0F87FAFF\ntext=#CCCCCCFF\ntext_selected=#FFFFFFFF\n\n[widget]\n\n[tab]\nbackground=#FF\ninner=#444444FF\n\n[menu]\ninner=#353535FF\n\n[titlebar]\ntext=#E7E7E7FF\nbackground=#4FA9FFFF\n"
 },
 
 {
-	.path = "data/themes/original.ini",
-	.size = 253,
-	.data = "[theme]\nname=original\n\n[base]\nbackground=#222222FF\noutline=#444444FF\ninner=#A1A1A1FF\ninner_selected=#66CC79FF\ntext=#EEEEEEFF\ntext_selected=#FFFFFFFF\n\n[widget]\n\n[tab]\nbackground=#444444FF\ninner=#696969FF\ninner_selected=#434343FF\n\n[menu]\ninner=#737373FF\n"
+	.path = "data/themes/light.ini",
+	.size = 396,
+	.data = "[theme]\nname=light\n\n[base]\nbackground=#C8C8C8FF\noutline=#666666FF\ninner=#ABABABFF\ninner_selected=#4FA9FFFF\ntext=#222222FF\ntext_selected=#444444FF\n\n[widget]\noutline=#777777FF\ninner=#E7E7E7FF\ninner_selected=#4FA9FFFF\ntext=#333333FF\ntext_selected=#444444FF\n\n[tab]\nbackground=#ABABABFF\ninner=#E7E7E7FF\ninner_selected=#4FA9FFFF\n\n[menu]\ninner=#E7E7E7FF\n\n[titlebar]\ntext=#FFFFFFFF\nbackground=#4FA9FFFF\n"
 },
 
 

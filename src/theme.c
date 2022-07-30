@@ -53,6 +53,14 @@ theme_group_info_t THEME_GROUP_INFOS[THEME_GROUP_COUNT] = {
             [THEME_COLOR_TEXT] = true,
         },
     },
+    [THEME_GROUP_TITLEBAR] = {
+        .name = "titlebar",
+        .parent = THEME_GROUP_BASE,
+        .colors = {
+            [THEME_COLOR_BACKGROUND] = true,
+            [THEME_COLOR_TEXT] = true,
+        },
+    },
 };
 
 theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT] = {
