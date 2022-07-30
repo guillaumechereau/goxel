@@ -305,6 +305,7 @@ void goxel_init(void)
 
 void goxel_reset(void)
 {
+    ReleaseAllLuaVMs();
     image_delete(goxel.image);
     goxel.image = image_new();
     settings_load();
