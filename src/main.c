@@ -7,6 +7,10 @@
 #include <GLFW/glfw3.h>
 #include <getopt.h>
 
+#if defined(_WIN32)
+	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // Removes The Console from launching in Background
+#endif
+
 bool shouldRender = true;
 static inputs_t     *g_inputs = NULL;
 static GLFWwindow   *g_window = NULL;
