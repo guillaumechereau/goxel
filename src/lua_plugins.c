@@ -2,7 +2,7 @@
 
 bool check_lua(lua_State* L, int r) {
     if (r != LUA_OK) {
-        printf("[Lua] - %s\n", lua_tostring(L, -1));
+        LOG_E("[Lua] - %s\n", lua_tostring(L, -1));
         return false;
     }
     return true;
