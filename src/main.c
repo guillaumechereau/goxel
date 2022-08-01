@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <getopt.h>
 
-#if defined(_WIN32)
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup") // Removes The Console from launching in Background
 #endif
 
