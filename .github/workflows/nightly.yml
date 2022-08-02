@@ -162,7 +162,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: osx_binary
-        path: ./goxel2.zip
+        path: ./goxel2-osx.zip
         if-no-files-found: error
 
   Success:
