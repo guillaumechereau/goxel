@@ -2,7 +2,8 @@
  * Model 3D .m3d format support.
  *
  * Model 3D is an application and engine netural 3D model format capable of
- * storing voxel images, see https://bztsrc.gitlab.io/model3d
+ * storing voxel images & much more, see https://bztsrc.gitlab.io/model3d
+ * Importer & Exporter Implemented By https://github.com/bztsrc
 */
 
 #define M3D_SAVE_PREVIEW 0
@@ -21,14 +22,207 @@
 #endif
 #endif
 
+// I guess it would be better to remove these defines here, and STB_*_STATIC
+// in img.c as well. Currently using static duplicates some (small) zlib code
+
 // get stbi_zlib_compress()
 #define STB_IMAGE_WRITE_STATIC
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+// get stbi_zlib_decompress()
+#define STB_IMAGE_STATIC
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#define STBI_NO_STDIO
+#define STBI_NO_GIF
+#include "stb_image.h"
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
+
+static int import_as_m3d(image_t *image, const char *path)
+{
+    FILE *file;
+    layer_t *layer;
+    mesh_iterator_t iter = {0};
+	long int size;
+	unsigned char *data, *buf, *s, *e, *chunk;
+    char *strtbl, *n;
+    int i, j, k, l, x, y, z, ci_s, si_s, sk_s, vd_s, vp_s, nt;
+    int sx, sy, sz, px, py, pz, pos[3];
+    uint32_t *cmap = NULL, *palette = NULL;
+	uint8_t black[4] = { 0, 0, 0, 255 };
+
+	// read in file data
+    file = fopen(path, "rb");
+    if(!file) {
+		LOG_E("Cannot load from %s: %s", path, strerror(errno));
+		return -1;
+	}
+	fseek(file, 0, SEEK_END);
+	size = (long int)ftell(file);
+	fseek(file, 0, SEEK_SET);
+	data = (unsigned char*)malloc(size);
+	if(!data) {
+		fclose(file);
+		LOG_E("Memory allocation error %s: %ld bytes", path, size);
+		return -1;
+	}
+	if(fread(data, 1, size, file) != size) {
+		fclose(file);
+		free(data);
+		LOG_E("Cannot load from %s: %s", path, strerror(errno));
+		return -1;
+	}
+	fclose(file);
+	// check magic and uncompress
+	if(memcmp(data, "3DMO", 4)) {
+		free(data);
+		LOG_E("Bad file format %s", path);
+		return -1;
+	}
+	// skip over header
+	s = data + 8;
+	e = data + size;
+    size -= 8;
+	// skip over optional preview chunk
+    if(!memcmp(s, "PRVW", 4)) {
+        size -= *((uint32_t*)(s + 4));
+        s += *((uint32_t*)(s + 4));
+    }
+	// check if it's a header chunk, if not, then file is stream compressed
+    if(memcmp(s, "HEAD", 4)) {
+        buf = (unsigned char *)stbi_zlib_decode_malloc_guesssize_headerflag(
+			(const char*)s, size, 4096, &l, 1);
+		free(data);
+        if(!buf || !l || memcmp(buf, "HEAD", 4)) {
+            if(buf) free(buf);
+			LOG_E("Uncompression error %s", path);
+			return -1;
+        }
+        data = s = buf;
+        e = data + l;
+    }
+	// decode item sizes from model header
+    strtbl = (char*)s + 16;
+    si_s = 1 << ((s[12] >> 4) & 3);
+    ci_s = 1 << ((s[12] >> 6) & 3);
+    sk_s = 1 << ((s[13] >> 6) & 3);
+    vd_s = 1 << ((s[14] >> 6) & 3);
+    vp_s = 1 << ((s[15] >> 0) & 3);
+    if(ci_s == 8) ci_s = 0;
+    if(sk_s == 8) sk_s = 0;
+    if(si_s == 8) si_s = 0;
+    if(vd_s == 8 || vp_s > 2) {
+		free(data);
+		LOG_E("Bad model header %s", path);
+		return -1;
+	}
+	// iterate on chunks, simply skip those we don't care about
+	for(chunk = s; chunk < e && memcmp(chunk, "OMD3", 4);) {
+		// decode chunk header and adjust to the next chunk
+		s = chunk;
+        l = *((uint32_t*)(chunk + 4));
+        chunk += l;
+        if(l < 8 || chunk >= e) break;
+        l -= 8;
+        // if it's a color map (not saved, but m3d files might have it)
+        if(!memcmp(s, "CMAP", 4)) { cmap = (uint32_t*)(s + 8); } else
+		// voxel types
+        if(!memcmp(s, "VOXT", 4)) {
+            s += 8;
+            // this will get an upper bound of number of types
+            nt = l / (ci_s + si_s + 3 + sk_s);
+            palette = (uint32_t *)malloc(nt * sizeof(uint32_t));
+            if(palette) {
+				memset(palette, 0, nt * sizeof(uint32_t));
+				// get voxel types
+	            for(i = 0; i < nt && s < chunk; i++) {
+	                switch(ci_s) {
+	                    case 1:  palette[i] = cmap ? cmap[s[0]] : 0; s++; break;
+	                    case 2:  palette[i] = cmap ? cmap[*((uint16_t*)s)] : 0; s += 2; break;
+	                    case 4:  palette[i] = *((uint32_t*)s); s += 4; break;
+	                }
+	                // skip over additional attributes
+	                s += si_s + 2;
+	                j = *s;
+	                s += 1 + sk_s + j * (2 + si_s);
+				}
+				// if we actually have less types than the upper bound
+				if(i != nt) {
+					nt = i;
+					palette = (uint32_t *)realloc(palette, nt * sizeof(uint32_t));
+				}
+			}
+		} else
+		// voxel data
+        if(!memcmp(s, "VOXD", 4)) {
+	        layer = image_add_layer(goxel.image, NULL);
+	        iter = mesh_get_accessor(layer->mesh);
+	        memset(layer->name, 0, sizeof(layer->name));
+			// we don't save layer names, but m3d files might have it
+            s += 8; n = NULL;
+            switch(si_s) {
+				case 1: n = strtbl + s[0]; break;
+				case 2: n = strtbl + *((uint16_t*)s); break;
+				case 4: n = strtbl + *((uint32_t*)s); break;
+			}
+			s += si_s;
+			if(n)
+				strncpy(layer->name, n, sizeof(layer->name) - 1);
+			// get layer dimensions
+            px = py = pz = sx = sy = sz = 0;
+            switch(vd_s) {
+                case 1:
+                    px = (int8_t)s[0]; py = (int8_t)s[1]; pz = (int8_t)s[2];
+                    sx = (int8_t)s[3]; sy = (int8_t)s[4]; sz = (int8_t)s[5];
+                    s += 6;
+                break;
+                case 2:
+                    px = *((int16_t*)(s+0)); py = *((int16_t*)(s+2)); pz = *((int16_t*)(s+4));
+                    sx = *((int16_t*)(s+6)); sy = *((int16_t*)(s+8)); sz = *((int16_t*)(s+10));
+                    s += 12;
+                break;
+                case 4:
+                    px = *((int32_t*)(s+0)); py = *((int32_t*)(s+4)); pz = *((int32_t*)(s+8));
+                    sx = *((int32_t*)(s+12)); sy = *((int32_t*)(s+16)); sz = *((int32_t*)(s+20));
+                    s += 24;
+                break;
+            }
+            // decompress RLE and set colors in mesh
+            x = y = z = 0;
+            for(s += 2, i = 0; s < chunk && i < sx * sy * sz;) {
+                l = ((*s++) & 0x7F) + 1;
+                if(s[-1] & 0x80) {
+                    if(vp_s == 1) { k = *s++; } else { k = *((uint16_t*)s); s += 2; }
+                    for(j = 0; j < l; j++, i++) {
+						if(k >= 0 && k < nt) {
+							pos[0] = px + x; pos[1] = -(pz + z); pos[2] = py + y;
+							mesh_set_at(layer->mesh, &iter, pos,
+								palette ? (uint8_t*)&palette[k] : (uint8_t*)&black);
+						}
+                        x++; if(x >= sx) { x = 0; z++; if(z >= sz) { z = 0; y++; } }
+                    }
+                } else {
+                    for(j = 0; j < l; j++, i++) {
+                        if(vp_s == 1) { k = *s++; } else { k = *((uint16_t*)s); s += 2; }
+						if(k >= 0 && k < nt) {
+							pos[0] = px + x; pos[1] = -(pz + z); pos[2] = py + y;
+							mesh_set_at(layer->mesh, &iter, pos,
+								palette ? (uint8_t*)&palette[k] : (uint8_t*)&black);
+						}
+                        x++; if(x >= sx) { x = 0; z++; if(z >= sz) { z = 0; y++; } }
+                    }
+                }
+            }
+		}
+	}
+	if(palette) free(palette);
+	free(data);
+	return 0;
+}
 
 #define WRITE(type, v, file) \
 	({ type v_ = v; fwrite(&v_, sizeof(v_), 1, file);})
@@ -216,6 +410,6 @@ static int export_as_m3d(const image_t *img, const char *path)
 FILE_FORMAT_REGISTER(m3d,
 	.name = "Model3D",
 	.ext = "m3d\0*.m3d\0",
-	// .import_func = import_as_m3d,
+	.import_func = import_as_m3d,
 	.export_func = export_as_m3d
 )
