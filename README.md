@@ -8,7 +8,7 @@
 [![Discord Chat](https://img.shields.io/discord/998971119623209090?color=7289DA&label=discord)](https://discord.gg/YXx3afnzzW)
 [![Total Downloads](https://img.shields.io/github/downloads/pegvin/goxel2/total)](https://github.com/pegvin/goxel2/releases)
 
-Official webpage: https://pegvin.github.io/goxel2
+Official webpage: https://goxel2.github.io
 
 ---
 ## Features
