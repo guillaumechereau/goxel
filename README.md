@@ -1,12 +1,12 @@
 # Goxel2
 
-[![Stable Release](https://github.com/pegvin/goxel2/actions/workflows/release.yml/badge.svg)](https://github.com/pegvin/goxel2/releases)
-[![Nightly Release](https://github.com/pegvin/goxel2/actions/workflows/nightly.yml/badge.svg)](https://github.com/pegvin/goxel2/actions/workflows/nightly.yml)
+[![Stable Release](https://github.com/goxel2/goxel2/actions/workflows/release.yml/badge.svg)](https://github.com/goxel2/goxel2/releases)
+[![Nightly Release](https://github.com/goxel2/goxel2/actions/workflows/nightly.yml/badge.svg)](https://github.com/goxel2/goxel2/actions/workflows/nightly.yml)
 
-[![Open Issues](https://img.shields.io/github/issues/pegvin/goxel2)](https://github.com/pegvin/goxel2/issues)
+[![Open Issues](https://img.shields.io/github/issues/goxel2/goxel2)](https://github.com/goxel2/goxel2/issues)
 [![AUR Badge](https://img.shields.io/aur/version/goxel2-git)](https://aur.archlinux.org/packages/goxel2-git)
 [![Discord Chat](https://img.shields.io/discord/998971119623209090?color=7289DA&label=discord)](https://discord.gg/YXx3afnzzW)
-[![Total Downloads](https://img.shields.io/github/downloads/pegvin/goxel2/total)](https://github.com/pegvin/goxel2/releases)
+[![Total Downloads](https://img.shields.io/github/downloads/goxel2/goxel2/total)](https://github.com/goxel2/goxel2/releases)
 
 Official webpage: https://goxel2.github.io
 
@@ -49,7 +49,7 @@ You can download latest stable release from [here](https://github.com/pegvin/gox
 
 ---
 ## API
-goxel2 can be extended via Lua, [Read more...](https://github.com/pegvin/goxel2/wiki/Lua-API)
+goxel2 can be extended via Lua, [Read more...](https://github.com/goxel2/goxel2/wiki/Lua-API)
 
 ---
 ## Building from source
