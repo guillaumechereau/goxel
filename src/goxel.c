@@ -1102,7 +1102,7 @@ int goxel_import_file(const char *path, const char *format)
     int err;
 
     if (str_endswith(path, ".gox")) {
-        return load_from_file(path);
+        return import_as_gox(goxel.image, path);
     }
     f = file_format_for_path(path, format, "r");
     if (!f) return -1;
@@ -1123,7 +1123,7 @@ int goxel_export_to_file(const char *path, const char *format)
     f = file_format_for_path(path, format, "w");
     if (!f) return -1;
     if (!path) {
-        snprintf(name, sizeof(name), "Untitled%s", f->ext + strlen(f->ext) + 2);
+        snprintf(name, sizeof(name), "untitled%s", f->ext + strlen(f->ext) + 2);
         path = sys_get_save_path(f->ext, name);
         if (!path) return -1;
     }

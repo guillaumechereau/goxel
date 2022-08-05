@@ -51,24 +51,27 @@ void gui_menu(void)
 {
     if (gui_menu_begin("File")) {
         gui_menu_item(ACTION_reset, "New", true);
-        gui_menu_item(ACTION_open_run_lua_plugin, "Run Plugin", true);
-        gui_menu_item(ACTION_save, "Save",
-                image_get_key(goxel.image) != goxel.image->saved_key);
-        gui_menu_item(ACTION_save_as, "Save as", true);
         gui_menu_item(ACTION_open, "Open", true);
+        gui_menu_item(ACTION_save, "Save", image_get_key(goxel.image) != goxel.image->saved_key);
+        gui_menu_item(ACTION_save_as, "Save as", true);
+        gui_menu_item(ACTION_open_run_lua_plugin, "Run Plugin", true);
+
         if (gui_menu_begin("Import...")) {
             if (gui_menu_item(0, "image plane", true))
                 import_image_plane();
             file_format_iter("r", NULL, import_menu_callback);
             gui_menu_end();
         }
+
         if (gui_menu_begin("Export As..")) {
             file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
         }
+
         gui_menu_item(ACTION_quit, "Quit", true);
         gui_menu_end();
     }
+
     if (gui_menu_begin("Edit")) {
         gui_menu_item(ACTION_layer_clear, "Clear", true);
         gui_menu_item(ACTION_undo, "Undo", true);

@@ -1,4 +1,5 @@
 #include "goxel.h"
+#include "file_format.h"
 #include <errno.h>
 
 #define VERSION 2 // Current version of the file format.
@@ -233,7 +234,7 @@ static const material_t *get_material(const image_t *img, int idx)
     return NULL;
 }
 
-void save_to_file(const image_t *img, const char *path)
+int export_as_gox(const image_t *img, const char *path)
 {
     // XXX: remove all empty blocks before saving.
     LOG_I("Save to %s", path);
@@ -252,7 +253,7 @@ void save_to_file(const image_t *img, const char *path)
     out = fopen(path, "wb");
     if (!out) {
         LOG_E("Cannot save to %s: %s", path, strerror(errno));
-        return;
+        return -1;
     }
     fwrite("GOX ", 4, 1, out);
     write_int32(out, VERSION);
@@ -407,6 +408,7 @@ void save_to_file(const image_t *img, const char *path)
     }
 
     fclose(out);
+    return 0;
 }
 
 // Iter info of a gox file, without actually reading it.
@@ -475,7 +477,7 @@ static block_hash_t *hash_find_at(block_hash_t *hash, int index)
     r; })
 
 
-int load_from_file(const char *path)
+int import_as_gox(image_t *img, const char *path)
 {
     layer_t *layer, *layer_tmp;
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
@@ -682,69 +684,9 @@ error:
     return -1;
 }
 
-static void a_open(void)
-{
-    const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
-                                NULL, NULL);
-    if (!path) return;
-    image_delete(goxel.image);
-    goxel.image = image_new();
-    load_from_file(path);
-}
-
-ACTION_REGISTER(open,
-    .help = "Open an image",
-    .cfunc = a_open,
-    .default_shortcut = "Ctrl O",
-)
-
-static void a_save_as(void)
-{
-    const char *path;
-    path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
-    if (!path) return;
-    if (path != goxel.image->path) {
-        free(goxel.image->path);
-        goxel.image->path = strdup(path);
-    }
-    save_to_file(goxel.image, goxel.image->path);
-    goxel.image->saved_key = image_get_key(goxel.image);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(save_as,
-    .help = "Save the image as",
-    .cfunc = a_save_as,
-)
-
-static void a_save(void)
-{
-    const char *path = goxel.image->path;
-    if (!path) path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
-    if (!path) return;
-    if (path != goxel.image->path) {
-        free(goxel.image->path);
-        goxel.image->path = strdup(path);
-    }
-    save_to_file(goxel.image, goxel.image->path);
-    goxel.image->saved_key = image_get_key(goxel.image);
-    sys_on_saved(path);
-}
-
-ACTION_REGISTER(save,
-    .help = "Save the image",
-    .cfunc = a_save,
-    .default_shortcut = "Ctrl S"
-)
-
-static void a_reset(void)
-{
-    goxel_reset();
-}
-
-ACTION_REGISTER(reset,
-    .help = "New",
-    .cfunc = a_reset,
-    .default_shortcut = "Ctrl N"
+FILE_FORMAT_REGISTER(gox,
+    .name = "gox",
+    .ext = "gox\0*.gox\0",
+    .import_func = import_as_gox,
+    .export_func = export_as_gox
 )
