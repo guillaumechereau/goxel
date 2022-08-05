@@ -980,9 +980,72 @@ memerr:             m3d_freestr(&str);
 	return 0;
 }
 
-FILE_FORMAT_REGISTER(m3d,
-	.name = "Model3D",
-	.ext = "m3d\0*.m3d\0",
-	.import_func = import_as_m3d,
-	.export_func = export_as_m3d
+static void _save_model_wrapper(void) {
+    const char *path = goxel.image->path;
+    if (!path) path = sys_get_save_path("m3d\0*.m3d\0", "untitled.m3d");
+    if (!path) return;
+    if (path != goxel.image->path) {
+        free(goxel.image->path);
+        goxel.image->path = strdup(path);
+    }
+
+    export_as_m3d(goxel.image, goxel.image->path);
+    goxel.image->saved_key = image_get_key(goxel.image);
+    sys_on_saved(path);
+}
+
+static void _new_model_wrapper(void) {
+    goxel_reset();
+}
+
+static void _save_model_as_wrapper(void)
+{
+    const char *path;
+    path = sys_get_save_path("m3d\0*.m3d\0", "untitled.m3d");
+    if (!path) return;
+    if (path != goxel.image->path) {
+        free(goxel.image->path);
+        goxel.image->path = strdup(path);
+    }
+    export_as_m3d(goxel.image, goxel.image->path);
+    goxel.image->saved_key = image_get_key(goxel.image);
+    sys_on_saved(path);
+}
+
+static void _open_model_wrapper(void)
+{
+    const char *path;
+    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "m3d\0*.m3d\0", NULL, NULL);
+    if (!path) return;
+    image_delete(goxel.image);
+    goxel.image = image_new();
+    import_as_m3d(goxel.image, path);
+
+    if (goxel.image->path != NULL)
+	    free(goxel.image->path);
+
+    goxel.image->path = strdup(path);
+}
+
+ACTION_REGISTER(open,
+    .help = "Open an image",
+    .cfunc = _open_model_wrapper,
+    .default_shortcut = "Ctrl O",
+)
+
+ACTION_REGISTER(save_as,
+    .help = "Save the image as",
+    .cfunc = _save_model_as_wrapper,
+)
+
+ACTION_REGISTER(save,
+    .help = "Save the image",
+    .cfunc = _save_model_wrapper,
+    .default_shortcut = "Ctrl S"
+)
+
+ACTION_REGISTER(reset,
+    .help = "New",
+    .cfunc = _new_model_wrapper,
+    .default_shortcut = "Ctrl N"
 )
