@@ -88,6 +88,7 @@ if target_os == 'msys':
     sources += glob.glob('lib/glew/glew.c')
     env.Append(CPPPATH=['lib/glew'])
     env.Append(CPPDEFINES=['GLEW_STATIC', 'FREE_WINDOWS'])
+    env.Append(LINKFLAGS="-mwindows") # Fix Console From Popping-Up
 
 # OSX Compilation support.
 if target_os == 'darwin':
