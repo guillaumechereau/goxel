@@ -129,6 +129,7 @@ some files/directories might not be included here because they are pretty self-e
 |       Item        |                          License                           |
 |-------------------|------------------------------------------------------------|
 | Goxel             | [GPL v3.0](https://github.com/guillaumechereau/goxel)      |
+| Model3D           | [MIT](https://gitlab.com/bztsrc/model3d)                   |
 | inih              | [BSD 3-Clause](https://github.com/benhoyt/inih)            |
 | json-parser       | [BSD 2-Clause](https://github.com/udp/json-parser)         |
 | xxHash            | [BSD 2-Clause](https://github.com/Cyan4973/xxHash)         |
