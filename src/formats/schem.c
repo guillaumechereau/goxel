@@ -252,8 +252,9 @@ memerr: if(data) free(data);
 				}
 			}
 		}
-		// Set The Canvas (Editor Box) Size To Fit With Current Model.
-		action_exec2(ACTION_img_auto_resize);
+
+		action_exec2(ACTION_img_auto_resize); // Set The Canvas (Editor Box) Size To Fit With Current Model.
+		camera_fit_box(goxel.image->active_camera, goxel.image->box); // Adjust Camera To Fit The Model.
 	} else {
 		LOG_E("Unknown schematic format %s", path);
 	}
