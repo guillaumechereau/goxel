@@ -7,7 +7,7 @@ the changelog is updated after every release.
 	- Fix Console From Popping-Up With Application
 	- Add Support For Storing Layers, Materials, Lights, Cameras, Etc.
 	- Model3d (.m3d) is Now Main Import/Export Format, (Gox can still be used)
-	- Add 2 New File Format Support by @bztsrc
+	- Add 2 New File Format Support by [@bztsrc](https://github.com/bztsrc)
 		1. Add Support For Minecraft Schematics (.schematic, .schem, .nbt Files)
 		2. Add Support For Minetest's schematic files (.mts)
 
