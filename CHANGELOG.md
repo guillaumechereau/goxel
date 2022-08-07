@@ -10,6 +10,8 @@ the changelog is updated after every release.
 	- Add 2 New File Format Support by [@bztsrc](https://github.com/bztsrc)
 		1. Add Support For Minecraft Schematics (.schematic, .schem, .nbt Files)
 		2. Add Support For Minetest's schematic files (.mts)
+	- Add 3 New Palettes, MineCraft, MineTest & MineClone2
+
 
 - [v0.14.2](https://github.com/pegvin/goxel2/releases/tag/v0.14.2)
 	- Add i686 (x32) Builds For Windows & Linux
