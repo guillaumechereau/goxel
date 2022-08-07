@@ -3,6 +3,14 @@ the changelog is updated after every release.
 
 ---
 
+- [Upcoming Release (v1.0?)]
+	- Fix Console From Popping-Up With Application
+	- Add Support For Storing Layers, Materials, Lights, Cameras, Etc.
+	- Model3d (.m3d) is Now Main Import/Export Format, (Gox can still be used)
+	- Add 2 New File Format Support by @bztsrc
+		1. Add Support For Minecraft Schematics (.schematic, .schem, .nbt Files)
+		2. Add Support For Minetest's schematic files (.mts)
+
 - [v0.14.2](https://github.com/pegvin/goxel2/releases/tag/v0.14.2)
 	- Add i686 (x32) Builds For Windows & Linux
 	- Add Better Support For Ace Of Spades (.vxl) Format & Similar Games (by [xtreme8000](https://github.com/xtreme8000))
