@@ -53,8 +53,12 @@ def list_files(group):
 
 	return sorted(ret, key=lambda x: x.upper())
 
-def encode_str(data):
+def encode_str(data, f):
 	data = data.decode()
+
+	# Just Replace Platform Independent New Line Feeds ( Windows = \r\n, Mac = \r, Unix = \n ) To \n
+	data = data.replace('\r\n', '\n').replace('\r', '\n')
+
 	ret = '"'
 	for c in data:
 		if c == '\n':
@@ -88,7 +92,7 @@ def create_file(f):
 
 	if TYPES[ext]['text']:
 		size += 1 # So that we NULL terminate the string.
-		data = encode_str(data)
+		data = encode_str(data, f)
 	else:
 		data = encode_bin(data)
 
