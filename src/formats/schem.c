@@ -265,7 +265,7 @@ memerr: if(data) free(data);
 }
 
 FILE_FORMAT_REGISTER(schem,
-	.name = "Minecraft / Minetest",
+	.name = "Minecraft/Minetest",
 	.ext = "mts\0*.mts\0nbt\0*.nbt\0schem\0*.schem\0schematic\0*.schematic\0",
 	.import_func = import_as_schem
 )
