@@ -182,6 +182,8 @@ void palette_load_all(palette_t **list)
     assets_list("data/palettes/", list, on_palette);
     if (sys_get_user_dir()) {
         asprintf(&dir, "%s/palettes", sys_get_user_dir());
+        free(dir);
+        asprintf(&dir, "%s/lospec", sys_get_user_dir());
         sys_list_dir(dir, on_palette2, list);
         free(dir);
     }
