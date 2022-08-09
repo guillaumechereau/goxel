@@ -103,6 +103,8 @@ env.Append(CPPPATH=['lib/noc'])
 env.Append(CPPPATH=['lib/xxhash'])
 env.Append(CPPPATH=['lib/libvxl'])
 
+env.Append(LIBS=['curl'])
+
 if not env['yocto']:
     env.Append(CPPDEFINES='YOCTO=0')
 
