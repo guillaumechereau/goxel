@@ -2,6 +2,7 @@
 
 #include "file_format.h"
 
+int gui_lospec_importer_popup(void *data); // In lospec.c
 int gui_settings_popup(void *data);
 int gui_about_popup(void *data);
 
@@ -79,8 +80,21 @@ void gui_menu(void)
         gui_menu_item(ACTION_copy, "Copy", true);
         gui_menu_item(ACTION_past, "Paste", true);
         if (gui_menu_item(0, "Settings", true))
-            gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
-                           NULL, gui_settings_popup);
+            gui_open_popup(
+                "Settings",
+                GUI_POPUP_FULL | GUI_POPUP_RESIZE,
+                NULL,
+                gui_settings_popup
+            );
+
+        if (gui_menu_item(0, "Add LoSpec Palette", true))
+            gui_open_popup(
+                "Import A LoSpec Palette",
+                !GUI_POPUP_RESIZE,
+                NULL,
+                gui_lospec_importer_popup
+            );
+
         gui_menu_end();
     }
     if (gui_menu_begin("View")) {
