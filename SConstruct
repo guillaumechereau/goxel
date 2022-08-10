@@ -115,6 +115,9 @@ if target_os == 'darwin':
     sources += glob.glob('src/*.m')
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
     env.Append(LIBS=['m', 'glfw', 'objc'])
+    # Fix warning in noc_file_dialog (the code should be fixed instead).
+    env.Append(CCFLAGS=['-Wno-deprecated-declarations'])
+    env['sound'] = False
 
 # Add external libs.
 env.Append(CPPPATH=['ext_src/uthash'])
