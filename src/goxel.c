@@ -1266,10 +1266,12 @@ ACTION_REGISTER(past,
 static void a_view_default(void)
 {
     camera_t *camera = get_camera();
-    float dist = vec3_norm(camera->mat[3]);
     mat4_set_identity(camera->mat);
-    mat4_irotate(camera->mat, M_PI / 4, 1, 0, 0);
-    mat4_itranslate(camera->mat, 0, 0, dist);
+    camera->dist = 128;
+    camera->aspect = 1;
+    mat4_itranslate(camera->mat, 0, 0, camera->dist);
+    camera_turntable(camera, M_PI / 4, M_PI / 4);
+    camera_fit_box(camera, goxel.image->box);
 }
 
 static void a_view_set(void *data)
