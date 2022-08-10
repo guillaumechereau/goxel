@@ -179,16 +179,52 @@ end:
     return 0;
 }
 
+static int on_palette3(int i, const char *path, void *user)
+{
+    FILE *file;
+    const char *data;
+    char *dir;
 
+    // add to the list as usual...
+    on_palette(i, path, user);
+    // ...but also save it to a file, so next time we can
+    // read in with the normal palette list
+    asprintf(&dir, "%s/%s", sys_get_user_dir(), path + 5);
+    data = assets_get(path, NULL);
+    file = fopen(dir, "wb");
+    if (file) {
+        fputs(data, file);
+        fclose(file);
+    }
+    return 0;
+}
+
+/**
+ * Possible scenarios:
+ * 1. first run, no HOME: just use the built-ins
+ * 2. first run, HOME exists: create dir and save built-ins there
+ * 3. both HOME and palettes dir exists: use the palettes there
+ */
 void palette_load_all(palette_t **list)
 {
     char *dir;
-    assets_list("data/palettes/", list, on_palette);
+
+    // If Home Available
     if (sys_get_user_dir()) {
-        asprintf(&dir, "%s/palettes", sys_get_user_dir());
+        asprintf(&dir, "%s/palettes/", sys_get_user_dir());
+        if (!sys_list_dir(dir, on_palette2, list)) {
+            // if we can't read in palettes, create directory
+            // and save all built-in palettes there
+            sys_make_dir(dir);
+            assets_list("data/palettes/", list, on_palette3);
+        }
         free(dir);
-        asprintf(&dir, "%s/lospec", sys_get_user_dir());
+
+        // Just List & Parse All of The .gpl palettes in lospec dir
+        asprintf(&dir, "%s/lospec/", sys_get_user_dir());
         sys_list_dir(dir, on_palette2, list);
         free(dir);
+    } else { // Else Use Built-in
+        assets_list("data/palettes/", list, on_palette);
     }
 }
