@@ -30,9 +30,9 @@
         goto end; \
     } while (0)
 
-static inline int AT(int x, int y, int z) {
+static inline int AT(int x, int y, int z, int d) {
     x = 511 - x;
-    z = 63 - z;
+    z = d - 1 - z;
     return x + y * 512 + z * 512 * 512;
 }
 
@@ -44,6 +44,38 @@ static void swap_color(uint32_t v, uint8_t ret[4])
     ret[1] = o[1];
     ret[2] = o[0];
     ret[3] = o[3];
+}
+
+/*
+ * Get the max height of a vlx file.
+ */
+static int vxl_get_d(const uint8_t *data, int size)
+{
+    int w = 512, h = 512, d = 64, x, y;
+    const uint8_t *v;
+    int number_4byte_chunks;
+    int top_color_start;
+    int top_color_end;
+    int len_bottom;
+
+    v = data;
+    for (y = 0; y < h; y++)
+    for (x = 0; x < w; x++) {
+        while (true) {
+            number_4byte_chunks = v[0];
+            top_color_start = v[1];
+            top_color_end = v[2];
+            d = max(d, top_color_end + 1);
+            len_bottom = top_color_end - top_color_start + 1;
+            if (number_4byte_chunks == 0) {
+                v += 4 * (len_bottom + 1);
+                break;
+            }
+            v += v[0] * 4;
+        }
+    }
+
+    return d;
 }
 
 static int vxl_import(image_t *image, const char *path)
@@ -69,15 +101,17 @@ static int vxl_import(image_t *image, const char *path)
 
     if (!path) return -1;
 
-    cube = calloc(w * h * d, sizeof(*cube));
     data = (void*)read_file(path, &size);
+
+    d = vxl_get_d(data, size);
+    cube = calloc(w * h * d, sizeof(*cube));
     v = data;
 
     for (y = 0; y < h; y++)
     for (x = 0; x < w; x++) {
 
-        for (z = 0; z < 64; z++)
-            cube[AT(x, y, z)][3] = 255;
+        for (z = 0; z < d; z++)
+            cube[AT(x, y, z, d)][3] = 255;
 
         z = 0;
         while (true) {
@@ -86,12 +120,12 @@ static int vxl_import(image_t *image, const char *path)
             top_color_end = v[2];
 
             for (i = z; i < top_color_start; i++)
-                cube[AT(x, y, i)][3] = 0;
+                cube[AT(x, y, i, d)][3] = 0;
 
             color = (uint32_t*)(v + 4);
             for (z = top_color_start; z <= top_color_end; z++) {
                 CHECK(z >= 0 && z < d);
-                swap_color(*color++, cube[AT(x, y, z)]);
+                swap_color(*color++, cube[AT(x, y, z, d)]);
             }
 
             len_bottom = top_color_end - top_color_start + 1;
@@ -115,7 +149,7 @@ static int vxl_import(image_t *image, const char *path)
             bottom_color_start = bottom_color_end - len_top;
 
             for(z = bottom_color_start; z < bottom_color_end; z++)
-                swap_color(*color++, cube[AT(x, y, z)]);
+                swap_color(*color++, cube[AT(x, y, z, d)]);
         }
     }
 
