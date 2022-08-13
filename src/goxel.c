@@ -1128,7 +1128,7 @@ int goxel_import_file(const char *path, const char *format)
     int err;
 
     if (str_endswith(path, ".gox")) {
-        return load_from_file(path);
+        return load_from_file(path, false);
     }
     f = file_format_for_path(path, format, "r");
     if (!f) return -1;
