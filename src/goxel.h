@@ -505,6 +505,7 @@ typedef struct goxel
     int        tool_drag_mode; // 0: move, 1: resize.
 
     float      selection[4][4];   // The selection box.
+    mesh_t     *mask; // Global selection mask mesh.
 
     struct {
         float  rotation[4];

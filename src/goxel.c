@@ -911,6 +911,9 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
     render_box(rend, goxel.selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
 
+    if (goxel.tool->flags & TOOL_SHOW_MASK)
+        render_mesh(rend, goxel.mask, NULL, EFFECT_GRID_ONLY);
+
     // Debug: show the current layer mesh blocks.
     if ((0)) {
         mesh_iterator_t iter;

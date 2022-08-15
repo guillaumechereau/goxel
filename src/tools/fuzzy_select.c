@@ -20,7 +20,6 @@
 
 typedef struct {
     tool_t tool;
-    mesh_t *selection;
     int threshold;
     struct {
         gesture3d_t click;
@@ -54,9 +53,9 @@ static int on_click(gesture3d_t *gest, void *user)
     pi[0] = floor(curs->pos[0]);
     pi[1] = floor(curs->pos[1]);
     pi[2] = floor(curs->pos[2]);
-    if (!tool->selection) tool->selection = mesh_new();
-    mesh_clear(tool->selection);
-    mesh_select(mesh, pi, select_cond, tool, tool->selection);
+    if (goxel.mask == NULL) goxel.mask = mesh_new();
+    mesh_clear(goxel.mask);
+    mesh_select(mesh, pi, select_cond, tool, goxel.mask);
     return 0;
 }
 
@@ -77,11 +76,6 @@ static int iter(tool_t *tool_, const painter_t *painter,
         };
     }
     gesture3d(&tool->gestures.click, curs, tool);
-
-    if (tool->selection) {
-        render_mesh(&goxel.rend, tool->selection, NULL, EFFECT_GRID_ONLY);
-    }
-
     return 0;
 }
 
@@ -108,7 +102,7 @@ static int gui(tool_t *tool_)
         gui_input_int("Threshold", &tool->threshold, 1, 254);
     }
 
-    if (!tool->selection || mesh_is_empty(tool->selection))
+    if (mesh_is_empty(goxel.mask))
         return 0;
 
     mesh_t *mesh = goxel.image->active_layer->mesh;
@@ -116,16 +110,16 @@ static int gui(tool_t *tool_)
     gui_group_begin(NULL);
     if (gui_button("Clear", 1, 0)) {
         image_history_push(goxel.image);
-        mesh_merge(mesh, tool->selection, MODE_SUB, NULL);
+        mesh_merge(mesh, goxel.mask, MODE_SUB, NULL);
     }
     if (gui_button("Fill", 1, 0)) {
         image_history_push(goxel.image);
-        mesh_merge(mesh, tool->selection, MODE_OVER, goxel.painter.color);
+        mesh_merge(mesh, goxel.mask, MODE_OVER, goxel.painter.color);
     }
     if (gui_button("Cut as new layer", 1, 0)) {
         image_history_push(goxel.image);
         cut_as_new_layer(goxel.image, goxel.image->active_layer,
-                         tool->selection);
+                         goxel.mask);
     }
     gui_group_end();
     return 0;
@@ -135,5 +129,5 @@ TOOL_REGISTER(TOOL_FUZZY_SELECT, fuzzy_select, tool_fuzzy_select_t,
               .name = "Fuzzy Select",
               .iter_fn = iter,
               .gui_fn = gui,
-              .flags = TOOL_REQUIRE_CAN_EDIT,
+              .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_SHOW_MASK,
 )
