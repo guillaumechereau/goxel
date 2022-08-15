@@ -46,6 +46,7 @@ static int select_cond(void *user, const mesh_t *mesh,
 static int on_click(gesture3d_t *gest, void *user)
 {
     mesh_t *mesh = goxel.image->active_layer->mesh;
+    mesh_t *sel;
     int pi[3];
     cursor_t *curs = gest->cursor;
     tool_fuzzy_select_t *tool = (void*)user;
@@ -53,9 +54,11 @@ static int on_click(gesture3d_t *gest, void *user)
     pi[0] = floor(curs->pos[0]);
     pi[1] = floor(curs->pos[1]);
     pi[2] = floor(curs->pos[2]);
+    sel = mesh_new();
+    mesh_select(mesh, pi, select_cond, tool, sel);
     if (goxel.mask == NULL) goxel.mask = mesh_new();
-    mesh_clear(goxel.mask);
-    mesh_select(mesh, pi, select_cond, tool, goxel.mask);
+    mesh_merge(goxel.mask, sel, goxel.mask_mode ?: MODE_REPLACE, NULL);
+    mesh_delete(sel);
     return 0;
 }
 
@@ -101,6 +104,8 @@ static int gui(tool_t *tool_)
     if (use_color) {
         gui_input_int("Threshold", &tool->threshold, 1, 254);
     }
+
+    tool_gui_mask_mode();
 
     if (mesh_is_empty(goxel.mask))
         return 0;

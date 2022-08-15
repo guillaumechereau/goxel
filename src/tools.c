@@ -132,6 +132,31 @@ int tool_gui_snap(void)
     return 0;
 }
 
+static bool mask_mode_button(const char *label, int s, float w)
+{
+    bool v = goxel.mask_mode == s;
+    if (gui_selectable(label, &v, NULL, w)) {
+        goxel.mask_mode = s;
+        return true;
+    }
+    return false;
+}
+
+int tool_gui_mask_mode(void)
+{
+    float w;
+    gui_text("Mask");
+    w = gui_get_avail_width() / 3.0 - 1;
+    gui_group_begin(NULL);
+    mask_mode_button("Set", MODE_REPLACE, w);
+    gui_same_line();
+    mask_mode_button("Add", MODE_OVER, w);
+    gui_same_line();
+    mask_mode_button("Sub", MODE_SUB, w);
+    gui_group_end();
+    return 0;
+}
+
 // XXX: replace this.
 static void auto_grid(int nb, int i, int col)
 {

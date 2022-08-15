@@ -48,6 +48,7 @@ enum {
     MODE_MAX,
     MODE_INTERSECT,
     MODE_MULT_ALPHA,
+    MODE_REPLACE,
 };
 
 

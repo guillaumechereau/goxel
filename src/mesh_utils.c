@@ -463,6 +463,12 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
     int bpos[3];
     uint64_t id1, id2;
 
+    // Simple case for replace.
+    if (mode == MODE_REPLACE) {
+        mesh_set(mesh, other);
+        return;
+    }
+
     // Check if the merge op has been cached.
     if (!cache) cache = cache_create(512);
     id1 = mesh_get_key(mesh);

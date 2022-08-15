@@ -89,8 +89,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         pi[0] = floor(curs->pos[0]);
         pi[1] = floor(curs->pos[1]);
         pi[2] = floor(curs->pos[2]);
-        mesh_select(mesh, pi, select_cond, &tool->snap_face,
-                    tmp_mesh);
+        mesh_select(mesh, pi, select_cond, &tool->snap_face, tmp_mesh);
         mesh_merge(tool->mesh, tmp_mesh, MODE_MULT_ALPHA, NULL);
         mesh_delete(tmp_mesh);
 
