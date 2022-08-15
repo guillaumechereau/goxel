@@ -52,6 +52,8 @@ enum {
     X(cut_as_new_layer),
     X(reset_selection),
     X(fill_selection),
+    X(add_selection),
+    X(sub_selection),
     X(copy),
     X(past),
     X(view_left),

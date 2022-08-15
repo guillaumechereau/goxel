@@ -630,10 +630,17 @@ static void image_clear_layer(void)
 {
     painter_t painter;
     layer_t *layer = goxel.image->active_layer;
-    if (box_is_null(goxel.selection)) {
+    if (box_is_null(goxel.selection) && mesh_is_empty(goxel.mask)) {
         mesh_clear(layer->mesh);
         return;
     }
+
+    // Use the mask in priority if it exists.
+    if (!mesh_is_empty(goxel.mask)) {
+        mesh_merge(layer->mesh, goxel.mask, MODE_SUB, NULL);
+        return;
+    }
+
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_SUB,

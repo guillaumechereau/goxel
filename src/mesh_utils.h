@@ -37,6 +37,7 @@
  * MODE_PAINT       - Set the color of the destination using the source.
  * MODE_MAX         - Set alpha to the max of the source and destination.
  * MODE_INTERSECT   - Set alpha to the min of the source and destination.
+ * MODE_INTERSECT_FILL - Like intersect but use the color of the source.
  * MODE_MULT_ALPHA  - Multiply the source and dest using source alpha.
  */
 enum {
@@ -47,6 +48,7 @@ enum {
     MODE_PAINT,
     MODE_MAX,
     MODE_INTERSECT,
+    MODE_INTERSECT_FILL,
     MODE_MULT_ALPHA,
     MODE_REPLACE,
 };

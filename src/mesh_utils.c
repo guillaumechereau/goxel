@@ -260,6 +260,13 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
         ret[3] = ret[3] * ba / 255;
     } else if (mode == MODE_INTERSECT) {
         ret[3] = min(aa, ba);
+    } else if (mode == MODE_INTERSECT_FILL) {
+        ret[3] = min(aa, ba);
+        if (ret[3]) {
+            ret[0] = b[0];
+            ret[1] = b[1];
+            ret[2] = b[2];
+        }
     } else {
         assert(false);
     }
@@ -331,11 +338,12 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     skip_dst_empty = mode == MODE_SUB ||
                      mode == MODE_SUB_CLAMP ||
                      mode == MODE_MULT_ALPHA ||
-                     mode == MODE_INTERSECT;
+                     mode == MODE_INTERSECT ||
+                     mode == MODE_INTERSECT_FILL;
 
     // for intersection start by deleting all the blocks that are not in
     // the box.
-    if (mode == MODE_INTERSECT) {
+    if (mode == MODE_INTERSECT || mode == MODE_INTERSECT_FILL) {
         iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
         while (mesh_iter(&iter, vp)) {
             mesh_get_block_aabb(vp, aabb);

@@ -1172,6 +1172,14 @@ static void a_cut_as_new_layer(void)
     const float (*box)[4][4] = &goxel.selection;
 
     new_layer = image_duplicate_layer(img, layer);
+
+    // Use the mask in priority.
+    if (!mesh_is_empty(goxel.mask)) {
+        mesh_merge(new_layer->mesh, goxel.mask, MODE_INTERSECT, NULL);
+        mesh_merge(layer->mesh, goxel.mask , MODE_SUB, NULL);
+        return;
+    }
+
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_INTERSECT,
@@ -1190,6 +1198,11 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void a_reset_selection(void)
 {
+    if (!mesh_is_empty(goxel.mask)) {
+        mesh_delete(goxel.mask);
+        goxel.mask = NULL;
+        return;
+    }
     mat4_copy(mat4_zero, goxel.selection);
 }
 
@@ -1201,6 +1214,12 @@ ACTION_REGISTER(reset_selection,
 static void a_fill_selection(void)
 {
     layer_t *layer = goxel.image->active_layer;
+
+    if (!mesh_is_empty(goxel.mask)) {
+        mesh_merge(layer->mesh, goxel.mask, MODE_OVER, goxel.painter.color);
+        return;
+    }
+
     if (box_is_null(goxel.selection)) return;
     mesh_op(layer->mesh, &goxel.painter, goxel.selection);
 }
@@ -1209,6 +1228,46 @@ ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
     .cfunc = a_fill_selection,
     .flags = ACTION_TOUCH_IMAGE,
+)
+
+static void a_add_selection(void)
+{
+    mesh_t *tmp;
+    painter_t painter;
+
+    if (box_is_null(goxel.selection)) return;
+    painter = (painter_t) {
+        .shape = &shape_cube,
+        .mode = MODE_INTERSECT_FILL,
+        .color = {255, 255, 255, 255},
+    };
+    tmp = mesh_copy(goxel.image->active_layer->mesh);
+    mesh_op(tmp, &painter, goxel.selection);
+    if (goxel.mask == NULL) goxel.mask = mesh_new();
+    mesh_merge(goxel.mask, tmp, MODE_OVER, painter.color);
+    mesh_delete(tmp);
+}
+
+ACTION_REGISTER(add_selection,
+    .help = "Add the selection to the current mask",
+    .cfunc = a_add_selection,
+)
+
+static void a_sub_selection(void)
+{
+    painter_t painter;
+    if (goxel.mask == NULL || box_is_null(goxel.selection)) return;
+    painter = (painter_t) {
+        .shape = &shape_cube,
+        .mode = MODE_SUB,
+        .color = {255, 255, 255, 255},
+    };
+    mesh_op(goxel.mask, &painter, goxel.selection);
+}
+
+ACTION_REGISTER(sub_selection,
+    .help = "Subtract the selection from the current mask",
+    .cfunc = a_sub_selection,
 )
 
 static void copy_action(void)
