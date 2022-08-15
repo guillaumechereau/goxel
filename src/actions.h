@@ -79,6 +79,7 @@ enum {
     X(tool_set_plane),
     X(tool_set_selection),
     X(tool_set_fuzzy_select),
+    X(tool_set_rect_select),
     X(tool_set_line),
     X(tool_set_move),
 
