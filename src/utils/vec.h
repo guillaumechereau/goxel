@@ -208,6 +208,14 @@ DECL void vec3_mul(const float a[S 3], float k, float out[S 3])
     out[2] = a[2] * k;
 }
 
+DECL void vec4_mul(const float a[S 4], float k, float out[S 4])
+{
+    out[0] = a[0] * k;
+    out[1] = a[1] * k;
+    out[2] = a[2] * k;
+    out[3] = a[3] * k;
+}
+
 DECL void vec3_imul(float a[S 3], float k)
 {
     vec3_mul(a, k, a);
@@ -726,6 +734,7 @@ DECL void mat4_imul_quat(float mat[S 4][4], const float q[S 4])
 void mat3_to_eul(const float m[S 3][3], int order, float e[S 3]);
 void mat3_to_eul2(const float m[S 3][3], int order, float e1[S 3],
                   float e2[S 3]);
+void mat3_to_quat(const float m[S 3][3], float quat[S 4]);
 void quat_to_mat3(const float q[S 4], float out[S 3][3]);
 
 DECL void quat_to_eul(const float q[S 4], int order, float e[S 3])
