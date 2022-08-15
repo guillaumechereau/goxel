@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2017 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2017-2022 Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -54,6 +54,33 @@ static void mat4_apply_quat(float mat[4][4], const float quat[4])
 
 }
 
+/*
+ * Algo provided by sariug <ugurcansari93@gmail.com>
+ * Note: we could probably make it much faster by checking the mesh blocks
+ * first instead of the voxels.
+ */
+static void cut(bool above)
+{
+    const uint8_t color[4] = {0, 0, 0, 0};
+    int vp[3];
+    float p[3], p_vec[3], d;
+    mesh_t *mesh = goxel.image->active_layer->mesh;
+    mesh_iterator_t iter;
+    mesh_accessor_t accessor;
+
+    image_history_push(goxel.image);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
+    accessor = mesh_get_accessor(mesh);
+    while (mesh_iter(&iter, vp)) {
+        vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
+        vec3_sub(p, goxel.plane[3], p_vec);
+        vec3_normalize(p_vec, p_vec);
+        d = vec3_dot(p_vec, goxel.plane[2]) * (above ? +1 : -1);
+        if (d > 0)
+            mesh_set_at(mesh, &accessor, vp, color);
+    }
+}
+
 static int gui(tool_t *tool_)
 {
     int i;
@@ -100,6 +127,14 @@ static int gui(tool_t *tool_)
         break;
 
     }
+
+    if (gui_button("Cut Above", 1, 0)) {
+        cut(true);
+    }
+    if (gui_button("Cut Below", 1, 0)) {
+        cut(false);
+    }
+
     return 0;
 }
 
