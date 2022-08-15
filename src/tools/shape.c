@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2017 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2017-2022 Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -34,48 +34,18 @@ typedef struct {
 
 
 static void get_box(const float p0[3], const float p1[3], const float n[3],
-                    float r, const float plane[4][4], float out[4][4])
+                    float out[4][4])
 {
-    float rot[4][4], box[4][4];
-    float v[3];
+    float box[4][4];
 
     if (p1 == NULL) {
-        bbox_from_extents(box, p0, r, r, r);
+        bbox_from_extents(box, p0, 0, 0, 0);
         box_swap_axis(box, 2, 0, 1, box);
         mat4_copy(box, out);
         return;
     }
-    if (r == 0) {
-        bbox_from_points(box, p0, p1);
-        bbox_grow(box, 0.5, 0.5, 0.5, box);
-        // Apply the plane rotation.
-        mat4_copy(plane, rot);
-        vec4_set(rot[3], 0, 0, 0, 1);
-        mat4_imul(box, rot);
-        mat4_copy(box, out);
-        return;
-    }
-
-    // Create a box for a line:
-    int i;
-    const float AXES[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-
-    mat4_set_identity(box);
-    vec3_mix(p0, p1, 0.5, box[3]);
-    vec3_sub(p1, box[3], box[2]);
-    for (i = 0; i < 3; i++) {
-        vec3_cross(box[2], AXES[i], box[0]);
-        if (vec3_norm2(box[0]) > 0) break;
-    }
-    if (i == 3) {
-        mat4_copy(box, out);
-        return;
-    }
-    vec3_normalize(box[0], v);
-    vec3_mul(v, r, box[0]);
-    vec3_cross(box[2], box[0], v);
-    vec3_normalize(v, v);
-    vec3_mul(v, r, box[1]);
+    bbox_from_points(box, p0, p1);
+    bbox_grow(box, 0.5, 0.5, 0.5, box);
     mat4_copy(box, out);
 }
 
@@ -86,7 +56,7 @@ static int on_hover(gesture3d_t *gest, void *user)
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to draw.");
-    get_box(curs->pos, curs->pos, curs->normal, 0, goxel.plane, box);
+    get_box(curs->pos, curs->pos, curs->normal, box);
     render_box(&goxel.rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
@@ -110,7 +80,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     }
 
     goxel_set_help_text("Drag.");
-    get_box(shape->start_pos, curs->pos, curs->normal, 0, goxel.plane, box);
+    get_box(shape->start_pos, curs->pos, curs->normal, box);
     if (!goxel.tool_mesh) goxel.tool_mesh = mesh_new();
     mesh_set(goxel.tool_mesh, shape->mesh_orig);
     mesh_op(goxel.tool_mesh, painter, box);
