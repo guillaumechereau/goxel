@@ -136,9 +136,11 @@ class GoxNSOpenGLView: NSOpenGLView, NSWindowDelegate {
             default: break
         }
         let scalars = event.characters!.unicodeScalars
-        let c = scalars[scalars.startIndex].value
-        if (c < 256) {
-            appDelegate().inputs.chars.0 = c
+        guard let c = scalars.first else {
+            return
+        }
+        if (c.value < 256) {
+            appDelegate().inputs.chars.0 = c.value
         }
     }
     
