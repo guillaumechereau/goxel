@@ -24,8 +24,8 @@
 from collections import namedtuple
 import os
 
-if os.path.dirname(__file__) != "./tools":
-    print ("Should be run from goxel root directory")
+if os.path.basename(os.path.dirname(__file__)) != "tools":
+    print("Should be run from goxel root directory")
     sys.exit(-1)
 
 TYPES = {
