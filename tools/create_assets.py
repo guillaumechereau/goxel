@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Goxel 3D voxels editor
 #
@@ -23,6 +23,7 @@
 
 from collections import namedtuple
 import os
+import sys
 
 if os.path.basename(os.path.dirname(__file__)) != "tools":
     print("Should be run from goxel root directory")
@@ -75,6 +76,7 @@ def list_files(group):
     return sorted(ret, key=lambda x: x.upper())
 
 def encode_str(data):
+    data = data.decode()
     ret = '    "'
     for c in data:
         if c == '\n':
@@ -90,7 +92,7 @@ def encode_bin(data):
     ret = "(const uint8_t[]){\n"
     line = ""
     for i, c in enumerate(data):
-        line += "{},".format(ord(c))
+        line += "{},".format(c)
         if len(line) >= 70 or i == len(data) - 1:
             ret += "    " + line + "\n"
             line = ""
@@ -98,7 +100,7 @@ def encode_bin(data):
     return ret;
 
 def create_file(f):
-    data = open(f).read()
+    data = open(f, 'rb').read()
     size = len(data)
     name = f.replace('/', '_').replace('.', '_').replace('-', '_')
     ext = f.split(".")[-1]
@@ -117,7 +119,7 @@ for group in GROUPS:
     if not files:
         continue
     out = open("src/assets/%s.inl" % group, "w")
-    print >>out, HEADER
+    print(HEADER, file=out)
     for f in files:
-        print >>out, TEMPLATE.format(**f._asdict())
-    print >>out, "\n\n"
+        print(TEMPLATE.format(**f._asdict()), file=out)
+    print("\n\n", file=out)

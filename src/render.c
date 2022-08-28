@@ -713,6 +713,7 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
     const material_t default_material = MATERIAL_DEFAULT;
     float alpha;
 
+    if (mesh == NULL) return;
     material = material ?: &default_material;
 
     if (!(effects & EFFECT_GRID_ONLY)) {

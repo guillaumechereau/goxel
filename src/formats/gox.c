@@ -18,6 +18,7 @@
 
 
 #include "goxel.h"
+#include "file_format.h"
 #include <errno.h>
 
 #define VERSION 2 // Current version of the file format.
@@ -494,7 +495,7 @@ static block_hash_t *hash_find_at(block_hash_t *hash, int index)
     r; })
 
 
-int load_from_file(const char *path)
+int load_from_file(const char *path, bool replace)
 {
     layer_t *layer, *layer_tmp;
     block_hash_t *blocks_table = NULL, *data, *data_tmp;
@@ -527,24 +528,26 @@ int load_from_file(const char *path)
 
     // Remove all layers, materials and camera.
     // XXX: should have a way to create a totally empty image instead.
-    DL_FOREACH_SAFE(goxel.image->layers, layer, layer_tmp) {
-        mesh_delete(layer->mesh);
-        free(layer);
-    }
-    DL_FOREACH_SAFE(goxel.image->materials, mat, mat_tmp) {
-        material_delete(mat);
-    }
-    DL_FOREACH_SAFE(goxel.image->cameras, camera, camera_tmp) {
-        camera_delete(camera);
-    }
+    if (replace) {
+        DL_FOREACH_SAFE(goxel.image->layers, layer, layer_tmp) {
+            mesh_delete(layer->mesh);
+            free(layer);
+        }
+        DL_FOREACH_SAFE(goxel.image->materials, mat, mat_tmp) {
+            material_delete(mat);
+        }
+        DL_FOREACH_SAFE(goxel.image->cameras, camera, camera_tmp) {
+            camera_delete(camera);
+        }
 
-    goxel.image->layers = NULL;
-    goxel.image->materials = NULL;
-    goxel.image->active_material = NULL;
-    goxel.image->cameras = NULL;
-    goxel.image->active_camera = NULL;
+        goxel.image->layers = NULL;
+        goxel.image->materials = NULL;
+        goxel.image->active_material = NULL;
+        goxel.image->cameras = NULL;
+        goxel.image->active_camera = NULL;
 
-    memset(&goxel.image->box, 0, sizeof(goxel.image->box));
+        memset(&goxel.image->box, 0, sizeof(goxel.image->box));
+    }
 
     while (chunk_read_start(&c, in)) {
         if (strncmp(c.type, "BL16", 4) == 0) {
@@ -709,7 +712,7 @@ static void a_open(void)
     if (!path) return;
     image_delete(goxel.image);
     goxel.image = image_new();
-    load_from_file(path);
+    load_from_file(path, true);
 }
 
 ACTION_REGISTER(open,
@@ -766,4 +769,15 @@ ACTION_REGISTER(reset,
     .help = "New",
     .cfunc = a_reset,
     .default_shortcut = "Ctrl N"
+)
+
+static int gox_import(image_t *image, const char *path)
+{
+    return load_from_file(path, false);
+}
+
+FILE_FORMAT_REGISTER(gox,
+    .name = "gox",
+    .ext = "gox\0*.gox\0",
+    .import_func = gox_import,
 )

@@ -169,6 +169,9 @@ static int gui(tool_t *tool)
     }
     gui_action_button(ACTION_fill_selection, "Fill", 1.0);
     gui_action_button(ACTION_layer_clear, "Clear", 1.0);
+    gui_action_button(ACTION_add_selection, "Add", 0.5);
+    gui_same_line();
+    gui_action_button(ACTION_sub_selection, "Sub", 1.0);
     gui_action_button(ACTION_cut_as_new_layer, "Cut as new layer", 1.0);
     gui_group_end();
 
@@ -204,4 +207,5 @@ TOOL_REGISTER(TOOL_SELECTION, selection, tool_selection_t,
               .iter_fn = iter,
               .gui_fn = gui,
               .default_shortcut = "R",
+              .flags = TOOL_SHOW_MASK,
 )

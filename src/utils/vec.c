@@ -82,6 +82,41 @@ void mat3_to_eul(const float m[3][3], int order, float e[3])
     }
 }
 
+void mat3_to_quat(const float m[3][3], float quat[4])
+{
+    float t;
+    if (m[2][2] < 0) {
+        if (m[0][0] > m[1][1]) {
+            t = 1 + m[0][0] - m[1][1] - m[2][2];
+            quat[0] = m[1][2] - m[2][1];
+            quat[1] = t;
+            quat[2] = m[0][1] + m[1][0];
+            quat[3] = m[2][0] + m[0][2];
+        } else {
+            t = 1 - m[0][0] + m[1][1] - m[2][2];
+            quat[0] = m[2][0] - m[0][2];
+            quat[1] = m[0][1] + m[1][0];
+            quat[2] = t;
+            quat[3] = m[1][2] + m[2][1];
+        }
+    } else {
+        if (m[0][0] < -m[1][1]) {
+            t = 1 - m[0][0] - m[1][1] + m[2][2];
+            quat[0] = m[0][1] - m[1][0];
+            quat[1] = m[2][0] + m[0][2];
+            quat[2] = m[1][2] + m[2][1];
+            quat[3] = t;
+        } else {
+            t = 1 + m[0][0] + m[1][1] + m[2][2];
+            quat[0] = t;
+            quat[1] = m[1][2] - m[2][1];
+            quat[2] = m[2][0] - m[0][2];
+            quat[3] = m[0][1] - m[1][0];
+        }
+    }
+    vec4_mul(quat, 0.5 / sqrt(t), quat);
+}
+
 void quat_to_mat3(const float q[4], float m[3][3])
 {
     float q0, q1, q2, q3, qda, qdb, qdc, qaa, qab, qac, qbb, qbc, qcc;

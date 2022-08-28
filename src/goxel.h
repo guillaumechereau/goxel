@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2015-2022 Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -72,7 +72,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GOXEL_VERSION_STR "0.10.8"
+#define GOXEL_VERSION_STR "0.11.0"
 #ifndef GOXEL_DEFAULT_THEME
 #   define GOXEL_DEFAULT_THEME "original"
 #endif
@@ -378,7 +378,7 @@ enum {
     ICON_SHAPE_CUBE = 12,
     ICON_SHAPE_SPHERE = 13,
     ICON_SHAPE_CYLINDER = 14,
-    ICON_TOOL_SELECTION = 15,
+    ICON_TOOL_RECT_SELECTION = 15,
     ICON_TOOL_LINE = 16,
 
     ICON_ADD = 17,
@@ -416,6 +416,7 @@ enum {
     ICON_VIEW = 49,
     ICON_MATERIAL = 50,
     ICON_LIGHT = 51,
+    ICON_TOOL_SELECTION = 52,
 };
 
 /*
@@ -505,6 +506,8 @@ typedef struct goxel
     int        tool_drag_mode; // 0: move, 1: resize.
 
     float      selection[4][4];   // The selection box.
+    mesh_t     *mask; // Global selection mask mesh.
+    int        mask_mode;
 
     struct {
         float  rotation[4];
@@ -614,7 +617,7 @@ int goxel_export_to_file(const char *path, const char *format);
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
 void save_to_file(const image_t *img, const char *path);
-int load_from_file(const char *path);
+int load_from_file(const char *path, bool replace);
 
 // Iter info of a gox file, without actually reading it.
 // For the moment only returns the image preview if available.

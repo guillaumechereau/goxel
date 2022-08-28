@@ -353,7 +353,7 @@ void mesh_remove_empty_blocks(mesh_t *mesh, bool fast)
 
 bool mesh_is_empty(const mesh_t *mesh)
 {
-    return mesh->blocks == NULL;
+    return mesh == NULL || mesh->blocks == NULL;
 }
 
 mesh_t *mesh_new(void)

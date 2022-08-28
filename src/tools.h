@@ -44,6 +44,7 @@ enum {
     TOOL_REQUIRE_CAN_EDIT = 1 << 0, // Set to tools that can edit the layer.
     TOOL_REQUIRE_CAN_MOVE = 1 << 1, // Set to tools that can move the layer.
     TOOL_ALLOW_PICK_COLOR = 1 << 2, // Ctrl switches to pick color tool.
+    TOOL_SHOW_MASK        = 1 << 3,
 };
 
 // Tools
@@ -80,6 +81,7 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4]);
 int tool_gui(tool_t *tool);
 
 int tool_gui_snap(void);
+int tool_gui_mask_mode(void);
 int tool_gui_shape(const shape_t **shape);
 int tool_gui_radius(void);
 int tool_gui_smoothness(void);

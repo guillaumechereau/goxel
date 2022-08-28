@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2015-2022 Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -911,6 +911,9 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
     render_box(rend, goxel.selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
 
+    if (goxel.tool->flags & TOOL_SHOW_MASK)
+        render_mesh(rend, goxel.mask, NULL, EFFECT_GRID_ONLY);
+
     // Debug: show the current layer mesh blocks.
     if ((0)) {
         mesh_iterator_t iter;
@@ -1128,7 +1131,7 @@ int goxel_import_file(const char *path, const char *format)
     int err;
 
     if (str_endswith(path, ".gox")) {
-        return load_from_file(path);
+        return load_from_file(path, false);
     }
     f = file_format_for_path(path, format, "r");
     if (!f) return -1;
@@ -1169,6 +1172,14 @@ static void a_cut_as_new_layer(void)
     const float (*box)[4][4] = &goxel.selection;
 
     new_layer = image_duplicate_layer(img, layer);
+
+    // Use the mask in priority.
+    if (!mesh_is_empty(goxel.mask)) {
+        mesh_merge(new_layer->mesh, goxel.mask, MODE_INTERSECT, NULL);
+        mesh_merge(layer->mesh, goxel.mask , MODE_SUB, NULL);
+        return;
+    }
+
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_INTERSECT,
@@ -1187,6 +1198,11 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void a_reset_selection(void)
 {
+    if (!mesh_is_empty(goxel.mask)) {
+        mesh_delete(goxel.mask);
+        goxel.mask = NULL;
+        return;
+    }
     mat4_copy(mat4_zero, goxel.selection);
 }
 
@@ -1198,6 +1214,12 @@ ACTION_REGISTER(reset_selection,
 static void a_fill_selection(void)
 {
     layer_t *layer = goxel.image->active_layer;
+
+    if (!mesh_is_empty(goxel.mask)) {
+        mesh_merge(layer->mesh, goxel.mask, MODE_OVER, goxel.painter.color);
+        return;
+    }
+
     if (box_is_null(goxel.selection)) return;
     mesh_op(layer->mesh, &goxel.painter, goxel.selection);
 }
@@ -1206,6 +1228,46 @@ ACTION_REGISTER(fill_selection,
     .help = "Fill the selection with the current paint settings",
     .cfunc = a_fill_selection,
     .flags = ACTION_TOUCH_IMAGE,
+)
+
+static void a_add_selection(void)
+{
+    mesh_t *tmp;
+    painter_t painter;
+
+    if (box_is_null(goxel.selection)) return;
+    painter = (painter_t) {
+        .shape = &shape_cube,
+        .mode = MODE_INTERSECT_FILL,
+        .color = {255, 255, 255, 255},
+    };
+    tmp = mesh_copy(goxel.image->active_layer->mesh);
+    mesh_op(tmp, &painter, goxel.selection);
+    if (goxel.mask == NULL) goxel.mask = mesh_new();
+    mesh_merge(goxel.mask, tmp, MODE_OVER, painter.color);
+    mesh_delete(tmp);
+}
+
+ACTION_REGISTER(add_selection,
+    .help = "Add the selection to the current mask",
+    .cfunc = a_add_selection,
+)
+
+static void a_sub_selection(void)
+{
+    painter_t painter;
+    if (goxel.mask == NULL || box_is_null(goxel.selection)) return;
+    painter = (painter_t) {
+        .shape = &shape_cube,
+        .mode = MODE_SUB,
+        .color = {255, 255, 255, 255},
+    };
+    mesh_op(goxel.mask, &painter, goxel.selection);
+}
+
+ACTION_REGISTER(sub_selection,
+    .help = "Subtract the selection from the current mask",
+    .cfunc = a_sub_selection,
 )
 
 static void copy_action(void)
@@ -1266,10 +1328,12 @@ ACTION_REGISTER(past,
 static void a_view_default(void)
 {
     camera_t *camera = get_camera();
-    float dist = vec3_norm(camera->mat[3]);
     mat4_set_identity(camera->mat);
-    mat4_irotate(camera->mat, M_PI / 4, 1, 0, 0);
-    mat4_itranslate(camera->mat, 0, 0, dist);
+    camera->dist = 128;
+    camera->aspect = 1;
+    mat4_itranslate(camera->mat, 0, 0, camera->dist);
+    camera_turntable(camera, M_PI / 4, M_PI / 4);
+    camera_fit_box(camera, goxel.image->box);
 }
 
 static void a_view_set(void *data)

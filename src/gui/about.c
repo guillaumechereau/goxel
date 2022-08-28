@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2019 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2019-2022 Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -21,7 +21,7 @@
 int gui_about_popup(void *data)
 {
     gui_text("Goxel " GOXEL_VERSION_STR);
-    gui_text("Copyright © 2015-2019 Guillaume Chereau");
+    gui_text("Copyright © 2015-2022 Guillaume Chereau");
     gui_text("<guillaume@noctua-software.com>");
     gui_text("All right reserved");
     if (!DEFINED(GOXEL_MOBILE)) gui_text("GPL 3 License");
