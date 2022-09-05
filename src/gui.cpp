@@ -1497,7 +1497,8 @@ bool gui_is_key_down(int key)
     return ImGui::IsKeyDown(key);
 }
 
-bool gui_palette_entry(const uint8_t color[4], uint8_t target[4])
+bool gui_palette_entry(const uint8_t color[4], uint8_t target[4],
+                       const char *name)
 {
     bool ret;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -1516,6 +1517,11 @@ bool gui_palette_entry(const uint8_t color[4], uint8_t target[4])
         on_click();
         memcpy(target, color, 4);
     }
+
+    if (name && ImGui::IsItemHovered()) {
+        gui_tooltip(name);
+    }
+
     return ret;
 }
 

@@ -48,7 +48,8 @@ void gui_palette_panel(void)
     for (i = 0; i < p->size; i++) {
         snprintf(id, sizeof(id), "%d", i);
         gui_push_id(id);
-        gui_palette_entry(p->entries[i].color, goxel.painter.color);
+        gui_palette_entry(p->entries[i].color, goxel.painter.color,
+                          p->entries[i].name);
         if ((i + 1) % nb_col && i != p->size - 1) gui_same_line();
         gui_pop_id();
     }

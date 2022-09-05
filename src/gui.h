@@ -117,7 +117,8 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
                     char *name, int len);
 
 bool gui_is_key_down(int key);
-bool gui_palette_entry(const uint8_t color[4], uint8_t target[4]);
+bool gui_palette_entry(const uint8_t color[4], uint8_t target[4],
+                       const char *name);
 
 bool gui_need_full_version(void);
 
