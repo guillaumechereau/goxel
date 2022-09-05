@@ -54,7 +54,8 @@ static int import_node(FILE *file)
     name_size = READ(uint32_t, file);
     if (name_size >= sizeof(layer->name)) raise("Node size too long");
     memset(layer->name, 0, sizeof(layer->name));
-    fread(layer->name, name_size, 1, file);
+    r = fread(layer->name, name_size, 1, file);
+    if (r != 1) raise("Read file error");
     SKIP(file, 3);
 
     switch (type) {
@@ -141,7 +142,7 @@ static int import_matrix(FILE *file)
 {
     int size[3], pos[3];
     float pivot[3];
-    int comp_data_size, data_size;
+    int r, comp_data_size, data_size;
     char *comp_data, *data;
     uint8_t (*cube)[4];
 
@@ -157,15 +158,9 @@ static int import_matrix(FILE *file)
     (void)pivot;
     comp_data_size = READ(uint32_t, file);
 
-    /*
-    LOG_D(" size: %d %d %d", size[0], size[1], size[2]);
-    LOG_D("  pos: %d %d %d", pos[0], pos[1], pos[2]);
-    LOG_D("pivot: %f %f %f", pivot[0], pivot[1], pivot[2]);
-    LOG_D("comp data size: %d", comp_data_size);
-    */
-
     comp_data = malloc(comp_data_size);
-    fread(comp_data, comp_data_size, 1, file);
+    r = fread(comp_data, comp_data_size, 1, file);
+    if (r != 1) return -1;
 
     data = stbi_zlib_decode_malloc(comp_data, comp_data_size, &data_size);
 
@@ -190,11 +185,11 @@ static int qubicle2_import(image_t *image, const char *path)
     char magic[4];
     uint32_t prog_version;
     uint32_t file_version;
-    int i, w, h, size;
+    int r, i, w, h, size;
 
     file = fopen(path, "rb");
-    fread(magic, 1, 4, file);
-    if (strncmp(magic, "QBCL ", 4) != 0) raise("Invalid magic");
+    r = fread(magic, 1, 4, file);
+    if (r != 1 || strncmp(magic, "QBCL ", 4) != 0) raise("Invalid magic");
     prog_version = READ(uint32_t, file);
     file_version = READ(uint32_t, file);
     LOG_I("Qubicle prog version: %d, file version: %d",
