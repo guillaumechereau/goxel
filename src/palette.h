@@ -23,7 +23,7 @@
 
 typedef struct {
     uint8_t  color[4];
-    char     name[32];
+    char     name[256];
 } palette_entry_t;
 
 typedef struct palette palette_t;
