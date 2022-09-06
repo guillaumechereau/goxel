@@ -53,12 +53,23 @@ static void get_color(const char *name, uint8_t out[4],
                       const palette_t *minetest_palette)
 {
     int i;
+
+    // First search using the current palette.
+    for (i = 0; i < goxel.palette->size; i++) {
+        if (strcasecmp(goxel.palette->entries[i].name, name) == 0) {
+            memcpy(out, goxel.palette->entries[i].color, 4);
+            return;
+        }
+    }
+
+    // Try minetest palette next.
     for (i = 0; i < minetest_palette->size; i++) {
         if (strcasecmp(minetest_palette->entries[i].name, name) == 0) {
             memcpy(out, minetest_palette->entries[i].color, 4);
             return;
         }
     }
+
     // Fallback to white.
     LOG_I("Cannot fine color for '%s'", name);
     out[0] = 255;
