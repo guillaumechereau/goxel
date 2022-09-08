@@ -96,24 +96,14 @@ jobs:
       run: |
         scons -j 4 werror=false mode=release
 
-    - name: List
-      run: |
-        ls
-        echo "---------------"
-        ls osx/goxel/
-        echo "---------------"
-        ls osx/goxel/goxel/
-        echo "---------------"
-        ls osx/goxel/goxel.xcodeproj
-
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
         name: osx_binary
-        path: ./goxel2-osx.zip
+        path: ./goxel
         if-no-files-found: error
 
-  Success:
+  Success: # Not Neccessary
     needs: [linux_x86_64, osx_x86_64, windows_x86_64, windows_i686]
     runs-on: ubuntu-latest
     steps:
