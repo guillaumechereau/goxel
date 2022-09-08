@@ -97,7 +97,7 @@ jobs:
         scons -j 4 werror=false mode=release
 
     - name: List
-      run:
+      run: |
         ls
         echo "---------------"
         ls osx/goxel/
