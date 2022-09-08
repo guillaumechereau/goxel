@@ -1,7 +1,7 @@
-name: nightly
+name: ci
 on:
   push:
-    branches: [ master ]
+    # branches: [ master ] # Uncomment if you want to only run the workflow when pushing on to the master branch
   pull_request:
 
 jobs:
