@@ -355,13 +355,21 @@ static int sync_camera(pathtracer_t *pt, int w, int h,
                                {m[1][0], m[1][1], m[1][2], m[1][3]},
                                {m[2][0], m[2][1], m[2][2], m[2][3]},
                                {m[3][0], m[3][1], m[3][2], m[3][3]}));
-    aspect = (float)w / h;
-    viewport_aspect = viewport[2] / viewport[3];
-    fovy = camera->fovy / 180 * M_PI;
-    if (viewport_aspect < aspect) {
-        fovy *= viewport_aspect / aspect;
+    if (!camera->ortho) {
+        aspect = (float)w / h;
+        viewport_aspect = viewport[2] / viewport[3];
+        fovy = camera->fovy / 180 * M_PI;
+        if (viewport_aspect < aspect) {
+            fovy *= viewport_aspect / aspect;
+        }
+        set_yperspective(*cam, fovy, aspect, camera->dist);
+    } else {
+        cam->orthographic = true;
+        cam->film.x = viewport[2];
+        cam->film.y = viewport[3];
+        cam->lens = cam->film.y / camera->dist;
+        cam->focus = camera->dist;
     }
-    set_yperspective(*cam, fovy, aspect, camera->dist);
 
     return CHANGE_CAMERA;
 }
