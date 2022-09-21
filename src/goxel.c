@@ -1117,6 +1117,11 @@ void goxel_import_image_plane(const char *path)
     layer = image_add_layer(goxel.image, NULL);
     sprintf(layer->name, "img");
     layer->image = tex;
+    // Adjust position for odd sized images.
+    if (tex->w % 2 == 1)
+        mat4_itranslate(layer->mat, 0.5, 0, 0);
+    if (tex->h % 2 == 1)
+        mat4_itranslate(layer->mat, 0, 0.5, 0);
     mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);
 }
 
