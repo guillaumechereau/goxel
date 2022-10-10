@@ -377,6 +377,14 @@ DECL void mat4_mul_vec3(const float m[S 4][4], const float v[S 3],
     vec3_copy(v4, out);
 }
 
+DECL void mat4_mul_dir3(const float m[S 4][4], const float v[S 3],
+                        float out[S 3])
+{
+    float v4[4] = {v[0], v[1], v[2], 0.0f};
+    mat4_mul_vec4(m, v4, v4);
+    vec3_copy(v4, out);
+}
+
 DECL void mat4_translate(const float m[S 4][4], float x, float y, float z,
                          float out[S 4][4])
 {
