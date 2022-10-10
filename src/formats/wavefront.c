@@ -33,6 +33,14 @@ typedef struct {
     };
 } line_t;
 
+typedef struct {
+    bool y_up;
+} export_options_t;
+
+static export_options_t g_export_options = {
+    .y_up = true,
+};
+
 static UT_icd line_icd = {sizeof(line_t), NULL, NULL, NULL};
 
 static int lines_find(UT_array *lines, const line_t *line, int search_nb)
@@ -83,6 +91,9 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
     UT_array *lines_f, *lines_v, *lines_vn;
     line_t line, face, *line_ptr = NULL;
     mesh_iterator_t iter;
+    static const float ZUP2YUP[4][4] = {
+        {1, 0, 0, 0}, {0, 0, -1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1},
+    };
 
     utarray_new(lines_f, &line_icd);
     utarray_new(lines_v, &line_icd);
@@ -93,6 +104,9 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
             MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
     while (mesh_iter(&iter, bpos)) {
         mat4_set_identity(mat);
+        if (g_export_options.y_up) {
+            mat4_mul(ZUP2YUP, mat, mat);
+        }
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
         nb_elems = mesh_generate_vertices(mesh, bpos,
                                     goxel.rend.settings.effects, verts,
@@ -115,6 +129,7 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
                 v[0] = verts[i * size + j].normal[0];
                 v[1] = verts[i * size + j].normal[1];
                 v[2] = verts[i * size + j].normal[2];
+                mat4_mul_dir3(mat, v, v);
                 line = (line_t){.vn = {v[0], v[1], v[2]}};
                 face.vns[j] = lines_add(lines_vn, &line, 512);
             }
@@ -203,14 +218,22 @@ int ply_export(const image_t *image, const char *path)
     return export(mesh, path, true);
 }
 
+static void export_gui(void)
+{
+    gui_checkbox("Y-up", &g_export_options.y_up,
+                 "Use Y up instead of Z up");
+}
+
 FILE_FORMAT_REGISTER(obj,
     .name = "obj",
     .ext = "obj\0*.obj\0",
+    .export_gui = export_gui,
     .export_func = wavefront_export,
 )
 
 FILE_FORMAT_REGISTER(ply,
     .name = "ply",
     .ext = "ply\0*.ply\0",
+    .export_gui = export_gui,
     .export_func = ply_export,
 )
