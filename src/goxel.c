@@ -1073,6 +1073,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     mat4_copy(camera->proj_mat, rend.proj_mat);
     rend.fbo = fbo->framebuffer;
     rend.scale = 1.0;
+    rend.items = NULL;
 
     // XXX: use goxel_get_render_layers!
     render_mesh(&rend, mesh, NULL, 0);
