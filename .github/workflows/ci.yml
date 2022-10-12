@@ -11,7 +11,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
 
@@ -26,7 +26,7 @@ jobs:
           scons -j 4 mode=release
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: win_x86_64_binary
           path: goxel.exe
@@ -38,7 +38,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
 
@@ -54,7 +54,7 @@ jobs:
           scons -j 4 mode=release
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: win_i686_binary
           path: goxel.exe
@@ -63,7 +63,7 @@ jobs:
   linux_x86_64:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -76,7 +76,7 @@ jobs:
         scons -j 4 mode=release
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: linux_x86_64_binary
         path: goxel
@@ -85,7 +85,7 @@ jobs:
   osx_x86_64:
     runs-on: macos-11
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
@@ -97,7 +97,7 @@ jobs:
         scons -j 4 mode=release
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: osx_binary
         path: ./goxel
@@ -107,6 +107,6 @@ jobs:
     needs: [linux_x86_64, osx_x86_64, windows_x86_64, windows_i686]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
