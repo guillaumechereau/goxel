@@ -23,7 +23,7 @@ jobs:
 
       - name: Build Goxel
         run: |
-          scons -j 4 werror=false mode=release
+          scons -j 4 mode=release
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
@@ -51,7 +51,7 @@ jobs:
       - name: Build Goxel
         run: |
           export PATH=/mingw32/bin/:$PATH
-          scons -j 4 werror=false mode=release
+          scons -j 4 mode=release
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
@@ -73,7 +73,7 @@ jobs:
 
     - name: Build Goxel
       run: |
-        scons -j 4 werror=false mode=release
+        scons -j 4 mode=release
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
@@ -94,7 +94,7 @@ jobs:
 
     - name: Build
       run: |
-        scons -j 4 werror=false mode=release
+        scons -j 4 mode=release
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
