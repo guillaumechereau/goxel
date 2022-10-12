@@ -103,6 +103,7 @@ if target_os == 'posix':
 if target_os == 'msys':
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
                          '-Wno-unused-function'])
+    env.Append(CCFLAGS=['-Wno-error=address']) # To remove if possible.
     env.Append(LIBS=['glfw3', 'opengl32', 'Imm32', 'gdi32', 'Comdlg32',
                      'z', 'tre', 'intl', 'iconv'],
                LINKFLAGS='--static')
