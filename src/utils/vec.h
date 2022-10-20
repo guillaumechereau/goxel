@@ -348,6 +348,8 @@ DECL void vec3_cross(const float a[S 3], const float b[S 3], float out[S 3])
     out[2] = a[0] * b[1] - a[1] * b[0];
 }
 
+void vec3_get_ortho(const float a[S 3], float out[S 3]);
+
 DECL void mat4_copy(const float m[S 4][4], float out[S 4][4])
 {
     int i, j;

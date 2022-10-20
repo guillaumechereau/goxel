@@ -182,3 +182,34 @@ void eul_to_quat(const float e[3], int order, float q[4])
 
     if (parity) q[j + 1] = -q[j + 1];
 }
+
+void vec3_get_ortho(const float v_[3], float out[3])
+{
+    int axis;
+    float v[3];
+
+    vec3_copy(v_, v);
+
+    // Get dominant axis:
+    if (fabs(v[0]) >= fabs(v[1]) && fabs(v[0]) > fabs(v[2])) axis = 0;
+    if (fabs(v[1]) >= fabs(v[0]) && fabs(v[1]) > fabs(v[2])) axis = 1;
+    if (fabs(v[2]) >= fabs(v[0]) && fabs(v[2]) > fabs(v[1])) axis = 2;
+
+    switch (axis) {
+    case 0:
+        out[0] = -v[1] - v[2];
+        out[1] =  v[0];
+        out[2] =  v[0];
+        break;
+    case 1:
+        out[0] =  v[1];
+        out[1] = -v[0] - v[2];
+        out[2] =  v[1];
+        break;
+    case 2:
+        out[0] =  v[2];
+        out[1] =  v[2];
+        out[2] = -v[0] - v[1];
+        break;
+    }
+}
