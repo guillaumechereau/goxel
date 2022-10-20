@@ -254,6 +254,34 @@ model3d_t *model3d_wire_rect(void)
     return model;
 }
 
+model3d_t *model3d_cone(void)
+{
+    int i, j, idx;
+    float da;
+    model3d_t *model = calloc(1, sizeof(*model));
+    model_vertex_t *v;
+
+    model->nb_vertices = 2 * 3 * 8;
+    model->vertices = calloc(model->nb_vertices, sizeof(*model->vertices));
+    da = 2 * M_PI / 8;
+    v = model->vertices;
+    for (i = 0; i < 2; i++) {
+        for (j = 0; j < 8; j++) {
+            idx = i * 3 * 8 + j * 3;
+            vec4_set(v[idx + 0].color, 255, 255, 255, 255);
+            vec4_set(v[idx + 1].color, 255, 255, 255, 255);
+            vec4_set(v[idx + 2].color, 255, 255, 255, 255);
+            vec3_set(v[idx].pos, i, 0, 0);
+            vec3_set(v[idx + 1].pos, 0, cos(da * (j + 0)), sin(da * (j + 0)));
+            vec3_set(v[idx + 2].pos, 0, cos(da * (j + 1)), sin(da * (j + 1)));
+            // Todo: normals.
+        }
+    }
+    model->dirty = true;
+    model->solid = true;
+    return model;
+}
+
 static void copy_color(const uint8_t in[4], uint8_t out[4])
 {
     if (in == NULL) {

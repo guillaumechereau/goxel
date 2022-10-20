@@ -87,6 +87,7 @@ static model3d_t *g_sphere_model;
 static model3d_t *g_grid_model;
 static model3d_t *g_rect_model;
 static model3d_t *g_wire_rect_model;
+static model3d_t *g_cone_model;
 
 static GLuint g_index_buffer;
 static GLuint g_background_array_buffer;
@@ -338,6 +339,7 @@ void render_init()
     g_grid_model = model3d_grid(8, 8);
     g_rect_model = model3d_rect();
     g_wire_rect_model = model3d_wire_rect();
+    g_cone_model = model3d_cone();
 }
 
 void render_deinit(void)
@@ -352,6 +354,7 @@ void render_deinit(void)
     model3d_delete(g_grid_model);
     model3d_delete(g_rect_model);
     model3d_delete(g_wire_rect_model);
+    model3d_delete(g_cone_model);
 }
 
 // A global buffer large enough to contain all the vertices for any block.
@@ -860,6 +863,17 @@ void render_rect(renderer_t *rend, const float plane[4][4], int effects)
     DL_APPEND(rend->items, item);
 }
 
+void render_rect_fill(renderer_t *rend, const float plane[4][4],
+                      const uint8_t color[4])
+{
+    render_item_t *item = calloc(1, sizeof(*item));
+    item->type = ITEM_MODEL3D;
+    mat4_copy(plane, item->mat);
+    item->model3d = g_rect_model;
+    copy_color(color, item->color);
+    DL_APPEND(rend->items, item);
+}
+
 // Return a plane whose u vector is the line ab.
 static void line_create_plane(const float a[3], const float b[3],
                               float out[4][4])
@@ -867,6 +881,8 @@ static void line_create_plane(const float a[3], const float b[3],
     mat4_set_identity(out);
     vec3_copy(a, out[3]);
     vec3_sub(b, a, out[0]);
+    vec3_get_ortho(out[0], out[1]);
+    vec3_cross(out[0], out[1], out[2]);
 }
 
 void render_line(renderer_t *rend, const float a[3], const float b[3],
@@ -880,6 +896,21 @@ void render_line(renderer_t *rend, const float a[3], const float b[3],
     mat4_itranslate(item->mat, 0.5, 0, 0);
     item->proj_screen = effects & EFFECT_PROJ_SCREEN;
     DL_APPEND(rend->items, item);
+
+    if (effects & EFFECT_ARROW) {
+        item = calloc(1, sizeof(*item));
+        item->type = ITEM_MODEL3D;
+        item->model3d = g_cone_model;
+        item->effects = EFFECT_NO_SHADING;
+        line_create_plane(a, b, item->mat);
+        vec3_normalize(item->mat[0], item->mat[0]);
+        vec3_normalize(item->mat[1], item->mat[1]);
+        vec3_normalize(item->mat[2], item->mat[2]);
+        vec3_copy(b, item->mat[3]);
+        mat4_iscale(item->mat, 1, 0.5, 0.5);
+        copy_color(color, item->color);
+        DL_APPEND(rend->items, item);
+    }
 }
 
 void render_box(renderer_t *rend, const float box[4][4],

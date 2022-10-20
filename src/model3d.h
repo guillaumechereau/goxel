@@ -105,6 +105,8 @@ model3d_t *model3d_rect(void);
  */
 model3d_t *model3d_wire_rect(void);
 
+model3d_t *model3d_cone(void);
+
 /*
  * Function: model3d_render
  * Render a 3d model using OpenGL calls.

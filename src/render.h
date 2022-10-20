@@ -42,6 +42,8 @@ enum {
     EFFECT_PROJ_SCREEN      = 1 << 16, // Image project in screen.
     EFFECT_ANTIALIASING     = 1 << 17,
     EFFECT_UNLIT            = 1 << 18,
+
+    EFFECT_ARROW            = 1 << 19, // Add an arrow at the end of lines.
 };
 
 typedef struct {
@@ -100,6 +102,10 @@ void render_img2(renderer_t *rend,
                  const float mat[4][4], int effects);
 
 void render_rect(renderer_t *rend, const float plane[4][4], int effects);
+
+void render_rect_fill(renderer_t *rend, const float plane[4][4],
+                      const uint8_t color[4]);
+
 // Flushes all the queued render items.  Actually calls opengl.
 //  rect: the viewport rect (passed to glViewport).
 //  clear_color: clear the screen with this first.

@@ -55,6 +55,18 @@ static void get_transf(const float src[4][4], const float dst[4][4],
     mat4_mul(dst, out, out);
 }
 
+static void render_gizmo(const float plane[4][4], int face)
+{
+    uint8_t color[4] = {255, 0, 0, 16};
+    float a[3], b[3], dir[3];
+    render_rect_fill(&goxel.rend, plane, color);
+    vec3_normalize(plane[2], dir);
+    vec3_copy(plane[3], a);
+    vec3_addk(a, dir, 3, b);
+    color[3] = 255;
+    render_line(&goxel.rend, a, b, color, EFFECT_ARROW);
+}
+
 static int on_hover(gesture3d_t *gest, void *user)
 {
     data_t *data = (void*)user;
@@ -73,8 +85,9 @@ static int on_hover(gesture3d_t *gest, void *user)
     // Render a white box on the side.
     // XXX: replace that with something better like an arrow.
     mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
+    mat4_iscale(face_plane, 2, 2, 1);
     mat4_itranslate(face_plane, 0, 0, 0.001);
-    render_img(&goxel.rend, NULL, face_plane, EFFECT_NO_SHADING);
+    render_gizmo(face_plane, data->snap_face);
     return 0;
 }
 
