@@ -121,6 +121,7 @@ if target_os == 'darwin':
     env['sound'] = False
 
 # Add external libs.
+env.Append(CPPPATH=['ext_src'])
 env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])

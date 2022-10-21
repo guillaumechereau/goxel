@@ -19,6 +19,12 @@
 #include "goxel.h"
 #include "file_format.h"
 
+#define VOXELIZER_IMPLEMENTATION
+#include "voxelizer/voxelizer.h"
+
+#define TINYOBJ_LOADER_C_IMPLEMENTATION
+#include "tinyobjloader/tinyobj_loader_c.h"
+
 typedef struct {
     union {
         struct {
@@ -224,11 +230,88 @@ static void export_gui(void)
                  "Use Y up instead of Z up");
 }
 
+static void get_file_data(void *ctx, const char *filename, const int is_mtl,
+                          const char *obj_filename, char **data, size_t *len)
+{
+    int size;
+
+    if (!filename) {
+        (*data) = NULL;
+        (*len) = 0;
+        return;
+    }
+    *data = read_file(filename, &size);
+    *len = size;
+}
+
+static int wavefront_import(image_t *image, const char *path)
+{
+    int err;
+    tinyobj_attrib_t attrib;
+    tinyobj_shape_t *shapes = NULL;
+    size_t num_shapes;
+    tinyobj_material_t *materials = NULL;
+    size_t num_materials;
+    int i, pos[3];
+    uint8_t color[4];
+    float res = 1. / 256; // For testing.
+    unsigned int flags;
+    vx_mesh_t *mesh;
+    vx_point_cloud_t *cloud;
+    mesh_iterator_t iter = {0};
+    layer_t *layer;
+
+    // XXX TODO: free the file data at the end!
+    flags = TINYOBJ_FLAG_TRIANGULATE;
+    err = tinyobj_parse_obj(&attrib, &shapes, &num_shapes, &materials,
+                            &num_materials, path, get_file_data, NULL, flags);
+    if (err != TINYOBJ_SUCCESS) {
+        LOG_E("Cannot load %s", path);
+        return -1;
+    }
+
+    mesh = vx_mesh_alloc(attrib.num_vertices, attrib.num_faces);
+    for (i = 0; i < attrib.num_vertices; i++) {
+        mesh->vertices[i].x = attrib.vertices[i * 3 + 0];
+        mesh->vertices[i].z = attrib.vertices[i * 3 + 1];
+        mesh->vertices[i].y = -attrib.vertices[i * 3 + 2];
+        mesh->colors[i].r = 255;
+        mesh->colors[i].g = 255;
+        mesh->colors[i].b = 255;
+    }
+    for (i = 0; i < attrib.num_faces; i++) {
+        mesh->indices[i] = attrib.faces[i].v_idx;
+    }
+
+    tinyobj_attrib_free(&attrib);
+    tinyobj_shapes_free(shapes, num_shapes);
+    tinyobj_materials_free(materials, num_materials);
+
+    cloud = vx_voxelize_pc(mesh, res, res, res, res * 0.1);
+
+    layer = image_add_layer(image, NULL);
+    for (i = 0; i < cloud->nvertices; i++) {
+        pos[0] = floor(cloud->vertices[i].x / res);
+        pos[1] = floor(cloud->vertices[i].y / res);
+        pos[2] = floor(cloud->vertices[i].z / res);
+        color[0] = cloud->colors[i].r;
+        color[1] = cloud->colors[i].g;
+        color[2] = cloud->colors[i].b;
+        color[3] = 255;
+        mesh_set_at(layer->mesh, &iter, pos, color);
+    }
+
+    vx_point_cloud_free(cloud);
+
+    return 0;
+}
+
 FILE_FORMAT_REGISTER(obj,
     .name = "obj",
     .ext = "obj\0*.obj\0",
     .export_gui = export_gui,
     .export_func = wavefront_export,
+    .import_func = wavefront_import,
 )
 
 FILE_FORMAT_REGISTER(ply,
