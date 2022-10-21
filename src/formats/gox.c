@@ -506,7 +506,7 @@ int load_from_file(const char *path, bool replace)
     int w, h, bpp;
     uint8_t *png;
     chunk_t c;
-    int i, index, version, x, y, z, material_idx;
+    int i, index, version, x, y, z, material_idx = 0;
     int  dict_value_size;
     char dict_key[256];
     char dict_value[256];
@@ -593,7 +593,7 @@ int load_from_file(const char *path, bool replace)
                     layer->image = texture_new_image(dict_value, TF_NEAREST);
                 }
 
-                typeof(layer->id) id;
+                typeof(layer->id) id = 0;
                 if (DICT_CPY("id", id)) {
                     if (id) layer->id = id;
                 }

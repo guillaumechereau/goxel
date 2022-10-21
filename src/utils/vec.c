@@ -185,7 +185,7 @@ void eul_to_quat(const float e[3], int order, float q[4])
 
 void vec3_get_ortho(const float v_[3], float out[3])
 {
-    int axis;
+    int axis = 0;
     float v[3];
 
     vec3_copy(v_, v);
