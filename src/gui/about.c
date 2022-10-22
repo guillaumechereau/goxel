@@ -40,6 +40,8 @@ int gui_about_popup(void *data)
         gui_text("● yocto-gl (https://github.com/xelatihy/yocto-gl)");
         gui_text("● uthash (https://troydhanson.github.io/uthash/)");
         gui_text("● inih (https://github.com/benhoyt/inih)");
+        gui_text("● voxelizer (https://github.com/karimnaaji/voxelizer)");
+        gui_text("● tinyobjloader (https://github.com/syoyo/tinyobjloader-c)");
 
         gui_text("Design:");
         gui_text("● Guillaume Chereau <guillaume@noctua-software.com>");
