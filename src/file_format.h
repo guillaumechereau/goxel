@@ -30,6 +30,7 @@ struct file_format
     void            (*export_gui)(void);
     int             (*export_func)(const image_t *img, const char *path);
     int             (*import_func)(image_t *img, const char *path);
+    void            (*import_gui)(void);
 };
 
 void file_format_register(file_format_t *format);

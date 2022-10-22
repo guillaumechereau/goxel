@@ -1048,6 +1048,11 @@ void gui_same_line(void)
     SameLine();
 }
 
+void gui_dummy(int w, int h)
+{
+    ImGui::Dummy(ImVec2(w, h));
+}
+
 void gui_spacing(int w)
 {
     ImGui::Dummy(ImVec2(w, 0));

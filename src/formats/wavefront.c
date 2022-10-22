@@ -244,6 +244,14 @@ static void get_file_data(void *ctx, const char *filename, const int is_mtl,
     *len = size;
 }
 
+static float g_resolution = 1.0;
+
+static void import_gui(void)
+{
+    gui_dummy(200, 0); // Just to fix the width.
+    gui_input_float("Resolution", &g_resolution, 0.01, 0, 100000, "%.3f");
+}
+
 static int wavefront_import(image_t *image, const char *path)
 {
     int err;
@@ -254,7 +262,7 @@ static int wavefront_import(image_t *image, const char *path)
     size_t num_materials;
     int i, pos[3];
     uint8_t color[4];
-    float res = 1. / 256; // For testing.
+    float res = g_resolution;
     unsigned int flags;
     vx_mesh_t *mesh;
     vx_point_cloud_t *cloud;
@@ -312,6 +320,7 @@ FILE_FORMAT_REGISTER(obj,
     .export_gui = export_gui,
     .export_func = wavefront_export,
     .import_func = wavefront_import,
+    .import_gui = import_gui,
 )
 
 FILE_FORMAT_REGISTER(ply,

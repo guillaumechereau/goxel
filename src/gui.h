@@ -97,6 +97,7 @@ float gui_get_avail_width(void);
 void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
+void gui_dummy(int w, int h);
 void gui_spacing(int w);
 
 // Add an icon in top left corner of last item.
