@@ -115,9 +115,10 @@ if target_os == 'msys':
 if target_os == 'darwin':
     sources += glob.glob('src/*.m')
     env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
-    env.Append(LIBS=['m', 'glfw', 'objc'])
+    env.Append(LIBS=['m', 'objc'])
     # Fix warning in noc_file_dialog (the code should be fixed instead).
     env.Append(CCFLAGS=['-Wno-deprecated-declarations'])
+    env.ParseConfig('pkg-config --cflags --libs glfw3')
     env['sound'] = False
 
 # Add external libs.
