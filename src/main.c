@@ -286,6 +286,8 @@ int main(int argc, char **argv)
     glfwMakeContextCurrent(window);
     if (!DEFINED(EMSCRIPTEN))
         glfwSetScrollCallback(window, on_scroll);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+    glfwSwapInterval(1);
     glfwSetDropCallback(window, on_drop);
     glfwSetCharCallback(window, on_char);
     glfwSetWindowCloseCallback(window, on_close);
