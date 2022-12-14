@@ -442,7 +442,8 @@ int goxel_iter(inputs_t *inputs)
         goxel_create_graphics();
 
     goxel.delta_time = time - goxel.frame_time;
-    goxel.fps = mix(goxel.fps, 1.0 / goxel.delta_time, 0.1);
+    if (goxel.delta_time != 0)
+        goxel.fps = mix(goxel.fps, 1.0 / goxel.delta_time, 0.1);
     goxel.frame_time = time;
     goxel_set_help_text(NULL);
     goxel_set_hint_text(NULL);
