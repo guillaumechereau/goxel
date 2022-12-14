@@ -6,9 +6,7 @@ Version 0.10.7
 
 By Guillaume Chereau <guillaume@noctua-software.com>
 
-[![Build Status](
-    https://travis-ci.org/guillaumechereau/goxel.svg?branch=master)](
-    https://travis-ci.org/guillaumechereau/goxel)
+[![Build Status](https://github.com/guillaumechereau/goxel/actions/workflows/ci.yml/badge.svg)](https://github.com/guillaumechereau/goxel/actions/workflows/ci.yml)
 [![DebianBadge](https://badges.debian.net/badges/debian/unstable/goxel/version.svg)](https://packages.debian.org/unstable/goxel)
 
 Official webpage: https://goxel.xyz
