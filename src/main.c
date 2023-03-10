@@ -171,8 +171,8 @@ static void loop_function(void)
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
     scale = g_scale * (float)fb_size[0] / win_size[0];
 
-    g_inputs->window_size[0] = win_size[0];
-    g_inputs->window_size[1] = win_size[1];
+    g_inputs->window_size[0] = win_size[0] / g_scale;
+    g_inputs->window_size[1] = win_size[1] / g_scale;
     g_inputs->scale = scale;
 
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -181,7 +181,7 @@ static void loop_function(void)
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    vec2_set(g_inputs->touches[0].pos, xpos, ypos);
+    vec2_set(g_inputs->touches[0].pos, xpos / g_scale, ypos / g_scale);
     g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
