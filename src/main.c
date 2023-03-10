@@ -181,7 +181,12 @@ static void loop_function(void)
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    vec2_set(g_inputs->touches[0].pos, xpos / scale, ypos / scale);
+#ifndef __APPLE__ // As far as I can tell this is a bug in glfw on Mac.
+    xpos /= scales[0];
+    ypos /= scales[1];
+#endif
+    vec2_set(g_inputs->touches[0].pos, xpos / g_scale, ypos / g_scale);
+
     g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
