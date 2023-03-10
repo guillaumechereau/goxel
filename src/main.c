@@ -153,26 +153,26 @@ static void parse_options(int argc, char **argv, args_t *args)
 
 static void loop_function(void)
 {
-    int fb_size[2], win_size[2];
+    int fb_size[2];
     int i;
     double xpos, ypos;
     float scale;
+    float scales[2];
+    GLFWmonitor *monitor;
 
     if (    !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
              glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
         glfwWaitEvents();
         goto end;
     }
-    // The input struct gets all the values in framebuffer coordinates,
-    // On retina display, this might not be the same as the window
-    // size.
-    glfwGetWindowSize(g_window, &win_size[0], &win_size[1]);
 
     glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
-    scale = g_scale * (float)fb_size[0] / win_size[0];
+    monitor = glfwGetPrimaryMonitor();
+    glfwGetMonitorContentScale(monitor, &scales[0], &scales[1]);
+    scale = g_scale * scales[0];
 
-    g_inputs->window_size[0] = win_size[0] / g_scale;
-    g_inputs->window_size[1] = win_size[1] / g_scale;
+    g_inputs->window_size[0] = fb_size[0] / scale;
+    g_inputs->window_size[1] = fb_size[1] / scale;
     g_inputs->scale = scale;
 
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -181,7 +181,7 @@ static void loop_function(void)
         g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(g_window, &xpos, &ypos);
-    vec2_set(g_inputs->touches[0].pos, xpos / g_scale, ypos / g_scale);
+    vec2_set(g_inputs->touches[0].pos, xpos / scale, ypos / scale);
     g_inputs->touches[0].down[0] =
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
