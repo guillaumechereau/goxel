@@ -1136,18 +1136,27 @@ int goxel_import_file(const char *path, const char *format)
 {
     const file_format_t *f;
     int err;
+    bool image_was_empty;
+
+    image_was_empty = image_is_empty(goxel.image);
 
     if (str_endswith(path, ".gox")) {
-        return load_from_file(path, false);
+        err = load_from_file(path, false);
+    } else {
+        f = file_format_for_path(path, format, "r");
+        if (!f) return -1;
+        if (!path) {
+            path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, f->ext, NULL, NULL);
+            if (!path) return -1;
+        }
+        err = f->import_func(goxel.image, path);
     }
-    f = file_format_for_path(path, format, "r");
-    if (!f) return -1;
-    if (!path) {
-        path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, f->ext, NULL, NULL);
-        if (!path) return -1;
-    }
-    err = f->import_func(goxel.image, path);
     if (err) return err;
+
+    if (image_was_empty) {
+        image_auto_resize(goxel.image);
+    }
+
     return 0;
 }
 

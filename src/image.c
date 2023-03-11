@@ -499,16 +499,20 @@ void image_delete_material(image_t *img, material_t *mat)
         if (layer->material == mat) layer->material = NULL;
 }
 
-static void a_image_auto_resize(void)
+void image_auto_resize(image_t *img)
 {
     float box[4][4] = {}, layer_box[4][4];
     layer_t *layer;
-    image_t *img = goxel.image;
     DL_FOREACH(img->layers, layer) {
         layer_get_bounding_box(layer, layer_box);
         box_union(box, layer_box, box);
     }
     mat4_copy(box, img->box);
+}
+
+static void a_image_auto_resize(void)
+{
+    image_auto_resize(goxel.image);
 }
 
 void image_set(image_t *img, image_t *other)
@@ -678,6 +682,15 @@ uint32_t image_get_key(const image_t *img)
         key = XXH32(&k, sizeof(k), key);
     }
     return key;
+}
+
+bool image_is_empty(const image_t *img)
+{
+    layer_t *layer;
+    DL_FOREACH(img->layers, layer) {
+        if (!mesh_is_empty(layer->mesh)) return false;
+    }
+    return true;
 }
 
 /*

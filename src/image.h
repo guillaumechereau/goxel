@@ -75,10 +75,18 @@ void image_delete_material(image_t *img, material_t *mat);
 camera_t *image_add_camera(image_t *img, camera_t *cam);
 void image_delete_camera(image_t *img, camera_t *cam);
 
+void image_auto_resize(image_t *img);
+
 /*
  * Function: image_get_key
  * Return a value that is guarantied to change when the image change.
  */
 uint32_t image_get_key(const image_t *img);
+
+/*
+ * Function: image_is_empty
+ * Return true if the image only contains empty layers.
+ */
+bool image_is_empty(const image_t *img);
 
 #endif // IMAGE_H
