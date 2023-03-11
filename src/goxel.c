@@ -1363,6 +1363,12 @@ static void a_view_set(void *data)
     camera_turntable(camera, rz, rx);
 }
 
+static void a_view_toggle_ortho(void)
+{
+    camera_t *camera = get_camera();
+    camera->ortho = !camera->ortho;
+}
+
 ACTION_REGISTER(view_left,
     .help = "Set camera view to left",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
@@ -1391,7 +1397,7 @@ ACTION_REGISTER(view_default,
     .help = "Set camera view to default",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_view_default,
-    .default_shortcut = "5",
+    .default_shortcut = "0",
 )
 
 ACTION_REGISTER(view_front,
@@ -1400,6 +1406,13 @@ ACTION_REGISTER(view_front,
     .cfunc_data = a_view_set,
     .data = (float[]){0, 90},
     .default_shortcut = "1",
+)
+
+ACTION_REGISTER(view_toggle_ortho,
+    .help = "Toggle between perspective and orthoggraphic view",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
+    .cfunc = a_view_toggle_ortho,
+    .default_shortcut = "5",
 )
 
 static void quit(void)

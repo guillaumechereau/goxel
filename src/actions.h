@@ -59,6 +59,7 @@ enum {
     X(view_left),
     X(view_right),
     X(view_top),
+    X(view_toggle_ortho),
     X(view_default),
     X(view_front),
     X(quit),

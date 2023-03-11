@@ -98,6 +98,7 @@ void gui_menu(void)
         gui_menu_item(ACTION_view_right, "Right", true);
         gui_menu_item(ACTION_view_front, "Front", true);
         gui_menu_item(ACTION_view_top, "Top", true);
+        gui_menu_item(ACTION_view_toggle_ortho, "Toggle ortho", true);
         gui_menu_item(ACTION_view_default, "Default", true);
         gui_menu_end();
     }
