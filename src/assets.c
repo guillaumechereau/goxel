@@ -59,6 +59,7 @@ static asset_t ASSETS[] = {
 #include "assets/palettes.inl"
 #include "assets/progs.inl"
 #include "assets/shaders.inl"
+#include "assets/scripts.inl"
 #include "assets/sounds.inl"
 #include "assets/themes.inl"
 #ifdef ASSETS_EXTRA

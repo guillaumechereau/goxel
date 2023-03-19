@@ -40,9 +40,11 @@ TYPES = {
     "glsl":  { "text": True },
     "gox":   { "text": False },
     "lua":   { "text": True },
+    "js":    { "text": True },
 }
 GROUPS = ['fonts', 'icons', 'images', 'other', 'palettes', 'progs',
-          'shaders', 'sounds', 'themes', 'samples', 'mobile']
+          'shaders', 'sounds', 'themes', 'samples', 'mobile',
+          'scripts']
 TEMPLATE = '{{.path = "{path}", .size = {size}, .data =\n{data}\n}},'
 File = namedtuple('File', 'path name data size')
 

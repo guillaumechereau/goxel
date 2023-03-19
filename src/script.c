@@ -23,6 +23,9 @@
 #include "quickjs/quickjs.h"
 #include "quickjs/quickjs-libc.h"
 
+static JSRuntime *g_rt = NULL;
+static JSContext *g_ctx = NULL;
+
 static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out)
 {
     int i;
@@ -140,13 +143,37 @@ static void bind_mesh(JSContext *ctx)
     JS_FreeValue(ctx, global_obj);
 }
 
+static void init_runtime(void)
+{
+    if (g_ctx) return;
+    g_rt = JS_NewRuntime();
+    g_ctx = JS_NewContext(g_rt);
+    bind_mesh(g_ctx);
+}
+
+static int script_run_from_str(
+        const char *script, int len, const char *filename, int argc,
+        const char **argv)
+{
+    int ret = 0;
+    JSValue val;
+
+    init_runtime();
+    js_std_add_helpers(g_ctx, argc, (char**)argv);
+
+    val = JS_Eval(g_ctx, script, len, filename, JS_EVAL_TYPE_GLOBAL);
+    if (JS_IsException(val)) {
+        js_std_dump_error(g_ctx);
+        ret = -1;
+    }
+    JS_FreeValue(g_ctx, val);
+    return ret;
+}
+
 int script_run(const char *filename, int argc, const char **argv)
 {
     char *script;
-    int ret = 0, size;
-    JSRuntime *rt;
-    JSContext *ctx;
-    JSValue val;
+    int ret, size;
 
     script = read_file(filename, &size);
     if (!script) {
@@ -154,18 +181,40 @@ int script_run(const char *filename, int argc, const char **argv)
         return -1;
     }
 
-    rt = JS_NewRuntime();
-    ctx = JS_NewContext(rt);
-    bind_mesh(ctx);
-    js_std_add_helpers(ctx, argc, (char**)argv);
-    val = JS_Eval(ctx, script, size, filename, JS_EVAL_TYPE_GLOBAL);
-    if (JS_IsException(val)) {
-        js_std_dump_error(ctx);
-        ret = -1;
-    }
-    JS_FreeValue(ctx, val);
-    JS_FreeContext(ctx);
-    JS_FreeRuntime(rt);
+    ret = script_run_from_str(script, size, filename, argc, argv);
     free(script);
     return ret;
+}
+
+static int on_script(int i, const char *path, void *user)
+{
+    const char *data;
+
+    LOG_D("Run script %s", path);
+    data = assets_get(path, NULL);
+    script_run_from_str(data, strlen(data), path, 0, NULL);
+    return 0;
+}
+
+static int on_user_script(const char *dir, const char *name, void *user)
+{
+    LOG_D("Execute script %s", name);
+    return 0;
+}
+
+void script_init(void)
+{
+    char dir[1024];
+
+    assets_list("data/scripts/", NULL, on_script);
+    if (sys_get_user_dir()) {
+        snprintf(dir, sizeof(dir), "%s/scripts", sys_get_user_dir());
+        sys_list_dir(dir, on_user_script, NULL);
+    }
+}
+
+void script_release(void)
+{
+    JS_FreeContext(g_ctx);
+    JS_FreeRuntime(g_rt);
 }

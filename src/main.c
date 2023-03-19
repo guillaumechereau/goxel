@@ -318,6 +318,8 @@ int main(int argc, char **argv)
     glewInit();
 #endif
     goxel_init();
+    script_init();
+
     // Run the unit tests in debug.
     if (DEBUG) {
         tests_run();
