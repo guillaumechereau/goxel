@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "script.h"
 #include <getopt.h>
 
 #ifdef GLES2
@@ -62,10 +63,15 @@ typedef struct
     char *input;
     char *export;
     float scale;
+
+    const char *script;
+    int script_args_nb;
+    const char *script_args[32];
 } args_t;
 
 #define OPT_HELP 1
 #define OPT_VERSION 2
+#define OPT_SCRIPT 3
 
 typedef struct {
     const char *name;
@@ -79,6 +85,8 @@ static const gox_option_t OPTIONS[] = {
     {"export", 'e', required_argument, "FILENAME",
         .help="Export the image to a file"},
     {"scale", 's', required_argument, "FLOAT", .help="Set UI scale"},
+    {"script", OPT_SCRIPT, required_argument, "FILENAME",
+        .help="Run a script and exit"},
     {"help", OPT_HELP, .help="Give this help list"},
     {"version", OPT_VERSION, .help="Print program version"},
     {}
@@ -141,12 +149,19 @@ static void parse_options(int argc, char **argv, args_t *args)
         case OPT_VERSION:
             printf("Goxel " GOXEL_VERSION_STR "\n");
             exit(0);
+        case OPT_SCRIPT:
+            args->script = optarg;
+            break;
         case '?':
             exit(-1);
         }
     }
     if (optind < argc) {
-        args->input = argv[optind];
+        if (args->script) {
+            args->script_args[args->script_args_nb++] = argv[optind];
+        } else {
+            args->input = argv[optind];
+        }
     }
 }
 
@@ -311,6 +326,11 @@ int main(int argc, char **argv)
 
     if (args.input)
         goxel_import_file(args.input, NULL);
+
+    if (args.script) {
+        script_run(args.script, args.script_args_nb, args.script_args);
+        goto end;
+    }
 
     if (args.export) {
         if (!args.input) {
