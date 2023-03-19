@@ -776,8 +776,15 @@ static int gox_import(image_t *image, const char *path)
     return load_from_file(path, false);
 }
 
+static int gox_export(const image_t *image, const char *path)
+{
+    save_to_file(image, path);
+    return 0;
+}
+
 FILE_FORMAT_REGISTER(gox,
     .name = "gox",
     .ext = "gox\0*.gox\0",
     .import_func = gox_import,
+    .export_func = gox_export,
 )
