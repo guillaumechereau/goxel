@@ -102,7 +102,7 @@ static JSValue js_mesh_save(JSContext *ctx, JSValueConst this_val,
     }
     img = image_new();
     mesh_set(img->active_layer->mesh, mesh);
-    err = f->export_func(img, path);
+    err = f->export_func(f, img, path);
     if (err) {
         fprintf(stderr, "Internal error saving file %s\n", path);
         return JS_EXCEPTION;

@@ -777,7 +777,8 @@ static int gox_import(const file_format_t *format, image_t *image,
     return load_from_file(path, false);
 }
 
-static int gox_export(const image_t *image, const char *path)
+static int gox_export(const file_format_t *format, const image_t *image,
+                      const char *path)
 {
     save_to_file(image, path);
     return 0;
