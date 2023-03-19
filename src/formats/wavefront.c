@@ -212,19 +212,21 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
     return 0;
 }
 
-static int wavefront_export(const image_t *image, const char *path)
+static int wavefront_export(const file_format_t *format,
+                            const image_t *image, const char *path)
 {
     const mesh_t *mesh = goxel_get_layers_mesh(image);
     return export(mesh, path, false);
 }
 
-int ply_export(const image_t *image, const char *path)
+int ply_export(const file_format_t *format, const image_t *image,
+               const char *path)
 {
     const mesh_t *mesh = goxel_get_layers_mesh(image);
     return export(mesh, path, true);
 }
 
-static void export_gui(void)
+static void export_gui(file_format_t *format)
 {
     gui_checkbox("Y-up", &g_export_options.y_up,
                  "Use Y up instead of Z up");
@@ -246,13 +248,14 @@ static void get_file_data(void *ctx, const char *filename, const int is_mtl,
 
 static float g_resolution = 1.0;
 
-static void import_gui(void)
+static void import_gui(file_format_t *format)
 {
     gui_dummy(200, 0); // Just to fix the width.
     gui_input_float("Resolution", &g_resolution, 0.01, 0, 100000, "%.3f");
 }
 
-static int wavefront_import(image_t *image, const char *path)
+static int wavefront_import(const file_format_t *format, image_t *image,
+                            const char *path)
 {
     int err;
     tinyobj_attrib_t attrib;

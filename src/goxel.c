@@ -1149,7 +1149,7 @@ int goxel_import_file(const char *path, const char *format)
             path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, f->ext, NULL, NULL);
             if (!path) return -1;
         }
-        err = f->import_func(goxel.image, path);
+        err = f->import_func(f, goxel.image, path);
     }
     if (err) return err;
 
@@ -1172,7 +1172,7 @@ int goxel_export_to_file(const char *path, const char *format)
         path = sys_get_save_path(f->ext, name);
         if (!path) return -1;
     }
-    err = f->export_func(goxel.image, path);
+    err = f->export_func(f, goxel.image, path);
     if (err) return err;
     sys_on_saved(path);
     return 0;

@@ -65,11 +65,11 @@ const file_format_t *file_format_for_path(const char *path, const char *name,
 }
 
 void file_format_iter(const char *mode, void *user,
-                      void (*fun)(void *user, const file_format_t *f))
+                      void (*fun)(void *user, file_format_t *f))
 {
     assert(mode);
     assert(fun);
-    const file_format_t *f;
+    file_format_t *f;
     bool need_read = strchr(mode, 'r');
     bool need_write = strchr(mode, 'w');
     DL_FOREACH(file_formats, f) {

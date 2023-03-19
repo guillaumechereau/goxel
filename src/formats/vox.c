@@ -384,7 +384,8 @@ static int import_layer(image_t *image,
     return 0;
 }
 
-static int vox_import(image_t *image, const char *path)
+static int vox_import(const file_format_t *format, image_t *image,
+                      const char *path)
 {
     FILE *file;
     char magic[4];
@@ -461,7 +462,8 @@ static int voxel_cmp(const void *a_, const void *b_)
     return 0;
 }
 
-static int vox_export(const image_t *image, const char *path)
+static int vox_export(const file_format_t *format, const image_t *image,
+                      const char *path)
 {
     FILE *file;
     int children_size, nb_vox = 0, i, pos[3];

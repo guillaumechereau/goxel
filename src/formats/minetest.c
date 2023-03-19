@@ -78,7 +78,8 @@ static void get_color(const char *name, uint8_t out[4],
     out[3] = 255;
 }
 
-static int mts_import(image_t *image, const char *path)
+static int mts_import(const file_format_t *format, image_t *image,
+                      const char *path)
 {
     FILE *file;
     char magic[4];

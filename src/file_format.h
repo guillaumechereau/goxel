@@ -27,10 +27,12 @@ struct file_format
     file_format_t   *next, *prev; // For the global list of formats.
     const char      *name;
     const char      *ext;
-    void            (*export_gui)(void);
-    int             (*export_func)(const image_t *img, const char *path);
-    int             (*import_func)(image_t *img, const char *path);
-    void            (*import_gui)(void);
+    void            (*export_gui)(file_format_t *format);
+    int             (*export_func)(const file_format_t *format,
+                                   const image_t *img, const char *path);
+    int             (*import_func)(const file_format_t *format, image_t *img,
+                                   const char *path);
+    void            (*import_gui)(file_format_t *format);
 };
 
 void file_format_register(file_format_t *format);
@@ -39,7 +41,7 @@ const file_format_t *file_format_for_path(const char *path, const char *name,
                                           const char *mode);
 
 void file_format_iter(const char *mode, void *user,
-                      void (*f)(void *user, const file_format_t *f));
+                      void (*f)(void *user, file_format_t *f));
 
 // The global list of registered file formats.
 extern file_format_t *file_formats;

@@ -78,7 +78,8 @@ static int vxl_get_d(const uint8_t *data, int size)
     return d;
 }
 
-static int vxl_import(image_t *image, const char *path)
+static int vxl_import(const file_format_t *format, image_t *image,
+                      const char *path)
 {
     // The algo is based on
     // https://silverspaceship.com/aosmap/aos_file_format.html
@@ -273,7 +274,8 @@ void write_map(const char *filename,
     fclose(f);
 }
 
-static int export_as_vxl(const image_t *image, const char *path)
+static int export_as_vxl(const file_format_t *format, const image_t *image,
+                         const char *path)
 {
     uint8_t (*map)[512][512][64];
     uint32_t (*color)[512][512][64];

@@ -19,7 +19,8 @@
 #include "goxel.h"
 #include "file_format.h"
 
-static int export_as_png_slices(const image_t *image, const char *path)
+static int export_as_png_slices(const file_format_t *format,
+                                const image_t *image, const char *path)
 {
     float box[4][4];
     const mesh_t *mesh;
