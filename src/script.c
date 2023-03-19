@@ -47,6 +47,7 @@ static void get_vec_uint8(JSContext *ctx, JSValue val, int size, uint8_t *out)
 }
 
 static JSClassID js_mesh_class_id;
+static JSClassID js_goxel_class_id;
 
 static JSValue js_mesh_ctor(JSContext *ctx, JSValueConst new_target,
                             int argc, JSValueConst *argv)
@@ -143,12 +144,52 @@ static void bind_mesh(JSContext *ctx)
     JS_FreeValue(ctx, global_obj);
 }
 
+static JSValue js_goxel_registerFormat(JSContext *ctx, JSValueConst this_val,
+                                       int argc, JSValueConst *argv)
+{
+    const char *name;
+    JSValueConst args;
+    JSValueConst export_fn;
+
+    args = argv[0];
+    name = JS_ToCString(ctx, JS_GetPropertyStr(ctx, args, "name"));
+    export_fn = JS_GetPropertyStr(ctx, args, "exportFn");
+    (void)export_fn;
+    // TODO: finish this.
+    JS_FreeCString(ctx, name);
+    return JS_UNDEFINED;
+}
+
+static void bind_goxel(JSContext *ctx)
+{
+    JSValue proto, global_obj, obj;
+    static const JSCFunctionListEntry js_goxel_proto_funcs[] = {
+        JS_CFUNC_DEF("registerFormat", 1, js_goxel_registerFormat),
+    };
+    static JSClassDef js_goxel_class = {
+        "Goxel",
+    };
+
+    JS_NewClassID(&js_goxel_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_goxel_class_id, &js_goxel_class);
+    proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, proto, js_goxel_proto_funcs,
+                               ARRAY_SIZE(js_goxel_proto_funcs));
+    JS_SetClassProto(ctx, js_goxel_class_id, proto);
+
+    obj = JS_NewObjectClass(ctx, js_goxel_class_id);
+    global_obj = JS_GetGlobalObject(ctx);
+    JS_SetPropertyStr(ctx, global_obj, "goxel", obj);
+    JS_FreeValue(ctx, global_obj);
+}
+
 static void init_runtime(void)
 {
     if (g_ctx) return;
     g_rt = JS_NewRuntime();
     g_ctx = JS_NewContext(g_rt);
     bind_mesh(g_ctx);
+    bind_goxel(g_ctx);
 }
 
 static int script_run_from_str(
