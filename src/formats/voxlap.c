@@ -73,7 +73,8 @@ static void swap_color(uint32_t v, uint8_t ret[4])
     ret[3] = o[3];
 }
 
-static int kv6_import(image_t *image, const char *path)
+static int kv6_import(const file_format_t *format, image_t *image,
+                      const char *path)
 {
     FILE *file;
     char magic[4];
@@ -152,7 +153,8 @@ end:
     return ret;
 }
 
-static int kvx_import(image_t *image, const char *path)
+static int kvx_import(const file_format_t *format, image_t *image,
+                      const char *path)
 {
     FILE *file;
     int i, r, ret = 0, nb, size, lastz = 0, len, visface;
@@ -310,7 +312,8 @@ static bool slab_append(slab_t *slab, voxel_t *vox)
 }
 
 
-static int kvx_export(const image_t *image, const char *path)
+static int kvx_export(const file_format_t *format, const image_t *image,
+                      const char *path)
 {
     FILE *file;
     uint8_t (*palette)[4];

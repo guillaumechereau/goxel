@@ -22,7 +22,8 @@
 #include "file_format.h"
 #include "utils/mustache.h"
 
-static int export_as_pov(const image_t *image, const char *path)
+static int export_as_pov(const file_format_t *format, const image_t *image,
+                         const char *path)
 {
     FILE *file;
     layer_t *layer;

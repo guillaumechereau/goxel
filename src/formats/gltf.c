@@ -500,13 +500,14 @@ static void gltf_export(const image_t *img, const char *path,
     free(g.palette.entries);
 }
 
-static int export_as_gltf(const image_t *img, const char *path)
+static int export_as_gltf(const file_format_t *format, const image_t *img,
+                          const char *path)
 {
     gltf_export(img, path, &g_export_options);
     return 0;
 }
 
-static void export_gui(void)
+static void export_gui(file_format_t *format)
 {
     gui_checkbox("Vertex color", &g_export_options.vertex_color,
                  "Save colors as a vertex attribute");

@@ -32,11 +32,11 @@ static void import_image_plane(void)
     goxel_import_image_plane(path);
 }
 
-static const file_format_t *g_import_format = NULL;
+static file_format_t *g_import_format = NULL;
 
 static int import_gui(void *data)
 {
-    g_import_format->import_gui();
+    g_import_format->import_gui(g_import_format);
     if (gui_button("OK", 0, 0)) {
         goxel_import_file(NULL, g_import_format->name);
         return 1;
@@ -44,7 +44,7 @@ static int import_gui(void *data)
     return 0;
 }
 
-static void import_menu_callback(void *user, const file_format_t *f)
+static void import_menu_callback(void *user, file_format_t *f)
 {
     if (!gui_menu_item(0, f->name, true)) return;
     if (f->import_gui) {
@@ -55,7 +55,7 @@ static void import_menu_callback(void *user, const file_format_t *f)
     goxel_import_file(NULL, f->name);
 }
 
-static void export_menu_callback(void *user, const file_format_t *f)
+static void export_menu_callback(void *user, file_format_t *f)
 {
     if (gui_menu_item(0, f->name, true))
         goxel_export_to_file(NULL, f->name);

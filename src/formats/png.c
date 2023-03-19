@@ -33,7 +33,8 @@ static int png_export(const image_t *img, const char *path, int w, int h)
     return 0;
 }
 
-static void export_gui(void) {
+static void export_gui(file_format_t *format)
+{
     int maxsize, i;
 
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
@@ -61,7 +62,8 @@ static void export_gui(void) {
                  NULL);
 }
 
-static int export_as_png(const image_t *img, const char *path)
+static int export_as_png(const file_format_t *format, const image_t *img,
+                         const char *path)
 {
     png_export(img, path, img->export_width, img->export_height);
     return 0;

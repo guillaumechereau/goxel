@@ -179,7 +179,8 @@ static int import_matrix(FILE *file)
     return 0;
 }
 
-static int qubicle2_import(image_t *image, const char *path)
+static int qubicle2_import(const file_format_t *format, image_t *image,
+                           const char *path)
 {
     FILE *file;
     char magic[4];

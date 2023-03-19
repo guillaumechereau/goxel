@@ -771,7 +771,8 @@ ACTION_REGISTER(reset,
     .default_shortcut = "Ctrl N"
 )
 
-static int gox_import(image_t *image, const char *path)
+static int gox_import(const file_format_t *format, image_t *image,
+                      const char *path)
 {
     return load_from_file(path, false);
 }

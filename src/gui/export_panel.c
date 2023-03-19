@@ -38,7 +38,7 @@ Keep this here as a reference until I fix file format names and order.
 
 #endif
 
-static const file_format_t *g_current = NULL;
+static file_format_t *g_current = NULL;
 
 static const char *make_label(const file_format_t *f, char *buf, int len)
 {
@@ -47,7 +47,7 @@ static const char *make_label(const file_format_t *f, char *buf, int len)
     return buf;
 }
 
-static void on_format(void *user, const file_format_t *f)
+static void on_format(void *user, file_format_t *f)
 {
     char label[128];
     make_label(f, label, sizeof(label));
@@ -69,7 +69,7 @@ void gui_export_panel(void)
     }
 
     if (g_current->export_gui)
-        g_current->export_gui();
+        g_current->export_gui(g_current);
     if (gui_button("Export", 1, 0))
         goxel_export_to_file(NULL, g_current->name);
 }

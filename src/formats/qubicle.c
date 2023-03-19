@@ -36,7 +36,8 @@ static void apply_orientation(int orientation, int pos[3])
     }
 }
 
-static int qubicle_import(image_t *image, const char *path)
+static int qubicle_import(const file_format_t *format, image_t *image,
+                          const char *path)
 {
     FILE *file;
     int version, color_format, orientation, compression, vmask, mat_count;
@@ -133,7 +134,8 @@ static int qubicle_import(image_t *image, const char *path)
     return 0;
 }
 
-static int qubicle_export(const image_t *img, const char *path)
+static int qubicle_export(const file_format_t *format, const image_t *img,
+                          const char *path)
 {
     FILE *file;
     int i, count, x, y, z, pos[3], bbox[2][3];

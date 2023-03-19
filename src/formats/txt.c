@@ -20,7 +20,8 @@
 #include "file_format.h"
 #include <errno.h>
 
-static int import_as_txt(image_t *image, const char *path)
+static int import_as_txt(const file_format_t *format, image_t *image,
+                         const char *path)
 {
     FILE *file;
     char line[2048];
@@ -60,7 +61,8 @@ static int import_as_txt(image_t *image, const char *path)
 }
 
 
-static int export_as_txt(const image_t *image, const char *path)
+static int export_as_txt(const file_format_t *format, const image_t *image,
+                         const char *path)
 {
     FILE *out;
     const mesh_t *mesh = goxel_get_layers_mesh(image);
