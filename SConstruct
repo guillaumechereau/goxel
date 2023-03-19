@@ -124,6 +124,9 @@ env.Append(CPPPATH=['ext_src/stb'])
 env.Append(CPPPATH=['ext_src/noc'])
 env.Append(CPPPATH=['ext_src/xxhash'])
 
+sources += glob.glob('ext_src/lua/*.c')
+env.Append(CPPPATH=['ext_src/lua'])
+
 if env['sound']:
     env.Append(LIBS='openal')
     env.Append(CPPDEFINES='SOUND=1')
