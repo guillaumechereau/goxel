@@ -16,6 +16,9 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #define CONFIG_VERSION "2021-03-27"
 
 #include "quickjs/cutils.c"
