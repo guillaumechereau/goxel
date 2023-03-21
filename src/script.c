@@ -144,19 +144,50 @@ static void bind_mesh(JSContext *ctx)
     JS_FreeValue(ctx, global_obj);
 }
 
+typedef struct {
+    file_format_t format;
+    JSValue data;
+} script_file_format_t;
+
+int script_format_export_func(const file_format_t *format_,
+                              const image_t *img, const char *path)
+{
+    JSContext *ctx = g_ctx;
+    const script_file_format_t *format = (void*)format_;
+    JSValue export;
+    JSValueConst argv[2];
+
+    argv[0] = JS_NULL;
+    argv[1] = JS_NewString(ctx, path);
+    export = JS_GetPropertyStr(ctx, format->data, "export");
+    JS_Call(ctx, export, JS_NULL, 2, argv);
+    return 0;
+}
+
 static JSValue js_goxel_registerFormat(JSContext *ctx, JSValueConst this_val,
                                        int argc, JSValueConst *argv)
 {
-    const char *name;
+    const char *name, *ext;
     JSValueConst args;
-    JSValueConst export_fn;
+    script_file_format_t *format;
 
     args = argv[0];
     name = JS_ToCString(ctx, JS_GetPropertyStr(ctx, args, "name"));
-    export_fn = JS_GetPropertyStr(ctx, args, "exportFn");
-    (void)export_fn;
+    ext = JS_ToCString(ctx, JS_GetPropertyStr(ctx, args, "ext"));
+
+    LOG_I("Register format %s", name);
     // TODO: finish this.
-    JS_FreeCString(ctx, name);
+    format = calloc(1, sizeof(*format));
+    *format = (script_file_format_t) {
+        .format = {
+            .name = name,
+            .ext = ext,
+            .export_func = script_format_export_func,
+        },
+        .data = JS_DupValue(ctx, args),
+    };
+    file_format_register(&format->format);
+    // JS_FreeCString(ctx, name);
     return JS_UNDEFINED;
 }
 
@@ -188,6 +219,8 @@ static void init_runtime(void)
     if (g_ctx) return;
     g_rt = JS_NewRuntime();
     g_ctx = JS_NewContext(g_rt);
+    js_init_module_std(g_ctx, "std");
+    js_init_module_os(g_ctx, "os");
     bind_mesh(g_ctx);
     bind_goxel(g_ctx);
 }
@@ -202,7 +235,7 @@ static int script_run_from_str(
     init_runtime();
     js_std_add_helpers(g_ctx, argc, (char**)argv);
 
-    val = JS_Eval(g_ctx, script, len, filename, JS_EVAL_TYPE_GLOBAL);
+    val = JS_Eval(g_ctx, script, len, filename, JS_EVAL_TYPE_MODULE);
     if (JS_IsException(val)) {
         js_std_dump_error(g_ctx);
         ret = -1;
@@ -239,7 +272,14 @@ static int on_script(int i, const char *path, void *user)
 
 static int on_user_script(const char *dir, const char *name, void *user)
 {
-    LOG_D("Execute script %s", name);
+    char path[1024];
+    char *data;
+    int size;
+
+    snprintf(path, sizeof(path), "%s/%s", dir, name);
+    data = read_file(path, &size);
+    if (!data) return -1;
+    script_run_from_str(data, strlen(data), path, 0, NULL);
     return 0;
 }
 
@@ -250,6 +290,7 @@ void script_init(void)
     assets_list("data/scripts/", NULL, on_script);
     if (sys_get_user_dir()) {
         snprintf(dir, sizeof(dir), "%s/scripts", sys_get_user_dir());
+        LOG_I("Loading scripts from %s\n", dir);
         sys_list_dir(dir, on_user_script, NULL);
     }
 }
