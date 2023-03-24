@@ -8,6 +8,7 @@ goxel.registerFormat({
     try {
       console.log(`Save ${path}`)
       let out = std.open(path, 'w')
+      mesh = img.getLayersMesh()
       out.close()
       console.log('done')
     } catch(e) {

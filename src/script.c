@@ -47,6 +47,7 @@ static void get_vec_uint8(JSContext *ctx, JSValue val, int size, uint8_t *out)
 }
 
 static JSClassID js_mesh_class_id;
+static JSClassID js_image_class_id;
 static JSClassID js_goxel_class_id;
 
 static JSValue js_mesh_ctor(JSContext *ctx, JSValueConst new_target,
@@ -144,6 +145,48 @@ static void bind_mesh(JSContext *ctx)
     JS_FreeValue(ctx, global_obj);
 }
 
+static void js_image_finalizer(JSRuntime *ctx, JSValue this_val)
+{
+    image_t *image;
+    image = JS_GetOpaque(this_val, js_image_class_id);
+    if (0)
+        image_delete(image);
+}
+
+static JSValue js_image_getLayersMesh(
+        JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    JSValue ret;
+    const mesh_t *mesh;
+    image_t *image;
+
+    image = JS_GetOpaque(this_val, js_image_class_id);
+    mesh = goxel_get_layers_mesh(image);
+    ret = JS_NewObjectClass(ctx, js_mesh_class_id);
+    // XXX: should make it non destructable somehow?  Or add ref counting
+    // to image_t?
+    JS_SetOpaque(ret, (void*)mesh);
+    return ret;
+}
+
+static void bind_image(JSContext *ctx)
+{
+    JSValue proto;
+    static const JSCFunctionListEntry js_image_proto_funcs[] = {
+        JS_CFUNC_DEF("getLayersMesh", 0, js_image_getLayersMesh),
+    };
+    static JSClassDef js_image_class = {
+        "Image",
+        .finalizer = js_image_finalizer,
+    };
+    JS_NewClassID(&js_image_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_image_class_id, &js_image_class);
+    proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, proto, js_image_proto_funcs,
+                               ARRAY_SIZE(js_image_proto_funcs));
+    JS_SetClassProto(ctx, js_image_class_id, proto);
+}
+
 typedef struct {
     file_format_t format;
     JSValue data;
@@ -222,6 +265,7 @@ static void init_runtime(void)
     js_init_module_std(g_ctx, "std");
     js_init_module_os(g_ctx, "os");
     bind_mesh(g_ctx);
+    bind_image(g_ctx);
     bind_goxel(g_ctx);
 }
 
