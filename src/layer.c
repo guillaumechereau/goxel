@@ -23,6 +23,7 @@ layer_t *layer_new(const char *name)
 {
     layer_t *layer;
     layer = calloc(1, sizeof(*layer));
+    layer->ref = 1;
     if (name) strncpy(layer->name, name, sizeof(layer->name) - 1);
     layer->volume = volume_new();
     mat4_set_identity(layer->mat);
@@ -31,6 +32,8 @@ layer_t *layer_new(const char *name)
 
 void layer_delete(layer_t *layer)
 {
+    if (!layer) return;
+    if (--layer->ref > 0) return;
     volume_delete(layer->volume);
     texture_delete(layer->image);
     free(layer);
@@ -54,6 +57,7 @@ layer_t *layer_copy(layer_t *other)
 {
     layer_t *layer;
     layer = calloc(1, sizeof(*layer));
+    layer->ref = 1;
     memcpy(layer->name, other->name, sizeof(layer->name));
     layer->visible = other->visible;
     layer->volume = volume_copy(other->volume);

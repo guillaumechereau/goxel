@@ -22,6 +22,7 @@
 camera_t *camera_new(const char *name)
 {
     camera_t *cam = calloc(1, sizeof(*cam));
+    cam->ref = 1;
     if (name)
         strncpy(cam->name, name, sizeof(cam->name) - 1);
     mat4_set_identity(cam->mat);
@@ -34,6 +35,8 @@ camera_t *camera_new(const char *name)
 
 void camera_delete(camera_t *cam)
 {
+    if (!cam) return;
+    if (--cam->ref > 0) return;
     free(cam);
 }
 
@@ -41,6 +44,7 @@ camera_t *camera_copy(const camera_t *other)
 {
     camera_t *cam = malloc(sizeof(*cam));
     *cam = *other;
+    cam->ref = 1;
     cam->next = cam->prev = NULL;
     return cam;
 }

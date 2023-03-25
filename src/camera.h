@@ -44,6 +44,7 @@
 typedef struct camera camera_t;
 struct camera
 {
+    int    ref;
     camera_t  *next, *prev; // List of camera in an image.
     char   name[128];  // 127 chars max.
     bool   ortho; // Set to true for orthographic projection.

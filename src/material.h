@@ -23,6 +23,7 @@
 
 typedef struct material material_t;
 struct material {
+    int   ref;
     char  name[128];  // 127 chars max.
     float metallic;
     float roughness;
@@ -32,6 +33,7 @@ struct material {
 };
 
 #define MATERIAL_DEFAULT (material_t){ \
+    .ref = 1, \
     .name = {}, \
     .metallic = 0.2, \
     .roughness = 0.5, \

@@ -59,6 +59,7 @@ struct tile
 
 struct volume
 {
+    int ref;
     tile_t *tiles;
     int *tiles_ref;   // Used to implement copy on write of the tiles.
     uint64_t key; // Two volumes with the same key have the same value.
@@ -360,6 +361,7 @@ volume_t *volume_new(void)
 {
     volume_t *volume;
     volume = calloc(1, sizeof(*volume));
+    volume->ref = 1;
     volume->tiles_ref = calloc(1, sizeof(*volume->tiles_ref));
     volume->key = 1; // Empty volume key.
     *volume->tiles_ref = 1;
@@ -428,6 +430,7 @@ void volume_delete(volume_t *volume)
 {
     tile_t *tile, *tmp;
     if (!volume) return;
+    if (--volume->ref > 0) return;
     (*volume->tiles_ref)--;
     if (*volume->tiles_ref == 0) {
         HASH_ITER(hh, volume->tiles, tile, tmp) {
@@ -444,6 +447,7 @@ void volume_delete(volume_t *volume)
 volume_t *volume_copy(const volume_t *other)
 {
     volume_t *volume = calloc(1, sizeof(*volume));
+    volume->ref = 1;
     volume->tiles = other->tiles;
     volume->tiles_ref = other->tiles_ref;
     volume->key = other->key;

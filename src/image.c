@@ -178,6 +178,7 @@ image_t *image_new(void)
 {
     layer_t *layer;
     image_t *img = calloc(1, sizeof(*img));
+    img->ref = 1;
     const int aabb[2][3] = {{-16, -16, 0}, {16, 16, 32}};
     bbox_from_aabb(img->box, aabb);
     img->export_width = 1024;
@@ -254,6 +255,7 @@ void image_delete(image_t *img)
     material_t *mat;
 
     if (!img) return;
+    if (--img->ref > 0) return;
 
     while ((layer = img->layers)) {
         DL_DELETE(img->layers, layer);

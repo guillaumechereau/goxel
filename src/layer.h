@@ -27,6 +27,7 @@
 typedef struct layer layer_t;
 
 struct layer {
+    int         ref;
     layer_t     *next, *prev;
     volume_t    *volume;
     const material_t  *material;
