@@ -60,7 +60,7 @@ struct block
 struct mesh
 {
     block_t *blocks;
-    int *ref;   // Used to implement copy on write of the blocks.
+    int *blocks_ref;   // Used to implement copy on write of the blocks.
     uint64_t key; // Two meshes with the same key have the same value.
 };
 
@@ -290,13 +290,13 @@ bool mesh_get_bbox(const mesh_t *mesh, int bbox[2][3], bool exact)
 static void mesh_prepare_write(mesh_t *mesh)
 {
     block_t *blocks, *block, *new_block;
-    assert(*mesh->ref > 0);
+    assert(*mesh->blocks_ref > 0);
     mesh->key = g_uid++;
-    if (*mesh->ref == 1)
+    if (*mesh->blocks_ref == 1)
         return;
-    (*mesh->ref)--;
-    mesh->ref = calloc(1, sizeof(*mesh->ref));
-    *mesh->ref = 1;
+    (*mesh->blocks_ref)--;
+    mesh->blocks_ref = calloc(1, sizeof(*mesh->blocks_ref));
+    *mesh->blocks_ref = 1;
     blocks = mesh->blocks;
     mesh->blocks = NULL;
     for (block = blocks; block; block = block->hh.next) {
@@ -360,9 +360,9 @@ mesh_t *mesh_new(void)
 {
     mesh_t *mesh;
     mesh = calloc(1, sizeof(*mesh));
-    mesh->ref = calloc(1, sizeof(*mesh->ref));
+    mesh->blocks_ref = calloc(1, sizeof(*mesh->blocks_ref));
     mesh->key = 1; // Empty mesh key.
-    *mesh->ref = 1;
+    *mesh->blocks_ref = 1;
     g_global_stats.nb_meshes++;
     return mesh;
 }
@@ -428,14 +428,14 @@ void mesh_delete(mesh_t *mesh)
 {
     block_t *block, *tmp;
     if (!mesh) return;
-    (*mesh->ref)--;
-    if (*mesh->ref == 0) {
+    (*mesh->blocks_ref)--;
+    if (*mesh->blocks_ref == 0) {
         HASH_ITER(hh, mesh->blocks, block, tmp) {
             HASH_DEL(mesh->blocks, block);
             assert(mesh->blocks != block);
             block_delete(block);
         }
-        free(mesh->ref);
+        free(mesh->blocks_ref);
         g_global_stats.nb_meshes--;
     }
     free(mesh);
@@ -445,9 +445,9 @@ mesh_t *mesh_copy(const mesh_t *other)
 {
     mesh_t *mesh = calloc(1, sizeof(*mesh));
     mesh->blocks = other->blocks;
-    mesh->ref = other->ref;
+    mesh->blocks_ref = other->blocks_ref;
     mesh->key = other->key;
-    (*mesh->ref)++;
+    (*mesh->blocks_ref)++;
     return mesh;
 }
 
@@ -456,20 +456,20 @@ void mesh_set(mesh_t *mesh, const mesh_t *other)
     block_t *block, *tmp;
     assert(mesh && other);
     if (mesh->blocks == other->blocks) return; // Already the same.
-    (*mesh->ref)--;
-    if (*mesh->ref == 0) {
+    (*mesh->blocks_ref)--;
+    if (*mesh->blocks_ref == 0) {
         HASH_ITER(hh, mesh->blocks, block, tmp) {
             HASH_DEL(mesh->blocks, block);
             assert(mesh->blocks != block);
             block_delete(block);
         }
-        free(mesh->ref);
+        free(mesh->blocks_ref);
         g_global_stats.nb_meshes--;
     }
     mesh->blocks = other->blocks;
-    mesh->ref = other->ref;
+    mesh->blocks_ref = other->blocks_ref;
     mesh->key = other->key;
-    (*mesh->ref)++;
+    (*mesh->blocks_ref)++;
 }
 
 static uint64_t get_block_id(const block_t *block)
