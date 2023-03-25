@@ -60,8 +60,8 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     int i;
     const int margin = 8 * BLOCK_SIZE;
     float vertices[8][3];
-    const mesh_t *mesh = goxel_get_layers_mesh(goxel.image);
-    mesh_iterator_t iter;
+    const volume_t *volume = goxel_get_layers_volume(goxel.image);
+    volume_iterator_t iter;
 
     if (!box_is_null(goxel.image->box)) {
         box_get_vertices(goxel.image->box, vertices);
@@ -74,8 +74,8 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
         }
     }
 
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
-    while (mesh_iter(&iter, bpos)) {
+    iter = volume_get_iterator(volume, VOLUME_ITER_TILES);
+    while (volume_iter(&iter, bpos)) {
         vec3_set(p, bpos[0], bpos[1], bpos[2]);
         mat4_mul_vec3(view_mat, p, p);
         if (p[2] < 0) {

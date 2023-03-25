@@ -23,15 +23,15 @@ static int export_as_png_slices(const file_format_t *format,
                                 const image_t *image, const char *path)
 {
     float box[4][4];
-    const mesh_t *mesh;
+    const volume_t *volume;
     int x, y, z, w, h, d, pos[3], start_pos[3];
     uint8_t c[4];
     uint8_t *img;
-    mesh_iterator_t iter = {0};
+    volume_iterator_t iter = {0};
 
-    mesh = goxel_get_layers_mesh(image);
+    volume = goxel_get_layers_volume(image);
     mat4_copy(image->box, box);
-    if (box_is_null(box)) mesh_get_box(mesh, true, box);
+    if (box_is_null(box)) volume_get_box(volume, true, box);
     w = box[0][0] * 2;
     h = box[1][1] * 2;
     d = box[2][2] * 2;
@@ -45,7 +45,7 @@ static int export_as_png_slices(const file_format_t *format,
         pos[0] = x + start_pos[0];
         pos[1] = y + start_pos[1];
         pos[2] = z + start_pos[2];
-        mesh_get_at(mesh, &iter, pos, c);
+        volume_get_at(volume, &iter, pos, c);
         img[(y * w * d + z * w + x) * 4 + 0] = c[0];
         img[(y * w * d + z * w + x) * 4 + 1] = c[1];
         img[(y * w * d + z * w + x) * 4 + 2] = c[2];

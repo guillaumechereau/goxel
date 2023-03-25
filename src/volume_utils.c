@@ -21,37 +21,37 @@
 
 #include <limits.h>
 
-#define N BLOCK_SIZE
+#define N TILE_SIZE
 
 // Used for the cache.
-static int mesh_del(void *data_)
+static int volume_del(void *data_)
 {
-    mesh_t *mesh = data_;
-    mesh_delete(mesh);
+    volume_t *volume = data_;
+    volume_delete(volume);
     return 0;
 }
 
-int mesh_select(const mesh_t *mesh,
+int volume_select(const volume_t *volume,
                 const int start_pos[3],
-                int (*cond)(void *user, const mesh_t *mesh,
+                int (*cond)(void *user, const volume_t *volume,
                             const int base_pos[3],
                             const int new_pos[3],
-                            mesh_accessor_t *mesh_accessor),
-                void *user, mesh_t *selection)
+                            volume_accessor_t *volume_accessor),
+                void *user, volume_t *selection)
 {
     int i, a;
     int pos[3], p[3];
     bool keep = true;
-    mesh_iterator_t iter;
-    mesh_accessor_t mesh_accessor, selection_accessor;
-    mesh_clear(selection);
+    volume_iterator_t iter;
+    volume_accessor_t volume_accessor, selection_accessor;
+    volume_clear(selection);
 
-    mesh_accessor = mesh_get_accessor(mesh);
-    selection_accessor = mesh_get_accessor(selection);
+    volume_accessor = volume_get_accessor(volume);
+    selection_accessor = volume_get_accessor(selection);
 
-    if (!mesh_get_alpha_at(mesh, &mesh_accessor, start_pos))
+    if (!volume_get_alpha_at(volume, &volume_accessor, start_pos))
         return 0;
-    mesh_set_at(selection, &selection_accessor, start_pos,
+    volume_set_at(selection, &selection_accessor, start_pos,
                 (uint8_t[]){255, 255, 255, 255});
 
     // XXX: Very inefficient algorithm!
@@ -59,23 +59,23 @@ int mesh_select(const mesh_t *mesh,
     // no more possible changes.
     while (keep) {
         keep = false;
-        iter = mesh_get_iterator(selection, MESH_ITER_VOXELS);
-        while (mesh_iter(&iter, pos)) {
+        iter = volume_get_iterator(selection, VOLUME_ITER_VOXELS);
+        while (volume_iter(&iter, pos)) {
             // Shouldn't be needed if the iter function did filter the voxels.
-            if (!mesh_get_alpha_at(selection, &selection_accessor, pos))
+            if (!volume_get_alpha_at(selection, &selection_accessor, pos))
                 continue;
 
             for (i = 0; i < 6; i++) {
                 p[0] = pos[0] + FACES_NORMALS[i][0];
                 p[1] = pos[1] + FACES_NORMALS[i][1];
                 p[2] = pos[2] + FACES_NORMALS[i][2];
-                if (mesh_get_alpha_at(selection, &selection_accessor, p))
+                if (volume_get_alpha_at(selection, &selection_accessor, p))
                     continue; // Already done.
-                if (!mesh_get_alpha_at(mesh, &mesh_accessor, p))
+                if (!volume_get_alpha_at(volume, &volume_accessor, p))
                     continue; // No voxel here.
-                a = cond(user, mesh, pos, p, &mesh_accessor);
+                a = cond(user, volume, pos, p, &volume_accessor);
                 if (a) {
-                    mesh_set_at(selection, &selection_accessor, p,
+                    volume_set_at(selection, &selection_accessor, p,
                                 (uint8_t[]){255, 255, 255, a});
                     keep = true;
                 }
@@ -88,13 +88,13 @@ int mesh_select(const mesh_t *mesh,
 
 // XXX: need to redo this function from scratch.  Even the API is a bit
 // stupid.
-void mesh_extrude(mesh_t *mesh,
+void volume_extrude(volume_t *volume,
                   const float plane[4][4],
                   const float box[4][4])
 {
     float proj[4][4];
     float n[3], pos[3], p[3];
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int vpos[3];
     uint8_t value[4];
 
@@ -119,93 +119,94 @@ void mesh_extrude(mesh_t *mesh,
     }
 
     // XXX: use an accessor to speed up access.
-    iter = mesh_get_box_iterator(mesh, box, 0);
-    while (mesh_iter(&iter, vpos)) {
+    iter = volume_get_box_iterator(volume, box, 0);
+    while (volume_iter(&iter, vpos)) {
         vec3_set(p, vpos[0], vpos[1], vpos[2]);
         if (!bbox_contains_vec(box, p)) {
             memset(value, 0, 4);
         } else {
             mat4_mul_vec3(proj, p, p);
             int pi[3] = {floor(p[0]), floor(p[1]), floor(p[2])};
-            mesh_get_at(mesh, NULL, pi, value);
+            volume_get_at(volume, NULL, pi, value);
         }
-        mesh_set_at(mesh, NULL, vpos, value);
+        volume_set_at(volume, NULL, vpos, value);
     }
 
 }
 
-static void mesh_fill(
-        mesh_t *mesh,
+static void volume_fill(
+        volume_t *volume,
         const float box[4][4],
         void (*get_color)(const int pos[3], uint8_t out[4], void *user_data),
         void *user_data)
 {
     int pos[3];
     uint8_t color[4];
-    mesh_iterator_t iter;
-    mesh_accessor_t accessor;
+    volume_iterator_t iter;
+    volume_accessor_t accessor;
 
-    mesh_clear(mesh);
-    accessor = mesh_get_accessor(mesh);
-    iter = mesh_get_box_iterator(mesh, box, 0);
-    while (mesh_iter(&iter, pos)) {
+    volume_clear(volume);
+    accessor = volume_get_accessor(volume);
+    iter = volume_get_box_iterator(volume, box, 0);
+    while (volume_iter(&iter, pos)) {
         get_color(pos, color, user_data);
-        mesh_set_at(mesh, &accessor, pos, color);
+        volume_set_at(volume, &accessor, pos, color);
     }
 }
 
-static void mesh_move_get_color(const int pos[3], uint8_t c[4], void *user)
+static void volume_move_get_color(const int pos[3], uint8_t c[4], void *user)
 {
     float p[3] = {pos[0], pos[1], pos[2]};
-    mesh_t *mesh = USER_GET(user, 0);
+    volume_t *volume = USER_GET(user, 0);
     float (*mat)[4][4] = USER_GET(user, 1);
     mat4_mul_vec3(*mat, p, p);
     int pi[3] = {round(p[0]), round(p[1]), round(p[2])};
-    mesh_get_at(mesh, NULL, pi, c);
+    volume_get_at(volume, NULL, pi, c);
 }
 
-void mesh_move(mesh_t *mesh, const float mat[4][4])
+void volume_move(volume_t *volume, const float mat[4][4])
 {
     float box[4][4];
-    mesh_t *src_mesh = mesh_copy(mesh);
+    volume_t *src_volume = volume_copy(volume);
     float imat[4][4];
 
     mat4_invert(mat, imat);
-    mesh_get_box(mesh, true, box);
+    volume_get_box(volume, true, box);
     if (box_is_null(box)) return;
     mat4_mul(mat, box, box);
-    mesh_fill(mesh, box, mesh_move_get_color, USER_PASS(src_mesh, &imat));
-    mesh_delete(src_mesh);
-    mesh_remove_empty_blocks(mesh, false);
+    volume_fill(volume, box, volume_move_get_color,
+                USER_PASS(src_volume, &imat));
+    volume_delete(src_volume);
+    volume_remove_empty_tiles(volume, false);
 }
 
-void mesh_blit(mesh_t *mesh, const uint8_t *data,
+void volume_blit(volume_t *volume, const uint8_t *data,
                int x, int y, int z, int w, int h, int d,
-               mesh_iterator_t *iter)
+               volume_iterator_t *iter)
 {
-    mesh_iterator_t default_iter = {0};
+    volume_iterator_t default_iter = {0};
     int pos[3];
     if (!iter) iter = &default_iter;
     for (pos[2] = z; pos[2] < z + d; pos[2]++)
     for (pos[1] = y; pos[1] < y + h; pos[1]++)
     for (pos[0] = x; pos[0] < x + w; pos[0]++) {
-        mesh_set_at(mesh, iter, pos, data);
+        volume_set_at(volume, iter, pos, data);
         data += 4;
     }
-    mesh_remove_empty_blocks(mesh, false);
+    volume_remove_empty_tiles(volume, false);
 }
 
-void mesh_shift_alpha(mesh_t *mesh, int v)
+void volume_shift_alpha(volume_t *volume, int v)
 {
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int pos[3];
     uint8_t value[4];
 
-    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
-    while (mesh_iter(&iter, pos)) {
-        mesh_get_at(mesh, &iter, pos, value);
+    iter = volume_get_iterator(volume, VOLUME_ITER_VOXELS);
+    while (volume_iter(&iter, pos)) {
+        volume_get_at(volume, &iter, pos, value);
         value[3] = clamp(value[3] + v, 0, 255);
-        mesh_set_at(mesh, NULL, pos, value);
+        volume_set_at(volume, NULL, pos, value);
     }
 }
 
@@ -274,12 +275,12 @@ static void combine(const uint8_t a[4], const uint8_t b[4], int mode,
 }
 
 
-void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
+void volume_op(volume_t *volume, const painter_t *painter, const float box[4][4])
 {
     int i, vp[3];
     uint8_t value[4], new_value[4], c[4];
-    mesh_iterator_t iter;
-    mesh_accessor_t accessor;
+    volume_iterator_t iter;
+    volume_accessor_t accessor;
     float size[3], p[3];
     float mat[4][4];
     float (*shape_func)(const float[3], const float[3], float smoothness);
@@ -289,7 +290,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
     painter_t painter2;
     float box2[4][4];
     int aabb[2][3];
-    mesh_t *cached;
+    volume_t *cached;
     static cache_t *cache = NULL;
     const float *sym_o = painter->symmetry_origin;
 
@@ -301,12 +302,12 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
         painter_t painter;
     } key;
     memset(&key, 0, sizeof(key));
-    key.id = mesh_get_key(mesh);
+    key.id = volume_get_key(volume);
     mat4_copy(box, key.box);
     key.painter = *painter;
     cached = cache_get(cache, &key, sizeof(key));
     if (cached) {
-        mesh_set(mesh, cached);
+        volume_set(volume, cached);
         return;
     }
 
@@ -322,7 +323,7 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
             if (i == 2) mat4_iscale(box2,  1,  1, -1);
             mat4_itranslate(box2, -sym_o[0], -sym_o[1], -sym_o[2]);
             mat4_imul(box2, box);
-            mesh_op(mesh, &painter2, box2);
+            volume_op(volume, &painter2, box2);
         }
     }
 
@@ -341,24 +342,24 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
                      mode == MODE_INTERSECT ||
                      mode == MODE_INTERSECT_FILL;
 
-    // for intersection start by deleting all the blocks that are not in
+    // for intersection start by deleting all the tiles that are not in
     // the box.
     if (mode == MODE_INTERSECT || mode == MODE_INTERSECT_FILL) {
-        iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
-        while (mesh_iter(&iter, vp)) {
-            mesh_get_block_aabb(vp, aabb);
+        iter = volume_get_iterator(volume, VOLUME_ITER_TILES);
+        while (volume_iter(&iter, vp)) {
+            volume_get_tile_aabb(vp, aabb);
             if (box_intersect_aabb(box, aabb)) continue;
-            mesh_clear_block(mesh, &iter, vp);
+            volume_clear_tile(volume, &iter, vp);
         }
     }
 
-    iter = mesh_get_box_iterator(mesh, box,
-                                 skip_dst_empty ? MESH_ITER_SKIP_EMPTY : 0);
+    iter = volume_get_box_iterator(volume, box,
+                                 skip_dst_empty ? VOLUME_ITER_SKIP_EMPTY : 0);
 
     // XXX: for the moment we cannot use the same accessor for both
     // setting and getting!  Need to fix that!!
-    accessor = mesh_get_accessor(mesh);
-    while (mesh_iter(&iter, vp)) {
+    accessor = volume_get_accessor(volume);
+    while (volume_iter(&iter, vp)) {
         vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
         if (use_box && !bbox_contains_vec(*painter->box, p)) continue;
         mat4_mul_vec3(mat, p, p);
@@ -372,37 +373,37 @@ void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4])
         memcpy(c, painter->color, 4);
         c[3] *= v;
         if (!c[3] && skip_src_empty) continue;
-        mesh_get_at(mesh, &accessor, vp, value);
+        volume_get_at(volume, &accessor, vp, value);
         if (!value[3] && skip_dst_empty) continue;
         combine(value, c, mode, new_value);
         if (!vec4_equal(value, new_value))
-            mesh_set_at(mesh, &accessor, vp, new_value);
+            volume_set_at(volume, &accessor, vp, new_value);
     }
 
-    cache_add(cache, &key, sizeof(key), mesh_copy(mesh), 1, mesh_del);
+    cache_add(cache, &key, sizeof(key), volume_copy(volume), 1, volume_del);
 }
 
 // XXX: remove this function!
-void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4])
+void volume_get_box(const volume_t *volume, bool exact, float box[4][4])
 {
     int bbox[2][3];
-    mesh_get_bbox(mesh, bbox, exact);
+    volume_get_bbox(volume, bbox, exact);
     bbox_from_aabb(box, bbox);
 }
 
-static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
+static void tile_merge(volume_t *volume, const volume_t *other, const int pos[3],
                         int mode, const uint8_t color[4])
 {
     int p[3];
     int x, y, z;
     uint64_t id1, id2;
-    mesh_t *block;
+    volume_t *tile;
     uint8_t v1[4], v2[4];
     static cache_t *cache = NULL;
-    mesh_accessor_t a1, a2, a3;
+    volume_accessor_t a1, a2, a3;
 
-    mesh_get_block_data(mesh,  NULL, pos, &id1);
-    mesh_get_block_data(other, NULL, pos, &id2);
+    volume_get_tile_data(volume,  NULL, pos, &id1);
+    volume_get_tile_data(other, NULL, pos, &id2);
 
     // XXX: cleanup this code!
 
@@ -415,13 +416,13 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
     }
 
     if ((mode == MODE_OVER || mode == MODE_MAX) && id1 == 0 && !color) {
-        mesh_copy_block(other, pos, mesh, pos);
+        volume_copy_tile(other, pos, volume, pos);
         return;
     }
 
     if ((mode == MODE_MULT_ALPHA) && id1 == 0) return;
     if ((mode == MODE_MULT_ALPHA) && id2 == 0) {
-        // XXX: could just delete the block.
+        // XXX: could just delete the tile.
     }
 
     // Check if the merge op has been cached.
@@ -434,13 +435,13 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
     } key = { id1, id2, mode };
     if (color) memcpy(key.color, color, 4);
     _Static_assert(sizeof(key) == 24, "");
-    block = cache_get(cache, &key, sizeof(key));
-    if (block) goto end;
+    tile = cache_get(cache, &key, sizeof(key));
+    if (tile) goto end;
 
-    block = mesh_new();
-    a1 = mesh_get_accessor(mesh);
-    a2 = mesh_get_accessor(other);
-    a3 = mesh_get_accessor(block);
+    tile = volume_new();
+    a1 = volume_get_accessor(volume);
+    a2 = volume_get_accessor(other);
+    a3 = volume_get_accessor(tile);
 
     for (z = 0; z < N; z++)
     for (y = 0; y < N; y++)
@@ -448,39 +449,39 @@ static void block_merge(mesh_t *mesh, const mesh_t *other, const int pos[3],
         p[0] = pos[0] + x;
         p[1] = pos[1] + y;
         p[2] = pos[2] + z;
-        mesh_get_at(mesh, &a1, p, v1);
-        mesh_get_at(other, &a2, p, v2);
+        volume_get_at(volume, &a1, p, v1);
+        volume_get_at(other, &a2, p, v2);
         if (color) color_mul(v2, color, v2);
         combine(v1, v2, mode, v1);
-        mesh_set_at(block, &a3, (int[]){x, y, z}, v1);
+        volume_set_at(tile, &a3, (int[]){x, y, z}, v1);
     }
-    cache_add(cache, &key, sizeof(key), block, 1, mesh_del);
+    cache_add(cache, &key, sizeof(key), tile, 1, volume_del);
 
 end:
-    mesh_copy_block(block, (int[]){0, 0, 0}, mesh, pos);
+    volume_copy_tile(tile, (int[]){0, 0, 0}, volume, pos);
     return;
 }
 
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
+void volume_merge(volume_t *volume, const volume_t *other, int mode,
                 const uint8_t color[4])
 {
-    mesh_t *cached;
-    assert(mesh && other);
+    volume_t *cached;
+    assert(volume && other);
     static cache_t *cache = NULL;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int bpos[3];
     uint64_t id1, id2;
 
     // Simple case for replace.
     if (mode == MODE_REPLACE) {
-        mesh_set(mesh, other);
+        volume_set(volume, other);
         return;
     }
 
     // Check if the merge op has been cached.
     if (!cache) cache = cache_create(512);
-    id1 = mesh_get_key(mesh);
-    id2 = mesh_get_key(other);
+    id1 = volume_get_key(volume);
+    id2 = volume_get_key(other);
     struct {
         uint64_t id1;
         uint64_t id2;
@@ -491,43 +492,43 @@ void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
     _Static_assert(sizeof(key) == 24, "");
     cached = cache_get(cache, &key, sizeof(key));
     if (cached) {
-        mesh_set(mesh, cached);
+        volume_set(volume, cached);
         return;
     }
 
-    iter = mesh_get_union_iterator(mesh, other, MESH_ITER_BLOCKS);
-    while (mesh_iter(&iter, bpos)) {
-        block_merge(mesh, other, bpos, mode, color);
+    iter = volume_get_union_iterator(volume, other, VOLUME_ITER_TILES);
+    while (volume_iter(&iter, bpos)) {
+        tile_merge(volume, other, bpos, mode, color);
     }
 
-    cache_add(cache, &key, sizeof(key), mesh_copy(mesh), 1, mesh_del);
+    cache_add(cache, &key, sizeof(key), volume_copy(volume), 1, volume_del);
 }
 
-void mesh_crop(mesh_t *mesh, const float box[4][4])
+void volume_crop(volume_t *volume, const float box[4][4])
 {
     painter_t painter = {
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
         .shape = &shape_cube,
     };
-    mesh_op(mesh, &painter, box);
+    volume_op(volume, &painter, box);
 }
 
-/* Function: mesh_crc32
- * Compute the crc32 of the mesh data as an array of xyz rgba values.
+/* Function: volume_crc32
+ * Compute the crc32 of the volume data as an array of xyz rgba values.
  *
  * This is only used in the tests, to make sure that we can still open
  * old file formats.
  */
-uint32_t mesh_crc32(const mesh_t *mesh)
+uint32_t volume_crc32(const volume_t *volume)
 {
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int pos[3];
     uint8_t v[4];
     uint32_t ret = 0;
-    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
-    while (mesh_iter(&iter, pos)) {
-        mesh_get_at(mesh, &iter, pos, v);
+    iter = volume_get_iterator(volume, VOLUME_ITER_VOXELS);
+    while (volume_iter(&iter, pos)) {
+        volume_get_at(volume, &iter, pos, v);
         if (!v[3]) continue;
         ret = XXH32(pos, sizeof(pos), ret);
         ret = XXH32(v, sizeof(v), ret);

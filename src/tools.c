@@ -22,9 +22,9 @@ static const tool_t *g_tools[TOOL_COUNT] = {};
 
 static void a_tool_set(void *data)
 {
-    if (goxel.tool_mesh) {
-        mesh_delete(goxel.tool_mesh);
-        goxel.tool_mesh = NULL;
+    if (goxel.tool_volume) {
+        volume_delete(goxel.tool_volume);
+        goxel.tool_volume = NULL;
     }
     goxel.tool = (tool_t*)data;
 }
@@ -52,17 +52,17 @@ const tool_t *tool_get(int id)
 static int pick_color_gesture(gesture3d_t *gest, void *user)
 {
     cursor_t *curs = &goxel.cursor;
-    const mesh_t *mesh = goxel_get_layers_mesh(goxel.image);
+    const volume_t *volume = goxel_get_layers_volume(goxel.image);
     int pi[3] = {floor(curs->pos[0]),
                  floor(curs->pos[1]),
                  floor(curs->pos[2])};
     uint8_t color[4];
-    curs->snap_mask = SNAP_MESH;
+    curs->snap_mask = SNAP_VOLUME;
     curs->snap_offset = -0.5;
 
     goxel_set_help_text("Click on a voxel to pick the color");
     if (!curs->snaped) return 0;
-    mesh_get_at(mesh, NULL, pi, color);
+    volume_get_at(volume, NULL, pi, color);
     color[3] = 255;
     goxel_set_help_text("pick: %d %d %d", color[0], color[1], color[2]);
     if (curs->flags & CURSOR_PRESSED) vec4_copy(color, goxel.painter.color);
@@ -114,7 +114,7 @@ int tool_gui_snap(void)
     gui_text("Snap on");
     w = gui_get_avail_width() / 2.0 - 1;
     gui_group_begin(NULL);
-    snap_button("Mesh", SNAP_MESH, w);
+    snap_button("Volume", SNAP_VOLUME, w);
     gui_same_line();
     snap_button("Plane", SNAP_PLANE, w);
     if (!box_is_null(goxel.selection)) {

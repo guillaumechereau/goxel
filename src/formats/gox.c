@@ -266,7 +266,7 @@ void save_to_file(const image_t *img, const char *path)
     uint8_t *png, *preview;
     camera_t *camera;
     material_t *material;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
 
     img = img ?: goxel.image;
     out = fopen(path, "wb");
@@ -293,13 +293,13 @@ void save_to_file(const image_t *img, const char *path)
     // Add all the blocks data into the hash table.
     index = 0;
     DL_FOREACH(img->layers, layer) {
-        iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
-        while (mesh_iter(&iter, bpos)) {
-            mesh_get_block_data(layer->mesh, &iter, bpos, &uid);
+        iter = volume_get_iterator(layer->volume, VOLUME_ITER_TILES);
+        while (volume_iter(&iter, bpos)) {
+            volume_get_tile_data(layer->volume, &iter, bpos, &uid);
             HASH_FIND(hh, blocks_table, &uid, sizeof(uid), data);
             if (data) continue;
             data = calloc(1, sizeof(*data));
-            data->v = mesh_get_block_data(layer->mesh, &iter, bpos, NULL);
+            data->v = volume_get_tile_data(layer->volume, &iter, bpos, NULL);
             assert(data->v);
             data->uid = uid;
             data->index = index++;
@@ -335,16 +335,16 @@ void save_to_file(const image_t *img, const char *path)
         chunk_write_start(&c, out, "LAYR");
         nb_blocks = 0;
         if (!layer->base_id && !layer->shape) {
-            iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
-            while (mesh_iter(&iter, bpos)) {
+            iter = volume_get_iterator(layer->volume, VOLUME_ITER_TILES);
+            while (volume_iter(&iter, bpos)) {
                 nb_blocks++;
             }
         }
         chunk_write_int32(&c, out, nb_blocks);
         if (!layer->base_id && !layer->shape) {
-            iter = mesh_get_iterator(layer->mesh, MESH_ITER_BLOCKS);
-            while (mesh_iter(&iter, bpos)) {
-                mesh_get_block_data(layer->mesh, &iter, bpos, &uid);
+            iter = volume_get_iterator(layer->volume, VOLUME_ITER_TILES);
+            while (volume_iter(&iter, bpos)) {
+                volume_get_tile_data(layer->volume, &iter, bpos, &uid);
                 HASH_FIND(hh, blocks_table, &uid, sizeof(uid), data);
                 assert(data);
                 chunk_write_int32(&c, out, data->index);
@@ -530,7 +530,7 @@ int load_from_file(const char *path, bool replace)
     // XXX: should have a way to create a totally empty image instead.
     if (replace) {
         DL_FOREACH_SAFE(goxel.image->layers, layer, layer_tmp) {
-            mesh_delete(layer->mesh);
+            volume_delete(layer->volume);
             free(layer);
         }
         DL_FOREACH_SAFE(goxel.image->materials, mat, mat_tmp) {
@@ -580,7 +580,7 @@ int load_from_file(const char *path, bool replace)
                 chunk_read_int32(&c, in, __LINE__);
                 data = hash_find_at(blocks_table, index);
                 assert(data);
-                mesh_blit(layer->mesh, data->v, x, y, z, 16, 16, 16, NULL);
+                volume_blit(layer->volume, data->v, x, y, z, 16, 16, 16, NULL);
             }
             while ((chunk_read_dict_value(&c, in, dict_key, dict_value,
                                           &dict_value_size, __LINE__))) {
@@ -662,7 +662,7 @@ int load_from_file(const char *path, bool replace)
     }
 
     // Free the block hash table.  We do not delete the block data because
-    // they have been used by the meshes.
+    // they have been used by the volumes.
     HASH_ITER(hh, blocks_table, data, data_tmp) {
         HASH_DEL(blocks_table, data);
         free(data->v);
@@ -681,7 +681,7 @@ int load_from_file(const char *path, bool replace)
 
     // Set default image box if we didn't have one.
     if (box_is_null(goxel.image->box)) {
-        mesh_get_bbox(goxel_get_layers_mesh(goxel.image), aabb, true);
+        volume_get_bbox(goxel_get_layers_volume(goxel.image), aabb, true);
         if (aabb[0][0] > aabb[1][0]) {
             aabb[0][0] = -16;
             aabb[0][1] = -16;

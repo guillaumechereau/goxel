@@ -22,7 +22,7 @@
 typedef struct {
     tool_t tool;
     float  start_pos[3];
-    mesh_t *mesh_orig;
+    volume_t *volume_orig;
     bool   planar; // Stay on the original plane.
 
     struct {
@@ -65,12 +65,12 @@ static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
-    mesh_t *layer_mesh = goxel.image->active_layer->mesh;
+    volume_t *layer_volume = goxel.image->active_layer->volume;
     float box[4][4], pos[3];
     cursor_t *curs = gest->cursor;
 
     if (gest->state == GESTURE_BEGIN) {
-        mesh_set(shape->mesh_orig, layer_mesh);
+        volume_set(shape->volume_orig, layer_volume);
         vec3_copy(curs->pos, shape->start_pos);
         image_history_push(goxel.image);
         if (shape->planar) {
@@ -81,14 +81,14 @@ static int on_drag(gesture3d_t *gest, void *user)
 
     goxel_set_help_text("Drag.");
     get_box(shape->start_pos, curs->pos, curs->normal, box);
-    if (!goxel.tool_mesh) goxel.tool_mesh = mesh_new();
-    mesh_set(goxel.tool_mesh, shape->mesh_orig);
-    mesh_op(goxel.tool_mesh, painter, box);
+    if (!goxel.tool_volume) goxel.tool_volume = volume_new();
+    volume_set(goxel.tool_volume, shape->volume_orig);
+    volume_op(goxel.tool_volume, painter, box);
 
     if (gest->state == GESTURE_END) {
-        mesh_set(layer_mesh, goxel.tool_mesh);
-        mesh_delete(goxel.tool_mesh);
-        goxel.tool_mesh = NULL;
+        volume_set(layer_volume, goxel.tool_volume);
+        volume_delete(goxel.tool_volume);
+        goxel.tool_volume = NULL;
         mat4_copy(plane_null, goxel.tool_plane);
     }
     return 0;
@@ -103,8 +103,8 @@ static int iter(tool_t *tool, const painter_t *painter,
     curs->snap_mask |= SNAP_ROUNDED;
     curs->snap_offset = (painter->mode == MODE_OVER) ? 0.5 : -0.5;
 
-    if (!shape->mesh_orig)
-        shape->mesh_orig = mesh_copy(goxel.image->active_layer->mesh);
+    if (!shape->volume_orig)
+        shape->volume_orig = volume_copy(goxel.image->active_layer->volume);
 
     if (!shape->gestures.drag.type) {
         shape->gestures.drag = (gesture3d_t) {

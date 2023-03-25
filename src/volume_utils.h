@@ -90,15 +90,15 @@ typedef struct painter {
 /* Function: mesh_get_box
  * Compute the bounding box of a mesh.  */
 // XXX: remove this function!
-void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4]);
+void volume_get_box(const volume_t *volume, bool exact, float box[4][4]);
 
-/* Function: mesh_op
- * Apply a paint operation to a mesh.
- * This function render geometrical 3d shapes into a mesh.
+/* Function: volume_op
+ * Apply a paint operation to a volume.
+ * This function render geometrical 3d shapes into a volume.
  * The shape, mode and color are defined in the painter argument.
  *
  * Parameters:
- *   mesh    - The mesh we paint into.
+ *   volume    - The volume we paint into.
  *   painter - Defines the paint operation to apply.
  *   box     - Defines the position and size of the shape as the
  *             transformation matrix from the zero centered unit box.
@@ -106,20 +106,21 @@ void mesh_get_box(const mesh_t *mesh, bool exact, float box[4][4]);
  * See Also:
  *   <painter_t>
  */
-void mesh_op(mesh_t *mesh, const painter_t *painter, const float box[4][4]);
+void volume_op(volume_t *volume, const painter_t *painter,
+               const float box[4][4]);
 
 // XXX: to cleanup.
-void mesh_extrude(mesh_t *mesh,
+void volume_extrude(volume_t *volume,
                   const float plane[4][4],
                   const float box[4][4]);
 
-/* Function: mesh_blit
+/* Function: volume_blit
  *
- * Blit voxel data into a mesh.
- * This is the fastest way to quickly put data into a mesh.
+ * Blit voxel data into a volume.
+ * This is the fastest way to quickly put data into a volume.
  *
  * Parameters:
- *   mesh - The mesh we blit into.
+ *   volume - The volume we blit into.
  *   data - Pointer to voxel data (RGBA values, in xyz order).
  *   x    - X pos.
  *   y    - Y pos.
@@ -129,66 +130,66 @@ void mesh_extrude(mesh_t *mesh,
  *   d    - Depth of the data.
  *   iter - Optional iterator for optimized access.
  */
-void mesh_blit(mesh_t *mesh, const uint8_t *data,
+void volume_blit(volume_t *volume, const uint8_t *data,
                int x, int y, int z, int w, int h, int d,
-               mesh_iterator_t *iter);
+               volume_iterator_t *iter);
 
-void mesh_move(mesh_t *mesh, const float mat[4][4]);
+void volume_move(volume_t *volume, const float mat[4][4]);
 
-void mesh_shift_alpha(mesh_t *mesh, int v);
+void volume_shift_alpha(volume_t *volume, int v);
 
 // Compute the selection mask for a given condition.
-int mesh_select(const mesh_t *mesh,
+int volume_select(const volume_t *volume,
                 const int start_pos[3],
-                int (*cond)(void *user, const mesh_t *mesh,
+                int (*cond)(void *user, const volume_t *volume,
                             const int base_pos[3],
                             const int new_pos[3],
-                            mesh_accessor_t *mesh_accessor),
-                void *user, mesh_t *selection);
+                            volume_accessor_t *volume_accessor),
+                void *user, volume_t *selection);
 
 /*
- * Function: mesh_merge
- * Merge a mesh into an other using a given blending function.
+ * Function: volume_merge
+ * Merge a volume into an other using a given blending function.
  *
  * Parameters:
- *   mesh   - The destination mesh we merge into.
- *   other  - The source mesh we merge.  Unchanged by this function.
+ *   volume   - The destination volume we merge into.
+ *   other  - The source volume we merge.  Unchanged by this function.
  *   mode   - The blending function used.  One of the <MODE> enum values.
- *   color  - A color to apply to the source mesh before merging.  Can be
+ *   color  - A color to apply to the source volume before merging.  Can be
  *            set to NULL.
  */
-void mesh_merge(mesh_t *mesh, const mesh_t *other, int mode,
+void volume_merge(volume_t *volume, const volume_t *other, int mode,
                 const uint8_t color[4]);
 
 /*
- * Function: mesh_generate_vertices
- * Generate a vertice array for rendering a mesh block.
+ * Function: volume_generate_vertices
+ * Generate a vertice array for rendering a volume block.
  *
  * Parameters:
- *   mesh       - Input mesh.
- *   block_pos  - Position of the mesh block to render.
+ *   volume       - Input volume.
+ *   block_pos  - Position of the volume block to render.
  *   effects    - Effect flags.
  *   out        - Output array.
  *   size       - Output the size of a single face.
- *                4 for quads and 3 for triangles.  Normal mesh uses quad
+ *                4 for quads and 3 for triangles.  Normal volume uses quad
  *                but marching cube effect return triangle arrays.
  *   subdivide  - Ouput the number of subdivisions used for a voxel.  Normal
  *                render uses 1 unit per voxel, but marching cube rendering
  *                can use more.
  */
-int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
+int volume_generate_vertices(const volume_t *volume, const int block_pos[3],
                            int effects, voxel_vertex_t *out,
                            int *size, int *subdivide);
 
 // XXX: use int[2][3] for the box?
-void mesh_crop(mesh_t *mesh, const float box[4][4]);
+void volume_crop(volume_t *volume, const float box[4][4]);
 
-/* Function: mesh_crc32
- * Compute the crc32 of the mesh data as an array of xyz rgba values.
+/* Function: volume_crc32
+ * Compute the crc32 of the volume data as an array of xyz rgba values.
  *
  * This is only used in the tests, to make sure that we can still open
  * old file formats.
  */
-uint32_t mesh_crc32(const mesh_t *mesh);
+uint32_t volume_crc32(const volume_t *volume);
 
-#endif // MESH_UTILS_H
+#endif // VOLUME_UTILS_H

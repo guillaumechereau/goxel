@@ -22,8 +22,8 @@
 typedef struct {
     tool_t tool;
 
-    mesh_t *mesh_orig; // Original mesh.
-    mesh_t *mesh;      // Mesh containing only the tool path.
+    volume_t *volume_orig; // Original volume.
+    volume_t *volume;      // Volume containing only the tool path.
 
     // Gesture start and last pos (should we put it in the 3d gesture?)
     float start_pos[3];
@@ -34,7 +34,7 @@ typedef struct {
         float      pos[3];
         bool       pressed;
         int        mode;
-        uint64_t   mesh_key;
+        uint64_t   volume_key;
     } last_op;
 
     struct {
@@ -47,17 +47,17 @@ typedef struct {
 static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
                            int mode)
 {
-    mesh_t *mesh = goxel.tool_mesh;
+    volume_t *volume = goxel.tool_volume;
     const bool pressed = curs->flags & CURSOR_PRESSED;
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
-            brush->last_op.mesh_key == mesh_get_key(mesh) &&
+            brush->last_op.volume_key == volume_get_key(volume) &&
             vec3_equal(curs->pos, brush->last_op.pos)) {
         return true;
     }
     brush->last_op.pressed = pressed;
     brush->last_op.mode = mode;
-    brush->last_op.mesh_key = mesh_get_key(mesh);
+    brush->last_op.volume_key = volume_get_key(volume);
     vec3_copy(curs->pos, brush->last_op.pos);
     return false;
 }
@@ -120,18 +120,18 @@ static int on_drag(gesture3d_t *gest, void *user)
     float pos[3];
 
     if (gest->state == GESTURE_BEGIN) {
-        mesh_set(brush->mesh_orig, goxel.image->active_layer->mesh);
+        volume_set(brush->volume_orig, goxel.image->active_layer->volume);
         brush->last_op.mode = 0; // Discard last op.
         vec3_copy(curs->pos, brush->last_pos);
         image_history_push(goxel.image);
-        mesh_clear(brush->mesh);
+        volume_clear(brush->volume);
 
         if (shift) {
             painter.shape = &shape_cylinder;
             painter.mode = MODE_MAX;
             vec4_set(painter.color, 255, 255, 255, 255);
             get_box(brush->start_pos, curs->pos, curs->normal, r, NULL, box);
-            mesh_op(brush->mesh, &painter, box);
+            volume_op(brush->volume, &painter, box);
         }
     }
 
@@ -151,21 +151,21 @@ static int on_drag(gesture3d_t *gest, void *user)
     for (i = 0; i < nb; i++) {
         vec3_mix(brush->last_pos, curs->pos, (i + 1.0) / nb, pos);
         get_box(pos, NULL, curs->normal, r, NULL, box);
-        mesh_op(brush->mesh, &painter, box);
+        volume_op(brush->volume, &painter, box);
     }
 
     painter = *(painter_t*)USER_GET(user, 1);
-    if (!goxel.tool_mesh) goxel.tool_mesh = mesh_new();
-    mesh_set(goxel.tool_mesh, brush->mesh_orig);
-    mesh_merge(goxel.tool_mesh, brush->mesh, painter.mode, painter.color);
+    if (!goxel.tool_volume) goxel.tool_volume = volume_new();
+    volume_set(goxel.tool_volume, brush->volume_orig);
+    volume_merge(goxel.tool_volume, brush->volume, painter.mode, painter.color);
     vec3_copy(curs->pos, brush->start_pos);
-    brush->last_op.mesh_key = mesh_get_key(goxel.tool_mesh);
+    brush->last_op.volume_key = volume_get_key(goxel.tool_volume);
 
     if (gest->state == GESTURE_END) {
-        mesh_set(goxel.image->active_layer->mesh, goxel.tool_mesh);
-        mesh_set(brush->mesh_orig, goxel.tool_mesh);
-        mesh_delete(goxel.tool_mesh);
-        goxel.tool_mesh = NULL;
+        volume_set(goxel.image->active_layer->volume, goxel.tool_volume);
+        volume_set(brush->volume_orig, goxel.tool_volume);
+        volume_delete(goxel.tool_volume);
+        goxel.tool_volume = NULL;
     }
     vec3_copy(curs->pos, brush->last_pos);
     return 0;
@@ -173,7 +173,7 @@ static int on_drag(gesture3d_t *gest, void *user)
 
 static int on_hover(gesture3d_t *gest, void *user)
 {
-    mesh_t *mesh = goxel.image->active_layer->mesh;
+    volume_t *volume = goxel.image->active_layer->volume;
     tool_brush_t *brush = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
     cursor_t *curs = gest->cursor;
@@ -181,24 +181,24 @@ static int on_hover(gesture3d_t *gest, void *user)
     bool shift = curs->flags & CURSOR_SHIFT;
 
     if (gest->state == GESTURE_END || !curs->snaped) {
-        mesh_delete(goxel.tool_mesh);
-        goxel.tool_mesh = NULL;
+        volume_delete(goxel.tool_volume);
+        goxel.tool_volume = NULL;
         return 0;
     }
 
     if (shift)
         render_line(&goxel.rend, brush->start_pos, curs->pos, NULL, 0);
 
-    if (goxel.tool_mesh && check_can_skip(brush, curs, painter->mode))
+    if (goxel.tool_volume && check_can_skip(brush, curs, painter->mode))
         return 0;
 
     get_box(curs->pos, NULL, curs->normal, goxel.tool_radius, NULL, box);
 
-    if (!goxel.tool_mesh) goxel.tool_mesh = mesh_new();
-    mesh_set(goxel.tool_mesh, mesh);
-    mesh_op(goxel.tool_mesh, painter, box);
+    if (!goxel.tool_volume) goxel.tool_volume = volume_new();
+    volume_set(goxel.tool_volume, volume);
+    volume_op(goxel.tool_volume, painter, box);
 
-    brush->last_op.mesh_key = mesh_get_key(mesh);
+    brush->last_op.volume_key = volume_get_key(volume);
 
     return 0;
 }
@@ -213,10 +213,10 @@ static int iter(tool_t *tool, const painter_t *painter,
     // to make things easier.
     curs->snap_mask |= SNAP_ROUNDED;
 
-    if (!brush->mesh_orig)
-        brush->mesh_orig = mesh_copy(goxel.image->active_layer->mesh);
-    if (!brush->mesh)
-        brush->mesh = mesh_new();
+    if (!brush->volume_orig)
+        brush->volume_orig = volume_copy(goxel.image->active_layer->volume);
+    if (!brush->volume)
+        brush->volume = volume_new();
 
     if (!brush->gestures.drag.type) {
         brush->gestures.drag = (gesture3d_t) {

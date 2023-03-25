@@ -20,7 +20,7 @@
 #define TOOLS_H
 
 #include "shape.h"
-#include "mesh_utils.h"
+#include "volume_utils.h"
 
 enum {
     TOOL_NONE = 0,

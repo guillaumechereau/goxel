@@ -167,7 +167,7 @@ static int import_matrix(FILE *file)
     cube = calloc(size[0] * size[1] * size[2], sizeof(*cube));
     import_matrix_data(data, data_size, cube, size[0], size[1], size[2]);
 
-    mesh_blit(goxel.image->active_layer->mesh, (uint8_t*)cube,
+    volume_blit(goxel.image->active_layer->volume, (uint8_t*)cube,
               pos[0], pos[2], pos[1],
               size[0], size[2], size[1], NULL);
 

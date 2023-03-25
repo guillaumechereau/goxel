@@ -2,7 +2,7 @@ varying lowp  vec2 v_pos_data;
 uniform highp mat4 u_model;
 uniform highp mat4 u_view;
 uniform highp mat4 u_proj;
-uniform lowp  vec2 u_block_id;
+uniform lowp  vec2 u_tile_id;
 
 #ifdef VERTEX_SHADER
 
@@ -25,7 +25,7 @@ void main()
 /************************************************************************/
 void main()
 {
-    gl_FragColor.rg = u_block_id;
+    gl_FragColor.rg = u_tile_id;
     gl_FragColor.ba = v_pos_data;
 }
 /************************************************************************/

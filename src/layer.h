@@ -20,7 +20,7 @@
 #define LAYER_H
 
 #include "material.h"
-#include "mesh.h"
+#include "volume.h"
 #include "shape.h"
 #include "utils/texture.h"
 
@@ -28,7 +28,7 @@ typedef struct layer layer_t;
 
 struct layer {
     layer_t     *next, *prev;
-    mesh_t      *mesh;
+    volume_t    *volume;
     const material_t  *material;
     int         id;         // Uniq id in the image (for clones).
     bool        visible;
@@ -39,7 +39,7 @@ struct layer {
     texture_t   *image;
     // For clone layers:
     int         base_id;
-    uint64_t    base_mesh_key;
+    uint64_t    base_volume_key;
     // For shape layers.
     const shape_t *shape;
     uint32_t    shape_key;
@@ -54,7 +54,7 @@ layer_t *layer_copy(layer_t *other);
 /*
  * Function: layer_get_bounding_box
  * Return the layer box if set, otherwise the bounding box of the layer
- * mesh.
+ * volume.
  */
 void layer_get_bounding_box(const layer_t *layer, float box[4][4]);
 

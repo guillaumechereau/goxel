@@ -20,12 +20,12 @@
 
 void gui_debug_panel(void)
 {
-    mesh_global_stats_t stats;
+    volume_global_stats_t stats;
 
     gui_text("FPS: %d", (int)round(goxel.fps));
-    mesh_get_global_stats(&stats);
-    gui_text("Nb meshes: %d", stats.nb_meshes);
-    gui_text("Nb blocks: %d", stats.nb_blocks);
+    volume_get_global_stats(&stats);
+    gui_text("Nb volumes: %d", stats.nb_volumes);
+    gui_text("Nb tiles: %d", stats.nb_tiles);
     gui_text("Mem: %dM", (int)(stats.mem / (1 << 20)));
 
     if (!DEFINED(GLES2)) {

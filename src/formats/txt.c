@@ -26,7 +26,7 @@ static int import_as_txt(const file_format_t *format, image_t *image,
     FILE *file;
     char line[2048];
     layer_t *layer;
-    mesh_iterator_t iter = {0};
+    volume_iterator_t iter = {0};
     int pos[3];
     unsigned int c[4];
     char *token;
@@ -53,7 +53,8 @@ static int import_as_txt(const file_format_t *format, image_t *image,
         pos[2] = atoi(token);
         token = strtok(NULL, " "); // get forth token (RRGGBB)
         sscanf(token, "%02x%02x%02x", &c[0], &c[1], &c[2]);
-        mesh_set_at(layer->mesh, &iter, pos, (uint8_t[]){c[0], c[1], c[2], 255});
+        volume_set_at(layer->volume, &iter, pos,
+                      (uint8_t[]){c[0], c[1], c[2], 255});
     }
 
     fclose(file);
@@ -65,10 +66,10 @@ static int export_as_txt(const file_format_t *format, const image_t *image,
                          const char *path)
 {
     FILE *out;
-    const mesh_t *mesh = goxel_get_layers_mesh(image);
+    const volume_t *volume = goxel_get_layers_volume(image);
     int p[3];
     uint8_t v[4];
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
 
     out = fopen(path, "w");
     if (!out) {
@@ -79,9 +80,9 @@ static int export_as_txt(const file_format_t *format, const image_t *image,
     fprintf(out, "# One line per voxel\n");
     fprintf(out, "# X Y Z RRGGBB\n");
 
-    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
-    while (mesh_iter(&iter, p)) {
-        mesh_get_at(mesh, &iter, p, v);
+    iter = volume_get_iterator(volume, VOLUME_ITER_VOXELS);
+    while (volume_iter(&iter, p)) {
+        volume_get_at(volume, &iter, p, v);
         if (v[3] < 127) continue;
         fprintf(out, "%d %d %d %02x%02x%02x\n",
                 p[0], p[1], p[2], v[0], v[1], v[2]);

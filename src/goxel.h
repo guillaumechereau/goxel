@@ -41,8 +41,8 @@
 #include "layer.h"
 #include "log.h"
 #include "material.h"
-#include "mesh.h"
-#include "mesh_utils.h"
+#include "volume.h"
+#include "volume_utils.h"
 #include "model3d.h"
 #include "noc_file_dialog.h"
 #include "palette.h"
@@ -431,8 +431,8 @@ enum {
 #define BLOCK_SIZE 16
 #define VOXEL_TEXTURE_SIZE 8
 
-// Generate an optimal palette whith a fixed number of colors from a mesh.
-void quantization_gen_palette(const mesh_t *mesh, int nb,
+// Generate an optimal palette whith a fixed number of colors from a volume.
+void quantization_gen_palette(const volume_t *volume, int nb,
                               uint8_t (*palette)[4]);
 
 // #### Goxel : core object ####
@@ -442,7 +442,7 @@ enum {
     SNAP_IMAGE_BOX      = 1 << 0,
     SNAP_SELECTION_IN   = 1 << 1,
     SNAP_SELECTION_OUT  = 1 << 2,
-    SNAP_MESH           = 1 << 3,
+    SNAP_VOLUME         = 1 << 3,
     SNAP_PLANE          = 1 << 4,
     SNAP_CAMERA         = 1 << 5, // Used for laser tool.
     SNAP_LAYER_OUT      = 1 << 6, // Snap the layer box.
@@ -462,21 +462,21 @@ typedef struct goxel
     // for testing.
     bool       request_test_graphic_release;
 
-    // Tools can set this mesh and it will replace the current layer mesh
+    // Tools can set this volume and it will replace the current layer volume
     // during render.
-    mesh_t     *tool_mesh;
+    volume_t   *tool_volume;
 
-    mesh_t     *layers_mesh_;
-    uint32_t   layers_mesh_hash;
+    volume_t   *layers_volume_;
+    uint32_t   layers_volume_hash;
 
-    mesh_t     *render_mesh_; // All the layers + tool mesh.
-    uint32_t   render_mesh_hash;
+    volume_t   *render_volume_; // All the layers + tool volume.
+    uint32_t   render_volume_hash;
 
     layer_t    *render_layers;
     uint32_t   render_layers_hash;
 
     struct     {
-        mesh_t *mesh;
+        volume_t *volume;
         float  box[4][4];
     } clipboard;
 
@@ -506,7 +506,7 @@ typedef struct goxel
     int        tool_drag_mode; // 0: move, 1: resize.
 
     float      selection[4][4];   // The selection box.
-    mesh_t     *mask; // Global selection mask mesh.
+    volume_t   *mask; // Global selection mask volume.
     int        mask_mode;
 
     struct {
@@ -535,8 +535,8 @@ typedef struct goxel
 
     pathtracer_t pathtracer;
 
-    // Used to check if the active mesh changed to play tick sound.
-    uint64_t    last_mesh_key;
+    // Used to check if the active volume changed to play tick sound.
+    uint64_t    last_volume_key;
     double      last_click_time;
 
     // Some stats for the UI.
@@ -588,8 +588,8 @@ void goxel_render_export_view(const float viewport[4]);
 void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          bool capture_keys);
 
-const mesh_t *goxel_get_layers_mesh(const image_t *img);
-const mesh_t *goxel_get_render_mesh(const image_t *img);
+const volume_t *goxel_get_layers_volume(const image_t *img);
+const volume_t *goxel_get_render_volume(const image_t *img);
 
 /*
  * Function: goxel_get_render_layers
@@ -598,7 +598,7 @@ const mesh_t *goxel_get_render_mesh(const image_t *img);
  * This returns a simplified list of layers from the current image where
  * we merged as many layers as possible into a single one.
  *
- * It also can replace the current layer mesh with the tool preview.
+ * It also can replace the current layer volume with the tool preview.
  *
  * This is the function that should be used the get the actual list of layers
  * to be rendered.

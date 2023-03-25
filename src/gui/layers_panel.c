@@ -80,13 +80,13 @@ void gui_layers_panel(void)
     layer = goxel.image->active_layer;
     bounded = !box_is_null(layer->box);
     if (bounded && gui_button("Crop to box", 1, 0)) {
-        mesh_crop(layer->mesh, layer->box);
+        volume_crop(layer->volume, layer->box);
     }
     if (!box_is_null(goxel.image->box) && gui_button("Crop to image", 1, 0)) {
-        mesh_crop(layer->mesh, goxel.image->box);
+        volume_crop(layer->volume, goxel.image->box);
     }
     if (layer->shape)
-        gui_action_button(ACTION_img_unclone_layer, "To mesh", 1);
+        gui_action_button(ACTION_img_unclone_layer, "To Volume", 1);
 
     if (gui_action_button(ACTION_img_new_shape_layer, "New Shape Layer", 1)) {
         action_exec2(ACTION_tool_set_move);
@@ -101,11 +101,11 @@ void gui_layers_panel(void)
         gui_group_end();
     }
     if (layer->image) {
-        gui_action_button(ACTION_img_image_layer_to_mesh, "To Mesh", 1);
+        gui_action_button(ACTION_img_image_layer_to_volume, "To Volume", 1);
     }
     if (!layer->shape && gui_checkbox("Bounded", &bounded, NULL)) {
         if (bounded) {
-            mesh_get_bbox(layer->mesh, bbox, true);
+            volume_get_bbox(layer->volume, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
             bbox_from_aabb(layer->box, bbox);
         } else {

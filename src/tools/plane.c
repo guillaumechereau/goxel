@@ -27,10 +27,10 @@ static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
     cursor_t *curs = &goxel.cursor;
-    curs->snap_mask = SNAP_MESH;
+    curs->snap_mask = SNAP_VOLUME;
     curs->snap_offset = 0;
 
-    goxel_set_help_text("Click on the mesh to set plane.");
+    goxel_set_help_text("Click on the volume to set plane.");
 
     if (curs->snaped && (curs->flags & CURSOR_PRESSED)) {
         curs->pos[0] = round(curs->pos[0]);
@@ -56,7 +56,7 @@ static void mat4_apply_quat(float mat[4][4], const float quat[4])
 
 /*
  * Algo provided by sariug <ugurcansari93@gmail.com>
- * Note: we could probably make it much faster by checking the mesh blocks
+ * Note: we could probably make it much faster by checking the volume blocks
  * first instead of the voxels.
  */
 static void cut(bool above)
@@ -64,20 +64,21 @@ static void cut(bool above)
     const uint8_t color[4] = {0, 0, 0, 0};
     int vp[3];
     float p[3], p_vec[3], d;
-    mesh_t *mesh = goxel.image->active_layer->mesh;
-    mesh_iterator_t iter;
-    mesh_accessor_t accessor;
+    volume_t *volume = goxel.image->active_layer->volume;
+    volume_iterator_t iter;
+    volume_accessor_t accessor;
 
     image_history_push(goxel.image);
-    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
-    accessor = mesh_get_accessor(mesh);
-    while (mesh_iter(&iter, vp)) {
+    iter = volume_get_iterator(volume,
+            VOLUME_ITER_VOXELS | VOLUME_ITER_SKIP_EMPTY);
+    accessor = volume_get_accessor(volume);
+    while (volume_iter(&iter, vp)) {
         vec3_set(p, vp[0] + 0.5, vp[1] + 0.5, vp[2] + 0.5);
         vec3_sub(p, goxel.plane[3], p_vec);
         vec3_normalize(p_vec, p_vec);
         d = vec3_dot(p_vec, goxel.plane[2]) * (above ? +1 : -1);
         if (d > 0)
-            mesh_set_at(mesh, &accessor, vp, color);
+            volume_set_at(volume, &accessor, vp, color);
     }
 }
 

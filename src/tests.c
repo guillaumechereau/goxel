@@ -44,7 +44,7 @@ static void test_file(const char *b64_data, uint32_t crc32)
     free(data);
     err = goxel_import_file("/tmp/goxel_test.gox", NULL);
     TEST(err == 0);
-    TEST(mesh_crc32(goxel.image->active_layer->mesh) == crc32);
+    TEST(volume_crc32(goxel.image->active_layer->volume) == crc32);
     image_delete(goxel.image);
     goxel.image = image_new();
 }

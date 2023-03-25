@@ -136,14 +136,14 @@ static layer_t *layer_clone(layer_t *other)
     snprintf(layer->name, sizeof(layer->name), "%.*s clone", len, other->name);
     layer->visible = other->visible;
     layer->material = other->material;
-    layer->mesh = mesh_copy(other->mesh);
+    layer->volume = volume_copy(other->volume);
     mat4_set_identity(layer->mat);
     layer->base_id = other->id;
-    layer->base_mesh_key = mesh_get_key(other->mesh);
+    layer->base_volume_key = volume_get_key(other->volume);
     return layer;
 }
 
-// Make sure the layer mesh is up to date.
+// Make sure the layer volume is up to date.
 void image_update(image_t *img)
 {
     painter_t painter = {};
@@ -152,10 +152,10 @@ void image_update(image_t *img)
 
     DL_FOREACH(img->layers, layer) {
         base = img_get_layer(img, layer->base_id);
-        if (base && layer->base_mesh_key != mesh_get_key(base->mesh)) {
-            mesh_set(layer->mesh, base->mesh);
-            mesh_move(layer->mesh, layer->mat);
-            layer->base_mesh_key = mesh_get_key(base->mesh);
+        if (base && layer->base_volume_key != volume_get_key(base->volume)) {
+            volume_set(layer->volume, base->volume);
+            volume_move(layer->volume, layer->mat);
+            layer->base_volume_key = volume_get_key(base->volume);
         }
         if (layer->shape) {
             key = XXH32(layer->mat, sizeof(layer->mat), 0);
@@ -166,8 +166,8 @@ void image_update(image_t *img)
                 painter.shape = layer->shape;
                 painter.box = &goxel.image->box;
                 vec4_copy(layer->color, painter.color);
-                mesh_clear(layer->mesh);
-                mesh_op(layer->mesh, &painter, layer->mat);
+                volume_clear(layer->volume);
+                volume_op(layer->volume, &painter, layer->mat);
                 layer->shape_key = key;
             }
         }
@@ -417,8 +417,8 @@ void image_merge_visible_layers(image_t *img)
                     other->base_id = 0;
                 }
             }
-            SWAP(layer->mesh, last->mesh);
-            mesh_merge(layer->mesh, last->mesh, MODE_OVER, NULL);
+            SWAP(layer->volume, last->volume);
+            volume_merge(layer->volume, last->volume, MODE_OVER, NULL);
             DL_DELETE(img->layers, last);
             layer_delete(last);
         }
@@ -634,14 +634,14 @@ static void image_clear_layer(void)
 {
     painter_t painter;
     layer_t *layer = goxel.image->active_layer;
-    if (box_is_null(goxel.selection) && mesh_is_empty(goxel.mask)) {
-        mesh_clear(layer->mesh);
+    if (box_is_null(goxel.selection) && volume_is_empty(goxel.mask)) {
+        volume_clear(layer->volume);
         return;
     }
 
     // Use the mask in priority if it exists.
-    if (!mesh_is_empty(goxel.mask)) {
-        mesh_merge(layer->mesh, goxel.mask, MODE_SUB, NULL);
+    if (!volume_is_empty(goxel.mask)) {
+        volume_merge(layer->volume, goxel.mask, MODE_SUB, NULL);
         return;
     }
 
@@ -650,7 +650,7 @@ static void image_clear_layer(void)
         .mode = MODE_SUB,
         .color = {255, 255, 255, 255},
     };
-    mesh_op(layer->mesh, &painter, goxel.selection);
+    volume_op(layer->volume, &painter, goxel.selection);
 }
 
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)
@@ -688,15 +688,15 @@ bool image_is_empty(const image_t *img)
 {
     layer_t *layer;
     DL_FOREACH(img->layers, layer) {
-        if (!mesh_is_empty(layer->mesh)) return false;
+        if (!volume_is_empty(layer->volume)) return false;
     }
     return true;
 }
 
 /*
- * Turn an image layer into a mesh of 1 voxel depth.
+ * Turn an image layer into a volume of 1 voxel depth.
  */
-static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
+static void image_image_layer_to_volume(image_t *img, layer_t *layer)
 {
     uint8_t *data;
     int x, y, w, h, bpp = 0, pos[3];
@@ -704,11 +704,11 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
     float p[3];
     assert(img);
     assert(layer);
-    mesh_accessor_t acc;
+    volume_accessor_t acc;
 
     image_history_push(img);
     data = img_read(layer->image->path, &w, &h, &bpp);
-    acc = mesh_get_accessor(layer->mesh);
+    acc = volume_get_accessor(layer->volume);
     for (y = 0; y < h; y++)
     for (x = 0; x < w; x++) {
         vec3_set(p, (x / (float)w) - 0.5, - ((y + 1) / (float)h) + 0.5, 0);
@@ -719,7 +719,7 @@ static void image_image_layer_to_mesh(image_t *img, layer_t *layer)
         memset(c, 0, 4);
         c[3] = 255;
         memcpy(c, data + (y * w + x) * bpp, bpp);
-        mesh_set_at(layer->mesh, &acc, pos, c);
+        volume_set_at(layer->volume, &acc, pos, c);
     }
     texture_delete(layer->image);
     layer->image = NULL;
@@ -888,14 +888,14 @@ ACTION_REGISTER(img_move_camera_down,
     .icon = ICON_ARROW_DOWNWARD,
 )
 
-static void a_img_image_layer_to_mesh(void)
+static void a_img_image_layer_to_volume(void)
 {
-    image_image_layer_to_mesh(goxel.image, goxel.image->active_layer);
+    image_image_layer_to_volume(goxel.image, goxel.image->active_layer);
 }
 
-ACTION_REGISTER(img_image_layer_to_mesh,
-    .help = "Turn an image layer into a mesh",
-    .cfunc = a_img_image_layer_to_mesh,
+ACTION_REGISTER(img_image_layer_to_volume,
+    .help = "Turn an image layer into a volume",
+    .cfunc = a_img_image_layer_to_volume,
     .flags = ACTION_TOUCH_IMAGE,
 )
 

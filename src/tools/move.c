@@ -32,17 +32,17 @@ static void do_move(layer_t *layer, const float mat[4][4])
     float m[4][4] = MAT4_IDENTITY;
 
     if (mat4_equal(mat, mat4_identity)) return;
-    // Change referential to the mesh origin.
-    // XXX: maybe this should be done in mesh_move directy??
+    // Change referential to the volume origin.
+    // XXX: maybe this should be done in volume_move directy??
     mat4_itranslate(m, -0.5, -0.5, -0.5);
     mat4_imul(m, mat);
     mat4_itranslate(m, +0.5, +0.5, +0.5);
 
     if (layer->base_id || layer->image || layer->shape) {
         mat4_mul(mat, layer->mat, layer->mat);
-        layer->base_mesh_key = 0;
+        layer->base_volume_key = 0;
     } else {
-        mesh_move(layer->mesh, m);
+        volume_move(layer->volume, m);
         if (!box_is_null(layer->box)) {
             mat4_mul(mat, layer->box, layer->box);
             box_get_bbox(layer->box, layer->box);
