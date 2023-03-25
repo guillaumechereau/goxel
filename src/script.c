@@ -26,6 +26,16 @@
 static JSRuntime *g_rt = NULL;
 static JSContext *g_ctx = NULL;
 
+static JSClassID js_vec_class_id;
+static JSClassID js_mesh_class_id;
+static JSClassID js_image_class_id;
+static JSClassID js_goxel_class_id;
+
+typedef struct {
+    int size;
+    double values[4];
+} vec_t;
+
 static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out)
 {
     int i;
@@ -46,9 +56,119 @@ static void get_vec_uint8(JSContext *ctx, JSValue val, int size, uint8_t *out)
     free(buf);
 }
 
-static JSClassID js_mesh_class_id;
-static JSClassID js_image_class_id;
-static JSClassID js_goxel_class_id;
+static JSValue js_vec_ctor(JSContext *ctx, JSValueConst new_target,
+                           int argc, JSValueConst *argv)
+{
+    int i;
+    JSValue ret;
+    vec_t *vec;
+
+    vec = calloc(1, sizeof(*vec));
+    vec->size = argc;
+    for (i = 0; i < argc; i++) {
+        JS_ToFloat64(ctx, &vec->values[i], argv[i]);
+    }
+    ret = JS_NewObjectClass(ctx, js_vec_class_id);
+    JS_SetOpaque(ret, vec);
+    return ret;
+}
+
+static void js_vec_finalizer(JSRuntime *rt, JSValue val)
+{
+    vec_t *vec = JS_GetOpaque(val, js_vec_class_id);
+    js_free_rt(rt, vec);
+}
+
+static JSValue new_js_vec3(JSContext *ctx, double x, double y, double z)
+{
+    JSValue ret;
+    vec_t *vec;
+    vec = js_mallocz(ctx, sizeof(*vec));
+    vec->size = 3;
+    vec->values[0] = x;
+    vec->values[1] = y;
+    vec->values[2] = z;
+    ret = JS_NewObjectClass(ctx, js_vec_class_id);
+    JS_SetOpaque(ret, vec);
+    return ret;
+}
+
+static JSValue new_js_vec4(JSContext *ctx,
+                           double x, double y, double z, double w)
+{
+    JSValue ret;
+    vec_t *vec;
+    vec = js_mallocz(ctx, sizeof(*vec));
+    vec->size = 4;
+    vec->values[0] = x;
+    vec->values[1] = y;
+    vec->values[2] = z;
+    vec->values[3] = z;
+    ret = JS_NewObjectClass(ctx, js_vec_class_id);
+    JS_SetOpaque(ret, vec);
+    return ret;
+}
+
+static JSValue js_vec_get_at(JSContext *ctx, JSValueConst this_val, int idx)
+{
+    vec_t *vec = JS_GetOpaque2(ctx, this_val, js_vec_class_id);
+    if (!vec)
+        return JS_EXCEPTION;
+    if (idx >= vec->size)
+        return JS_EXCEPTION;
+    return JS_NewFloat64(ctx, vec->values[idx]);
+}
+
+static JSValue js_vec_set_at(
+        JSContext *ctx, JSValueConst this_val, JSValue val, int idx)
+{
+    vec_t *vec;
+    double v;
+
+    vec = JS_GetOpaque2(ctx, this_val, js_vec_class_id);
+    if (!vec)
+        return JS_EXCEPTION;
+    if (idx >= vec->size)
+        return JS_EXCEPTION;
+    if (JS_ToFloat64(ctx, &v, val))
+        return JS_EXCEPTION;
+    vec->values[idx] = v;
+    return JS_UNDEFINED;
+}
+
+static void bind_vec(JSContext *ctx)
+{
+    JSValue proto, ctor, global_obj;
+    static const JSCFunctionListEntry js_vec_proto_funcs[] = {
+        JS_CGETSET_MAGIC_DEF("x", js_vec_get_at, js_vec_set_at, 0),
+        JS_CGETSET_MAGIC_DEF("y", js_vec_get_at, js_vec_set_at, 1),
+        JS_CGETSET_MAGIC_DEF("z", js_vec_get_at, js_vec_set_at, 2),
+        JS_CGETSET_MAGIC_DEF("w", js_vec_get_at, js_vec_set_at, 3),
+        JS_CGETSET_MAGIC_DEF("r", js_vec_get_at, js_vec_set_at, 0),
+        JS_CGETSET_MAGIC_DEF("g", js_vec_get_at, js_vec_set_at, 1),
+        JS_CGETSET_MAGIC_DEF("b", js_vec_get_at, js_vec_set_at, 2),
+        JS_CGETSET_MAGIC_DEF("a", js_vec_get_at, js_vec_set_at, 3),
+    };
+    static JSClassDef js_vec_class = {
+        "Vec",
+        .finalizer = js_vec_finalizer,
+    }; 
+
+    JS_NewClassID(&js_vec_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_vec_class_id, &js_vec_class);
+
+    proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, proto, js_vec_proto_funcs,
+                               ARRAY_SIZE(js_vec_proto_funcs));
+    JS_SetClassProto(ctx, js_vec_class_id, proto);
+    ctor = JS_NewCFunction2(ctx, js_vec_ctor, "Vec", 0,
+                            JS_CFUNC_constructor, 0);
+    JS_SetConstructor(ctx, ctor, proto);
+    global_obj = JS_GetGlobalObject(ctx);
+    JS_SetPropertyStr(ctx, global_obj, "Vec", ctor);
+    JS_FreeValue(ctx, global_obj);
+}
+
 
 static JSValue js_mesh_ctor(JSContext *ctx, JSValueConst new_target,
                             int argc, JSValueConst *argv)
@@ -66,6 +186,28 @@ static void js_mesh_finalizer(JSRuntime *ctx, JSValue this_val)
     mesh_t *mesh;
     mesh = JS_GetOpaque(this_val, js_mesh_class_id);
     mesh_delete(mesh);
+}
+
+static JSValue js_mesh_iter(JSContext *ctx, JSValueConst this_val,
+                            int argc, JSValueConst *argv)
+{
+    mesh_t *mesh;
+    JSValue args[2];
+    mesh_iterator_t iter;
+    int pos[3];
+    uint8_t value[4];
+
+    mesh = JS_GetOpaque(this_val, js_mesh_class_id);
+    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
+    while (mesh_iter(&iter, pos)) {
+        mesh_get_at(mesh, &iter, pos, value);
+        args[0] = new_js_vec3(ctx, pos[0], pos[1], pos[2]);
+        args[1] = new_js_vec4(ctx, value[0], value[1], value[2], value[3]);
+        JS_Call(ctx, argv[0], JS_UNDEFINED, 2, args);
+        JS_FreeValue(ctx, args[0]);
+        JS_FreeValue(ctx, args[1]);
+    };
+    return JS_UNDEFINED;
 }
 
 static JSValue js_mesh_setAt(JSContext *ctx, JSValueConst this_val,
@@ -120,6 +262,7 @@ static void bind_mesh(JSContext *ctx)
     JSValue proto, ctor, global_obj;
 
     static const JSCFunctionListEntry js_mesh_proto_funcs[] = {
+        JS_CFUNC_DEF("iter", 1, js_mesh_iter),
         JS_CFUNC_DEF("setAt", 1, js_mesh_setAt),
         JS_CFUNC_DEF("save", 2, js_mesh_save),
     };
@@ -197,10 +340,12 @@ int script_format_export_func(const file_format_t *format_,
 {
     JSContext *ctx = g_ctx;
     const script_file_format_t *format = (void*)format_;
-    JSValue export;
+    JSValue export, image;
     JSValueConst argv[2];
 
-    argv[0] = JS_NULL;
+    image = JS_NewObjectClass(ctx, js_image_class_id);
+    JS_SetOpaque(image, (void*)goxel.image);
+    argv[0] = image;
     argv[1] = JS_NewString(ctx, path);
     export = JS_GetPropertyStr(ctx, format->data, "export");
     JS_Call(ctx, export, JS_NULL, 2, argv);
@@ -264,6 +409,7 @@ static void init_runtime(void)
     g_ctx = JS_NewContext(g_rt);
     js_init_module_std(g_ctx, "std");
     js_init_module_os(g_ctx, "os");
+    bind_vec(g_ctx);
     bind_mesh(g_ctx);
     bind_image(g_ctx);
     bind_goxel(g_ctx);
