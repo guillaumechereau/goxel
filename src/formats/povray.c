@@ -34,7 +34,7 @@ static int export_as_pov(const file_format_t *format, const image_t *image,
     float modelview[4][4], light_dir[3];
     mustache_t *m, *m_cam, *m_light, *m_voxels, *m_voxel;
     camera_t camera = *image->active_camera;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
 
     w = image->export_width;
     h = image->export_height;
@@ -69,9 +69,9 @@ static int export_as_pov(const file_format_t *format, const image_t *image,
 
     m_voxels = mustache_add_list(m, "voxels");
     DL_FOREACH(image->layers, layer) {
-        iter = mesh_get_iterator(layer->mesh, MESH_ITER_VOXELS);
-        while (mesh_iter(&iter, p)) {
-            mesh_get_at(layer->mesh, &iter, p, v);
+        iter = volume_get_iterator(layer->volume, VOLUME_ITER_VOXELS);
+        while (volume_iter(&iter, p)) {
+            volume_get_at(layer->volume, &iter, p, v);
             if (v[3] < 127) continue;
             m_voxel = mustache_add_dict(m_voxels, NULL);
             mustache_add_str(m_voxel, "pos", "<%d, %d, %d>",

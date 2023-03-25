@@ -22,6 +22,7 @@
 camera_t *camera_new(const char *name)
 {
     camera_t *cam = calloc(1, sizeof(*cam));
+    cam->ref = 1;
     if (name)
         strncpy(cam->name, name, sizeof(cam->name) - 1);
     mat4_set_identity(cam->mat);
@@ -34,6 +35,8 @@ camera_t *camera_new(const char *name)
 
 void camera_delete(camera_t *cam)
 {
+    if (!cam) return;
+    if (--cam->ref > 0) return;
     free(cam);
 }
 
@@ -41,6 +44,7 @@ camera_t *camera_copy(const camera_t *other)
 {
     camera_t *cam = malloc(sizeof(*cam));
     *cam = *other;
+    cam->ref = 1;
     cam->next = cam->prev = NULL;
     return cam;
 }
@@ -60,8 +64,8 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
     int i;
     const int margin = 8 * BLOCK_SIZE;
     float vertices[8][3];
-    const mesh_t *mesh = goxel_get_layers_mesh(goxel.image);
-    mesh_iterator_t iter;
+    const volume_t *volume = goxel_get_layers_volume(goxel.image);
+    volume_iterator_t iter;
 
     if (!box_is_null(goxel.image->box)) {
         box_get_vertices(goxel.image->box, vertices);
@@ -74,8 +78,8 @@ static void compute_clip(const float view_mat[4][4], float *near_, float *far_)
         }
     }
 
-    iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
-    while (mesh_iter(&iter, bpos)) {
+    iter = volume_get_iterator(volume, VOLUME_ITER_TILES);
+    while (volume_iter(&iter, bpos)) {
         vec3_set(p, bpos[0], bpos[1], bpos[2]);
         mat4_mul_vec3(view_mat, p, p);
         if (p[2] < 0) {

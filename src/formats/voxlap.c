@@ -142,7 +142,7 @@ static int kv6_import(const file_format_t *format, image_t *image,
         }
     }
 
-    mesh_blit(image->active_layer->mesh, (const uint8_t*)cube,
+    volume_blit(image->active_layer->volume, (const uint8_t*)cube,
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
 end:
     free(cube);
@@ -244,7 +244,7 @@ static int kvx_import(const file_format_t *format, image_t *image,
 
     bbox_from_aabb(image->box, aabb);
     bbox_from_aabb(image->active_layer->box, aabb);
-    mesh_blit(image->active_layer->mesh, (uint8_t*)cube,
+    volume_blit(image->active_layer->volume, (uint8_t*)cube,
               -px, -py, pz - d, w, h, d, NULL);
 
 end:
@@ -317,8 +317,8 @@ static int kvx_export(const file_format_t *format, const image_t *image,
 {
     FILE *file;
     uint8_t (*palette)[4];
-    mesh_iterator_t iter;
-    mesh_accessor_t acc;
+    volume_iterator_t iter;
+    volume_accessor_t acc;
     uint8_t v[4];
     float box[4][4];
     int pos[3], size[3], orig[3], x, y, i;
@@ -331,13 +331,13 @@ static int kvx_export(const file_format_t *format, const image_t *image,
     uint32_t *xyoffsets;
     bool use_current_palette = false;
     float pivot[3];
-    const mesh_t *mesh = goxel_get_layers_mesh(image);
+    const volume_t *volume = goxel_get_layers_volume(image);
 
     UT_icd voxel_icd = {sizeof(voxel_t), NULL, NULL, NULL};
     UT_icd slab_icd = {sizeof(slab_t), NULL, NULL, NULL};
 
     mat4_copy(image->box, box);
-    if (box_is_null(box)) mesh_get_box(mesh, true, box);
+    if (box_is_null(box)) volume_get_box(volume, true, box);
 
     size[0] = box[0][0] * 2;
     size[1] = box[1][1] * 2;
@@ -352,9 +352,9 @@ static int kvx_export(const file_format_t *format, const image_t *image,
     // create a palette.
     if (goxel.palette->size == 256) {
         use_current_palette = true;
-        iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
-        while (mesh_iter(&iter, pos)) {
-            mesh_get_at(mesh, &iter, pos, v);
+        iter = volume_get_iterator(volume, VOLUME_ITER_VOXELS);
+        while (volume_iter(&iter, pos)) {
+            volume_get_at(volume, &iter, pos, v);
             if (v[3] < 127) continue;
             if (palette_search(goxel.palette, v, true) < 0) {
                 use_current_palette = false;
@@ -369,17 +369,18 @@ static int kvx_export(const file_format_t *format, const image_t *image,
             memcpy(palette[i], goxel.palette->entries[i].color, 4);
         }
     } else {
-        quantization_gen_palette(mesh, 256, (void*)(palette));
+        quantization_gen_palette(volume, 256, (void*)(palette));
     }
 
     // Iter the voxels and only keep the visible ones, plus the visible
     // faces mask.  Put them all into an array.
     utarray_new(voxels, &voxel_icd);
-    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS | MESH_ITER_SKIP_EMPTY);
-    acc = mesh_get_accessor(mesh);
+    iter = volume_get_iterator(volume,
+                               VOLUME_ITER_VOXELS | VOLUME_ITER_SKIP_EMPTY);
+    acc = volume_get_accessor(volume);
 
-    while (mesh_iter(&iter, voxel.pos)) {
-        mesh_get_at(mesh, &iter, voxel.pos, v);
+    while (volume_iter(&iter, voxel.pos)) {
+        volume_get_at(volume, &iter, voxel.pos, v);
         if (v[3] < 127) continue;
 
         // XXX: we should be able to use box iterator instead of this,
@@ -391,9 +392,10 @@ static int kvx_export(const file_format_t *format, const image_t *image,
         // Compute visible face mask.
         voxel.vis = 0;
         #define vis_test(x, y, z) \
-            (mesh_get_alpha_at(mesh, &acc, (int[]){voxel.pos[0] + (x), \
-                                                   voxel.pos[1] + (y), \
-                                                   voxel.pos[2] + (z)}) < 127)
+            (volume_get_alpha_at(volume, &acc, \
+                        (int[]){voxel.pos[0] + (x), \
+                                voxel.pos[1] + (y), \
+                                voxel.pos[2] + (z)}) < 127)
         if (vis_test(-1,  0,  0)) voxel.vis |= 1;
         if (vis_test(+1,  0,  0)) voxel.vis |= 2;
         if (vis_test( 0, +1,  0)) voxel.vis |= 4;

@@ -52,7 +52,7 @@ static int qubicle_import(const file_format_t *format, image_t *image,
     const uint32_t CODEFLAG = 2;
     const uint32_t NEXTSLICEFLAG = 6;
     layer_t *layer;
-    mesh_iterator_t iter = {0};
+    volume_iterator_t iter = {0};
 
     file = fopen(path, "rb");
     version = READ(uint32_t, file);
@@ -67,7 +67,7 @@ static int qubicle_import(const file_format_t *format, image_t *image,
 
     for (i = 0; i < mat_count; i++) {
         layer = image_add_layer(goxel.image, NULL);
-        iter = mesh_get_accessor(layer->mesh);
+        iter = volume_get_accessor(layer->volume);
         memset(layer->name, 0, sizeof(layer->name));
         len = READ(uint8_t, file);
         r = (int)fread(layer->name, len, 1, file);
@@ -100,7 +100,7 @@ static int qubicle_import(const file_format_t *format, image_t *image,
                 vpos[1] = pos[1] + (index % (w * h)) / w;
                 vpos[2] = pos[2] + index / (w * h);
                 apply_orientation(orientation, vpos);
-                mesh_set_at(layer->mesh, &iter, vpos, v.v);
+                volume_set_at(layer->volume, &iter, vpos, v.v);
             }
         } else {
             for (z = 0; z < d; z++) {
@@ -124,7 +124,7 @@ static int qubicle_import(const file_format_t *format, image_t *image,
                         vpos[1] = pos[1] + y;
                         vpos[2] = pos[2] + z;
                         apply_orientation(orientation, vpos);
-                        mesh_set_at(layer->mesh, &iter, vpos, v.v);
+                        volume_set_at(layer->volume, &iter, vpos, v.v);
                         index++;
                     }
                 }
@@ -141,8 +141,8 @@ static int qubicle_export(const file_format_t *format, const image_t *img,
     int i, count, x, y, z, pos[3], bbox[2][3];
     uint8_t v[4];
     layer_t *layer;
-    mesh_iterator_t iter;
-    mesh_t *mesh;
+    volume_iterator_t iter;
+    volume_t *volume;
 
     count = 0;
     DL_COUNT(img->layers, layer, count);
@@ -157,12 +157,12 @@ static int qubicle_export(const file_format_t *format, const image_t *img,
 
     i = 0;
     DL_FOREACH(img->layers, layer) {
-        mesh = layer->mesh;
+        volume = layer->volume;
 
         if (!box_is_null(layer->box))
             bbox_to_aabb(layer->box, bbox);
         else
-            if (!mesh_get_bbox(mesh, bbox, true)) continue;
+            if (!volume_get_bbox(volume, bbox, true)) continue;
 
         WRITE(uint8_t, strlen(layer->name), file);
         fwrite(layer->name, strlen(layer->name), 1, file);
@@ -172,14 +172,14 @@ static int qubicle_export(const file_format_t *format, const image_t *img,
         WRITE(int32_t, bbox[0][0], file);
         WRITE(int32_t, bbox[0][2], file);
         WRITE(int32_t, bbox[0][1], file);
-        iter = mesh_get_accessor(mesh);
+        iter = volume_get_accessor(volume);
         for (y = bbox[0][1]; y < bbox[1][1]; y++)
         for (z = bbox[0][2]; z < bbox[1][2]; z++)
         for (x = bbox[0][0]; x < bbox[1][0]; x++) {
             pos[0] = x;
             pos[1] = y;
             pos[2] = z;
-            mesh_get_at(mesh, &iter, pos, v);
+            volume_get_at(volume, &iter, pos, v);
             fwrite(v, 4, 1, file);
         }
         i++;

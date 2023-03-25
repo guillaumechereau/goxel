@@ -43,7 +43,7 @@ enum {
     X(img_del_camera),
     X(img_move_camera_up),
     X(img_move_camera_down),
-    X(img_image_layer_to_mesh),
+    X(img_image_layer_to_volume),
     X(img_new_shape_layer),
     X(img_new_material),
     X(img_del_material),

@@ -30,7 +30,7 @@ typedef struct history history_t;
 
 typedef struct image image_t;
 struct image {
-
+    int     ref;
     layer_t *layers;
     layer_t *active_layer;
 

@@ -53,7 +53,7 @@ texture_t *texture_new_image(const char *path, int flags)
 static void unpack_pos_data(uint32_t v, int pos[3], int *face,
                             int *cube_id)
 {
-    assert(BLOCK_SIZE == 16);
+    assert(TILE_SIZE == 16);
     int x, y, z, f, i;
     x = v >> 28;
     y = (v >> 24) & 0x0f;
@@ -149,8 +149,8 @@ static bool goxel_unproject_on_box(
     return false;
 }
 
-static bool goxel_unproject_on_mesh(
-        const float view[4], const float pos[2], const mesh_t *mesh,
+static bool goxel_unproject_on_volume(
+        const float view[4], const float pos[2], const volume_t *volume,
         float out[3], float normal[3])
 {
     int view_size[2] = {view[2], view[3]};
@@ -172,7 +172,7 @@ static bool goxel_unproject_on_mesh(
 
     uint32_t pixel;
     int voxel_pos[3];
-    int face, block_id, block_pos[3];
+    int face, tile_id, tile_pos[3];
     int x, y;
     float rect[4] = {0, 0, view_size[0], view_size[1]};
     uint8_t clear_color[4] = {0, 0, 0, 0};
@@ -180,7 +180,7 @@ static bool goxel_unproject_on_mesh(
     rend.settings.shadow = 0;
     rend.fbo = goxel.pick_fbo->framebuffer;
     rend.scale = 1;
-    render_mesh(&rend, mesh, NULL, EFFECT_RENDER_POS);
+    render_volume(&rend, volume, NULL, EFFECT_RENDER_POS);
     render_submit(&rend, rect, clear_color);
 
     x = round(pos[0] - view[0]);
@@ -190,12 +190,12 @@ static bool goxel_unproject_on_mesh(
         y < 0 || y >= view_size[1]) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
 
-    unpack_pos_data(pixel, voxel_pos, &face, &block_id);
-    if (!block_id) return false;
-    render_get_block_pos(&rend, mesh, block_id, block_pos);
-    out[0] = block_pos[0] + voxel_pos[0] + 0.5;
-    out[1] = block_pos[1] + voxel_pos[1] + 0.5;
-    out[2] = block_pos[2] + voxel_pos[2] + 0.5;
+    unpack_pos_data(pixel, voxel_pos, &face, &tile_id);
+    if (!tile_id) return false;
+    render_get_tile_pos(&rend, volume, tile_id, tile_pos);
+    out[0] = tile_pos[0] + voxel_pos[0] + 0.5;
+    out[1] = tile_pos[1] + voxel_pos[1] + 0.5;
+    out[2] = tile_pos[2] + voxel_pos[2] + 0.5;
     normal[0] = FACES_NORMALS[face][0];
     normal[1] = FACES_NORMALS[face][1];
     normal[2] = FACES_NORMALS[face][2];
@@ -224,9 +224,9 @@ int goxel_unproject(const float viewport[4],
 
     for (i = 0; i < 7; i++) {
         if (!(snap_mask & (1 << i))) continue;
-        if ((1 << i) == SNAP_MESH) {
-            r = goxel_unproject_on_mesh(viewport, pos,
-                            goxel_get_layers_mesh(goxel.image), p, n);
+        if ((1 << i) == SNAP_VOLUME) {
+            r = goxel_unproject_on_volume(viewport, pos,
+                            goxel_get_layers_volume(goxel.image), p, n);
         }
         if ((1 << i) == SNAP_PLANE)
             r = goxel_unproject_on_plane(viewport, pos,
@@ -240,7 +240,7 @@ int goxel_unproject(const float viewport[4],
                                        goxel.selection, false,
                                        p, n, NULL);
         if ((1 << i) == SNAP_LAYER_OUT) {
-            mesh_get_box(goxel.image->active_layer->mesh, true, box);
+            volume_get_box(goxel.image->active_layer->volume, true, box);
             r = goxel_unproject_on_box(viewport, pos, box, false,
                                        p, n, NULL);
         }
@@ -371,7 +371,7 @@ void goxel_reset(void)
     if (DEFINED(NO_SHADOW))
         goxel.rend.settings.shadow = 0;
 
-    goxel.snap_mask = SNAP_MESH | SNAP_IMAGE_BOX;
+    goxel.snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX;
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,
@@ -434,7 +434,7 @@ KEEPALIVE
 int goxel_iter(inputs_t *inputs)
 {
     double time = sys_get_time();
-    uint64_t mesh_key;
+    uint64_t volume_key;
     float pitch;
     camera_t *camera = get_camera();
 
@@ -458,15 +458,15 @@ int goxel_iter(inputs_t *inputs)
     gui_iter(inputs);
 
     if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
-        mesh_key = mesh_get_key(goxel_get_render_mesh(goxel.image));
-        if (goxel.last_mesh_key != mesh_key) {
-            if (goxel.last_mesh_key) {
+        volume_key = volume_get_key(goxel_get_render_volume(goxel.image));
+        if (goxel.last_volume_key != volume_key) {
+            if (goxel.last_volume_key) {
                 pitch = goxel.painter.mode == MODE_OVER ? 1.0 :
                         goxel.painter.mode == MODE_SUB ? 0.8 : 1.2;
                 sound_play("build", 0.2, pitch);
                 goxel.last_click_time = time;
             }
-            goxel.last_mesh_key = mesh_key;
+            goxel.last_volume_key = volume_key;
         }
     }
 
@@ -491,7 +491,7 @@ static void set_cursor_hint(cursor_t *curs)
         goxel_set_hint_text(NULL);
         return;
     }
-    if (curs->snaped == SNAP_MESH) snap_str = "mesh";
+    if (curs->snaped == SNAP_VOLUME) snap_str = "volume";
     if (curs->snaped == SNAP_PLANE) snap_str = "plane";
     if (curs->snaped == SNAP_IMAGE_BOX) snap_str = "bounding box";
     if (    curs->snaped == SNAP_SELECTION_IN ||
@@ -596,8 +596,8 @@ static int on_zoom(const gesture_t *gest, void *user)
             -camera->dist * (1 - pow(1.1, -zoom)));
     camera->dist *= pow(1.1, -zoom);
     // Auto adjust the camera rotation position.
-    if (goxel_unproject_on_mesh(gest->viewport, gest->pos,
-                                goxel_get_layers_mesh(goxel.image), p, n)) {
+    if (goxel_unproject_on_volume(gest->viewport, gest->pos,
+                                goxel_get_layers_volume(goxel.image), p, n)) {
         camera_set_target(camera, p);
     }
     return 0;
@@ -659,8 +659,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                 -camera->dist * (1 - pow(1.1, -inputs->mouse_wheel)));
         camera->dist *= pow(1.1, -inputs->mouse_wheel);
         // Auto adjust the camera rotation position.
-        if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
-                                goxel_get_layers_mesh(goxel.image), p, n)) {
+        if (goxel_unproject_on_volume(viewport, inputs->touches[0].pos,
+                                goxel_get_layers_volume(goxel.image), p, n)) {
             camera_set_target(camera, p);
         }
         return;
@@ -685,8 +685,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     // C: recenter the view:
     // XXX: this should be an action!
     if (inputs->keys['C']) {
-        if (goxel_unproject_on_mesh(viewport, inputs->touches[0].pos,
-                                goxel_get_layers_mesh(goxel.image), p, n)) {
+        if (goxel_unproject_on_volume(viewport, inputs->touches[0].pos,
+                                goxel_get_layers_volume(goxel.image), p, n)) {
             camera_set_target(camera, p);
         }
     }
@@ -896,8 +896,8 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     effects |= goxel.view_effects;
 
     for (layer = goxel_get_render_layers(true); layer; layer = layer->next) {
-        if (layer->visible && layer->mesh)
-            render_mesh(rend, layer->mesh, layer->material, effects);
+        if (layer->visible && layer->volume)
+            render_volume(rend, layer->volume, layer->material, effects);
     }
 
     if (!box_is_null(goxel.image->active_layer->box))
@@ -913,17 +913,17 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     render_box(rend, goxel.selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
 
     if (goxel.tool->flags & TOOL_SHOW_MASK)
-        render_mesh(rend, goxel.mask, NULL, EFFECT_GRID_ONLY);
+        render_volume(rend, goxel.mask, NULL, EFFECT_GRID_ONLY);
 
-    // Debug: show the current layer mesh blocks.
+    // Debug: show the current layer volume tiles.
     if ((0)) {
-        mesh_iterator_t iter;
-        mesh_t *mesh = goxel.image->active_layer->mesh;
-        iter = mesh_get_iterator(mesh, MESH_ITER_BLOCKS);
+        volume_iterator_t iter;
+        volume_t *volume = goxel.image->active_layer->volume;
+        iter = volume_get_iterator(volume, VOLUME_ITER_TILES);
         int p[3], aabb[2][3];
         float box[4][4];
-        while (mesh_iter(&iter, p)) {
-            mesh_get_block_aabb(p, aabb);
+        while (volume_iter(&iter, p)) {
+            volume_get_tile_aabb(p, aabb);
             bbox_from_aabb(box, aabb);
             render_box(rend, box, NULL, EFFECT_WIREFRAME);
         }
@@ -934,10 +934,10 @@ void goxel_render_view(const float viewport[4], bool render_mode)
         float b[4][4];
         uint8_t c[4];
         vec4_set(c, 0, 255, 0, 80);
-        mesh_get_box(goxel_get_layers_mesh(goxel.image), true, b);
+        volume_get_box(goxel_get_layers_volume(goxel.image), true, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
         vec4_set(c, 0, 255, 255, 80);
-        mesh_get_box(goxel_get_layers_mesh(goxel.image), false, b);
+        volume_get_box(goxel_get_layers_volume(goxel.image), false, b);
         render_box(rend, b, c, EFFECT_WIREFRAME);
     }
     if (goxel.snap_mask & SNAP_PLANE)
@@ -958,7 +958,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 
 void image_update(image_t *img);
 
-const mesh_t *goxel_get_layers_mesh(const image_t *img)
+const volume_t *goxel_get_layers_volume(const image_t *img)
 {
     uint32_t key = 0, k;
     layer_t *layer;
@@ -966,48 +966,48 @@ const mesh_t *goxel_get_layers_mesh(const image_t *img)
     image_update((image_t*)img);
     DL_FOREACH(img->layers, layer) {
         if (!layer->visible) continue;
-        if (!layer->mesh) continue;
+        if (!layer->volume) continue;
         k = layer_get_key(layer);
         key = XXH32(&k, sizeof(k), key);
     }
-    if (key != goxel.layers_mesh_hash) {
-        goxel.layers_mesh_hash = key;
-        if (!goxel.layers_mesh_) goxel.layers_mesh_ = mesh_new();
-        mesh_clear(goxel.layers_mesh_);
+    if (key != goxel.layers_volume_hash) {
+        goxel.layers_volume_hash = key;
+        if (!goxel.layers_volume_) goxel.layers_volume_ = volume_new();
+        volume_clear(goxel.layers_volume_);
         DL_FOREACH(img->layers, layer) {
             if (!layer->visible) continue;
-            mesh_merge(goxel.layers_mesh_, layer->mesh, MODE_OVER, NULL);
+            volume_merge(goxel.layers_volume_, layer->volume, MODE_OVER, NULL);
         }
     }
-    return goxel.layers_mesh_;
+    return goxel.layers_volume_;
 }
 
-const mesh_t *goxel_get_render_mesh(const image_t *img)
+const volume_t *goxel_get_render_volume(const image_t *img)
 {
     uint32_t key, k;
-    const mesh_t *mesh;
+    const volume_t *volume;
     layer_t *layer;
 
-    if (!goxel.tool_mesh)
-        return goxel_get_layers_mesh(img);
+    if (!goxel.tool_volume)
+        return goxel_get_layers_volume(img);
 
-    key = mesh_get_key(goxel_get_layers_mesh(img));
-    k = mesh_get_key(goxel.tool_mesh);
+    key = volume_get_key(goxel_get_layers_volume(img));
+    k = volume_get_key(goxel.tool_volume);
     key = XXH32(&k, sizeof(k), key);
-    if (key != goxel.render_mesh_hash) {
+    if (key != goxel.render_volume_hash) {
         image_update(goxel.image);
-        goxel.render_mesh_hash = key;
-        if (!goxel.render_mesh_) goxel.render_mesh_ = mesh_new();
-        mesh_clear(goxel.render_mesh_);
+        goxel.render_volume_hash = key;
+        if (!goxel.render_volume_) goxel.render_volume_ = volume_new();
+        volume_clear(goxel.render_volume_);
         DL_FOREACH(goxel.image->layers, layer) {
             if (!layer->visible) continue;
-            mesh = layer->mesh;
-            if (mesh == goxel.image->active_layer->mesh)
-                mesh = goxel.tool_mesh;
-            mesh_merge(goxel.render_mesh_, mesh, MODE_OVER, NULL);
+            volume = layer->volume;
+            if (volume == goxel.image->active_layer->volume)
+                volume = goxel.tool_volume;
+            volume_merge(goxel.render_volume_, volume, MODE_OVER, NULL);
         }
     }
-    return goxel.render_mesh_;
+    return goxel.render_volume_;
 }
 
 const layer_t *goxel_get_render_layers(bool with_tool_preview)
@@ -1016,8 +1016,8 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
     layer_t *l, *layer, *tmp;
 
     hash = image_get_key(goxel.image);
-    if (with_tool_preview && goxel.tool_mesh) {
-        k = mesh_get_key(goxel.tool_mesh);
+    if (with_tool_preview && goxel.tool_volume) {
+        k = volume_get_key(goxel.tool_volume);
         hash = XXH32(&k, sizeof(k), hash);
     }
 
@@ -1032,18 +1032,18 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
 
         DL_FOREACH(goxel.image->layers, l) {
             if (!l->visible) continue;
-            if (!l->mesh) continue;
+            if (!l->volume) continue;
             layer = layer_copy(l);
-            if (    with_tool_preview && goxel.tool_mesh &&
-                    l->mesh == goxel.image->active_layer->mesh)
+            if (    with_tool_preview && goxel.tool_volume &&
+                    l->volume == goxel.image->active_layer->volume)
             {
-                mesh_set(layer->mesh, goxel.tool_mesh);
+                volume_set(layer->volume, goxel.tool_volume);
             }
 
             if (    goxel.render_layers &&
                     goxel.render_layers->prev->material == layer->material)
             {
-                mesh_merge(goxel.render_layers->prev->mesh, layer->mesh,
+                volume_merge(goxel.render_layers->prev->volume, layer->volume,
                            MODE_OVER, NULL);
                 layer_delete(layer);
             } else {
@@ -1058,7 +1058,7 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 {
     camera_t *camera = get_camera();
-    const mesh_t *mesh;
+    const volume_t *volume;
     texture_t *fbo;
     renderer_t rend = goxel.rend;
     float rect[4] = {0, 0, w * 2, h * 2};
@@ -1067,7 +1067,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     camera->aspect = (float)w / h;
     camera_update(camera);
 
-    mesh = goxel_get_layers_mesh(goxel.image);
+    volume = goxel_get_layers_volume(goxel.image);
     fbo = texture_new_buffer(w * 2, h * 2, TF_DEPTH);
 
     mat4_copy(camera->view_mat, rend.view_mat);
@@ -1077,7 +1077,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     rend.items = NULL;
 
     // XXX: use goxel_get_render_layers!
-    render_mesh(&rend, mesh, NULL, 0);
+    render_volume(&rend, volume, NULL, 0);
     render_submit(&rend, rect, (bpp == 3) ? goxel.back_color : NULL);
     tmp_buf = calloc(w * h * 4, bpp);
     texture_get_data(fbo, w * 2, h * 2, bpp, tmp_buf);
@@ -1190,9 +1190,9 @@ static void a_cut_as_new_layer(void)
     new_layer = image_duplicate_layer(img, layer);
 
     // Use the mask in priority.
-    if (!mesh_is_empty(goxel.mask)) {
-        mesh_merge(new_layer->mesh, goxel.mask, MODE_INTERSECT, NULL);
-        mesh_merge(layer->mesh, goxel.mask , MODE_SUB, NULL);
+    if (!volume_is_empty(goxel.mask)) {
+        volume_merge(new_layer->volume, goxel.mask, MODE_INTERSECT, NULL);
+        volume_merge(layer->volume, goxel.mask , MODE_SUB, NULL);
         return;
     }
 
@@ -1201,9 +1201,9 @@ static void a_cut_as_new_layer(void)
         .mode = MODE_INTERSECT,
         .color = {255, 255, 255, 255},
     };
-    mesh_op(new_layer->mesh, &painter, *box);
+    volume_op(new_layer->volume, &painter, *box);
     painter.mode = MODE_SUB;
-    mesh_op(layer->mesh, &painter, *box);
+    volume_op(layer->volume, &painter, *box);
 }
 
 ACTION_REGISTER(cut_as_new_layer,
@@ -1214,8 +1214,8 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void a_reset_selection(void)
 {
-    if (!mesh_is_empty(goxel.mask)) {
-        mesh_delete(goxel.mask);
+    if (!volume_is_empty(goxel.mask)) {
+        volume_delete(goxel.mask);
         goxel.mask = NULL;
         return;
     }
@@ -1231,13 +1231,13 @@ static void a_fill_selection(void)
 {
     layer_t *layer = goxel.image->active_layer;
 
-    if (!mesh_is_empty(goxel.mask)) {
-        mesh_merge(layer->mesh, goxel.mask, MODE_OVER, goxel.painter.color);
+    if (!volume_is_empty(goxel.mask)) {
+        volume_merge(layer->volume, goxel.mask, MODE_OVER, goxel.painter.color);
         return;
     }
 
     if (box_is_null(goxel.selection)) return;
-    mesh_op(layer->mesh, &goxel.painter, goxel.selection);
+    volume_op(layer->volume, &goxel.painter, goxel.selection);
 }
 
 ACTION_REGISTER(fill_selection,
@@ -1248,7 +1248,7 @@ ACTION_REGISTER(fill_selection,
 
 static void a_add_selection(void)
 {
-    mesh_t *tmp;
+    volume_t *tmp;
     painter_t painter;
 
     if (box_is_null(goxel.selection)) return;
@@ -1257,11 +1257,11 @@ static void a_add_selection(void)
         .mode = MODE_INTERSECT_FILL,
         .color = {255, 255, 255, 255},
     };
-    tmp = mesh_copy(goxel.image->active_layer->mesh);
-    mesh_op(tmp, &painter, goxel.selection);
-    if (goxel.mask == NULL) goxel.mask = mesh_new();
-    mesh_merge(goxel.mask, tmp, MODE_OVER, painter.color);
-    mesh_delete(tmp);
+    tmp = volume_copy(goxel.image->active_layer->volume);
+    volume_op(tmp, &painter, goxel.selection);
+    if (goxel.mask == NULL) goxel.mask = volume_new();
+    volume_merge(goxel.mask, tmp, MODE_OVER, painter.color);
+    volume_delete(tmp);
 }
 
 ACTION_REGISTER(add_selection,
@@ -1278,7 +1278,7 @@ static void a_sub_selection(void)
         .mode = MODE_SUB,
         .color = {255, 255, 255, 255},
     };
-    mesh_op(goxel.mask, &painter, goxel.selection);
+    volume_op(goxel.mask, &painter, goxel.selection);
 }
 
 ACTION_REGISTER(sub_selection,
@@ -1289,39 +1289,39 @@ ACTION_REGISTER(sub_selection,
 static void copy_action(void)
 {
     painter_t painter;
-    mesh_delete(goxel.clipboard.mesh);
+    volume_delete(goxel.clipboard.volume);
     mat4_copy(goxel.selection, goxel.clipboard.box);
-    goxel.clipboard.mesh = mesh_copy(goxel.image->active_layer->mesh);
+    goxel.clipboard.volume = volume_copy(goxel.image->active_layer->volume);
     if (!box_is_null(goxel.selection)) {
         painter = (painter_t) {
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
             .color = {255, 255, 255, 255},
         };
-        mesh_op(goxel.clipboard.mesh, &painter, goxel.selection);
+        volume_op(goxel.clipboard.volume, &painter, goxel.selection);
     }
 }
 
 static void past_action(void)
 {
-    mesh_t *mesh = goxel.image->active_layer->mesh;
-    mesh_t *tmp;
+    volume_t *volume = goxel.image->active_layer->volume;
+    volume_t *tmp;
     float p1[3], p2[3], mat[4][4];
 
     mat4_set_identity(mat);
-    if (!goxel.clipboard.mesh) return;
+    if (!goxel.clipboard.volume) return;
 
-    tmp = mesh_copy(goxel.clipboard.mesh);
+    tmp = volume_copy(goxel.clipboard.volume);
     if (    !box_is_null(goxel.selection) &&
             !box_is_null(goxel.clipboard.box)) {
         vec3_copy(goxel.selection[3], p1);
         vec3_copy(goxel.clipboard.box[3], p2);
         mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
         mat4_itranslate(mat, -p2[0], -p2[1], -p2[2]);
-        mesh_move(tmp, mat);
+        volume_move(tmp, mat);
     }
-    mesh_merge(mesh, tmp, MODE_OVER, NULL);
-    mesh_delete(tmp);
+    volume_merge(volume, tmp, MODE_OVER, NULL);
+    volume_delete(tmp);
 }
 
 ACTION_REGISTER(copy,

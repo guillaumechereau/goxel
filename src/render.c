@@ -30,17 +30,17 @@
  * functions.  This allows to call `render_xxx` anywhere in the code, without
  * having to worry about the current OpenGL state.
  *
- * Since generating the blocks vertex buffers is slow, we buffer them in a hash
- * table.  We can evict blocks from the buffer when we need to save space or
- * if we know that the block won't be used anymore.
+ * Since generating the tiles vertex buffers is slow, we buffer them in a hash
+ * table.  We can evict tiles from the buffer when we need to save space or
+ * if we know that the tile won't be used anymore.
  */
 
-// TODO: we need to get ride of unused blocks in the buffer, that hav not been
+// TODO: we need to get ride of unused tiles in the buffer, that hav not been
 // rendered for too long.  First we might need to keep track of how much video
 // memory is used, so we get an idea of how much we need that.
 
 enum {
-    ITEM_MESH = 1,
+    ITEM_VOLUME = 1,
     ITEM_MODEL3D,
     ITEM_GRID,
 };
@@ -48,16 +48,16 @@ enum {
 typedef struct {
     uint64_t ids[27];
     int effects;
-} block_item_key_t;
+} tile_item_key_t;
 
 struct render_item_t
 {
     render_item_t   *next, *prev;   // The rendering queue.
     int             type;
-    block_item_key_t key;
+    tile_item_key_t key;
 
     union {
-        mesh_t          *mesh;
+        volume_t        *volume;
         float           mat[4][4];
     };
     material_t      material;
@@ -74,7 +74,7 @@ struct render_item_t
     int         subdivide;      // Unit per voxel (usually 1).
 };
 
-// The buffered item hash table.  For the moment it is only used of the blocks.
+// The buffered item hash table.  For the moment it is only used of the tiles.
 // static render_item_t *g_items = NULL;
 
 // The cache of the g_items.
@@ -158,7 +158,7 @@ static const char *ATTR_NAMES[] = {
  *  |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
  *
  *  The index into the atlas is the bit mask of the touching side for
- *  the 4 corners and the 4 edges => 8bit => 256 blocks.
+ *  the 4 corners and the 4 edges => 8bit => 256 tiles.
  *
  */
 
@@ -357,7 +357,7 @@ void render_deinit(void)
     model3d_delete(g_cone_model);
 }
 
-// A global buffer large enough to contain all the vertices for any block.
+// A global buffer large enough to contain all the vertices for any tile.
 static voxel_vertex_t* g_vertices_buffer = NULL;
 
 // Used for the cache.
@@ -369,30 +369,30 @@ static int item_delete(void *item_)
     return 0;
 }
 
-static render_item_t *get_item_for_block(
-        const mesh_t *mesh,
-        mesh_iterator_t *iter,
-        const int block_pos[3],
+static render_item_t *get_item_for_tile(
+        const volume_t *volume,
+        volume_iterator_t *iter,
+        const int tile_pos[3],
         int effects, float smoothness)
 {
     render_item_t *item;
     const int effects_mask = EFFECT_MARCHING_CUBES | EFFECT_MC_SMOOTH;
-    uint64_t block_data_id;
+    uint64_t tile_data_id;
     int p[3], i, x, y, z;
-    block_item_key_t key = {};
+    tile_item_key_t key = {};
 
     memset(&key, 0, sizeof(key)); // Just to be sure!
     key.effects = effects & effects_mask;
-    // The hash key take into consideration all the blocks adjacent to
-    // the current block!
+    // The hash key take into consideration all the tiles adjacent to
+    // the current tile!
     for (i = 0, z = -1; z <= 1; z++)
     for (y = -1; y <= 1; y++)
     for (x = -1; x <= 1; x++, i++) {
-        p[0] = block_pos[0] + x * BLOCK_SIZE;
-        p[1] = block_pos[1] + y * BLOCK_SIZE;
-        p[2] = block_pos[2] + z * BLOCK_SIZE;
-        mesh_get_block_data(mesh, NULL, p, &block_data_id);
-        key.ids[i] = block_data_id;
+        p[0] = tile_pos[0] + x * TILE_SIZE;
+        p[1] = tile_pos[1] + y * TILE_SIZE;
+        p[2] = tile_pos[2] + z * TILE_SIZE;
+        volume_get_tile_data(volume, NULL, p, &tile_data_id);
+        key.ids[i] = tile_data_id;
     }
 
     item = cache_get(g_items_cache, &key, sizeof(key));
@@ -404,10 +404,10 @@ static render_item_t *get_item_for_block(
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
     if (!g_vertices_buffer)
         g_vertices_buffer = calloc(
-                BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
+                TILE_SIZE * TILE_SIZE * TILE_SIZE * 6 * 4,
                 sizeof(*g_vertices_buffer));
-    item->nb_elements = mesh_generate_vertices(
-            mesh, block_pos, effects, g_vertices_buffer,
+    item->nb_elements = volume_generate_vertices(
+            volume, tile_pos, effects, g_vertices_buffer,
             &item->size, &item->subdivide);
     if (item->nb_elements > BATCH_QUAD_COUNT) {
         LOG_W("Too many quads!");
@@ -425,27 +425,27 @@ static render_item_t *get_item_for_block(
     return item;
 }
 
-static void render_block_(renderer_t *rend, mesh_t *mesh,
-                          mesh_iterator_t *iter,
-                          const int block_pos[3],
-                          int block_id,
+static void render_tile_(renderer_t *rend, volume_t *volume,
+                          volume_iterator_t *iter,
+                          const int tile_pos[3],
+                          int tile_id,
                           const material_t *material,
                           int effects, gl_shader_t *shader,
                           const float model[4][4])
 {
     render_item_t *item;
-    float block_model[4][4];
+    float tile_model[4][4];
     int attr;
-    float block_id_f[2];
+    float tile_id_f[2];
 
-    item = get_item_for_block(mesh, iter, block_pos, effects,
+    item = get_item_for_tile(volume, iter, tile_pos, effects,
                               rend->settings.smoothness);
     if (item->nb_elements == 0) return;
     GL(glBindBuffer(GL_ARRAY_BUFFER, item->vertex_buffer));
-    if (gl_has_uniform(shader, "u_block_id")) {
-        block_id_f[1] = ((block_id >> 8) & 0xff) / 255.0;
-        block_id_f[0] = ((block_id >> 0) & 0xff) / 255.0;
-        gl_update_uniform(shader, "u_block_id", block_id_f);
+    if (gl_has_uniform(shader, "u_tile_id")) {
+        tile_id_f[1] = ((tile_id >> 8) & 0xff) / 255.0;
+        tile_id_f[0] = ((tile_id >> 0) & 0xff) / 255.0;
+        gl_update_uniform(shader, "u_tile_id", tile_id_f);
     }
     gl_update_uniform(shader, "u_pos_scale", 1.f / item->subdivide);
 
@@ -458,9 +458,9 @@ static void render_block_(renderer_t *rend, mesh_t *mesh,
                                  (void*)(intptr_t)ATTRIBUTES[attr].offset));
     }
 
-    mat4_copy(model, block_model);
-    mat4_itranslate(block_model, block_pos[0], block_pos[1], block_pos[2]);
-    gl_update_uniform(shader, "u_model", block_model);
+    mat4_copy(model, tile_model);
+    mat4_itranslate(tile_model, tile_pos[0], tile_pos[1], tile_pos[2]);
+    gl_update_uniform(shader, "u_model", tile_model);
     if (item->size == 4) {
         if (!(effects & (EFFECT_GRID | EFFECT_EDGES))) {
             GL(glDrawElements(GL_TRIANGLES, item->nb_elements * 6,
@@ -532,12 +532,12 @@ static void compute_shadow_map_box(
         {1, 1, 1},
         {0, 1, 1},
     };
-    const int N = BLOCK_SIZE;
+    const int N = TILE_SIZE;
 
     render_item_t *item;
     float p[3];
     int i, bpos[3];
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     float view_mat[4][4], light_dir[3];
 
     get_light_dir(rend, light_dir);
@@ -550,9 +550,9 @@ static void compute_shadow_map_box(
     rect[5] = -FLT_MAX;
 
     DL_FOREACH(rend->items, item) {
-        if (item->type != ITEM_MESH) continue;
-        iter = mesh_get_iterator(item->mesh, MESH_ITER_BLOCKS);
-        while (mesh_iter(&iter, bpos)) {
+        if (item->type != ITEM_VOLUME) continue;
+        iter = volume_get_iterator(item->volume, VOLUME_ITER_TILES);
+        while (volume_iter(&iter, bpos)) {
             for (i = 0; i < 8; i++) {
                 vec3_set(p, bpos[0], bpos[1], bpos[2]);
                 vec3_addk(p, POS[i], N, p);
@@ -568,16 +568,16 @@ static void compute_shadow_map_box(
     }
 }
 
-static void render_mesh_(renderer_t *rend, mesh_t *mesh,
+static void render_volume_(renderer_t *rend, volume_t *volume,
                          const material_t *material, int effects,
                          const float shadow_mvp[4][4])
 {
     gl_shader_t *shader;
     float model[4][4], camera[4][4];
-    int attr, block_pos[3], block_id;
+    int attr, tile_pos[3], tile_id;
     float light_dir[3], alpha;
     bool shadow = false;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
 
     mat4_set_identity(model);
     get_light_dir(rend, light_dir);
@@ -602,7 +602,7 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
             {"SMOOTHNESS", rend->settings.smoothness > 0},
             {}
         };
-        shader = shader_get("mesh", defines, ATTR_NAMES, shader_init);
+        shader = shader_get("volume", defines, ATTR_NAMES, shader_init);
     }
 
     GL(glEnable(GL_DEPTH_TEST));
@@ -670,12 +670,12 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
 
     GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_index_buffer));
 
-    block_id = 1;
-    iter = mesh_get_iterator(mesh,
-            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-    while (mesh_iter(&iter, block_pos)) {
-        render_block_(rend, mesh, &iter, block_pos,
-                      block_id++, material, effects, shader, model);
+    tile_id = 1;
+    iter = volume_get_iterator(volume,
+            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+    while (volume_iter(&iter, tile_pos)) {
+        render_tile_(rend, volume, &iter, tile_pos,
+                      tile_id++, material, effects, shader, model);
     }
     for (attr = 0; attr < ARRAY_SIZE(ATTRIBUTES); attr++)
         GL(glDisableVertexAttribArray(attr));
@@ -683,46 +683,46 @@ static void render_mesh_(renderer_t *rend, mesh_t *mesh,
     if (effects & EFFECT_SEE_BACK) {
         effects &= ~EFFECT_SEE_BACK;
         effects |= EFFECT_SEMI_TRANSPARENT;
-        render_mesh_(rend, mesh, material, effects, shadow_mvp);
+        render_volume_(rend, volume, material, effects, shadow_mvp);
     }
     GL(glDisable(GL_BLEND));
 }
 
 // XXX: this is quite ugly.  We could maybe use a callback of some sort
 // in the renderer instead.
-void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
+void render_get_tile_pos(renderer_t *rend, const volume_t *volume,
                           int id, int pos[3])
 {
-    // Basically we simulate the algo of render_mesh_ but without rendering
+    // Basically we simulate the algo of render_volume_ but without rendering
     // anything.
-    int block_id, block_pos[3];
-    mesh_iterator_t iter;
-    block_id = 1;
-    iter = mesh_get_iterator(mesh,
-            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-    while (mesh_iter(&iter, block_pos)) {
-        if (block_id == id) {
-            memcpy(pos, block_pos, sizeof(block_pos));
+    int tile_id, tile_pos[3];
+    volume_iterator_t iter;
+    tile_id = 1;
+    iter = volume_get_iterator(volume,
+            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+    while (volume_iter(&iter, tile_pos)) {
+        if (tile_id == id) {
+            memcpy(pos, tile_pos, sizeof(tile_pos));
             return;
         }
-        block_id++;
+        tile_id++;
     }
 }
 
-void render_mesh(renderer_t *rend, const mesh_t *mesh,
+void render_volume(renderer_t *rend, const volume_t *volume,
                  const material_t *material, int effects)
 {
     render_item_t *item;
     const material_t default_material = MATERIAL_DEFAULT;
     float alpha;
 
-    if (mesh == NULL) return;
+    if (volume == NULL) return;
     material = material ?: &default_material;
 
     if (!(effects & EFFECT_GRID_ONLY)) {
         item = calloc(1, sizeof(*item));
-        item->type = ITEM_MESH;
-        item->mesh = mesh_copy(mesh);
+        item->type = ITEM_VOLUME;
+        item->volume = volume_copy(volume);
         item->material = *material;
         item->effects = effects | rend->settings.effects;
         item->effects &= ~(EFFECT_GRID | EFFECT_EDGES);
@@ -738,8 +738,8 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
     if (effects & EFFECT_GRID) {
         alpha = 0.1;
         item = calloc(1, sizeof(*item));
-        item->type = ITEM_MESH;
-        item->mesh = mesh_copy(mesh);
+        item->type = ITEM_VOLUME;
+        item->volume = volume_copy(volume);
         item->effects = EFFECT_GRID | EFFECT_BORDERS;
         item->material = *material;
         vec4_set(item->material.base_color, 0, 0, 0, alpha);
@@ -749,8 +749,8 @@ void render_mesh(renderer_t *rend, const mesh_t *mesh,
     if (effects & EFFECT_EDGES) {
         alpha = 0.2;
         item = calloc(1, sizeof(*item));
-        item->type = ITEM_MESH;
-        item->mesh = mesh_copy(mesh);
+        item->type = ITEM_VOLUME;
+        item->volume = volume_copy(volume);
         item->effects = EFFECT_EDGES | EFFECT_BORDERS;
         item->material = *material;
         vec4_set(item->material.base_color, 0, 0, 0, alpha);
@@ -943,11 +943,11 @@ static float item_sort_value(const render_item_t *a)
     if ((a->type == ITEM_MODEL3D) && !(a->effects & EFFECT_WIREFRAME) &&
             !(a->tex) && (a->color[3] == 255)) return 0;
 
-    // Then all the non transparent meshes.
-    if (a->type == ITEM_MESH && a->material.base_color[3] == 1) return 2;
+    // Then all the non transparent volumes.
+    if (a->type == ITEM_VOLUME && a->material.base_color[3] == 1) return 2;
 
-    // Then all the transparent meshes.
-    if (a->type == ITEM_MESH && a->material.base_color[3] < 1) return 4;
+    // Then all the transparent volumes.
+    if (a->type == ITEM_VOLUME && a->material.base_color[3] < 1) return 4;
 
     // Then the grids.
     if (a->type == ITEM_GRID) return 5;
@@ -1005,10 +1005,10 @@ static void render_shadow_map(renderer_t *rend, float shadow_mvp[4][4])
     GL(glClear(GL_DEPTH_BUFFER_BIT));
 
     DL_FOREACH(rend->items, item) {
-        if (item->type == ITEM_MESH) {
+        if (item->type == ITEM_VOLUME) {
             effects = (item->effects & EFFECT_MARCHING_CUBES);
             effects |= EFFECT_SHADOW_MAP;
-            render_mesh_(&srend, item->mesh, &item->material, effects, NULL);
+            render_volume_(&srend, item->volume, &item->material, effects, NULL);
         }
     }
     mat4_copy(bias_mat, ret);
@@ -1089,10 +1089,10 @@ void render_submit(renderer_t *rend, const float viewport[4],
     DL_SORT(rend->items, item_sort_cmp);
     DL_FOREACH_SAFE(rend->items, item, tmp) {
         switch (item->type) {
-        case ITEM_MESH:
-            render_mesh_(rend, item->mesh, &item->material, item->effects,
+        case ITEM_VOLUME:
+            render_volume_(rend, item->volume, &item->material, item->effects,
                          shadow_mvp);
-            mesh_delete(item->mesh);
+            volume_delete(item->volume);
             break;
         case ITEM_MODEL3D:
             render_model_item(rend, item, viewport);

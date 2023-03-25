@@ -248,9 +248,9 @@ static int split_triangles(int nb, const mc_vert_t (*tri)[3],
     return ret;
 }
 
-int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
-                              int effects, voxel_vertex_t *out,
-                              int *size, int *subdivide)
+int volume_generate_vertices_mc(const volume_t *volume, const int block_pos[3],
+                                int effects, voxel_vertex_t *out,
+                                int *size, int *subdivide)
 {
     int i, vi, x, y, z, v, vx, vy, vz, nb_tri, nb_tri_tot = 0;
     uint8_t tmp[4];
@@ -276,7 +276,7 @@ int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
     s[0] = N + 2;
     s[1] = N + 2;
     s[2] = N + 2;
-    mesh_read(mesh, p, s, data);
+    volume_read(volume, p, s, data);
 
 #define get_at(d, x, y, z, out) do { \
     memcpy(out, &data[( \

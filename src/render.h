@@ -77,7 +77,7 @@ struct renderer
 
 void render_init(void);
 void render_deinit(void);
-void render_mesh(renderer_t *rend, const mesh_t *mesh,
+void render_volume(renderer_t *rend, const volume_t *volume,
                  const material_t *material,
                  int effects);
 void render_grid(renderer_t *rend, const float plane[4][4],
@@ -114,10 +114,10 @@ void render_submit(renderer_t *rend, const float viewport[4],
 // Compute the light direction in the model coordinates (toward the light)
 void render_get_light_dir(const renderer_t *rend, float out[3]);
 
-// Ugly function that return the position of the block at a given id
-// when the mesh is rendered with render_mesh.
-void render_get_block_pos(renderer_t *rend, const mesh_t *mesh,
-                          int id, int pos[3]);
+// Ugly function that return the position of the tile at a given id
+// when the volume is rendered with render_volume.
+void render_get_tile_pos(renderer_t *rend, const volume_t *volume,
+                         int id, int pos[3]);
 
 // Attempt to release some memory.
 void render_on_low_memory(renderer_t *rend);

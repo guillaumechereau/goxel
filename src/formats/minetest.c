@@ -88,7 +88,7 @@ static int mts_import(const file_format_t *format, image_t *image,
     char string[512], *buf, *data;
     const uint8_t *ptr;
     layer_t *layer;
-    mesh_iterator_t iter = {0};
+    volume_iterator_t iter = {0};
     const palette_t *minetest_palette = NULL;
 
     file = fopen(path, "rb");
@@ -146,7 +146,7 @@ static int mts_import(const file_format_t *format, image_t *image,
 
         if (c >= n_strings) continue;
         memcpy(color, palette[c], 4);
-        mesh_set_at(layer->mesh, &iter, pos, color);
+        volume_set_at(layer->volume, &iter, pos, color);
     }
 
     free(data);

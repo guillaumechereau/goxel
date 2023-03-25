@@ -22,7 +22,7 @@
 static const int N = BLOCK_SIZE;
 
 // Implemented in marchingcube.c
-int mesh_generate_vertices_mc(const mesh_t *mesh, const int block_pos[3],
+int volume_generate_vertices_mc(const volume_t *volume, const int block_pos[3],
                               int effects, voxel_vertex_t *out,
                               int *size, int *pos_scale);
 
@@ -209,7 +209,7 @@ static uint16_t get_pos_data(uint16_t x, uint16_t y, uint16_t z, uint16_t f)
 }
 
 
-int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
+int volume_generate_vertices(const volume_t *volume, const int block_pos[3],
                            int effects, voxel_vertex_t *out,
                            int *size, int *subdivide)
 {
@@ -224,17 +224,17 @@ int mesh_generate_vertices(const mesh_t *mesh, const int block_pos[3],
     const int *vpos;
 
     if (effects & EFFECT_MARCHING_CUBES)
-        return mesh_generate_vertices_mc(mesh, block_pos, effects, out,
+        return volume_generate_vertices_mc(volume, block_pos, effects, out,
                                          size, subdivide);
 
     *size = 4;      // Quad.
     *subdivide = 1; // Unit is one voxel.
 
     // To speed things up we first get the voxel cube around the block.
-    // XXX: can we do this while still using mesh iterators somehow?
+    // XXX: can we do this while still using volume iterators somehow?
 #define IVEC(...) ((int[]){__VA_ARGS__})
     data = malloc((N + 2) * (N + 2) * (N + 2) * 4);
-    mesh_read(mesh,
+    volume_read(volume,
               IVEC(block_pos[0] - 1, block_pos[1] - 1, block_pos[2] - 1),
               IVEC(N + 2, N + 2, N + 2), data);
 

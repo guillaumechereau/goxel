@@ -26,17 +26,17 @@ typedef struct {
     } gestures;
 } tool_fuzzy_select_t;
 
-static int select_cond(void *user, const mesh_t *mesh,
+static int select_cond(void *user, const volume_t *volume,
                        const int base_pos[3],
                        const int new_pos[3],
-                       mesh_accessor_t *mesh_accessor)
+                       volume_accessor_t *volume_accessor)
 {
     tool_fuzzy_select_t *tool = (void*)user;
     uint8_t v0[4], v1[4];
     int d;
 
-    mesh_get_at(mesh, mesh_accessor, base_pos, v0);
-    mesh_get_at(mesh, mesh_accessor, new_pos, v1);
+    volume_get_at(volume, volume_accessor, base_pos, v0);
+    volume_get_at(volume, volume_accessor, new_pos, v1);
     if (!v0[3] || !v1[3]) return 0;
 
     d = max3(abs(v0[0] - v1[0]), abs(v0[1] - v1[1]), abs(v0[2] - v1[2]));
@@ -45,8 +45,8 @@ static int select_cond(void *user, const mesh_t *mesh,
 
 static int on_click(gesture3d_t *gest, void *user)
 {
-    mesh_t *mesh = goxel.image->active_layer->mesh;
-    mesh_t *sel;
+    volume_t *volume = goxel.image->active_layer->volume;
+    volume_t *sel;
     int pi[3];
     cursor_t *curs = gest->cursor;
     tool_fuzzy_select_t *tool = (void*)user;
@@ -54,11 +54,11 @@ static int on_click(gesture3d_t *gest, void *user)
     pi[0] = floor(curs->pos[0]);
     pi[1] = floor(curs->pos[1]);
     pi[2] = floor(curs->pos[2]);
-    sel = mesh_new();
-    mesh_select(mesh, pi, select_cond, tool, sel);
-    if (goxel.mask == NULL) goxel.mask = mesh_new();
-    mesh_merge(goxel.mask, sel, goxel.mask_mode ?: MODE_REPLACE, NULL);
-    mesh_delete(sel);
+    sel = volume_new();
+    volume_select(volume, pi, select_cond, tool, sel);
+    if (goxel.mask == NULL) goxel.mask = volume_new();
+    volume_merge(goxel.mask, sel, goxel.mask_mode ?: MODE_REPLACE, NULL);
+    volume_delete(sel);
     return 0;
 }
 
@@ -83,13 +83,13 @@ static int iter(tool_t *tool_, const painter_t *painter,
 }
 
 static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
-                                 const mesh_t *mask)
+                                 const volume_t *mask)
 {
     layer_t *new_layer;
 
     new_layer = image_duplicate_layer(img, layer);
-    mesh_merge(new_layer->mesh, mask, MODE_INTERSECT, NULL);
-    mesh_merge(layer->mesh, mask, MODE_SUB, NULL);
+    volume_merge(new_layer->volume, mask, MODE_INTERSECT, NULL);
+    volume_merge(layer->volume, mask, MODE_SUB, NULL);
     return new_layer;
 }
 
@@ -107,19 +107,19 @@ static int gui(tool_t *tool_)
 
     tool_gui_mask_mode();
 
-    if (mesh_is_empty(goxel.mask))
+    if (volume_is_empty(goxel.mask))
         return 0;
 
-    mesh_t *mesh = goxel.image->active_layer->mesh;
+    volume_t *volume = goxel.image->active_layer->volume;
 
     gui_group_begin(NULL);
     if (gui_button("Clear", 1, 0)) {
         image_history_push(goxel.image);
-        mesh_merge(mesh, goxel.mask, MODE_SUB, NULL);
+        volume_merge(volume, goxel.mask, MODE_SUB, NULL);
     }
     if (gui_button("Fill", 1, 0)) {
         image_history_push(goxel.image);
-        mesh_merge(mesh, goxel.mask, MODE_OVER, goxel.painter.color);
+        volume_merge(volume, goxel.mask, MODE_OVER, goxel.painter.color);
     }
     if (gui_button("Cut as new layer", 1, 0)) {
         image_history_push(goxel.image);

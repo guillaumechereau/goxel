@@ -119,7 +119,7 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
                       const image_t *img)
 {
     const layer_t *layer;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int bpos[3], nb_blocks = 0;
 
     g->data = calloc(1, sizeof(*g->data));
@@ -129,9 +129,9 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
 
     // Count the total number of blocks.
     DL_FOREACH(img->layers, layer) {
-        iter = mesh_get_iterator(layer->mesh,
-                MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-        while (mesh_iter(&iter, bpos)) {
+        iter = volume_get_iterator(layer->volume,
+                VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+        while (volume_iter(&iter, bpos)) {
             nb_blocks++;
         }
     }
@@ -325,24 +325,24 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
     cgltf_buffer *buffer;
     cgltf_node *node, *layer_node;
     cgltf_buffer_view *buffer_view;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int nb_elems, bpos[3], size = 0, subdivide;
     voxel_vertex_t *verts;
     const int N = BLOCK_SIZE;
     gltf_vertex_t *gverts;
     int buf_size, start_nodes_count, i;
     float pos_min[3], pos_max[3];
-    mesh_t *mesh = layer->mesh;
+    volume_t *volume = layer->volume;
 
     start_nodes_count = g->data->nodes_count;
 
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     gverts = calloc(N * N * N * 6 * 4, sizeof(*gverts));
 
-    iter = mesh_get_iterator(mesh,
-            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-    while (mesh_iter(&iter, bpos)) {
-        nb_elems = mesh_generate_vertices(mesh, bpos,
+    iter = volume_get_iterator(volume,
+            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+    while (volume_iter(&iter, bpos)) {
+        nb_elems = volume_generate_vertices(volume, bpos,
                                     goxel.rend.settings.effects, verts,
                                     &size, &subdivide);
         if (!nb_elems) continue;
@@ -423,7 +423,7 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
 {
     // Create the global palette with all the colors.
     layer_t *layer;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int i, s, pos[3], size;
     uint8_t c[4];
     uint8_t (*data)[3];
@@ -434,9 +434,9 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
     cgltf_texture *texture;
 
     DL_FOREACH(img->layers, layer) {
-        iter = mesh_get_iterator(layer->mesh, 0);
-        while (mesh_iter(&iter, pos)) {
-            mesh_get_at(layer->mesh, &iter, pos, c);
+        iter = volume_get_iterator(layer->volume, 0);
+        while (volume_iter(&iter, pos)) {
+            volume_get_at(layer->volume, &iter, pos, c);
             palette_insert(&g->palette, c, NULL);
         }
     }

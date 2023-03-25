@@ -35,7 +35,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     tool_laser_t *laser = (tool_laser_t*)USER_GET(user, 0);
     painter_t painter = *(painter_t*)USER_GET(user, 1);
 
-    mesh_t *mesh = goxel.image->active_layer->mesh;
+    volume_t *volume = goxel.image->active_layer->volume;
     painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
     vec4_set(painter.color, 255, 255, 255, 255);
@@ -43,7 +43,7 @@ static int on_drag(gesture3d_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN)
         image_history_push(goxel.image);
 
-    mesh_op(mesh, &painter, laser->box);
+    volume_op(volume, &painter, laser->box);
     return 0;
 }
 

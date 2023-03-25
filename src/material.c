@@ -34,6 +34,8 @@ material_t *material_new(const char *name)
 
 void material_delete(material_t *m)
 {
+    if (!m) return;
+    if (--m->ref > 0) return;
     free(m);
 }
 
@@ -41,6 +43,7 @@ material_t *material_copy(const material_t *other)
 {
     material_t *m = malloc(sizeof(*m));
     *m = *other;
+    m->ref = 1;
     m->next = m->prev = NULL;
     return m;
 }

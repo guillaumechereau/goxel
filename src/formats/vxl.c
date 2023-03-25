@@ -154,7 +154,7 @@ static int vxl_import(const file_format_t *format, image_t *image,
         }
     }
 
-    mesh_blit(image->active_layer->mesh, (uint8_t*)cube,
+    volume_blit(image->active_layer->volume, (uint8_t*)cube,
               -w / 2, -h / 2, -d / 2, w, h, d, NULL);
     if (box_is_null(image->box)) {
         bbox_from_extents(image->box, vec3_zero, w / 2, h / 2, d / 2);
@@ -279,8 +279,8 @@ static int export_as_vxl(const file_format_t *format, const image_t *image,
 {
     uint8_t (*map)[512][512][64];
     uint32_t (*color)[512][512][64];
-    const mesh_t *mesh = goxel_get_layers_mesh(image);
-    mesh_iterator_t iter = {0};
+    const volume_t *volume = goxel_get_layers_volume(image);
+    volume_iterator_t iter = {0};
     uint8_t c[4];
     int x, y, z, pos[3];
     assert(path);
@@ -293,7 +293,7 @@ static int export_as_vxl(const file_format_t *format, const image_t *image,
         pos[0] = 256 - x;
         pos[1] = y - 256;
         pos[2] = 31 - z;
-        mesh_get_at(mesh, &iter, pos, c);
+        volume_get_at(volume, &iter, pos, c);
         if (c[3] <= 127) continue;
         (*map)[x][y][z] = 1;
         memcpy(&((*color)[x][y][z]), c, 4);

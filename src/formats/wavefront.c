@@ -81,7 +81,7 @@ static int lines_add(UT_array *lines, const line_t *line, int search_nb)
     return utarray_len(lines);
 }
 
-static int export(const mesh_t *mesh, const char *path, bool ply)
+static int export(const volume_t *volume, const char *path, bool ply)
 {
     // XXX: Merge faces that can be merged into bigger ones.
     //      Allow to chose between quads or triangles.
@@ -96,7 +96,7 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
     int size = 0, subdivide;
     UT_array *lines_f, *lines_v, *lines_vn;
     line_t line, face, *line_ptr = NULL;
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     static const float ZUP2YUP[4][4] = {
         {1, 0, 0, 0}, {0, 0, -1, 0}, {0, 1, 0, 0}, {0, 0, 0, 1},
     };
@@ -106,15 +106,15 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
     utarray_new(lines_vn, &line_icd);
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     face = (line_t){};
-    iter = mesh_get_iterator(mesh,
-            MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-    while (mesh_iter(&iter, bpos)) {
+    iter = volume_get_iterator(volume,
+            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+    while (volume_iter(&iter, bpos)) {
         mat4_set_identity(mat);
         if (g_export_options.y_up) {
             mat4_mul(ZUP2YUP, mat, mat);
         }
         mat4_itranslate(mat, bpos[0], bpos[1], bpos[2]);
-        nb_elems = mesh_generate_vertices(mesh, bpos,
+        nb_elems = volume_generate_vertices(volume, bpos,
                                     goxel.rend.settings.effects, verts,
                                     &size, &subdivide);
         for (i = 0; i < nb_elems; i++) {
@@ -215,15 +215,15 @@ static int export(const mesh_t *mesh, const char *path, bool ply)
 static int wavefront_export(const file_format_t *format,
                             const image_t *image, const char *path)
 {
-    const mesh_t *mesh = goxel_get_layers_mesh(image);
-    return export(mesh, path, false);
+    const volume_t *volume = goxel_get_layers_volume(image);
+    return export(volume, path, false);
 }
 
 int ply_export(const file_format_t *format, const image_t *image,
                const char *path)
 {
-    const mesh_t *mesh = goxel_get_layers_mesh(image);
-    return export(mesh, path, true);
+    const volume_t *volume = goxel_get_layers_volume(image);
+    return export(volume, path, true);
 }
 
 static void export_gui(file_format_t *format)
@@ -269,7 +269,7 @@ static int wavefront_import(const file_format_t *format, image_t *image,
     unsigned int flags;
     vx_mesh_t *mesh;
     vx_point_cloud_t *cloud;
-    mesh_iterator_t iter = {0};
+    volume_iterator_t iter = {0};
     layer_t *layer;
 
     // XXX TODO: free the file data at the end!
@@ -309,7 +309,7 @@ static int wavefront_import(const file_format_t *format, image_t *image,
         color[1] = cloud->colors[i].g;
         color[2] = cloud->colors[i].b;
         color[3] = 255;
-        mesh_set_at(layer->mesh, &iter, pos, color);
+        volume_set_at(layer->volume, &iter, pos, color);
     }
 
     vx_point_cloud_free(cloud);

@@ -56,7 +56,7 @@ using namespace std;
 typedef yocto::image<vec4f> image4f;
 
 enum {
-    CHANGE_MESH         = 1 << 0,
+    CHANGE_VOLUME       = 1 << 0,
     CHANGE_WORLD        = 1 << 1,
     CHANGE_LIGHT        = 1 << 2,
     CHANGE_CAMERA       = 1 << 3,
@@ -69,7 +69,7 @@ enum {
 struct pathtracer_internal {
 
     // Different hash keys to quickly check for state changes.
-    uint64_t mesh_key;
+    uint64_t volume_key;
     uint64_t camera_key;
     uint64_t world_key;
     uint64_t light_key;
@@ -156,17 +156,17 @@ static int get_material_id(pathtracer_t *pt, const material_t *mat,
     return getindex(p->scene.materials, m);
 }
 
-static yocto_shape create_shape_for_block(
-        const mesh_t *mesh, const int block_pos[3])
+static yocto_shape create_shape_for_tile(
+        const volume_t *volume, const int tile_pos[3])
 {
     voxel_vertex_t* vertices;
     int i, nb, size, subdivide;
     yocto_shape shape = {};
 
     vertices = (voxel_vertex_t*)calloc(
-                BLOCK_SIZE * BLOCK_SIZE * BLOCK_SIZE * 6 * 4,
+                TILE_SIZE * TILE_SIZE * TILE_SIZE * 6 * 4,
                 sizeof(*vertices));
-    nb = mesh_generate_vertices(mesh, block_pos,
+    nb = volume_generate_vertices(volume, tile_pos,
                                 goxel.rend.settings.effects,
                                 vertices, &size, &subdivide);
     if (!nb) goto end;
@@ -220,12 +220,12 @@ void stop_render(vector<future<void>>& futures,
 }
 
 
-static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
+static int sync_volume(pathtracer_t *pt, int w, int h, bool force)
 {
     uint32_t key = 0, k;
-    mesh_iterator_t iter;
-    const mesh_t *mesh;
-    int block_pos[3], i, changed = 0;
+    volume_iterator_t iter;
+    const volume_t *volume;
+    int tile_pos[3], i, changed = 0;
     yocto_shape shape;
     yocto_instance instance;
     pathtracer_internal_t *p = pt->p;
@@ -233,8 +233,8 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
 
     layers = goxel_get_render_layers(false);
     DL_FOREACH(layers, layer) {
-        if (!layer->visible || !layer->mesh) continue;
-        k = mesh_get_key(layer->mesh);
+        if (!layer->visible || !layer->volume) continue;
+        k = volume_get_key(layer->volume);
         key = XXH32(&k, sizeof(k), key);
         i = get_material_id(pt, layer->material, &changed);
         key = XXH32(&i, sizeof(i), key);
@@ -246,22 +246,22 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
                 sizeof(goxel.rend.settings.effects), key);
     key = XXH32(&pt->floor.type, sizeof(pt->floor.type), key);
     key = XXH32(&force, sizeof(force), key);
-    if (!force && key == p->mesh_key) return changed;
+    if (!force && key == p->volume_key) return changed;
 
-    p->mesh_key = key;
+    p->volume_key = key;
     stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
                 &p->trace_stop);
     p->scene = {};
     p->lights = {};
-    changed |= CHANGE_MESH;
+    changed |= CHANGE_VOLUME;
 
     DL_FOREACH(layers, layer) {
-        if (!layer->visible || !layer->mesh) continue;
-        mesh = layer->mesh;
-        iter = mesh_get_iterator(mesh,
-                        MESH_ITER_BLOCKS | MESH_ITER_INCLUDES_NEIGHBORS);
-        while (mesh_iter(&iter, block_pos)) {
-            shape = create_shape_for_block(mesh, block_pos);
+        if (!layer->visible || !layer->volume) continue;
+        volume = layer->volume;
+        iter = volume_get_iterator(volume,
+                        VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+        while (volume_iter(&iter, tile_pos)) {
+            shape = create_shape_for_tile(volume, tile_pos);
             // shape.material = get_material_id(pt, layer->material, &changed);
             if (shape.positions.empty()) continue;
             p->scene.shapes.push_back(shape);
@@ -269,7 +269,7 @@ static int sync_mesh(pathtracer_t *pt, int w, int h, bool force)
             instance.uri = shape.uri;
             instance.shape = p->scene.shapes.size() - 1;
             instance.frame = translation_frame(vec3f(
-                                    block_pos[0], block_pos[1], block_pos[2]));
+                                    tile_pos[0], tile_pos[1], tile_pos[2]));
             p->scene.instances.push_back(instance);
         }
     }
@@ -540,7 +540,7 @@ static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
 
     if (force) changes |= CHANGE_FORCE;
 
-    changes |= sync_mesh(pt, w, h, changes);
+    changes |= sync_volume(pt, w, h, changes);
     changes |= sync_floor(pt, changes);
     changes |= sync_world(pt, changes);
     changes |= sync_light(pt, changes);
@@ -554,7 +554,7 @@ static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
     }
 
     // Update BVH if needed.
-    if (changes & (CHANGE_MESH | CHANGE_LIGHT | CHANGE_FLOOR)) {
+    if (changes & (CHANGE_VOLUME | CHANGE_LIGHT | CHANGE_FLOOR)) {
         p->bvh = make_bvh(p->scene, p->bvh_prms);
     }
     if (changes & (CHANGE_LIGHT | CHANGE_MATERIAL)) {
@@ -612,7 +612,7 @@ static void make_preview(pathtracer_t *pt)
 
 /*
  * Function: pathtracer_iter
- * Iter the rendering process of the current mesh.
+ * Iter the rendering process of the current volume.
  *
  * Parameters:
  *   pt     - A pathtracer instance.
