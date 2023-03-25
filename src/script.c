@@ -27,7 +27,7 @@ static JSRuntime *g_rt = NULL;
 static JSContext *g_ctx = NULL;
 
 static JSClassID js_vec_class_id;
-static JSClassID js_mesh_class_id;
+static JSClassID js_volume_class_id;
 static JSClassID js_image_class_id;
 static JSClassID js_goxel_class_id;
 
@@ -170,37 +170,37 @@ static void bind_vec(JSContext *ctx)
 }
 
 
-static JSValue js_mesh_ctor(JSContext *ctx, JSValueConst new_target,
+static JSValue js_volume_ctor(JSContext *ctx, JSValueConst new_target,
                             int argc, JSValueConst *argv)
 {
     JSValue ret;
-    mesh_t *mesh;
-    mesh = mesh_new();
-    ret = JS_NewObjectClass(ctx, js_mesh_class_id);
-    JS_SetOpaque(ret, mesh);
+    volume_t *volume;
+    volume = volume_new();
+    ret = JS_NewObjectClass(ctx, js_volume_class_id);
+    JS_SetOpaque(ret, volume);
     return ret;
 }
 
-static void js_mesh_finalizer(JSRuntime *ctx, JSValue this_val)
+static void js_volume_finalizer(JSRuntime *ctx, JSValue this_val)
 {
-    mesh_t *mesh;
-    mesh = JS_GetOpaque(this_val, js_mesh_class_id);
-    mesh_delete(mesh);
+    volume_t *volume;
+    volume = JS_GetOpaque(this_val, js_volume_class_id);
+    volume_delete(volume);
 }
 
-static JSValue js_mesh_iter(JSContext *ctx, JSValueConst this_val,
+static JSValue js_volume_iter(JSContext *ctx, JSValueConst this_val,
                             int argc, JSValueConst *argv)
 {
-    mesh_t *mesh;
+    volume_t *volume;
     JSValue args[2];
-    mesh_iterator_t iter;
+    volume_iterator_t iter;
     int pos[3];
     uint8_t value[4];
 
-    mesh = JS_GetOpaque(this_val, js_mesh_class_id);
-    iter = mesh_get_iterator(mesh, MESH_ITER_VOXELS);
-    while (mesh_iter(&iter, pos)) {
-        mesh_get_at(mesh, &iter, pos, value);
+    volume = JS_GetOpaque(this_val, js_volume_class_id);
+    iter = volume_get_iterator(volume, VOLUME_ITER_VOXELS);
+    while (volume_iter(&iter, pos)) {
+        volume_get_at(volume, &iter, pos, value);
         args[0] = new_js_vec3(ctx, pos[0], pos[1], pos[2]);
         args[1] = new_js_vec4(ctx, value[0], value[1], value[2], value[3]);
         JS_Call(ctx, argv[0], JS_UNDEFINED, 2, args);
@@ -210,30 +210,30 @@ static JSValue js_mesh_iter(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_mesh_setAt(JSContext *ctx, JSValueConst this_val,
+static JSValue js_volume_setAt(JSContext *ctx, JSValueConst this_val,
                              int argc, JSValueConst *argv)
 {
-    mesh_t *mesh;
+    volume_t *volume;
     int pos[3];
     uint8_t v[4];
 
     get_vec_int(ctx, argv[0], 3, pos);
     get_vec_uint8(ctx, argv[1], 4, v);
-    mesh = JS_GetOpaque2(ctx, this_val, js_mesh_class_id);
-    mesh_set_at(mesh, NULL, pos, v);
+    volume = JS_GetOpaque2(ctx, this_val, js_volume_class_id);
+    volume_set_at(volume, NULL, pos, v);
     return JS_UNDEFINED;
 }
 
-static JSValue js_mesh_save(JSContext *ctx, JSValueConst this_val,
+static JSValue js_volume_save(JSContext *ctx, JSValueConst this_val,
                             int argc, JSValueConst *argv)
 {
-    mesh_t *mesh;
+    volume_t *volume;
     image_t *img;
     const char *path, *format = NULL;
     const file_format_t *f;
     int err;
 
-    mesh = JS_GetOpaque2(ctx, this_val, js_mesh_class_id);
+    volume = JS_GetOpaque2(ctx, this_val, js_volume_class_id);
     path = JS_ToCString(ctx, argv[0]);
     if (argc > 1)
         format = JS_ToCString(ctx, argv[1]);
@@ -244,7 +244,7 @@ static JSValue js_mesh_save(JSContext *ctx, JSValueConst this_val,
         return JS_EXCEPTION;
     }
     img = image_new();
-    mesh_set(img->active_layer->mesh, mesh);
+    volume_set(img->active_layer->volume, volume);
     err = f->export_func(f, img, path);
     if (err) {
         fprintf(stderr, "Internal error saving file %s\n", path);
@@ -257,34 +257,34 @@ static JSValue js_mesh_save(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static void bind_mesh(JSContext *ctx)
+static void bind_volume(JSContext *ctx)
 {
     JSValue proto, ctor, global_obj;
 
-    static const JSCFunctionListEntry js_mesh_proto_funcs[] = {
-        JS_CFUNC_DEF("iter", 1, js_mesh_iter),
-        JS_CFUNC_DEF("setAt", 1, js_mesh_setAt),
-        JS_CFUNC_DEF("save", 2, js_mesh_save),
+    static const JSCFunctionListEntry js_volume_proto_funcs[] = {
+        JS_CFUNC_DEF("iter", 1, js_volume_iter),
+        JS_CFUNC_DEF("setAt", 1, js_volume_setAt),
+        JS_CFUNC_DEF("save", 2, js_volume_save),
     };
 
-    static JSClassDef js_mesh_class = {
-        "Mesh",
-        .finalizer = js_mesh_finalizer,
+    static JSClassDef js_volume_class = {
+        "Volume",
+        .finalizer = js_volume_finalizer,
     };
 
-    JS_NewClassID(&js_mesh_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_mesh_class_id, &js_mesh_class);
+    JS_NewClassID(&js_volume_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_volume_class_id, &js_volume_class);
     proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, proto, js_mesh_proto_funcs,
-                               ARRAY_SIZE(js_mesh_proto_funcs));
-    JS_SetClassProto(ctx, js_mesh_class_id, proto);
+    JS_SetPropertyFunctionList(ctx, proto, js_volume_proto_funcs,
+                               ARRAY_SIZE(js_volume_proto_funcs));
+    JS_SetClassProto(ctx, js_volume_class_id, proto);
 
-    ctor = JS_NewCFunction2(ctx, js_mesh_ctor, "Mesh", 0,
+    ctor = JS_NewCFunction2(ctx, js_volume_ctor, "Volume", 0,
                             JS_CFUNC_constructor, 0);
     JS_SetConstructor(ctx, ctor, proto);
 
     global_obj = JS_GetGlobalObject(ctx);
-    JS_SetPropertyStr(ctx, global_obj, "Mesh", ctor);
+    JS_SetPropertyStr(ctx, global_obj, "Volume", ctor);
     JS_FreeValue(ctx, global_obj);
 }
 
@@ -296,19 +296,17 @@ static void js_image_finalizer(JSRuntime *ctx, JSValue this_val)
         image_delete(image);
 }
 
-static JSValue js_image_getLayersMesh(
+static JSValue js_image_getLayersVolume(
         JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
     JSValue ret;
-    const mesh_t *mesh;
+    volume_t *volume;
     image_t *image;
 
     image = JS_GetOpaque(this_val, js_image_class_id);
-    mesh = goxel_get_layers_mesh(image);
-    ret = JS_NewObjectClass(ctx, js_mesh_class_id);
-    // XXX: should make it non destructable somehow?  Or add ref counting
-    // to image_t?
-    JS_SetOpaque(ret, (void*)mesh);
+    volume = volume_copy(goxel_get_layers_volume(image));
+    ret = JS_NewObjectClass(ctx, js_volume_class_id);
+    JS_SetOpaque(ret, (void*)volume);
     return ret;
 }
 
@@ -316,7 +314,7 @@ static void bind_image(JSContext *ctx)
 {
     JSValue proto;
     static const JSCFunctionListEntry js_image_proto_funcs[] = {
-        JS_CFUNC_DEF("getLayersMesh", 0, js_image_getLayersMesh),
+        JS_CFUNC_DEF("getLayersVolume", 0, js_image_getLayersVolume),
     };
     static JSClassDef js_image_class = {
         "Image",
@@ -344,6 +342,7 @@ int script_format_export_func(const file_format_t *format_,
     JSValueConst argv[2];
 
     image = JS_NewObjectClass(ctx, js_image_class_id);
+    goxel.image->ref++;
     JS_SetOpaque(image, (void*)goxel.image);
     argv[0] = image;
     argv[1] = JS_NewString(ctx, path);
@@ -410,7 +409,7 @@ static void init_runtime(void)
     js_init_module_std(g_ctx, "std");
     js_init_module_os(g_ctx, "os");
     bind_vec(g_ctx);
-    bind_mesh(g_ctx);
+    bind_volume(g_ctx);
     bind_image(g_ctx);
     bind_goxel(g_ctx);
 }
