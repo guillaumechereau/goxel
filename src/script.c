@@ -30,6 +30,7 @@ static JSRuntime *g_rt = NULL;
 static JSContext *g_ctx = NULL;
 
 static JSClassID js_vec_class_id;
+static JSClassID js_box_class_id;
 static JSClassID js_volume_class_id;
 static JSClassID js_image_class_id;
 static JSClassID js_goxel_class_id;
@@ -45,8 +46,12 @@ static script_t *g_scripts = NULL;
 
 typedef struct {
     int size;
-    double values[4];
+    float values[4];
 } vec_t;
+
+typedef struct {
+    float mat[4][4];
+} box_t;
 
 static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out)
 {
@@ -72,13 +77,15 @@ static JSValue js_vec_ctor(JSContext *ctx, JSValueConst new_target,
                            int argc, JSValueConst *argv)
 {
     int i;
+    double v;
     JSValue ret;
     vec_t *vec;
 
     vec = calloc(1, sizeof(*vec));
     vec->size = argc;
     for (i = 0; i < argc; i++) {
-        JS_ToFloat64(ctx, &vec->values[i], argv[i]);
+        JS_ToFloat64(ctx, &v, argv[i]);
+        vec->values[i] = v;
     }
     ret = JS_NewObjectClass(ctx, js_vec_class_id);
     JS_SetOpaque(ret, vec);
@@ -179,6 +186,57 @@ static void bind_vec(JSContext *ctx)
     global_obj = JS_GetGlobalObject(ctx);
     JS_SetPropertyStr(ctx, global_obj, "Vec", ctor);
     JS_FreeValue(ctx, global_obj);
+}
+
+static JSValue new_js_box(JSContext *ctx, const float mat[4][4])
+{
+    JSValue ret;
+    box_t *box;
+    if (mat == NULL) return JS_NULL;
+    box = js_mallocz(ctx, sizeof(*box));
+    mat4_copy(mat, box->mat);
+    ret = JS_NewObjectClass(ctx, js_box_class_id);
+    JS_SetOpaque(ret, box);
+    return ret;
+}
+
+static JSValue js_box_iterVoxels(JSContext *ctx, JSValueConst this_val,
+                                 int argc, JSValueConst *argv)
+{
+    return JS_EXCEPTION;
+}
+
+static JSValue js_box_worldToLocal(JSContext *ctx, JSValueConst this_val,
+                                   int argc, JSValueConst *argv)
+{
+    return JS_EXCEPTION;
+}
+
+static void js_box_finalizer(JSRuntime *rt, JSValue val)
+{
+    box_t *box = JS_GetOpaque(val, js_box_class_id);
+    js_free_rt(rt, box);
+}
+
+static void bind_box(JSContext *ctx)
+{
+    JSValue proto;
+    static const JSCFunctionListEntry js_box_proto_funcs[] = {
+        JS_CFUNC_DEF("iterVoxels", 1, js_box_iterVoxels),
+        JS_CFUNC_DEF("worldToLocal", 1, js_box_worldToLocal),
+    };
+    static JSClassDef js_box_class = {
+        "Box",
+        .finalizer = js_box_finalizer,
+    }; 
+
+    JS_NewClassID(&js_box_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_box_class_id, &js_box_class);
+
+    proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, proto, js_box_proto_funcs,
+                               ARRAY_SIZE(js_box_proto_funcs));
+    JS_SetClassProto(ctx, js_box_class_id, proto);
 }
 
 
@@ -304,8 +362,7 @@ static void js_image_finalizer(JSRuntime *ctx, JSValue this_val)
 {
     image_t *image;
     image = JS_GetOpaque(this_val, js_image_class_id);
-    if (0)
-        image_delete(image);
+    image_delete(image);
 }
 
 static JSValue js_image_getLayersVolume(
@@ -407,12 +464,35 @@ static JSValue js_goxel_registerScript(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
+static JSValue js_goxel_selection_get(JSContext *ctx, JSValueConst this_val)
+{
+    return new_js_box(ctx, goxel.selection);
+}
+
+static JSValue js_goxel_selection_set(JSContext *ctx, JSValueConst this_val,
+                                      JSValue val)
+{
+    return JS_UNDEFINED;
+}
+
+static JSValue js_goxel_image_get(JSContext *ctx, JSValueConst this_val)
+{
+    JSValue ret;
+    ret = JS_NewObjectClass(ctx, js_image_class_id);
+    goxel.image->ref++;
+    JS_SetOpaque(ret, (void*)goxel.image);
+    return ret;
+}
+
 static void bind_goxel(JSContext *ctx)
 {
     JSValue proto, global_obj, obj;
     static const JSCFunctionListEntry js_goxel_proto_funcs[] = {
         JS_CFUNC_DEF("registerFormat", 1, js_goxel_registerFormat),
         JS_CFUNC_DEF("registerScript", 1, js_goxel_registerScript),
+        JS_CGETSET_DEF("selection",
+                js_goxel_selection_get, js_goxel_selection_set),
+        JS_CGETSET_DEF("image", js_goxel_image_get, NULL),
     };
     static JSClassDef js_goxel_class = {
         "Goxel",
@@ -439,6 +519,7 @@ static void init_runtime(void)
     js_init_module_std(g_ctx, "std");
     js_init_module_os(g_ctx, "os");
     bind_vec(g_ctx);
+    bind_box(g_ctx);
     bind_volume(g_ctx);
     bind_image(g_ctx);
     bind_goxel(g_ctx);
@@ -544,6 +625,7 @@ int script_execute(const char *name)
     LOG_I("Run script %s", name);
     val = JS_Call(ctx, script->execute_fn, JS_NULL, 0, NULL);
     if (JS_IsException(val)) {
+        LOG_E("Error executing script");
         js_std_dump_error(ctx);
         ret = -1;
     }

@@ -26,12 +26,12 @@ goxel.registerScript({
     console.log('test')
     let box = goxel.selection
     if (!box) {
-        console.log('Need a selection')
-        return
+      console.log('Need a selection')
+      return
     }
-    let mesh = goxel.image.layer.mesh
-    if (!mesh) return
+    let volume = goxel.image.layer.volume
     box.iterVoxels(function(pos) {
+      pos = box.wordToLocal(pos)
     })
   }
 })
