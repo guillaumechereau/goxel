@@ -330,7 +330,7 @@ int main(int argc, char **argv)
         goxel_import_file(args.input, NULL);
 
     if (args.script) {
-        script_run(args.script, args.script_args_nb, args.script_args);
+        script_run_from_file(args.script, args.script_args_nb, args.script_args);
         goto end;
     }
 

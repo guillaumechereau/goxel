@@ -19,6 +19,7 @@
 #include "goxel.h"
 
 #include "file_format.h"
+#include "script.h"
 
 int gui_settings_popup(void *data);
 int gui_about_popup(void *data);
@@ -61,6 +62,12 @@ static void export_menu_callback(void *user, file_format_t *f)
         goxel_export_to_file(NULL, f->name);
 }
 
+static void on_script(void *user, const char *name)
+{
+    if (gui_menu_item(0, name, true))
+        script_execute(name);
+}
+
 void gui_menu(void)
 {
     if (gui_menu_begin("File")) {
@@ -100,6 +107,10 @@ void gui_menu(void)
         gui_menu_item(ACTION_view_top, "Top", true);
         gui_menu_item(ACTION_view_toggle_ortho, "Toggle ortho", true);
         gui_menu_item(ACTION_view_default, "Default", true);
+        gui_menu_end();
+    }
+    if (gui_menu_begin("Scripts")) {
+        script_iter_all(NULL, on_script);
         gui_menu_end();
     }
     if (gui_menu_begin("Help")) {

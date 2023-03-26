@@ -23,6 +23,9 @@
 #include "quickjs/quickjs.h"
 #include "quickjs/quickjs-libc.h"
 
+#define STB_DS_IMPLEMENTATION
+#include "stb/stb_ds.h"
+
 static JSRuntime *g_rt = NULL;
 static JSContext *g_ctx = NULL;
 
@@ -30,6 +33,15 @@ static JSClassID js_vec_class_id;
 static JSClassID js_volume_class_id;
 static JSClassID js_image_class_id;
 static JSClassID js_goxel_class_id;
+
+
+typedef struct {
+    char name[128];
+    JSValue execute_fn;
+} script_t;
+
+// stb array of registered scripts
+static script_t *g_scripts = NULL;
 
 typedef struct {
     int size;
@@ -378,11 +390,29 @@ static JSValue js_goxel_registerFormat(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
+static JSValue js_goxel_registerScript(JSContext *ctx, JSValueConst this_val,
+                                       int argc, JSValueConst *argv)
+{
+    JSValueConst data;
+    script_t script = {};
+    const char *name;
+
+    data = argv[0];
+    name = JS_ToCString(ctx, JS_GetPropertyStr(ctx, data, "name"));
+    LOG_I("Register script %s", name);
+    snprintf(script.name, sizeof(script.name), "%s", name);
+    script.execute_fn = JS_GetPropertyStr(ctx, data, "onExecute");
+    arrput(g_scripts, script);
+    JS_FreeCString(ctx, name);
+    return JS_UNDEFINED;
+}
+
 static void bind_goxel(JSContext *ctx)
 {
     JSValue proto, global_obj, obj;
     static const JSCFunctionListEntry js_goxel_proto_funcs[] = {
         JS_CFUNC_DEF("registerFormat", 1, js_goxel_registerFormat),
+        JS_CFUNC_DEF("registerScript", 1, js_goxel_registerScript),
     };
     static JSClassDef js_goxel_class = {
         "Goxel",
@@ -433,7 +463,7 @@ static int script_run_from_str(
     return ret;
 }
 
-int script_run(const char *filename, int argc, const char **argv)
+int script_run_from_file(const char *filename, int argc, const char **argv)
 {
     char *script;
     int ret, size;
@@ -488,4 +518,35 @@ void script_release(void)
 {
     JS_FreeContext(g_ctx);
     JS_FreeRuntime(g_rt);
+}
+
+void script_iter_all(void *user, void (*f)(void *user, const char *name))
+{
+    int i;
+    for (i = 0; i < arrlen(g_scripts); i++) {
+        f(user, g_scripts[i].name);
+    }
+}
+
+int script_execute(const char *name)
+{
+    int i;
+    int ret = 0;
+    script_t *script;
+    JSContext *ctx = g_ctx;
+    JSValue val;
+
+    for (i = 0; i < arrlen(g_scripts); i++) {
+        script = &g_scripts[i];
+        if (strcmp(script->name, name) == 0) break;
+    }
+    if (i == arrlen(g_scripts)) return -1;
+    LOG_I("Run script %s", name);
+    val = JS_Call(ctx, script->execute_fn, JS_NULL, 0, NULL);
+    if (JS_IsException(val)) {
+        js_std_dump_error(ctx);
+        ret = -1;
+    }
+    JS_FreeValue(ctx, val);
+    return ret;
 }

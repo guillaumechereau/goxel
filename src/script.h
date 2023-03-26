@@ -23,8 +23,19 @@
  * Function: script_run
  * Run a lua script from a file.
  */
-int script_run(const char *filename, int argc, const char **argv);
+int script_run_from_file(const char *filename, int argc, const char **argv);
 
 void script_init(void);
+
+/*
+ * List all the registered scripts to show in the script menu.
+ */
+void script_iter_all(void *user, void (*f)(void *user, const char *name));
+
+/*
+ * Execute a registered script.
+ */
+int script_execute(const char *name);
+
 
 #endif // SCRIPT_H

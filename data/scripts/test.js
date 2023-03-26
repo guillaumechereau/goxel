@@ -19,3 +19,19 @@ goxel.registerFormat({
     }
   },
 })
+
+goxel.registerScript({
+  name: 'Test',
+  onExecute: function() {
+    console.log('test')
+    let box = goxel.selection
+    if (!box) {
+        console.log('Need a selection')
+        return
+    }
+    let mesh = goxel.image.layer.mesh
+    if (!mesh) return
+    box.iterVoxels(function(pos) {
+    })
+  }
+})
