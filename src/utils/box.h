@@ -312,4 +312,6 @@ static inline bool box_intersect_aabb(const float box[4][4],
  */
 void box_union(const float a[4][4], const float b[4][4], float out[4][4]);
 
+void box_get_aabb(const float box[4][4], int aabb[2][3]);
+
 #endif // BOX_H

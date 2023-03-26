@@ -18,6 +18,9 @@
 
 #include "utils/box.h"
 
+#include <limits.h>
+#include <string.h>
+
 static bool box_intersect_box_(const float b1[4][4], const float b2[4][4])
 {
     float inv[4][4], box[4][4], vertices[8][3];
@@ -67,4 +70,31 @@ void box_union(const float a[4][4], const float b[4][4], float out[4][4])
     box_get_vertices(a, verts + 0);
     box_get_vertices(b, verts + 8);
     bbox_from_npoints(out, 16, verts);
+}
+
+void box_get_aabb(const float box[4][4], int aabb[2][3])
+{
+    const float vertices[8][4] = {
+        {-1, -1, +1, 1},
+        {+1, -1, +1, 1},
+        {+1, +1, +1, 1},
+        {-1, +1, +1, 1},
+        {-1, -1, -1, 1},
+        {+1, -1, -1, 1},
+        {+1, +1, -1, 1},
+        {-1, +1, -1, 1}};
+    int i;
+    int ret[2][3] = {{INT_MAX, INT_MAX, INT_MAX},
+                     {INT_MIN, INT_MIN, INT_MIN}};
+    float p[4];
+    for (i = 0; i < 8; i++) {
+        mat4_mul_vec4(box, vertices[i], p);
+        ret[0][0] = fmin(ret[0][0], (int)floor(p[0]));
+        ret[0][1] = fmin(ret[0][1], (int)floor(p[1]));
+        ret[0][2] = fmin(ret[0][2], (int)floor(p[2]));
+        ret[1][0] = fmax(ret[1][0], (int)ceil(p[0]));
+        ret[1][1] = fmax(ret[1][1], (int)ceil(p[1]));
+        ret[1][2] = fmax(ret[1][2], (int)ceil(p[2]));
+    }
+    memcpy(aabb, ret, sizeof(ret));
 }

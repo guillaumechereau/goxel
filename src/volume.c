@@ -369,6 +369,13 @@ volume_t *volume_new(void)
     return volume;
 }
 
+volume_t *volume_dup(const volume_t *volume)
+{
+    volume_t *ret = (volume_t*)volume;
+    ret->ref++;
+    return ret;
+}
+
 volume_iterator_t volume_get_iterator(const volume_t *volume, int flags)
 {
     return (volume_iterator_t){

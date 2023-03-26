@@ -110,6 +110,8 @@ static inline void volume_get_tile_aabb(const int pos[3], int aabb[2][3])
     aabb[1][2] = pos[2] + TILE_SIZE;
 }
 
+volume_t *volume_dup(const volume_t *volume);
+
 volume_t *volume_copy(const volume_t *volume);
 
 void volume_set(volume_t *volume, const volume_t *other);

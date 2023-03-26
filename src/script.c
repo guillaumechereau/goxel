@@ -33,6 +33,7 @@ static JSClassID js_vec_class_id;
 static JSClassID js_box_class_id;
 static JSClassID js_volume_class_id;
 static JSClassID js_image_class_id;
+static JSClassID js_layer_class_id;
 static JSClassID js_goxel_class_id;
 
 
@@ -53,24 +54,34 @@ typedef struct {
     float mat[4][4];
 } box_t;
 
-static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out)
+static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out,
+                        int default_val)
 {
     int i;
     JSValue v;
+    vec_t *vec;
+
+    vec = JS_GetOpaque2(ctx, val, js_vec_class_id);
+    if (vec) {
+        for (i = 0; i < size; i++) {
+            out[i] = i < vec->size ? vec->values[i] : default_val;
+        }
+        return;
+    }
+
     for (i = 0; i < size; i++) {
         v = JS_GetPropertyUint32(ctx, val, i);
         JS_ToInt32(ctx, &out[i], v);
     }
 }
 
-static void get_vec_uint8(JSContext *ctx, JSValue val, int size, uint8_t *out)
+static void get_vec_uint8(JSContext *ctx, JSValue val, int size, uint8_t *out,
+                          uint8_t default_val)
 {
-    int *buf;
+    int buf[4];
     int i;
-    buf = calloc(size, sizeof(int));
-    get_vec_int(ctx, val, size, buf);
+    get_vec_int(ctx, val, size, buf, default_val);
     for (i = 0; i < size; i++) out[i] = buf[i];
-    free(buf);
 }
 
 static JSValue js_vec_ctor(JSContext *ctx, JSValueConst new_target,
@@ -98,7 +109,7 @@ static void js_vec_finalizer(JSRuntime *rt, JSValue val)
     js_free_rt(rt, vec);
 }
 
-static JSValue new_js_vec3(JSContext *ctx, double x, double y, double z)
+static JSValue new_js_vec3(JSContext *ctx, float x, float y, float z)
 {
     JSValue ret;
     vec_t *vec;
@@ -112,8 +123,7 @@ static JSValue new_js_vec3(JSContext *ctx, double x, double y, double z)
     return ret;
 }
 
-static JSValue new_js_vec4(JSContext *ctx,
-                           double x, double y, double z, double w)
+static JSValue new_js_vec4(JSContext *ctx, float x, float y, float z, float w)
 {
     JSValue ret;
     vec_t *vec;
@@ -203,7 +213,38 @@ static JSValue new_js_box(JSContext *ctx, const float mat[4][4])
 static JSValue js_box_iterVoxels(JSContext *ctx, JSValueConst this_val,
                                  int argc, JSValueConst *argv)
 {
-    return JS_EXCEPTION;
+    float inv[4][4];
+    int aabb[2][3];
+    int x, y, z;
+    float pos[3], localpos[3];
+    box_t *box;
+    JSValue js_pos, val;
+    const float EPS = 1e-8;
+    const float L = 1 + EPS;
+
+    if (argc != 1) return JS_EXCEPTION;
+    box = JS_GetOpaque(this_val, js_box_class_id);
+    mat4_invert(box->mat, inv);
+    box_get_aabb(box->mat, aabb);
+    for (z = aabb[0][2]; z < aabb[1][2]; z++) {
+        for (y = aabb[0][1]; y < aabb[1][1]; y++) {
+            for (x = aabb[0][0]; x < aabb[1][0]; x++) {
+                vec3_set(pos, x, y, z);
+                mat4_mul_vec3(inv, pos, localpos);
+                if (    localpos[0] < -L || localpos[0] > +L ||
+                        localpos[1] < -L || localpos[1] > +L ||
+                        localpos[2] < -L || localpos[2] > +L)
+                    continue;
+                js_pos = new_js_vec3(ctx, x, y, z);
+                val = JS_Call(ctx, argv[0], JS_NULL, 1, &js_pos);
+                JS_FreeValue(ctx, js_pos);
+                if (JS_IsException(val))
+                    return val;
+                JS_FreeValue(ctx, val);
+            }
+        }
+    }
+    return JS_UNDEFINED;
 }
 
 static JSValue js_box_worldToLocal(JSContext *ctx, JSValueConst this_val,
@@ -287,8 +328,8 @@ static JSValue js_volume_setAt(JSContext *ctx, JSValueConst this_val,
     int pos[3];
     uint8_t v[4];
 
-    get_vec_int(ctx, argv[0], 3, pos);
-    get_vec_uint8(ctx, argv[1], 4, v);
+    get_vec_int(ctx, argv[0], 3, pos, 0);
+    get_vec_uint8(ctx, argv[1], 4, v, 255);
     volume = JS_GetOpaque2(ctx, this_val, js_volume_class_id);
     volume_set_at(volume, NULL, pos, v);
     return JS_UNDEFINED;
@@ -333,7 +374,7 @@ static void bind_volume(JSContext *ctx)
 
     static const JSCFunctionListEntry js_volume_proto_funcs[] = {
         JS_CFUNC_DEF("iter", 1, js_volume_iter),
-        JS_CFUNC_DEF("setAt", 1, js_volume_setAt),
+        JS_CFUNC_DEF("setAt", 2, js_volume_setAt),
         JS_CFUNC_DEF("save", 2, js_volume_save),
     };
 
@@ -379,10 +420,23 @@ static JSValue js_image_getLayersVolume(
     return ret;
 }
 
+static JSValue js_image_activeLayer_get(JSContext *ctx, JSValueConst this_val)
+{
+    image_t *image;
+    JSValue ret;
+
+    image = JS_GetOpaque(this_val, js_image_class_id);
+    ret = JS_NewObjectClass(ctx, js_layer_class_id);
+    image->active_layer->ref++;
+    JS_SetOpaque(ret, (void*)image->active_layer);
+    return ret;
+}
+
 static void bind_image(JSContext *ctx)
 {
     JSValue proto;
     static const JSCFunctionListEntry js_image_proto_funcs[] = {
+        JS_CGETSET_DEF("activeLayer", js_image_activeLayer_get, NULL),
         JS_CFUNC_DEF("getLayersVolume", 0, js_image_getLayersVolume),
     };
     static JSClassDef js_image_class = {
@@ -395,6 +449,42 @@ static void bind_image(JSContext *ctx)
     JS_SetPropertyFunctionList(ctx, proto, js_image_proto_funcs,
                                ARRAY_SIZE(js_image_proto_funcs));
     JS_SetClassProto(ctx, js_image_class_id, proto);
+}
+
+static JSValue js_layer_volume_get(JSContext *ctx, JSValueConst this_val)
+{
+    layer_t *layer;
+    JSValue ret;
+
+    layer = JS_GetOpaque(this_val, js_layer_class_id);
+    ret = JS_NewObjectClass(ctx, js_volume_class_id);
+    JS_SetOpaque(ret, (void*)volume_dup(layer->volume));
+    return ret;
+}
+
+static void js_layer_finalizer(JSRuntime *ctx, JSValue this_val)
+{
+    layer_t *layer;
+    layer = JS_GetOpaque(this_val, js_layer_class_id);
+    layer_delete(layer);
+}
+
+static void bind_layer(JSContext *ctx)
+{
+    JSValue proto;
+    static const JSCFunctionListEntry js_layer_proto_funcs[] = {
+        JS_CGETSET_DEF("volume", js_layer_volume_get, NULL),
+    };
+    static JSClassDef js_layer_class = {
+        "Layer",
+        .finalizer = js_layer_finalizer,
+    };
+    JS_NewClassID(&js_layer_class_id);
+    JS_NewClass(JS_GetRuntime(ctx), js_layer_class_id, &js_layer_class);
+    proto = JS_NewObject(ctx);
+    JS_SetPropertyFunctionList(ctx, proto, js_layer_proto_funcs,
+                               ARRAY_SIZE(js_layer_proto_funcs));
+    JS_SetClassProto(ctx, js_layer_class_id, proto);
 }
 
 typedef struct {
@@ -522,6 +612,7 @@ static void init_runtime(void)
     bind_box(g_ctx);
     bind_volume(g_ctx);
     bind_image(g_ctx);
+    bind_layer(g_ctx);
     bind_goxel(g_ctx);
 }
 

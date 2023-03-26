@@ -29,9 +29,9 @@ goxel.registerScript({
       console.log('Need a selection')
       return
     }
-    let volume = goxel.image.layer.volume
+    let volume = goxel.image.activeLayer.volume
     box.iterVoxels(function(pos) {
-      pos = box.wordToLocal(pos)
+      volume.setAt(pos, [255, 0, 0, 255])
     })
   }
 })
