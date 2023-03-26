@@ -20,8 +20,18 @@ goxel.registerFormat({
   },
 })
 
+function getRandomColor() {
+  return [
+    Math.floor(Math.random() * 256),
+    Math.floor(Math.random() * 256),
+    Math.floor(Math.random() * 256),
+    255
+  ]
+}
+
 goxel.registerScript({
-  name: 'Test',
+  name: 'FillRandom',
+  description: 'Fill selection with random voxels',
   onExecute: function() {
     console.log('test')
     let box = goxel.selection
@@ -31,7 +41,7 @@ goxel.registerScript({
     }
     let volume = goxel.image.activeLayer.volume
     box.iterVoxels(function(pos) {
-      volume.setAt(pos, [255, 0, 0, 255])
+      volume.setAt(pos, getRandomColor())
     })
   }
 })
