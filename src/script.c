@@ -29,13 +29,59 @@
 static JSRuntime *g_rt = NULL;
 static JSContext *g_ctx = NULL;
 
-static JSClassID js_vec_class_id;
-static JSClassID js_box_class_id;
-static JSClassID js_volume_class_id;
-static JSClassID js_image_class_id;
-static JSClassID js_layer_class_id;
-static JSClassID js_goxel_class_id;
+typedef struct klass klass_t;
+typedef struct attribute attribute_t;
 
+/*
+ * Represent a bound attribute of a class.
+ */
+struct attribute {
+    const char *name;
+    klass_t *klass;
+    int flags;
+
+    struct {
+        int offset;
+        int size;
+    } member;
+
+    JSValue (*get)(JSContext *ctx, JSValueConst this_val, int magic);
+    JSValue (*set)(JSContext *ctx, JSValueConst this_val, JSValueConst val,
+                   int magic);
+    JSCFunction *fn;
+    int magic;
+};
+
+#define MEMBER(k, m) .member = {offsetof(k, m), sizeof(((k*)0)->m)}
+
+/*
+ * Info struct for all the bound classes.
+ */
+struct klass {
+    JSClassID id;
+    JSClassDef def;
+    JSCFunction *ctor;
+    JSValue (*ctor_from_ptr)(
+            JSContext * ctx, JSValueConst owner, void *ptr, size_t size);
+    attribute_t attributes[];
+};
+
+/*
+ * Base struct for all reference counted objects.
+ */
+typedef struct {
+    int ref;
+} obj_t;
+
+/*
+ * Pre declaration of all the registered classes.
+ */
+static klass_t vec_klass;
+static klass_t box_klass;
+static klass_t image_klass;
+static klass_t layer_klass;
+static klass_t volume_klass;
+static klass_t goxel_klass;
 
 typedef struct {
     char name[128];
@@ -63,7 +109,7 @@ static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out,
     JSValue v;
     vec_t *vec;
 
-    vec = JS_GetOpaque2(ctx, val, js_vec_class_id);
+    vec = JS_GetOpaque2(ctx, val, vec_klass.id);
     if (vec) {
         for (i = 0; i < size; i++) {
             out[i] = i < vec->size ? vec->values[i] : default_val;
@@ -101,14 +147,14 @@ static JSValue js_vec_ctor(JSContext *ctx, JSValueConst new_target,
         JS_ToFloat64(ctx, &v, argv[i]);
         vec->values[i] = v;
     }
-    ret = JS_NewObjectClass(ctx, js_vec_class_id);
+    ret = JS_NewObjectClass(ctx, vec_klass.id);
     JS_SetOpaque(ret, vec);
     return ret;
 }
 
 static void js_vec_finalizer(JSRuntime *rt, JSValue val)
 {
-    vec_t *vec = JS_GetOpaque(val, js_vec_class_id);
+    vec_t *vec = JS_GetOpaque(val, vec_klass.id);
     if (JS_IsUndefined(vec->owner)) js_free_rt(rt, vec->values);
     JS_FreeValueRT(rt, vec->owner);
     js_free_rt(rt, vec);
@@ -125,7 +171,7 @@ static JSValue new_js_vec3(JSContext *ctx, float x, float y, float z)
     vec->values[0] = x;
     vec->values[1] = y;
     vec->values[2] = z;
-    ret = JS_NewObjectClass(ctx, js_vec_class_id);
+    ret = JS_NewObjectClass(ctx, vec_klass.id);
     JS_SetOpaque(ret, vec);
     return ret;
 }
@@ -142,14 +188,14 @@ static JSValue new_js_vec4(JSContext *ctx, float x, float y, float z, float w)
     vec->values[1] = y;
     vec->values[2] = z;
     vec->values[3] = z;
-    ret = JS_NewObjectClass(ctx, js_vec_class_id);
+    ret = JS_NewObjectClass(ctx, vec_klass.id);
     JS_SetOpaque(ret, vec);
     return ret;
 }
 
 static JSValue js_vec_get_at(JSContext *ctx, JSValueConst this_val, int idx)
 {
-    vec_t *vec = JS_GetOpaque2(ctx, this_val, js_vec_class_id);
+    vec_t *vec = JS_GetOpaque2(ctx, this_val, vec_klass.id);
     if (!vec)
         return JS_EXCEPTION;
     if (idx >= vec->size)
@@ -163,7 +209,7 @@ static JSValue js_vec_set_at(
     vec_t *vec;
     double v;
 
-    vec = JS_GetOpaque2(ctx, this_val, js_vec_class_id);
+    vec = JS_GetOpaque2(ctx, this_val, vec_klass.id);
     if (!vec)
         return JS_EXCEPTION;
     if (idx >= vec->size)
@@ -174,53 +220,35 @@ static JSValue js_vec_set_at(
     return JS_UNDEFINED;
 }
 
-static void bind_vec(JSContext *ctx)
-{
-    JSValue proto, ctor, global_obj;
-    static const JSCFunctionListEntry js_vec_proto_funcs[] = {
-        JS_CGETSET_MAGIC_DEF("x", js_vec_get_at, js_vec_set_at, 0),
-        JS_CGETSET_MAGIC_DEF("y", js_vec_get_at, js_vec_set_at, 1),
-        JS_CGETSET_MAGIC_DEF("z", js_vec_get_at, js_vec_set_at, 2),
-        JS_CGETSET_MAGIC_DEF("w", js_vec_get_at, js_vec_set_at, 3),
-        JS_CGETSET_MAGIC_DEF("r", js_vec_get_at, js_vec_set_at, 0),
-        JS_CGETSET_MAGIC_DEF("g", js_vec_get_at, js_vec_set_at, 1),
-        JS_CGETSET_MAGIC_DEF("b", js_vec_get_at, js_vec_set_at, 2),
-        JS_CGETSET_MAGIC_DEF("a", js_vec_get_at, js_vec_set_at, 3),
-    };
-    static JSClassDef js_vec_class = {
-        "Vec",
-        .finalizer = js_vec_finalizer,
-    }; 
+static klass_t vec_klass = {
+    .def.class_name = "Vec",
+    .def.finalizer = js_vec_finalizer,
+    .ctor = js_vec_ctor,
+    .attributes = {
+        {"x", .get=js_vec_get_at, .set=js_vec_set_at, .magic=0},
+        {"y", .get=js_vec_get_at, .set=js_vec_set_at, .magic=1},
+        {"z", .get=js_vec_get_at, .set=js_vec_set_at, .magic=2},
+        {"w", .get=js_vec_get_at, .set=js_vec_set_at, .magic=3},
+        {}
+    },
+};
 
-    JS_NewClassID(&js_vec_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_vec_class_id, &js_vec_class);
-
-    proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, proto, js_vec_proto_funcs,
-                               ARRAY_SIZE(js_vec_proto_funcs));
-    JS_SetClassProto(ctx, js_vec_class_id, proto);
-    ctor = JS_NewCFunction2(ctx, js_vec_ctor, "Vec", 0,
-                            JS_CFUNC_constructor, 0);
-    JS_SetConstructor(ctx, ctor, proto);
-    global_obj = JS_GetGlobalObject(ctx);
-    JS_SetPropertyStr(ctx, global_obj, "Vec", ctor);
-    JS_FreeValue(ctx, global_obj);
-}
-
-static JSValue new_js_box(JSContext *ctx, JSValueConst owner, float mat[4][4])
+static JSValue js_box_from_ptr(
+        JSContext *ctx, JSValueConst owner, void *ptr, size_t size)
 {
     JSValue ret;
     box_t *box;
-    if (mat == NULL) return JS_NULL;
+    if (ptr == NULL) return JS_NULL;
+    assert(size == 16 * sizeof(float));
     box = js_mallocz(ctx, sizeof(*box));
     box->owner = JS_DupValue(ctx, owner);
     if (JS_IsUndefined(owner)) {
-        box->mat = calloc(1, 16 * sizeof(float));
-        mat4_copy(mat, box->mat);
+        box->mat = calloc(1, size);
+        memcpy(box->mat, ptr, size);
     } else {
-        box->mat = mat;
+        box->mat = ptr;
     }
-    ret = JS_NewObjectClass(ctx, js_box_class_id);
+    ret = JS_NewObjectClass(ctx, box_klass.id);
     JS_SetOpaque(ret, box);
     return ret;
 }
@@ -238,7 +266,7 @@ static JSValue js_box_iterVoxels(JSContext *ctx, JSValueConst this_val,
     const float L = 1 + EPS;
 
     if (argc != 1) return JS_EXCEPTION;
-    box = JS_GetOpaque(this_val, js_box_class_id);
+    box = JS_GetOpaque(this_val, box_klass.id);
     mat4_invert(box->mat, inv);
     box_get_aabb(box->mat, aabb);
     for (z = aabb[0][2]; z < aabb[1][2]; z++) {
@@ -270,33 +298,22 @@ static JSValue js_box_worldToLocal(JSContext *ctx, JSValueConst this_val,
 
 static void js_box_finalizer(JSRuntime *rt, JSValue val)
 {
-    box_t *box = JS_GetOpaque(val, js_box_class_id);
+    box_t *box = JS_GetOpaque(val, box_klass.id);
     if (JS_IsUndefined(box->owner)) js_free_rt(rt, box->mat);
     JS_FreeValueRT(rt, box->owner);
     js_free_rt(rt, box);
 }
 
-static void bind_box(JSContext *ctx)
-{
-    JSValue proto;
-    static const JSCFunctionListEntry js_box_proto_funcs[] = {
-        JS_CFUNC_DEF("iterVoxels", 1, js_box_iterVoxels),
-        JS_CFUNC_DEF("worldToLocal", 1, js_box_worldToLocal),
-    };
-    static JSClassDef js_box_class = {
-        "Box",
-        .finalizer = js_box_finalizer,
-    }; 
-
-    JS_NewClassID(&js_box_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_box_class_id, &js_box_class);
-
-    proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, proto, js_box_proto_funcs,
-                               ARRAY_SIZE(js_box_proto_funcs));
-    JS_SetClassProto(ctx, js_box_class_id, proto);
-}
-
+static klass_t box_klass = {
+    .def.class_name = "Box",
+    .def.finalizer = js_box_finalizer,
+    .ctor_from_ptr = js_box_from_ptr,
+    .attributes = {
+        {"iterVoxels", .fn=js_box_iterVoxels},
+        {"worldToLocal", .fn=js_box_worldToLocal},
+        {}
+    },
+};
 
 static JSValue js_volume_ctor(JSContext *ctx, JSValueConst new_target,
                             int argc, JSValueConst *argv)
@@ -304,7 +321,7 @@ static JSValue js_volume_ctor(JSContext *ctx, JSValueConst new_target,
     JSValue ret;
     volume_t *volume;
     volume = volume_new();
-    ret = JS_NewObjectClass(ctx, js_volume_class_id);
+    ret = JS_NewObjectClass(ctx, volume_klass.id);
     JS_SetOpaque(ret, volume);
     return ret;
 }
@@ -312,7 +329,7 @@ static JSValue js_volume_ctor(JSContext *ctx, JSValueConst new_target,
 static void js_volume_finalizer(JSRuntime *ctx, JSValue this_val)
 {
     volume_t *volume;
-    volume = JS_GetOpaque(this_val, js_volume_class_id);
+    volume = JS_GetOpaque(this_val, volume_klass.id);
     volume_delete(volume);
 }
 
@@ -325,7 +342,7 @@ static JSValue js_volume_iter(JSContext *ctx, JSValueConst this_val,
     int pos[3];
     uint8_t value[4];
 
-    volume = JS_GetOpaque(this_val, js_volume_class_id);
+    volume = JS_GetOpaque(this_val, volume_klass.id);
     iter = volume_get_iterator(volume, VOLUME_ITER_VOXELS);
     while (volume_iter(&iter, pos)) {
         volume_get_at(volume, &iter, pos, value);
@@ -347,7 +364,7 @@ static JSValue js_volume_setAt(JSContext *ctx, JSValueConst this_val,
 
     get_vec_int(ctx, argv[0], 3, pos, 0);
     get_vec_uint8(ctx, argv[1], 4, v, 255);
-    volume = JS_GetOpaque2(ctx, this_val, js_volume_class_id);
+    volume = JS_GetOpaque2(ctx, this_val, volume_klass.id);
     volume_set_at(volume, NULL, pos, v);
     return JS_UNDEFINED;
 }
@@ -361,7 +378,7 @@ static JSValue js_volume_save(JSContext *ctx, JSValueConst this_val,
     const file_format_t *f;
     int err;
 
-    volume = JS_GetOpaque2(ctx, this_val, js_volume_class_id);
+    volume = JS_GetOpaque2(ctx, this_val, volume_klass.id);
     path = JS_ToCString(ctx, argv[0]);
     if (argc > 1)
         format = JS_ToCString(ctx, argv[1]);
@@ -385,41 +402,22 @@ static JSValue js_volume_save(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static void bind_volume(JSContext *ctx)
-{
-    JSValue proto, ctor, global_obj;
-
-    static const JSCFunctionListEntry js_volume_proto_funcs[] = {
-        JS_CFUNC_DEF("iter", 1, js_volume_iter),
-        JS_CFUNC_DEF("setAt", 2, js_volume_setAt),
-        JS_CFUNC_DEF("save", 2, js_volume_save),
-    };
-
-    static JSClassDef js_volume_class = {
-        "Volume",
-        .finalizer = js_volume_finalizer,
-    };
-
-    JS_NewClassID(&js_volume_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_volume_class_id, &js_volume_class);
-    proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, proto, js_volume_proto_funcs,
-                               ARRAY_SIZE(js_volume_proto_funcs));
-    JS_SetClassProto(ctx, js_volume_class_id, proto);
-
-    ctor = JS_NewCFunction2(ctx, js_volume_ctor, "Volume", 0,
-                            JS_CFUNC_constructor, 0);
-    JS_SetConstructor(ctx, ctor, proto);
-
-    global_obj = JS_GetGlobalObject(ctx);
-    JS_SetPropertyStr(ctx, global_obj, "Volume", ctor);
-    JS_FreeValue(ctx, global_obj);
-}
+static klass_t volume_klass = {
+    .def.class_name = "Volume",
+    .def.finalizer = js_volume_finalizer,
+    .ctor = js_volume_ctor,
+    .attributes = {
+        {"iter", .fn=js_volume_iter},
+        {"setAt", .fn=js_volume_setAt},
+        {"save", .fn=js_volume_save},
+        {}
+    }
+};
 
 static void js_image_finalizer(JSRuntime *ctx, JSValue this_val)
 {
     image_t *image;
-    image = JS_GetOpaque(this_val, js_image_class_id);
+    image = JS_GetOpaque(this_val, image_klass.id);
     image_delete(image);
 }
 
@@ -430,79 +428,38 @@ static JSValue js_image_getLayersVolume(
     volume_t *volume;
     image_t *image;
 
-    image = JS_GetOpaque(this_val, js_image_class_id);
+    image = JS_GetOpaque(this_val, image_klass.id);
     volume = volume_copy(goxel_get_layers_volume(image));
-    ret = JS_NewObjectClass(ctx, js_volume_class_id);
+    ret = JS_NewObjectClass(ctx, volume_klass.id);
     JS_SetOpaque(ret, (void*)volume);
     return ret;
 }
 
-static JSValue js_image_activeLayer_get(JSContext *ctx, JSValueConst this_val)
-{
-    image_t *image;
-    JSValue ret;
-
-    image = JS_GetOpaque(this_val, js_image_class_id);
-    ret = JS_NewObjectClass(ctx, js_layer_class_id);
-    image->active_layer->ref++;
-    JS_SetOpaque(ret, (void*)image->active_layer);
-    return ret;
-}
-
-static void bind_image(JSContext *ctx)
-{
-    JSValue proto;
-    static const JSCFunctionListEntry js_image_proto_funcs[] = {
-        JS_CGETSET_DEF("activeLayer", js_image_activeLayer_get, NULL),
-        JS_CFUNC_DEF("getLayersVolume", 0, js_image_getLayersVolume),
-    };
-    static JSClassDef js_image_class = {
-        "Image",
-        .finalizer = js_image_finalizer,
-    };
-    JS_NewClassID(&js_image_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_image_class_id, &js_image_class);
-    proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, proto, js_image_proto_funcs,
-                               ARRAY_SIZE(js_image_proto_funcs));
-    JS_SetClassProto(ctx, js_image_class_id, proto);
-}
-
-static JSValue js_layer_volume_get(JSContext *ctx, JSValueConst this_val)
-{
-    layer_t *layer;
-    JSValue ret;
-
-    layer = JS_GetOpaque(this_val, js_layer_class_id);
-    ret = JS_NewObjectClass(ctx, js_volume_class_id);
-    JS_SetOpaque(ret, (void*)volume_dup(layer->volume));
-    return ret;
-}
+static klass_t image_klass = {
+    .def.class_name = "Image",
+    .def.finalizer = js_image_finalizer,
+    .attributes = {
+        {"activeLayer", .klass=&layer_klass, MEMBER(image_t, active_layer)},
+        {"getLayersVolume", .fn=js_image_getLayersVolume},
+        {}
+    }
+};
 
 static void js_layer_finalizer(JSRuntime *ctx, JSValue this_val)
 {
     layer_t *layer;
-    layer = JS_GetOpaque(this_val, js_layer_class_id);
+    layer = JS_GetOpaque(this_val, layer_klass.id);
     layer_delete(layer);
 }
 
-static void bind_layer(JSContext *ctx)
-{
-    JSValue proto;
-    static const JSCFunctionListEntry js_layer_proto_funcs[] = {
-        JS_CGETSET_DEF("volume", js_layer_volume_get, NULL),
-    };
-    static JSClassDef js_layer_class = {
-        "Layer",
-        .finalizer = js_layer_finalizer,
-    };
-    JS_NewClassID(&js_layer_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_layer_class_id, &js_layer_class);
-    proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, proto, js_layer_proto_funcs,
-                               ARRAY_SIZE(js_layer_proto_funcs));
-    JS_SetClassProto(ctx, js_layer_class_id, proto);
-}
+static klass_t layer_klass = {
+    .def.class_name = "Layer",
+    .def.finalizer = js_layer_finalizer,
+    .attributes = {
+        {"volume", .klass=&volume_klass, MEMBER(layer_t, volume)},
+        {}
+    }
+};
 
 typedef struct {
     file_format_t format;
@@ -517,7 +474,7 @@ int script_format_export_func(const file_format_t *format_,
     JSValue export, image;
     JSValueConst argv[2];
 
-    image = JS_NewObjectClass(ctx, js_image_class_id);
+    image = JS_NewObjectClass(ctx, image_klass.id);
     goxel.image->ref++;
     JS_SetOpaque(image, (void*)goxel.image);
     argv[0] = image;
@@ -571,66 +528,125 @@ static JSValue js_goxel_registerScript(JSContext *ctx, JSValueConst this_val,
     return JS_UNDEFINED;
 }
 
-static JSValue js_goxel_selection_get(JSContext *ctx, JSValueConst this_val)
+static klass_t goxel_klass = {
+    .def.class_name = "Goxel",
+    .attributes = {
+        {"image", .klass=&image_klass, MEMBER(goxel_t, image)},
+        {"selection", .klass=&box_klass, MEMBER(goxel_t, selection)},
+        {"registerFormat", .fn=js_goxel_registerFormat},
+        {"registerScript", .fn=js_goxel_registerScript},
+        {}
+    },
+};
+
+static JSValue attr_getter(JSContext *ctx, JSValueConst this_val, int magic)
 {
-    return new_js_box(ctx, this_val, goxel.selection);
+    JSValue proto, ret;
+    const klass_t *klass;
+    void *this, *ptr;
+    const attribute_t *attr;
+
+    proto = JS_GetPrototype(ctx, this_val);
+    klass = JS_GetOpaque(proto, 1);
+    this = JS_GetOpaque(this_val, klass->id);
+    JS_FreeValue(ctx, proto);
+    attr = &klass->attributes[magic];
+
+    assert(this);
+    if (attr->klass && attr->klass->ctor_from_ptr && attr->member.size) {
+        ptr = this + attr->member.offset;
+        ret = attr->klass->ctor_from_ptr(ctx, this_val, ptr, attr->member.size);
+        return ret;
+    }
+
+    if (attr->klass && attr->member.size) {
+        ptr = *(void**)(this + attr->member.offset);
+        if (!ptr) return JS_NULL;
+        ((obj_t*)ptr)->ref++;
+        ret = JS_NewObjectClass(ctx, attr->klass->id);
+        JS_SetOpaque(ret, ptr);
+        return ret;
+    }
+
+    return JS_EXCEPTION;
 }
 
-static JSValue js_goxel_selection_set(JSContext *ctx, JSValueConst this_val,
-                                      JSValue val)
+static JSValue attr_setter(JSContext *ctx, JSValueConst this_val,
+                           JSValueConst val, int magic)
 {
-    return JS_UNDEFINED;
+    // Not implemented yet.
+    return JS_EXCEPTION;
 }
 
-static JSValue js_goxel_image_get(JSContext *ctx, JSValueConst this_val)
+static void init_klass(JSContext *ctx, klass_t *klass)
 {
-    JSValue ret;
-    ret = JS_NewObjectClass(ctx, js_image_class_id);
-    goxel.image->ref++;
-    JS_SetOpaque(ret, (void*)goxel.image);
-    return ret;
-}
+    JSValue proto, getter, setter, obj_class, global_obj;
+    attribute_t *attr;
+    int i;
+    JSAtom name;
 
-static void bind_goxel(JSContext *ctx)
-{
-    JSValue proto, global_obj, obj;
-    static const JSCFunctionListEntry js_goxel_proto_funcs[] = {
-        JS_CFUNC_DEF("registerFormat", 1, js_goxel_registerFormat),
-        JS_CFUNC_DEF("registerScript", 1, js_goxel_registerScript),
-        JS_CGETSET_DEF("selection",
-                js_goxel_selection_get, js_goxel_selection_set),
-        JS_CGETSET_DEF("image", js_goxel_image_get, NULL),
-    };
-    static JSClassDef js_goxel_class = {
-        "Goxel",
-    };
-
-    JS_NewClassID(&js_goxel_class_id);
-    JS_NewClass(JS_GetRuntime(ctx), js_goxel_class_id, &js_goxel_class);
+    JS_NewClassID(&klass->id);
+    JS_NewClass(JS_GetRuntime(ctx), klass->id, &klass->def);
     proto = JS_NewObject(ctx);
-    JS_SetPropertyFunctionList(ctx, proto, js_goxel_proto_funcs,
-                               ARRAY_SIZE(js_goxel_proto_funcs));
-    JS_SetClassProto(ctx, js_goxel_class_id, proto);
+    JS_SetOpaque(proto, klass);
+    JS_SetClassProto(ctx, klass->id, proto);
 
-    obj = JS_NewObjectClass(ctx, js_goxel_class_id);
-    global_obj = JS_GetGlobalObject(ctx);
-    JS_SetPropertyStr(ctx, global_obj, "goxel", obj);
-    JS_FreeValue(ctx, global_obj);
+    if (klass->ctor) {
+        obj_class = JS_NewCFunction2(ctx, klass->ctor, klass->def.class_name, 0,
+                                     JS_CFUNC_constructor, 0);
+        JS_SetConstructor(ctx, obj_class, proto);
+        global_obj = JS_GetGlobalObject(ctx);
+        JS_SetPropertyStr(ctx, global_obj, klass->def.class_name, obj_class);
+        JS_FreeValue(ctx, global_obj);
+    }
+
+    for (i = 0, attr = &klass->attributes[0]; attr->name; attr++, i++) {
+        name = JS_NewAtom(ctx, attr->name);
+        if (attr->get) {
+            getter = JS_NewCFunction2(ctx, (void*)attr->get, NULL, 0,
+                                      JS_CFUNC_getter, 0);
+            setter = JS_NewCFunction2(ctx, (void*)attr->set, NULL, 0,
+                                      JS_CFUNC_setter, 0);
+            JS_DefinePropertyGetSet(ctx, proto, name, getter, setter, 0);
+        } else if (attr->fn) {
+            JS_DefinePropertyValue(ctx, proto, name,
+                           JS_NewCFunction(ctx, attr->fn, NULL, 0),
+                           JS_DEF_CFUNC);
+        } else {
+            getter = JS_NewCFunction2(ctx, (void*)attr_getter, NULL, 0,
+                                      JS_CFUNC_getter_magic, i);
+            setter = JS_NewCFunction2(ctx, (void*)attr_setter, NULL, 0,
+                                      JS_CFUNC_setter_magic, i);
+            JS_DefinePropertyGetSet(ctx, proto, name, getter, setter, 0);
+        }
+    }
 }
 
 static void init_runtime(void)
 {
+    JSContext *ctx;
+    JSValue obj, global_obj;
+
     if (g_ctx) return;
     g_rt = JS_NewRuntime();
     g_ctx = JS_NewContext(g_rt);
-    js_init_module_std(g_ctx, "std");
-    js_init_module_os(g_ctx, "os");
-    bind_vec(g_ctx);
-    bind_box(g_ctx);
-    bind_volume(g_ctx);
-    bind_image(g_ctx);
-    bind_layer(g_ctx);
-    bind_goxel(g_ctx);
+    ctx = g_ctx;
+    js_init_module_std(ctx, "std");
+    js_init_module_os(ctx, "os");
+
+    init_klass(ctx, &vec_klass);
+    init_klass(ctx, &box_klass);
+    init_klass(ctx, &volume_klass);
+    init_klass(ctx, &layer_klass);
+    init_klass(ctx, &image_klass);
+    init_klass(ctx, &goxel_klass);
+
+    // Add global 'goxel' object.
+    obj = JS_NewObjectClass(ctx, goxel_klass.id);
+    JS_SetOpaque(obj, &goxel);
+    global_obj = JS_GetGlobalObject(ctx);
+    JS_SetPropertyStr(ctx, global_obj, "goxel", obj);
+    JS_FreeValue(ctx, global_obj);
 }
 
 static int script_run_from_str(
