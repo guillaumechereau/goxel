@@ -160,6 +160,23 @@ static void js_vec_finalizer(JSRuntime *rt, JSValue val)
     js_free_rt(rt, vec);
 }
 
+static JSValue js_vec_from_ptr(
+        JSContext *ctx, JSValueConst owner, void *ptr, size_t size)
+{
+    JSValue ret;
+    vec_t *vec;
+
+    assert(ptr != NULL);
+    vec = js_mallocz(ctx, sizeof(*vec));
+    vec->size = size / sizeof(float);
+    assert(!JS_IsUndefined(owner));
+    vec->owner = JS_DupValue(ctx, owner);
+    vec->values = ptr;
+    ret = JS_NewObjectClass(ctx, vec_klass.id);
+    JS_SetOpaque(ret, vec);
+    return ret;
+}
+
 static JSValue new_js_vec3(JSContext *ctx, float x, float y, float z)
 {
     JSValue ret;
@@ -187,13 +204,13 @@ static JSValue new_js_vec4(JSContext *ctx, float x, float y, float z, float w)
     vec->values[0] = x;
     vec->values[1] = y;
     vec->values[2] = z;
-    vec->values[3] = z;
+    vec->values[3] = w;
     ret = JS_NewObjectClass(ctx, vec_klass.id);
     JS_SetOpaque(ret, vec);
     return ret;
 }
 
-static JSValue js_vec_get_at(JSContext *ctx, JSValueConst this_val, int idx)
+static JSValue js_vec_get(JSContext *ctx, JSValueConst this_val, int idx)
 {
     vec_t *vec = JS_GetOpaque2(ctx, this_val, vec_klass.id);
     if (!vec)
@@ -203,7 +220,7 @@ static JSValue js_vec_get_at(JSContext *ctx, JSValueConst this_val, int idx)
     return JS_NewFloat64(ctx, vec->values[idx]);
 }
 
-static JSValue js_vec_set_at(
+static JSValue js_vec_set(
         JSContext *ctx, JSValueConst this_val, JSValue val, int idx)
 {
     vec_t *vec;
@@ -224,11 +241,12 @@ static klass_t vec_klass = {
     .def.class_name = "Vec",
     .def.finalizer = js_vec_finalizer,
     .ctor = js_vec_ctor,
+    .ctor_from_ptr = js_vec_from_ptr,
     .attributes = {
-        {"x", .get=js_vec_get_at, .set=js_vec_set_at, .magic=0},
-        {"y", .get=js_vec_get_at, .set=js_vec_set_at, .magic=1},
-        {"z", .get=js_vec_get_at, .set=js_vec_set_at, .magic=2},
-        {"w", .get=js_vec_get_at, .set=js_vec_set_at, .magic=3},
+        {"x", .get=js_vec_get, .set=js_vec_set, .magic=0},
+        {"y", .get=js_vec_get, .set=js_vec_set, .magic=1},
+        {"z", .get=js_vec_get, .set=js_vec_set, .magic=2},
+        {"w", .get=js_vec_get, .set=js_vec_set, .magic=3},
         {}
     },
 };
@@ -333,6 +351,18 @@ static void js_volume_finalizer(JSRuntime *ctx, JSValue this_val)
     volume_delete(volume);
 }
 
+static JSValue js_volume_copy(JSContext *ctx, JSValueConst this_val,
+                              int argc, JSValueConst *argv)
+{
+    JSValue ret;
+    volume_t *volume;
+    volume = JS_GetOpaque(this_val, volume_klass.id);
+    volume = volume_copy(volume);
+    ret = JS_NewObjectClass(ctx, volume_klass.id);
+    JS_SetOpaque(ret, volume);
+    return ret;
+}
+
 static JSValue js_volume_iter(JSContext *ctx, JSValueConst this_val,
                             int argc, JSValueConst *argv)
 {
@@ -343,9 +373,11 @@ static JSValue js_volume_iter(JSContext *ctx, JSValueConst this_val,
     uint8_t value[4];
 
     volume = JS_GetOpaque(this_val, volume_klass.id);
-    iter = volume_get_iterator(volume, VOLUME_ITER_VOXELS);
+    iter = volume_get_iterator(volume,
+            VOLUME_ITER_VOXELS | VOLUME_ITER_SKIP_EMPTY);
     while (volume_iter(&iter, pos)) {
         volume_get_at(volume, &iter, pos, value);
+        if (value[3] == 0) continue;
         args[0] = new_js_vec3(ctx, pos[0], pos[1], pos[2]);
         args[1] = new_js_vec4(ctx, value[0], value[1], value[2], value[3]);
         JS_Call(ctx, argv[0], JS_UNDEFINED, 2, args);
@@ -407,6 +439,7 @@ static klass_t volume_klass = {
     .def.finalizer = js_volume_finalizer,
     .ctor = js_volume_ctor,
     .attributes = {
+        {"copy", .fn=js_volume_copy},
         {"iter", .fn=js_volume_iter},
         {"setAt", .fn=js_volume_setAt},
         {"save", .fn=js_volume_save},
@@ -604,9 +637,9 @@ static void init_klass(JSContext *ctx, klass_t *klass)
         name = JS_NewAtom(ctx, attr->name);
         if (attr->get) {
             getter = JS_NewCFunction2(ctx, (void*)attr->get, NULL, 0,
-                                      JS_CFUNC_getter, 0);
+                                      JS_CFUNC_getter_magic, attr->magic);
             setter = JS_NewCFunction2(ctx, (void*)attr->set, NULL, 0,
-                                      JS_CFUNC_setter, 0);
+                                      JS_CFUNC_setter_magic, attr->magic);
             JS_DefinePropertyGetSet(ctx, proto, name, getter, setter, 0);
         } else if (attr->fn) {
             JS_DefinePropertyValue(ctx, proto, name,
@@ -747,7 +780,7 @@ int script_execute(const char *name)
     }
     if (i == arrlen(g_scripts)) return -1;
     LOG_I("Run script %s", name);
-    val = JS_Call(ctx, script->execute_fn, JS_NULL, 0, NULL);
+    val = JS_Call(ctx, script->execute_fn, JS_UNDEFINED, 0, NULL);
     if (JS_IsException(val)) {
         LOG_E("Error executing script");
         js_std_dump_error(ctx);

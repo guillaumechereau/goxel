@@ -33,7 +33,6 @@ goxel.registerScript({
   name: 'FillRandom',
   description: 'Fill selection with random voxels',
   onExecute: function() {
-    console.log('test')
     let box = goxel.selection
     if (!box) {
       console.log('Need a selection')
@@ -42,6 +41,22 @@ goxel.registerScript({
     let volume = goxel.image.activeLayer.volume
     box.iterVoxels(function(pos) {
       volume.setAt(pos, getRandomColor())
+    })
+  }
+})
+
+goxel.registerScript({
+  name: 'Dilate',
+  onExecute: function() {
+    let volume = goxel.image.activeLayer.volume
+    volume.copy().iter(function(pos, color) {
+      for (let z = -1; z < 2; z++) {
+        for (let y = -1; y < 2; y++) {
+          for (let x = -1; x < 2; x++) {
+            volume.setAt([pos.x + x, pos.y + y, pos.z + z], color)
+          }
+        }
+      }
     })
   }
 })
