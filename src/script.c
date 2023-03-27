@@ -47,11 +47,13 @@ static script_t *g_scripts = NULL;
 
 typedef struct {
     int size;
-    float values[4];
+    float *values;
+    JSValue owner;
 } vec_t;
 
 typedef struct {
-    float mat[4][4];
+    float (*mat)[4];
+    JSValue owner;
 } box_t;
 
 static void get_vec_int(JSContext *ctx, JSValue val, int size, int *out,
@@ -94,6 +96,7 @@ static JSValue js_vec_ctor(JSContext *ctx, JSValueConst new_target,
 
     vec = calloc(1, sizeof(*vec));
     vec->size = argc;
+    vec->values = calloc(argc, sizeof(float));
     for (i = 0; i < argc; i++) {
         JS_ToFloat64(ctx, &v, argv[i]);
         vec->values[i] = v;
@@ -106,6 +109,8 @@ static JSValue js_vec_ctor(JSContext *ctx, JSValueConst new_target,
 static void js_vec_finalizer(JSRuntime *rt, JSValue val)
 {
     vec_t *vec = JS_GetOpaque(val, js_vec_class_id);
+    if (JS_IsUndefined(vec->owner)) js_free_rt(rt, vec->values);
+    JS_FreeValueRT(rt, vec->owner);
     js_free_rt(rt, vec);
 }
 
@@ -114,7 +119,9 @@ static JSValue new_js_vec3(JSContext *ctx, float x, float y, float z)
     JSValue ret;
     vec_t *vec;
     vec = js_mallocz(ctx, sizeof(*vec));
+    vec->owner = JS_UNDEFINED;
     vec->size = 3;
+    vec->values = calloc(3, sizeof(float));
     vec->values[0] = x;
     vec->values[1] = y;
     vec->values[2] = z;
@@ -128,7 +135,9 @@ static JSValue new_js_vec4(JSContext *ctx, float x, float y, float z, float w)
     JSValue ret;
     vec_t *vec;
     vec = js_mallocz(ctx, sizeof(*vec));
+    vec->owner = JS_UNDEFINED;
     vec->size = 4;
+    vec->values = calloc(4, sizeof(float));
     vec->values[0] = x;
     vec->values[1] = y;
     vec->values[2] = z;
@@ -198,13 +207,19 @@ static void bind_vec(JSContext *ctx)
     JS_FreeValue(ctx, global_obj);
 }
 
-static JSValue new_js_box(JSContext *ctx, const float mat[4][4])
+static JSValue new_js_box(JSContext *ctx, JSValueConst owner, float mat[4][4])
 {
     JSValue ret;
     box_t *box;
     if (mat == NULL) return JS_NULL;
     box = js_mallocz(ctx, sizeof(*box));
-    mat4_copy(mat, box->mat);
+    box->owner = JS_DupValue(ctx, owner);
+    if (JS_IsUndefined(owner)) {
+        box->mat = calloc(1, 16 * sizeof(float));
+        mat4_copy(mat, box->mat);
+    } else {
+        box->mat = mat;
+    }
     ret = JS_NewObjectClass(ctx, js_box_class_id);
     JS_SetOpaque(ret, box);
     return ret;
@@ -256,6 +271,8 @@ static JSValue js_box_worldToLocal(JSContext *ctx, JSValueConst this_val,
 static void js_box_finalizer(JSRuntime *rt, JSValue val)
 {
     box_t *box = JS_GetOpaque(val, js_box_class_id);
+    if (JS_IsUndefined(box->owner)) js_free_rt(rt, box->mat);
+    JS_FreeValueRT(rt, box->owner);
     js_free_rt(rt, box);
 }
 
@@ -556,7 +573,7 @@ static JSValue js_goxel_registerScript(JSContext *ctx, JSValueConst this_val,
 
 static JSValue js_goxel_selection_get(JSContext *ctx, JSValueConst this_val)
 {
-    return new_js_box(ctx, goxel.selection);
+    return new_js_box(ctx, this_val, goxel.selection);
 }
 
 static JSValue js_goxel_selection_set(JSContext *ctx, JSValueConst this_val,
