@@ -770,7 +770,7 @@ int script_execute(const char *name)
 {
     int i;
     int ret = 0;
-    script_t *script;
+    script_t *script = NULL;
     JSContext *ctx = g_ctx;
     JSValue val;
 
@@ -779,6 +779,8 @@ int script_execute(const char *name)
         if (strcmp(script->name, name) == 0) break;
     }
     if (i == arrlen(g_scripts)) return -1;
+    assert(script);
+
     LOG_I("Run script %s", name);
     val = JS_Call(ctx, script->execute_fn, JS_UNDEFINED, 0, NULL);
     if (JS_IsException(val)) {
