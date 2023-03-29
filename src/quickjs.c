@@ -21,11 +21,11 @@
 
 #define CONFIG_VERSION "2021-03-27"
 
-#include "quickjs/cutils.c"
-#include "quickjs/libregexp.c"
-#include "quickjs/libunicode.c"
-#include "quickjs/quickjs-libc.c"
-#include "quickjs/repl.c"
+#include "../ext_src/quickjs/cutils.c"
+#include "../ext_src/quickjs/libregexp.c"
+#include "../ext_src/quickjs/libunicode.c"
+#include "../ext_src/quickjs/quickjs-libc.c"
+#include "../ext_src/quickjs/repl.c"
 #define is_digit is_digit2
 #define compute_stack_size compute_stack_size2
-#include "quickjs/quickjs.c"
+#include "../ext_src/quickjs/quickjs.c"

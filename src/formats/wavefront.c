@@ -20,10 +20,10 @@
 #include "file_format.h"
 
 #define VOXELIZER_IMPLEMENTATION
-#include "voxelizer/voxelizer.h"
+#include "../ext_src/voxelizer/voxelizer.h"
 
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
-#include "tinyobjloader/tinyobj_loader_c.h"
+#include "../ext_src/tinyobjloader/tinyobj_loader_c.h"
 
 typedef struct {
     union {

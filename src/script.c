@@ -20,11 +20,11 @@
 
 #include "file_format.h"
 
-#include "quickjs/quickjs.h"
-#include "quickjs/quickjs-libc.h"
+#include "../ext_src/quickjs/quickjs.h"
+#include "../ext_src/quickjs/quickjs-libc.h"
 
 #define STB_DS_IMPLEMENTATION
-#include "stb/stb_ds.h"
+#include "../ext_src/stb/stb_ds.h"
 
 static JSRuntime *g_rt = NULL;
 static JSContext *g_ctx = NULL;

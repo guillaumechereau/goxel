@@ -43,6 +43,11 @@
 		F037D5D61EA6069A00C96D10 /* shape.c in Sources */ = {isa = PBXBuildFile; fileRef = F037D5CE1EA6069A00C96D10 /* shape.c */; };
 		F03B4387224CCDDF00798CAB /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F03B4385224CCDDF00798CAB /* pathtracer.cpp */; };
 		F03B4388224CCDDF00798CAB /* yocto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F03B4386224CCDDF00798CAB /* yocto.cpp */; };
+		F05D6E5D29D3E952004CA300 /* script.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E5C29D3E952004CA300 /* script.c */; };
+		F05D6E8029D3EA36004CA300 /* volume.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E7C29D3EA36004CA300 /* volume.c */; };
+		F05D6E8129D3EA36004CA300 /* volume_to_vertices.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E7D29D3EA36004CA300 /* volume_to_vertices.c */; };
+		F05D6E8229D3EA36004CA300 /* quickjs.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E7E29D3EA36004CA300 /* quickjs.c */; };
+		F05D6E8329D3EA36004CA300 /* volume_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E7F29D3EA36004CA300 /* volume_utils.c */; };
 		F05E2DD9268F451D00E47D33 /* quit.c in Sources */ = {isa = PBXBuildFile; fileRef = F05E2DD8268F451D00E47D33 /* quit.c */; };
 		F06C683C1D2EAECC00887FCE /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C68391D2EAECC00887FCE /* camera.c */; };
 		F06C683D1D2EAECC00887FCE /* quantization.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C683A1D2EAECC00887FCE /* quantization.c */; };
@@ -54,7 +59,6 @@
 		F07DEA041BD0F31500BAA1AD /* goxel.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9EA1BD0F31500BAA1AD /* goxel.c */; };
 		F07DEA051BD0F31500BAA1AD /* gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9EC1BD0F31500BAA1AD /* gui.cpp */; };
 		F07DEA061BD0F31500BAA1AD /* image.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9ED1BD0F31500BAA1AD /* image.c */; };
-		F07DEA091BD0F31500BAA1AD /* mesh.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9F11BD0F31500BAA1AD /* mesh.c */; };
 		F07DEA0A1BD0F31500BAA1AD /* model3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9F21BD0F31500BAA1AD /* model3d.c */; };
 		F07DEA0B1BD0F31500BAA1AD /* palette.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9F31BD0F31500BAA1AD /* palette.c */; };
 		F07DEA0D1BD0F31500BAA1AD /* render.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9F61BD0F31500BAA1AD /* render.c */; };
@@ -90,8 +94,6 @@
 		F0E5DB2824FBB0D600010FDD /* file_format.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E5DB2624FBB0D600010FDD /* file_format.c */; };
 		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
 		F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */; };
-		F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C611F98B03200FB50DE /* mesh_utils.c */; };
-		F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */; };
 		F0EEB7E41C8EC27C004AB676 /* action.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7E31C8EC27C004AB676 /* action.c */; };
 		F0EEB7E81C8EC4D1004AB676 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F0EEB7E71C8EC4D1004AB676 /* libz.tbd */; };
 		F0F14C6720AF282E0006E575 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F0F14C6620AF282E0006E575 /* imgui.cpp */; };
@@ -146,6 +148,12 @@
 		F037D5CE1EA6069A00C96D10 /* shape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shape.c; sourceTree = "<group>"; };
 		F03B4385224CCDDF00798CAB /* pathtracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pathtracer.cpp; sourceTree = "<group>"; };
 		F03B4386224CCDDF00798CAB /* yocto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yocto.cpp; sourceTree = "<group>"; };
+		F05D6E5B29D3E7EC004CA300 /* voxelizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = voxelizer.h; sourceTree = "<group>"; };
+		F05D6E5C29D3E952004CA300 /* script.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = script.c; sourceTree = "<group>"; };
+		F05D6E7C29D3EA36004CA300 /* volume.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volume.c; sourceTree = "<group>"; };
+		F05D6E7D29D3EA36004CA300 /* volume_to_vertices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volume_to_vertices.c; sourceTree = "<group>"; };
+		F05D6E7E29D3EA36004CA300 /* quickjs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = quickjs.c; sourceTree = "<group>"; };
+		F05D6E7F29D3EA36004CA300 /* volume_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volume_utils.c; sourceTree = "<group>"; };
 		F05E2DD8268F451D00E47D33 /* quit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = quit.c; path = gui/quit.c; sourceTree = "<group>"; };
 		F06C68391D2EAECC00887FCE /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
 		F06C683A1D2EAECC00887FCE /* quantization.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = quantization.c; sourceTree = "<group>"; };
@@ -160,7 +168,6 @@
 		F07DE9EB1BD0F31500BAA1AD /* goxel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = goxel.h; sourceTree = "<group>"; };
 		F07DE9EC1BD0F31500BAA1AD /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
 		F07DE9ED1BD0F31500BAA1AD /* image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = image.c; sourceTree = "<group>"; };
-		F07DE9F11BD0F31500BAA1AD /* mesh.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh.c; sourceTree = "<group>"; };
 		F07DE9F21BD0F31500BAA1AD /* model3d.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = model3d.c; sourceTree = "<group>"; };
 		F07DE9F31BD0F31500BAA1AD /* palette.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = palette.c; sourceTree = "<group>"; };
 		F07DE9F61BD0F31500BAA1AD /* render.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = render.c; sourceTree = "<group>"; };
@@ -211,9 +218,6 @@
 		F0E5DB2724FBB0D600010FDD /* file_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file_format.h; sourceTree = "<group>"; };
 		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
 		F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuzzy_select.c; sourceTree = "<group>"; };
-		F0ED3C611F98B03200FB50DE /* mesh_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_utils.c; sourceTree = "<group>"; };
-		F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mesh_to_vertices.c; sourceTree = "<group>"; };
-		F0ED3C631F98B03300FB50DE /* mesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mesh.h; sourceTree = "<group>"; };
 		F0EEB7E31C8EC27C004AB676 /* action.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = action.c; sourceTree = "<group>"; };
 		F0EEB7E71C8EC4D1004AB676 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		F0F14C6620AF282E0006E575 /* imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui.cpp; sourceTree = "<group>"; };
@@ -306,6 +310,14 @@
 			path = tools;
 			sourceTree = "<group>";
 		};
+		F05D6E5A29D3E7EC004CA300 /* voxelizer */ = {
+			isa = PBXGroup;
+			children = (
+				F05D6E5B29D3E7EC004CA300 /* voxelizer.h */,
+			);
+			path = voxelizer;
+			sourceTree = "<group>";
+		};
 		F07DE9C61BD0F03900BAA1AD = {
 			isa = PBXGroup;
 			children = (
@@ -343,6 +355,11 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F05D6E7E29D3EA36004CA300 /* quickjs.c */,
+				F05D6E7D29D3EA36004CA300 /* volume_to_vertices.c */,
+				F05D6E7F29D3EA36004CA300 /* volume_utils.c */,
+				F05D6E7C29D3EA36004CA300 /* volume.c */,
+				F05D6E5C29D3E952004CA300 /* script.c */,
 				F05E2DD8268F451D00E47D33 /* quit.c */,
 				F0E5DB2624FBB0D600010FDD /* file_format.c */,
 				F0E5DB2724FBB0D600010FDD /* file_format.h */,
@@ -357,9 +374,6 @@
 				F03B4386224CCDDF00798CAB /* yocto.cpp */,
 				F09FFC5621CE161400B6976A /* box_edit.c */,
 				F0F14C6620AF282E0006E575 /* imgui.cpp */,
-				F0ED3C621F98B03200FB50DE /* mesh_to_vertices.c */,
-				F0ED3C611F98B03200FB50DE /* mesh_utils.c */,
-				F0ED3C631F98B03300FB50DE /* mesh.h */,
 				F0E71BAB1F1DA30D00D20C7C /* theme.c */,
 				F097B3F11F0C97DB00A3622B /* gesture.c */,
 				F097B3F21F0C97DB00A3622B /* gesture3d.c */,
@@ -375,7 +389,6 @@
 				F07DE9EB1BD0F31500BAA1AD /* goxel.h */,
 				F07DE9EC1BD0F31500BAA1AD /* gui.cpp */,
 				F07DE9ED1BD0F31500BAA1AD /* image.c */,
-				F07DE9F11BD0F31500BAA1AD /* mesh.c */,
 				F07DE9F21BD0F31500BAA1AD /* model3d.c */,
 				F07DE9F31BD0F31500BAA1AD /* palette.c */,
 				F07DE9F61BD0F31500BAA1AD /* render.c */,
@@ -391,6 +404,7 @@
 		F07DEA151BD0F33A00BAA1AD /* ext_src */ = {
 			isa = PBXGroup;
 			children = (
+				F05D6E5A29D3E7EC004CA300 /* voxelizer */,
 				F0C37C8D2317CBF2000EF45F /* xxhash */,
 				F0DE970D1E6FE8BF000354AF /* noc */,
 				F07DEA211BD0F33A00BAA1AD /* stb */,
@@ -532,6 +546,7 @@
 				F025C7DB1F33239000C52709 /* png_slices.c in Sources */,
 				F037D5D31EA6069A00C96D10 /* plane.c in Sources */,
 				F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */,
+				F05D6E8329D3EA36004CA300 /* volume_utils.c in Sources */,
 				F037D5CF1EA6069A00C96D10 /* brush.c in Sources */,
 				F00FC32E226B2FCF0002F251 /* material_panel.c in Sources */,
 				F00FC339226B2FCF0002F251 /* export_panel.c in Sources */,
@@ -550,6 +565,7 @@
 				F07DEA061BD0F31500BAA1AD /* image.c in Sources */,
 				F00FC32F226B2FCF0002F251 /* palette_panel.c in Sources */,
 				F06C683C1D2EAECC00887FCE /* camera.c in Sources */,
+				F05D6E8129D3EA36004CA300 /* volume_to_vertices.c in Sources */,
 				F09FFC5721CE161400B6976A /* box_edit.c in Sources */,
 				F00FC330226B2FCF0002F251 /* menu.c in Sources */,
 				F037D5D11EA6069A00C96D10 /* laser.c in Sources */,
@@ -559,6 +575,7 @@
 				F00FC312226B2F7C0002F251 /* ini.c in Sources */,
 				F0EEB7E41C8EC27C004AB676 /* action.c in Sources */,
 				F037D5D61EA6069A00C96D10 /* shape.c in Sources */,
+				F05D6E5D29D3E952004CA300 /* script.c in Sources */,
 				F03B4387224CCDDF00798CAB /* pathtracer.cpp in Sources */,
 				F00FC334226B2FCF0002F251 /* render_panel.c in Sources */,
 				F07DEA0A1BD0F31500BAA1AD /* model3d.c in Sources */,
@@ -570,7 +587,6 @@
 				F00FC32D226B2FCF0002F251 /* cameras_panel.c in Sources */,
 				F07DEA0F1BD0F31500BAA1AD /* shape.c in Sources */,
 				F0A160011E962F1300C6EF33 /* txt.c in Sources */,
-				F07DEA091BD0F31500BAA1AD /* mesh.c in Sources */,
 				F076EA362284162400B74F0C /* light_panel.c in Sources */,
 				F0AE90F71C8EE01300C29080 /* assets.c in Sources */,
 				F00FC331226B2FCF0002F251 /* layers_panel.c in Sources */,
@@ -585,13 +601,12 @@
 				F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */,
 				F0A160021E962F1300C6EF33 /* vox.c in Sources */,
 				F07DEA121BD0F31500BAA1AD /* tools.c in Sources */,
-				F0ED3C641F98B03300FB50DE /* mesh_utils.c in Sources */,
-				F0ED3C651F98B03300FB50DE /* mesh_to_vertices.c in Sources */,
 				F03B4388224CCDDF00798CAB /* yocto.cpp in Sources */,
 				F00FC317226B2F7C0002F251 /* sound.c in Sources */,
 				F00FC31A226B2F7C0002F251 /* cache.c in Sources */,
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
 				F0ACA2A12271ACD400376C82 /* gltf.c in Sources */,
+				F05D6E8229D3EA36004CA300 /* quickjs.c in Sources */,
 				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,
 				F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */,
 				F097B3F31F0C97DB00A3622B /* gesture.c in Sources */,
@@ -607,6 +622,7 @@
 				F00FC336226B2FCF0002F251 /* debug_panel.c in Sources */,
 				F07DEA051BD0F31500BAA1AD /* gui.cpp in Sources */,
 				F0F14C6720AF282E0006E575 /* imgui.cpp in Sources */,
+				F05D6E8029D3EA36004CA300 /* volume.c in Sources */,
 				F0E5DB2824FBB0D600010FDD /* file_format.c in Sources */,
 				F07DEA0D1BD0F31500BAA1AD /* render.c in Sources */,
 				F037D5C31EA6061F00C96D10 /* gox.c in Sources */,
