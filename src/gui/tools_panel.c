@@ -60,6 +60,7 @@ void gui_tools_panel(void)
     gui_group_begin(NULL);
     for (i = 0; i < nb; i++) {
         tool = tool_get(values[i].tool);
+        assert(tool);
         v = goxel.tool->id == values[i].tool;
         sprintf(label, "%s", tool->name);
         action = action_get(values[i].action, true);

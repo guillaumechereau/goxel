@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "script.h"
 #include "xxhash.h"
 #include "file_format.h"
 
@@ -312,6 +313,7 @@ void goxel_init(void)
 {
     shapes_init();
     goxel_init_sound();
+    script_init();
 
     // Load and set default palette.
     palette_load_all(&goxel.palettes);
