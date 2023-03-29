@@ -247,6 +247,10 @@ static klass_t vec_klass = {
         {"y", .get=js_vec_get, .set=js_vec_set, .magic=1},
         {"z", .get=js_vec_get, .set=js_vec_set, .magic=2},
         {"w", .get=js_vec_get, .set=js_vec_set, .magic=3},
+        {"r", .get=js_vec_get, .set=js_vec_set, .magic=0},
+        {"g", .get=js_vec_get, .set=js_vec_set, .magic=1},
+        {"b", .get=js_vec_get, .set=js_vec_set, .magic=2},
+        {"a", .get=js_vec_get, .set=js_vec_set, .magic=3},
         {}
     },
 };
@@ -454,6 +458,21 @@ static void js_image_finalizer(JSRuntime *ctx, JSValue this_val)
     image_delete(image);
 }
 
+static JSValue js_image_addLayer(
+        JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    image_t *image;
+    layer_t *layer;
+    JSValue ret;
+
+    image = JS_GetOpaque(this_val, image_klass.id);
+    layer = image_add_layer(image, NULL);
+    ret = JS_NewObjectClass(ctx, layer_klass.id);
+    layer->ref++;
+    JS_SetOpaque(ret, (void*)layer);
+    return ret;
+}
+
 static JSValue js_image_getLayersVolume(
         JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
 {
@@ -472,6 +491,7 @@ static klass_t image_klass = {
     .def.class_name = "Image",
     .def.finalizer = js_image_finalizer,
     .attributes = {
+        {"addLayer", .fn=js_image_addLayer},
         {"activeLayer", .klass=&layer_klass, MEMBER(image_t, active_layer)},
         {"getLayersVolume", .fn=js_image_getLayersVolume},
         {}
@@ -499,6 +519,28 @@ typedef struct {
     JSValue data;
 } script_file_format_t;
 
+int script_format_import_func(const file_format_t *format_, image_t *image,
+                              const char *path)
+{
+    JSContext *ctx = g_ctx;
+    const script_file_format_t *format = (void*)format_;
+    JSValue js_import, js_image, js_path, val;
+    JSValueConst argv[2];
+    js_image = JS_NewObjectClass(ctx, image_klass.id);
+    goxel.image->ref++;
+    JS_SetOpaque(js_image, (void*)goxel.image);
+    js_path = JS_NewString(ctx, path);
+    argv[0] = js_image;
+    argv[1] = js_path;
+    js_import = JS_GetPropertyStr(ctx, format->data, "import");
+    val = JS_Call(ctx, js_import, JS_NULL, 2, argv);
+    JS_FreeValue(ctx, val);
+    JS_FreeValue(ctx, js_import);
+    JS_FreeValue(ctx, js_image);
+    JS_FreeValue(ctx, js_path);
+    return 0;
+}
+
 int script_format_export_func(const file_format_t *format_,
                               const image_t *img, const char *path)
 {
@@ -522,6 +564,7 @@ static JSValue js_goxel_registerFormat(JSContext *ctx, JSValueConst this_val,
 {
     const char *name, *ext;
     JSValueConst args;
+    JSValue val;
     script_file_format_t *format;
 
     args = argv[0];
@@ -529,18 +572,25 @@ static JSValue js_goxel_registerFormat(JSContext *ctx, JSValueConst this_val,
     ext = JS_ToCString(ctx, JS_GetPropertyStr(ctx, args, "ext"));
 
     LOG_I("Register format %s", name);
-    // TODO: finish this.
     format = calloc(1, sizeof(*format));
     *format = (script_file_format_t) {
         .format = {
             .name = name,
             .ext = ext,
-            .export_func = script_format_export_func,
         },
         .data = JS_DupValue(ctx, args),
     };
+    val = JS_GetPropertyStr(ctx, args, "import");
+    if (!JS_IsUndefined(val))
+        format->format.import_func = script_format_import_func;
+    JS_FreeValue(ctx, val);
+
+    val = JS_GetPropertyStr(ctx, args, "export");
+    if (!JS_IsUndefined(val))
+        format->format.export_func = script_format_export_func;
+    JS_FreeValue(ctx, val);
+
     file_format_register(&format->format);
-    // JS_FreeCString(ctx, name);
     return JS_UNDEFINED;
 }
 

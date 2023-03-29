@@ -4,13 +4,18 @@ import * as std from 'std'
 goxel.registerFormat({
   name: 'Test',
   ext: 'test\0*.test\0',
+  import: function(img, path) {
+    let layer = img.addLayer()
+    let volume = layer.volume
+    volume.setAt([0, 0, 0], [255, 0, 0, 255])
+  },
   export: function(img, path) {
     try {
       console.log(`Save ${path}`)
       let out = std.open(path, 'w')
       let volume = img.getLayersVolume()
       volume.iter(function(p, c) {
-        console.log(`${p.x} ${p.y}, ${p.z} => ${c.r}, ${c.g}, ${c.b}`)
+        out.printf(`${p.x} ${p.y}, ${p.z} => ${c.r}, ${c.g}, ${c.b}\n`)
       })
       out.close()
       console.log('done')
