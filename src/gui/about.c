@@ -62,7 +62,7 @@ int gui_about_scripts_popup(void *data)
 
     gui_text("Starting from version 0.12.0 Goxel adds experimental support "
              "for javascript plugins.");
-    gui_text("Add your own scripts in the directory:\n%s", dir);
-    gui_text("See some examples at %s", examples_url);
+    gui_text("Add your own scripts in the directory:\n%s.", dir);
+    gui_text("See some examples at %s.", examples_url);
     return gui_button("OK", 0, 0);
 }
