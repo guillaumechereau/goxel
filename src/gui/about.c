@@ -50,3 +50,19 @@ int gui_about_popup(void *data)
     return gui_button("OK", 0, 0);
 }
 
+int gui_about_scripts_popup(void *data)
+{
+    char dir[1024] = "";
+    const char *examples_url =
+        "https://github.com/guillaumechereau/goxel/tree/master/data/scripts";
+
+    if (sys_get_user_dir()) {
+        snprintf(dir, sizeof(dir), "%s/scripts", sys_get_user_dir());
+    }
+
+    gui_text("Starting from version 0.12.0 Goxel adds experimental support "
+             "for javascript plugins.");
+    gui_text("Add your own scripts in the directory:\n%s", dir);
+    gui_text("See some examples at %s", examples_url);
+    return gui_button("OK", 0, 0);
+}

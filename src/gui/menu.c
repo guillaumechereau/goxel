@@ -23,6 +23,7 @@
 
 int gui_settings_popup(void *data);
 int gui_about_popup(void *data);
+int gui_about_scripts_popup(void *data);
 
 static void import_image_plane(void)
 {
@@ -110,6 +111,8 @@ void gui_menu(void)
         gui_menu_end();
     }
     if (gui_menu_begin("Scripts")) {
+        if (gui_menu_item(0, "About Scripts", true))
+            gui_open_popup("Scripts", 0, NULL, gui_about_scripts_popup);
         script_iter_all(NULL, on_script);
         gui_menu_end();
     }
