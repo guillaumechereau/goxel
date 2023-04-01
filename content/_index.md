@@ -10,8 +10,7 @@ dimensions, voxels make 3D editing as intuitive as drawing in 2D.
 Voxel art is used in many video games, and also by artists as a standalone
 style.
 
-Get the desktop version now for free in the [download page](/download),
-or try the webgl [live version](/live) directly in your browser.
+Get the desktop version now for free in the [download page](/download).
 
 
 {{% features %}}
