@@ -123,7 +123,7 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
     int bpos[3], nb_blocks = 0;
 
     g->data = calloc(1, sizeof(*g->data));
-    g->data->memory.free = &cgltf_default_free;
+    g->data->memory.free_func = &cgltf_default_free;
     g->data->asset.version = strdup("2.0");
     g->data->asset.generator = strdup("goxel");
 
@@ -468,6 +468,7 @@ static void gltf_export(const image_t *img, const char *path,
     const layer_t *layer;
     cgltf_scene *scene;
     cgltf_node *root_node;
+    cgltf_options gltf_options = {};
     material_t *mat;
 
     gltf_init(&g, options, img);
@@ -495,7 +496,7 @@ static void gltf_export(const image_t *img, const char *path,
         save_layer(&g, root_node, img, layer, options);
     }
 
-    cgltf_write_file(NULL, path, g.data);
+    cgltf_write_file(&gltf_options, path, g.data);
     cgltf_free(g.data);
     free(g.palette.entries);
 }
