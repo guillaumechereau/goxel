@@ -1,6 +1,10 @@
 
 import * as std from 'std'
 
+/*
+ * Example of file format support in js:
+ */
+/*
 goxel.registerFormat({
   name: 'Test',
   ext: 'test\0*.test\0',
@@ -24,6 +28,7 @@ goxel.registerFormat({
     }
   },
 })
+*/
 
 function getRandomColor() {
   return [
@@ -40,6 +45,7 @@ goxel.registerScript({
   onExecute: function() {
     let box = goxel.selection
     if (!box) {
+      // Todo: actually show a popup.
       console.log('Need a selection')
       return
     }
