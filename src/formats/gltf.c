@@ -22,9 +22,12 @@
 #include "utils/json.h"
 #include "utils/vec.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
 #define CGLTF_IMPLEMENTATION
 #define CGLTF_WRITE_IMPLEMENTATION
 #include "../ext_src/cgltf/cgltf_write.h"
+#pragma GCC diagnostic pop
 
 typedef struct {
     cgltf_data *data;
