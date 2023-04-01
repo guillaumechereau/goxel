@@ -1,5 +1,18 @@
 #Changelog
 
+## [0.12.0] - 2023-04-01
+
+- Added basic support for Minetest file format import.
+- Added a new tool to select from a 2d rectangle.
+- Fixed issues with high density screens.
+- Added some (very basic) support for scripting.
+
+The biggest new feature is probably the scripting support.  For the moment it
+is very limited, see the example in data/scripts/test.js.  If you would like to
+make your own scripts but some features are missing (and they will), please
+open an issue about it.
+
+
 ## [0.10.6] - 2020-07-09
 
 Minor update that improves glTF color export: we can now export the models
