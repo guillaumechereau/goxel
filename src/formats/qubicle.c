@@ -138,7 +138,7 @@ static int qubicle_export(const file_format_t *format, const image_t *img,
                           const char *path)
 {
     FILE *file;
-    int i, count, x, y, z, pos[3], bbox[2][3];
+    int count, x, y, z, pos[3], bbox[2][3];
     uint8_t v[4];
     layer_t *layer;
     volume_iterator_t iter;
@@ -155,7 +155,6 @@ static int qubicle_export(const file_format_t *format, const image_t *img,
     WRITE(uint32_t, 0, file);   // vmask
     WRITE(uint32_t, count, file);
 
-    i = 0;
     DL_FOREACH(img->layers, layer) {
         volume = layer->volume;
 
@@ -182,7 +181,6 @@ static int qubicle_export(const file_format_t *format, const image_t *img,
             volume_get_at(volume, &iter, pos, v);
             fwrite(v, 4, 1, file);
         }
-        i++;
     }
     fclose(file);
     return 0;
