@@ -56,11 +56,12 @@ void gui_render_panel(void)
     }
     if (pt->status == PT_FINISHED && gui_button("Restart", 1, 0)) {
         pt->status = PT_RUNNING;
-        pt->progress = 0;
+        pt->samples = 0;
         pt->force_restart = true;
     }
     if (pt->status) {
-        gui_text("%d/100", (int)(pt->progress * 100));
+        gui_text("%d/%d (%d%%)", pt->samples, pt->num_samples,
+                 pt->samples * 100 / pt->num_samples);
     }
     if (    pt->status == PT_FINISHED &&
             gui_button("Save to album", -1, 0) &&

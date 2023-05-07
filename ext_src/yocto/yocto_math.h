@@ -1,46 +1,15 @@
 //
-// # Yocto/Math: Tiny library for math support in graphics applications.
+// # Yocto/Math: Math types
 //
-// Yocto/Math provides the basic math primitives used in grahics, including
-// small-sized vectors and matrixes, frames, bounding boxes and transforms.
-//
-// We provide common operations for small vectors and matrices typically used
-// in graphics. In particular, we support 1-4 dimensional vectors
-// coordinates in float and int coordinates (`vec1f`, `vec2f`, `vec3f`, `vec4f`,
-// `vec1i`, `vec2i`, `vec3i`, `vec4i`).
-//
-// We support 2-4 dimensional matrices (`mat2f`, `mat3f`, `mat4f`) with
-// matrix-matrix and matrix-vector products, transposes and inverses.
-// Matrices are stored in column-major order and are accessed and
-// constructed by column. The one dimensional version is for completeness only.
-//
-// To represent transformations, most of the library facilities prefer the use
-// coordinate frames, aka rigid transforms, represented as `frame2f` and
-// `frame3f`. The structure store three coordinate axes and the origin.
-// This is equivalent to a rigid transform written as a column-major affine
-// matrix. Transform operations are fater with this representation.
-//
-// We represent bounding boxes in 2-3 dimensions with `bbox2f`, `bbox3f`
-// Each bounding box support construction from points and other bounding box.
-// We provide operations to compute bounds for points, lines, triangles and
-// quads.
-//
-// For both matrices and frames we support transform operations for points,
-// vectors and directions (`transform_point()`, `transform_vector()`,
-// `transform_direction()`). Transform matrices and frames can be
-// constructed from basic translation, rotation and scaling, e.g. with
-// `translation_mat()` or `translation_frame()` respectively, etc.
-// For rotation we support axis-angle and quaternions, with slerp.
-//
-// Finally, we include a `timer` for benchmarking with high precision and
-// a few common path manipulations ghat will be remove once C++ filesystem
-// support will be more common.
+// Yocto/Math defines the basic math primitives used in graphics, including
+// small-sized vectors, matrices, frames, quaternions, rays, bounding boxes
+// and their transforms. Yocto/Math is implemented in `yocto_math.h`.
 //
 
 //
 // LICENSE:
 //
-// Copyright (c) 2016 -- 2019 Fabio Pellacini
+// Copyright (c) 2016 -- 2022 Fabio Pellacini
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +29,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-//
 
 #ifndef _YOCTO_MATH_H_
 #define _YOCTO_MATH_H_
@@ -69,80 +37,86 @@
 // INCLUDES
 // -----------------------------------------------------------------------------
 
-#include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+#include <utility>
 
-#include <chrono>
-#include <string>
-#include <unordered_map>
-#include <vector>
+// -----------------------------------------------------------------------------
+// USING DIRECTIVES
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// using directives
+using std::pair;
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// CUDA SUPPORT
+// -----------------------------------------------------------------------------
+#ifdef __CUDACC__
+#define inline inline __device__ __forceinline__
+#endif
 
 // -----------------------------------------------------------------------------
 // MATH CONSTANTS AND FUNCTIONS
 // -----------------------------------------------------------------------------
 namespace yocto {
 
-// Aliased typenames for readability
-using std::pair;
-using std::string;
-using std::unordered_map;
-using std::vector;
-using namespace std::literals::string_literals;
+using byte   = unsigned char;
+using uint   = unsigned int;
+using ushort = unsigned short;
 
-using byte = unsigned char;
-using uint = unsigned int;
+constexpr auto pi  = 3.14159265358979323846;
+constexpr auto pif = (float)pi;
 
-static const double pi  = 3.14159265358979323846;
-static const float  pif = (float)pi;
+constexpr auto int_max = std::numeric_limits<int>::max();
+constexpr auto int_min = std::numeric_limits<int>::lowest();
+constexpr auto flt_max = std::numeric_limits<float>::max();
+constexpr auto flt_min = std::numeric_limits<float>::lowest();
+constexpr auto flt_eps = std::numeric_limits<float>::epsilon();
 
-static const auto int_max = INT_MAX;
-static const auto int_min = INT_MIN;
-static const auto flt_max = FLT_MAX;
-static const auto flt_min = -FLT_MAX;
-static const auto flt_eps = FLT_EPSILON;
+inline float abs(float a);
+inline float min(float a, float b);
+inline float max(float a, float b);
+inline float clamp(float a, float min, float max);
+inline float sign(float a);
+inline float sqr(float a);
+inline float sqrt(float a);
+inline float sin(float a);
+inline float cos(float a);
+inline float tan(float a);
+inline float asin(float a);
+inline float acos(float a);
+inline float atan(float a);
+inline float log(float a);
+inline float exp(float a);
+inline float log2(float a);
+inline float exp2(float a);
+inline float pow(float a, float b);
+inline bool  isfinite(float a);
+inline float atan2(float a, float b);
+inline float fmod(float a, float b);
+inline float radians(float a);
+inline float degrees(float a);
+inline float lerp(float a, float b, float u);
+inline void  swap(float& a, float& b);
+inline float smoothstep(float a, float b, float u);
+inline float bias(float a, float bias);
+inline float gain(float a, float gain);
 
-inline float abs(float a) { return a < 0 ? -a : a; }
-inline float min(float a, float b) { return (a < b) ? a : b; }
-inline float max(float a, float b) { return (a > b) ? a : b; }
-inline float clamp(float a, float min_, float max_) {
-  return min(max(a, min_), max_);
-}
-inline float lerp(float a, float b, float u) { return a * (1 - u) + b * u; }
-inline float radians(float a) { return a * pif / 180; }
-inline float degrees(float a) { return a * 180 / pif; }
-inline float bias(float a, float bias) {
-  return a / ((1 / bias - 2) * (1 - a) + 1);
-}
-inline float gain(float a, float gain) {
-  return (a < 0.5f) ? bias(a * 2, gain) / 2
-                    : bias(a * 2 - 1, 1 - gain) / 2 + 0.5f;
-}
-inline float sqrt(float a) { return sqrtf(a); }
-inline float sin(float a) { return sinf(a); }
-inline float cos(float a) { return cosf(a); }
-inline float tan(float a) { return tanf(a); }
-inline float asin(float a) { return asinf(a); }
-inline float acos(float a) { return acosf(a); }
-inline float atan(float a) { return atanf(a); }
-inline float log(float a) { return logf(a); }
-inline float exp(float a) { return expf(a); }
-inline float log2(float a) { return log2f(a); }
-inline float exp2(float a) { return exp2f(a); }
-inline float pow(float a, float b) { return powf(a, b); }
-inline float is_finite(float a) { return isfinite(a); }
-inline void  swap(float& a, float& b) { std::swap(a, b); }
+inline int  abs(int a);
+inline int  min(int a, int b);
+inline int  max(int a, int b);
+inline int  clamp(int a, int min, int max);
+inline int  sign(int a);
+inline int  pow2(int a);
+inline void swap(int& a, int& b);
 
-inline int  abs(int a) { return a < 0 ? -a : a; }
-inline int  min(int a, int b) { return (a < b) ? a : b; }
-inline int  max(int a, int b) { return (a > b) ? a : b; }
-inline int  clamp(int a, int min_, int max_) { return min(max(a, min_), max_); }
-inline int  pow2(int a) { return 1 << a; }
-inline void swap(int& a, int& b) { std::swap(a, b); }
+inline size_t min(size_t a, size_t b);
+inline size_t max(size_t a, size_t b);
 
 }  // namespace yocto
 
@@ -155,12 +129,8 @@ struct vec2f {
   float x = 0;
   float y = 0;
 
-  vec2f() {}
-  vec2f(float x, float y) : x{x}, y{y} {}
-  explicit vec2f(float v) : x{v}, y{v} {}
-
-  float&       operator[](int i) { return (&x)[i]; }
-  const float& operator[](int i) const { return (&x)[i]; }
+  inline float&       operator[](int i);
+  inline const float& operator[](int i) const;
 };
 
 struct vec3f {
@@ -168,13 +138,8 @@ struct vec3f {
   float y = 0;
   float z = 0;
 
-  vec3f() {}
-  vec3f(float x, float y, float z) : x{x}, y{y}, z{z} {}
-  vec3f(const vec2f& v, float z) : x{v.x}, y{v.y}, z{z} {}
-  explicit vec3f(float v) : x{v}, y{v}, z{v} {}
-
-  float&       operator[](int i) { return (&x)[i]; }
-  const float& operator[](int i) const { return (&x)[i]; }
+  inline float&       operator[](int i);
+  inline const float& operator[](int i) const;
 };
 
 struct vec4f {
@@ -183,23 +148,985 @@ struct vec4f {
   float z = 0;
   float w = 0;
 
-  vec4f() {}
-  vec4f(float x, float y, float z, float w) : x{x}, y{y}, z{z}, w{w} {}
-  vec4f(const vec3f& v, float w) : x{v.x}, y{v.y}, z{v.z}, w{w} {}
-  explicit vec4f(float v) : x{v}, y{v}, z{v}, w{v} {}
-
-  float&       operator[](int i) { return (&x)[i]; }
-  const float& operator[](int i) const { return (&x)[i]; }
+  inline float&       operator[](int i);
+  inline const float& operator[](int i) const;
 };
 
 // Zero vector constants.
-static const auto zero2f = vec2f{0, 0};
-static const auto zero3f = vec3f{0, 0, 0};
-static const auto zero4f = vec4f{0, 0, 0, 0};
+constexpr auto zero2f = vec2f{0, 0};
+constexpr auto zero3f = vec3f{0, 0, 0};
+constexpr auto zero4f = vec4f{0, 0, 0, 0};
+
+// One vector constants.
+constexpr auto one2f = vec2f{1, 1};
+constexpr auto one3f = vec3f{1, 1, 1};
+constexpr auto one4f = vec4f{1, 1, 1, 1};
 
 // Element access
-inline vec3f&       xyz(vec4f& a) { return (vec3f&)a; }
-inline const vec3f& xyz(const vec4f& a) { return (const vec3f&)a; }
+inline vec3f xyz(const vec4f& a);
+
+// Vector sequence operations.
+inline int          size(const vec2f& a);
+inline const float* begin(const vec2f& a);
+inline const float* end(const vec2f& a);
+inline float*       begin(vec2f& a);
+inline float*       end(vec2f& a);
+inline const float* data(const vec2f& a);
+inline float*       data(vec2f& a);
+
+// Vector comparison operations.
+inline bool operator==(const vec2f& a, const vec2f& b);
+inline bool operator!=(const vec2f& a, const vec2f& b);
+
+// Vector operations.
+inline vec2f operator+(const vec2f& a);
+inline vec2f operator-(const vec2f& a);
+inline vec2f operator+(const vec2f& a, const vec2f& b);
+inline vec2f operator+(const vec2f& a, float b);
+inline vec2f operator+(float a, const vec2f& b);
+inline vec2f operator-(const vec2f& a, const vec2f& b);
+inline vec2f operator-(const vec2f& a, float b);
+inline vec2f operator-(float a, const vec2f& b);
+inline vec2f operator*(const vec2f& a, const vec2f& b);
+inline vec2f operator*(const vec2f& a, float b);
+inline vec2f operator*(float a, const vec2f& b);
+inline vec2f operator/(const vec2f& a, const vec2f& b);
+inline vec2f operator/(const vec2f& a, float b);
+inline vec2f operator/(float a, const vec2f& b);
+
+// Vector assignments
+inline vec2f& operator+=(vec2f& a, const vec2f& b);
+inline vec2f& operator+=(vec2f& a, float b);
+inline vec2f& operator-=(vec2f& a, const vec2f& b);
+inline vec2f& operator-=(vec2f& a, float b);
+inline vec2f& operator*=(vec2f& a, const vec2f& b);
+inline vec2f& operator*=(vec2f& a, float b);
+inline vec2f& operator/=(vec2f& a, const vec2f& b);
+inline vec2f& operator/=(vec2f& a, float b);
+
+// Vector products and lengths.
+inline float dot(const vec2f& a, const vec2f& b);
+inline float cross(const vec2f& a, const vec2f& b);
+
+inline float length(const vec2f& a);
+inline float length_squared(const vec2f& a);
+inline vec2f normalize(const vec2f& a);
+inline float distance(const vec2f& a, const vec2f& b);
+inline float distance_squared(const vec2f& a, const vec2f& b);
+inline float angle(const vec2f& a, const vec2f& b);
+
+// Max element and clamp.
+inline vec2f max(const vec2f& a, float b);
+inline vec2f min(const vec2f& a, float b);
+inline vec2f max(const vec2f& a, const vec2f& b);
+inline vec2f min(const vec2f& a, const vec2f& b);
+inline vec2f clamp(const vec2f& x, float min, float max);
+inline vec2f lerp(const vec2f& a, const vec2f& b, float u);
+inline vec2f lerp(const vec2f& a, const vec2f& b, const vec2f& u);
+
+inline float max(const vec2f& a);
+inline float min(const vec2f& a);
+inline float sum(const vec2f& a);
+inline float mean(const vec2f& a);
+
+// Functions applied to vector elements
+inline vec2f abs(const vec2f& a);
+inline vec2f sqr(const vec2f& a);
+inline vec2f sqrt(const vec2f& a);
+inline vec2f exp(const vec2f& a);
+inline vec2f log(const vec2f& a);
+inline vec2f exp2(const vec2f& a);
+inline vec2f log2(const vec2f& a);
+inline bool  isfinite(const vec2f& a);
+inline vec2f pow(const vec2f& a, float b);
+inline vec2f pow(const vec2f& a, const vec2f& b);
+inline vec2f gain(const vec2f& a, float b);
+inline void  swap(vec2f& a, vec2f& b);
+
+// Vector sequence operations.
+inline int          size(const vec3f& a);
+inline const float* begin(const vec3f& a);
+inline const float* end(const vec3f& a);
+inline float*       begin(vec3f& a);
+inline float*       end(vec3f& a);
+inline const float* data(const vec3f& a);
+inline float*       data(vec3f& a);
+
+// Vector comparison operations.
+inline bool operator==(const vec3f& a, const vec3f& b);
+inline bool operator!=(const vec3f& a, const vec3f& b);
+
+// Vector operations.
+inline vec3f operator+(const vec3f& a);
+inline vec3f operator-(const vec3f& a);
+inline vec3f operator+(const vec3f& a, const vec3f& b);
+inline vec3f operator+(const vec3f& a, float b);
+inline vec3f operator+(float a, const vec3f& b);
+inline vec3f operator-(const vec3f& a, const vec3f& b);
+inline vec3f operator-(const vec3f& a, float b);
+inline vec3f operator-(float a, const vec3f& b);
+inline vec3f operator*(const vec3f& a, const vec3f& b);
+inline vec3f operator*(const vec3f& a, float b);
+inline vec3f operator*(float a, const vec3f& b);
+inline vec3f operator/(const vec3f& a, const vec3f& b);
+inline vec3f operator/(const vec3f& a, float b);
+inline vec3f operator/(float a, const vec3f& b);
+
+// Vector assignments
+inline vec3f& operator+=(vec3f& a, const vec3f& b);
+inline vec3f& operator+=(vec3f& a, float b);
+inline vec3f& operator-=(vec3f& a, const vec3f& b);
+inline vec3f& operator-=(vec3f& a, float b);
+inline vec3f& operator*=(vec3f& a, const vec3f& b);
+inline vec3f& operator*=(vec3f& a, float b);
+inline vec3f& operator/=(vec3f& a, const vec3f& b);
+inline vec3f& operator/=(vec3f& a, float b);
+
+// Vector products and lengths.
+inline float dot(const vec3f& a, const vec3f& b);
+inline vec3f cross(const vec3f& a, const vec3f& b);
+
+inline float length(const vec3f& a);
+inline float length_squared(const vec3f& a);
+inline vec3f normalize(const vec3f& a);
+inline float distance(const vec3f& a, const vec3f& b);
+inline float distance_squared(const vec3f& a, const vec3f& b);
+inline float angle(const vec3f& a, const vec3f& b);
+
+// Orthogonal vectors.
+inline vec3f orthogonal(const vec3f& v);
+inline vec3f orthonormalize(const vec3f& a, const vec3f& b);
+
+// Reflected and refracted vector.
+inline vec3f reflect(const vec3f& w, const vec3f& n);
+inline vec3f refract(const vec3f& w, const vec3f& n, float inv_eta);
+
+// Max element and clamp.
+inline vec3f max(const vec3f& a, float b);
+inline vec3f min(const vec3f& a, float b);
+inline vec3f max(const vec3f& a, const vec3f& b);
+inline vec3f min(const vec3f& a, const vec3f& b);
+inline vec3f clamp(const vec3f& x, float min, float max);
+inline vec3f lerp(const vec3f& a, const vec3f& b, float u);
+inline vec3f lerp(const vec3f& a, const vec3f& b, const vec3f& u);
+
+inline float max(const vec3f& a);
+inline float min(const vec3f& a);
+inline float sum(const vec3f& a);
+inline float mean(const vec3f& a);
+
+// Functions applied to vector elements
+inline vec3f abs(const vec3f& a);
+inline vec3f sqr(const vec3f& a);
+inline vec3f sqrt(const vec3f& a);
+inline vec3f exp(const vec3f& a);
+inline vec3f log(const vec3f& a);
+inline vec3f exp2(const vec3f& a);
+inline vec3f log2(const vec3f& a);
+inline vec3f pow(const vec3f& a, float b);
+inline vec3f pow(const vec3f& a, const vec3f& b);
+inline vec3f gain(const vec3f& a, float b);
+inline bool  isfinite(const vec3f& a);
+inline void  swap(vec3f& a, vec3f& b);
+
+// Vector sequence operations.
+inline int          size(const vec4f& a);
+inline const float* begin(const vec4f& a);
+inline const float* end(const vec4f& a);
+inline float*       begin(vec4f& a);
+inline float*       end(vec4f& a);
+inline const float* data(const vec4f& a);
+inline float*       data(vec4f& a);
+
+// Vector comparison operations.
+inline bool operator==(const vec4f& a, const vec4f& b);
+inline bool operator!=(const vec4f& a, const vec4f& b);
+
+// Vector operations.
+inline vec4f operator+(const vec4f& a);
+inline vec4f operator-(const vec4f& a);
+inline vec4f operator+(const vec4f& a, const vec4f& b);
+inline vec4f operator+(const vec4f& a, float b);
+inline vec4f operator+(float a, const vec4f& b);
+inline vec4f operator-(const vec4f& a, const vec4f& b);
+inline vec4f operator-(const vec4f& a, float b);
+inline vec4f operator-(float a, const vec4f& b);
+inline vec4f operator*(const vec4f& a, const vec4f& b);
+inline vec4f operator*(const vec4f& a, float b);
+inline vec4f operator*(float a, const vec4f& b);
+inline vec4f operator/(const vec4f& a, const vec4f& b);
+inline vec4f operator/(const vec4f& a, float b);
+inline vec4f operator/(float a, const vec4f& b);
+
+// Vector assignments
+inline vec4f& operator+=(vec4f& a, const vec4f& b);
+inline vec4f& operator+=(vec4f& a, float b);
+inline vec4f& operator-=(vec4f& a, const vec4f& b);
+inline vec4f& operator-=(vec4f& a, float b);
+inline vec4f& operator*=(vec4f& a, const vec4f& b);
+inline vec4f& operator*=(vec4f& a, float b);
+inline vec4f& operator/=(vec4f& a, const vec4f& b);
+inline vec4f& operator/=(vec4f& a, float b);
+
+// Vector products and lengths.
+inline float dot(const vec4f& a, const vec4f& b);
+inline float length(const vec4f& a);
+inline float length_squared(const vec4f& a);
+inline vec4f normalize(const vec4f& a);
+inline float distance(const vec4f& a, const vec4f& b);
+inline float distance_squared(const vec4f& a, const vec4f& b);
+inline float angle(const vec4f& a, const vec4f& b);
+
+inline vec4f slerp(const vec4f& a, const vec4f& b, float u);
+
+// Max element and clamp.
+inline vec4f max(const vec4f& a, float b);
+inline vec4f min(const vec4f& a, float b);
+inline vec4f max(const vec4f& a, const vec4f& b);
+inline vec4f min(const vec4f& a, const vec4f& b);
+inline vec4f clamp(const vec4f& x, float min, float max);
+inline vec4f lerp(const vec4f& a, const vec4f& b, float u);
+inline vec4f lerp(const vec4f& a, const vec4f& b, const vec4f& u);
+
+inline float max(const vec4f& a);
+inline float min(const vec4f& a);
+inline float sum(const vec4f& a);
+inline float mean(const vec4f& a);
+
+// Functions applied to vector elements
+inline vec4f abs(const vec4f& a);
+inline vec4f sqr(const vec4f& a);
+inline vec4f sqrt(const vec4f& a);
+inline vec4f exp(const vec4f& a);
+inline vec4f log(const vec4f& a);
+inline vec4f exp2(const vec4f& a);
+inline vec4f log2(const vec4f& a);
+inline vec4f pow(const vec4f& a, float b);
+inline vec4f pow(const vec4f& a, const vec4f& b);
+inline vec4f gain(const vec4f& a, float b);
+inline bool  isfinite(const vec4f& a);
+inline void  swap(vec4f& a, vec4f& b);
+
+// Quaternion operatons represented as xi + yj + zk + w
+// const auto identity_quat4f = vec4f{0, 0, 0, 1};
+inline vec4f quat_mul(const vec4f& a, float b);
+inline vec4f quat_mul(const vec4f& a, const vec4f& b);
+inline vec4f quat_conjugate(const vec4f& a);
+inline vec4f quat_inverse(const vec4f& a);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// INTEGER VECTORS
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+struct vec2i {
+  int x = 0;
+  int y = 0;
+
+  inline int&       operator[](int i);
+  inline const int& operator[](int i) const;
+};
+
+struct vec3i {
+  int x = 0;
+  int y = 0;
+  int z = 0;
+
+  inline int&       operator[](int i);
+  inline const int& operator[](int i) const;
+};
+
+struct vec4i {
+  int x = 0;
+  int y = 0;
+  int z = 0;
+  int w = 0;
+
+  inline int&       operator[](int i);
+  inline const int& operator[](int i) const;
+};
+
+struct vec4b {
+  byte x = 0;
+  byte y = 0;
+  byte z = 0;
+  byte w = 0;
+
+  inline byte&       operator[](int i);
+  inline const byte& operator[](int i) const;
+};
+
+// Zero vector constants.
+constexpr auto zero2i = vec2i{0, 0};
+constexpr auto zero3i = vec3i{0, 0, 0};
+constexpr auto zero4i = vec4i{0, 0, 0, 0};
+constexpr auto zero4b = vec4b{0, 0, 0, 0};
+
+// Element access
+inline vec3i xyz(const vec4i& a);
+
+// Vector sequence operations.
+inline int        size(const vec2i& a);
+inline const int* begin(const vec2i& a);
+inline const int* end(const vec2i& a);
+inline int*       begin(vec2i& a);
+inline int*       end(vec2i& a);
+inline const int* data(const vec2i& a);
+inline int*       data(vec2i& a);
+
+// Vector comparison operations.
+inline bool operator==(const vec2i& a, const vec2i& b);
+inline bool operator!=(const vec2i& a, const vec2i& b);
+
+// Vector operations.
+inline vec2i operator+(const vec2i& a);
+inline vec2i operator-(const vec2i& a);
+inline vec2i operator+(const vec2i& a, const vec2i& b);
+inline vec2i operator+(const vec2i& a, int b);
+inline vec2i operator+(int a, const vec2i& b);
+inline vec2i operator-(const vec2i& a, const vec2i& b);
+inline vec2i operator-(const vec2i& a, int b);
+inline vec2i operator-(int a, const vec2i& b);
+inline vec2i operator*(const vec2i& a, const vec2i& b);
+inline vec2i operator*(const vec2i& a, int b);
+inline vec2i operator*(int a, const vec2i& b);
+inline vec2i operator/(const vec2i& a, const vec2i& b);
+inline vec2i operator/(const vec2i& a, int b);
+inline vec2i operator/(int a, const vec2i& b);
+
+// Vector assignments
+inline vec2i& operator+=(vec2i& a, const vec2i& b);
+inline vec2i& operator+=(vec2i& a, int b);
+inline vec2i& operator-=(vec2i& a, const vec2i& b);
+inline vec2i& operator-=(vec2i& a, int b);
+inline vec2i& operator*=(vec2i& a, const vec2i& b);
+inline vec2i& operator*=(vec2i& a, int b);
+inline vec2i& operator/=(vec2i& a, const vec2i& b);
+inline vec2i& operator/=(vec2i& a, int b);
+
+// Max element and clamp.
+inline vec2i max(const vec2i& a, int b);
+inline vec2i min(const vec2i& a, int b);
+inline vec2i max(const vec2i& a, const vec2i& b);
+inline vec2i min(const vec2i& a, const vec2i& b);
+inline vec2i clamp(const vec2i& x, int min, int max);
+
+inline int max(const vec2i& a);
+inline int min(const vec2i& a);
+inline int sum(const vec2i& a);
+
+// Functions applied to vector elements
+inline vec2i abs(const vec2i& a);
+inline void  swap(vec2i& a, vec2i& b);
+
+// Vector sequence operations.
+inline int        size(const vec3i& a);
+inline const int* begin(const vec3i& a);
+inline const int* end(const vec3i& a);
+inline int*       begin(vec3i& a);
+inline int*       end(vec3i& a);
+inline const int* data(const vec3i& a);
+inline int*       data(vec3i& a);
+
+// Vector comparison operations.
+inline bool operator==(const vec3i& a, const vec3i& b);
+inline bool operator!=(const vec3i& a, const vec3i& b);
+
+// Vector operations.
+inline vec3i operator+(const vec3i& a);
+inline vec3i operator-(const vec3i& a);
+inline vec3i operator+(const vec3i& a, const vec3i& b);
+inline vec3i operator+(const vec3i& a, int b);
+inline vec3i operator+(int a, const vec3i& b);
+inline vec3i operator-(const vec3i& a, const vec3i& b);
+inline vec3i operator-(const vec3i& a, int b);
+inline vec3i operator-(int a, const vec3i& b);
+inline vec3i operator*(const vec3i& a, const vec3i& b);
+inline vec3i operator*(const vec3i& a, int b);
+inline vec3i operator*(int a, const vec3i& b);
+inline vec3i operator/(const vec3i& a, const vec3i& b);
+inline vec3i operator/(const vec3i& a, int b);
+inline vec3i operator/(int a, const vec3i& b);
+
+// Vector assignments
+inline vec3i& operator+=(vec3i& a, const vec3i& b);
+inline vec3i& operator+=(vec3i& a, int b);
+inline vec3i& operator-=(vec3i& a, const vec3i& b);
+inline vec3i& operator-=(vec3i& a, int b);
+inline vec3i& operator*=(vec3i& a, const vec3i& b);
+inline vec3i& operator*=(vec3i& a, int b);
+inline vec3i& operator/=(vec3i& a, const vec3i& b);
+inline vec3i& operator/=(vec3i& a, int b);
+
+// Max element and clamp.
+inline vec3i max(const vec3i& a, int b);
+inline vec3i min(const vec3i& a, int b);
+inline vec3i max(const vec3i& a, const vec3i& b);
+inline vec3i min(const vec3i& a, const vec3i& b);
+inline vec3i clamp(const vec3i& x, int min, int max);
+
+inline int max(const vec3i& a);
+inline int min(const vec3i& a);
+inline int sum(const vec3i& a);
+
+// Functions applied to vector elements
+inline vec3i abs(const vec3i& a);
+inline void  swap(vec3i& a, vec3i& b);
+
+// Vector sequence operations.
+inline int        size(const vec4i& a);
+inline const int* begin(const vec4i& a);
+inline const int* end(const vec4i& a);
+inline int*       begin(vec4i& a);
+inline int*       end(vec4i& a);
+inline const int* data(const vec4i& a);
+inline int*       data(vec4i& a);
+
+// Vector comparison operations.
+inline bool operator==(const vec4i& a, const vec4i& b);
+inline bool operator!=(const vec4i& a, const vec4i& b);
+
+// Vector operations.
+inline vec4i operator+(const vec4i& a);
+inline vec4i operator-(const vec4i& a);
+inline vec4i operator+(const vec4i& a, const vec4i& b);
+inline vec4i operator+(const vec4i& a, int b);
+inline vec4i operator+(int a, const vec4i& b);
+inline vec4i operator-(const vec4i& a, const vec4i& b);
+inline vec4i operator-(const vec4i& a, int b);
+inline vec4i operator-(int a, const vec4i& b);
+inline vec4i operator*(const vec4i& a, const vec4i& b);
+inline vec4i operator*(const vec4i& a, int b);
+inline vec4i operator*(int a, const vec4i& b);
+inline vec4i operator/(const vec4i& a, const vec4i& b);
+inline vec4i operator/(const vec4i& a, int b);
+inline vec4i operator/(int a, const vec4i& b);
+
+// Vector assignments
+inline vec4i& operator+=(vec4i& a, const vec4i& b);
+inline vec4i& operator+=(vec4i& a, int b);
+inline vec4i& operator-=(vec4i& a, const vec4i& b);
+inline vec4i& operator-=(vec4i& a, int b);
+inline vec4i& operator*=(vec4i& a, const vec4i& b);
+inline vec4i& operator*=(vec4i& a, int b);
+inline vec4i& operator/=(vec4i& a, const vec4i& b);
+inline vec4i& operator/=(vec4i& a, int b);
+
+// Max element and clamp.
+inline vec4i max(const vec4i& a, int b);
+inline vec4i min(const vec4i& a, int b);
+inline vec4i max(const vec4i& a, const vec4i& b);
+inline vec4i min(const vec4i& a, const vec4i& b);
+inline vec4i clamp(const vec4i& x, int min, int max);
+
+inline int max(const vec4i& a);
+inline int min(const vec4i& a);
+inline int sum(const vec4i& a);
+
+// Functions applied to vector elements
+inline vec4i abs(const vec4i& a);
+inline void  swap(vec4i& a, vec4i& b);
+
+// Vector comparison operations.
+inline bool operator==(const vec4b& a, const vec4b& b);
+inline bool operator!=(const vec4b& a, const vec4b& b);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// MATRICES
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Small Fixed-size matrices stored in column major format.
+struct mat2f {
+  vec2f x = {1, 0};
+  vec2f y = {0, 1};
+
+  inline vec2f&       operator[](int i);
+  inline const vec2f& operator[](int i) const;
+};
+
+// Small Fixed-size matrices stored in column major format.
+struct mat3f {
+  vec3f x = {1, 0, 0};
+  vec3f y = {0, 1, 0};
+  vec3f z = {0, 0, 1};
+
+  inline vec3f&       operator[](int i);
+  inline const vec3f& operator[](int i) const;
+};
+
+// Small Fixed-size matrices stored in column major format.
+struct mat4f {
+  vec4f x = {1, 0, 0, 0};
+  vec4f y = {0, 1, 0, 0};
+  vec4f z = {0, 0, 1, 0};
+  vec4f w = {0, 0, 0, 1};
+
+  inline vec4f&       operator[](int i);
+  inline const vec4f& operator[](int i) const;
+};
+
+// Identity matrices constants.
+constexpr auto identity2x2f = mat2f{{1, 0}, {0, 1}};
+constexpr auto identity3x3f = mat3f{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+constexpr auto identity4x4f = mat4f{
+    {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
+
+// Matrix comparisons.
+inline bool operator==(const mat2f& a, const mat2f& b);
+inline bool operator!=(const mat2f& a, const mat2f& b);
+
+// Matrix operations.
+inline mat2f operator+(const mat2f& a, const mat2f& b);
+inline mat2f operator*(const mat2f& a, float b);
+inline vec2f operator*(const mat2f& a, const vec2f& b);
+inline vec2f operator*(const vec2f& a, const mat2f& b);
+inline mat2f operator*(const mat2f& a, const mat2f& b);
+
+// Matrix assignments.
+inline mat2f& operator+=(mat2f& a, const mat2f& b);
+inline mat2f& operator*=(mat2f& a, const mat2f& b);
+inline mat2f& operator*=(mat2f& a, float b);
+
+// Matrix diagonals and transposes.
+inline vec2f diagonal(const mat2f& a);
+inline mat2f transpose(const mat2f& a);
+
+// Matrix adjoints, determinants and inverses.
+inline float determinant(const mat2f& a);
+inline mat2f adjoint(const mat2f& a);
+inline mat2f inverse(const mat2f& a);
+
+// Matrix comparisons.
+inline bool operator==(const mat3f& a, const mat3f& b);
+inline bool operator!=(const mat3f& a, const mat3f& b);
+
+// Matrix operations.
+inline mat3f operator+(const mat3f& a, const mat3f& b);
+inline mat3f operator*(const mat3f& a, float b);
+inline vec3f operator*(const mat3f& a, const vec3f& b);
+inline vec3f operator*(const vec3f& a, const mat3f& b);
+inline mat3f operator*(const mat3f& a, const mat3f& b);
+
+// Matrix assignments.
+inline mat3f& operator+=(mat3f& a, const mat3f& b);
+inline mat3f& operator*=(mat3f& a, const mat3f& b);
+inline mat3f& operator*=(mat3f& a, float b);
+
+// Matrix diagonals and transposes.
+inline vec3f diagonal(const mat3f& a);
+inline mat3f transpose(const mat3f& a);
+
+// Matrix adjoints, determinants and inverses.
+inline float determinant(const mat3f& a);
+inline mat3f adjoint(const mat3f& a);
+inline mat3f inverse(const mat3f& a);
+
+// Constructs a basis from a direction
+inline mat3f basis_fromz(const vec3f& v);
+
+// Matrix comparisons.
+inline bool operator==(const mat4f& a, const mat4f& b);
+inline bool operator!=(const mat4f& a, const mat4f& b);
+
+// Matrix operations.
+inline mat4f operator+(const mat4f& a, const mat4f& b);
+inline mat4f operator*(const mat4f& a, float b);
+inline vec4f operator*(const mat4f& a, const vec4f& b);
+inline vec4f operator*(const vec4f& a, const mat4f& b);
+inline mat4f operator*(const mat4f& a, const mat4f& b);
+
+// Matrix assignments.
+inline mat4f& operator+=(mat4f& a, const mat4f& b);
+inline mat4f& operator*=(mat4f& a, const mat4f& b);
+inline mat4f& operator*=(mat4f& a, float b);
+
+// Matrix diagonals and transposes.
+inline vec4f diagonal(const mat4f& a);
+inline mat4f transpose(const mat4f& a);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// RIGID BODY TRANSFORMS/FRAMES
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Rigid frames stored as a column-major affine transform matrix.
+struct frame2f {
+  vec2f x = {1, 0};
+  vec2f y = {0, 1};
+  vec2f o = {0, 0};
+
+  inline vec2f&       operator[](int i);
+  inline const vec2f& operator[](int i) const;
+};
+
+// Rigid frames stored as a column-major affine transform matrix.
+struct frame3f {
+  vec3f x = {1, 0, 0};
+  vec3f y = {0, 1, 0};
+  vec3f z = {0, 0, 1};
+  vec3f o = {0, 0, 0};
+
+  inline vec3f&       operator[](int i);
+  inline const vec3f& operator[](int i) const;
+};
+
+// Identity frames.
+constexpr auto identity2x3f = frame2f{{1, 0}, {0, 1}, {0, 0}};
+constexpr auto identity3x4f = frame3f{
+    {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0, 0, 0}};
+
+// Frame properties
+inline mat2f rotation(const frame2f& a);
+inline vec2f translation(const frame2f& a);
+
+// Frame construction
+inline frame2f make_frame(const mat2f& m, const vec2f& t);
+
+// Conversion between frame and mat
+inline mat3f   frame_to_mat(const frame2f& f);
+inline frame2f mat_to_frame(const mat3f& ma);
+
+// Frame comparisons.
+inline bool operator==(const frame2f& a, const frame2f& b);
+inline bool operator!=(const frame2f& a, const frame2f& b);
+
+// Frame composition, equivalent to affine matrix product.
+inline frame2f  operator*(const frame2f& a, const frame2f& b);
+inline frame2f& operator*=(frame2f& a, const frame2f& b);
+
+// Frame inverse, equivalent to rigid affine inverse.
+inline frame2f inverse(const frame2f& a, bool non_rigid = false);
+
+// Frame properties
+inline mat3f rotation(const frame3f& a);
+inline vec3f translation(const frame3f& a);
+
+// Frame construction
+inline frame3f make_frame(const mat3f& m, const vec3f& t);
+
+// Conversion between frame and mat
+inline mat4f   frame_to_mat(const frame3f& f);
+inline frame3f mat_to_frame(const mat4f& m);
+
+// Frame comparisons.
+inline bool operator==(const frame3f& a, const frame3f& b);
+inline bool operator!=(const frame3f& a, const frame3f& b);
+
+// Frame composition, equivalent to affine matrix product.
+inline frame3f  operator*(const frame3f& a, const frame3f& b);
+inline frame3f& operator*=(frame3f& a, const frame3f& b);
+
+// Frame inverse, equivalent to rigid affine inverse.
+inline frame3f inverse(const frame3f& a, bool non_rigid = false);
+
+// Frame construction from axis.
+inline frame3f frame_fromz(const vec3f& o, const vec3f& v);
+inline frame3f frame_fromzx(const vec3f& o, const vec3f& z_, const vec3f& x_);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// QUATERNIONS
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Quaternions to represent rotations
+struct quat4f {
+  float x = 0;
+  float y = 0;
+  float z = 0;
+  float w = 1;
+};
+
+// Constants
+constexpr auto identity_quat4f = quat4f{0, 0, 0, 1};
+
+// Quaternion operatons
+inline quat4f operator+(const quat4f& a, const quat4f& b);
+inline quat4f operator*(const quat4f& a, float b);
+inline quat4f operator/(const quat4f& a, float b);
+inline quat4f operator*(const quat4f& a, const quat4f& b);
+
+// Quaterion operations
+inline float  dot(const quat4f& a, const quat4f& b);
+inline float  length(const quat4f& a);
+inline quat4f normalize(const quat4f& a);
+inline quat4f conjugate(const quat4f& a);
+inline quat4f inverse(const quat4f& a);
+inline float  uangle(const quat4f& a, const quat4f& b);
+inline quat4f lerp(const quat4f& a, const quat4f& b, float t);
+inline quat4f nlerp(const quat4f& a, const quat4f& b, float t);
+inline quat4f slerp(const quat4f& a, const quat4f& b, float t);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// TRANSFORMS
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Transforms points, vectors and directions by matrices.
+inline vec2f transform_point(const mat3f& a, const vec2f& b);
+inline vec2f transform_vector(const mat3f& a, const vec2f& b);
+inline vec2f transform_direction(const mat3f& a, const vec2f& b);
+inline vec2f transform_normal(const mat3f& a, const vec2f& b);
+inline vec2f transform_vector(const mat2f& a, const vec2f& b);
+inline vec2f transform_direction(const mat2f& a, const vec2f& b);
+inline vec2f transform_normal(const mat2f& a, const vec2f& b);
+
+inline vec3f transform_point(const mat4f& a, const vec3f& b);
+inline vec3f transform_vector(const mat4f& a, const vec3f& b);
+inline vec3f transform_direction(const mat4f& a, const vec3f& b);
+inline vec3f transform_vector(const mat3f& a, const vec3f& b);
+inline vec3f transform_direction(const mat3f& a, const vec3f& b);
+inline vec3f transform_normal(const mat3f& a, const vec3f& b);
+
+// Transforms points, vectors and directions by frames.
+inline vec2f transform_point(const frame2f& a, const vec2f& b);
+inline vec2f transform_vector(const frame2f& a, const vec2f& b);
+inline vec2f transform_direction(const frame2f& a, const vec2f& b);
+inline vec2f transform_normal(
+    const frame2f& a, const vec2f& b, bool non_rigid = false);
+
+// Transforms points, vectors and directions by frames.
+inline vec3f transform_point(const frame3f& a, const vec3f& b);
+inline vec3f transform_vector(const frame3f& a, const vec3f& b);
+inline vec3f transform_direction(const frame3f& a, const vec3f& b);
+inline vec3f transform_normal(
+    const frame3f& a, const vec3f& b, bool non_rigid = false);
+
+// Transforms points, vectors and directions by frames.
+inline vec2f transform_point_inverse(const frame2f& a, const vec2f& b);
+inline vec2f transform_vector_inverse(const frame2f& a, const vec2f& b);
+inline vec2f transform_direction_inverse(const frame2f& a, const vec2f& b);
+
+// Transforms points, vectors and directions by frames.
+inline vec3f transform_point_inverse(const frame3f& a, const vec3f& b);
+inline vec3f transform_vector_inverse(const frame3f& a, const vec3f& b);
+inline vec3f transform_direction_inverse(const frame3f& a, const vec3f& b);
+
+// Translation, scaling and rotations transforms.
+inline frame3f translation_frame(const vec3f& a);
+inline frame3f scaling_frame(const vec3f& a);
+inline frame3f rotation_frame(const vec3f& axis, float angle);
+inline frame3f rotation_frame(const vec4f& quat);
+inline frame3f rotation_frame(const quat4f& quat);
+inline frame3f rotation_frame(const mat3f& rot);
+
+// Lookat frame. Z-axis can be inverted with inv_xz.
+inline frame3f lookat_frame(const vec3f& eye, const vec3f& center,
+    const vec3f& up, bool inv_xz = false);
+
+// OpenGL frustum, ortho and perspecgive matrices.
+inline mat4f frustum_mat(float l, float r, float b, float t, float n, float f);
+inline mat4f ortho_mat(float l, float r, float b, float t, float n, float f);
+inline mat4f ortho2d_mat(float left, float right, float bottom, float top);
+inline mat4f ortho_mat(float xmag, float ymag, float near, float far);
+inline mat4f perspective_mat(float fovy, float aspect, float near, float far);
+inline mat4f perspective_mat(float fovy, float aspect, float near);
+
+// Rotation conversions.
+inline pair<vec3f, float> rotation_axisangle(const vec4f& quat);
+inline vec4f              rotation_quat(const vec3f& axis, float angle);
+inline vec4f              rotation_quat(const vec4f& axisangle);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// USER INTERFACE UTILITIES
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Computes the image uv coordinates corresponding to the view parameters.
+// Returns negative coordinates if out of the image.
+inline vec2i image_coords(const vec2f& mouse_pos, const vec2f& center,
+    float scale, const vec2i& txt_size);
+
+// Center image and autofit. Returns center and scale.
+inline pair<vec2f, float> camera_imview(const vec2f& center, float scale,
+    const vec2i& imsize, const vec2i& winsize, bool zoom_to_fit);
+
+// Turntable for UI navigation. Returns from and to.
+inline pair<vec3f, vec3f> camera_turntable(const vec3f& from, const vec3f& to,
+    const vec3f& up, const vec2f& rotate, float dolly, const vec2f& pan);
+
+// Turntable for UI navigation. Returns frame and focus.
+inline pair<frame3f, float> camera_turntable(const frame3f& frame, float focus,
+    const vec2f& rotate, float dolly, const vec2f& pan);
+
+// FPS camera for UI navigation for a frame parametrization. Returns frame.
+inline frame3f camera_fpscam(
+    const frame3f& frame, const vec3f& transl, const vec2f& rotate);
+
+// Computes the image uv coordinates corresponding to the view parameters.
+// Returns negative coordinates if out of the image.
+[[deprecated]] inline vec2i get_image_coords(const vec2f& mouse_pos,
+    const vec2f& center, float scale, const vec2i& txt_size);
+
+// Center image and autofit.
+[[deprecated]] inline void update_imview(vec2f& center, float& scale,
+    const vec2i& imsize, const vec2i& winsize, bool zoom_to_fit);
+
+// Turntable for UI navigation.
+[[deprecated]] inline void update_turntable(vec3f& from, vec3f& to,
+    const vec3f& up, const vec2f& rotate, float dolly, const vec2f& pan);
+
+// Turntable for UI navigation.
+[[deprecated]] inline void update_turntable(frame3f& frame, float& focus,
+    const vec2f& rotate, float dolly, const vec2f& pan);
+
+// FPS camera for UI navigation for a frame parametrization.
+[[deprecated]] inline void update_fpscam(
+    frame3f& frame, const vec3f& transl, const vec2f& rotate);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// PYTHON-LIKE ITERATORS
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Python range. Construct an object that iterates over an integer sequence.
+template <typename T>
+constexpr auto range(T max);
+template <typename T>
+constexpr auto range(T min, T max);
+template <typename T>
+constexpr auto range(T min, T max, T step);
+
+// Python enumerate
+template <typename Sequence, typename T = size_t>
+constexpr auto enumerate(const Sequence& sequence, T start = 0);
+template <typename Sequence, typename T = size_t>
+constexpr auto enumerate(Sequence& sequence, T start = 0);
+
+// Python zip
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(const Sequence1& sequence1, const Sequence2& sequence2);
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(Sequence1& sequence1, Sequence2& sequence2);
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(const Sequence1& sequence1, Sequence2& sequence2);
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(Sequence1& sequence1, const Sequence2& sequence2);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// SIGNED-SIZE
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+template <typename T>
+inline std::ptrdiff_t ssize(const T& container);
+
+}
+
+// -----------------------------------------------------------------------------
+//
+//
+// IMPLEMENTATION
+//
+//
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// MATH CONSTANTS AND FUNCTIONS
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+inline float abs(float a) { return a < 0 ? -a : a; }
+inline float min(float a, float b) { return (a < b) ? a : b; }
+inline float max(float a, float b) { return (a > b) ? a : b; }
+inline float clamp(float a, float min_, float max_) {
+  return min(max(a, min_), max_);
+}
+inline float sign(float a) { return a < 0 ? -1.0f : 1.0f; }
+inline float sqr(float a) { return a * a; }
+inline float sqrt(float a) { return std::sqrt(a); }
+inline float sin(float a) { return std::sin(a); }
+inline float cos(float a) { return std::cos(a); }
+inline float tan(float a) { return std::tan(a); }
+inline float asin(float a) { return std::asin(a); }
+inline float acos(float a) { return std::acos(a); }
+inline float atan(float a) { return std::atan(a); }
+inline float log(float a) { return std::log(a); }
+inline float exp(float a) { return std::exp(a); }
+inline float log2(float a) { return std::log2(a); }
+inline float exp2(float a) { return std::exp2(a); }
+inline float pow(float a, float b) { return std::pow(a, b); }
+#ifndef __CUDACC__
+inline bool isfinite(float a) { return std::isfinite(a); }
+#else
+inline bool isfinite(float a) { return ::isfinite(a); }
+#endif
+inline float atan2(float a, float b) { return std::atan2(a, b); }
+inline float fmod(float a, float b) { return std::fmod(a, b); }
+inline void  swap(float& a, float& b) { std::swap(a, b); }
+inline float radians(float a) { return a * pif / 180; }
+inline float degrees(float a) { return a * 180 / pif; }
+inline float lerp(float a, float b, float u) { return a * (1 - u) + b * u; }
+inline float step(float a, float u) { return u < a ? 0.0f : 1.0f; }
+inline float smoothstep(float a, float b, float u) {
+  auto t = clamp((u - a) / (b - a), 0.0f, 1.0f);
+  return t * t * (3 - 2 * t);
+}
+inline float bias(float a, float bias) {
+  return a / ((1 / bias - 2) * (1 - a) + 1);
+}
+inline float gain(float a, float gain) {
+  return (a < 0.5f) ? bias(a * 2, gain) / 2
+                    : bias(a * 2 - 1, 1 - gain) / 2 + 0.5f;
+}
+
+inline int  abs(int a) { return a < 0 ? -a : a; }
+inline int  min(int a, int b) { return (a < b) ? a : b; }
+inline int  max(int a, int b) { return (a > b) ? a : b; }
+inline int  clamp(int a, int min_, int max_) { return min(max(a, min_), max_); }
+inline int  sign(int a) { return a < 0 ? -1 : 1; }
+inline int  pow2(int a) { return 1 << a; }
+inline void swap(int& a, int& b) { std::swap(a, b); }
+
+inline size_t min(size_t a, size_t b) { return (a < b) ? a : b; }
+inline size_t max(size_t a, size_t b) { return (a > b) ? a : b; }
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// VECTORS
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Vec2
+inline float& vec2f::operator[](int i) { return (&x)[i]; }
+inline const float& vec2f::operator[](int i) const { return (&x)[i]; }
+
+// Vec3
+inline float& vec3f::operator[](int i) { return (&x)[i]; }
+inline const float& vec3f::operator[](int i) const { return (&x)[i]; }
+
+// Vec4
+inline float& vec4f::operator[](int i) { return (&x)[i]; }
+inline const float& vec4f::operator[](int i) const { return (&x)[i]; }
+
+// Element access
+inline vec3f xyz(const vec4f& a) { return {a.x, a.y, a.z}; }
+
+// Vector sequence operations.
+inline int          size(const vec2f& a) { return 2; }
+inline const float* begin(const vec2f& a) { return &a.x; }
+inline const float* end(const vec2f& a) { return &a.x + 2; }
+inline float*       begin(vec2f& a) { return &a.x; }
+inline float*       end(vec2f& a) { return &a.x + 2; }
+inline const float* data(const vec2f& a) { return &a.x; }
+inline float*       data(vec2f& a) { return &a.x; }
 
 // Vector comparison operations.
 inline bool operator==(const vec2f& a, const vec2f& b) {
@@ -252,6 +1179,7 @@ inline float cross(const vec2f& a, const vec2f& b) {
 }
 
 inline float length(const vec2f& a) { return sqrt(dot(a, a)); }
+inline float length_squared(const vec2f& a) { return dot(a, a); }
 inline vec2f normalize(const vec2f& a) {
   auto l = length(a);
   return (l != 0) ? a / l : a;
@@ -259,6 +1187,9 @@ inline vec2f normalize(const vec2f& a) {
 inline float distance(const vec2f& a, const vec2f& b) { return length(a - b); }
 inline float distance_squared(const vec2f& a, const vec2f& b) {
   return dot(a - b, a - b);
+}
+inline float angle(const vec2f& a, const vec2f& b) {
+  return acos(clamp(dot(normalize(a), normalize(b)), (float)-1, (float)1));
 }
 
 // Max element and clamp.
@@ -286,23 +1217,31 @@ inline float sum(const vec2f& a) { return a.x + a.y; }
 inline float mean(const vec2f& a) { return sum(a) / 2; }
 
 // Functions applied to vector elements
-inline vec2f abs(const vec2f& a) { return {abs(a.x), abs(a.y)}; };
-inline vec2f sqrt(const vec2f& a) { return {sqrt(a.x), sqrt(a.y)}; };
-inline vec2f exp(const vec2f& a) { return {exp(a.x), exp(a.y)}; };
-inline vec2f log(const vec2f& a) { return {log(a.x), log(a.y)}; };
-inline vec2f exp2(const vec2f& a) { return {exp2(a.x), exp2(a.y)}; };
-inline vec2f log2(const vec2f& a) { return {log2(a.x), log2(a.y)}; };
-inline bool is_finite(const vec2f& a) { return is_finite(a.x) && is_finite(a.y); };
-inline vec2f pow(const vec2f& a, float b) {
-  return {pow(a.x, b), pow(a.y, b)};
-};
+inline vec2f abs(const vec2f& a) { return {abs(a.x), abs(a.y)}; }
+inline vec2f sqr(const vec2f& a) { return {sqr(a.x), sqr(a.y)}; }
+inline vec2f sqrt(const vec2f& a) { return {sqrt(a.x), sqrt(a.y)}; }
+inline vec2f exp(const vec2f& a) { return {exp(a.x), exp(a.y)}; }
+inline vec2f log(const vec2f& a) { return {log(a.x), log(a.y)}; }
+inline vec2f exp2(const vec2f& a) { return {exp2(a.x), exp2(a.y)}; }
+inline vec2f log2(const vec2f& a) { return {log2(a.x), log2(a.y)}; }
+inline bool  isfinite(const vec2f& a) { return isfinite(a.x) && isfinite(a.y); }
+inline vec2f pow(const vec2f& a, float b) { return {pow(a.x, b), pow(a.y, b)}; }
 inline vec2f pow(const vec2f& a, const vec2f& b) {
   return {pow(a.x, b.x), pow(a.y, b.y)};
-};
+}
 inline vec2f gain(const vec2f& a, float b) {
   return {gain(a.x, b), gain(a.y, b)};
-};
+}
 inline void swap(vec2f& a, vec2f& b) { std::swap(a, b); }
+
+// Vector sequence operations.
+inline int          size(const vec3f& a) { return 3; }
+inline const float* begin(const vec3f& a) { return &a.x; }
+inline const float* end(const vec3f& a) { return &a.x + 3; }
+inline float*       begin(vec3f& a) { return &a.x; }
+inline float*       end(vec3f& a) { return &a.x + 3; }
+inline const float* data(const vec3f& a) { return &a.x; }
+inline float*       data(vec3f& a) { return &a.x; }
 
 // Vector comparison operations.
 inline bool operator==(const vec3f& a, const vec3f& b) {
@@ -371,6 +1310,7 @@ inline vec3f cross(const vec3f& a, const vec3f& b) {
 }
 
 inline float length(const vec3f& a) { return sqrt(dot(a, a)); }
+inline float length_squared(const vec3f& a) { return dot(a, a); }
 inline vec3f normalize(const vec3f& a) {
   auto l = length(a);
   return (l != 0) ? a / l : a;
@@ -379,7 +1319,6 @@ inline float distance(const vec3f& a, const vec3f& b) { return length(a - b); }
 inline float distance_squared(const vec3f& a, const vec3f& b) {
   return dot(a - b, a - b);
 }
-
 inline float angle(const vec3f& a, const vec3f& b) {
   return acos(clamp(dot(normalize(a), normalize(b)), (float)-1, (float)1));
 }
@@ -397,15 +1336,11 @@ inline vec3f orthonormalize(const vec3f& a, const vec3f& b) {
 inline vec3f reflect(const vec3f& w, const vec3f& n) {
   return -w + 2 * dot(n, w) * n;
 }
-inline vec3f refract(const vec3f& w, const vec3f& n, float eta) {
-  auto k = 1 - eta * eta * max((float)0, 1 - dot(n, w) * dot(n, w));
+inline vec3f refract(const vec3f& w, const vec3f& n, float inv_eta) {
+  auto cosine = dot(n, w);
+  auto k      = 1 + inv_eta * inv_eta * (cosine * cosine - 1);
   if (k < 0) return {0, 0, 0};  // tir
-  return -w * eta + (eta * dot(n, w) - sqrt(k)) * n;
-}
-inline vec3f refract_notir(const vec3f& w, const vec3f& n, float eta) {
-  auto k = 1 - eta * eta * max((float)0, 1 - dot(n, w) * dot(n, w));
-  k      = max(k, 0.001f);
-  return -w * eta + (eta * dot(n, w) - sqrt(k)) * n;
+  return -w * inv_eta + (inv_eta * cosine - sqrt(k)) * n;
 }
 
 // Max element and clamp.
@@ -437,25 +1372,35 @@ inline float sum(const vec3f& a) { return a.x + a.y + a.z; }
 inline float mean(const vec3f& a) { return sum(a) / 3; }
 
 // Functions applied to vector elements
-inline vec3f abs(const vec3f& a) { return {abs(a.x), abs(a.y), abs(a.z)}; };
-inline vec3f sqrt(const vec3f& a) { return {sqrt(a.x), sqrt(a.y), sqrt(a.z)}; };
-inline vec3f exp(const vec3f& a) { return {exp(a.x), exp(a.y), exp(a.z)}; };
-inline vec3f log(const vec3f& a) { return {log(a.x), log(a.y), log(a.z)}; };
-inline vec3f exp2(const vec3f& a) { return {exp2(a.x), exp2(a.y), exp2(a.z)}; };
-inline vec3f log2(const vec3f& a) { return {log2(a.x), log2(a.y), log2(a.z)}; };
+inline vec3f abs(const vec3f& a) { return {abs(a.x), abs(a.y), abs(a.z)}; }
+inline vec3f sqr(const vec3f& a) { return {sqr(a.x), sqr(a.y), sqr(a.z)}; }
+inline vec3f sqrt(const vec3f& a) { return {sqrt(a.x), sqrt(a.y), sqrt(a.z)}; }
+inline vec3f exp(const vec3f& a) { return {exp(a.x), exp(a.y), exp(a.z)}; }
+inline vec3f log(const vec3f& a) { return {log(a.x), log(a.y), log(a.z)}; }
+inline vec3f exp2(const vec3f& a) { return {exp2(a.x), exp2(a.y), exp2(a.z)}; }
+inline vec3f log2(const vec3f& a) { return {log2(a.x), log2(a.y), log2(a.z)}; }
 inline vec3f pow(const vec3f& a, float b) {
   return {pow(a.x, b), pow(a.y, b), pow(a.z, b)};
-};
+}
 inline vec3f pow(const vec3f& a, const vec3f& b) {
   return {pow(a.x, b.x), pow(a.y, b.y), pow(a.z, b.z)};
-};
+}
 inline vec3f gain(const vec3f& a, float b) {
   return {gain(a.x, b), gain(a.y, b), gain(a.z, b)};
-};
-inline bool is_finite(const vec3f& a) {
-  return is_finite(a.x) && is_finite(a.y) && is_finite(a.z);
-};
+}
+inline bool isfinite(const vec3f& a) {
+  return isfinite(a.x) && isfinite(a.y) && isfinite(a.z);
+}
 inline void swap(vec3f& a, vec3f& b) { std::swap(a, b); }
+
+// Vector sequence operations.
+inline int          size(const vec4f& a) { return 4; }
+inline const float* begin(const vec4f& a) { return &a.x; }
+inline const float* end(const vec4f& a) { return &a.x + 4; }
+inline float*       begin(vec4f& a) { return &a.x; }
+inline float*       end(vec4f& a) { return &a.x + 4; }
+inline const float* data(const vec4f& a) { return &a.x; }
+inline float*       data(vec4f& a) { return &a.x; }
 
 // Vector comparison operations.
 inline bool operator==(const vec4f& a, const vec4f& b) {
@@ -520,6 +1465,7 @@ inline float dot(const vec4f& a, const vec4f& b) {
   return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 inline float length(const vec4f& a) { return sqrt(dot(a, a)); }
+inline float length_squared(const vec4f& a) { return dot(a, a); }
 inline vec4f normalize(const vec4f& a) {
   auto l = length(a);
   return (l != 0) ? a / l : a;
@@ -527,6 +1473,9 @@ inline vec4f normalize(const vec4f& a) {
 inline float distance(const vec4f& a, const vec4f& b) { return length(a - b); }
 inline float distance_squared(const vec4f& a, const vec4f& b) {
   return dot(a - b, a - b);
+}
+inline float angle(const vec4f& a, const vec4f& b) {
+  return acos(clamp(dot(normalize(a), normalize(b)), (float)-1, (float)1));
 }
 
 inline vec4f slerp(const vec4f& a, const vec4f& b, float u) {
@@ -539,7 +1488,7 @@ inline vec4f slerp(const vec4f& a, const vec4f& b, float u) {
   }
   if (d > (float)0.9995) return normalize(an + u * (bn - an));
   auto th = acos(clamp(d, (float)-1, (float)1));
-  if (!th) return an;
+  if (th == 0) return an;
   return an * (sin(th * (1 - u)) / sin(th)) + bn * (sin(th * u) / sin(th));
 }
 
@@ -575,34 +1524,37 @@ inline float mean(const vec4f& a) { return sum(a) / 4; }
 // Functions applied to vector elements
 inline vec4f abs(const vec4f& a) {
   return {abs(a.x), abs(a.y), abs(a.z), abs(a.w)};
-};
+}
+inline vec4f sqr(const vec4f& a) {
+  return {sqr(a.x), sqr(a.y), sqr(a.z), sqr(a.w)};
+}
 inline vec4f sqrt(const vec4f& a) {
   return {sqrt(a.x), sqrt(a.y), sqrt(a.z), sqrt(a.w)};
-};
+}
 inline vec4f exp(const vec4f& a) {
   return {exp(a.x), exp(a.y), exp(a.z), exp(a.w)};
-};
+}
 inline vec4f log(const vec4f& a) {
   return {log(a.x), log(a.y), log(a.z), log(a.w)};
-};
+}
 inline vec4f exp2(const vec4f& a) {
   return {exp2(a.x), exp2(a.y), exp2(a.z), exp2(a.w)};
-};
+}
 inline vec4f log2(const vec4f& a) {
   return {log2(a.x), log2(a.y), log2(a.z), log2(a.w)};
-};
+}
 inline vec4f pow(const vec4f& a, float b) {
   return {pow(a.x, b), pow(a.y, b), pow(a.z, b), pow(a.w, b)};
-};
+}
 inline vec4f pow(const vec4f& a, const vec4f& b) {
   return {pow(a.x, b.x), pow(a.y, b.y), pow(a.z, b.z), pow(a.w, b.w)};
-};
+}
 inline vec4f gain(const vec4f& a, float b) {
   return {gain(a.x, b), gain(a.y, b), gain(a.z, b), gain(a.w, b)};
-};
-inline bool is_finite(const vec4f& a) {
-  return is_finite(a.x) && is_finite(a.y) && is_finite(a.z) && is_finite(a.w);
-};
+}
+inline bool isfinite(const vec4f& a) {
+  return isfinite(a.x) && isfinite(a.y) && isfinite(a.z) && isfinite(a.w);
+}
 inline void swap(vec4f& a, vec4f& b) { std::swap(a, b); }
 
 // Quaternion operatons represented as xi + yj + zk + w
@@ -628,70 +1580,33 @@ inline vec4f quat_inverse(const vec4f& a) {
 // -----------------------------------------------------------------------------
 namespace yocto {
 
-struct vec2i {
-  int x = 0;
-  int y = 0;
+// Vector data types
+inline int& vec2i::operator[](int i) { return (&x)[i]; }
+inline const int& vec2i::operator[](int i) const { return (&x)[i]; }
 
-  vec2i() {}
-  vec2i(int x, int y) : x{x}, y{y} {}
-  explicit vec2i(int v) : x{v}, y{v} {}
+// Vector data types
+inline int& vec3i::operator[](int i) { return (&x)[i]; }
+inline const int& vec3i::operator[](int i) const { return (&x)[i]; }
 
-  int&       operator[](int i) { return (&x)[i]; }
-  const int& operator[](int i) const { return (&x)[i]; }
-};
+// Vector data types
+inline int& vec4i::operator[](int i) { return (&x)[i]; }
+inline const int& vec4i::operator[](int i) const { return (&x)[i]; }
 
-struct vec3i {
-  int x = 0;
-  int y = 0;
-  int z = 0;
-
-  vec3i() {}
-  vec3i(int x, int y, int z) : x{x}, y{y}, z{z} {}
-  vec3i(const vec2i& v, int z) : x{v.x}, y{v.y}, z{z} {}
-  explicit vec3i(int v) : x{v}, y{v}, z{v} {}
-
-  int&       operator[](int i) { return (&x)[i]; }
-  const int& operator[](int i) const { return (&x)[i]; }
-};
-
-struct vec4i {
-  int x = 0;
-  int y = 0;
-  int z = 0;
-  int w = 0;
-
-  vec4i() {}
-  vec4i(int x, int y, int z, int w) : x{x}, y{y}, z{z}, w{w} {}
-  vec4i(const vec3i& v, int w) : x{v.x}, y{v.y}, z{v.z}, w{w} {}
-  explicit vec4i(int v) : x{v}, y{v}, z{v}, w{v} {}
-
-  int&       operator[](int i) { return (&x)[i]; }
-  const int& operator[](int i) const { return (&x)[i]; }
-};
-
-struct vec4b {
-  byte x = 0;
-  byte y = 0;
-  byte z = 0;
-  byte w = 0;
-
-  vec4b() {}
-  vec4b(byte x, byte y, byte z, byte w) : x{x}, y{y}, z{z}, w{w} {}
-  explicit vec4b(byte v) : x{v}, y{v}, z{v}, w{v} {}
-
-  byte&       operator[](int i) { return (&x)[i]; }
-  const byte& operator[](int i) const { return (&x)[i]; }
-};
-
-// Zero vector constants.
-static const auto zero2i = vec2i{0, 0};
-static const auto zero3i = vec3i{0, 0, 0};
-static const auto zero4i = vec4i{0, 0, 0, 0};
-static const auto zero4b = vec4b{0, 0, 0, 0};
+// Vector data types
+inline byte& vec4b::operator[](int i) { return (&x)[i]; }
+inline const byte& vec4b::operator[](int i) const { return (&x)[i]; }
 
 // Element access
-inline vec3i&       xyz(vec4i& a) { return (vec3i&)a; }
-inline const vec3i& xyz(const vec4i& a) { return (const vec3i&)a; }
+inline vec3i xyz(const vec4i& a) { return {a.x, a.y, a.z}; }
+
+// Vector sequence operations.
+inline int        size(const vec2i& a) { return 2; }
+inline const int* begin(const vec2i& a) { return &a.x; }
+inline const int* end(const vec2i& a) { return &a.x + 2; }
+inline int*       begin(vec2i& a) { return &a.x; }
+inline int*       end(vec2i& a) { return &a.x + 2; }
+inline const int* data(const vec2i& a) { return &a.x; }
+inline int*       data(vec2i& a) { return &a.x; }
 
 // Vector comparison operations.
 inline bool operator==(const vec2i& a, const vec2i& b) {
@@ -753,8 +1668,17 @@ inline int min(const vec2i& a) { return min(a.x, a.y); }
 inline int sum(const vec2i& a) { return a.x + a.y; }
 
 // Functions applied to vector elements
-inline vec2i abs(const vec2i& a) { return {abs(a.x), abs(a.y)}; };
+inline vec2i abs(const vec2i& a) { return {abs(a.x), abs(a.y)}; }
 inline void  swap(vec2i& a, vec2i& b) { std::swap(a, b); }
+
+// Vector sequence operations.
+inline int        size(const vec3i& a) { return 3; }
+inline const int* begin(const vec3i& a) { return &a.x; }
+inline const int* end(const vec3i& a) { return &a.x + 3; }
+inline int*       begin(vec3i& a) { return &a.x; }
+inline int*       end(vec3i& a) { return &a.x + 3; }
+inline const int* data(const vec3i& a) { return &a.x; }
+inline int*       data(vec3i& a) { return &a.x; }
 
 // Vector comparison operations.
 inline bool operator==(const vec3i& a, const vec3i& b) {
@@ -836,8 +1760,17 @@ inline int min(const vec3i& a) { return min(min(a.x, a.y), a.z); }
 inline int sum(const vec3i& a) { return a.x + a.y + a.z; }
 
 // Functions applied to vector elements
-inline vec3i abs(const vec3i& a) { return {abs(a.x), abs(a.y), abs(a.z)}; };
+inline vec3i abs(const vec3i& a) { return {abs(a.x), abs(a.y), abs(a.z)}; }
 inline void  swap(vec3i& a, vec3i& b) { std::swap(a, b); }
+
+// Vector sequence operations.
+inline int        size(const vec4i& a) { return 4; }
+inline const int* begin(const vec4i& a) { return &a.x; }
+inline const int* end(const vec4i& a) { return &a.x + 4; }
+inline int*       begin(vec4i& a) { return &a.x; }
+inline int*       end(vec4i& a) { return &a.x + 4; }
+inline const int* data(const vec4i& a) { return &a.x; }
+inline int*       data(vec4i& a) { return &a.x; }
 
 // Vector comparison operations.
 inline bool operator==(const vec4i& a, const vec4i& b) {
@@ -922,49 +1855,18 @@ inline int sum(const vec4i& a) { return a.x + a.y + a.z + a.w; }
 // Functions applied to vector elements
 inline vec4i abs(const vec4i& a) {
   return {abs(a.x), abs(a.y), abs(a.z), abs(a.w)};
-};
+}
 inline void swap(vec4i& a, vec4i& b) { std::swap(a, b); }
 
+// Vector comparison operations.
+inline bool operator==(const vec4b& a, const vec4b& b) {
+  return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w;
+}
+inline bool operator!=(const vec4b& a, const vec4b& b) {
+  return a.x != b.x || a.y != b.y || a.z != b.z || a.w != b.w;
+}
+
 }  // namespace yocto
-
-namespace std {
-
-// Hash functor for vector for use with unordered_map
-template <>
-struct hash<yocto::vec2i> {
-  size_t operator()(const yocto::vec2i& v) const {
-    static const auto hasher = std::hash<int>();
-    auto              h      = (size_t)0;
-    h ^= hasher(v.x) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= hasher(v.y) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    return h;
-  }
-};
-template <>
-struct hash<yocto::vec3i> {
-  size_t operator()(const yocto::vec3i& v) const {
-    static const auto hasher = std::hash<int>();
-    auto              h      = (size_t)0;
-    h ^= hasher(v.x) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= hasher(v.y) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= hasher(v.z) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    return h;
-  }
-};
-template <>
-struct hash<yocto::vec4i> {
-  size_t operator()(const yocto::vec4i& v) const {
-    static const auto hasher = std::hash<int>();
-    auto              h      = (size_t)0;
-    h ^= hasher(v.x) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= hasher(v.y) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= hasher(v.z) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= hasher(v.w) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    return h;
-  }
-};
-
-}  // namespace std
 
 // -----------------------------------------------------------------------------
 // MATRICES
@@ -972,50 +1874,16 @@ struct hash<yocto::vec4i> {
 namespace yocto {
 
 // Small Fixed-size matrices stored in column major format.
-struct mat2f {
-  vec2f x = {1, 0};
-  vec2f y = {0, 1};
-
-  mat2f() {}
-  mat2f(const vec2f& x, const vec2f& y) : x{x}, y{y} {}
-
-  vec2f&       operator[](int i) { return (&x)[i]; }
-  const vec2f& operator[](int i) const { return (&x)[i]; }
-};
+inline vec2f& mat2f::operator[](int i) { return (&x)[i]; }
+inline const vec2f& mat2f::operator[](int i) const { return (&x)[i]; }
 
 // Small Fixed-size matrices stored in column major format.
-struct mat3f {
-  vec3f x = {1, 0, 0};
-  vec3f y = {0, 1, 0};
-  vec3f z = {0, 0, 1};
-
-  mat3f() {}
-  mat3f(const vec3f& x, const vec3f& y, const vec3f& z) : x{x}, y{y}, z{z} {}
-
-  vec3f&       operator[](int i) { return (&x)[i]; }
-  const vec3f& operator[](int i) const { return (&x)[i]; }
-};
+inline vec3f& mat3f::operator[](int i) { return (&x)[i]; }
+inline const vec3f& mat3f::operator[](int i) const { return (&x)[i]; }
 
 // Small Fixed-size matrices stored in column major format.
-struct mat4f {
-  vec4f x = {1, 0, 0, 0};
-  vec4f y = {0, 1, 0, 0};
-  vec4f z = {0, 0, 1, 0};
-  vec4f w = {0, 0, 0, 1};
-
-  mat4f() {}
-  mat4f(const vec4f& x, const vec4f& y, const vec4f& z, const vec4f& w)
-      : x{x}, y{y}, z{z}, w{w} {}
-
-  vec4f&       operator[](int i) { return (&x)[i]; }
-  const vec4f& operator[](int i) const { return (&x)[i]; }
-};
-
-// Identity matrices constants.
-static const auto identity2x2f = mat2f{{1, 0}, {0, 1}};
-static const auto identity3x3f = mat3f{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-static const auto identity4x4f = mat4f{
-    {1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}};
+inline vec4f& mat4f::operator[](int i) { return (&x)[i]; }
+inline const vec4f& mat4f::operator[](int i) const { return (&x)[i]; }
 
 // Matrix comparisons.
 inline bool operator==(const mat2f& a, const mat2f& b) {
@@ -1164,53 +2032,29 @@ inline mat4f transpose(const mat4f& a) {
 namespace yocto {
 
 // Rigid frames stored as a column-major affine transform matrix.
-struct frame2f {
-  vec2f x = {1, 0};
-  vec2f y = {0, 1};
-  vec2f o = {0, 0};
-
-  frame2f() : x{}, y{}, o{} {}
-  frame2f(const vec2f& x, const vec2f& y, const vec2f& o) : x{x}, y{y}, o{o} {}
-  explicit frame2f(const vec2f& o) : x{1, 0}, y{0, 1}, o{o} {}
-  frame2f(const mat2f& m, const vec2f& t) : x{m.x}, y{m.y}, o{t} {}
-  explicit frame2f(const mat3f& m)
-      : x{m.x.x, m.x.y}, y{m.y.x, m.y.y}, o{m.z.x, m.z.y} {}
-  operator mat3f() const { return {{x, 0}, {y, 0}, {o, 1}}; }
-
-  vec2f&       operator[](int i) { return (&x)[i]; }
-  const vec2f& operator[](int i) const { return (&x)[i]; }
-};
+inline vec2f& frame2f::operator[](int i) { return (&x)[i]; }
+inline const vec2f& frame2f::operator[](int i) const { return (&x)[i]; }
 
 // Rigid frames stored as a column-major affine transform matrix.
-struct frame3f {
-  vec3f x = {1, 0, 0};
-  vec3f y = {0, 1, 0};
-  vec3f z = {0, 0, 1};
-  vec3f o = {0, 0, 0};
-
-  frame3f() : x{}, y{}, z{}, o{} {}
-  frame3f(const vec3f& x, const vec3f& y, const vec3f& z, const vec3f& o)
-      : x{x}, y{y}, z{z}, o{o} {}
-  explicit frame3f(const vec3f& o) : x{1, 0, 0}, y{0, 1, 0}, z{0, 0, 1}, o{o} {}
-  frame3f(const mat3f& m, const vec3f& t) : x{m.x}, y{m.y}, z{m.z}, o{t} {}
-  explicit frame3f(const mat4f& m)
-      : x{m.x.x, m.x.y, m.x.z}
-      , y{m.y.x, m.y.y, m.y.z}
-      , z{m.z.x, m.z.y, m.z.z}
-      , o{m.w.x, m.w.y, m.w.z} {}
-  operator mat4f() const { return {{x, 0}, {y, 0}, {z, 0}, {o, 1}}; }
-
-  vec3f&       operator[](int i) { return (&x)[i]; }
-  const vec3f& operator[](int i) const { return (&x)[i]; }
-};
-
-// Indentity frames.
-static const auto identity2x3f = frame2f{{1, 0}, {0, 1}, {0, 0}};
-static const auto identity3x4f = frame3f{
-    {1, 0, 0}, {0, 1, 0}, {0, 0, 1}, {0, 0, 0}};
+inline vec3f& frame3f::operator[](int i) { return (&x)[i]; }
+inline const vec3f& frame3f::operator[](int i) const { return (&x)[i]; }
 
 // Frame properties
-inline const mat2f& rotation(const frame2f& a) { return (const mat2f&)a; }
+inline mat2f rotation(const frame2f& a) { return {a.x, a.y}; }
+inline vec2f translation(const frame2f& a) { return a.o; }
+
+// Frame construction
+inline frame2f make_frame(const mat2f& m, const vec2f& t) {
+  return {m.x, m.y, t};
+}
+
+// Frame/mat conversion
+inline frame2f mat_to_frame(const mat3f& m) {
+  return {{m.x.x, m.x.y}, {m.y.x, m.y.y}, {m.z.x, m.z.y}};
+}
+inline mat3f frame_to_mat(const frame2f& f) {
+  return {{f.x.x, f.x.y, 0}, {f.y.x, f.y.y, 0}, {f.o.x, f.o.y, 1}};
+}
 
 // Frame comparisons.
 inline bool operator==(const frame2f& a, const frame2f& b) {
@@ -1220,23 +2064,39 @@ inline bool operator!=(const frame2f& a, const frame2f& b) { return !(a == b); }
 
 // Frame composition, equivalent to affine matrix product.
 inline frame2f operator*(const frame2f& a, const frame2f& b) {
-  return {rotation(a) * rotation(b), rotation(a) * b.o + a.o};
+  return make_frame(rotation(a) * rotation(b), rotation(a) * b.o + a.o);
 }
 inline frame2f& operator*=(frame2f& a, const frame2f& b) { return a = a * b; }
 
 // Frame inverse, equivalent to rigid affine inverse.
-inline frame2f inverse(const frame2f& a, bool non_rigid = false) {
+inline frame2f inverse(const frame2f& a, bool non_rigid) {
   if (non_rigid) {
     auto minv = inverse(rotation(a));
-    return {minv, -(minv * a.o)};
+    return make_frame(minv, -(minv * a.o));
   } else {
     auto minv = transpose(rotation(a));
-    return {minv, -(minv * a.o)};
+    return make_frame(minv, -(minv * a.o));
   }
 }
 
 // Frame properties
-inline const mat3f& rotation(const frame3f& a) { return (const mat3f&)a; }
+inline mat3f rotation(const frame3f& a) { return {a.x, a.y, a.z}; }
+inline vec3f translation(const frame3f& a) { return a.o; }
+
+// Frame construction
+inline frame3f make_frame(const mat3f& m, const vec3f& t) {
+  return {m.x, m.y, m.z, t};
+}
+
+// frame/mat conversion
+inline frame3f mat_to_frame(const mat4f& m) {
+  return {{m.x.x, m.x.y, m.x.z}, {m.y.x, m.y.y, m.y.z}, {m.z.x, m.z.y, m.z.z},
+      {m.w.x, m.w.y, m.w.z}};
+}
+inline mat4f frame_to_mat(const frame3f& f) {
+  return {{f.x.x, f.x.y, f.x.z, 0}, {f.y.x, f.y.y, f.y.z, 0},
+      {f.z.x, f.z.y, f.z.z, 0}, {f.o.x, f.o.y, f.o.z, 1}};
+}
 
 // Frame comparisons.
 inline bool operator==(const frame3f& a, const frame3f& b) {
@@ -1246,18 +2106,18 @@ inline bool operator!=(const frame3f& a, const frame3f& b) { return !(a == b); }
 
 // Frame composition, equivalent to affine matrix product.
 inline frame3f operator*(const frame3f& a, const frame3f& b) {
-  return {rotation(a) * rotation(b), rotation(a) * b.o + a.o};
+  return make_frame(rotation(a) * rotation(b), rotation(a) * b.o + a.o);
 }
 inline frame3f& operator*=(frame3f& a, const frame3f& b) { return a = a * b; }
 
 // Frame inverse, equivalent to rigid affine inverse.
-inline frame3f inverse(const frame3f& a, bool non_rigid = false) {
+inline frame3f inverse(const frame3f& a, bool non_rigid) {
   if (non_rigid) {
     auto minv = inverse(rotation(a));
-    return {minv, -(minv * a.o)};
+    return make_frame(minv, -(minv * a.o));
   } else {
     auto minv = transpose(rotation(a));
-    return {minv, -(minv * a.o)};
+    return make_frame(minv, -(minv * a.o));
   }
 }
 
@@ -1285,21 +2145,6 @@ inline frame3f frame_fromzx(const vec3f& o, const vec3f& z_, const vec3f& x_) {
 // QUATERNIONS
 // -----------------------------------------------------------------------------
 namespace yocto {
-
-// Quaternions to represent rotations
-struct quat4f {
-  float x = 0;
-  float y = 0;
-  float z = 0;
-  float w = 0;
-
-  // constructors
-  quat4f() : x{0}, y{0}, z{0}, w{1} {}
-  quat4f(float x, float y, float z, float w) : x{x}, y{y}, z{z}, w{w} {}
-};
-
-// Constants
-static const auto identity_quat4f = quat4f{0, 0, 0, 1};
 
 // Quaternion operatons
 inline quat4f operator+(const quat4f& a, const quat4f& b) {
@@ -1330,8 +2175,8 @@ inline quat4f normalize(const quat4f& a) {
 inline quat4f conjugate(const quat4f& a) { return {-a.x, -a.y, -a.z, a.w}; }
 inline quat4f inverse(const quat4f& a) { return conjugate(a) / dot(a, a); }
 inline float  uangle(const quat4f& a, const quat4f& b) {
-  auto d = dot(a, b);
-  return d > 1 ? 0 : acos(d < -1 ? -1 : d);
+   auto d = dot(a, b);
+   return d > 1 ? 0 : acos(d < -1 ? -1 : d);
 }
 inline quat4f lerp(const quat4f& a, const quat4f& b, float t) {
   return a * (1 - t) + b * t;
@@ -1345,141 +2190,6 @@ inline quat4f slerp(const quat4f& a, const quat4f& b, float t) {
              ? a
              : a * (sin(th * (1 - t)) / sin(th)) + b * (sin(th * t) / sin(th));
 }
-
-}  // namespace yocto
-
-// -----------------------------------------------------------------------------
-// AXIS ALIGNED BOUNDING BOXES
-// -----------------------------------------------------------------------------
-namespace yocto {
-
-// Axis aligned bounding box represented as a min/max vector pairs.
-struct bbox2f {
-  vec2f min = {flt_max, flt_max};
-  vec2f max = {flt_min, flt_min};
-
-  bbox2f() {}
-  bbox2f(const vec2f& min, const vec2f& max) : min{min}, max{max} {}
-
-  vec2f&       operator[](int i) { return (&min)[i]; }
-  const vec2f& operator[](int i) const { return (&min)[i]; }
-};
-
-// Axis aligned bounding box represented as a min/max vector pairs.
-struct bbox3f {
-  vec3f min = {flt_max, flt_max, flt_max};
-  vec3f max = {flt_min, flt_min, flt_min};
-
-  bbox3f() {}
-  bbox3f(const vec3f& min, const vec3f& max) : min{min}, max{max} {}
-
-  vec3f&       operator[](int i) { return (&min)[i]; }
-  const vec3f& operator[](int i) const { return (&min)[i]; }
-};
-
-// Empty bbox constant.
-static const auto invalidb2f = bbox2f{};
-static const auto invalidb3f = bbox3f{};
-
-// Bounding box properties
-inline vec2f center(const bbox2f& a) { return (a.min + a.max) / 2; }
-inline vec2f size(const bbox2f& a) { return a.max - a.min; }
-
-// Bounding box comparisons.
-inline bool operator==(const bbox2f& a, const bbox2f& b) {
-  return a.min == b.min && a.max == b.max;
-}
-inline bool operator!=(const bbox2f& a, const bbox2f& b) {
-  return a.min != b.min || a.max != b.max;
-}
-
-// Bounding box expansions with points and other boxes.
-inline bbox2f merge(const bbox2f& a, const vec2f& b) {
-  return {min(a.min, b), max(a.max, b)};
-}
-inline bbox2f merge(const bbox2f& a, const bbox2f& b) {
-  return {min(a.min, b.min), max(a.max, b.max)};
-}
-inline void expand(bbox2f& a, const vec2f& b) { a = merge(a, b); }
-inline void expand(bbox2f& a, const bbox2f& b) { a = merge(a, b); }
-
-// Bounding box properties
-inline vec3f center(const bbox3f& a) { return (a.min + a.max) / 2; }
-inline vec3f size(const bbox3f& a) { return a.max - a.min; }
-
-// Bounding box comparisons.
-inline bool operator==(const bbox3f& a, const bbox3f& b) {
-  return a.min == b.min && a.max == b.max;
-}
-inline bool operator!=(const bbox3f& a, const bbox3f& b) {
-  return a.min != b.min || a.max != b.max;
-}
-
-// Bounding box expansions with points and other boxes.
-inline bbox3f merge(const bbox3f& a, const vec3f& b) {
-  return {min(a.min, b), max(a.max, b)};
-}
-inline bbox3f merge(const bbox3f& a, const bbox3f& b) {
-  return {min(a.min, b.min), max(a.max, b.max)};
-}
-inline void expand(bbox3f& a, const vec3f& b) { a = merge(a, b); }
-inline void expand(bbox3f& a, const bbox3f& b) { a = merge(a, b); }
-
-// Primitive bounds.
-inline bbox3f point_bounds(const vec3f& p) { return {p, p}; }
-inline bbox3f point_bounds(const vec3f& p, float r) {
-  return {min(p - r, p + r), max(p - r, p + r)};
-}
-inline bbox3f line_bounds(const vec3f& p0, const vec3f& p1) {
-  return {min(p0, p1), max(p0, p1)};
-}
-inline bbox3f line_bounds(
-    const vec3f& p0, const vec3f& p1, float r0, float r1) {
-  return {min(p0 - r0, p1 - r1), max(p0 + r0, p1 + r1)};
-}
-inline bbox3f triangle_bounds(
-    const vec3f& p0, const vec3f& p1, const vec3f& p2) {
-  return {min(p0, min(p1, p2)), max(p0, max(p1, p2))};
-}
-inline bbox3f quad_bounds(
-    const vec3f& p0, const vec3f& p1, const vec3f& p2, const vec3f& p3) {
-  return {min(p0, min(p1, min(p2, p3))), max(p0, max(p1, max(p2, p3)))};
-}
-
-}  // namespace yocto
-
-// -----------------------------------------------------------------------------
-// RAYS
-// -----------------------------------------------------------------------------
-namespace yocto {
-
-// Ray esplison
-static const auto ray_eps = 1e-4f;
-
-struct ray2f {
-  vec2f o    = {0, 0};
-  vec2f d    = {0, 1};
-  float tmin = ray_eps;
-  float tmax = flt_max;
-
-  ray2f() {}
-  ray2f(const vec2f& o, const vec2f& d, float tmin = ray_eps,
-      float tmax = flt_max)
-      : o{o}, d{d}, tmin{tmin}, tmax{tmax} {}
-};
-
-// Rays with origin, direction and min/max t value.
-struct ray3f {
-  vec3f o    = {0, 0, 0};
-  vec3f d    = {0, 0, 1};
-  float tmin = ray_eps;
-  float tmax = flt_max;
-
-  ray3f() {}
-  ray3f(const vec3f& o, const vec3f& d, float tmin = ray_eps,
-      float tmax = flt_max)
-      : o{o}, d{d}, tmin{tmin}, tmax{tmax} {}
-};
 
 }  // namespace yocto
 
@@ -1541,7 +2251,7 @@ inline vec2f transform_direction(const frame2f& a, const vec2f& b) {
   return normalize(transform_vector(a, b));
 }
 inline vec2f transform_normal(
-    const frame2f& a, const vec2f& b, bool non_rigid = false) {
+    const frame2f& a, const vec2f& b, bool non_rigid) {
   if (non_rigid) {
     return transform_normal(rotation(a), b);
   } else {
@@ -1560,7 +2270,7 @@ inline vec3f transform_direction(const frame3f& a, const vec3f& b) {
   return normalize(transform_vector(a, b));
 }
 inline vec3f transform_normal(
-    const frame3f& a, const vec3f& b, bool non_rigid = false) {
+    const frame3f& a, const vec3f& b, bool non_rigid) {
   if (non_rigid) {
     return transform_normal(rotation(a), b);
   } else {
@@ -1568,34 +2278,26 @@ inline vec3f transform_normal(
   }
 }
 
-// Transforms rays and bounding boxes by matrices.
-inline ray3f transform_ray(const mat4f& a, const ray3f& b) {
-  return {transform_point(a, b.o), transform_vector(a, b.d), b.tmin, b.tmax};
+// Transforms points, vectors and directions by frames.
+inline vec2f transform_point_inverse(const frame2f& a, const vec2f& b) {
+  return {dot(a.x, b - a.o), dot(a.y, b - a.o)};
 }
-inline ray3f transform_ray(const frame3f& a, const ray3f& b) {
-  return {transform_point(a, b.o), transform_vector(a, b.d), b.tmin, b.tmax};
+inline vec2f transform_vector_inverse(const frame2f& a, const vec2f& b) {
+  return {dot(a.x, b), dot(a.y, b)};
 }
-inline bbox3f transform_bbox(const mat4f& a, const bbox3f& b) {
-  auto corners = {vec3f{b.min.x, b.min.y, b.min.z},
-      vec3f{b.min.x, b.min.y, b.max.z}, vec3f{b.min.x, b.max.y, b.min.z},
-      vec3f{b.min.x, b.max.y, b.max.z}, vec3f{b.max.x, b.min.y, b.min.z},
-      vec3f{b.max.x, b.min.y, b.max.z}, vec3f{b.max.x, b.max.y, b.min.z},
-      vec3f{b.max.x, b.max.y, b.max.z}};
-  auto xformed = bbox3f();
-  for (auto& corner : corners)
-    xformed = merge(xformed, transform_point(a, corner));
-  return xformed;
+inline vec2f transform_direction_inverse(const frame2f& a, const vec2f& b) {
+  return normalize(transform_vector_inverse(a, b));
 }
-inline bbox3f transform_bbox(const frame3f& a, const bbox3f& b) {
-  auto corners = {vec3f{b.min.x, b.min.y, b.min.z},
-      vec3f{b.min.x, b.min.y, b.max.z}, vec3f{b.min.x, b.max.y, b.min.z},
-      vec3f{b.min.x, b.max.y, b.max.z}, vec3f{b.max.x, b.min.y, b.min.z},
-      vec3f{b.max.x, b.min.y, b.max.z}, vec3f{b.max.x, b.max.y, b.min.z},
-      vec3f{b.max.x, b.max.y, b.max.z}};
-  auto xformed = bbox3f();
-  for (auto& corner : corners)
-    xformed = merge(xformed, transform_point(a, corner));
-  return xformed;
+
+// Transforms points, vectors and directions by frames.
+inline vec3f transform_point_inverse(const frame3f& a, const vec3f& b) {
+  return {dot(a.x, b - a.o), dot(a.y, b - a.o), dot(a.z, b - a.o)};
+}
+inline vec3f transform_vector_inverse(const frame3f& a, const vec3f& b) {
+  return {dot(a.x, b), dot(a.y, b), dot(a.z, b)};
+}
+inline vec3f transform_direction_inverse(const frame3f& a, const vec3f& b) {
+  return normalize(transform_vector_inverse(a, b));
 }
 
 // Translation, scaling and rotations transforms.
@@ -1643,8 +2345,8 @@ inline frame3f rotation_frame(const mat3f& rot) {
 }
 
 // Lookat frame. Z-axis can be inverted with inv_xz.
-inline frame3f lookat_frame(const vec3f& eye, const vec3f& center,
-    const vec3f& up, bool inv_xz = false) {
+inline frame3f lookat_frame(
+    const vec3f& eye, const vec3f& center, const vec3f& up, bool inv_xz) {
   auto w = normalize(eye - center);
   auto u = normalize(cross(up, w));
   auto v = normalize(cross(w, u));
@@ -1691,13 +2393,135 @@ inline pair<vec3f, float> rotation_axisangle(const vec4f& quat) {
 }
 inline vec4f rotation_quat(const vec3f& axis, float angle) {
   auto len = length(axis);
-  if (!len) return {0, 0, 0, 1};
+  if (len == 0) return {0, 0, 0, 1};
   return vec4f{sin(angle / 2) * axis.x / len, sin(angle / 2) * axis.y / len,
       sin(angle / 2) * axis.z / len, cos(angle / 2)};
 }
 inline vec4f rotation_quat(const vec4f& axisangle) {
   return rotation_quat(
       vec3f{axisangle.x, axisangle.y, axisangle.z}, axisangle.w);
+}
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// USER INTERFACE UTILITIES
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Computes the image uv coordinates corresponding to the view parameters.
+// Returns negative coordinates if out of the image.
+inline vec2i image_coords(const vec2f& mouse_pos, const vec2f& center,
+    float scale, const vec2i& txt_size) {
+  auto xyf = (mouse_pos - center) / scale;
+  return vec2i{(int)round(xyf.x + txt_size.x / 2.0f),
+      (int)round(xyf.y + txt_size.y / 2.0f)};
+}
+
+// Center image and autofit. Returns center and scale.
+inline pair<vec2f, float> camera_imview(const vec2f& center, float scale,
+    const vec2i& imsize, const vec2i& winsize, bool zoom_to_fit) {
+  if (zoom_to_fit) {
+    return {{(float)winsize.x / 2, (float)winsize.y / 2},
+        min(winsize.x / (float)imsize.x, winsize.y / (float)imsize.y)};
+  } else {
+    return {
+        {(winsize.x >= imsize.x * scale) ? (float)winsize.x / 2 : center.x,
+            (winsize.y >= imsize.y * scale) ? (float)winsize.y / 2 : center.y},
+        scale};
+  }
+}
+
+// Turntable for UI navigation. Returns from and to.
+inline pair<vec3f, vec3f> camera_turntable(const vec3f& from_, const vec3f& to_,
+    const vec3f& up, const vec2f& rotate, float dolly, const vec2f& pan) {
+  // copy values
+  auto from = from_, to = to_;
+
+  // rotate if necessary
+  if (rotate != vec2f{0, 0}) {
+    auto z     = normalize(to - from);
+    auto lz    = length(to - from);
+    auto phi   = atan2(z.z, z.x) + rotate.x;
+    auto theta = acos(z.y) + rotate.y;
+    theta      = clamp(theta, 0.001f, pif - 0.001f);
+    auto nz    = vec3f{sin(theta) * cos(phi) * lz, cos(theta) * lz,
+        sin(theta) * sin(phi) * lz};
+    from       = to - nz;
+  }
+
+  // dolly if necessary
+  if (dolly != 0) {
+    auto z  = normalize(to - from);
+    auto lz = max(0.001f, length(to - from) * (1 + dolly));
+    z *= lz;
+    from = to - z;
+  }
+
+  // pan if necessary
+  if (pan != vec2f{0, 0}) {
+    auto z = normalize(to - from);
+    auto x = normalize(cross(up, z));
+    auto y = normalize(cross(z, x));
+    auto t = vec3f{pan.x * x.x + pan.y * y.x, pan.x * x.y + pan.y * y.y,
+        pan.x * x.z + pan.y * y.z};
+    from += t;
+    to += t;
+  }
+
+  // done
+  return {from, to};
+}
+
+// Turntable for UI navigation. Returns frame and focus.
+inline pair<frame3f, float> camera_turntable(const frame3f& frame_, float focus,
+    const vec2f& rotate, float dolly, const vec2f& pan) {
+  // copy values
+  auto frame = frame_;
+
+  // rotate if necessary
+  if (rotate != vec2f{0, 0}) {
+    auto phi   = atan2(frame.z.z, frame.z.x) + rotate.x;
+    auto theta = acos(frame.z.y) + rotate.y;
+    theta      = clamp(theta, 0.001f, pif - 0.001f);
+    auto new_z = vec3f{
+        sin(theta) * cos(phi), cos(theta), sin(theta) * sin(phi)};
+    auto new_center = frame.o - frame.z * focus;
+    auto new_o      = new_center + new_z * focus;
+    frame           = lookat_frame(new_o, new_center, {0, 1, 0});
+    focus           = length(new_o - new_center);
+  }
+
+  // pan if necessary
+  if (dolly != 0) {
+    auto c  = frame.o - frame.z * focus;
+    focus   = max(focus * (1 + dolly), 0.001f);
+    frame.o = c + frame.z * focus;
+  }
+
+  // pan if necessary
+  if (pan != vec2f{0, 0}) {
+    frame.o += frame.x * pan.x + frame.y * pan.y;
+  }
+
+  // done
+  return {frame, focus};
+}
+
+// FPS camera for UI navigation for a frame parametrization. Returns frame.
+inline frame3f camera_fpscam(
+    const frame3f& frame, const vec3f& transl, const vec2f& rotate) {
+  // https://gamedev.stackexchange.com/questions/30644/how-to-keep-my-quaternion-using-fps-camera-from-tilting-and-messing-up
+  auto y = vec3f{0, 1, 0};
+  auto z = orthonormalize(frame.z, y);
+  auto x = cross(y, z);
+
+  auto rot = rotation_frame(vec3f{1, 0, 0}, rotate.y) *
+             frame3f{frame.x, frame.y, frame.z, vec3f{0, 0, 0}} *
+             rotation_frame(vec3f{0, 1, 0}, rotate.x);
+  auto pos = frame.o + transl.x * x + transl.y * y + transl.z * z;
+
+  return {rot.x, rot.y, rot.z, pos};
 }
 
 // Computes the image uv coordinates corresponding to the view parameters.
@@ -1716,8 +2540,8 @@ inline void update_imview(vec2f& center, float& scale, const vec2i& imsize,
     scale  = min(winsize.x / (float)imsize.x, winsize.y / (float)imsize.y);
     center = {(float)winsize.x / 2, (float)winsize.y / 2};
   } else {
-    if (winsize.x >= imsize.x * scale) center.x = winsize.x / 2;
-    if (winsize.y >= imsize.y * scale) center.y = winsize.y / 2;
+    if (winsize.x >= imsize.x * scale) center.x = (float)winsize.x / 2;
+    if (winsize.y >= imsize.y * scale) center.y = (float)winsize.y / 2;
   }
 }
 
@@ -1725,7 +2549,7 @@ inline void update_imview(vec2f& center, float& scale, const vec2i& imsize,
 inline void update_turntable(vec3f& from, vec3f& to, vec3f& up,
     const vec2f& rotate, float dolly, const vec2f& pan) {
   // rotate if necessary
-  if (rotate.x || rotate.y) {
+  if (rotate != vec2f{0, 0}) {
     auto z     = normalize(to - from);
     auto lz    = length(to - from);
     auto phi   = atan2(z.z, z.x) + rotate.x;
@@ -1737,7 +2561,7 @@ inline void update_turntable(vec3f& from, vec3f& to, vec3f& up,
   }
 
   // dolly if necessary
-  if (dolly) {
+  if (dolly != 0) {
     auto z  = normalize(to - from);
     auto lz = max(0.001f, length(to - from) * (1 + dolly));
     z *= lz;
@@ -1745,7 +2569,7 @@ inline void update_turntable(vec3f& from, vec3f& to, vec3f& up,
   }
 
   // pan if necessary
-  if (pan.x || pan.y) {
+  if (pan != vec2f{0, 0}) {
     auto z = normalize(to - from);
     auto x = normalize(cross(up, z));
     auto y = normalize(cross(z, x));
@@ -1760,7 +2584,7 @@ inline void update_turntable(vec3f& from, vec3f& to, vec3f& up,
 inline void update_turntable(frame3f& frame, float& focus, const vec2f& rotate,
     float dolly, const vec2f& pan) {
   // rotate if necessary
-  if (rotate != zero2f) {
+  if (rotate != vec2f{0, 0}) {
     auto phi   = atan2(frame.z.z, frame.z.x) + rotate.x;
     auto theta = acos(frame.z.y) + rotate.y;
     theta      = clamp(theta, 0.001f, pif - 0.001f);
@@ -1773,14 +2597,14 @@ inline void update_turntable(frame3f& frame, float& focus, const vec2f& rotate,
   }
 
   // pan if necessary
-  if (dolly) {
+  if (dolly != 0) {
     auto c  = frame.o - frame.z * focus;
     focus   = max(focus * (1 + dolly), 0.001f);
     frame.o = c + frame.z * focus;
   }
 
   // pan if necessary
-  if (pan.x || pan.y) {
+  if (pan != vec2f{0, 0}) {
     frame.o += frame.x * pan.x + frame.y * pan.y;
   }
 }
@@ -1794,7 +2618,7 @@ inline void update_fpscam(
   auto x = cross(y, z);
 
   auto rot = rotation_frame(vec3f{1, 0, 0}, rotate.y) *
-             yocto::frame3f{frame.x, frame.y, frame.z, vec3f{0, 0, 0}} *
+             frame3f{frame.x, frame.y, frame.z, vec3f{0, 0, 0}} *
              rotation_frame(vec3f{0, 1, 0}, rotate.x);
   auto pos = frame.o + transl.x * x + transl.y * y + transl.z * z;
 
@@ -1804,36 +2628,260 @@ inline void update_fpscam(
 }  // namespace yocto
 
 // -----------------------------------------------------------------------------
-// TIMER
+// PYTHON-LIKE ITERATORS
 // -----------------------------------------------------------------------------
 namespace yocto {
 
-// print information and returns a timer that will print the time when
-// destroyed. Use with RIIA for scoped timing.
-struct timer {
-  timer() : start{get_time()} {}
-  int64_t elapsed() { return get_time() - start; }
-  string  elapsedf() {
-    auto duration = get_time() - start;
-    auto elapsed  = duration / 1000000;  // milliseconds
-    auto hours    = (int)(elapsed / 3600000);
-    elapsed %= 3600000;
-    auto mins = (int)(elapsed / 60000);
-    elapsed %= 60000;
-    auto secs  = (int)(elapsed / 1000);
-    auto msecs = (int)(elapsed % 1000);
-    char buffer[256];
-    sprintf(buffer, "%02d:%02d:%02d.%03d", hours, mins, secs, msecs);
-    return buffer;
-  }
-  static int64_t get_time() {
-    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  }
+// Python `range()` equivalent. Construct an object to iterate over a sequence.
+template <typename T>
+constexpr auto range(T max) {
+  return range((T)0, max);
+}
+template <typename T>
+constexpr auto range(T min, T max) {
+  struct range_iterator {
+    T    index;
+    void operator++() { ++index; }
+    bool operator!=(const range_iterator& other) const {
+      return index != other.index;
+    }
+    T operator*() const { return index; }
+  };
+  struct range_helper {
+    T              begin_ = 0, end_ = 0;
+    range_iterator begin() const { return {begin_}; }
+    range_iterator end() const { return {end_}; }
+  };
+  return range_helper{min, max};
+}
+template <typename T>
+constexpr auto range(T min, T max, T step) {
+  struct range_iterator {
+    T    index;
+    T    step;
+    void operator++() { index += step; }
+    bool operator!=(const range_iterator& other) const {
+      return index != other.index;
+    }
+    T operator*() const { return index; }
+  };
+  struct range_helper {
+    T              begin_ = 0, end_ = 0, step_ = 0;
+    range_iterator begin() const { return {begin_, step_}; }
+    range_iterator end() const {
+      return {begin_ + ((end_ - begin_) / step_) * step_, step_};
+    }
+  };
+  return range_helper{min, max, step};
+}
 
- private:
-  int64_t start = 0;
-};
+// Python enumerate
+template <typename Sequence, typename T>
+constexpr auto enumerate(const Sequence& sequence, T start) {
+  using Iterator  = typename Sequence::const_iterator;
+  using Reference = typename Sequence::const_reference;
+  struct enumerate_iterator {
+    T        index;
+    Iterator iterator;
+    bool     operator!=(const enumerate_iterator& other) const {
+          return index != other.index;
+    }
+    void operator++() {
+      ++index;
+      ++iterator;
+    }
+    pair<const T&, Reference> operator*() const { return {index, *iterator}; }
+  };
+  struct enumerate_helper {
+    const Sequence& sequence;
+    T               begin_, end_;
+    auto begin() { return enumerate_iterator{begin_, std::begin(sequence)}; }
+    auto end() { return enumerate_iterator{end_, std::end(sequence)}; }
+  };
+  return enumerate_helper{sequence, 0, size(sequence)};
+}
+
+// Python enumerate
+template <typename Sequence, typename T>
+constexpr auto enumerate(Sequence& sequence, T start) {
+  using Iterator  = typename Sequence::iterator;
+  using Reference = typename Sequence::reference;
+  struct enumerate_iterator {
+    T        index;
+    Iterator iterator;
+    bool     operator!=(const enumerate_iterator& other) const {
+          return index != other.index;
+    }
+    void operator++() {
+      ++index;
+      ++iterator;
+    }
+    pair<T&, Reference> operator*() const { return {index, *iterator}; }
+  };
+  struct enumerate_helper {
+    Sequence& sequence;
+    T         begin_, end_;
+    auto begin() { return enumerate_iterator{begin_, std::begin(sequence)}; }
+    auto end() { return enumerate_iterator{end_, std::end(sequence)}; }
+  };
+  return enumerate_helper{sequence, 0, size(sequence)};
+}
+
+// Python zip
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(const Sequence1& sequence1, const Sequence2& sequence2) {
+  using Iterator1  = typename Sequence1::const_iterator;
+  using Reference1 = typename Sequence1::const_reference;
+  using Iterator2  = typename Sequence2::const_iterator;
+  using Reference2 = typename Sequence2::const_reference;
+  struct zip_iterator {
+    Iterator1 iterator1;
+    Iterator2 iterator2;
+    bool      operator!=(const zip_iterator& other) const {
+           return iterator1 != other.iterator1;
+    }
+    void operator++() {
+      ++iterator1;
+      ++iterator2;
+    }
+    pair<Reference1, Reference2> operator*() const {
+      return {*iterator1, *iterator2};
+    }
+  };
+  struct zip_helper {
+    const Sequence1& sequence1;
+    const Sequence2& sequence2;
+    auto             begin() {
+                  return zip_iterator{std::begin(sequence1), std::begin(sequence2)};
+    }
+    auto end() {
+      return zip_iterator{std::end(sequence1), std::end(sequence2)};
+    }
+  };
+  return zip_helper{sequence1, sequence2};
+}
+
+// Python zip
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(Sequence1& sequence1, Sequence2& sequence2) {
+  using Iterator1  = typename Sequence1::iterator;
+  using Reference1 = typename Sequence1::reference;
+  using Iterator2  = typename Sequence2::iterator;
+  using Reference2 = typename Sequence2::reference;
+  struct zip_iterator {
+    Iterator1 iterator1;
+    Iterator2 iterator2;
+    bool      operator!=(const zip_iterator& other) const {
+           return iterator1 != other.iterator1;
+    }
+    void operator++() {
+      ++iterator1;
+      ++iterator2;
+    }
+    pair<Reference1, Reference2> operator*() const {
+      return {*iterator1, *iterator2};
+    }
+  };
+  struct zip_helper {
+    Sequence1& sequence1;
+    Sequence2& sequence2;
+    auto       begin() {
+            return zip_iterator{std::begin(sequence1), std::begin(sequence2)};
+    }
+    auto end() {
+      return zip_iterator{std::end(sequence1), std::end(sequence2)};
+    }
+  };
+  return zip_helper{sequence1, sequence2};
+}
+
+// Python zip
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(const Sequence1& sequence1, Sequence2& sequence2) {
+  using Iterator1  = typename Sequence1::const_iterator;
+  using Reference1 = typename Sequence1::const_reference;
+  using Iterator2  = typename Sequence2::iterator;
+  using Reference2 = typename Sequence2::reference;
+  struct zip_iterator {
+    Iterator1 iterator1;
+    Iterator2 iterator2;
+    bool      operator!=(const zip_iterator& other) const {
+           return iterator1 != other.iterator1;
+    }
+    void operator++() {
+      ++iterator1;
+      ++iterator2;
+    }
+    pair<Reference1, Reference2> operator*() const {
+      return {*iterator1, *iterator2};
+    }
+  };
+  struct zip_helper {
+    const Sequence1& sequence1;
+    Sequence2&       sequence2;
+    auto             begin() {
+                  return zip_iterator{std::begin(sequence1), std::begin(sequence2)};
+    }
+    auto end() {
+      return zip_iterator{std::end(sequence1), std::end(sequence2)};
+    }
+  };
+  return zip_helper{sequence1, sequence2};
+}
+
+// Python zip
+template <typename Sequence1, typename Sequence2>
+constexpr auto zip(Sequence1& sequence1, const Sequence2& sequence2) {
+  using Iterator1  = typename Sequence1::iterator;
+  using Reference1 = typename Sequence1::reference;
+  using Iterator2  = typename Sequence2::const_iterator;
+  using Reference2 = typename Sequence2::const_reference;
+  struct zip_iterator {
+    Iterator1 iterator1;
+    Iterator2 iterator2;
+    bool      operator!=(const zip_iterator& other) const {
+           return iterator1 != other.iterator1;
+    }
+    void operator++() {
+      ++iterator1;
+      ++iterator2;
+    }
+    pair<Reference1, Reference2> operator*() const {
+      return {*iterator1, *iterator2};
+    }
+  };
+  struct zip_helper {
+    Sequence1&       sequence1;
+    const Sequence2& sequence2;
+    auto             begin() {
+                  return zip_iterator{std::begin(sequence1), std::begin(sequence2)};
+    }
+    auto end() {
+      return zip_iterator{std::end(sequence1), std::end(sequence2)};
+    }
+  };
+  return zip_helper{sequence1, sequence2};
+}
 
 }  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// SIGNED-SIZE
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+template <typename T>
+inline std::ptrdiff_t ssize(const T& container) {
+  return (std::ptrdiff_t)std::size(container);
+}
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// CUDA SUPPORT
+// -----------------------------------------------------------------------------
+#ifdef __CUDACC__
+#undef inline
+#endif
 
 #endif

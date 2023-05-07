@@ -1,40 +1,14 @@
 //
-// # Yocto/Trace: Tiny path tracer
+// # Yocto/Trace: Path tracing
 //
-//
-// Yocto/Trace is a simple path tracing library with support for microfacet
-// materials, area and environment lights, and advacned sampling.
-//
-//
-// ## Physically-based Path Tracing
-//
-// Yocto/Trace includes a tiny, but fully featured, path tracer with support for
-// textured mesh area lights, GGX materials, environment mapping. The algorithm
-// makes heavy use of MIS for fast convergence.
-// The interface supports progressive parallel execution both synchronously,
-// for CLI applications, and asynchronously for interactive viewing.
-//
-// Materials are represented as sums of an emission term, a diffuse term and
-// a specular microfacet term (GGX or Phong), and a transmission term for
-// this sheet glass.
-// Lights are defined as any shape with a material emission term. Additionally
-// one can also add environment maps. But even if you can, you might want to
-// add a large triangle mesh with inward normals instead. The latter is more
-// general (you can even more an arbitrary shape sun). For now only the first
-// environment is used.
-//
-// 1. prepare the ray-tracing acceleration structure with `build_bvh()`
-// 2. prepare lights for rendering with `init_trace_lights()`
-// 3. create the random number generators with `init_trace_state()`
-// 4. render blocks of samples with `trace_samples()`
-// 5. you can also start an asynchronous renderer with `trace_asynch_start()`
-//
+// Yocto/Trace is a simple path tracer written on the Yocto/Scene model.
+// Yocto/Trace is implemented in `yocto_trace.h` and `yocto_trace.cpp`.
 //
 
 //
 // LICENSE:
 //
-// Copyright (c) 2016 -- 2019 Fabio Pellacini
+// Copyright (c) 2016 -- 2022 Fabio Pellacini
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -59,187 +33,306 @@
 #ifndef _YOCTO_TRACE_H_
 #define _YOCTO_TRACE_H_
 
-#ifndef YOCTO_QUADS_AS_TRIANGLES
-#define YOCTO_QUADS_AS_TRIANGLES 1
-#endif
-
-#ifndef YOCTO_TRACE_THINSHEET
-#define YOCTO_TRACE_THINSHEET 0
-#endif
-
 // -----------------------------------------------------------------------------
 // INCLUDES
 // -----------------------------------------------------------------------------
 
+#include <atomic>
+#include <future>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "yocto_bvh.h"
+#include "yocto_image.h"
 #include "yocto_math.h"
-#include "yocto_random.h"
+#include "yocto_sampling.h"
 #include "yocto_scene.h"
 
-#include <atomic>
-
 // -----------------------------------------------------------------------------
-// PATH TRACING
+// USING DIRECTIVES
 // -----------------------------------------------------------------------------
 namespace yocto {
 
-// Default trace seed
-const auto trace_default_seed = 961748941ull;
-
-// Trace lights used during rendering.
-struct trace_lights {
-  vector<int>           instances        = {};
-  vector<int>           environments     = {};
-  vector<vector<float>> shape_cdfs       = {};
-  vector<vector<float>> environment_cdfs = {};
-
-  bool empty() const { return instances.empty() && environments.empty(); }
-};
-
-// Initialize lights.
-trace_lights make_trace_lights(const yocto_scene& scene);
-void         make_trace_lights(trace_lights& lights, const yocto_scene& scene);
-
-// State of a pixel during tracing
-struct trace_pixel {
-  vec3f     radiance = zero3f;
-  int       hits     = 0;
-  int       samples  = 0;
-  rng_state rng      = {};
-};
-struct trace_state {
-  vec2i               image_size = {0, 0};
-  vector<trace_pixel> pixels     = {};
-};
-
-// Initialize state of the renderer.
-trace_state make_trace_state(
-    const vec2i& image_size, uint64_t random_seed = trace_default_seed);
-void make_trace_state(trace_state& state, const vec2i& image_size,
-    uint64_t random_seed = trace_default_seed);
-
-// Options for trace functions
-struct trace_params {
-  // clang-format off
-  // Type of tracing algorithm to use
-  enum struct sampler_type {
-    path,        // path tracing
-    naive,       // naive path tracing
-    eyelight,    // eyelight rendering
-    falsecolor,  // false color rendering
-  };
-  enum struct falsecolor_type {
-    normal, frontfacing, gnormal, gfrontfacing, texcoord, color, emission,    
-    diffuse, specular, transmission, roughness, material, shape, instance, 
-    element, highlight };
-  // clang-format on
-
-  int                camera     = 0;
-  int                resolution = 1280;
-  sampler_type       sampler    = sampler_type::path;
-  falsecolor_type    falsecolor = falsecolor_type::diffuse;
-  int                samples    = 512;
-  int                bounces    = 8;
-  int                batch      = 16;
-  int                region     = 16;
-  float              clamp      = 10;
-  bool               envhidden  = false;
-  bool               tentfilter = false;
-  uint64_t           seed       = trace_default_seed;
-  std::atomic<bool>* cancel     = nullptr;
-  bool               noparallel = false;
-};
-
-const auto trace_sampler_names = vector<string>{
-    "path", "naive", "eyelight", "falsecolor"};
-
-const auto trace_falsecolor_names = vector<string>{"normal", "frontfacing",
-    "gnormal", "gfrontfacing", "texcoord", "color", "emission", "diffuse",
-    "specular", "transmission", "roughness", "material", "shape", "instance",
-    "element", "highlight"};
-
-// Equality operators
-inline bool operator==(const trace_params& a, const trace_params& b) {
-  return memcmp(&a, &b, sizeof(a)) == 0;
-}
-inline bool operator!=(const trace_params& a, const trace_params& b) {
-  return memcmp(&a, &b, sizeof(a)) != 0;
-}
-
-// Progressively compute an image by calling trace_samples multiple times.
-image<vec4f> trace_image(const yocto_scene& scene, const bvh_scene& bvh,
-    const trace_lights& lights, const trace_params& params);
-
-// Progressively compute an image by calling trace_samples multiple times.
-// Start with an empty state and then successively call this function to
-// render the next batch of samples.
-int trace_samples(image<vec4f>& image, trace_state& state,
-    const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
-    int current_sample, const trace_params& params);
-
-// Progressively compute an image by calling trace_region multiple times.
-// Compared to `trace_samples` this always runs serially and is helpful
-// when building async applications.
-void trace_region(image<vec4f>& image, trace_state& state,
-    const yocto_scene& scene, const bvh_scene& bvh, const trace_lights& lights,
-    const image_region& region, int num_samples, const trace_params& params);
-
-// Check is a sampler requires lights
-bool is_sampler_lit(const trace_params& params);
-
-// Trace statistics for last run used for fine tuning implementation.
-// For now returns number of paths and number of rays.
-pair<uint64_t, uint64_t> get_trace_stats();
-void                     reset_trace_stats();
+// using directives
+using std::pair;
+using std::string;
+using std::vector;
 
 }  // namespace yocto
 
 // -----------------------------------------------------------------------------
-// PATH TRACING SUPPORT FUNCTION
+// RENDERING API
 // -----------------------------------------------------------------------------
 namespace yocto {
 
-// Phong exponent to roughness.
-float exponent_to_roughness(float n);
+// Type of tracing algorithm
+enum struct trace_sampler_type {
+  path,        // path tracing
+  pathdirect,  // path tracing with direct
+  pathmis,     // path tracing with mis
+  pathtest,    // path tracing test
+  naive,       // naive path tracing
+  eyelight,    // eyelight rendering
+  diagram,     // diagram rendering
+  furnace,     // furnace test
+  falsecolor,  // false color rendering
+};
+// Type of false color visualization
+enum struct trace_falsecolor_type {
+  // clang-format off
+  position, normal, frontfacing, gnormal, gfrontfacing, texcoord, mtype, color,
+  emission, roughness, opacity, metallic, delta, instance, shape, material, 
+  element, highlight
+  // clang-format on
+};
 
-// Specular to fresnel eta.
-vec3f              reflectivity_to_eta(const vec3f& reflectivity);
-vec3f              eta_to_reflectivity(const vec3f& eta);
-pair<vec3f, vec3f> reflectivity_to_eta(
-    const vec3f& reflectivity, const vec3f& edge_tint);
-vec3f eta_to_reflectivity(const vec3f& eta, const vec3f& etak);
-vec3f eta_to_edge_tint(const vec3f& eta, const vec3f& etak);
-// Compute the fresnel term for dielectrics.
-vec3f fresnel_dielectric(const vec3f& eta, float direction_cosine);
-// Compute the fresnel term for metals.
-vec3f fresnel_conductor(
-    const vec3f& eta, const vec3f& etak, float direction_cosine);
-// Schlick approximation of Fresnel term, optionally weighted by roughness;
-vec3f fresnel_schlick(const vec3f& specular, float direction_cosine);
-vec3f fresnel_schlick(
-    const vec3f& specular, float direction_cosine, float roughness);
+// Default trace seed
+const auto trace_default_seed = 961748941ull;
 
-// Evaluates the microfacet distribution and geometric term (ggx or beckman).
-float eval_microfacetD(float roughness, const vec3f& normal,
-    const vec3f& half_vector, bool ggx = true);
-float eval_microfacetG(float roughness, const vec3f& normal,
-    const vec3f& half_vector, const vec3f& outgoing, const vec3f& incoming,
-    bool ggx = true);
-vec3f sample_microfacet(
-    float roughness, const vec3f& normal, const vec2f& rn, bool ggx = true);
-float sample_microfacet_pdf(float roughness, const vec3f& normal,
-    const vec3f& half_vector, bool ggx = true);
+// Options for trace functions
+struct trace_params {
+  int                   camera         = 0;
+  int                   resolution     = 1280;
+  trace_sampler_type    sampler        = trace_sampler_type::path;
+  trace_falsecolor_type falsecolor     = trace_falsecolor_type::color;
+  int                   samples        = 512;
+  int                   bounces        = 8;
+  float                 clamp          = 10;
+  bool                  nocaustics     = false;
+  bool                  envhidden      = false;
+  bool                  tentfilter     = false;
+  uint64_t              seed           = trace_default_seed;
+  bool                  embreebvh      = false;
+  bool                  highqualitybvh = false;
+  bool                  noparallel     = false;
+  int                   pratio         = 8;
+  bool                  denoise        = false;
+  int                   batch          = 1;
+};
 
-// Evaluate and sample volume phase function.
-vec3f sample_phasefunction(float vg, const vec2f& u);
-float eval_phasefunction(float cos_theta, float vg);
+// Progressively computes an image.
+image_data trace_image(const scene_data& scene, const trace_params& params);
 
-// Get complex ior from metal names (eta, etak).
-// Return zeros if not available.
-pair<vec3f, vec3f> get_conductor_eta(const string& element);
+}  // namespace yocto
 
-// Get subsurface params
-pair<vec3f, vec3f> get_subsurface_params(const string& name);
+// -----------------------------------------------------------------------------
+// LOWER-LEVEL RENDERING API
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Scene lights used during rendering. These are created automatically.
+struct trace_light {
+  int           instance     = invalidid;
+  int           environment  = invalidid;
+  vector<float> elements_cdf = {};
+};
+
+// Scene lights
+struct trace_lights {
+  vector<trace_light> lights = {};
+};
+
+// Trace Bvh, a wrapper of a Yocto/Bvh and an Embree one
+struct trace_bvh {
+  scene_bvh  bvh  = {};
+  scene_ebvh ebvh = {};
+};
+
+// Check is a sampler requires lights
+bool is_sampler_lit(const trace_params& params);
+
+// Trace state
+struct trace_state {
+  int               width    = 0;
+  int               height   = 0;
+  int               samples  = 0;
+  vector<vec4f>     image    = {};
+  vector<vec3f>     albedo   = {};
+  vector<vec3f>     normal   = {};
+  vector<int>       hits     = {};
+  vector<rng_state> rngs     = {};
+  vector<vec4f>     denoised = {};
+};
+
+// Initialize state.
+trace_state make_trace_state(
+    const scene_data& scene, const trace_params& params);
+
+// Initialize lights.
+trace_lights make_trace_lights(
+    const scene_data& scene, const trace_params& params);
+
+// Build the bvh acceleration structure.
+trace_bvh make_trace_bvh(const scene_data& scene, const trace_params& params);
+
+// Progressively computes an image.
+void trace_samples(trace_state& state, const scene_data& scene,
+    const trace_bvh& bvh, const trace_lights& lights,
+    const trace_params& params);
+void trace_sample(trace_state& state, const scene_data& scene,
+    const trace_bvh& bvh, const trace_lights& lights, int i, int j, int sample,
+    const trace_params& params);
+
+// Get resulting render, denoised if requested
+image_data get_image(const trace_state& state);
+void       get_image(image_data& image, const trace_state& state);
+
+// Get internal images from state
+image_data get_rendered_image(const trace_state& state);
+void       get_rendered_image(image_data& image, const trace_state& state);
+image_data get_denoised_image(const trace_state& state);
+void       get_denoised_image(image_data& image, const trace_state& state);
+image_data get_albedo_image(const trace_state& state);
+void       get_albedo_image(image_data& image, const trace_state& state);
+image_data get_normal_image(const trace_state& state);
+void       get_normal_image(image_data& image, const trace_state& state);
+
+// Denoise image
+image_data denoise_image(const image_data& render, const image_data& albedo,
+    const image_data& normal);
+void       denoise_image(image_data& image, const image_data& render,
+          const image_data& albedo, const image_data& normal);
+void       denoise_image(vector<vec4f>& denoised, int width, int height,
+          const vector<vec4f>& render, const vector<vec3f>& albedo,
+          const vector<vec3f>& normal);
+
+// Async implementation
+struct trace_context {
+  std::future<void> worker = {};
+  std::atomic<bool> done   = false;
+  std::atomic<bool> stop   = false;
+};
+
+// Trace context
+trace_context make_trace_context(const trace_params& params);
+
+// Async start
+void trace_start(trace_context& context, trace_state& state,
+    const scene_data& scene, const trace_bvh& bvh, const trace_lights& lights,
+    const trace_params& params);
+
+// Async cancel
+void trace_cancel(trace_context& context);
+
+// Async done
+void trace_done(trace_context& context);
+
+// Async preview
+void trace_preview(color_image& image, trace_context& context,
+    trace_state& state, const scene_data& scene, const trace_bvh& bvh,
+    const trace_lights& lights, const trace_params& params);
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// ENUM LABELS
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// trace sampler names
+inline const auto trace_sampler_names = vector<string>{"path", "pathdirect",
+    "pathmis", "pathtest", "naive", "eyelight", "furnace", "falsecolor"};
+
+// false color names
+inline const auto trace_falsecolor_names = vector<string>{"position", "normal",
+    "frontfacing", "gnormal", "gfrontfacing", "texcoord", "mtype", "color",
+    "emission", "roughness", "opacity", "metallic", "delta", "instance",
+    "shape", "material", "element", "highlight"};
+
+// trace sampler labels
+inline const auto trace_sampler_labels =
+    vector<pair<trace_sampler_type, string>>{{trace_sampler_type::path, "path"},
+        {trace_sampler_type::pathdirect, "pathdirect"},
+        {trace_sampler_type::pathmis, "pathmis"},
+        {trace_sampler_type::pathtest, "pathtest"},
+        {trace_sampler_type::naive, "naive"},
+        {trace_sampler_type::eyelight, "eyelight"},
+        {trace_sampler_type::diagram, "diagram"},
+        {trace_sampler_type::furnace, "furnace"},
+        {trace_sampler_type::falsecolor, "falsecolor"}};
+
+// false color labels
+inline const auto trace_falsecolor_labels =
+    vector<pair<trace_falsecolor_type, string>>{
+        {trace_falsecolor_type::position, "position"},
+        {trace_falsecolor_type::normal, "normal"},
+        {trace_falsecolor_type::frontfacing, "frontfacing"},
+        {trace_falsecolor_type::gnormal, "gnormal"},
+        {trace_falsecolor_type::gfrontfacing, "gfrontfacing"},
+        {trace_falsecolor_type::texcoord, "texcoord"},
+        {trace_falsecolor_type::mtype, "mtype"},
+        {trace_falsecolor_type::color, "color"},
+        {trace_falsecolor_type::emission, "emission"},
+        {trace_falsecolor_type::roughness, "roughness"},
+        {trace_falsecolor_type::opacity, "opacity"},
+        {trace_falsecolor_type::metallic, "metallic"},
+        {trace_falsecolor_type::delta, "delta"},
+        {trace_falsecolor_type::instance, "instance"},
+        {trace_falsecolor_type::shape, "shape"},
+        {trace_falsecolor_type::material, "material"},
+        {trace_falsecolor_type::element, "element"},
+        {trace_falsecolor_type::highlight, "highlight"}};
+
+}  // namespace yocto
+
+// -----------------------------------------------------------------------------
+// BACKWARD COMPATIBILITY
+// -----------------------------------------------------------------------------
+namespace yocto {
+
+// Initialize state.
+[[deprecated]] inline trace_state make_state(
+    const scene_data& scene, const trace_params& params) {
+  return make_trace_state(scene, params);
+}
+
+// Initialize lights.
+[[deprecated]] inline trace_lights make_lights(
+    const scene_data& scene, const trace_params& params) {
+  return make_trace_lights(scene, params);
+}
+
+// Build the bvh acceleration structure.
+[[deprecated]] inline trace_bvh make_bvh(
+    const scene_data& scene, const trace_params& params) {
+  return make_trace_bvh(scene, params);
+}
+
+// Get resulting render
+[[deprecated]] inline image_data get_render(const trace_state& state) {
+  return get_rendered_image(state);
+}
+[[deprecated]] inline void get_render(
+    image_data& image, const trace_state& state) {
+  return get_rendered_image(image, state);
+}
+
+// Get denoised result
+[[deprecated]] inline image_data get_denoised(const trace_state& state) {
+  return get_denoised_image(state);
+}
+[[deprecated]] inline void get_denoised(
+    image_data& image, const trace_state& state) {
+  return get_denoised_image(image, state);
+}
+
+// Get denoising buffers
+[[deprecated]] inline image_data get_albedo(const trace_state& state) {
+  return get_albedo_image(state);
+}
+[[deprecated]] inline void get_albedo(
+    image_data& image, const trace_state& state) {
+  return get_albedo_image(image, state);
+}
+[[deprecated]] inline image_data get_normal(const trace_state& state) {
+  return get_normal_image(state);
+}
+[[deprecated]] inline void get_normal(
+    image_data& image, const trace_state& state) {
+  return get_normal_image(image, state);
+}
 
 }  // namespace yocto
 

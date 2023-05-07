@@ -30,11 +30,12 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-warning-option"
 #pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wcomma"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #ifndef __clang__
 #pragma GCC diagnostic ignored "-Wsign-compare"
-#pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wparentheses"
 #pragma GCC diagnostic ignored "-Wreturn-type"
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -44,7 +45,6 @@
 #include <cstdio>
 #include <vector>
 
-#define YOCTO_EMBREE 0
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_WRITE_STATIC
 
@@ -57,9 +57,14 @@
 #include "../ext_src/yocto/yocto_bvh.cpp"
 #include "../ext_src/yocto/yocto_image.cpp"
 #include "../ext_src/yocto/yocto_scene.cpp"
+#define split_middle split_middle_
+#define bvh_max_prims bvh_max_prims_
 #include "../ext_src/yocto/yocto_shape.cpp"
 #include "../ext_src/yocto/yocto_trace.cpp"
 
 #pragma GCC diagnostic pop
+
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb/stb_image_resize.h"
 
 #endif // YOCTO

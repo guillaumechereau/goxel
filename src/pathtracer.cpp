@@ -22,22 +22,18 @@
 
 #if YOCTO
 
-#ifndef __clang__
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
-#endif
 
-#define YOCTO_EMBREE 0
 #define STB_IMAGE_STATIC
 
 #include "../ext_src/yocto/yocto_bvh.h"
 #include "../ext_src/yocto/yocto_scene.h"
 #include "../ext_src/yocto/yocto_trace.h"
 
-#ifndef __clang__
 #pragma GCC diagnostic pop
-#endif
 
 #include <cstddef>
 #include <cstdio>
@@ -53,7 +49,6 @@ extern "C" {
 
 using namespace yocto;
 using namespace std;
-typedef yocto::image<vec4f> image4f;
 
 enum {
     CHANGE_VOLUME       = 1 << 0,
@@ -76,92 +71,44 @@ struct pathtracer_internal {
     uint64_t floor_key;
     uint64_t options_key;
 
-    yocto_scene scene;
-    bvh_scene bvh;
-    image4f image;
-    image4f display;
+    int to_sync; // Mask of changes waiting to be applied.
+
+    scene_data scene;
+    trace_bvh bvh;
+    trace_context context;
+
+    // image_data image;
+    // image_data display;
+
     trace_state state;
     trace_lights lights;
-    trace_params trace_prms;
-    bvh_params bvh_prms;
-    tonemap_params tonemap_prms;
-    atomic<int> trace_sample;
-    vector<future<void>> trace_futures;
-    deque<image_region> trace_queue;
-    std::mutex trace_queuem;
-    atomic<bool> trace_stop;
+    trace_params params;
     float exposure;
+
+    int trace_sample;
 };
 
-
-template <typename T>
-inline bool try_pop(std::deque<T> &queue, std::mutex &mut, T& value) {
-    lock_guard<mutex> lock(mut);
-    if (queue.empty()) return false;
-    value = queue.front();
-    queue.pop_front();
-    return true;
-}
-
-
-/*
- * Get a item from a list by name or create a new one if it doesn't exists
- */
-template <class T>
-static T* getdefault(vector<T> &list, const string &uri,
-                     bool *created=nullptr)
+// Add a material to the scene and return its id.
+static int add_material(pathtracer_t *pt, const material_t *mat)
 {
-    if (created) *created = false;
-    for (T &value : list) {
-        if (value.uri == uri) return &value;
-    }
-    if (created) *created = true;
-    list.push_back(T{});
-    list.back().uri = uri;
-    return &list.back();
-}
-
-/*
- * Return the index of an item in a list.
- */
-template <class T>
-static int getindex(const vector<T> &list, const T* elem)
-{
-    return elem - &list.front();
-}
-
-static int get_material_id(pathtracer_t *pt, const material_t *mat,
-                           int *changed)
-{
-    char name[128];
-    pathtracer_internal_t *p = pt->p;
-    yocto_material *m;
-    bool created;
     const material_t default_mat = MATERIAL_DEFAULT;
-
     if (!mat) mat = &default_mat;
-    snprintf(name, sizeof(name), "<mat_%x>", material_get_hash(mat));
-    m = getdefault(p->scene.materials, name, &created);
-    if (created) {
-        *changed |= CHANGE_MATERIAL;
-        m->metallic = mat->metallic;
-        m->diffuse = {mat->base_color[0],
-                      mat->base_color[1],
-                      mat->base_color[2]};
-        m->opacity = mat->base_color[3];
-        m->specular = {0.04, 0.04, 0.04};
-        m->roughness = mat->roughness;
-        m->emission = {mat->emission[0], mat->emission[1], mat->emission[2]};
-    }
-    return getindex(p->scene.materials, m);
+    pt->p->scene.materials.push_back({
+        .emission = {mat->emission[0], mat->emission[1], mat->emission[2]},
+        .color = {mat->base_color[0], mat->base_color[1], mat->base_color[2]},
+        .roughness = mat->roughness,
+        .metallic = mat->metallic,
+        .opacity = mat->base_color[3],
+    });
+    return pt->p->scene.materials.size() - 1;
 }
 
-static yocto_shape create_shape_for_tile(
+static shape_data create_shape_for_tile(
         const volume_t *volume, const int tile_pos[3])
 {
     voxel_vertex_t* vertices;
     int i, nb, size, subdivide;
-    yocto_shape shape = {};
+    shape_data shape = {};
 
     vertices = (voxel_vertex_t*)calloc(
                 TILE_SIZE * TILE_SIZE * TILE_SIZE * 6 * 4,
@@ -204,57 +151,136 @@ end:
     return shape;
 }
 
-// Stop the asynchronous renderer.
-void stop_render(vector<future<void>>& futures,
-    deque<image_region>& queue,
-    std::mutex& queuem,
-    atomic<bool>* cancel)
-{
-    if (cancel) *cancel = true;
-    for (auto& f : futures) f.get();
-    futures.clear();
-    {
-        std::lock_guard<mutex> guard{queuem};
-        queue.clear();
-    }
-}
 
-
-static int sync_volume(pathtracer_t *pt, int w, int h, bool force)
+static int check_changes(pathtracer_t *pt)
 {
-    uint32_t key = 0, k;
-    volume_iterator_t iter;
-    const volume_t *volume;
-    int tile_pos[3], i, changed = 0;
-    yocto_shape shape;
-    yocto_instance instance;
-    pathtracer_internal_t *p = pt->p;
+    uint32_t key, k;
     const layer_t *layers, *layer;
+    float light_dir[3];
+    const camera_t *camera;
+    int changes = 0;
+    pathtracer_internal_t *p = pt->p;
 
+    // Volume changes.
+    key = 0;
     layers = goxel_get_render_layers(false);
     DL_FOREACH(layers, layer) {
         if (!layer->visible || !layer->volume) continue;
         k = volume_get_key(layer->volume);
         key = XXH32(&k, sizeof(k), key);
-        i = get_material_id(pt, layer->material, &changed);
-        key = XXH32(&i, sizeof(i), key);
     }
     key = XXH32(goxel.back_color, sizeof(goxel.back_color), key);
-    key = XXH32(&w, sizeof(w), key);
-    key = XXH32(&h, sizeof(h), key);
     key = XXH32(&goxel.rend.settings.effects,
                 sizeof(goxel.rend.settings.effects), key);
     key = XXH32(&pt->floor.type, sizeof(pt->floor.type), key);
-    key = XXH32(&force, sizeof(force), key);
-    if (!force && key == p->volume_key) return changed;
+    key = XXH32(&pt->floor, sizeof(pt->floor), key);
+    if (key != p->volume_key) {
+        p->volume_key = key;
+        changes |= CHANGE_VOLUME;
+    }
 
-    p->volume_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                &p->trace_stop);
+    // Env changes.
+    key = 0;
+    key = XXH32(&pt->world.type, sizeof(pt->world.type), key);
+    key = XXH32(&pt->world.energy, sizeof(pt->world.energy), key);
+    key = XXH32(&pt->world.color, sizeof(pt->world.color), key);
+    if (key != p->world_key) {
+        p->world_key = key;
+        changes |= CHANGE_WORLD;
+    }
+
+    // Lights changes.
+    key = 0;
+    render_get_light_dir(&goxel.rend, light_dir);
+    key = XXH32(&pt->world, sizeof(pt->world), key);
+    key = XXH32(&goxel.rend.light.intensity,
+                sizeof(goxel.rend.light.intensity), key);
+    key = XXH32(light_dir, sizeof(light_dir), key);
+    if (key != p->light_key) {
+        p->light_key = key;
+        changes |= CHANGE_LIGHT;
+    }
+
+    // Options changes.
+    key = 0;
+    key = XXH32(&pt->num_samples, sizeof(pt->num_samples), key);
+    if (key != p->options_key) {
+        p->options_key = key;
+        changes |= CHANGE_OPTIONS;
+    }
+
+    // Camera changes.
+    key = 0;
+    camera = goxel.image->active_camera;
+    key = XXH32(camera->view_mat, sizeof(camera->view_mat), 0);
+    key = XXH32(camera->proj_mat, sizeof(camera->proj_mat), key);
+    key = XXH32(&pt->w, sizeof(pt->w), key);
+    key = XXH32(&pt->h, sizeof(pt->h), key);
+    if (key != p->camera_key) {
+        p->camera_key = key;
+        changes |= CHANGE_CAMERA;
+    }
+
+    return changes;
+}
+
+
+static void update_camera(pathtracer_t *pt)
+{
+    camera_data *cam;
+    camera_t *camera;
+    float m[4][4], aspect, fovy, distance;
+    pathtracer_internal_t *p = pt->p;
+
+    if (p->scene.cameras.empty()) {
+        add_camera(p->scene);
+    }
+    cam = &p->scene.cameras[0];
+    camera = goxel.image->active_camera;
+
+    mat4_copy(camera->mat, m);
+    cam->frame = frame3f{{m[0][0], m[0][1], m[0][2]},
+                         {m[1][0], m[1][1], m[1][2]},
+                         {m[2][0], m[2][1], m[2][2]},
+                         {m[3][0], m[3][1], m[3][2]}};
+    aspect = (float)pt->w / pt->h;
+    if (!camera->ortho) {
+        fovy = camera->fovy / 180 * M_PI;
+        cam->focus = camera->dist;
+        distance = cam->film / (2 * tanf(fovy / 2));
+        if (aspect > 1) distance /= aspect;
+        cam->lens = cam->focus * distance / (cam->focus + distance);
+        cam->aspect = aspect;
+    } else {
+        cam->orthographic = true;
+        cam->film = pt->w;
+        cam->aspect = aspect;
+        cam->lens = cam->film / camera->dist;
+        cam->focus = camera->dist;
+    }
+}
+
+static void update_scene(pathtracer_t *pt)
+{
+    volume_iterator_t iter;
+    const volume_t *volume;
+    int tile_pos[3];
+    shape_data shape;
+    pathtracer_internal_t *p = pt->p;
+    const layer_t *layers, *layer;
+    float light_dir[3];
+    float ke;
+    const float d = 10000;
+    bool has_sun = false;
+    float turbidity = 3;
+    float pos[3];
+    vec4f color;
+    image_data image;
+
     p->scene = {};
     p->lights = {};
-    changed |= CHANGE_VOLUME;
 
+    layers = goxel_get_render_layers(false);
     DL_FOREACH(layers, layer) {
         if (!layer->visible || !layer->volume) continue;
         volume = layer->volume;
@@ -262,349 +288,105 @@ static int sync_volume(pathtracer_t *pt, int w, int h, bool force)
                         VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
         while (volume_iter(&iter, tile_pos)) {
             shape = create_shape_for_tile(volume, tile_pos);
-            // shape.material = get_material_id(pt, layer->material, &changed);
             if (shape.positions.empty()) continue;
             p->scene.shapes.push_back(shape);
-            instance.material = get_material_id(pt, layer->material, &changed);
-            instance.uri = shape.uri;
-            instance.shape = p->scene.shapes.size() - 1;
-            instance.frame = translation_frame(vec3f(
-                                    tile_pos[0], tile_pos[1], tile_pos[2]));
-            p->scene.instances.push_back(instance);
+            p->scene.instances.push_back({
+                .frame = translation_frame({
+                        tile_pos[0], tile_pos[1], tile_pos[2]}),
+                .shape = p->scene.shapes.size() - 1,
+                .material = add_material(pt, layer->material),
+            });
         }
     }
 
-    return changed;
-}
-
-static int sync_floor(pathtracer_t *pt, bool force)
-{
-    pathtracer_internal_t *p = pt->p;
-    uint64_t key = 0;
-    yocto_shape *shape;
-    yocto_instance *instance;
-    int i;
-    vec4f color;
-    float pos[3] = {0, 0, 0};
-    int changed = 0;
-
-    key = XXH32(&pt->floor, sizeof(pt->floor), key);
-    if (!force && key == p->floor_key) return 0;
-    changed |= CHANGE_FLOOR;
-    p->floor_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                &p->trace_stop);
-
-    if (pt->floor.type == PT_FLOOR_NONE) return changed;
-
-    color[0] = pt->floor.color[0] / 255.f;
-    color[1] = pt->floor.color[1] / 255.f;
-    color[2] = pt->floor.color[2] / 255.f;
-    color[3] = 1.0;
-
-    if (!box_is_null(goxel.image->box)) {
-        pos[0] = goxel.image->box[3][0];
-        pos[1] = goxel.image->box[3][1];
-        pos[2] = goxel.image->box[3][2] - goxel.image->box[2][2];
-    }
-
-    shape = getdefault(p->scene.shapes, "<floor>");
-    shape->positions = {};
-    shape->colors = {};
-    shape->normals = {};
-    shape->quads = {};
-    for (i = 0; i < 4; i++) {
-        shape->positions.push_back({i % 2 - 0.5f, i / 2 - 0.5f, 0.f});
-        shape->normals.push_back({0, 0, 1});
-        shape->colors.push_back(color);
-    }
-    shape->quads.push_back({0, 1, 3, 2});
-    // shape->material = get_material_id(pt, pt->floor.material, &changed);
-    instance = getdefault(p->scene.instances, "<floor>");
-    instance->material = get_material_id(pt, pt->floor.material, &changed);
-    instance->shape = getindex(p->scene.shapes, shape);
-    instance->frame = translation_frame({pos[0], pos[1], pos[2]}) *
-                      scaling_frame(
-                        vec3f(pt->floor.size[0], pt->floor.size[1], 1.f));
-    return changed;
-}
-
-static int sync_camera(pathtracer_t *pt, int w, int h,
-                       const float viewport[4],
-                       const camera_t *camera, bool force)
-{
-    pathtracer_internal_t *p = pt->p;
-    yocto_camera *cam;
-    uint64_t key;
-    float m[4][4], aspect, viewport_aspect, fovy;
-
-    add_cameras(p->scene);
-    cam = &p->scene.cameras[0];
-
-    key = XXH32(camera->view_mat, sizeof(camera->view_mat), 0);
-    key = XXH32(camera->proj_mat, sizeof(camera->proj_mat), key);
-    key = XXH32(&w, sizeof(w), key);
-    key = XXH32(&h, sizeof(h), key);
-    if (!force && key == p->camera_key) return 0;
-    p->camera_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                &p->trace_stop);
-
-    mat4_copy(camera->mat, m);
-    cam->frame = frame3f(mat4f({m[0][0], m[0][1], m[0][2], m[0][3]},
-                               {m[1][0], m[1][1], m[1][2], m[1][3]},
-                               {m[2][0], m[2][1], m[2][2], m[2][3]},
-                               {m[3][0], m[3][1], m[3][2], m[3][3]}));
-    if (!camera->ortho) {
-        aspect = (float)w / h;
-        viewport_aspect = viewport[2] / viewport[3];
-        fovy = camera->fovy / 180 * M_PI;
-        if (viewport_aspect < aspect) {
-            fovy *= viewport_aspect / aspect;
+    // Add the floor.
+    if (pt->floor.type != PT_FLOOR_NONE) {
+        color[0] = pt->floor.color[0] / 255.f;
+        color[1] = pt->floor.color[1] / 255.f;
+        color[2] = pt->floor.color[2] / 255.f;
+        color[3] = 1.0;
+        if (!box_is_null(goxel.image->box)) {
+            pos[0] = goxel.image->box[3][0];
+            pos[1] = goxel.image->box[3][1];
+            pos[2] = goxel.image->box[3][2] - goxel.image->box[2][2];
+        } else {
+            pos[0] = 0;
+            pos[1] = 0;
+            pos[2] = 0;
         }
-        set_yperspective(*cam, fovy, aspect, camera->dist);
-    } else {
-        cam->orthographic = true;
-        cam->film.x = viewport[2];
-        cam->film.y = viewport[3];
-        cam->lens = cam->film.y / camera->dist;
-        cam->focus = camera->dist;
+        p->scene.shapes.push_back({
+            .positions = {
+                {-0.5, -0.5, 0}, {0.5, -0.5, 0}, {-0.5, 0.5, 0}, {0.5, 0.5, 0}
+            },
+            .normals = {{0, 0, 1}, {0, 0, 1}, {0, 0, 1}, {0, 0, 1}},
+            .colors = {color, color, color, color},
+            .quads = {{0, 1, 3, 2}},
+        });
+        p->scene.instances.push_back({
+            .frame = translation_frame({pos[0], pos[1], pos[2]}) *
+                      scaling_frame({
+                              pt->floor.size[0], pt->floor.size[1], 1.f}),
+            .shape = p->scene.shapes.size() - 1,
+            .material = add_material(pt, pt->floor.material),
+        });
     }
 
-    return CHANGE_CAMERA;
-}
-
-static int sync_world(pathtracer_t *pt, bool force)
-{
-    uint64_t key = 0;
-    pathtracer_internal_t *p = pt->p;
-    yocto_texture *texture;
-    yocto_environment *environment;
-    float turbidity = 3;
-    bool has_sun = false;
-    vec4f color;
-
-    key = XXH32(&pt->world.type, sizeof(pt->world.type), key);
-    key = XXH32(&pt->world.energy, sizeof(pt->world.energy), key);
-    key = XXH32(&pt->world.color, sizeof(pt->world.color), key);
-    if (!force && key == p->world_key) return 0;
-    p->world_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                &p->trace_stop);
-
-    texture = getdefault(p->scene.textures, "<world>");
-    texture->uri = "textures/uniform.hdr";
-
-    color[0] = pt->world.color[0] / 255.f;
-    color[1] = pt->world.color[1] / 255.f;
-    color[2] = pt->world.color[2] / 255.f;
-    color[3] = 1.0;
-
-    switch (pt->world.type) {
-    case PT_WORLD_NONE:
-        return true;
-    case PT_WORLD_SKY:
-        texture->hdr = make_sunsky({512, 256}, pif / 4, turbidity, has_sun,
-                          1.0f, 0, {color.x, color.y, color.z});
-        break;
-    case PT_WORLD_UNIFORM:
-        texture->hdr = {{64, 64}, color};
-        break;
+    // Add the env.
+    if (pt->world.type != PT_WORLD_NONE) {
+        color[0] = pt->world.color[0] / 255.f;
+        color[1] = pt->world.color[1] / 255.f;
+        color[2] = pt->world.color[2] / 255.f;
+        color[3] = 1.0;
+        switch (pt->world.type) {
+        case PT_WORLD_UNIFORM:
+            image = image_data {1, 1, true, vector<vec4f>(1, color)};
+            break;
+        case PT_WORLD_SKY:
+            image = make_sunsky(512, 256, M_PI / 4, turbidity, has_sun,
+                                1.0f, 0, {color.x, color.y, color.z});
+            break;
+        default:
+            assert(false);
+            break;
+        }
+        p->scene.textures.push_back(image_to_texture(image));
+        p->scene.environments.push_back({
+            .frame = rotation_frame(vec3f{1, 0, 0}, M_PI / 2),
+            .emission = vec3f{1, 1, 1} * pt->world.energy,
+            .emission_tex = p->scene.textures.size() - 1,
+        });
     }
-    environment = getdefault(p->scene.environments, "<world>");
-    environment->emission = vec3f{1, 1, 1} * pt->world.energy;
-    environment->emission_tex = getindex(p->scene.textures, texture);
-    environment->frame = rotation_frame(vec3f{1.f, 0.f, 0.f}, pif / 2);
 
-    return CHANGE_WORLD;
-}
-
-static int sync_light(pathtracer_t *pt, bool force)
-{
-
-    uint64_t key = 0;
-    pathtracer_internal_t *p = pt->p;
-    yocto_shape *shape;
-    yocto_instance *instance;
-    yocto_material *material;
-    // Large enough to be considered at infinity, but not enough to produce
-    // rendering effects.
-    const float d = 10000;
-    float ke;
-    float light_dir[3];
-
-    render_get_light_dir(&goxel.rend, light_dir);
-    key = XXH32(&pt->world, sizeof(pt->world), key);
-    key = XXH32(&goxel.rend.light.intensity,
-                sizeof(goxel.rend.light.intensity), key);
-    key = XXH32(light_dir, sizeof(light_dir), key);
-
-    if (!force && key == p->light_key) return 0;
-    p->light_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                &p->trace_stop);
-
+    // Add the light.
     ke = goxel.rend.light.intensity;
-    material = getdefault(p->scene.materials, "<light>");
-    material->emission = {ke * d * d, ke * d * d, ke * d * d};
+    render_get_light_dir(&goxel.rend, light_dir);
+    p->scene.materials.push_back({
+        .emission = {ke *d * d, ke * d * d, ke * d * d}});
+    p->scene.shapes.push_back({
+        .triangles = {{0, 1, 2}},
+        .positions = {{0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}, {1.0, 1.0, 0.0}, {0.0, 1.0, 2.0}},
+    });
+    p->scene.instances.push_back({
+        .frame = translation_frame(
+            {light_dir[0] * d, light_dir[1] * d, light_dir[2] * d}),
+        .shape = p->scene.shapes.size() - 1,
+        .material = p->scene.materials.size() - 1,
+    });
 
-    shape = getdefault(p->scene.shapes, "<light>");
-    shape->positions = {};
-    shape->triangles = {};
-    shape->positions.push_back({0, 0, 0});
-    shape->positions.push_back({1, 0, 0});
-    shape->positions.push_back({1, 1, 0});
-    shape->triangles.push_back({0, 1, 2});
-
-    instance = getdefault(p->scene.instances, "<light>");
-    instance->material = getindex(p->scene.materials, material);
-    instance->shape = getindex(p->scene.shapes, shape);
-    instance->frame = translation_frame(
-            {light_dir[0] * d, light_dir[1] * d, light_dir[2] * d});
-
-    return CHANGE_LIGHT;
+    p->bvh = make_trace_bvh(p->scene, p->params);
+    p->lights = make_trace_lights(p->scene, p->params);
 }
 
-static int sync_options(pathtracer_t *pt, bool force)
-{
-    uint64_t key = 0;
-    pathtracer_internal_t *p = pt->p;
-    key = XXH32(&pt->num_samples, sizeof(pt->num_samples), key);
-    if (!force && key == p->options_key) return 0;
-    p->options_key = key;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                &p->trace_stop);
-    p->trace_prms.samples = pt->num_samples;
-    p->trace_prms.resolution = max(pt->w, pt->h);
-    return CHANGE_OPTIONS;
-}
-
-static void start_render(
-        image4f& image, trace_state& state,
-        const yocto_scene& scene, const bvh_scene& bvh,
-        const trace_lights& lights,
-        vector<future<void>>& futures, atomic<int>& current_sample,
-        deque<image_region>& queue,
-        mutex& queuem,
-        const trace_params& trace_prms,
-        atomic<bool>* cancel)
-{
-    auto& camera     = scene.cameras.at(trace_prms.camera);
-    auto  image_size = camera_resolution(camera, trace_prms.resolution);
-    state            = make_trace_state(image_size, trace_prms.seed);
-    auto regions = make_regions(image.size(), trace_prms.region, true);
-    if (cancel) *cancel = false;
-
-    futures.clear();
-    futures.emplace_back(async([trace_prms, regions, &current_sample, &image,
-                                &scene, &lights, &bvh, &state, &queue,
-                                &queuem, cancel]() {
-        for (auto sample = 0; sample < trace_prms.samples;
-             sample += trace_prms.batch) {
-            if (cancel && *cancel) return;
-            current_sample   = sample;
-            auto num_samples = min(trace_prms.batch,
-                                   trace_prms.samples - current_sample);
-            auto futures  = vector<future<void>>{};
-            int nthreads = std::thread::hardware_concurrency();
-            std::atomic<size_t> next_idx(0);
-            for (int thread_id = 0; thread_id < nthreads; thread_id++) {
-                futures.emplace_back(async(std::launch::async,
-                            [num_samples, &trace_prms, &image, &scene, &lights,
-                             &bvh, &state, &queue, &queuem, &next_idx, cancel,
-                             &regions]() {
-                    while (true) {
-                        if (cancel && *cancel) break;
-                        auto idx = next_idx.fetch_add(1);
-                        if (idx >= regions.size()) break;
-                        auto region = regions[idx];
-                        trace_region(image, state, scene, bvh, lights,
-                                     region, num_samples, trace_prms);
-                        {
-                            std::lock_guard<mutex> guard{queuem};
-                            queue.push_back(region);
-                        }
-                    }
-                }));
-            }
-        }
-        current_sample = trace_prms.samples;
-    }));
-}
-
-static int sync(pathtracer_t *pt, int w, int h, const float viewport[4],
-                bool force)
-{
-    pathtracer_internal_t *p = pt->p;
-    int changes = 0;
-
-    if (force) changes |= CHANGE_FORCE;
-
-    changes |= sync_volume(pt, w, h, changes);
-    changes |= sync_floor(pt, changes);
-    changes |= sync_world(pt, changes);
-    changes |= sync_light(pt, changes);
-    changes |= sync_camera(pt, w, h, viewport,
-                           goxel.image->active_camera, changes);
-    changes |= sync_options(pt, changes);
-
-    if (changes) {
-        add_materials(p->scene);
-        update_transforms(p->scene);
-    }
-
-    // Update BVH if needed.
-    if (changes & (CHANGE_VOLUME | CHANGE_LIGHT | CHANGE_FLOOR)) {
-        p->bvh = make_bvh(p->scene, p->bvh_prms);
-    }
-    if (changes & (CHANGE_LIGHT | CHANGE_MATERIAL)) {
-        p->lights = make_trace_lights(p->scene);
-    }
-
-    if (changes) {
-        if (p->lights.instances.empty() &&
-                p->lights.environments.empty()) {
-            p->trace_prms.sampler = trace_params::sampler_type::eyelight;
-        }
-        p->trace_prms.resolution = max(w, h);
-        p->image = image4f({w, h});
-        p->display = image4f({w, h});
-
-        stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                    &p->trace_stop);
-
-        p->state = make_trace_state({w, h});
-        p->trace_sample = 0;
-        p->trace_stop = false;
-        start_render(p->image, p->state, p->scene,
-                     p->bvh, p->lights,
-                     p->trace_futures, p->trace_sample,
-                     p->trace_queue, p->trace_queuem, p->trace_prms,
-                     &p->trace_stop);
-    }
-    return changes;
-}
-
-static void make_preview(pathtracer_t *pt)
+static void update_preview(pathtracer_t *pt, const image_data &img)
 {
     int i, j, pi, pj;
-    pathtracer_internal_t *p = pt->p;
-    trace_params preview_prms = p->trace_prms;
-    int preview_ratio = 8;
-    image4f preview;
     vec4b v;
-
-    preview_prms.resolution /= preview_ratio;
-    preview_prms.samples = 1;
-
-    preview = trace_image(p->scene, p->bvh, p->lights, preview_prms);
-    preview = tonemap(preview, p->tonemap_prms);
 
     for (i = 0; i < pt->h; i++) {
         for (j = 0; j < pt->w; j++) {
-            pi = clamp(i / preview_ratio, 0, preview.size().y - 1);
-            pj = clamp(j / preview_ratio, 0, preview.size().x - 1);
-            v = float_to_byte(preview[{pj, pi}]);
+            pi = i * img.height / pt->h;
+            pj = j * img.width / pt->w;
+            v = float_to_byte(img[{pj, pi}]);
             memcpy(&pt->buf[(i * pt->w + j) * 4], &v, 4);
         }
     }
@@ -621,39 +403,54 @@ static void make_preview(pathtracer_t *pt)
 void pathtracer_iter(pathtracer_t *pt, const float viewport[4])
 {
     pathtracer_internal_t *p;
-    int changes, i, j, size = 0;
-    image_region region = image_region{};
-    vec4b v;
+    int changes;
+    image_data image;
 
-    if (!pt->p) pt->p = new pathtracer_internal_t();
+    if (!pt->p) {
+        pt->p = new pathtracer_internal_t {
+            .context = make_trace_context({}),
+        };
+    }
     p = pt->p;
-    p->trace_prms.resolution = max(pt->w, pt->h);
-    changes = sync(pt, pt->w, pt->h, viewport, pt->force_restart);
-    pt->force_restart = false;
-    assert(p->display.size()[0] == pt->w);
-    assert(p->display.size()[1] == pt->h);
-    if (changes) pt->status = PT_RUNNING;
+    changes = check_changes(pt);
 
-    if (changes & CHANGE_CAMERA) {
-        make_preview(pt);
-        pt->progress = 0;
-        return;
+    if (pt->force_restart) {
+        changes |= CHANGE_OPTIONS;
+        pt->force_restart = false;
     }
 
-    while (try_pop(p->trace_queue, p->trace_queuem, region)) {
-        tonemap(p->display, p->image, region, p->tonemap_prms);
-        for (i = region.min[1]; i < region.max[1]; i++)
-        for (j = region.min[0]; j < region.max[0]; j++) {
-            v = float_to_byte(p->display[{j, i}]);
-            memcpy(&pt->buf[(i * pt->w + j) * 4], &v, 4);
-        }
-        size += region.size().x * region.size().y;
-        if (size >= p->image.size().x * p->image.size().y) break;
+    if (changes) {
+        p->to_sync |= changes;
+        trace_cancel(p->context);
     }
-    pt->progress = (float)p->trace_sample / p->trace_prms.samples;
 
-    if (pt->status != PT_FINISHED &&
-            p->trace_sample == p->trace_prms.samples) {
+    if (!p->context.stop && !p->context.done) return;
+
+    pt->status = PT_RUNNING;
+
+    if (p->to_sync & (CHANGE_VOLUME | CHANGE_WORLD | CHANGE_LIGHT)) {
+        update_scene(pt);
+        p->to_sync |= CHANGE_CAMERA;
+    }
+
+    if (p->to_sync) {
+        update_camera(pt);
+        p->params.samples = pt->num_samples;
+        p->params.resolution = max(pt->w, pt->h);
+        p->state = make_trace_state(p->scene, p->params);
+        image = make_image(p->state.width, p->state.height, true);
+        trace_preview(image, p->context, p->state, p->scene, p->bvh,
+                      p->lights, p->params);
+        update_preview(pt, image);
+        p->to_sync = 0;
+    } else {
+        image = get_image(p->state);
+        update_preview(pt, image);
+    }
+    trace_start(p->context, p->state, p->scene, p->bvh, p->lights, p->params);
+
+    pt->samples = p->state.samples;
+    if (pt->samples == pt->num_samples) {
         pt->status = PT_FINISHED;
     }
 }
@@ -666,8 +463,7 @@ void pathtracer_stop(pathtracer_t *pt)
 {
     pathtracer_internal_t *p = pt->p;
     if (!p) return;
-    stop_render(p->trace_futures, p->trace_queue, p->trace_queuem,
-                &p->trace_stop);
+    trace_cancel(p->context);
     delete p;
     pt->p = nullptr;
 }

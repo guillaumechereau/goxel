@@ -42,11 +42,11 @@ typedef struct {
     int status;
     uint8_t *buf;       // RGBA buffer.
     int w, h;           // Size of the buffer.
-    float progress;
     bool force_restart;
     texture_t *texture;
     pathtracer_internal_t *p;
     int num_samples;
+    int samples;
     struct {
         int type;
         float energy;

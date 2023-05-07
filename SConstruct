@@ -74,7 +74,7 @@ if env['mode'] == 'debug':
 if env['mode'] in ('profile', 'debug'):
     env.Append(CCFLAGS='-g')
 
-env.Append(CPPPATH=['src'])
+env.Append(CPPPATH=['src', '.'])
 env.Append(CCFLAGS=['-include', '$config_file'])
 
 # Get all the c and c++ files in src, recursively.
