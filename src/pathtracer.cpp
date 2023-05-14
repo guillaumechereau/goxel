@@ -126,10 +126,10 @@ static shape_data create_shape_for_tile(
         shape.positions[i] = {vertices[i].pos[0] / (float)subdivide,
                               vertices[i].pos[1] / (float)subdivide,
                               vertices[i].pos[2] / (float)subdivide};
-        shape.colors[i] = {vertices[i].color[0] / 255.f,
-                           vertices[i].color[1] / 255.f,
-                           vertices[i].color[2] / 255.f,
-                           1.0f};
+        shape.colors[i] = srgb_to_rgb(
+                           {vertices[i].color[0] / 255.f,
+                            vertices[i].color[1] / 255.f,
+                            vertices[i].color[2] / 255.f, 1.0f}),
         shape.normals[i] = {vertices[i].normal[0] / 128.f,
                             vertices[i].normal[1] / 128.f,
                             vertices[i].normal[2] / 128.f};
@@ -381,12 +381,14 @@ static void update_preview(pathtracer_t *pt, const image_data &img)
 {
     int i, j, pi, pj;
     vec4b v;
+    vec4f srgb;
 
     for (i = 0; i < pt->h; i++) {
         for (j = 0; j < pt->w; j++) {
             pi = i * img.height / pt->h;
             pj = j * img.width / pt->w;
-            v = float_to_byte(img[{pj, pi}]);
+            srgb = rgb_to_srgb(img[{pj, pi}]);
+            v = float_to_byte(srgb);
             memcpy(&pt->buf[(i * pt->w + j) * 4], &v, 4);
         }
     }
