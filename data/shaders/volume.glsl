@@ -179,7 +179,8 @@ void main()
     vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);
     v_Position = vec3(pos.xyz) / pos.w;
 
-    v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).
+    v_color = a_color;
+    v_color.rgb = pow(v_color.rgb, vec3(2.2)); // srgb to linear (fast).
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
     gl_Position.z += u_z_ofs;
@@ -223,7 +224,7 @@ precision mediump float;
 vec3 toneMap(vec3 color)
 {
     // color *= u_exposure;
-    return sqrt(color); // Gamma correction.
+    return pow(color, vec3(1.0 / 2.2)); // Gamma correction.
 }
 
 void main()

@@ -201,7 +201,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/volume.glsl", .size = 8877, .data =
+{.path = "data/shaders/volume.glsl", .size = 8920, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -383,7 +383,8 @@
     "    vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);\n"
     "    v_Position = vec3(pos.xyz) / pos.w;\n"
     "\n"
-    "    v_color = a_color.rgba * a_color.rgba; // srgb to linear (fast).\n"
+    "    v_color = a_color;\n"
+    "    v_color.rgb = pow(v_color.rgb, vec3(2.2)); // srgb to linear (fast).\n"
     "    v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);\n"
     "    gl_Position = u_proj * u_view * vec4(v_Position, 1.0);\n"
     "    gl_Position.z += u_z_ofs;\n"
@@ -427,7 +428,7 @@
     "vec3 toneMap(vec3 color)\n"
     "{\n"
     "    // color *= u_exposure;\n"
-    "    return sqrt(color); // Gamma correction.\n"
+    "    return pow(color, vec3(1.0 / 2.2)); // Gamma correction.\n"
     "}\n"
     "\n"
     "void main()\n"
