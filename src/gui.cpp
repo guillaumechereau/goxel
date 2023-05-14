@@ -1071,9 +1071,12 @@ bool gui_color(const char *label, uint8_t color[4])
     if (ImGui::ColorButton(label, color, 0, size))
         memcpy(backup_color, color, 4);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
+        gui->capture_mouse = true;
         color_edit("##edit", color, backup_color);
-        if (ImGui::Button("Close"))
+        if (ImGui::Button("Close")) {
             ImGui::CloseCurrentPopup();
+            gui->capture_mouse = false;
+        }
         ImGui::EndPopup();
     }
     if (label && label[0] != '#') {
@@ -1092,9 +1095,11 @@ bool gui_color_small(const char *label, uint8_t color[4])
     ImGui::PushID(label);
     ImGui::ColorButton(label, c);
     if (ImGui::BeginPopupContextItem("color context menu", 0)) {
+        gui->capture_mouse = true;
         color_edit("##edit", color, NULL);
         if (ImGui::Button("Close")) {
             ImGui::CloseCurrentPopup();
+            gui->capture_mouse = false;
         }
         ImGui::EndPopup();
     }
