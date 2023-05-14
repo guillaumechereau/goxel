@@ -174,13 +174,25 @@ attribute mediump vec2 a_uv;        // uv coordinates [0,1]
 // Must match the value in goxel.h
 #define VOXEL_TEXTURE_SIZE 8.0
 
+float gamma_to_linear(float v)
+{
+    return (v <= 0.04045) ? (v / 12.92) : pow((v + 0.055) / 1.055, 2.4);
+}
+
+vec3 srgb_to_linear(vec3 c)
+{
+    return vec3(gamma_to_linear(c.x),
+                gamma_to_linear(c.y),
+                gamma_to_linear(c.z));
+}
+
 void main()
 {
     vec4 pos = u_model * vec4(a_pos * u_pos_scale, 1.0);
     v_Position = vec3(pos.xyz) / pos.w;
 
     v_color = a_color;
-    v_color.rgb = pow(v_color.rgb, vec3(2.2)); // srgb to linear (fast).
+    v_color.rgb = srgb_to_linear(v_color.rgb);
     v_occlusion_uv = (a_occlusion_uv + 0.5) / (16.0 * VOXEL_TEXTURE_SIZE);
     gl_Position = u_proj * u_view * vec4(v_Position, 1.0);
     gl_Position.z += u_z_ofs;
@@ -221,10 +233,23 @@ precision mediump float;
 
 
 /************************************************************************/
+
+float linear_to_gamma(float v)
+{
+    return (v <= 0.0031308) ? 12.92 * v : (1.055) * pow(v, 1 / 2.4) - 0.055;
+}
+
+vec3 linear_to_srgb(vec3 c)
+{
+    return vec3(linear_to_gamma(c.x),
+                linear_to_gamma(c.y),
+                linear_to_gamma(c.z));
+}
+
 vec3 toneMap(vec3 color)
 {
-    // color *= u_exposure;
-    return pow(color, vec3(1.0 / 2.2)); // Gamma correction.
+    // Note: would not be needed if we used linear buffers.
+    return linear_to_srgb(color);
 }
 
 void main()

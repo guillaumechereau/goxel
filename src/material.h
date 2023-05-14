@@ -27,7 +27,7 @@ struct material {
     char  name[128];  // 127 chars max.
     float metallic;
     float roughness;
-    float base_color[4];
+    float base_color[4]; // Linear color.
     float emission[3];
     material_t *next, *prev; // List of materials in an image.
 };

@@ -22,8 +22,19 @@
 #include <stdint.h>
 
 /*
+ * Convert from sRGB uint8 to linear RGB float.
+ */
+void srgb8_to_rgb(const uint8_t srgba[3], float rgba[3]);
+
+/*
+ * Convert from linear RGB float to sRGB uint8.
+ */
+void rgb_to_srgb8(const float rgb[3], uint8_t srgb[3]);
+
+/*
  * Convert from sRGBA uint8 to linear RGBA float.
  */
 void srgba8_to_rgba(const uint8_t srgba[4], float rgba[4]);
+
 
 #endif // COLOR_H

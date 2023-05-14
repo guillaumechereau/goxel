@@ -26,6 +26,7 @@
 
 extern "C" {
 #include "goxel.h"
+#include "utils/color.h"
 
 void gui_app(void);
 void gui_render_panel(void);
@@ -1105,14 +1106,12 @@ bool gui_color_small(const char *label, uint8_t color[4])
 
 bool gui_color_small_f3(const char *label, float color[3])
 {
-    uint8_t c[4] = {(uint8_t)(color[0] * 255),
-                    (uint8_t)(color[1] * 255),
-                    (uint8_t)(color[2] * 255),
-                    255};
-    bool ret = gui_color_small(label, c);
-    color[0] = c[0] / 255.;
-    color[1] = c[1] / 255.;
-    color[2] = c[2] / 255.;
+    uint8_t c[4];
+    bool ret;
+    rgb_to_srgb8(color, c);
+    c[3] = 255;
+    ret = gui_color_small(label, c);
+    srgb8_to_rgb(c, color);
     return ret;
 }
 
