@@ -21,6 +21,20 @@
 #include <math.h>
 #include <string.h>
 
+void srgba8_to_rgba(const uint8_t srgba[4], float rgba[4])
+{
+    // https://en.wikipedia.org/wiki/SRGB
+    float c;
+    int i;
+    for (i = 0; i < 3; i++) {
+        c = srgba[i] / 255.f;
+        c = (c <= 0.04045f) ? (c / 12.92f) : pow((c + 0.055) / 1.055, 2.4);
+        rgba[i] = c;
+    }
+    rgba[3] = srgba[3] / 255.f;
+}
+
+
 static float min3(float x, float y, float z)
 {
     if (y < x) x = y;

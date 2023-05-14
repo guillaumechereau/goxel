@@ -19,6 +19,7 @@
 
 #include "goxel.h"
 #include "file_format.h"
+#include "utils/color.h"
 #include "utils/json.h"
 #include "utils/vec.h"
 
@@ -41,8 +42,8 @@ typedef struct {
 
     // XXX: for vertex color we are wasting space here.
     union {
-        uint8_t color[4];
-        float   texcoord[2];
+        float color[4];
+        float texcoord[2];
     };
 } gltf_vertex_t;
 
@@ -236,10 +237,7 @@ static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
         vec3_normalize(bverts[i].normal, bverts[i].normal);
 
         if (vertex_color) {
-            bverts[i].color[0] = verts[i].color[0];
-            bverts[i].color[1] = verts[i].color[1];
-            bverts[i].color[2] = verts[i].color[2];
-            bverts[i].color[3] = verts[i].color[3];
+            srgba8_to_rgba(verts[i].color, bverts[i].color);
         } else {
             c = palette_search(&g->palette, verts[i].color, true);
             assert(c != -1);
@@ -394,8 +392,8 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
         if (options->vertex_color) {
             make_attribute(g, buffer_view, primitive,
                            "COLOR_0",
-                           cgltf_component_type_r_8u,
-                           cgltf_type_vec4, true,
+                           cgltf_component_type_r_32f,
+                           cgltf_type_vec4, false,
                            nb_elems * size, offsetof(gltf_vertex_t, color),
                            NULL, NULL);
         } else {
