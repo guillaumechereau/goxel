@@ -236,7 +236,7 @@ precision mediump float;
 
 float linear_to_gamma(float v)
 {
-    return (v <= 0.0031308) ? 12.92 * v : (1.055) * pow(v, 1 / 2.4) - 0.055;
+    return (v <= 0.0031308) ? 12.92 * v : (1.055) * pow(v, 1.0 / 2.4) - 0.055;
 }
 
 vec3 linear_to_srgb(vec3 c)

@@ -201,7 +201,7 @@
     "#endif\n"
     ""
 },
-{.path = "data/shaders/volume.glsl", .size = 9418, .data =
+{.path = "data/shaders/volume.glsl", .size = 9420, .data =
     "/* Goxel 3D voxels editor\n"
     " *\n"
     " * copyright (c) 2015 Guillaume Chereau <guillaume@noctua-software.com>\n"
@@ -440,7 +440,7 @@
     "\n"
     "float linear_to_gamma(float v)\n"
     "{\n"
-    "    return (v <= 0.0031308) ? 12.92 * v : (1.055) * pow(v, 1 / 2.4) - 0.055;\n"
+    "    return (v <= 0.0031308) ? 12.92 * v : (1.055) * pow(v, 1.0 / 2.4) - 0.055;\n"
     "}\n"
     "\n"
     "vec3 linear_to_srgb(vec3 c)\n"

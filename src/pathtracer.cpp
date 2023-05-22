@@ -291,8 +291,10 @@ static void update_scene(pathtracer_t *pt)
             p->scene.shapes.push_back(shape);
             p->scene.instances.push_back({
                 .frame = translation_frame({
-                        tile_pos[0], tile_pos[1], tile_pos[2]}),
-                .shape = p->scene.shapes.size() - 1,
+                        (float)tile_pos[0],
+                        (float)tile_pos[1],
+                        (float)tile_pos[2]}),
+                .shape = (int)(p->scene.shapes.size() - 1),
                 .material = add_material(pt, layer->material),
             });
         }
@@ -323,9 +325,9 @@ static void update_scene(pathtracer_t *pt)
         });
         p->scene.instances.push_back({
             .frame = translation_frame({pos[0], pos[1], pos[2]}) *
-                      scaling_frame({
-                              pt->floor.size[0], pt->floor.size[1], 1.f}),
-            .shape = p->scene.shapes.size() - 1,
+                      scaling_frame({(float)pt->floor.size[0],
+                                     (float)pt->floor.size[1], 1.f}),
+            .shape = (int)(p->scene.shapes.size() - 1),
             .material = add_material(pt, pt->floor.material),
         });
     }
@@ -352,7 +354,7 @@ static void update_scene(pathtracer_t *pt)
         p->scene.environments.push_back({
             .frame = rotation_frame(vec3f{1, 0, 0}, M_PI / 2),
             .emission = vec3f{1, 1, 1} * pt->world.energy,
-            .emission_tex = p->scene.textures.size() - 1,
+            .emission_tex = (int)p->scene.textures.size() - 1,
         });
     }
 
@@ -368,8 +370,8 @@ static void update_scene(pathtracer_t *pt)
     p->scene.instances.push_back({
         .frame = translation_frame(
             {light_dir[0] * d, light_dir[1] * d, light_dir[2] * d}),
-        .shape = p->scene.shapes.size() - 1,
-        .material = p->scene.materials.size() - 1,
+        .shape = (int)p->scene.shapes.size() - 1,
+        .material = (int)p->scene.materials.size() - 1,
     });
 
     p->bvh = make_trace_bvh(p->scene, p->params);
