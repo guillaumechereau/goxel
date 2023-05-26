@@ -182,4 +182,5 @@ TOOL_REGISTER(TOOL_EXTRUDE, extrude, tool_extrude_t,
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT,
+              .default_shortcut = "F"
 )

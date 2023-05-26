@@ -1463,3 +1463,36 @@ ACTION_REGISTER(toggle_mode,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = toggle_mode,
 )
+
+static void a_set_mode(void *data)
+{
+    int mode = *(int*)data;
+    goxel.painter.mode = mode;
+}
+
+ACTION_REGISTER(set_mode_add,
+    .help = "Set tool mode to 'add'",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
+    .cfunc_data = a_set_mode,
+    .data = (int[]){MODE_OVER},
+    .icon = ICON_MODE_ADD,
+    .default_shortcut = "T",
+)
+
+ACTION_REGISTER(set_mode_sub,
+    .help = "Set tool mode to 'sub'",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
+    .cfunc_data = a_set_mode,
+    .data = (int[]){MODE_SUB},
+    .icon = ICON_MODE_SUB,
+    .default_shortcut = "R",
+)
+
+ACTION_REGISTER(set_mode_paint,
+    .help = "Set tool mode to 'sub'",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
+    .cfunc_data = a_set_mode,
+    .data = (int[]){MODE_PAINT},
+    .icon = ICON_MODE_PAINT,
+    .default_shortcut = "G",
+)

@@ -22,12 +22,32 @@
 
 static int gui_mode_select(void)
 {
-
-    gui_choice_begin("Mode", &goxel.painter.mode, false);
-    gui_choice("Add", MODE_OVER, ICON_MODE_ADD);
-    gui_choice("Sub", MODE_SUB, ICON_MODE_SUB);
-    gui_choice("Paint", MODE_PAINT, ICON_MODE_PAINT);
-    gui_choice_end();
+    bool v;
+    char label[64];
+    const action_t *action = NULL;
+    int i;
+    const struct {
+        int mode;
+        const char *label;
+        int action;
+        int icon;
+    } values[] = {
+        {MODE_OVER,     "Add",     ACTION_set_mode_add,    ICON_MODE_ADD},
+        {MODE_SUB,      "Sub",     ACTION_set_mode_sub,    ICON_MODE_SUB},
+        {MODE_PAINT,    "Paint",   ACTION_set_mode_paint,  ICON_MODE_PAINT},
+    };
+    // XXX: almost the same as in tools_panel.
+    gui_group_begin(NULL);
+    for (i = 0; i < ARRAY_SIZE(values); i++) {
+        v = goxel.painter.mode == values[i].mode;
+        action = action_get(values[i].action, true);
+        sprintf(label, "%s (%s)", values[i].label, action->shortcut);
+        if (gui_selectable_icon(label, &v, values[i].icon)) {
+            action_exec(action);
+        }
+        gui_same_line();
+    }
+    gui_group_end();
     return 0;
 }
 
