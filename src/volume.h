@@ -228,6 +228,8 @@ void volume_read(const volume_t *volume,
                  const int pos[3], const int size[3],
                  uint8_t *data);
 
+int volume_get_tiles_count(const volume_t *volume);
+
 typedef struct {
     int       nb_volumes;
     int       nb_tiles;

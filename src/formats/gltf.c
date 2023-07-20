@@ -217,7 +217,8 @@ static void make_quad_indices(gltf_t *g, cgltf_primitive *primitive,
 }
 
 static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
-                        const voxel_vertex_t *verts, int nb, int subdivide,
+                        const voxel_vertex_t *verts, int nb,
+                        const int bpos[3], int subdivide,
                         bool vertex_color)
 {
     int i, c, s = 0;
@@ -228,9 +229,9 @@ static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
         s = max(next_pow2(ceil(log2(g->palette.size))), 16);
 
     for (i = 0; i < nb; i++) {
-        bverts[i].pos[0] = (float)verts[i].pos[0] / subdivide;
-        bverts[i].pos[1] = (float)verts[i].pos[1] / subdivide;
-        bverts[i].pos[2] = (float)verts[i].pos[2] / subdivide;
+        bverts[i].pos[0] = (float)verts[i].pos[0] / subdivide + bpos[0];
+        bverts[i].pos[1] = (float)verts[i].pos[1] / subdivide + bpos[1];
+        bverts[i].pos[2] = (float)verts[i].pos[2] / subdivide + bpos[2];
         bverts[i].normal[0] = verts[i].normal[0];
         bverts[i].normal[1] = verts[i].normal[1];
         bverts[i].normal[2] = verts[i].normal[2];
@@ -324,18 +325,23 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
     cgltf_mesh *gmesh;
     cgltf_primitive *primitive;
     cgltf_buffer *buffer;
-    cgltf_node *node, *layer_node;
+    cgltf_node *node; // , *layer_node;
     cgltf_buffer_view *buffer_view;
     volume_iterator_t iter;
     int nb_elems, bpos[3], size = 0, subdivide;
     voxel_vertex_t *verts;
     const int N = BLOCK_SIZE;
     gltf_vertex_t *gverts;
-    int buf_size, start_nodes_count, i;
+    int buf_size;
     float pos_min[3], pos_max[3];
     volume_t *volume = layer->volume;
 
-    start_nodes_count = g->data->nodes_count;
+    gmesh = add_item(g->data, meshes);
+    ALLOC(gmesh->primitives, volume_get_tiles_count(volume));
+    node = add_item(g->data, nodes);
+    node->mesh = gmesh;
+    node->name = strdup(layer->name);
+    *add_item(root_node, children) = node;
 
     verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
     gverts = calloc(N * N * N * 6 * 4, sizeof(*gverts));
@@ -347,7 +353,7 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
                                     goxel.rend.settings.effects, verts,
                                     &size, &subdivide);
         if (!nb_elems) continue;
-        fill_buffer(g, gverts, verts, nb_elems * size, subdivide,
+        fill_buffer(g, gverts, verts, nb_elems * size, bpos, subdivide,
                     options->vertex_color);
         get_pos_min_max(gverts, nb_elems * size, pos_min, pos_max);
         buf_size = nb_elems * size * sizeof(*gverts);
@@ -355,8 +361,6 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
         buffer = add_item(g->data, buffers);
         buffer->size = buf_size;
         buffer->uri = data_new(gverts, buf_size, NULL);
-        gmesh = add_item(g->data, meshes);
-        ALLOC(gmesh->primitives, 1);
         primitive = add_item(gmesh, primitives);
         primitive->type = cgltf_primitive_type_triangles;
         ALLOC(primitive->attributes, 3);
@@ -403,21 +407,9 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
                            nb_elems * size, offsetof(gltf_vertex_t, texcoord),
                            NULL, NULL);
         }
-        node = add_item(g->data, nodes);
-        vec3_set(node->translation, bpos[0], bpos[1], bpos[2]);
-        node->has_translation = true;
-        node->mesh = gmesh;
     }
     free(verts);
     free(gverts);
-
-    // Add all the new created nodes into a single layer node.
-    layer_node = add_item(g->data, nodes);
-    ALLOC(layer_node->children, g->data->nodes_count - start_nodes_count);
-    for (i = start_nodes_count; i < g->data->nodes_count - 1; i++) {
-        *add_item(layer_node, children) = &g->data->nodes[i];
-    }
-    *add_item(root_node, children) = layer_node;
 }
 
 static void create_palette_texture(gltf_t *g, const image_t *img)

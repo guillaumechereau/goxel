@@ -816,6 +816,10 @@ rest:
     }
 }
 
+int volume_get_tiles_count(const volume_t *volume)
+{
+    return HASH_COUNT(volume->tiles);
+}
 
 void volume_get_global_stats(volume_global_stats_t *stats)
 {
