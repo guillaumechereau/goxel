@@ -368,12 +368,13 @@ static void fill_mesh(volume_mesh_t *mesh,
     mesh->vertices_count += nb * size;
 }
 
-static void optimize_mesh(volume_mesh_t *mesh)
+static void optimize_mesh(volume_mesh_t *mesh, int options)
 {
     unsigned int *remap;
     unsigned int *tmp_indices;
-    float *tmp_vertices;
+    typeof(*mesh->vertices) *tmp_vertices;
     size_t vertices_count;
+    size_t indices_count;
 
     // Merge duplicated vertices.
     remap = calloc(mesh->vertices_count, sizeof(unsigned int));
@@ -391,15 +392,32 @@ static void optimize_mesh(volume_mesh_t *mesh)
             sizeof(*mesh->vertices), remap);
 
     free(remap);
-    free(mesh->vertices);
-    free(mesh->indices);
-    mesh->vertices = (void*)tmp_vertices;
-    mesh->indices = tmp_indices;
+    SWAP(mesh->vertices, tmp_vertices);
+    SWAP(mesh->indices, tmp_indices);
     mesh->vertices_count = vertices_count;
+
+    // Also simplify the mesh if required.
+    if (options & VOLUME_MESH_SIMPLIFY) {
+        indices_count = meshopt_simplify(
+                tmp_indices, mesh->indices, mesh->indices_count,
+                (const float*)mesh->vertices, mesh->vertices_count,
+                sizeof(*mesh->vertices), 0, 0.1, 0, NULL);
+        vertices_count = meshopt_optimizeVertexFetch(
+                tmp_vertices, tmp_indices, indices_count,
+                mesh->vertices, mesh->vertices_count, sizeof(*mesh->vertices));
+    }
+    SWAP(mesh->vertices, tmp_vertices);
+    SWAP(mesh->indices, tmp_indices);
+    mesh->vertices_count = vertices_count;
+    mesh->indices_count = indices_count;
+
+    free(tmp_vertices);
+    free(tmp_indices);
 }
 
 volume_mesh_t *volume_generate_mesh(
-        const volume_t *volume, int effects, const palette_t *palette)
+        const volume_t *volume, int effects, const palette_t *palette,
+        int options)
 {
     volume_iterator_t iter;
     int bpos[3];
@@ -417,7 +435,7 @@ volume_mesh_t *volume_generate_mesh(
         fill_mesh(mesh, verts, nb, size, subdivide, bpos, palette);
     }
 
-    optimize_mesh(mesh);
+    optimize_mesh(mesh, options);
 
     mesh->pos_min[0] = +FLT_MAX;
     mesh->pos_min[1] = +FLT_MAX;
