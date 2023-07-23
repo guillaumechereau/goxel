@@ -84,7 +84,7 @@ typedef struct volume_mesh
         };
     } *vertices;
     int indices_count;
-    int *indices;
+    unsigned int *indices;
     float pos_min[3];
     float pos_max[3];
 } volume_mesh_t;

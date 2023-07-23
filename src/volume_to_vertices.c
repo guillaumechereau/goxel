@@ -20,6 +20,8 @@
 #include "goxel.h"
 #include "utils/color.h"
 
+#include "ext_src/meshoptimizer/meshoptimizer.h"
+
 static const int N = BLOCK_SIZE;
 
 // Return the next power of 2 larger or equal to x.
@@ -366,6 +368,36 @@ static void fill_mesh(volume_mesh_t *mesh,
     mesh->vertices_count += nb * size;
 }
 
+static void optimize_mesh(volume_mesh_t *mesh)
+{
+    unsigned int *remap;
+    unsigned int *tmp_indices;
+    float *tmp_vertices;
+    size_t vertices_count;
+
+    // Merge duplicated vertices.
+    remap = calloc(mesh->vertices_count, sizeof(unsigned int));
+    vertices_count = meshopt_generateVertexRemap(
+            remap, mesh->indices, mesh->indices_count, mesh->vertices,
+            mesh->vertices_count, sizeof(*mesh->vertices));
+
+    tmp_indices = malloc(mesh->indices_count * sizeof(*tmp_indices));
+    meshopt_remapIndexBuffer(
+            tmp_indices, mesh->indices, mesh->indices_count, remap);
+
+    tmp_vertices = malloc(vertices_count * sizeof(*mesh->vertices));
+    meshopt_remapVertexBuffer(
+            tmp_vertices, mesh->vertices, mesh->vertices_count,
+            sizeof(*mesh->vertices), remap);
+
+    free(remap);
+    free(mesh->vertices);
+    free(mesh->indices);
+    mesh->vertices = (void*)tmp_vertices;
+    mesh->indices = tmp_indices;
+    mesh->vertices_count = vertices_count;
+}
+
 volume_mesh_t *volume_generate_mesh(
         const volume_t *volume, int effects, const palette_t *palette)
 {
@@ -384,6 +416,8 @@ volume_mesh_t *volume_generate_mesh(
         if (nb == 0) continue;
         fill_mesh(mesh, verts, nb, size, subdivide, bpos, palette);
     }
+
+    optimize_mesh(mesh);
 
     mesh->pos_min[0] = +FLT_MAX;
     mesh->pos_min[1] = +FLT_MAX;
