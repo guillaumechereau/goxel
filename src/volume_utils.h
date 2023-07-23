@@ -25,6 +25,8 @@
 
 #include "shape.h"
 
+typedef struct palette palette_t;
+
 /*
  * Enum: MODE
  * Define how layers/brush are merged.  Each mode defines how to apply a
@@ -68,6 +70,24 @@ typedef struct voxel_vertex
     uint8_t  occlusion_uv[2]            __attribute__((aligned(4)));
     uint8_t  bump_uv[2]                 __attribute__((aligned(4)));
 } voxel_vertex_t;
+
+typedef struct volume_mesh
+{
+    int vertices_count;
+    struct {
+        float pos[3];
+        float normal[3];
+        // Note: we lose some space here.
+        union {
+            float color[4];
+            float texcoord[2];
+        };
+    } *vertices;
+    int indices_count;
+    int *indices;
+    float pos_min[3];
+    float pos_max[3];
+} volume_mesh_t;
 
 
 // Type: painter_t
@@ -180,6 +200,20 @@ void volume_merge(volume_t *volume, const volume_t *other, int mode,
 int volume_generate_vertices(const volume_t *volume, const int block_pos[3],
                            int effects, voxel_vertex_t *out,
                            int *size, int *subdivide);
+
+/*
+ * volume_generate_mesh
+ * Compared to volume_generate_vertices, this generate a single mesh for
+ * the entire volume (instead of one mesh per tile).
+ * Also we don't save the extra data.
+ *
+ * This is better suited for export function.
+ */
+volume_mesh_t *volume_generate_mesh(
+        const volume_t *volume, int effects, const palette_t *palette);
+
+void volume_mesh_free(volume_mesh_t *mesh);
+
 
 // XXX: use int[2][3] for the box?
 void volume_crop(volume_t *volume, const float box[4][4]);

@@ -187,89 +187,6 @@ static void make_attribute(gltf_t *g, cgltf_buffer_view *buffer_view,
     cgltf_parse_attribute_type(name, &attribute->type, &attribute->index);
 }
 
-static void make_quad_indices(gltf_t *g, cgltf_primitive *primitive,
-                              int nb, int size)
-{
-    cgltf_buffer *buffer;
-    cgltf_buffer_view *buffer_view;
-    cgltf_accessor *accessor;
-    uint16_t *data;
-    int i;
-
-    data = calloc(nb * 6, sizeof(*data));
-    for (i = 0; i < nb * 6; i++)
-        data[i] = (i / 6) * 4 + ((int[]){0, 1, 2, 2, 3, 0})[i % 6];
-    buffer = add_item(g->data, buffers);
-    buffer->size = nb * 6 * sizeof(*data);
-    buffer->uri = data_new(data, nb * 6 * sizeof(*data), NULL);
-    free(data);
-    buffer_view = add_item(g->data, buffer_views);
-    buffer_view->buffer = buffer;
-    buffer_view->size = nb * 6 * sizeof(*data);
-    buffer_view->type = cgltf_buffer_view_type_indices;
-
-    accessor = add_item(g->data, accessors);
-    accessor->buffer_view = buffer_view;
-    accessor->component_type = cgltf_component_type_r_16u;
-    accessor->count = nb * 6;
-    accessor->type = cgltf_type_scalar;
-    primitive->indices = accessor;
-}
-
-static void fill_buffer(const gltf_t *g, gltf_vertex_t *bverts,
-                        const voxel_vertex_t *verts, int nb,
-                        const int bpos[3], int subdivide,
-                        bool vertex_color)
-{
-    int i, c, s = 0;
-    float uv[2];
-
-    // The palette texture size.
-    if (!vertex_color)
-        s = max(next_pow2(ceil(log2(g->palette.size))), 16);
-
-    for (i = 0; i < nb; i++) {
-        bverts[i].pos[0] = (float)verts[i].pos[0] / subdivide + bpos[0];
-        bverts[i].pos[1] = (float)verts[i].pos[1] / subdivide + bpos[1];
-        bverts[i].pos[2] = (float)verts[i].pos[2] / subdivide + bpos[2];
-        bverts[i].normal[0] = verts[i].normal[0];
-        bverts[i].normal[1] = verts[i].normal[1];
-        bverts[i].normal[2] = verts[i].normal[2];
-        vec3_normalize(bverts[i].normal, bverts[i].normal);
-
-        if (vertex_color) {
-            srgba8_to_rgba(verts[i].color, bverts[i].color);
-        } else {
-            c = palette_search(&g->palette, verts[i].color, true);
-            assert(c != -1);
-            uv[0] = (c % s + 0.5) / s;
-            uv[1] = (c / s + 0.5) / s;
-            bverts[i].texcoord[0] = uv[0];
-            bverts[i].texcoord[1] = uv[1];
-        }
-    }
-}
-
-static void get_pos_min_max(gltf_vertex_t *bverts, int nb,
-                            float pos_min[3], float pos_max[3])
-{
-    int i;
-    pos_min[0] = +FLT_MAX;
-    pos_min[1] = +FLT_MAX;
-    pos_min[2] = +FLT_MAX;
-    pos_max[0] = -FLT_MAX;
-    pos_max[1] = -FLT_MAX;
-    pos_max[2] = -FLT_MAX;
-    for (i = 0; i < nb; i++) {
-        pos_min[0] = min(bverts[i].pos[0], pos_min[0]);
-        pos_min[1] = min(bverts[i].pos[1], pos_min[1]);
-        pos_min[2] = min(bverts[i].pos[2], pos_min[2]);
-        pos_max[0] = max(bverts[i].pos[0], pos_max[0]);
-        pos_max[1] = max(bverts[i].pos[1], pos_max[1]);
-        pos_max[2] = max(bverts[i].pos[2], pos_max[2]);
-    }
-}
-
 static int get_material_idx(const image_t *img, const material_t *mat)
 {
     int i;
@@ -320,96 +237,94 @@ static cgltf_material *get_default_mat(
 
 static void save_layer(gltf_t *g, cgltf_node *root_node,
                        const image_t *img, const layer_t *layer,
+                       const palette_t *palette,
                        const export_options_t *options)
 {
+    volume_mesh_t *mesh;
     cgltf_mesh *gmesh;
+    cgltf_node *node;
     cgltf_primitive *primitive;
     cgltf_buffer *buffer;
-    cgltf_node *node; // , *layer_node;
     cgltf_buffer_view *buffer_view;
-    volume_iterator_t iter;
-    int nb_elems, bpos[3], size = 0, subdivide;
-    voxel_vertex_t *verts;
-    const int N = BLOCK_SIZE;
-    gltf_vertex_t *gverts;
-    int buf_size;
-    float pos_min[3], pos_max[3];
-    volume_t *volume = layer->volume;
+    cgltf_accessor *accessor;
+
+    mesh = volume_generate_mesh(
+            layer->volume, goxel.rend.settings.effects, palette);
 
     gmesh = add_item(g->data, meshes);
-    ALLOC(gmesh->primitives, volume_get_tiles_count(volume));
+    ALLOC(gmesh->primitives, 1);
+    primitive = add_item(gmesh, primitives);
+    primitive->type = cgltf_primitive_type_triangles;
+    ALLOC(primitive->attributes, 3);
+    if (layer->material) {
+        primitive->material = g->data->materials +
+                              get_material_idx(img, layer->material);
+    } else {
+        primitive->material = get_default_mat(g, options);
+    }
+
+
+    buffer = add_item(g->data, buffers);
+    buffer->size = mesh->vertices_count * sizeof(*mesh->vertices);
+    buffer->uri = data_new(mesh->vertices, buffer->size, NULL);
+    buffer_view = add_item(g->data, buffer_views);
+    buffer_view->buffer = buffer;
+    buffer_view->size = buffer->size;
+    buffer_view->stride = sizeof(*mesh->vertices);
+    buffer_view->type = cgltf_buffer_view_type_vertices;
+
+    make_attribute(
+            g, buffer_view, primitive,
+            "POSITION",
+            cgltf_component_type_r_32f,
+            cgltf_type_vec3, false,
+            mesh->vertices_count, offsetof(typeof(*mesh->vertices), pos),
+            mesh->pos_min, mesh->pos_max);
+    make_attribute(
+            g, buffer_view, primitive,
+            "NORMAL",
+            cgltf_component_type_r_32f,
+            cgltf_type_vec3, false,
+            mesh->vertices_count, offsetof(typeof(*mesh->vertices), normal),
+            NULL, NULL);
+    if (options->vertex_color) {
+        make_attribute(g, buffer_view, primitive,
+                       "COLOR_0",
+                       cgltf_component_type_r_32f,
+                       cgltf_type_vec4, false,
+                       mesh->vertices_count,
+                       offsetof(typeof(*mesh->vertices), color),
+                       NULL, NULL);
+    } else {
+        make_attribute(g, buffer_view, primitive,
+                       "TEXCOORD_0",
+                       cgltf_component_type_r_32f, cgltf_type_vec2, false,
+                       mesh->vertices_count,
+                       offsetof(typeof(*mesh->vertices), texcoord),
+                       NULL, NULL);
+    }
+
+    buffer = add_item(g->data, buffers);
+    buffer->size = mesh->indices_count * sizeof(*mesh->indices);
+    buffer->uri = data_new(mesh->indices, buffer->size, NULL);
+    buffer_view = add_item(g->data, buffer_views);
+    buffer_view->buffer = buffer;
+    buffer_view->size = buffer->size;
+    buffer_view->type = cgltf_buffer_view_type_indices;
+
+    accessor = add_item(g->data, accessors);
+    accessor->buffer_view = buffer_view;
+    accessor->component_type = cgltf_component_type_r_32u;
+    accessor->count = mesh->indices_count;
+    accessor->type = cgltf_type_scalar;
+    primitive->indices = accessor;
+
     node = add_item(g->data, nodes);
     node->mesh = gmesh;
     node->name = strdup(layer->name);
     *add_item(root_node, children) = node;
 
-    verts = calloc(N * N * N * 6 * 4, sizeof(*verts));
-    gverts = calloc(N * N * N * 6 * 4, sizeof(*gverts));
-
-    iter = volume_get_iterator(volume,
-            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
-    while (volume_iter(&iter, bpos)) {
-        nb_elems = volume_generate_vertices(volume, bpos,
-                                    goxel.rend.settings.effects, verts,
-                                    &size, &subdivide);
-        if (!nb_elems) continue;
-        fill_buffer(g, gverts, verts, nb_elems * size, bpos, subdivide,
-                    options->vertex_color);
-        get_pos_min_max(gverts, nb_elems * size, pos_min, pos_max);
-        buf_size = nb_elems * size * sizeof(*gverts);
-
-        buffer = add_item(g->data, buffers);
-        buffer->size = buf_size;
-        buffer->uri = data_new(gverts, buf_size, NULL);
-        primitive = add_item(gmesh, primitives);
-        primitive->type = cgltf_primitive_type_triangles;
-        ALLOC(primitive->attributes, 3);
-        if (layer->material) {
-            primitive->material = g->data->materials +
-                                      get_material_idx(img, layer->material);
-        } else {
-            primitive->material = get_default_mat(g, options);
-        }
-
-        if (size == 4)
-            make_quad_indices(g, primitive, nb_elems, size);
-
-        buffer_view = add_item(g->data, buffer_views);
-        buffer_view->buffer = buffer;
-        buffer_view->size = buf_size;
-        buffer_view->stride = sizeof(gltf_vertex_t);
-        buffer_view->type = cgltf_buffer_view_type_vertices;
-
-        make_attribute(g, buffer_view, primitive,
-                       "POSITION",
-                       cgltf_component_type_r_32f,
-                       cgltf_type_vec3, false,
-                       nb_elems * size, offsetof(gltf_vertex_t, pos),
-                       pos_min, pos_max);
-        make_attribute(g, buffer_view, primitive,
-                       "NORMAL",
-                       cgltf_component_type_r_32f,
-                       cgltf_type_vec3, false,
-                       nb_elems * size, offsetof(gltf_vertex_t, normal),
-                       NULL, NULL);
-
-        if (options->vertex_color) {
-            make_attribute(g, buffer_view, primitive,
-                           "COLOR_0",
-                           cgltf_component_type_r_32f,
-                           cgltf_type_vec4, false,
-                           nb_elems * size, offsetof(gltf_vertex_t, color),
-                           NULL, NULL);
-        } else {
-            make_attribute(g, buffer_view, primitive,
-                           "TEXCOORD_0",
-                           cgltf_component_type_r_32f, cgltf_type_vec2, false,
-                           nb_elems * size, offsetof(gltf_vertex_t, texcoord),
-                           NULL, NULL);
-        }
-    }
-    free(verts);
-    free(gverts);
+    volume_mesh_free(mesh);
 }
 
 static void create_palette_texture(gltf_t *g, const image_t *img)
@@ -463,11 +378,14 @@ static void gltf_export(const image_t *img, const char *path,
     cgltf_node *root_node;
     cgltf_options gltf_options = {};
     material_t *mat;
+    const palette_t *palette = NULL;
 
     gltf_init(&g, options, img);
 
-    if (!options->vertex_color)
+    if (!options->vertex_color) {
         create_palette_texture(&g, img);
+        palette = &g.palette;
+    }
 
     DL_FOREACH(img->materials, mat) {
         save_material(&g, mat, options);
@@ -486,7 +404,7 @@ static void gltf_export(const image_t *img, const char *path,
 
     ALLOC(root_node->children, DL_SIZE(img->layers));
     DL_FOREACH(img->layers, layer) {
-        save_layer(&g, root_node, img, layer, options);
+        save_layer(&g, root_node, img, layer, palette, options);
     }
 
     cgltf_write_file(&gltf_options, path, g.data);
