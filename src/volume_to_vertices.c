@@ -405,11 +405,11 @@ static void optimize_mesh(volume_mesh_t *mesh, int options)
         vertices_count = meshopt_optimizeVertexFetch(
                 tmp_vertices, tmp_indices, indices_count,
                 mesh->vertices, mesh->vertices_count, sizeof(*mesh->vertices));
+        SWAP(mesh->vertices, tmp_vertices);
+        SWAP(mesh->indices, tmp_indices);
+        mesh->vertices_count = vertices_count;
+        mesh->indices_count = indices_count;
     }
-    SWAP(mesh->vertices, tmp_vertices);
-    SWAP(mesh->indices, tmp_indices);
-    mesh->vertices_count = vertices_count;
-    mesh->indices_count = indices_count;
 
     free(tmp_vertices);
     free(tmp_indices);

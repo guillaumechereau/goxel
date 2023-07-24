@@ -24,8 +24,7 @@
 #define MESH_UTILS_H
 
 #include "shape.h"
-
-typedef struct palette palette_t;
+#include "palette.h"
 
 /*
  * Enum: MODE
