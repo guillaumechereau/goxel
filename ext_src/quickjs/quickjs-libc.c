@@ -22,7 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+/*
+ * Added by Guillaume
+ * See: https://github.com/guillaumechereau/goxel/issues/319
+ */
+#if __has_include(<grp.h>)
 #include <grp.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -2980,7 +2988,9 @@ static JSValue js_os_exec(JSContext *ctx, JSValueConst this_val,
              * Added by Guillaume
              * See: https://github.com/guillaumechereau/goxel/issues/319
              */
+            #if __has_include(<grp.h>)
             setgroups(0, NULL);
+            #endif
 
             if (setuid(uid) < 0)
                 _exit(127);
