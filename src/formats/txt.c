@@ -43,6 +43,10 @@ static int import_as_txt(const file_format_t *format, image_t *image,
     layer = image->active_layer;
 
     while (fgets(line, 2048, file)) {
+        // if empty line or comment, skip
+        if (line[0] == '\n' || line[0] == '\0')
+            continue;
+
         token = strtok(line, " "); // get first token (X)
         if (strcmp(token, "#") == 0)
             continue;
