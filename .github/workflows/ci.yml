@@ -69,7 +69,8 @@ jobs:
 
     - name: Install GLFW3, PKG Config, Git, Gtk3, LibPNG & SCONS
       run: |
-        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev libpng-dev libpng16-16 scons
+        sudo apt-get install libglfw3-dev pkg-config git libgtk-3-dev \
+        libpng-dev libpng16-16 scons libfuse2
 
     - name: Build Goxel
       run: |
