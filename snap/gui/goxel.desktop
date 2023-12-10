@@ -5,6 +5,6 @@ Name=Goxel
 GenericName=Voxel graphics editor
 Comment=3D Voxel Editor
 Exec=goxel
-Icon=${SNAP}/icon.png
+Icon=goxel
 Type=Application
 Categories=Graphics;3DGraphics;

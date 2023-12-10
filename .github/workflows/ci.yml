@@ -75,11 +75,27 @@ jobs:
       run: |
         scons -j 4 mode=release
 
-    - name: Upload Artifacts
+    - name: Build AppImage
+      run: |
+        mkdir AppDir
+        DESTDIR=AppDir PREFIX=/usr make install
+        curl https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20231206-1/linuxdeploy-x86_64.AppImage \
+          --output linuxdeploy.AppImage -L -f
+        chmod +x linuxdeploy.AppImage
+        ./linuxdeploy.AppImage --output=appimage --appdir AppDir
+
+    - name: Upload Binary
       uses: actions/upload-artifact@v3
       with:
         name: linux_x86_64_binary
         path: goxel
+        if-no-files-found: error
+
+    - name: Upload AppImage
+      uses: actions/upload-artifact@v3
+      with:
+        name: appimage
+        path: goxel*.AppImage
         if-no-files-found: error
 
   osx_x86_64:
