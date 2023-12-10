@@ -83,7 +83,7 @@ jobs:
         curl https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20231206-1/linuxdeploy-x86_64.AppImage \
           --output linuxdeploy.AppImage -L -f
         chmod +x linuxdeploy.AppImage
-        ./linuxdeploy.AppImage --output=appimage --appdir AppDir
+        ./linuxdeploy.AppImage --output=appimage --appdir=AppDir
 
     - name: Upload Binary
       uses: actions/upload-artifact@v3
@@ -96,7 +96,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: appimage
-        path: goxel*.AppImage
+        path: Goxel*.AppImage
         if-no-files-found: error
 
   osx_x86_64:
