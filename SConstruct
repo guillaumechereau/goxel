@@ -90,7 +90,7 @@ if conf.CheckLibWithHeader('libpng', 'png.h', 'c'):
 
 # Linux compilation support.
 if target_os == 'posix':
-    env.Append(LIBS=['GL', 'm'])
+    env.Append(LIBS=['GL', 'm', 'dl'])
     # Note: add '--static' to link with all the libs needed by glfw3.
     env.ParseConfig('pkg-config --libs glfw3')
     env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
