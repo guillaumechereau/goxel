@@ -669,8 +669,10 @@ int load_from_file(const char *path, bool replace)
         free(data);
     }
 
-    goxel.image->path = strdup(path);
-    goxel.image->saved_key = image_get_key(goxel.image);
+    if (replace) {
+        goxel.image->path = strdup(path);
+        goxel.image->saved_key = image_get_key(goxel.image);
+    }
     fclose(in);
 
     // Add a default camera if there is none.
