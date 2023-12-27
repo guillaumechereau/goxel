@@ -1428,6 +1428,36 @@ ACTION_REGISTER(quit,
     .default_shortcut = "Ctrl Q",
 )
 
+static int new_file_popup(void *data)
+{
+    gui_text("Discard current image?");
+    if (gui_button("Discard", 0, 0)) {
+        goxel_reset();
+        return 1;
+    }
+    gui_same_line();
+    if (gui_button("Cancel", 0, 0)) {
+        return 2;
+    }
+    return 0;
+}
+
+static void a_reset(void)
+{
+    if (image_get_key(goxel.image) == goxel.image->saved_key) {
+        goxel_reset();
+        return;
+    }
+    gui_open_popup("Unsaved Changes", GUI_POPUP_RESIZE, NULL, new_file_popup);
+}
+
+ACTION_REGISTER(reset,
+    .help = "New",
+    .flags = ACTION_CAN_EDIT_SHORTCUT,
+    .cfunc = a_reset,
+    .default_shortcut = "Ctrl N"
+)
+
 static void undo(void) { image_undo(goxel.image); }
 static void redo(void) { image_redo(goxel.image); }
 

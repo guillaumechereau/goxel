@@ -762,17 +762,6 @@ ACTION_REGISTER(save,
     .default_shortcut = "Ctrl S"
 )
 
-static void a_reset(void)
-{
-    goxel_reset();
-}
-
-ACTION_REGISTER(reset,
-    .help = "New",
-    .cfunc = a_reset,
-    .default_shortcut = "Ctrl N"
-)
-
 static int gox_import(const file_format_t *format, image_t *image,
                       const char *path)
 {
