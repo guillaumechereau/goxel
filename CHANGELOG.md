@@ -1,5 +1,15 @@
 #Changelog
 
+## [0.13.0] - 2023-12-27
+
+- Some fixes for glTF export.
+- Added shortcuts for Add/Sub/Paint.
+- Allow to simplify exported glTF.
+
+Minor update, mostly so that I can try to sign the Mac package, and also
+release an AppImage for the linux build.
+
+
 ## [0.12.0] - 2023-04-01
 
 - Added basic support for Minetest file format import.
