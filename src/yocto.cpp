@@ -65,6 +65,6 @@
 #pragma GCC diagnostic pop
 
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "stb/stb_image_resize.h"
+#include "../ext_src/stb/stb_image_resize.h"
 
 #endif // YOCTO

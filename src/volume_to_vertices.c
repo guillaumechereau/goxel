@@ -20,7 +20,7 @@
 #include "goxel.h"
 #include "utils/color.h"
 
-#include "ext_src/meshoptimizer/meshoptimizer.h"
+#include "../ext_src/meshoptimizer/meshoptimizer.h"
 
 static const int N = BLOCK_SIZE;
 

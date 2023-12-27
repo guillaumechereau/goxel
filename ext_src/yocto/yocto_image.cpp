@@ -33,7 +33,7 @@
 #include "yocto_image.h"
 
 // #include <stb_image/stb_image_resize.h>
-#include "stb/stb_image_resize.h"
+#include "../stb/stb_image_resize.h"
 
 #include <future>
 #include <memory>

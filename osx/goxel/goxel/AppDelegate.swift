@@ -205,6 +205,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     open var inputs = inputs_t()
     var userDirectory: [CChar]? = nil;
 
+    @available(macOS 10.10, *)
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // Set fullscreen.
         if let screen = NSScreen.main {
@@ -237,6 +238,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         goxel_init()
     }
 
+    @available(macOS 10.10, *)
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
     }

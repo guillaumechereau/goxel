@@ -72,6 +72,21 @@
 		F094830022994765005DE2C5 /* material.c in Sources */ = {isa = PBXBuildFile; fileRef = F09482FF22994765005DE2C5 /* material.c */; };
 		F097B3F31F0C97DB00A3622B /* gesture.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F11F0C97DB00A3622B /* gesture.c */; };
 		F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F21F0C97DB00A3622B /* gesture3d.c */; };
+		F09A62772B3BB8E6006A4464 /* vertexfilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62672B3BB8E6006A4464 /* vertexfilter.cpp */; };
+		F09A62782B3BB8E7006A4464 /* vertexcodec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62682B3BB8E6006A4464 /* vertexcodec.cpp */; };
+		F09A62792B3BB8E7006A4464 /* overdrawanalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62692B3BB8E6006A4464 /* overdrawanalyzer.cpp */; };
+		F09A627A2B3BB8E7006A4464 /* vcacheoptimizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A626A2B3BB8E6006A4464 /* vcacheoptimizer.cpp */; };
+		F09A627B2B3BB8E7006A4464 /* overdrawoptimizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A626B2B3BB8E6006A4464 /* overdrawoptimizer.cpp */; };
+		F09A627C2B3BB8E7006A4464 /* stripifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A626D2B3BB8E6006A4464 /* stripifier.cpp */; };
+		F09A627D2B3BB8E7006A4464 /* vcacheanalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A626E2B3BB8E6006A4464 /* vcacheanalyzer.cpp */; };
+		F09A627E2B3BB8E7006A4464 /* indexcodec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A626F2B3BB8E6006A4464 /* indexcodec.cpp */; };
+		F09A627F2B3BB8E7006A4464 /* vfetchoptimizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62702B3BB8E6006A4464 /* vfetchoptimizer.cpp */; };
+		F09A62802B3BB8E7006A4464 /* allocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62712B3BB8E6006A4464 /* allocator.cpp */; };
+		F09A62812B3BB8E7006A4464 /* spatialorder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62722B3BB8E6006A4464 /* spatialorder.cpp */; };
+		F09A62822B3BB8E7006A4464 /* indexgenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62732B3BB8E6006A4464 /* indexgenerator.cpp */; };
+		F09A62832B3BB8E7006A4464 /* vfetchanalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62742B3BB8E6006A4464 /* vfetchanalyzer.cpp */; };
+		F09A62842B3BB8E7006A4464 /* clusterizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62752B3BB8E6006A4464 /* clusterizer.cpp */; };
+		F09A62852B3BB8E7006A4464 /* simplifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62762B3BB8E6006A4464 /* simplifier.cpp */; };
 		F09FFC5721CE161400B6976A /* box_edit.c in Sources */ = {isa = PBXBuildFile; fileRef = F09FFC5621CE161400B6976A /* box_edit.c */; };
 		F0A15FFD1E962F1300C6EF33 /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF31E962F1300C6EF33 /* png.c */; };
 		F0A15FFE1E962F1300C6EF33 /* povray.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF41E962F1300C6EF33 /* povray.c */; };
@@ -192,6 +207,23 @@
 		F09482FF22994765005DE2C5 /* material.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = material.c; sourceTree = "<group>"; };
 		F097B3F11F0C97DB00A3622B /* gesture.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gesture.c; sourceTree = "<group>"; };
 		F097B3F21F0C97DB00A3622B /* gesture3d.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gesture3d.c; sourceTree = "<group>"; };
+		F09A62632B3BB8C7006A4464 /* stb_image_resize.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image_resize.h; sourceTree = "<group>"; };
+		F09A62672B3BB8E6006A4464 /* vertexfilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertexfilter.cpp; sourceTree = "<group>"; };
+		F09A62682B3BB8E6006A4464 /* vertexcodec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vertexcodec.cpp; sourceTree = "<group>"; };
+		F09A62692B3BB8E6006A4464 /* overdrawanalyzer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = overdrawanalyzer.cpp; sourceTree = "<group>"; };
+		F09A626A2B3BB8E6006A4464 /* vcacheoptimizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vcacheoptimizer.cpp; sourceTree = "<group>"; };
+		F09A626B2B3BB8E6006A4464 /* overdrawoptimizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = overdrawoptimizer.cpp; sourceTree = "<group>"; };
+		F09A626C2B3BB8E6006A4464 /* meshoptimizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = meshoptimizer.h; sourceTree = "<group>"; };
+		F09A626D2B3BB8E6006A4464 /* stripifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stripifier.cpp; sourceTree = "<group>"; };
+		F09A626E2B3BB8E6006A4464 /* vcacheanalyzer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vcacheanalyzer.cpp; sourceTree = "<group>"; };
+		F09A626F2B3BB8E6006A4464 /* indexcodec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = indexcodec.cpp; sourceTree = "<group>"; };
+		F09A62702B3BB8E6006A4464 /* vfetchoptimizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vfetchoptimizer.cpp; sourceTree = "<group>"; };
+		F09A62712B3BB8E6006A4464 /* allocator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = allocator.cpp; sourceTree = "<group>"; };
+		F09A62722B3BB8E6006A4464 /* spatialorder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = spatialorder.cpp; sourceTree = "<group>"; };
+		F09A62732B3BB8E6006A4464 /* indexgenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = indexgenerator.cpp; sourceTree = "<group>"; };
+		F09A62742B3BB8E6006A4464 /* vfetchanalyzer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vfetchanalyzer.cpp; sourceTree = "<group>"; };
+		F09A62752B3BB8E6006A4464 /* clusterizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clusterizer.cpp; sourceTree = "<group>"; };
+		F09A62762B3BB8E6006A4464 /* simplifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplifier.cpp; sourceTree = "<group>"; };
 		F09FFC5621CE161400B6976A /* box_edit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box_edit.c; sourceTree = "<group>"; };
 		F0A15FF31E962F1300C6EF33 /* png.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = png.c; sourceTree = "<group>"; };
 		F0A15FF41E962F1300C6EF33 /* povray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = povray.c; sourceTree = "<group>"; };
@@ -407,6 +439,7 @@
 		F07DEA151BD0F33A00BAA1AD /* ext_src */ = {
 			isa = PBXGroup;
 			children = (
+				F09A62662B3BB8E6006A4464 /* meshoptimizer */,
 				F05D6E5A29D3E7EC004CA300 /* voxelizer */,
 				F0C37C8D2317CBF2000EF45F /* xxhash */,
 				F0DE970D1E6FE8BF000354AF /* noc */,
@@ -420,6 +453,7 @@
 		F07DEA211BD0F33A00BAA1AD /* stb */ = {
 			isa = PBXGroup;
 			children = (
+				F09A62632B3BB8C7006A4464 /* stb_image_resize.h */,
 				F07DEA221BD0F33A00BAA1AD /* stb_image.h */,
 				F07DEA231BD0F33A00BAA1AD /* stb_image_write.h */,
 				F07DEA241BD0F33A00BAA1AD /* stb_rect_pack.h */,
@@ -437,6 +471,29 @@
 				F07DEA2A1BD0F33A00BAA1AD /* utlist.h */,
 			);
 			path = uthash;
+			sourceTree = "<group>";
+		};
+		F09A62662B3BB8E6006A4464 /* meshoptimizer */ = {
+			isa = PBXGroup;
+			children = (
+				F09A62672B3BB8E6006A4464 /* vertexfilter.cpp */,
+				F09A62682B3BB8E6006A4464 /* vertexcodec.cpp */,
+				F09A62692B3BB8E6006A4464 /* overdrawanalyzer.cpp */,
+				F09A626A2B3BB8E6006A4464 /* vcacheoptimizer.cpp */,
+				F09A626B2B3BB8E6006A4464 /* overdrawoptimizer.cpp */,
+				F09A626C2B3BB8E6006A4464 /* meshoptimizer.h */,
+				F09A626D2B3BB8E6006A4464 /* stripifier.cpp */,
+				F09A626E2B3BB8E6006A4464 /* vcacheanalyzer.cpp */,
+				F09A626F2B3BB8E6006A4464 /* indexcodec.cpp */,
+				F09A62702B3BB8E6006A4464 /* vfetchoptimizer.cpp */,
+				F09A62712B3BB8E6006A4464 /* allocator.cpp */,
+				F09A62722B3BB8E6006A4464 /* spatialorder.cpp */,
+				F09A62732B3BB8E6006A4464 /* indexgenerator.cpp */,
+				F09A62742B3BB8E6006A4464 /* vfetchanalyzer.cpp */,
+				F09A62752B3BB8E6006A4464 /* clusterizer.cpp */,
+				F09A62762B3BB8E6006A4464 /* simplifier.cpp */,
+			);
+			path = meshoptimizer;
 			sourceTree = "<group>";
 		};
 		F0A15FF11E962F1300C6EF33 /* formats */ = {
@@ -551,12 +608,14 @@
 				F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */,
 				F05D6E8329D3EA36004CA300 /* volume_utils.c in Sources */,
 				F037D5CF1EA6069A00C96D10 /* brush.c in Sources */,
+				F09A62822B3BB8E7006A4464 /* indexgenerator.cpp in Sources */,
 				F00FC32E226B2FCF0002F251 /* material_panel.c in Sources */,
 				F00FC339226B2FCF0002F251 /* export_panel.c in Sources */,
 				F00FC333226B2FCF0002F251 /* settings.c in Sources */,
 				F0A160041E962F1300C6EF33 /* vxl.c in Sources */,
 				F00FC31C226B2F7C0002F251 /* img.c in Sources */,
 				F094830022994765005DE2C5 /* material.c in Sources */,
+				F09A62812B3BB8E7006A4464 /* spatialorder.cpp in Sources */,
 				F00FC319226B2F7C0002F251 /* b64.c in Sources */,
 				F0C37C8C2317CBDE000EF45F /* xxhash.c in Sources */,
 				F00FC332226B2FCF0002F251 /* about.c in Sources */,
@@ -564,15 +623,21 @@
 				F05E2DD9268F451D00E47D33 /* quit.c in Sources */,
 				F0A160031E962F1300C6EF33 /* voxlap.c in Sources */,
 				F07DEA101BD0F31500BAA1AD /* system.c in Sources */,
+				F09A627A2B3BB8E7006A4464 /* vcacheoptimizer.cpp in Sources */,
 				F09482FE22994752005DE2C5 /* layer.c in Sources */,
 				F07DEA061BD0F31500BAA1AD /* image.c in Sources */,
 				F00FC32F226B2FCF0002F251 /* palette_panel.c in Sources */,
 				F06C683C1D2EAECC00887FCE /* camera.c in Sources */,
+				F09A62782B3BB8E7006A4464 /* vertexcodec.cpp in Sources */,
 				F05D6E8129D3EA36004CA300 /* volume_to_vertices.c in Sources */,
 				F09FFC5721CE161400B6976A /* box_edit.c in Sources */,
 				F00FC330226B2FCF0002F251 /* menu.c in Sources */,
+				F09A62832B3BB8E7006A4464 /* vfetchanalyzer.cpp in Sources */,
+				F09A627E2B3BB8E7006A4464 /* indexcodec.cpp in Sources */,
+				F09A62772B3BB8E6006A4464 /* vertexfilter.cpp in Sources */,
 				F037D5D11EA6069A00C96D10 /* laser.c in Sources */,
 				F00FC318226B2F7C0002F251 /* vec.c in Sources */,
+				F09A627F2B3BB8E7006A4464 /* vfetchoptimizer.cpp in Sources */,
 				F0BC9B362315550500B2A56A /* app.c in Sources */,
 				F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */,
 				F00FC312226B2F7C0002F251 /* ini.c in Sources */,
@@ -593,14 +658,18 @@
 				F076EA362284162400B74F0C /* light_panel.c in Sources */,
 				F0AE90F71C8EE01300C29080 /* assets.c in Sources */,
 				F00FC331226B2FCF0002F251 /* layers_panel.c in Sources */,
+				F09A62852B3BB8E7006A4464 /* simplifier.cpp in Sources */,
 				F00FC33A226B2FCF0002F251 /* tools_panel.c in Sources */,
 				F0A15FFD1E962F1300C6EF33 /* png.c in Sources */,
 				F037D5D01EA6069A00C96D10 /* color_picker.c in Sources */,
 				F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */,
+				F09A62792B3BB8E7006A4464 /* overdrawanalyzer.cpp in Sources */,
 				F0DC02A322EEE274007E2F17 /* box.c in Sources */,
+				F09A62842B3BB8E7006A4464 /* clusterizer.cpp in Sources */,
 				F07DE9D31BD0F03900BAA1AD /* AppDelegate.swift in Sources */,
 				F00FC313226B2F7C0002F251 /* gl.c in Sources */,
 				F05D6E8529D3EB1F004CA300 /* rect_select.c in Sources */,
+				F09A627D2B3BB8E7006A4464 /* vcacheanalyzer.cpp in Sources */,
 				F00FC31D226B2F7C0002F251 /* color.c in Sources */,
 				F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */,
 				F0A160021E962F1300C6EF33 /* vox.c in Sources */,
@@ -621,13 +690,16 @@
 				F07DEA041BD0F31500BAA1AD /* goxel.c in Sources */,
 				F0A15FFF1E962F1300C6EF33 /* qubicle.c in Sources */,
 				F0ACA2A8227BF2A300376C82 /* shader_cache.c in Sources */,
+				F09A62802B3BB8E7006A4464 /* allocator.cpp in Sources */,
 				F037D5D21EA6069A00C96D10 /* move.c in Sources */,
 				F06C683D1D2EAECC00887FCE /* quantization.c in Sources */,
+				F09A627B2B3BB8E7006A4464 /* overdrawoptimizer.cpp in Sources */,
 				F00FC336226B2FCF0002F251 /* debug_panel.c in Sources */,
 				F07DEA051BD0F31500BAA1AD /* gui.cpp in Sources */,
 				F0F14C6720AF282E0006E575 /* imgui.cpp in Sources */,
 				F05D6E8029D3EA36004CA300 /* volume.c in Sources */,
 				F0E5DB2824FBB0D600010FDD /* file_format.c in Sources */,
+				F09A627C2B3BB8E7006A4464 /* stripifier.cpp in Sources */,
 				F07DEA0D1BD0F31500BAA1AD /* render.c in Sources */,
 				F037D5C31EA6061F00C96D10 /* gox.c in Sources */,
 				F0A15FFE1E962F1300C6EF33 /* povray.c in Sources */,
@@ -754,7 +826,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = VH4XTANA7R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/goxel/goxel.pch";
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../src";
@@ -774,7 +848,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = VH4XTANA7R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/goxel/goxel.pch";
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../src";
