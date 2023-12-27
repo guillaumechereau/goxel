@@ -19,6 +19,18 @@ clean:
 analyze:
 	scan-build scons mode=analyze
 
+# Generate an AppImage.  Used by github CI.
+appimage:
+	scons mode=release
+	mkdir AppDir
+	DESTDIR=AppDir PREFIX=/usr make install
+	curl https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20231206-1/linuxdeploy-x86_64.AppImage \
+		--output linuxdeploy.AppImage -L -f
+	curl https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh \
+		--output linuxdeploy-plugin-gtk.sh
+	chmod +x linuxdeploy.AppImage linuxdeploy-plugin-gtk.sh
+	./linuxdeploy.AppImage --output=appimage --appdir=AppDir --plugin=gtk
+
 # Targets to install/uninstall goxel and its data files on unix system.
 PREFIX ?= /usr/local
 

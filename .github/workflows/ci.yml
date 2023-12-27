@@ -78,12 +78,7 @@ jobs:
 
     - name: Build AppImage
       run: |
-        mkdir AppDir
-        DESTDIR=AppDir PREFIX=/usr make install
-        curl https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20231206-1/linuxdeploy-x86_64.AppImage \
-          --output linuxdeploy.AppImage -L -f
-        chmod +x linuxdeploy.AppImage
-        ./linuxdeploy.AppImage --output=appimage --appdir=AppDir
+        make appimage
 
     - name: Upload Binary
       uses: actions/upload-artifact@v3
