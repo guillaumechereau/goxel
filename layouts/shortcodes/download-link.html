@@ -1,8 +1,6 @@
 
 {{ $v := .Site.Params.lastReleaseVersion }}
-{{ $os := .Get "os" }}
+{{ $suffix := .Get "suffix" }}
 {{ $base := "https://github.com/guillaumechereau/goxel/releases/download" }}
-{{ $ext := ".zip" }}
-{{ if eq $os "linux" }} {{ $ext = "" }} {{ end }}
 
-{{$base}}/v{{$v}}/goxel-{{$v}}-{{$os}}{{$ext}}
+{{$base}}/v{{$v}}/goxel-{{$v}}-{{$suffix}}

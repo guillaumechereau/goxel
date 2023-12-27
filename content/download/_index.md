@@ -11,14 +11,17 @@ The current stable version of Goxel for desktop is
 
 [Read the release notes](https://github.com/guillaumechereau/goxel/releases/tag/v{{< current-version >}}).
 
-<a href="{{< download-link os="windows" >}}"
+<a href="{{< download-link suffix="windows.zip" >}}"
    class="button is-large is-link">Download for Windows</a>
 
-<a href="{{< download-link os="mac" >}}"
+<a href="{{< download-link suffix="mac.zip" >}}"
    class="button is-large is-link">Download for MacOS</a>
 
-<a href="{{< download-link os="linux" >}}"
+<a href="{{< download-link suffix="linux" >}}"
    class="button is-large is-link">Download for Linux</a>
+
+<a href="{{< download-link suffix="AppImage" >}}"
+   class="button is-large is-link">Download for Linux AppImage</a>
 
 ## iOS
 

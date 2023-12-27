@@ -3,7 +3,7 @@ languageCode = "en-us"
 title = "Goxel 3D Voxel Editor"
 
 [params]
-  lastReleaseVersion = "0.12.0"
+  lastReleaseVersion = "0.13.0"
 
 [markup]
   [markup.goldmark]
