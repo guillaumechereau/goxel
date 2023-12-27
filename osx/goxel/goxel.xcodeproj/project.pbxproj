@@ -203,6 +203,7 @@
 		F07DEA2E1BD0F3D000BAA1AD /* goxel.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = goxel.pch; sourceTree = "<group>"; };
 		F07DEA2F1BD0FB5F00BAA1AD /* goxel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "goxel-Bridging-Header.h"; sourceTree = "<group>"; };
 		F07DEA321BD1014800BAA1AD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		F0931E492B3BEBCE00E908FE /* goxel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = goxel.entitlements; sourceTree = "<group>"; };
 		F09482FD22994752005DE2C5 /* layer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = layer.c; sourceTree = "<group>"; };
 		F09482FF22994765005DE2C5 /* material.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = material.c; sourceTree = "<group>"; };
 		F097B3F11F0C97DB00A3622B /* gesture.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gesture.c; sourceTree = "<group>"; };
@@ -375,6 +376,7 @@
 		F07DE9D11BD0F03900BAA1AD /* goxel */ = {
 			isa = PBXGroup;
 			children = (
+				F0931E492B3BEBCE00E908FE /* goxel.entitlements */,
 				F07DEA151BD0F33A00BAA1AD /* ext_src */,
 				F07DE9E31BD0F31500BAA1AD /* src */,
 				F07DE9D21BD0F03900BAA1AD /* AppDelegate.swift */,
@@ -563,6 +565,7 @@
 						CreatedOnToolsVersion = 7.0.1;
 						DevelopmentTeam = VH4XTANA7R;
 						LastSwiftMigration = 1010;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -827,8 +830,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_ENTITLEMENTS = goxel/goxel.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = VH4XTANA7R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -839,6 +844,7 @@
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.noctuasoftware.goxel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/goxel/goxel-Bridging-Header.h";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.2;
@@ -849,8 +855,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Mac Developer";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_ENTITLEMENTS = goxel/goxel.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = VH4XTANA7R;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -861,6 +869,7 @@
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.noctuasoftware.goxel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/goxel/goxel-Bridging-Header.h";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.2;
