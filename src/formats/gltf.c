@@ -239,6 +239,7 @@ static cgltf_material *get_default_mat(
 static void save_layer(gltf_t *g, cgltf_node *root_node,
                        const image_t *img, const layer_t *layer,
                        const palette_t *palette,
+                       int palette_pix_size,
                        const export_options_t *options)
 {
     volume_mesh_t *mesh;
@@ -329,12 +330,13 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
     volume_mesh_free(mesh);
 }
 
-static void create_palette_texture(gltf_t *g, const image_t *img)
+static void create_palette_texture(
+        gltf_t *g, const image_t *img, int pix_size)
 {
     // Create the global palette with all the colors.
     layer_t *layer;
     volume_iterator_t iter;
-    int i, s, pos[3], size;
+    int i, s, pos[3], size, x, y, j, k;
     uint8_t c[4];
     uint8_t (*data)[3];
     uint8_t *png;
@@ -351,10 +353,21 @@ static void create_palette_texture(gltf_t *g, const image_t *img)
         }
     }
 
-    s = max(next_pow2(ceil(sqrt(g->palette.size))), 16);
+    s = ceil(sqrt(g->palette.size));
+    s = max(next_pow2(s), 16);
+    s *= pix_size;
     data = calloc(s * s, sizeof(*data));
-    for (i = 0; i < g->palette.size; i++)
-        memcpy(data[i], g->palette.entries[i].color, 3);
+    // Copy colors as blocks of pix_size x pix_size.
+    for (k = 0; k < g->palette.size; k++) {
+        x = (k % (s / pix_size)) * pix_size;
+        y = (k / (s / pix_size)) * pix_size;
+        for (i = 0; i < pix_size; i++) {
+            for (j = 0; j < pix_size; j++) {
+                memcpy(data[(y + i) * s + x + j],
+                        g->palette.entries[k].color, 3);
+            }
+        }
+    }
     png = img_write_to_mem((void*)data, s, s, 3, &size);
     free(data);
     buffer = add_item(g->data, buffers);
@@ -381,11 +394,12 @@ static void gltf_export(const image_t *img, const char *path,
     cgltf_options gltf_options = {};
     material_t *mat;
     const palette_t *palette = NULL;
+    const int palette_pix_size = 4;
 
     gltf_init(&g, options, img);
 
     if (!options->vertex_color) {
-        create_palette_texture(&g, img);
+        create_palette_texture(&g, img, palette_pix_size);
         palette = &g.palette;
     }
 
@@ -406,7 +420,8 @@ static void gltf_export(const image_t *img, const char *path,
 
     ALLOC(root_node->children, DL_SIZE(img->layers));
     DL_FOREACH(img->layers, layer) {
-        save_layer(&g, root_node, img, layer, palette, options);
+        save_layer(&g, root_node, img, layer,
+                   palette, palette_pix_size, options);
     }
 
     cgltf_write_file(&gltf_options, path, g.data);
