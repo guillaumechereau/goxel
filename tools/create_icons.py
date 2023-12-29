@@ -20,6 +20,7 @@
 # ************************************************************************
 # Create the icon atlas image from all the icons svg files
 
+import cairosvg
 import itertools
 import PIL.Image
 from shutil import copyfile
@@ -27,10 +28,9 @@ import os
 import subprocess
 import re
 
-# Use inkscape to convert the svg into one big png file.
-subprocess.check_output([
-    'inkscape', './svg/icons.svg', '--export-area-page',
-    '--export-dpi=192', '--export-png=/tmp/icons.png'])
+# Convert the svg into one big png file.
+cairosvg.svg2png(url='./svg/icons.svg', write_to='/tmp/icons.png',
+                 output_width=370, output_height=352)
 
 src_img = PIL.Image.open('/tmp/icons.png')
 ret_img = PIL.Image.new('RGBA', (512, 512))
