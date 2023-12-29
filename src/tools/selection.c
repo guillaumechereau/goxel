@@ -169,12 +169,14 @@ static int gui(tool_t *tool)
     }
     gui_action_button(ACTION_fill_selection, "Fill", 1.0);
     gui_action_button(ACTION_layer_clear, "Clear", 1.0);
+    gui_row_begin(2);
     gui_action_button(ACTION_add_selection, "Add", 0.5);
-    gui_same_line();
     gui_action_button(ACTION_sub_selection, "Sub", 1.0);
+    gui_row_end();
     gui_action_button(ACTION_cut_as_new_layer, "Cut as new layer", 1.0);
     gui_group_end();
 
+    // XXX: why not using gui_bbox here?
     x_mag = fabs(get_magnitude(*box, 0));
     y_mag = fabs(get_magnitude(*box, 1));
     z_mag = fabs(get_magnitude(*box, 2));
@@ -192,10 +194,14 @@ static int gui(tool_t *tool)
     gui_group_end();
 
     gui_group_begin("Size");
-    gui_input_int("w", &w, 1, 2048);
-    gui_input_int("h", &h, 1, 2048);
-    gui_input_int("d", &d, 1, 2048);
+    gui_input_int("w", &w, 0, 0);
+    gui_input_int("h", &h, 0, 0);
+    gui_input_int("d", &d, 0, 0);
+    w = max(1, w);
+    h = max(1, h);
+    d = max(1, d);
     gui_group_end();
+
     bbox_from_extents(*box,
             VEC(x + w / 2., y + h / 2., z + d / 2.),
             w / 2., h / 2., d / 2.);

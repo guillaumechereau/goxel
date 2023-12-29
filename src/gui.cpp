@@ -16,10 +16,6 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GUI_HAS_MENU
-#   define GUI_HAS_MENU 1
-#endif
-
 #ifndef GUI_HAS_SCROLLBARS
 #   define GUI_HAS_SCROLLBARS 1
 #endif
@@ -30,7 +26,6 @@ extern "C" {
 
 void gui_app(void);
 void gui_render_panel(void);
-void gui_menu(void);
 }
 
 #ifndef typeof
@@ -43,6 +38,12 @@ void gui_menu(void);
             y = f[1] / 255.; \
             z = f[2] / 255.; \
             w = f[3] / 255.; }     \
+        ImVec4(const float f[4]) { \
+            x = f[0]; \
+            y = f[1]; \
+            z = f[2]; \
+            w = f[3]; }     \
+
 
 // Prevent warnings with gcc.
 #ifndef __clang__
@@ -53,7 +54,7 @@ void gui_menu(void);
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+// #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
@@ -62,136 +63,36 @@ void gui_menu(void);
 #pragma GCC diagnostic pop
 #endif
 
-static ImVec4 imvec4(const uint8_t v[4])
+// How much space we keep for the labels on the left.
+static const float LABEL_SIZE = 90;
+
+// Base height of items (note: maybe remove and use the font size instead?).
+static const float ITEM_HEIGHT = 18;
+static const float ICON_HEIGHT = 32;
+static const ImVec2 ITEM_SPACING = ImVec2(8, 4);
+
+#define COL_HEX(x) ImVec4( \
+        ((uint8_t)((x >> 24) & 0xff)) / 255.0, \
+        ((uint8_t)((x >> 16) & 0xff)) / 255.0, \
+        ((uint8_t)((x >> 8) & 0xff)) / 255.0, \
+        ((uint8_t)((x >> 0) & 0xff)) / 255.0)
+
+static inline ImVec4 color_lighten(ImVec4 c, float k = 0.2)
 {
-    return ImVec4(v[0] / 255., v[1] / 255., v[2] / 255., v[3] / 255.);
+    float h, s, v, r, g, b;
+    r = c.x;
+    g = c.y;
+    b = c.z;
+    ImGui::ColorConvertRGBtoHSV(r, g, b, h, s, v);
+    v += k;
+    ImGui::ColorConvertHSVtoRGB(h, s, v, r, g, b);
+    return ImVec4(r, g, b, c.w);
 }
 
-static inline ImVec4 color_lighten(ImVec4 c, float k)
+static inline ImVec4 color_lighten2(ImVec4 v)
 {
-    c.x *= k;
-    c.y *= k;
-    c.z *= k;
-    return c;
+    return color_lighten(v, 0.5);
 }
-
-namespace ImGui {
-    void GoxBox2(ImVec2 pos, ImVec2 size, ImVec4 color, bool fill,
-                 float thickness = 1,
-                 int rounding_corners_flags = ~0)
-    {
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
-        ImGuiWindow* window = GetCurrentWindow();
-        float r = style.FrameRounding;
-        size.x = size.x ?: ImGui::GetContentRegionAvail().x;
-        if (fill) {
-            window->DrawList->AddRectFilled(
-                    pos, pos + size,
-                    ImGui::ColorConvertFloat4ToU32(color), r,
-                    rounding_corners_flags);
-        } else {
-            window->DrawList->AddRect(
-                    pos, pos + size,
-                    ImGui::ColorConvertFloat4ToU32(color), r,
-                    rounding_corners_flags, thickness);
-        }
-    }
-
-    void GoxBox(ImVec2 pos, ImVec2 size, bool selected,
-                int rounding_corners_flags = ~0)
-    {
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
-        ImVec4 color  = style.Colors[selected ? ImGuiCol_ButtonActive :
-                                     ImGuiCol_Button];
-        return GoxBox2(pos, size, color, true, 1, rounding_corners_flags);
-    }
-
-    bool GoxInputFloat(const char *label, float *v, float step,
-                       float minv, float maxv, const char *format)
-    {
-        const theme_t *theme = theme_get();
-        bool ret = false;
-        ImGuiContext& g = *GImGui;
-        const ImGuiStyle& style = g.Style;
-        const ImVec2 button_sz = ImVec2(
-                max(g.FontSize * 2.0f, theme->sizes.item_height),
-                g.FontSize + style.FramePadding.y * 2.0f);
-        int button_flags =
-            ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
-        float speed = step / 20;
-        uint8_t color[4];
-        char buf[128];
-        bool input_active;
-        ImVec4 text_color;
-
-        ImGui::PushID(label);
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 1));
-
-        // XXX: commented out for the moment so that diabled input work.
-        // theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_TEXT, 0, color);
-        // ImGui::PushStyleColor(ImGuiCol_Text, imvec4(color));
-
-        theme_get_color(THEME_GROUP_WIDGET, THEME_COLOR_INNER, 0, color);
-        ImGui::PushStyleColor(ImGuiCol_Button, imvec4(color));
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, imvec4(color));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
-            color_lighten(imvec4(color), 1.2));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            color_lighten(imvec4(color), 1.2));
-
-        ImGui::SetWindowFontScale(0.75);
-        if (ImGui::ButtonEx("◀", button_sz, button_flags)) {
-            (*v) -= step;
-            ret = true;
-        }
-        ImGui::SetWindowFontScale(1);
-
-        ImGui::SameLine();
-        ImGui::PushItemWidth(
-                ImGui::GetContentRegionAvail().x -
-                button_sz.x - style.ItemSpacing.x);
-
-        input_active = ImGui::TempInputTextIsActive(ImGui::GetID(""));
-        text_color = ImGui::GetStyleColorVec4(ImGuiCol_Text);
-        if (!input_active)
-            text_color = ImVec4(0, 0, 0, 0);
-        ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-        ret |= ImGui::DragFloat("", v, speed, minv, maxv, format, 1.0);
-        ImGui::PopStyleColor();
-
-        if (!input_active) {
-            snprintf(buf, sizeof(buf), "%s:", label);
-            ImGui::RenderTextClipped(ImGui::GetItemRectMin(),
-                                     ImGui::GetItemRectMax(),
-                                     buf, NULL, NULL, ImVec2(0, 0.5));
-            snprintf(buf, sizeof(buf), format, *v);
-            ImGui::RenderTextClipped(ImGui::GetItemRectMin(),
-                                     ImGui::GetItemRectMax(),
-                                     buf, NULL, NULL, ImVec2(1, 0.5));
-        }
-
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
-
-        ImGui::SetWindowFontScale(0.75);
-        if (ImGui::ButtonEx("▶", button_sz, button_flags)) {
-            (*v) += step;
-            ret = true;
-        }
-        ImGui::SetWindowFontScale(1);
-
-        ImGui::PopStyleColor(4);
-        ImGui::PopStyleVar();
-        ImGui::PopID();
-
-        if (ret)
-            *v = clamp(*v, minv, maxv);
-
-        return ret;
-    }
-};
 
 static texture_t *g_tex_icons = NULL;
 
@@ -231,12 +132,6 @@ static const char *FSHADER =
     "}                                                              \n"
 ;
 
-typedef struct {
-    float  rect[4];
-    void    *user;
-    void    (*render)(void *user, const float viewport[4]);
-} view_t;
-
 enum {
     A_POS_LOC = 0,
     A_TEX_POS_LOC,
@@ -256,16 +151,11 @@ typedef struct gui_t {
     gl_shader_t *shader;
     GLuint  array_buffer;
     GLuint  index_buffer;
-    const inputs_t *inputs;
-    view_t  view;
-    struct {
-        gesture_t drag;
-        gesture_t hover;
-    }       gestures;
-    bool    capture_mouse; // Mouse is captured by a window.
-    int     group;
     margins_t margins;
     bool    is_scrolling;
+
+    int     is_row;
+    float   item_size;
 
     struct {
         const char *title;
@@ -305,8 +195,30 @@ static bool isCharPressed(int c)
  */
 static uint32_t get_icon_color(int icon, bool selected)
 {
+    int group;
+    uint8_t color[4];
+
+    group = icon >> 16;
+    if (group == 0)
+        return ImGui::GetColorU32(COLOR(ICON, TEXT, selected));
+    if (group == THEME_GROUP_ICON)
+        return 0xFFFFFFFF;
+    theme_get_color(group, THEME_COLOR_ITEM, false, color);
+    return ImGui::GetColorU32(color);
+
+    /*
+    if (icon < ICON_COLORIZABLE_START || icon > ICON_COLORIZABLE_END)
+        return 0xFFFFFFFF;
+
     return (icon >= ICON_COLORIZABLE_START && icon < ICON_COLORIZABLE_END) ?
             ImGui::GetColorU32(COLOR(WIDGET, TEXT, selected)) : 0xFFFFFFFF;
+    */
+}
+
+static ImVec2 get_icon_uv(int icon)
+{
+    icon = icon & 0xffff; // Remove the theme group part.
+    return ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
 }
 
 static void render_prepare_context(void)
@@ -362,7 +274,6 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        const ImDrawIdx* idx_buffer_offset = 0;
 
         if (cmd_list->VtxBuffer.size())
             GL(glBufferData(GL_ARRAY_BUFFER,
@@ -383,15 +294,15 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
             }
             else
             {
-                GL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId));
+                GL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID()));
                 GL(glScissor((int)pcmd->ClipRect.x * scale,
                              (int)(height - pcmd->ClipRect.w) * scale,
                              (int)(pcmd->ClipRect.z - pcmd->ClipRect.x) * scale,
                              (int)(pcmd->ClipRect.w - pcmd->ClipRect.y) * scale));
                 GL(glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
-                                  GL_UNSIGNED_SHORT, idx_buffer_offset));
+                                  GL_UNSIGNED_SHORT,
+                                  (void*)(uintptr_t)(pcmd->IdxOffset * 2)));
             }
-            idx_buffer_offset += pcmd->ElemCount;
         }
     }
     GL(glDisable(GL_SCISSOR_TEST));
@@ -466,76 +377,12 @@ static void init_ImGui(void)
     }
 }
 
-static bool color_edit(const char *name, uint8_t color[4],
-                       const uint8_t backup_color[4])
-{
-    bool ret = false;
-    ImVec4 col = color;
-    ImVec4 backup_col;
-    if (backup_color) backup_col = backup_color;
-
-    ImGui::Text("Pick Color");
-    ImGui::Separator();
-    ret |= ImGui::ColorPicker4("##picker", (float*)&col,
-                        ImGuiColorEditFlags_NoSidePreview |
-                        ImGuiColorEditFlags_NoSmallPreview |
-                        ImGuiColorEditFlags_NoAlpha);
-    gui_same_line();
-    ImGui::BeginGroup();
-    ImGui::Text("Current");
-    ImGui::ColorButton("##current", col, ImGuiColorEditFlags_NoPicker,
-                       ImVec2(60, 40));
-    if (backup_color) {
-        ImGui::Text("Previous");
-        if (ImGui::ColorButton("##previous", backup_col,
-                               ImGuiColorEditFlags_NoPicker,
-                               ImVec2(60, 40))) {
-            col = backup_col;
-            ret = true;
-        }
-    }
-    ImGui::EndGroup();
-
-    if (ret) {
-        color[0] = col.x * 255;
-        color[1] = col.y * 255;
-        color[2] = col.z * 255;
-        color[3] = col.w * 255;
-    }
-    return ret;
-}
-
-static int on_gesture(const gesture_t *gest, void *user)
-{
-    gui_t *gui = (gui_t*)user;
-    ImGuiIO& io = ImGui::GetIO();
-
-    if (DEFINED(GOXEL_MOBILE) && gest->type == GESTURE_HOVER) return 0;
-    io.MousePos = ImVec2(gest->pos[0], gest->pos[1]);
-    io.MouseDown[0] = (gest->type == GESTURE_DRAG) &&
-                      (gest->state != GESTURE_END);
-
-    if (gest->state == GESTURE_END || gest->type == GESTURE_HOVER) {
-        gui->capture_mouse = false;
-    }
-    if (gest->state == GESTURE_END && gest->type != GESTURE_HOVER) {
-        gui_iter(NULL);
-        io.MousePos = ImVec2(-1, -1);
-    }
-    return 0;
-}
-
 
 static void gui_init(void)
 {
     if (!gui) {
         gui = (gui_t*)calloc(1, sizeof(*gui));
         init_ImGui();
-        gui->gestures.drag.type = GESTURE_DRAG;
-        gui->gestures.drag.button = GESTURE_LMB;
-        gui->gestures.drag.callback = on_gesture;
-        gui->gestures.hover.type = GESTURE_HOVER;
-        gui->gestures.hover.callback = on_gesture;
         goxel.gui.panel_width = GUI_PANEL_WIDTH_NORMAL;
     }
 
@@ -598,27 +445,17 @@ static int check_action_shortcut(action_t *action, void *user)
         check_key = false;
     }
     if (    (check_char && isCharPressed(s[0])) ||
-            (check_key && ImGui::IsKeyPressed(s[0], false))) {
+            (check_key && ImGui::IsKeyPressed((ImGuiKey)s[0], false))) {
         action_exec(action);
         return 1;
     }
     return 0;
 }
 
-static void render_menu(void)
-{
-    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(MENU, INNER, 0));
-    ImGui::PushStyleColor(ImGuiCol_Text, COLOR(MENU, TEXT, 0));
-
-    if (!ImGui::BeginMenuBar()) return;
-    gui_menu();
-    ImGui::EndMenuBar();
-    ImGui::PopStyleColor(2);
-}
-
 static void render_popups(int index)
 {
     int r;
+    int flags;
     typeof(gui->popup[0]) *popup;
     ImGuiIO& io = ImGui::GetIO();
 
@@ -629,7 +466,7 @@ static void render_popups(int index)
         ImGui::OpenPopup(popup->title);
         popup->opened = true;
     }
-    int flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
+    flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
     if (popup->flags & GUI_POPUP_FULL) {
         ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x - 40,
                                         io.DisplaySize.y - 40),
@@ -640,6 +477,9 @@ static void render_popups(int index)
                    ImGuiWindowFlags_AlwaysAutoResize);
     }
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WINDOW, BACKGROUND, false));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgActive, COLOR(WINDOW, INNER, false));
+
     if (ImGui::BeginPopupModal(popup->title, NULL, flags)) {
         typeof(popup->func) func = popup->func;
         if ((r = func(popup->data))) {
@@ -656,20 +496,16 @@ static void render_popups(int index)
         render_popups(index + 1);
         ImGui::EndPopup();
     }
+    ImGui::PopStyleColor(2);
     ImGui::PopStyleVar();
 }
 
-void gui_iter(const inputs_t *inputs)
+static void gui_iter(const inputs_t *inputs)
 {
     gui_init();
     unsigned int i;
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
-    const theme_t *theme = theme_get();
-    gesture_t *gestures[] = {&gui->gestures.drag, &gui->gestures.hover};
-    float display_rect[4] = {
-        0.f, 0.f, (float)goxel.screen_size[0], (float)goxel.screen_size[1]};
-    float font_size = ImGui::GetFontSize();
 
     io.DisplaySize = ImVec2((float)goxel.screen_size[0],
                             (float)goxel.screen_size[1]);
@@ -677,13 +513,17 @@ void gui_iter(const inputs_t *inputs)
     io.DisplayFramebufferScale = ImVec2(goxel.screen_scale,
                                         goxel.screen_scale);
     io.DeltaTime = goxel.delta_time;
-    gui->inputs = inputs;
+    io.ConfigDragClickToInputText = true;
 
     if (inputs) {
         io.DisplayFramebufferScale = ImVec2(inputs->scale, inputs->scale);
         io.FontGlobalScale = 1 / inputs->scale;
+        io.MousePos.x = inputs->touches[0].pos[0];
+        io.MousePos.y = inputs->touches[0].pos[1];
+        io.MouseDown[0] = inputs->touches[0].down[0];
+        io.MouseDown[1] = inputs->touches[0].down[1];
+        io.MouseDown[2] = inputs->touches[0].down[2];
         gui->margins = inputs->safe_margins;
-        gesture_update(2, gestures, inputs, display_rect, gui);
         io.MouseWheel = inputs->mouse_wheel;
 
         for (i = 0; i < ARRAY_SIZE(inputs->keys); i++)
@@ -698,63 +538,30 @@ void gui_iter(const inputs_t *inputs)
         memset((void*)inputs->chars, 0, sizeof(inputs->chars));
     }
 
+
     // Setup theme.
-    style.FramePadding = ImVec2(theme->sizes.item_padding_h,
-                                (theme->sizes.item_height - font_size) / 2);
-    style.FrameRounding = theme->sizes.item_rounding;
-    style.ItemSpacing = ImVec2(theme->sizes.item_spacing_h,
-                               theme->sizes.item_spacing_v);
-    style.ItemInnerSpacing = ImVec2(theme->sizes.item_inner_spacing_h, 0);
-    style.ScrollbarSize = theme->sizes.item_height;
-    style.GrabMinSize = theme->sizes.item_height;
+    ImGui::StyleColorsDark();
     style.WindowBorderSize = 0;
+    style.WindowPadding = ImVec2(8, 5);
+    style.FrameRounding = 2;
+    style.ChildRounding = 4;
+    style.WindowRounding = 6;
     style.ChildBorderSize = 0;
-    style.WindowRounding = 0;
-    style.WindowPadding = ImVec2(4, 4);
+    style.SelectableTextAlign = ImVec2(0.5, 0.5);
+    style.Colors[ImGuiCol_WindowBg] = COLOR(WINDOW, BACKGROUND, false);
+    style.Colors[ImGuiCol_ChildBg] = COLOR(SECTION, BACKGROUND, false);
+    style.Colors[ImGuiCol_Header] = ImVec4(0, 0, 0, 0);
+    style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, false);
+    style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, false);
 
-    style.Colors[ImGuiCol_WindowBg] = COLOR(BASE, BACKGROUND, 0);
-    style.Colors[ImGuiCol_PopupBg] = ImVec4(0.38, 0.38, 0.38, 1.0);
-    style.Colors[ImGuiCol_Header] = style.Colors[ImGuiCol_WindowBg];
-    style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, 0);
-    style.Colors[ImGuiCol_Button] = COLOR(BASE, INNER, 0);
-    style.Colors[ImGuiCol_FrameBg] = COLOR(BASE, INNER, 0);
-    style.Colors[ImGuiCol_PopupBg] = COLOR(BASE, BACKGROUND, 0);
-    style.Colors[ImGuiCol_ButtonActive] = COLOR(BASE, INNER, 1);
-    style.Colors[ImGuiCol_ButtonHovered] =
-        color_lighten(COLOR(BASE, INNER, 0), 1.2);
-    style.Colors[ImGuiCol_CheckMark] = COLOR(WIDGET, INNER, 1);
-    style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, 0);
-    style.Colors[ImGuiCol_Border] = COLOR(BASE, OUTLINE, 0);
-
+    // Old code, to remove.
     ImGui::NewFrame();
 
-    // Create the root fullscreen window.
-    ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar |
-                                    ImGuiWindowFlags_NoResize |
-                                    ImGuiWindowFlags_NoMove |
-                                    ImGuiWindowFlags_NoScrollbar |
-                                    ImGuiWindowFlags_NoCollapse |
-                                    ImGuiWindowFlags_NoBringToFrontOnFocus |
-                                    (GUI_HAS_MENU ? ImGuiWindowFlags_MenuBar : 0);
-
-    ImGui::SetNextWindowSize(ImVec2(
-        io.DisplaySize.x - (gui->margins.left + gui->margins.right),
-        io.DisplaySize.y - gui->margins.top));
-    ImGui::SetNextWindowPos(ImVec2(gui->margins.left, gui->margins.top));
-    ImGui::Begin("Goxel", NULL, window_flags);
-
-    render_popups(0);
-    goxel.no_edit = gui->popup_count;
-    if (gui->popup_count) gui->capture_mouse = true;
-
-    if (GUI_HAS_MENU) render_menu();
-
     gui_app();
-
-    ImGui::End();
+    render_popups(0);
 
     // Handle the shortcuts.  XXX: this should be done with actions.
-    if (ImGui::IsKeyPressed(KEY_DELETE, false))
+    if (ImGui::IsKeyPressed((ImGuiKey)KEY_DELETE, false))
         action_exec2(ACTION_layer_clear);
 
     if (!io.WantCaptureKeyboard) {
@@ -771,9 +578,10 @@ void gui_iter(const inputs_t *inputs)
     sys_show_keyboard(io.WantTextInput);
 }
 
-void gui_render(void)
+void gui_render(const inputs_t *inputs)
 {
     gui_init();
+    gui_iter(inputs);
     ImGui::Render();
     ImImpl_RenderDrawLists(ImGui::GetDrawData());
 }
@@ -781,64 +589,97 @@ void gui_render(void)
 extern "C" {
 using namespace ImGui;
 
-static void reset_context_callback(const ImDrawList* parent_list,
-                                   const ImDrawCmd* cmd)
-{
-    // Do nothing.
-}
-
 
 void gui_group_begin(const char *label)
 {
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    if (label) ImGui::Text("%s", label);
-    ImGui::PushID(label ? label : "group");
-    gui->group++;
-    draw_list->ChannelsSplit(2);
-    draw_list->ChannelsSetCurrent(1);
+    if (label && label[0] != '#') ImGui::Text("%s", label);
+    ImGui::PushID(label ?: "group");
     ImGui::BeginGroup();
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(1, 1));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
 }
 
 void gui_group_end(void)
 {
-    gui->group--;
     ImGui::PopID();
-    ImGui::PopStyleVar(2);
+    ImGui::PopStyleVar(1);
     ImGui::Dummy(ImVec2(0, 0));
     ImGui::EndGroup();
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->ChannelsSetCurrent(0);
-    ImVec2 pos = ImGui::GetItemRectMin();
-    ImVec2 size = ImGui::GetItemRectMax() - pos;
-    GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), true);
-
-    draw_list->ChannelsMerge();
-    draw_list->AddCallback(reset_context_callback, NULL);
-    GoxBox2(pos, size, COLOR(WIDGET, OUTLINE, 0), false);
+    if (gui->is_row) ImGui::SameLine();
 }
 
-void gui_div_begin(void)
+bool gui_section_begin(const char *label, int flags)
 {
-    ImGui::BeginGroup();
+    ImGuiChildFlags childflags =
+        ImGuiChildFlags_AutoResizeY |
+        ImGuiChildFlags_AlwaysUseWindowPadding;
+    float padding, w;
+
+    // We ensure that everything stays aligned with widgets outside a section.
+    padding = ImGui::GetStyle().WindowPadding.x;
+    w = ImGui::GetContentRegionAvail().x;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,
+                        ImVec2(padding / 2, padding / 2));
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX() - padding / 2);
+    ImGui::BeginChild(label, ImVec2(w + padding, 0), childflags);
+
+    if (flags & GUI_SECTION_COLLAPSABLE) {
+        ImGui::SetNextItemOpen(
+                !(flags & GUI_SECTION_COLLAPSABLE_CLOSED), ImGuiCond_Once);
+        return ImGui::CollapsingHeader(label);
+    } else {
+        if (label && label[0] != '#')
+            ImGui::Text("%s", label);
+        return true;
+    }
 }
 
-void gui_div_end(void)
-{
-    ImGui::EndGroup();
-}
-
-void gui_child_begin(const char *id, float w, float h)
-{
-    ImGui::BeginChild(id, ImVec2(w, h), false,
-                      ImGuiWindowFlags_NoScrollWithMouse);
-}
-
-void gui_child_end(void)
+void gui_section_end(void)
 {
     ImGui::EndChild();
+    ImGui::PopStyleVar();
+}
+
+void gui_row_begin(int nb)
+{
+    float spacing;
+    float avail;
+    ImGui::BeginGroup();
+    gui->is_row++;
+    gui->item_size = 0;
+    if (nb) {
+        spacing = ImGui::GetStyle().ItemSpacing.x;
+        avail = ImGui::GetContentRegionAvail().x;
+        gui->item_size = (avail - (nb - 1) * spacing) / nb;
+    }
+}
+
+void gui_row_end(void)
+{
+    ImGui::EndGroup();
+    gui->is_row--;
+    gui->item_size = 0;
+}
+
+void gui_window_begin(const char *label, float x, float y, float w, float h)
+{
+    ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove | //  ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoDecoration;
+    float max_h;
+
+    ImGui::SetNextWindowPos(ImVec2(x, y));
+    ImGui::SetNextWindowSize(ImVec2(w, h));
+    if (h == 0) {
+        max_h = ImGui::GetMainViewport()->Size.y - y;
+        SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
+    }
+    ImGui::Begin(label, NULL, flags);
+}
+
+void gui_window_end(void)
+{
+    ImGui::End();
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
@@ -856,25 +697,151 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
     return ret;
 }
 
+static void label_aligned(const char *label, float size)
+{
+    ImVec2 spacing;
+    float text_size = ImGui::CalcTextSize(label).x;
+    const ImGuiStyle &style = ImGui::GetStyle();
+
+    spacing = style.ItemSpacing;
+    spacing.x = ITEM_SPACING.x;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, spacing);
+
+    ImGui::SetCursorPosX(size - text_size - ITEM_SPACING.x);
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("%s", label);
+    ImGui::SameLine();
+    ImGui::PopStyleVar(1);
+}
+
+static bool clicked(void)
+{
+    ImGuiStorage *storage = ImGui::GetStateStorage();
+    ImGuiID key;
+    int state;
+    bool ret = false;
+
+    if (!ImGui::IsItemHovered()) return false;
+
+    key = ImGui::GetID("clicked");
+    state = storage->GetInt(key, 0);
+
+    switch (state) {
+    case 0:
+        if (ImGui::IsMouseClicked(0)) {
+            state = 1;
+            break;
+        }
+        break;
+    case 1:
+        if (ImGui::IsMouseDragging(0)) {
+            state = 0;
+            break;
+        }
+        if (ImGui::IsMouseReleased(0)) {
+            state = 0;
+            ret = true;
+            break;
+        }
+        break;
+    }
+
+    storage->SetInt(key, state);
+    return ret;
+}
+
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
-    bool self_group = false, ret;
+    bool ret = false;
+    float button_width = 20; // Compute exactly.
+    const char *left_utf = "◀";
+    const char *right_utf = "▶";
+    float v_speed = step / 10;
+    bool unbounded;
+    bool show_arrows = false;
+    bool is_active = false;
+    ImGuiID key;
+    ImGuiStorage *storage = ImGui::GetStateStorage();
+
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
         maxv = +FLT_MAX;
     }
-
-    if (gui->group == 0) {
-        gui_group_begin(NULL);
-        self_group = true;
-    }
-
     if (step == 0.f) step = 0.1f;
     if (!format) format = "%.1f";
-    ret = ImGui::GoxInputFloat(label, v, step, minv, maxv, format);
-    if (ret) on_click();
-    if (self_group) gui_group_end();
+
+    unbounded = (minv == -FLT_MAX || maxv == +FLT_MAX);
+
+    ImGui::PushID(label);
+
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, COLOR(NUMBER_INPUT, INNER, false));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
+                    color_lighten(COLOR(NUMBER_INPUT, INNER, false)));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive,
+                    color_lighten2(COLOR(NUMBER_INPUT, INNER, false)));
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(NUMBER_INPUT, INNER, false));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                    color_lighten(COLOR(NUMBER_INPUT, INNER, false)));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                    color_lighten2(COLOR(NUMBER_INPUT, INNER, false)));
+    ImGui::PushStyleColor(ImGuiCol_SliderGrab,
+                    COLOR(NUMBER_INPUT, ITEM, false));
+
+    label_aligned(label, LABEL_SIZE);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
+    ImGui::BeginGroup();
+    ImGui::PushButtonRepeat(true);
+
+    if (unbounded) {
+        key = ImGui::GetID("show_arrows");
+        show_arrows = storage->GetBool(key, false);
+    }
+
+    if (show_arrows) {
+        if (ImGui::Button(left_utf)) {
+            (*v) -= step;
+            ret = true;
+        }
+        ImGui::SameLine();
+        ImGui::PushItemWidth(
+                ImGui::GetContentRegionAvail().x - button_width);
+        ret = ImGui::DragFloat("", v, v_speed, minv, maxv, format) || ret;
+        is_active = ImGui::IsItemActive();
+        ImGui::PopItemWidth();
+        ImGui::SameLine();
+        if (ImGui::Button(right_utf)) {
+            (*v) += step;
+            ret = true;
+        }
+    } else {
+        ImGui::SetNextItemWidth(-1);
+        if (unbounded) {
+            ret = ImGui::DragFloat("", v, step, minv, maxv, format);
+        } else {
+            ret = ImGui::SliderFloat("", v, minv, maxv, format);
+            if (clicked()) {
+                ImGui::SetKeyboardFocusHere(-1);
+            }
+        }
+
+        is_active = ImGui::IsItemActive();
+    }
+
+    ImGui::PopButtonRepeat();
+    ImGui::PopStyleVar(1);
+    ImGui::PopStyleColor(7);
+    ImGui::EndGroup();
+    if (unbounded) {
+        storage->SetBool(key, ret || is_active || ImGui::IsItemHovered());
+    }
+    ImGui::PopID();
+
+    if (ret) {
+        *v = clamp(*v, minv, maxv);
+        on_click();
+    }
     return ret;
 }
 
@@ -896,9 +863,12 @@ bool gui_bbox(float box[4][4])
     ret |= gui_input_int("z", &z, 0, 0);
     gui_group_end();
     gui_group_begin("Size");
-    ret |= gui_input_int("w", &w, 1, 2048);
-    ret |= gui_input_int("h", &h, 1, 2048);
-    ret |= gui_input_int("d", &d, 1, 2048);
+    ret |= gui_input_int("w", &w, 0, 0);
+    ret |= gui_input_int("h", &h, 0, 0);
+    ret |= gui_input_int("d", &d, 0, 0);
+    w = max(1, w);
+    h = max(1, h);
+    d = max(1, d);
     gui_group_end();
 
     if (ret) {
@@ -939,46 +909,52 @@ bool gui_action_button(int id, const char *label, float size)
         action_exec(action_get(id, true));
     }
     PopID();
+    if (gui->is_row) ImGui::SameLine();
     return ret;
 }
 
 static bool _selectable(const char *label, bool *v, const char *tooltip,
-                        float w, int icon, int group)
+                        float w, int icon)
 {
-    const theme_t *theme = theme_get();
     ImGuiWindow* window = GetCurrentWindow();
     ImVec2 size;
     ImVec2 center;
     bool ret = false;
     bool default_v = false;
     ImVec2 uv0, uv1; // The position in the icon texture.
-    uint8_t color[4];
+
+    if (gui->item_size) w = gui->item_size;
 
     v = v ? v : &default_v;
     size = (icon != -1) ?
-        ImVec2(theme->sizes.icons_height, theme->sizes.icons_height) :
-        ImVec2(w, theme->sizes.item_height);
+        ImVec2(ICON_HEIGHT, ICON_HEIGHT) :
+        ImVec2(w, ITEM_HEIGHT);
 
     if (!tooltip) {
         tooltip = label;
         while (*tooltip == '#') tooltip++;
     }
     ImGui::PushID(label);
-
-    theme_get_color(group, THEME_COLOR_INNER, *v, color);
-    if (!*v && group == THEME_GROUP_TAB) color[3] = 0;
-    PushStyleColor(ImGuiCol_Button, color);
-    theme_get_color(group, THEME_COLOR_INNER, *v, color);
-    PushStyleColor(ImGuiCol_ButtonHovered, color_lighten(color, 1.2));
-    theme_get_color(group, THEME_COLOR_TEXT, *v, color);
-    PushStyleColor(ImGuiCol_Text, color);
+    if (icon == -1) {
+        ImGui::PushStyleColor(ImGuiCol_Button, COLOR(SELECTABLE, INNER, (*v)));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                color_lighten(COLOR(SELECTABLE, INNER, true)));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                color_lighten2(COLOR(SELECTABLE, INNER, true)));
+    } else {
+        ImGui::PushStyleColor(ImGuiCol_Button, COLOR(ICON, INNER, (*v)));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
+                color_lighten(COLOR(ICON, INNER, true)));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive,
+                color_lighten2(COLOR(ICON, INNER, true)));
+    }
 
     if (icon != -1) {
         ret = ImGui::Button("", size);
         if (icon) {
             center = (ImGui::GetItemRectMin() + ImGui::GetItemRectMax()) / 2;
             center.y += 0.5;
-            uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
+            uv0 = get_icon_uv(icon);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
             window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
                                        center - ImVec2(16, 16),
@@ -995,6 +971,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
         goxel_set_help_text(tooltip);
     }
     ImGui::PopID();
+    if (gui->is_row) ImGui::SameLine();
 
     if (ret) on_click();
     return ret;
@@ -1002,7 +979,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
 
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
 {
-    return _selectable(name, v, tooltip, w, -1, THEME_GROUP_WIDGET);
+    return _selectable(name, v, tooltip, w, -1);
 }
 
 bool gui_selectable_toggle(const char *name, int *v, int set_v,
@@ -1018,12 +995,7 @@ bool gui_selectable_toggle(const char *name, int *v, int set_v,
 
 bool gui_selectable_icon(const char *name, bool *v, int icon)
 {
-    return _selectable(name, v, NULL, 0, icon, THEME_GROUP_WIDGET);
-}
-
-float gui_get_avail_width(void)
-{
-    return ImGui::GetContentRegionAvail().x;
+    return _selectable(name, v, NULL, 0, icon);
 }
 
 void gui_text(const char *label, ...)
@@ -1044,11 +1016,6 @@ void gui_text_wrapped(const char *label, ...)
     ImGui::PopTextWrapPos();
 }
 
-void gui_same_line(void)
-{
-    SameLine();
-}
-
 void gui_dummy(int w, int h)
 {
     ImGui::Dummy(ImVec2(w, h));
@@ -1060,35 +1027,82 @@ void gui_spacing(int w)
     ImGui::SameLine();
 }
 
+static bool color_picker(const char *label, uint8_t color[4])
+{
+    float colorf[4] = {color[0] / 255.,
+                       color[1] / 255.,
+                       color[2] / 255.,
+                       color[3] / 255.};
+    static uint8_t backup_color[4];
+    bool ret;
+
+    if (ImGui::IsWindowAppearing())
+        memcpy(backup_color, color, sizeof(backup_color));
+    ret = ImGui::ColorPicker4(label, colorf,
+            ImGuiColorEditFlags_NoSidePreview |
+            ImGuiColorEditFlags_NoSmallPreview);
+    if (ret) {
+        color[0] = colorf[0] * 255;
+        color[1] = colorf[1] * 255;
+        color[2] = colorf[2] * 255;
+        color[3] = colorf[3] * 255;
+    }
+    ImGui::SameLine();
+    ImGui::BeginGroup();
+    ImGui::Text("Current");
+    ImGui::ColorButton("##current", color,
+            ImGuiColorEditFlags_NoPicker, ImVec2(60, 40));
+    ImGui::Text("Original");
+    if (ImGui::ColorButton("##previous", backup_color,
+                ImGuiColorEditFlags_NoPicker, ImVec2(60, 40))) {
+        memcpy(color, backup_color, sizeof(backup_color));
+        ret = true;
+    }
+
+    ImGui::EndGroup();
+    return ret;
+}
+
 bool gui_color(const char *label, uint8_t color[4])
 {
-    static uint8_t backup_color[4];
-    ImVec2 size;
-    const theme_t *theme = theme_get();
+    bool ret = false;
+    ImVec2 size(ICON_HEIGHT, ICON_HEIGHT);
 
-    size.x = size.y = theme->sizes.icons_height;
     ImGui::PushID(label);
-    if (ImGui::ColorButton(label, color, 0, size))
-        memcpy(backup_color, color, 4);
-    if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-        gui->capture_mouse = true;
-        color_edit("##edit", color, backup_color);
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-            gui->capture_mouse = false;
+    if (ImGui::ColorButton(label, color, 0, size)) {
+        ImGui::OpenPopup("GoxelPicker");
+    }
+
+    if (ImGui::BeginPopupContextItem("GoxelPicker")) {
+        if (color_picker(label, color)) {
+            ret = true;
         }
         ImGui::EndPopup();
     }
-    if (label && label[0] != '#') {
-        gui_same_line();
-        ImGui::Text("%s", label);
-    }
+
     ImGui::PopID();
-    return false;
+    return ret;
 }
 
 bool gui_color_small(const char *label, uint8_t color[4])
 {
+    bool ret;
+    float colorf[4] = {color[0] / 255.,
+                       color[1] / 255.,
+                       color[2] / 255.,
+                       color[3] / 255.};
+    ImGui::PushID(label);
+    label_aligned(label, LABEL_SIZE);
+    ret = ImGui::ColorEdit4("", colorf, ImGuiColorEditFlags_NoInputs);
+    ImGui::PopID();
+    if (ret) {
+        color[0] = colorf[0] * 255;
+        color[1] = colorf[1] * 255;
+        color[2] = colorf[2] * 255;
+        color[3] = colorf[3] * 255;
+    }
+    return ret;
+    /*
     uint8_t orig[4];
     memcpy(orig, color, 4);
     ImVec4 c = color;
@@ -1107,6 +1121,7 @@ bool gui_color_small(const char *label, uint8_t color[4])
     ImGui::Text("%s", label);
     ImGui::PopID();
     return memcmp(color, orig, 4) != 0;
+    */
 }
 
 bool gui_color_small_f3(const char *label, float color[3])
@@ -1123,21 +1138,13 @@ bool gui_color_small_f3(const char *label, float color[3])
 bool gui_checkbox(const char *label, bool *v, const char *hint)
 {
     bool ret;
-    const theme_t *theme = theme_get();
-    ImGuiContext& g = *GImGui;
-    const ImGuiStyle& style = g.Style;
-    // Checkbox inside a group box have a plain background.
-    if (gui->group) {
-        GoxBox2(ImGui::GetCursorScreenPos(),
-                ImVec2(0, theme->sizes.item_height),
-                COLOR(WIDGET, INNER, 0), true, 0);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg,
-                color_lighten(style.Colors[ImGuiCol_FrameBg], 1.2));
-    }
-    ret = Checkbox(label, v);
-    if (gui->group) ImGui::PopStyleColor();
+    label_aligned("", LABEL_SIZE);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, COLOR(CHECKBOX, INNER, false));
+    ImGui::PushStyleColor(ImGuiCol_CheckMark, COLOR(CHECKBOX, ITEM, false));
+    ret = ImGui::Checkbox(label, v);
     if (hint && ImGui::IsItemHovered()) gui_tooltip(hint);
     if (ret) on_click();
+    ImGui::PopStyleColor(2);
     return ret;
 }
 
@@ -1160,26 +1167,30 @@ bool gui_button(const char *label, float size, int icon)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImVec2 uv0, uv1;
     ImVec2 button_size;
-    const theme_t *theme = theme_get();
+    ImGuiStyle& style = ImGui::GetStyle();
     ImVec2 center;
     int w, isize;
 
-    button_size = ImVec2(size * GetContentRegionAvail().x,
-                         theme->sizes.item_height);
+    button_size = ImVec2(size * GetContentRegionAvail().x, ITEM_HEIGHT);
     if (size == -1) button_size.x = GetContentRegionAvail().x;
     if (size == 0 && (label == NULL || label[0] == '#')) {
-        button_size.x = theme->sizes.icons_height;
-        button_size.y = theme->sizes.icons_height;
+        button_size.x = ICON_HEIGHT;
+        button_size.y = ICON_HEIGHT;
     }
     if (size == 0 && label && label[0] != '#') {
-        w = CalcTextSize(label, NULL, true).x +
-            theme->sizes.item_padding_h * 2;
-        if (w < theme->sizes.item_height)
-            button_size.x = theme->sizes.item_height;
+        w = CalcTextSize(label, NULL, true).x + style.FramePadding.x * 2;
+        if (w < ITEM_HEIGHT)
+            button_size.x = ITEM_HEIGHT;
     }
-    isize = (label && label[0] != '#' && label) ? 12 : 16;
-    label = label ?: "";
-    ret = Button(label, button_size);
+
+    if (gui->item_size) button_size.x = gui->item_size;
+
+    isize = (label && label[0] != '#') ? 12 : 16;
+    ImGui::PushStyleColor(ImGuiCol_Button,
+            (label && (label[0] != '#')) ?
+            COLOR(BUTTON, INNER, false) : COLOR(ICON, INNER, false));
+    ret = ImGui::Button(label ?: "", button_size);
+    ImGui::PopStyleColor();
     if (icon) {
         center = GetItemRectMin() + ImVec2(GetItemRectSize().y / 2,
                                            GetItemRectSize().y / 2);
@@ -1191,19 +1202,20 @@ bool gui_button(const char *label, float size, int icon)
                             uv0, uv1, get_icon_color(icon, 0));
     }
     if (ret) on_click();
+    if (gui->is_row) ImGui::SameLine();
     return ret;
 }
 
 bool gui_button_right(const char *label, int icon)
 {
-    const theme_t *theme = theme_get();
+    const ImGuiStyle& style = ImGui::GetStyle();
     float text_size = ImGui::CalcTextSize(label).x;
-    float w = text_size + 2 * theme->sizes.item_padding_h;
-    w = max(w, theme->sizes.item_height);
-    w += theme->sizes.item_padding_h;
-    gui_same_line();
+    float w = text_size + 2 * style.FramePadding.x;
+    w = max(w, ITEM_HEIGHT);
+    w += style.FramePadding.x;
+    ImGui::SameLine();
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
-    gui_same_line();
+    ImGui::SameLine();
     return gui_button(label, 0, icon);
 }
 
@@ -1229,17 +1241,13 @@ bool gui_input_text_multiline(const char *label, char *buf, int size,
 
 bool gui_combo(const char *label, int *v, const char **names, int nb)
 {
-    const theme_t *theme = theme_get();
     bool ret;
-    float font_size = ImGui::GetFontSize();
-
     ImGui::PushItemWidth(-1);
-    PushStyleVar(ImGuiStyleVar_ItemSpacing,
-                 ImVec2(0, (theme->sizes.item_height - font_size) / 2));
-    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WIDGET, INNER, 0));
-    ret = Combo(label, v, names, nb);
-    PopStyleVar();
-    PopStyleColor();
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, COLOR(COMBO, INNER, 0));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(COMBO, BACKGROUND, 0));
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(COMBO, ITEM, 0));
+    ret = ImGui::Combo(label, v, names, nb);
+    ImGui::PopStyleColor(3);
     ImGui::PopItemWidth();
     return ret;
 }
@@ -1247,19 +1255,16 @@ bool gui_combo(const char *label, int *v, const char **names, int nb)
 bool gui_combo_begin(const char *label, const char *preview)
 {
     bool ret;
-    const theme_t *theme = theme_get();
-    float font_size = ImGui::GetFontSize();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
-                        ImVec2(0, (theme->sizes.item_height - font_size) / 2));
-    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WIDGET, INNER, 0));
     ImGui::PushItemWidth(-1);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, COLOR(COMBO, INNER, 0));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(COMBO, BACKGROUND, 0));
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(COMBO, ITEM, 0));
     ret = ImGui::BeginCombo(label, preview);
 
     if (!ret) {
         ImGui::PopItemWidth();
-        ImGui::PopStyleColor();
-        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(3);
     }
     return ret;
 }
@@ -1267,9 +1272,8 @@ bool gui_combo_begin(const char *label, const char *preview)
 void gui_combo_end(void)
 {
     ImGui::EndCombo();
+    ImGui::PopStyleColor(3);
     ImGui::PopItemWidth();
-    ImGui::PopStyleColor();
-    ImGui::PopStyleVar();
 }
 
 bool gui_combo_item(const char *label, bool is_selected)
@@ -1352,12 +1356,17 @@ void gui_on_popup_closed(void (*func)(int))
     gui->popup[gui->popup_count - 1].on_closed = func;
 }
 
-void gui_popup_body_begin(void) {
-    ImGui::BeginChild("body", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
+void gui_popup_bottom_begin(void)
+{
+    float w = ImGui::GetContentRegionAvail().y -
+              ImGui::GetFrameHeightWithSpacing();
+    ImGui::Dummy(ImVec2(0, w));
+    gui_row_begin(0);
 }
 
-void gui_popup_body_end(void) {
-    ImGui::EndChild();
+void gui_popup_bottom_end(void)
+{
+    gui_row_end();
 }
 
 void gui_alert(const char *title, const char *msg)
@@ -1397,35 +1406,6 @@ void gui_pop_id(void)
     ImGui::PopID();
 }
 
-void gui_floating_icon(int icon)
-{
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 uv0, uv1, pos;
-    uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
-    uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
-    pos = GetItemRectMin();
-    draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
-            pos, pos + ImVec2(32, 32),
-            uv0, uv1, get_icon_color(icon, 0));
-}
-
-void gui_bottom_text(const char *txt)
-{
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 pos, size, text_size;
-    float wrap;
-
-    pos = GetItemRectMin();
-    size = GetItemRectSize();
-    wrap = size.x - 8;
-    text_size = CalcTextSize(txt, NULL, false, wrap);
-
-    draw_list->AddText(ImGui::GetFont(), ImGui::GetFontSize(),
-                       ImVec2(pos.x + 4, pos.y + size.y - text_size.y - 4),
-                       ImGui::GetColorU32(COLOR(WIDGET, TEXT, false)),
-                       txt, NULL, wrap);
-}
-
 void gui_request_panel_width(float width)
 {
     goxel.gui.panel_width = width;
@@ -1434,7 +1414,6 @@ void gui_request_panel_width(float width)
 bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
                     char *name, int len)
 {
-    const theme_t *theme = theme_get();
     bool ret = false;
     bool edit_ = *edit;
     static char *edit_name = NULL;
@@ -1443,35 +1422,35 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
     ImVec2 center;
     ImVec2 uv0, uv1;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImGuiStyle& style = ImGui::GetStyle();
 
     ImGui::PushID(i);
     ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *edit));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            color_lighten(COLOR(WIDGET, INNER, *edit), 1.2));
+            color_lighten(COLOR(WIDGET, INNER, *edit)));
     if (visible) {
         if (gui_selectable_icon("##visible", &edit_,
                 *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
             *visible = !*visible;
             ret = true;
         }
-        gui_same_line();
+        ImGui::SameLine();
     }
 
     if (edit_name != name) {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
         if (icon != -1) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                    ImVec2(theme->sizes.icons_height / 1.5, 0));
+                    ImVec2(ICON_HEIGHT / 1.5, 0));
         }
-        if (ImGui::Button(name, ImVec2(-1, theme->sizes.icons_height))) {
+        if (ImGui::Button(name, ImVec2(-1, ICON_HEIGHT))) {
             *edit = true;
             ret = true;
         }
         if (icon != -1) ImGui::PopStyleVar();
         if (icon > 0) {
             center = ImGui::GetItemRectMin() +
-                ImVec2(theme->sizes.icons_height / 2 / 1.5,
-                       theme->sizes.icons_height / 2);
+                ImVec2(ICON_HEIGHT / 2 / 1.5, ICON_HEIGHT / 2);
             uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
             uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
             draw_list->AddImage(
@@ -1488,8 +1467,8 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
     } else {
         if (start_edit) ImGui::SetKeyboardFocusHere();
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                            ImVec2(theme->sizes.item_padding_h,
-                            (theme->sizes.icons_height - font_size) / 2));
+                            ImVec2(style.FramePadding.x,
+                            (ICON_HEIGHT - font_size) / 2));
         ImGui::InputText("##name_edit", name, len,
                          ImGuiInputTextFlags_AutoSelectAll);
         if (!start_edit && !ImGui::IsItemActive()) edit_name = NULL;
@@ -1503,47 +1482,42 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
 
 bool gui_is_key_down(int key)
 {
-    return ImGui::IsKeyDown(key);
+    return ImGui::IsKeyDown((ImGuiKey)key);
 }
 
-bool gui_palette_entry(const uint8_t color[4], uint8_t target[4],
-                       const char *name)
+bool gui_menu_bar_begin(void)
 {
     bool ret;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    const theme_t *theme = theme_get();
+    ImGui::PushStyleColor(ImGuiCol_MenuBarBg, COLOR(MENU, BACKGROUND, false));
+    ImGui::PushStyleColor(ImGuiCol_Header,
+            color_lighten(COLOR(MENU, BACKGROUND, false)));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
+            color_lighten(COLOR(MENU, BACKGROUND, false)));
+    ImGui::PushStyleColor(ImGuiCol_Text, COLOR(MENU, TEXT, false));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(MENU, BACKGROUND, false));
 
-    ImGui::PushStyleColor(ImGuiCol_Button, color);
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, color);
-    ret = ImGui::Button("", ImVec2(theme->sizes.item_height,
-                                   theme->sizes.item_height));
-    if (memcmp(color, target, 4) == 0) {
-        draw_list->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                           0xFFFFFFFF, 0, 0, 1);
+    ret = ImGui::BeginMainMenuBar();
+    if (!ret) {
+        ImGui::PopStyleColor(5);
     }
-    ImGui::PopStyleColor(2);
-    if (ret) {
-        on_click();
-        memcpy(target, color, 4);
-    }
-
-    if (name && ImGui::IsItemHovered()) {
-        gui_tooltip(name);
-    }
-
     return ret;
 }
 
-bool gui_menu_begin(const char *label)
+void gui_menu_bar_end(void)
 {
-    bool ret = ImGui::BeginMenu(label);
-    if (ret) gui->capture_mouse = true;
-    return ret;
+    ImGui::PopStyleColor(5);
+    ImGui::EndMainMenuBar();
+}
+
+
+bool gui_menu_begin(const char *label, bool enabled)
+{
+    return ImGui::BeginMenu(label, enabled);
 }
 
 void gui_menu_end(void)
 {
-    return ImGui::EndMenu();
+    ImGui::EndMenu();
 }
 
 bool gui_menu_item(int action, const char *label, bool enabled)
@@ -1560,195 +1534,133 @@ bool gui_menu_item(int action, const char *label, bool enabled)
     return false;
 }
 
-void gui_scrollable_begin(int width)
-{
-    ImGuiWindowFlags flags = 0;
-
-    if (!GUI_HAS_SCROLLBARS) {
-        if (gui->is_scrolling && !ImGui::IsAnyMouseDown())
-            gui->is_scrolling = false;
-        flags |= ImGuiWindowFlags_NoScrollbar;
-        if (gui->is_scrolling) flags |= ImGuiWindowFlags_NoInputs;
-    }
-
-    ImGui::BeginChild("#scroll", ImVec2(width, 0), true, flags);
-    ImGui::BeginGroup();
-}
-
-void gui_scrollable_end(void)
-{
-    // XXX: make this attribute of the item instead, so that we can use
-    // several scrollable widgets.
-    static float scroll_y = 0;
-    static float x, y;
-    static float last_y;
-    static float speed = 0;
-    static int state; // 0: possible, 1: scrolling, 2: cancel.
-
-    ImGui::EndGroup();
-
-    if (!GUI_HAS_SCROLLBARS) {
-        if (ImGui::IsItemClicked()) {
-            state = 0;
-            speed = 0;
-            y = ImGui::GetMousePos().y;
-            x = ImGui::GetMousePos().x;
-            last_y = y;
-            scroll_y = ImGui::GetScrollY();
-        }
-
-        if (ImGui::IsItemHovered()) {
-            if (state == 0 && fabs(x - ImGui::GetMousePos().x) > 8)
-                state = 2;
-            if (state == 0 && fabs(y - ImGui::GetMousePos().y) > 8) {
-                state = 1;
-                gui->is_scrolling = true;
-            }
-            if (state == 1) {
-                speed = mix(speed, last_y - ImGui::GetMousePos().y, 0.5);
-                last_y = ImGui::GetMousePos().y;
-                ImGui::ClearActiveID();
-                ImGui::SetScrollY(scroll_y + y - ImGui::GetMousePos().y);
-            }
-        } else if (speed) {
-            ImGui::SetScrollY(ImGui::GetScrollY() + speed);
-            speed *= 0.95;
-            if (fabs(speed) < 1) speed = 0;
-        }
-    }
-    ImGui::EndChild();
-}
-
 void gui_tooltip(const char *str)
 {
     if (gui->is_scrolling) return;
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(TOOLTIP, BACKGROUND, 0));
     ImGui::SetTooltip("%s", str);
-}
-
-#if !DEFINED(GOXEL_MOBILE)
-bool gui_need_full_version(void)
-{
-    return true;
-}
-#endif
-
-void gui_choice_begin(const char *label, int *value, bool small)
-{
-    ImGuiStorage* storage = ImGui::GetStateStorage();
-    gui_group_begin(NULL);
-    storage->SetVoidPtr(ImGui::GetID("choices#value"), value);
-    storage->SetBool(ImGui::GetID("choices#small"), small);
-}
-
-bool gui_choice(const char *label, int idx, int icon)
-{
-    ImGuiStorage* storage = ImGui::GetStateStorage();
-    int *value;
-    bool selected, small;
-
-    small = storage->GetBool(ImGui::GetID("choices#small"));
-    value = (int*)storage->GetVoidPtr(ImGui::GetID("choices#value"));
-    assert(value);
-
-    if (storage->GetBool(ImGui::GetID("choices#change"))) {
-        storage->SetBool(ImGui::GetID("choices#change"), false);
-        *value = idx;
-    }
-
-    selected = (*value == idx);
-
-    if (!small) {
-        if (gui_selectable_icon(label, &selected, icon) && selected) {
-            *value = idx;
-            return true;
-        }
-        gui_same_line();
-    } else {
-        if (!selected) return false;
-        selected = false;
-        if (gui_selectable_icon(label, &selected, icon)) {
-            storage->SetBool(ImGui::GetID("choices#change"), true);
-        }
-    }
-
-    return false;
-}
-
-void gui_choice_end(void)
-{
-    gui_group_end();
-}
-
-static void gui_canvas_(const ImDrawList* parent_list, const ImDrawCmd* cmd)
-{
-    float scale = ImGui::GetIO().DisplayFramebufferScale.y;
-    view_t *view = (view_t*)cmd->UserCallbackData;
-    const float width = ImGui::GetIO().DisplaySize.x;
-    const float height = ImGui::GetIO().DisplaySize.y;
-    view->render(view->user, view->rect);
-    GL(glViewport(0, 0, width * scale, height * scale));
-}
-
-void gui_canvas(float w, float h,
-                inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
-                void *user,
-                void (*render)(void *user, const float viewport[4]))
-{
-    int i;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 canvas_pos = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_size = ImGui::GetContentRegionAvail();
-    ImGuiIO& io = ImGui::GetIO();
-    bool hovered;
-
-    if (h < 0) canvas_size.y += h;
-    vec4_set(gui->view.rect,
-             canvas_pos.x,
-             goxel.screen_size[1] - (canvas_pos.y + canvas_size.y),
-             canvas_size.x, canvas_size.y);
-    gui->view.user = user;
-    gui->view.render = render;
-    draw_list->AddCallback(gui_canvas_, &gui->view);
-    ImGui::InvisibleButton("canvas", canvas_size);
-    hovered = ImGui::IsItemHovered();
-
-    if (    gui->inputs &&
-            (hovered || !gui->inputs->mouse_wheel) &&
-            !gui->capture_mouse) {
-        *has_mouse = true;
-        *inputs = *gui->inputs;
-        for (i = 0; i < (int)ARRAY_SIZE(inputs->touches); i++) {
-            inputs->touches[i].pos[1] =
-                io.DisplaySize.y - inputs->touches[i].pos[1];
-        }
-    } else {
-        *has_mouse = false;
-        memset(inputs, 0, sizeof(*inputs));
-    }
-    *has_keyboard = !io.WantCaptureKeyboard;
+    ImGui::PopStyleColor();
 }
 
 bool gui_tab(const char *label, int icon, bool *v)
 {
-    return _selectable(label, v, NULL, 0, icon, THEME_GROUP_TAB);
+    return _selectable(label, v, NULL, 0, icon);
+}
+
+static bool panel_header_close_button(void)
+{
+    float w;
+    ImVec2 uv0, uv1;
+    ImVec2 center;
+    const ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    bool ret;
+
+    w = ITEM_HEIGHT + style.FramePadding.x;
+    ImGui::SameLine();
+    ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+    ret = ImGui::Button("", ImVec2(ITEM_HEIGHT, ITEM_HEIGHT));
+    ImGui::PopStyleColor();
+
+    center = GetItemRectMin() + ImVec2(GetItemRectSize().y / 2,
+                                       GetItemRectSize().y / 2);
+    uv0 = get_icon_uv(ICON_CLOSE);
+    uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
+    draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
+                            center - ImVec2(12, 12),
+                            center + ImVec2(12, 12),
+                            uv0, uv1, get_icon_color(ICON_CLOSE, 0));
+    return ret;
 }
 
 bool gui_panel_header(const char *label)
 {
-    const theme_t *theme = theme_get();
     bool ret;
     float label_w = ImGui::CalcTextSize(label).x;
-    float w = ImGui::GetContentRegionAvail().x - theme->sizes.item_height;
-    gui_push_id("panel_header");
+    float w = ImGui::GetContentRegionAvail().x - ITEM_HEIGHT;
+
+    ImGui::PushID("panel_header");
     ImGui::Dummy(ImVec2((w - label_w) / 2, 0));
-    gui_same_line();
+    ImGui::SameLine();
     ImGui::AlignTextToFramePadding();
     gui_text(label);
-    ret = gui_button_right("", ICON_CLOSE);
-    ImGui::Separator();
-    gui_pop_id();
+    ret = panel_header_close_button();
+    ImGui::PopID();
     return ret;
 }
 
 
+}
+
+bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
+{
+    const gui_icon_info_t *icon;
+    char label[128];
+    bool v;
+    bool ret = false;
+    int i;
+    float last_button_x;
+    float next_button_x;
+    float max_x;
+    const ImGuiStyle &style = ImGui::GetStyle();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    bool clicked;
+    float size;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
+
+    max_x = ImGui::GetWindowPos().x + ImGui::GetContentRegionAvail().x;
+    max_x += 16; // ?
+
+    for (i = 0; i < nb; i++) {
+        icon = &icons[i];
+        ImGui::PushID(i);
+        if (icon->sublabel) {
+            snprintf(label, sizeof(label), "%s (%s)",
+                     icon->label, icon->sublabel);
+        } else {
+            snprintf(label, sizeof(label), "%s", icon->label);
+        }
+        v = (i == *current);
+        if (icon->icon) {
+            size = ICON_HEIGHT;
+            clicked = gui_selectable_icon(label, &v, icon->icon);
+        } else { // Color icon.
+            size = ITEM_HEIGHT;
+            ImGui::PushStyleColor(ImGuiCol_Button, icon->color);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, icon->color);
+            clicked = ImGui::Button("", ImVec2(ITEM_HEIGHT, ITEM_HEIGHT));
+            ImGui::PopStyleColor(2);
+            if (icon->label && ImGui::IsItemHovered())
+                gui_tooltip(icon->label);
+            if (v) {
+                draw_list->AddRect(
+                        ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+                        0xFFFFFFFF, 0, 0, 1);
+            }
+        }
+        if (clicked) {
+            ret = true;
+            *current = i;
+        }
+        last_button_x = ImGui::GetItemRectMax().x;
+        next_button_x = last_button_x + style.ItemSpacing.x + size;
+        if (i + 1 < nb && next_button_x < max_x)
+            ImGui::SameLine();
+
+        ImGui::PopID();
+
+    }
+    ImGui::PopStyleVar(1);
+
+    return ret;
+}
+
+bool gui_want_capture_mouse(void)
+{
+    gui_init();
+    ImGuiIO& io = ImGui::GetIO();
+    return io.WantCaptureMouse;
 }

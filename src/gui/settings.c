@@ -41,68 +41,42 @@ int gui_settings_popup(void *data)
     theme_t *theme;
     int i, nb, current;
     theme_t *themes = theme_get_list();
+    int ret = 0;
 
-    gui_popup_body_begin();
-
-    DL_COUNT(themes, theme, nb);
-    names = (const char**)calloc(nb, sizeof(*names));
-    i = 0;
-    DL_FOREACH(themes, theme) {
-        if (strcmp(theme->name, theme_get()->name) == 0) current = i;
-        names[i++] = theme->name;
-    }
-
-    gui_text("theme");
-    if (gui_combo("##themes", &current, names, nb)) {
-        theme_set(names[current]);
-    }
-
-    free(names);
-
-    // For the moment I disable the theme editor!
-#if 0
-    int group;
-    uint8_t *color;
-    theme = theme_get();
-
-    gui_group_begin("Sizes");
-    #define X(a) gui_input_int(#a, &theme->sizes.a, 0, 1000);
-    THEME_SIZES(X)
-    #undef X
-    gui_group_end();
-
-    for (group = 0; group < THEME_GROUP_COUNT; group++) {
-        if (gui_collapsing_header(THEME_GROUP_INFOS[group].name)) {
-            for (i = 0; i < THEME_COLOR_COUNT; i++) {
-                if (!THEME_GROUP_INFOS[group].colors[i]) continue;
-                color = theme->groups[group].colors[i];
-                gui_color(THEME_COLOR_INFOS[i].name, color);
-            }
+    if (gui_section_begin("Theme", GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        DL_COUNT(themes, theme, nb);
+        names = (const char**)calloc(nb, sizeof(*names));
+        i = 0;
+        DL_FOREACH(themes, theme) {
+            if (strcmp(theme->name, theme_get()->name) == 0) current = i;
+            names[i++] = theme->name;
         }
-    }
+        if (gui_combo("##themes", &current, names, nb)) {
+            theme_set(names[current]);
+        }
+        free(names);
+    } gui_section_end();
 
-    if (gui_button("Revert", 0, 0)) theme_revert_default();
-    gui_same_line();
-    if (gui_button("Save", 0, 0)) theme_save();
-#endif
-    if (gui_collapsing_header("Paths", false)) {
+
+    if (gui_section_begin("Paths", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_text("Palettes: %s/palettes", sys_get_user_dir());
         gui_text("Progs: %s/progs", sys_get_user_dir());
-    }
+    } gui_section_end();
 
-    if (gui_collapsing_header("Shortcuts", false)) {
+    if (gui_section_begin("Shortcuts", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_columns(2);
         gui_separator();
         actions_iter(shortcut_callback, NULL);
         gui_separator();
         gui_columns(1);
-    }
+    } gui_section_end();
 
-    gui_popup_body_end();
+    gui_popup_bottom_begin();
     if (gui_button("Save", 0, 0))
         settings_save();
-    gui_same_line();
-    return gui_button("OK", 0, 0);
+    ret = gui_button("OK", 0, 0);
+    gui_popup_bottom_end();
+    return ret;
 }
 
 static int settings_ini_handler(void *user, const char *section,

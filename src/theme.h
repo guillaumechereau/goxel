@@ -50,9 +50,26 @@
  */
 enum {
     THEME_GROUP_BASE,
+    THEME_GROUP_WINDOW,
+    THEME_GROUP_SECTION,
+
     THEME_GROUP_WIDGET,
+    THEME_GROUP_NUMBER_INPUT,
+    THEME_GROUP_CHECKBOX,
+    THEME_GROUP_SELECTABLE,
+    THEME_GROUP_BUTTON,
+    THEME_GROUP_COMBO,
+
+    THEME_GROUP_ICON,
+    THEME_GROUP_ICON_EDIT,
+    THEME_GROUP_ICON_VIEW,
+    THEME_GROUP_ICON_RENDER,
+    THEME_GROUP_ICON_OTHER,
+
     THEME_GROUP_TAB,
     THEME_GROUP_MENU,
+    THEME_GROUP_TOOLTIP,
+
     THEME_GROUP_COUNT
 };
 
@@ -62,9 +79,10 @@ enum {
  */
 enum {
     THEME_COLOR_BACKGROUND,
-    THEME_COLOR_OUTLINE,
+    THEME_COLOR_ITEM,
     THEME_COLOR_INNER,
-    THEME_COLOR_INNER_SELECTED,
+    THEME_COLOR_SELECTED,
+    THEME_COLOR_OUTLINE,
     THEME_COLOR_TEXT,
     THEME_COLOR_TEXT_SELECTED,
     THEME_COLOR_COUNT
@@ -108,35 +126,15 @@ extern theme_color_info_t THEME_COLOR_INFOS[THEME_COLOR_COUNT];
  * Contains all the colors set for a given group.
  */
 typedef struct {
+    bool    colors_set[THEME_COLOR_COUNT];
     uint8_t colors[THEME_COLOR_COUNT][4];
 } theme_group_t;
-
-/*
- * Macro: THEME_SIZES
- * X macro to list all the themes size attributes.
- */
-#define THEME_SIZES(X) \
-    X(item_height) \
-    X(icons_height) \
-    X(item_padding_h) \
-    X(item_rounding) \
-    X(item_spacing_h) \
-    X(item_spacing_v) \
-    X(item_inner_spacing_h)
 
 
 typedef struct theme theme_t;
 struct theme {
     char name[64];
-
-    struct {
-        #define X(attr) int attr;
-        THEME_SIZES(X)
-        #undef X
-    } sizes;
-
     theme_group_t groups[THEME_GROUP_COUNT];
-
     theme_t *prev, *next; // Global list of themes.
 };
 

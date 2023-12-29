@@ -25,8 +25,6 @@ void gui_render_panel(void)
     pathtracer_t *pt = &goxel.pathtracer;
     material_t *material;
 
-    goxel.no_edit |= pt->status;
-
     GL(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxsize));
     maxsize /= 2; // Because png export already double it.
     goxel.show_export_viewport = true;
@@ -64,8 +62,7 @@ void gui_render_panel(void)
                  pt->samples * 100 / pt->num_samples);
     }
     if (    pt->status == PT_FINISHED &&
-            gui_button("Save to album", -1, 0) &&
-            gui_need_full_version())
+            gui_button("Save to album", -1, 0))
     {
         action_exec2(ACTION_export_render_buf_to_photos);
     }

@@ -18,16 +18,12 @@
 
 #include "goxel.h"
 
-#ifndef GUI_PALETTE_COLUMNS_NB
-#   define GUI_PALETTE_COLUMNS_NB 8
-#endif
-
 void gui_palette_panel(void)
 {
-    palette_t *p;
-    int i, current, nb = 0, nb_col = GUI_PALETTE_COLUMNS_NB;
+    int nb, i, current = -1;
+    const palette_t *p;
     const char **names;
-    char id[128];
+    gui_icon_info_t *grid;
 
     DL_COUNT(goxel.palettes, p, nb);
     names = (const char**)calloc(nb, sizeof(*names));
@@ -44,14 +40,18 @@ void gui_palette_panel(void)
     free(names);
 
     p = goxel.palette;
-
+    grid = calloc(p->size, sizeof(*grid));
     for (i = 0; i < p->size; i++) {
-        snprintf(id, sizeof(id), "%d", i);
-        gui_push_id(id);
-        gui_palette_entry(p->entries[i].color, goxel.painter.color,
-                          p->entries[i].name);
-        if ((i + 1) % nb_col && i != p->size - 1) gui_same_line();
-        gui_pop_id();
+        grid[i] = (gui_icon_info_t) {
+            .label = p->entries[i].name,
+            .icon = 0,
+            .color = {VEC4_SPLIT(p->entries[i].color)},
+        };
+        if (memcmp(goxel.painter.color, p->entries[i].color, 4) == 0)
+            current = i;
     }
+    if (gui_icons_grid(p->size, grid, &current)) {
+        memcpy(goxel.painter.color, p->entries[current].color, 4);
+    }
+    free(grid);
 }
-

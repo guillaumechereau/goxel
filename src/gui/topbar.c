@@ -38,6 +38,7 @@ static int gui_mode_select(void)
     };
     // XXX: almost the same as in tools_panel.
     gui_group_begin(NULL);
+    gui_row_begin(0);
     for (i = 0; i < ARRAY_SIZE(values); i++) {
         v = goxel.painter.mode == values[i].mode;
         action = action_get(values[i].action, true);
@@ -45,23 +46,27 @@ static int gui_mode_select(void)
         if (gui_selectable_icon(label, &v, values[i].icon)) {
             action_exec(action);
         }
-        gui_same_line();
     }
+    gui_row_end();
     gui_group_end();
     return 0;
 }
 
 void gui_top_bar(void)
 {
-    gui_action_button(ACTION_undo, NULL, 0);
-    gui_same_line();
-    gui_action_button(ACTION_redo, NULL, 0);
-    gui_same_line();
-    gui_action_button(ACTION_layer_clear, NULL, 0);
-    gui_same_line();
-    gui_mode_select();
-    gui_same_line();
-    gui_color("##color", goxel.painter.color);
+    gui_row_begin(0); {
+        gui_group_begin(NULL); {
+            gui_row_begin(0); {
+                gui_action_button(ACTION_undo, NULL, 0);
+                gui_action_button(ACTION_redo, NULL, 0);
+            } gui_row_end();
+        } gui_group_end();
+        gui_row_begin(0); {
+            gui_action_button(ACTION_layer_clear, NULL, 0);
+            gui_mode_select();
+            gui_color("##color", goxel.painter.color);
+        } gui_row_end();
+    } gui_row_end();
 }
 
 #endif // GUI_CUSTOM_TOPBAR

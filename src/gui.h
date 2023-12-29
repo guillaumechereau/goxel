@@ -28,27 +28,26 @@
 #include "inputs.h"
 
 #ifndef GUI_PANEL_WIDTH_NORMAL
-#   define GUI_PANEL_WIDTH_NORMAL 190
+#   define GUI_PANEL_WIDTH_NORMAL 230
 #endif
 
 #ifndef GUI_PANEL_WIDTH_LARGE
 #   define GUI_PANEL_WIDTH_LARGE 400
 #endif
 
+void gui_window_begin(const char *label, float x, float y, float w, float h);
+void gui_window_end(void);
+
+bool gui_want_capture_mouse(void);
+
 void gui_release(void);
 void gui_release_graphics(void);
 
-void gui_iter(const inputs_t *inputs);
-void gui_render(void);
+void gui_render(const inputs_t *inputs);
 
 void gui_request_panel_width(float width);
 
 bool gui_panel_header(const char *label);
-
-void gui_canvas(float w, float h,
-                inputs_t *inputs, bool *has_mouse, bool *has_keyboard,
-                void *user,
-                void (*render)(void *user, const float viewport[4]));
 
 // Gui widgets:
 bool gui_collapsing_header(const char *label, bool default_opened);
@@ -56,14 +55,36 @@ void gui_text(const char *label, ...);
 void gui_text_wrapped(const char *label, ...);
 bool gui_button(const char *label, float w, int icon);
 bool gui_button_right(const char *label, int icon);
+
+// Group just lower the spacing between items.
 void gui_group_begin(const char *label);
 void gui_group_end(void);
 
-void gui_div_begin(void);
-void gui_div_end(void);
+// Section have a frame.
 
-void gui_child_begin(const char *id, float w, float h);
-void gui_child_end(void);
+enum {
+    GUI_SECTION_COLLAPSABLE             = 1 << 0,
+    GUI_SECTION_COLLAPSABLE_CLOSED      = 1 << 1 | GUI_SECTION_COLLAPSABLE,
+};
+
+bool gui_section_begin(const char *label, int flags);
+void gui_section_end(void);
+
+// Auto layout the inner items in a row.
+void gui_row_begin(int nb);
+void gui_row_end(void);
+
+/* Render a grid of same sized icons, where one can be selected.
+ * For tools grid, shapes... */
+typedef struct gui_icon_info
+{
+    const char *label;
+    const char *sublabel;
+    int icon;
+    uint8_t color[4];
+} gui_icon_info_t;
+
+bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current);
 
 bool gui_tab(const char *label, int icon, bool *v);
 bool gui_checkbox(const char *label, bool *v, const char *hint);
@@ -92,18 +113,10 @@ bool gui_combo_begin(const char *label, const char *preview);
 bool gui_combo_item(const char *label, bool selected);
 void gui_combo_end(void);
 
-
-float gui_get_avail_width(void);
-void gui_same_line(void);
 void gui_enabled_begin(bool enabled);
 void gui_enabled_end(void);
 void gui_dummy(int w, int h);
 void gui_spacing(int w);
-
-// Add an icon in top left corner of last item.
-void gui_floating_icon(int icon);
-// Add a text at the bottom of last item.
-void gui_bottom_text(const char *txt);
 
 void gui_alert(const char *title, const char *msg);
 
@@ -118,10 +131,6 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
                     char *name, int len);
 
 bool gui_is_key_down(int key);
-bool gui_palette_entry(const uint8_t color[4], uint8_t target[4],
-                       const char *name);
-
-bool gui_need_full_version(void);
 
 void gui_query_quit(void);
 
@@ -146,20 +155,15 @@ enum {
 void gui_open_popup(const char *title, int flags, void *data,
                     int (*func)(void *data));
 void gui_on_popup_closed(void (*func)(int v));
-void gui_popup_body_begin(void);
-void gui_popup_body_end(void);
+void gui_popup_bottom_begin(void);
+void gui_popup_bottom_end(void);
 
-bool gui_menu_begin(const char *label);
+bool gui_menu_bar_begin(void);
+void gui_menu_bar_end(void);
+bool gui_menu_begin(const char *label, bool enabled);
 void gui_menu_end(void);
 bool gui_menu_item(int action, const char *label, bool enabled);
 
-void gui_scrollable_begin(int width);
-void gui_scrollable_end(void);
-
 void gui_tooltip(const char *str);
-
-void gui_choice_begin(const char *label, int *value, bool small);
-bool gui_choice(const char *label, int idx, int icon);
-void gui_choice_end(void);
 
 #endif // GUI_H

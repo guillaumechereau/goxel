@@ -18,17 +18,6 @@
 
 #include "goxel.h"
 
-#ifndef GUI_TOOLS_COLUMNS_NB
-#   define GUI_TOOLS_COLUMNS_NB 4
-#endif
-
-
-// XXX: better replace this by something more automatic.
-static void auto_grid(int nb, int i, int col)
-{
-    if ((i + 1) % col != 0) gui_same_line();
-}
-
 void gui_tools_panel(void)
 {
     // XXX: cleanup this.
@@ -52,27 +41,29 @@ void gui_tools_panel(void)
 
     const int nb = ARRAY_SIZE(values);
     int i;
-    bool v;
-    char label[64];
     const action_t *action = NULL;
     const tool_t *tool;
+    int current = 0;
+    gui_icon_info_t grid[64] = {};
 
-    gui_group_begin(NULL);
     for (i = 0; i < nb; i++) {
         tool = tool_get(values[i].tool);
-        assert(tool);
-        v = goxel.tool->id == values[i].tool;
-        sprintf(label, "%s", tool->name);
         action = action_get(values[i].action, true);
         assert(action);
-        if (*action->shortcut)
-            sprintf(label, "%s (%s)", tool->name, action->shortcut);
-        if (gui_selectable_icon(label, &v, values[i].icon)) {
-            action_exec(action);
-        }
-        auto_grid(nb, i, GUI_TOOLS_COLUMNS_NB);
+        if (goxel.tool->id == values[i].tool) current = i;
+        grid[i] = (gui_icon_info_t) {
+            .label = tool->name,
+            .sublabel = action->shortcut,
+            .icon = values[i].icon,
+        };
     }
-    gui_group_end();
+
+    gui_section_begin("##Tools", false);
+    if (gui_icons_grid(nb, grid, &current)) {
+        action = action_get(values[current].action, true);
+        action_exec(action);
+    }
+    gui_section_end();
 
     if (gui_collapsing_header(goxel.tool->name, true))
         tool_gui(goxel.tool);

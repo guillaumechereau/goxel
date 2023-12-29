@@ -74,7 +74,7 @@
 
 #define GOXEL_VERSION_STR "0.13.0"
 #ifndef GOXEL_DEFAULT_THEME
-#   define GOXEL_DEFAULT_THEME "original"
+#   define GOXEL_DEFAULT_THEME "dark"
 #endif
 
 // #### Set the DEBUG macro ####
@@ -360,71 +360,70 @@ enum {
 };
 
 // All the icons positions inside icon.png (as Y*8 + X + 1).
+
+#define X(NAME, x, y, theme) \
+    NAME = (y * 8 + x + 1) | (theme << 16)
+
 enum {
     ICON_NULL = 0,
 
-    ICON_TOOL_BRUSH = 1,
-    ICON_TOOL_PICK = 2,
-    ICON_TOOL_SHAPE = 3,
-    ICON_TOOL_PLANE = 4,
-    ICON_TOOL_LASER = 5,
-    ICON_TOOL_MOVE = 6,
-    ICON_TOOL_EXTRUDE = 7,
-    ICON_TOOL_FUZZY_SELECT = 8,
+    X(ICON_TOOL_BRUSH,              0, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_PICK,               1, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_SHAPE,              2, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_PLANE,              3, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_LASER,              4, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_MOVE,               5, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_EXTRUDE,            6, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_FUZZY_SELECT,       7, 0, THEME_GROUP_ICON),
 
-    ICON_MODE_ADD = 9,
-    ICON_MODE_SUB = 10,
-    ICON_MODE_PAINT = 11,
-    ICON_SHAPE_CUBE = 12,
-    ICON_SHAPE_SPHERE = 13,
-    ICON_SHAPE_CYLINDER = 14,
-    ICON_TOOL_RECT_SELECTION = 15,
-    ICON_TOOL_LINE = 16,
+    X(ICON_MODE_ADD,                0, 1, THEME_GROUP_ICON),
+    X(ICON_MODE_SUB,                1, 1, THEME_GROUP_ICON),
+    X(ICON_MODE_PAINT,              2, 1, THEME_GROUP_ICON),
+    X(ICON_SHAPE_CUBE,              3, 1, THEME_GROUP_ICON),
+    X(ICON_SHAPE_SPHERE,            4, 1, THEME_GROUP_ICON),
+    X(ICON_SHAPE_CYLINDER,          5, 1, THEME_GROUP_ICON),
+    X(ICON_TOOL_RECT_SELECTION,     6, 1, THEME_GROUP_ICON),
+    X(ICON_TOOL_LINE,               7, 1, THEME_GROUP_ICON),
 
-    ICON_ADD = 17,
-    ICON_REMOVE = 18,
-    ICON_ARROW_BACK = 19,
-    ICON_ARROW_FORWARD = 20,
-    ICON_LINK = 21,
-    ICON_MENU = 22,
-    ICON_DELETE = 23,
-    ICON_TOOL_PROCEDURAL = 24,
+    X(ICON_ADD,                     0, 2, 0),
+    X(ICON_REMOVE,                  1, 2, 0),
+    X(ICON_ARROW_BACK,              2, 2, 0),
+    X(ICON_ARROW_FORWARD,           3, 2, 0),
+    X(ICON_LINK,                    4, 2, 0),
+    X(ICON_MENU,                    5, 2, 0),
+    X(ICON_DELETE,                  6, 2, 0),
+    X(ICON_TOOL_PROCEDURAL,         7, 2, 0),
 
-    ICON_VISIBILITY = 25,
-    ICON_VISIBILITY_OFF = 26,
-    ICON_ARROW_DOWNWARD = 27,
-    ICON_ARROW_UPWARD = 28,
-    ICON_EDIT = 29,
-    ICON_COPY = 30,
-    ICON_GALLERY = 31,
-    ICON_INFO = 32,
+    X(ICON_VISIBILITY,              0, 3, 0),
+    X(ICON_VISIBILITY_OFF,          1, 3, 0),
+    X(ICON_ARROW_DOWNWARD,          2, 3, 0),
+    X(ICON_ARROW_UPWARD,            3, 3, 0),
+    X(ICON_EDIT,                    4, 3, 0),
+    X(ICON_COPY,                    5, 3, 0),
+    X(ICON_GALLERY,                 6, 3, 0),
+    X(ICON_INFO,                    7, 3, 0),
 
-    ICON_SETTINGS = 33,
-    ICON_CLOUD = 34,
-    ICON_SHAPE = 35,
-    ICON_CLOSE = 36,
+    X(ICON_SETTINGS,                0, 4, 0),
+    X(ICON_CLOUD,                   1, 4, 0),
+    X(ICON_SHAPE,                   2, 4, 0),
+    X(ICON_CLOSE,                   3, 4, 0),
 
-    ICON_TOOLS = 41,
-    ICON_PALETTE = 42,
-    ICON_LAYERS = 43,
-    ICON_RENDER = 44,
-    ICON_CAMERA = 45,
-    ICON_IMAGE = 46,
-    ICON_EXPORT = 47,
-    ICON_DEBUG = 48,
+    X(ICON_TOOLS,                   0, 5, THEME_GROUP_ICON_EDIT),
+    X(ICON_PALETTE,                 1, 5, THEME_GROUP_ICON_EDIT),
+    X(ICON_LAYERS,                  2, 5, THEME_GROUP_ICON_EDIT),
+    X(ICON_RENDER,                  3, 5, THEME_GROUP_ICON_RENDER),
+    X(ICON_CAMERA,                  4, 5, THEME_GROUP_ICON_VIEW),
+    X(ICON_IMAGE,                   5, 5, THEME_GROUP_ICON_RENDER),
+    X(ICON_EXPORT,                  6, 5, THEME_GROUP_ICON_RENDER),
+    X(ICON_DEBUG,                   7, 5, THEME_GROUP_ICON_OTHER),
 
-    ICON_VIEW = 49,
-    ICON_MATERIAL = 50,
-    ICON_LIGHT = 51,
-    ICON_TOOL_SELECTION = 52,
+    X(ICON_VIEW,                    0, 6, THEME_GROUP_ICON_VIEW),
+    X(ICON_MATERIAL,                1, 6, THEME_GROUP_ICON_VIEW),
+    X(ICON_LIGHT,                   2, 6, THEME_GROUP_ICON_VIEW),
+    X(ICON_TOOL_SELECTION,          3, 6, 0),
 };
 
-/*
- * Some icons have their color blended depending on the style.  We define
- * them with a range in the icons atlas:
- */
-#define ICON_COLORIZABLE_START 17
-#define ICON_COLORIZABLE_END   41
+#undef X
 
 // #### Block ##################
 // The block size can only be 16.
@@ -499,7 +498,7 @@ typedef struct goxel
 
     tool_t     *tool;
     float      tool_radius;
-    bool       no_edit; // Disable editing.
+    bool       pathtrace; // Render pathtraced mode.
 
     // Some state for the tool iter functions.
     float      tool_plane[4][4];
@@ -541,7 +540,7 @@ typedef struct goxel
 
     // Some stats for the UI.
     struct {
-        void (*current_panel)(void);
+        int current_panel; // Index of the current visible control panel.
         float panel_width;
         float viewport[4];
     } gui;
@@ -555,8 +554,10 @@ extern goxel_t goxel;
 void goxel_init(void);
 void goxel_release(void);
 void goxel_reset(void);
-int goxel_iter(inputs_t *inputs);
-void goxel_render(void);
+
+// Probably better to merge those two.
+int goxel_iter(const inputs_t *inputs);
+void goxel_render(const inputs_t *inputs);
 
 /*
  * Function: goxel_create_graphics

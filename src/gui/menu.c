@@ -71,26 +71,26 @@ static void on_script(void *user, const char *name)
 
 void gui_menu(void)
 {
-    if (gui_menu_begin("File")) {
+    if (gui_menu_begin("File", true)) {
         gui_menu_item(ACTION_reset, "New", true);
         gui_menu_item(ACTION_save, "Save",
                 image_get_key(goxel.image) != goxel.image->saved_key);
         gui_menu_item(ACTION_save_as, "Save as", true);
         gui_menu_item(ACTION_open, "Open", true);
-        if (gui_menu_begin("Import...")) {
+        if (gui_menu_begin("Import...", true)) {
             if (gui_menu_item(0, "image plane", true))
                 import_image_plane();
             file_format_iter("r", NULL, import_menu_callback);
             gui_menu_end();
         }
-        if (gui_menu_begin("Export As..")) {
+        if (gui_menu_begin("Export As..", true)) {
             file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
         }
         gui_menu_item(ACTION_quit, "Quit", true);
         gui_menu_end();
     }
-    if (gui_menu_begin("Edit")) {
+    if (gui_menu_begin("Edit", true)) {
         gui_menu_item(ACTION_layer_clear, "Clear", true);
         gui_menu_item(ACTION_undo, "Undo", true);
         gui_menu_item(ACTION_redo, "Redo", true);
@@ -101,7 +101,7 @@ void gui_menu(void)
                            NULL, gui_settings_popup);
         gui_menu_end();
     }
-    if (gui_menu_begin("View")) {
+    if (gui_menu_begin("View", true)) {
         gui_menu_item(ACTION_view_left, "Left", true);
         gui_menu_item(ACTION_view_right, "Right", true);
         gui_menu_item(ACTION_view_front, "Front", true);
@@ -110,13 +110,13 @@ void gui_menu(void)
         gui_menu_item(ACTION_view_default, "Default", true);
         gui_menu_end();
     }
-    if (gui_menu_begin("Scripts")) {
+    if (gui_menu_begin("Scripts", true)) {
         if (gui_menu_item(0, "About Scripts", true))
             gui_open_popup("Scripts", 0, NULL, gui_about_scripts_popup);
         script_iter_all(NULL, on_script);
         gui_menu_end();
     }
-    if (gui_menu_begin("Help")) {
+    if (gui_menu_begin("Help", true)) {
         if (gui_menu_item(0, "About", true))
             gui_open_popup("About", 0, NULL, gui_about_popup);
         gui_menu_end();

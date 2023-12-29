@@ -34,16 +34,15 @@ void gui_cameras_panel(void)
         i++;
     }
     gui_group_end();
+
+    gui_row_begin(0);
     gui_action_button(ACTION_img_new_camera, NULL, 0);
-    gui_same_line();
     gui_action_button(ACTION_img_del_camera, NULL, 0);
-    gui_same_line();
     gui_action_button(ACTION_img_move_camera_up, NULL, 0);
-    gui_same_line();
     gui_action_button(ACTION_img_move_camera_down, NULL, 0);
+    gui_row_end();
 
     if (!goxel.image->cameras) image_add_camera(goxel.image, NULL);
-
 
     cam = goxel.image->active_camera;
     gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
@@ -60,10 +59,14 @@ void gui_cameras_panel(void)
     gui_checkbox("Ortho", &cam->ortho, NULL);
 
     gui_group_begin("Set");
-    gui_action_button(ACTION_view_left, "left", 0.5); gui_same_line();
+    gui_row_begin(2);
+    gui_action_button(ACTION_view_left, "left", 1.0);
     gui_action_button(ACTION_view_right, "right", 1.0);
-    gui_action_button(ACTION_view_front, "front", 0.5); gui_same_line();
+    gui_row_end();
+    gui_row_begin(2);
+    gui_action_button(ACTION_view_front, "front", 1.0);
     gui_action_button(ACTION_view_top, "top", 1.0);
+    gui_row_end();
     gui_action_button(ACTION_view_default, "default", 1.0);
     gui_group_end();
 

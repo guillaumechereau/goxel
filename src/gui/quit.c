@@ -20,15 +20,19 @@
 
 static int gui_quit_popup(void *data)
 {
+    int ret = 0;
     gui_text("Quit without saving your changes?");
+
+    gui_row_begin(0);
     if (gui_button("Quit", 0, 0)) {
         goxel.quit = true;
-        return 1;
+        ret = 1;
     }
-    gui_same_line();
-    if (gui_button("Cancel", 0, 0))
-        return 2;
-    return 0;
+    if (gui_button("Cancel", 0, 0)) {
+        ret = 2;
+    }
+    gui_row_end();
+    return ret;
 }
 
 void gui_query_quit(void)

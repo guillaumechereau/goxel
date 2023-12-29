@@ -98,10 +98,10 @@ int tool_gui(tool_t *tool)
 }
 
 
-static bool snap_button(const char *label, int s, float w)
+static bool snap_button(const char *label, int s)
 {
     bool v = goxel.snap_mask & s;
-    if (gui_selectable(label, &v, NULL, w)) {
+    if (gui_selectable(label, &v, NULL, -1)) {
         set_flag(&goxel.snap_mask, s, v);
         return true;
     }
@@ -110,32 +110,36 @@ static bool snap_button(const char *label, int s, float w)
 
 int tool_gui_snap(void)
 {
-    float w, v;
-    gui_text("Snap on");
-    w = gui_get_avail_width() / 2.0 - 1;
-    gui_group_begin(NULL);
-    snap_button("Volume", SNAP_VOLUME, w);
-    gui_same_line();
-    snap_button("Plane", SNAP_PLANE, w);
-    if (!box_is_null(goxel.selection)) {
-        snap_button("Sel In", SNAP_SELECTION_IN, w);
-        gui_same_line();
-        snap_button("Sel out", SNAP_SELECTION_OUT, w);
-    }
-    if (!box_is_null(goxel.image->box))
-        snap_button("Image box", SNAP_IMAGE_BOX, -1);
+    float v;
+    if (gui_section_begin("Snap on", true)) {
+        gui_group_begin(NULL);
+        gui_row_begin(2);
+        snap_button("Volume", SNAP_VOLUME);
+        snap_button("Plane", SNAP_PLANE);
+        gui_row_end();
+        if (!box_is_null(goxel.selection)) {
+            gui_row_begin(2);
+            snap_button("Sel In", SNAP_SELECTION_IN);
+            snap_button("Sel out", SNAP_SELECTION_OUT);
+            gui_row_end();
+        }
+        if (!box_is_null(goxel.image->box)) {
+            snap_button("Image box", SNAP_IMAGE_BOX);
+        }
+        gui_group_end();
 
-    v = goxel.snap_offset;
-    if (gui_input_float("Offset", &v, 0.1, -1, +1, "%.1f"))
-        goxel.snap_offset = clamp(v, -1, +1);
-    gui_group_end();
+        v = goxel.snap_offset;
+        if (gui_input_float("Offset", &v, 0.1, -1, +1, "%.1f"))
+            goxel.snap_offset = clamp(v, -1, +1);
+    }
+    gui_section_end();
     return 0;
 }
 
-static bool mask_mode_button(const char *label, int s, float w)
+static bool mask_mode_button(const char *label, int s)
 {
     bool v = goxel.mask_mode == s;
-    if (gui_selectable(label, &v, NULL, w)) {
+    if (gui_selectable(label, &v, NULL, 0)) {
         goxel.mask_mode = s;
         return true;
     }
@@ -144,23 +148,15 @@ static bool mask_mode_button(const char *label, int s, float w)
 
 int tool_gui_mask_mode(void)
 {
-    float w;
     gui_text("Mask");
-    w = gui_get_avail_width() / 3.0 - 1;
     gui_group_begin(NULL);
-    mask_mode_button("Set", MODE_REPLACE, w);
-    gui_same_line();
-    mask_mode_button("Add", MODE_OVER, w);
-    gui_same_line();
-    mask_mode_button("Sub", MODE_SUB, w);
+    gui_row_begin(3);
+    mask_mode_button("Set", MODE_REPLACE);
+    mask_mode_button("Add", MODE_OVER);
+    mask_mode_button("Sub", MODE_SUB);
+    gui_row_end();
     gui_group_end();
     return 0;
-}
-
-// XXX: replace this.
-static void auto_grid(int nb, int i, int col)
-{
-    if ((i + 1) % col != 0) gui_same_line();
 }
 
 int tool_gui_shape(const shape_t **shape)
@@ -174,20 +170,26 @@ int tool_gui_shape(const shape_t **shape)
         {"Cube", &shape_cube, ICON_SHAPE_CUBE},
         {"Cylinder", &shape_cylinder, ICON_SHAPE_CYLINDER},
     };
+    gui_icon_info_t grid[64] = {};
     shape = shape ?: &goxel.painter.shape;
     int i, ret = 0;
-    bool v;
-    gui_text("Shape");
-    gui_group_begin(NULL);
-    for (i = 0; i < (int)ARRAY_SIZE(shapes); i++) {
-        v = *shape == shapes[i].shape;
-        if (gui_selectable_icon(shapes[i].name, &v, shapes[i].icon)) {
-            *shape = shapes[i].shape;
+    int current;
+    const int nb = ARRAY_SIZE(shapes);
+
+    if (gui_section_begin("Shape", true)) {
+        for (i = 0; i < nb; i++) {
+            grid[i] = (gui_icon_info_t) {
+                .label = shapes[i].name,
+                .icon = shapes[i].icon,
+            };
+            if (*shape == shapes[i].shape) current = i;
+        }
+        if (gui_icons_grid(nb, grid, &current)) {
+            *shape = shapes[current].shape;
             ret = 1;
         }
-        auto_grid(ARRAY_SIZE(shapes), i, 4);
     }
-    gui_group_end();
+    gui_section_end();
     return ret;
 }
 
@@ -195,7 +197,7 @@ int tool_gui_radius(void)
 {
     int i;
     i = goxel.tool_radius * 2;
-    if (gui_input_int("Size", &i, 1, 128)) {
+    if (gui_input_int("Size", &i, 0, 0)) {
         i = clamp(i, 1, 128);
         goxel.tool_radius = i / 2.0;
     }
@@ -226,46 +228,47 @@ int tool_gui_color(void)
 
 int tool_gui_symmetry(void)
 {
-    float w;
     int i;
     bool v;
     const char *labels_u[] = {"X", "Y", "Z"};
     const char *labels_l[] = {"x", "y", "z"};
-    w = gui_get_avail_width() / 3.0 - 1;
-    gui_group_begin("Symmetry");
-    for (i = 0; i < 3; i++) {
-        v = (goxel.painter.symmetry >> i) & 0x1;
-        if (gui_selectable(labels_u[i], &v, NULL, w))
-            set_flag(&goxel.painter.symmetry, 1 << i, v);
-        if (i < 2) gui_same_line();
+    if (gui_section_begin("Symmetry", true)) {
+        gui_group_begin("##Axis");
+        gui_row_begin(3);
+        for (i = 0; i < 3; i++) {
+            v = (goxel.painter.symmetry >> i) & 0x1;
+            if (gui_selectable(labels_u[i], &v, NULL, 0))
+                set_flag(&goxel.painter.symmetry, 1 << i, v);
+        }
+        gui_row_end();
+        gui_group_end();
+        for (i = 0; i < 3; i++) {
+            gui_input_float(labels_l[i], &goxel.painter.symmetry_origin[i],
+                             0.5, -FLT_MAX, +FLT_MAX, "%.1f");
+        }
     }
-    for (i = 0; i < 3; i++) {
-        gui_input_float(labels_l[i], &goxel.painter.symmetry_origin[i],
-                         0.5, -FLT_MAX, +FLT_MAX, "%.1f");
-    }
-    gui_group_end();
+    gui_section_end();
     return 0;
 }
 
 int tool_gui_drag_mode(int *mode)
 {
-    float w;
     int ret = 0;
     bool b;
 
-    w = gui_get_avail_width() / 2.0 - 1;
     gui_group_begin("Drag mode");
+    gui_row_begin(2);
     b = *mode == 0;
-    if (gui_selectable("Move", &b, NULL, w)) {
+    if (gui_selectable("Move", &b, NULL, 0)) {
         *mode = 0;
         ret = 1;
     }
-    gui_same_line();
     b = *mode == 1;
-    if (gui_selectable("Resize", &b, NULL, w)) {
+    if (gui_selectable("Resize", &b, NULL, 0)) {
         *mode = 1;
         ret = 1;
     }
+    gui_row_end();
     gui_group_end();
     return ret;
 }

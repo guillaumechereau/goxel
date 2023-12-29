@@ -433,7 +433,7 @@ static void update_window_title(void)
 }
 
 KEEPALIVE
-int goxel_iter(inputs_t *inputs)
+int goxel_iter(const inputs_t *inputs)
 {
     double time = sys_get_time();
     uint64_t volume_key;
@@ -454,10 +454,29 @@ int goxel_iter(inputs_t *inputs)
     goxel.screen_scale = inputs->scale;
     goxel.rend.fbo = inputs->framebuffer;
     goxel.rend.scale = inputs->scale;
+
+    goxel.gui.viewport[0] = 0;
+    goxel.gui.viewport[1] = 0;
+    goxel.gui.viewport[2] = goxel.screen_size[0];
+    goxel.gui.viewport[3] = goxel.screen_size[1];
+    goxel.gui.viewport[3] -= 20; // For menu.
+
     camera_update(camera);
     mat4_copy(camera->view_mat, goxel.rend.view_mat);
     mat4_copy(camera->proj_mat, goxel.rend.proj_mat);
-    gui_iter(inputs);
+    // gui_iter(inputs);
+
+    // Test: update the viewport before the UI.
+    // Note: the inputs Y coordinates are inverted!
+    if (!gui_want_capture_mouse()) {
+        int i;
+        inputs_t inputs2 = *inputs;
+        for (i = 0; i < (int)ARRAY_SIZE(inputs2.touches); i++) {
+            inputs2.touches[i].pos[1] =
+                inputs->window_size[1] - inputs->touches[i].pos[1];
+        }
+        goxel_mouse_in_view(goxel.gui.viewport, &inputs2, true);
+    }
 
     if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
         volume_key = volume_get_key(goxel_get_render_volume(goxel.image));
@@ -645,7 +664,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     // semi 'transparent' voxels anymore.
     if (painter.mode != MODE_PAINT) painter.smoothness = 0;
 
-    if (!goxel.no_edit) {
+    if (!goxel.pathtrace) {
         tool_iter(goxel.tool, &painter, viewport);
     }
 
@@ -688,9 +707,10 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 }
 
 KEEPALIVE
-void goxel_render(void)
+void goxel_render(const inputs_t *inputs)
 {
     uint8_t color[4];
+
     theme_get_color(THEME_GROUP_BASE, THEME_COLOR_BACKGROUND, false, color);
     GL(glViewport(0, 0, goxel.screen_size[0] * goxel.screen_scale,
                         goxel.screen_size[1] * goxel.screen_scale));
@@ -700,7 +720,12 @@ void goxel_render(void)
     GL(glDisable(GL_SCISSOR_TEST));
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                GL_STENCIL_BUFFER_BIT));
-    gui_render();
+
+    goxel_render_view(goxel.gui.viewport, goxel.pathtrace);
+
+    GL(glViewport(0, 0, goxel.screen_size[0] * goxel.screen_scale,
+                        goxel.screen_size[1] * goxel.screen_scale));
+    gui_render(inputs);
 }
 
 static void render_export_viewport(const float viewport[4])
@@ -1424,15 +1449,18 @@ ACTION_REGISTER(quit,
 static int new_file_popup(void *data)
 {
     gui_text("Discard current image?");
+    int ret = 0;
+
+    gui_row_begin(0);
     if (gui_button("Discard", 0, 0)) {
         goxel_reset();
-        return 1;
+        ret = 1;
     }
-    gui_same_line();
     if (gui_button("Cancel", 0, 0)) {
-        return 2;
+        ret = 2;
     }
-    return 0;
+    gui_row_end();
+    return ret;
 }
 
 static void a_reset(void)

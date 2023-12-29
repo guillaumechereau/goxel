@@ -210,7 +210,7 @@ static void loop_function(void)
         glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
     goxel_iter(g_inputs);
-    goxel_render();
+    goxel_render(g_inputs);
 
     memset(g_inputs, 0, sizeof(*g_inputs));
     glfwSwapBuffers(g_window);
