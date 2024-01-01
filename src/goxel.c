@@ -488,20 +488,12 @@ int goxel_iter(inputs_t *inputs)
 
 static void set_cursor_hint(cursor_t *curs)
 {
-    const char *snap_str = NULL;
     if (!curs->snaped) {
         goxel_set_hint_text(NULL);
         return;
     }
-    if (curs->snaped == SNAP_VOLUME) snap_str = "volume";
-    if (curs->snaped == SNAP_PLANE) snap_str = "plane";
-    if (curs->snaped == SNAP_IMAGE_BOX) snap_str = "bounding box";
-    if (    curs->snaped == SNAP_SELECTION_IN ||
-            curs->snaped == SNAP_SELECTION_OUT) snap_str = "selection";
-
-    goxel_set_hint_text("[%.0f %.0f %.0f] (%s)",
-            curs->pos[0] - 0.5, curs->pos[1] - 0.5, curs->pos[2] - 0.5,
-            snap_str);
+    goxel_set_hint_text("[%.0f %.0f %.0f]",
+            curs->pos[0] - 0.5, curs->pos[1] - 0.5, curs->pos[2] - 0.5);
 }
 
 static int on_drag(const gesture_t *gest, void *user)
