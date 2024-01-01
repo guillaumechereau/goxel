@@ -174,6 +174,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
 
 static int gui(tool_t *tool)
 {
+    goxel_set_help_text("Drag any surface to extrude it.");
     return 0;
 }
 
