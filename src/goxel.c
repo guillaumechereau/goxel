@@ -507,6 +507,7 @@ static int on_drag(const gesture_t *gest, void *user)
     c->snaped = goxel_unproject(
             gest->viewport, gest->pos, c->snap_mask,
             c->snap_offset, c->pos, c->normal);
+    set_cursor_hint(c);
 
     // Set some default values.  The tools can override them.
     // XXX: would be better to reset the cursor when we change tool!
