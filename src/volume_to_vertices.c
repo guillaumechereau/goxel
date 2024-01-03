@@ -375,6 +375,11 @@ static void optimize_mesh(volume_mesh_t *mesh, int options)
     typeof(*mesh->vertices) *tmp_vertices;
     size_t vertices_count;
     size_t indices_count;
+    int target_index_count;
+	float target_error = 1e-2f;
+
+    // XXX: make it an argument.
+    float threshold = 0.1;
 
     // Merge duplicated vertices.
     remap = calloc(mesh->vertices_count, sizeof(unsigned int));
@@ -397,11 +402,13 @@ static void optimize_mesh(volume_mesh_t *mesh, int options)
     mesh->vertices_count = vertices_count;
 
     // Also simplify the mesh if required.
-    if (options & VOLUME_MESH_SIMPLIFY) {
+	target_index_count = (int)(mesh->indices_count * threshold);
+    if (options & VOLUME_MESH_SIMPLIFY && target_index_count > 1) {
         indices_count = meshopt_simplify(
                 tmp_indices, mesh->indices, mesh->indices_count,
                 (const float*)mesh->vertices, mesh->vertices_count,
-                sizeof(*mesh->vertices), 0, 0.1, 0, NULL);
+                sizeof(*mesh->vertices), target_index_count, target_error,
+                0, NULL);
         vertices_count = meshopt_optimizeVertexFetch(
                 tmp_vertices, tmp_indices, indices_count,
                 mesh->vertices, mesh->vertices_count, sizeof(*mesh->vertices));
