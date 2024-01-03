@@ -32,34 +32,6 @@ jobs:
           path: goxel.exe
           if-no-files-found: error
 
-  windows_i686:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: mingw-w64-i686-gcc mingw-w64-i686-glfw mingw-w64-i686-libtre-git mingw-w64-i686-libpng scons make
-
-      - name: Build Goxel
-        run: |
-          export PATH=/mingw32/bin/:$PATH
-          scons -j 4 mode=release
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: win_i686_binary
-          path: goxel.exe
-          if-no-files-found: error
-
   linux_x86_64:
     runs-on: ubuntu-20.04
     steps:
