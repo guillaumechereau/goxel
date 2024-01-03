@@ -88,11 +88,6 @@ typedef struct volume_mesh
     float pos_max[3];
 } volume_mesh_t;
 
-enum {
-    VOLUME_MESH_SIMPLIFY = 1,
-};
-
-
 // Type: painter_t
 // The painting context, including the tool, brush, mode, radius,
 // color, etc...
@@ -211,10 +206,13 @@ int volume_generate_vertices(const volume_t *volume, const int block_pos[3],
  * Also we don't save the extra data.
  *
  * This is better suited for export function.
+ *
+ * Parameters:
+ *   simplify - 0 to 1.  0 for no simplification, 1 for most simplification.
  */
 volume_mesh_t *volume_generate_mesh(
         const volume_t *volume, int effects, const palette_t *palette,
-        int options);
+        float simplify);
 
 void volume_mesh_free(volume_mesh_t *mesh);
 

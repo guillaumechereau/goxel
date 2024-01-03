@@ -49,7 +49,7 @@ typedef struct {
 
 typedef struct {
     bool vertex_color;
-    bool simplify;
+    float simplify;
 } export_options_t;
 
 static export_options_t g_export_options = {};
@@ -252,7 +252,7 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
 
     mesh = volume_generate_mesh(
             layer->volume, goxel.rend.settings.effects, palette,
-            g_export_options.simplify ? VOLUME_MESH_SIMPLIFY : 0);
+            g_export_options.simplify);
 
     if (mesh->vertices_count == 0) return;
 
@@ -442,8 +442,8 @@ static void export_gui(file_format_t *format)
 {
     gui_checkbox("Vertex color", &g_export_options.vertex_color,
                  "Save colors as a vertex attribute");
-    gui_checkbox("Simplify", &g_export_options.simplify,
-                 "Simplify the exported meshes");
+    gui_input_float("Simplify", &g_export_options.simplify, 0.1,
+                    0, 1, "%.1f");
 }
 
 FILE_FORMAT_REGISTER(gltf,

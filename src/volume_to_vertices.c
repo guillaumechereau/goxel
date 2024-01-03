@@ -368,7 +368,7 @@ static void fill_mesh(volume_mesh_t *mesh,
     mesh->vertices_count += nb * size;
 }
 
-static void optimize_mesh(volume_mesh_t *mesh, int options)
+static void optimize_mesh(volume_mesh_t *mesh, float simplify)
 {
     unsigned int *remap;
     unsigned int *tmp_indices;
@@ -377,9 +377,6 @@ static void optimize_mesh(volume_mesh_t *mesh, int options)
     size_t indices_count;
     int target_index_count;
 	float target_error = 1e-2f;
-
-    // XXX: make it an argument.
-    float threshold = 0.1;
 
     // Merge duplicated vertices.
     remap = calloc(mesh->vertices_count, sizeof(unsigned int));
@@ -402,8 +399,9 @@ static void optimize_mesh(volume_mesh_t *mesh, int options)
     mesh->vertices_count = vertices_count;
 
     // Also simplify the mesh if required.
-	target_index_count = (int)(mesh->indices_count * threshold);
-    if (options & VOLUME_MESH_SIMPLIFY && target_index_count > 1) {
+	target_index_count = (int)(mesh->indices_count * (1 - simplify));
+    target_index_count = fmax(target_index_count, 1);
+    if (target_index_count < mesh->indices_count) {
         indices_count = meshopt_simplify(
                 tmp_indices, mesh->indices, mesh->indices_count,
                 (const float*)mesh->vertices, mesh->vertices_count,
@@ -424,7 +422,7 @@ static void optimize_mesh(volume_mesh_t *mesh, int options)
 
 volume_mesh_t *volume_generate_mesh(
         const volume_t *volume, int effects, const palette_t *palette,
-        int options)
+        float simplify)
 {
     volume_iterator_t iter;
     int bpos[3];
@@ -442,7 +440,7 @@ volume_mesh_t *volume_generate_mesh(
         fill_mesh(mesh, verts, nb, size, subdivide, bpos, palette);
     }
 
-    optimize_mesh(mesh, options);
+    optimize_mesh(mesh, simplify);
 
     mesh->pos_min[0] = +FLT_MAX;
     mesh->pos_min[1] = +FLT_MAX;
