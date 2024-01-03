@@ -254,6 +254,8 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
             layer->volume, goxel.rend.settings.effects, palette,
             g_export_options.simplify ? VOLUME_MESH_SIMPLIFY : 0);
 
+    if (mesh->vertices_count == 0) return;
+
     gmesh = add_item(g->data, meshes);
     ALLOC(gmesh->primitives, 1);
     primitive = add_item(gmesh, primitives);
