@@ -88,7 +88,7 @@ jobs:
         if-no-files-found: error
 
   Success: # Not Neccessary
-    needs: [linux_x86_64, osx_x86_64, windows_x86_64, windows_i686]
+    needs: [linux_x86_64, osx_x86_64, windows_x86_64]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
