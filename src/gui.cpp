@@ -656,15 +656,16 @@ void gui_row_end(void)
     gui->item_size = 0;
 }
 
-void gui_window_begin(const char *label, float x, float y, float w, float h)
+void gui_window_begin(const char *label, float x, float y, float w, float h,
+                      bool *moved)
 {
     ImGuiWindowFlags flags =
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoMove | //  ImGuiWindowFlags_AlwaysAutoResize |
         ImGuiWindowFlags_NoDecoration;
     float max_h;
 
-    ImGui::SetNextWindowPos(ImVec2(x, y));
+    ImGui::SetNextWindowPos(ImVec2(x, y),
+            moved == NULL ? ImGuiCond_Always : ImGuiCond_Appearing);
     ImGui::SetNextWindowSize(ImVec2(w, h));
     if (h == 0) {
         max_h = ImGui::GetMainViewport()->Size.y - y;
@@ -672,6 +673,10 @@ void gui_window_begin(const char *label, float x, float y, float w, float h)
                 ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
     }
     ImGui::Begin(label, NULL, flags);
+
+    if (moved != NULL) {
+        *moved = ImGui::GetWindowPos() != ImVec2(x, y);
+    }
 }
 
 void gui_window_end(void)

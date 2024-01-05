@@ -35,7 +35,9 @@
 #   define GUI_PANEL_WIDTH_LARGE 400
 #endif
 
-void gui_window_begin(const char *label, float x, float y, float w, float h);
+void gui_window_begin(const char *label, float x, float y, float w, float h,
+                      bool *moved);
+
 void gui_window_end(void);
 
 bool gui_want_capture_mouse(void);

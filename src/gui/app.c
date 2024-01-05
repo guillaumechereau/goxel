@@ -53,10 +53,11 @@ void gui_debug_panel(void);
 void gui_export_panel(void);
 bool gui_rotation_bar(void);
 
-static const struct {
+static struct {
     const char *name;
     int icon;
     void (*fn)(void);
+    bool detached;
 } PANELS[] = {
     {NULL},
     {"Tools", ICON_TOOLS, gui_tools_panel},
@@ -99,6 +100,9 @@ static void render_left_panel(void)
 void gui_app(void)
 {
     float x = 0, y = 0;
+    bool moved;
+    const char *name;
+    int i;
 
     goxel.show_export_viewport = false;
 
@@ -117,24 +121,39 @@ void gui_app(void)
         y = ITEM_HEIGHT + 2;
     }
 
-    gui_window_begin("Top Bar", x, y, 0, 0);
+    gui_window_begin("Top Bar", x, y, 0, 0, NULL);
     gui_top_bar();
     gui_window_end();
 
     y += ICON_HEIGHT + 28;
-    gui_window_begin("Left Bar", x, y, 0, 0);
+    gui_window_begin("Left Bar", x, y, 0, 0, NULL);
     render_left_panel();
     gui_window_end();
 
     if (goxel.gui.current_panel) {
         x += ICON_HEIGHT + 28;
-        gui_window_begin("Controls", x, y, goxel.gui.panel_width, 0);
-
-        if (gui_panel_header(PANELS[goxel.gui.current_panel].name))
+        name = PANELS[goxel.gui.current_panel].name;
+        gui_window_begin(name, x, y, goxel.gui.panel_width, 0, &moved);
+        if (gui_panel_header(name))
             goxel.gui.current_panel = 0;
         else
             PANELS[goxel.gui.current_panel].fn();
+        gui_window_end();
 
+        if (moved) {
+            PANELS[goxel.gui.current_panel].detached = true;
+            goxel.gui.current_panel = 0;
+        }
+    }
+
+    for (i = 0; i < ARRAY_SIZE(PANELS); i++) {
+        if (!PANELS[i].detached) continue;
+        name = PANELS[i].name;
+        gui_window_begin(name, 0, 0, goxel.gui.panel_width, 0, &moved);
+        if (gui_panel_header(name)) {
+            PANELS[i].detached = false;
+        }
+        PANELS[i].fn();
         gui_window_end();
     }
 
