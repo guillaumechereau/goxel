@@ -77,7 +77,7 @@ static const ImVec2 ITEM_SPACING = ImVec2(8, 4);
         ((uint8_t)((x >> 8) & 0xff)) / 255.0, \
         ((uint8_t)((x >> 0) & 0xff)) / 255.0)
 
-static inline ImVec4 color_lighten(ImVec4 c, float k = 0.2)
+static inline ImVec4 color_lighten(ImVec4 c, float k = 0.1)
 {
     float h, s, v, r, g, b;
     r = c.x;
@@ -91,7 +91,7 @@ static inline ImVec4 color_lighten(ImVec4 c, float k = 0.2)
 
 static inline ImVec4 color_lighten2(ImVec4 v)
 {
-    return color_lighten(v, 0.5);
+    return color_lighten(v, 0.2);
 }
 
 static texture_t *g_tex_icons = NULL;
