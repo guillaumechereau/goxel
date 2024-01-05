@@ -586,10 +586,6 @@ void gui_render(const inputs_t *inputs)
     ImImpl_RenderDrawLists(ImGui::GetDrawData());
 }
 
-extern "C" {
-using namespace ImGui;
-
-
 void gui_group_begin(const char *label)
 {
     if (label && label[0] != '#') ImGui::Text("%s", label);
@@ -672,7 +668,8 @@ void gui_window_begin(const char *label, float x, float y, float w, float h)
     ImGui::SetNextWindowSize(ImVec2(w, h));
     if (h == 0) {
         max_h = ImGui::GetMainViewport()->Size.y - y;
-        SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
+        ImGui::SetNextWindowSizeConstraints(
+                ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
     }
     ImGui::Begin(label, NULL, flags);
 }
@@ -902,13 +899,14 @@ bool gui_action_button(int id, const char *label, float size)
 
     action = action_get(id, true);
     assert(action);
-    PushID(action->id);
+    ImGui::PushID(action->id);
     ret = gui_button(label, size, action->icon);
-    if (IsItemHovered()) goxel_set_help_text(action_get(id, true)->help);
+    if (ImGui::IsItemHovered())
+        goxel_set_help_text(action_get(id, true)->help);
     if (ret) {
         action_exec(action_get(id, true));
     }
-    PopID();
+    ImGui::PopID();
     if (gui->is_row) ImGui::SameLine();
     return ret;
 }
@@ -916,7 +914,7 @@ bool gui_action_button(int id, const char *label, float size)
 static bool _selectable(const char *label, bool *v, const char *tooltip,
                         float w, int icon)
 {
-    ImGuiWindow* window = GetCurrentWindow();
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
     ImVec2 size;
     ImVec2 center;
     bool ret = false;
@@ -1002,7 +1000,7 @@ void gui_text(const char *label, ...)
 {
     va_list args;
     va_start(args, label);
-    TextV(label, args);
+    ImGui::TextV(label, args);
     va_end(args);
 }
 
@@ -1011,7 +1009,7 @@ void gui_text_wrapped(const char *label, ...)
     va_list args;
     ImGui::PushTextWrapPos(0);
     va_start(args, label);
-    TextV(label, args);
+    ImGui::TextV(label, args);
     va_end(args);
     ImGui::PopTextWrapPos();
 }
@@ -1171,14 +1169,14 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 center;
     int w, isize;
 
-    button_size = ImVec2(size * GetContentRegionAvail().x, ITEM_HEIGHT);
-    if (size == -1) button_size.x = GetContentRegionAvail().x;
+    button_size = ImVec2(size * ImGui::GetContentRegionAvail().x, ITEM_HEIGHT);
+    if (size == -1) button_size.x = ImGui::GetContentRegionAvail().x;
     if (size == 0 && (label == NULL || label[0] == '#')) {
         button_size.x = ICON_HEIGHT;
         button_size.y = ICON_HEIGHT;
     }
     if (size == 0 && label && label[0] != '#') {
-        w = CalcTextSize(label, NULL, true).x + style.FramePadding.x * 2;
+        w = ImGui::CalcTextSize(label, NULL, true).x + style.FramePadding.x * 2;
         if (w < ITEM_HEIGHT)
             button_size.x = ITEM_HEIGHT;
     }
@@ -1192,8 +1190,9 @@ bool gui_button(const char *label, float size, int icon)
     ret = ImGui::Button(label ?: "", button_size);
     ImGui::PopStyleColor();
     if (icon) {
-        center = GetItemRectMin() + ImVec2(GetItemRectSize().y / 2,
-                                           GetItemRectSize().y / 2);
+        center = ImGui::GetItemRectMin() +
+            ImVec2(ImGui::GetItemRectSize().y / 2,
+                   ImGui::GetItemRectSize().y / 2);
         uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
         draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
@@ -1221,7 +1220,7 @@ bool gui_button_right(const char *label, int icon)
 
 bool gui_input_text(const char *label, char *txt, int size)
 {
-    return InputText(label, txt, size);
+    return ImGui::InputText(label, txt, size);
 }
 
 bool gui_input_text_multiline(const char *label, char *buf, int size,
@@ -1234,7 +1233,7 @@ bool gui_input_text_multiline(const char *label, char *buf, int size,
     ImGuiStyle& style = ImGui::GetStyle();
     ImVec4 col = style.Colors[ImGuiCol_FrameBg];
     style.Colors[ImGuiCol_FrameBg].w = 0.5;
-    ret = InputTextMultiline(label, buf, size, ImVec2(width, height));
+    ret = ImGui::InputTextMultiline(label, buf, size, ImVec2(width, height));
     style.Colors[ImGuiCol_FrameBg] = col;
     return ret;
 }
@@ -1564,8 +1563,9 @@ static bool panel_header_close_button(void)
     ret = ImGui::Button("", ImVec2(ITEM_HEIGHT, ITEM_HEIGHT));
     ImGui::PopStyleColor();
 
-    center = GetItemRectMin() + ImVec2(GetItemRectSize().y / 2,
-                                       GetItemRectSize().y / 2);
+    center = ImGui::GetItemRectMin() +
+        ImVec2(ImGui::GetItemRectSize().y / 2,
+               ImGui::GetItemRectSize().y / 2);
     uv0 = get_icon_uv(ICON_CLOSE);
     uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
     draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
@@ -1589,9 +1589,6 @@ bool gui_panel_header(const char *label)
     ret = panel_header_close_button();
     ImGui::PopID();
     return ret;
-}
-
-
 }
 
 bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
