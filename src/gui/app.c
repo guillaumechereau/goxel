@@ -141,33 +141,4 @@ void gui_app(void)
     goxel.pathtrace = goxel.gui.current_panel &&
         PANELS[goxel.gui.current_panel].fn == gui_render_panel &&
         goxel.pathtracer.status;
-
-
-#if 0
-    gui_same_line();
-
-    gui_child_begin("3d view",
-                    GUI_HAS_ROTATION_BAR ? -theme->sizes.item_height : 0, 0);
-
-    gui_canvas(0, GUI_HAS_HELP ? -20 : 0,
-               &inputs, &has_mouse, &has_keyboard,
-               NULL, render_view);
-    // Call mouse_in_view with inputs in the view referential.
-    if (has_mouse)
-        goxel_mouse_in_view(goxel.gui.viewport, &inputs, has_keyboard);
-
-    if (GUI_HAS_HELP) {
-        gui_text("%s", goxel.hint_text ?: "");
-        gui_same_line();
-        gui_spacing(180);
-        gui_text("%s", goxel.help_text ?: "");
-    }
-    gui_child_end();
-
-    if (GUI_HAS_ROTATION_BAR) {
-        gui_same_line();
-        gui_rotation_bar();
-    }
-#endif
 }
-
