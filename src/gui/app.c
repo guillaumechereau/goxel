@@ -53,27 +53,41 @@ void gui_debug_panel(void);
 void gui_export_panel(void);
 bool gui_rotation_bar(void);
 
+enum {
+    PANEL_NULL,
+    PANEL_TOOLS,
+    PANEL_PALETTE,
+    PANEL_LAYERS,
+    PANEL_VIEW,
+    PANEL_MATERIAL,
+    PANEL_LIGHT,
+    PANEL_CAMERAS,
+    PANEL_IMAGE,
+    PANEL_RENDER,
+    PANEL_EXPORT,
+    PANEL_DEBUG,
+};
+
 static struct {
     const char *name;
     int icon;
     void (*fn)(void);
     bool detached;
 } PANELS[] = {
-    {NULL},
-    {"Tools", ICON_TOOLS, gui_tools_panel},
-    {"Palette", ICON_PALETTE, gui_palette_panel},
-    {"Layers", ICON_LAYERS, gui_layers_panel},
-    {"View", ICON_VIEW, gui_view_panel},
-    {"Material", ICON_MATERIAL, gui_material_panel},
-    {"Light", ICON_LIGHT, gui_light_panel},
-    {"Cameras", ICON_CAMERA, gui_cameras_panel},
-    {"Image", ICON_IMAGE, gui_image_panel},
+    [PANEL_TOOLS]       = {"Tools", ICON_TOOLS, gui_tools_panel},
+    [PANEL_PALETTE]     = {"Palette", ICON_PALETTE, gui_palette_panel},
+    [PANEL_LAYERS]      = {"Layers", ICON_LAYERS, gui_layers_panel},
+    [PANEL_VIEW]        = {"View", ICON_VIEW, gui_view_panel},
+    [PANEL_MATERIAL]    = {"Material", ICON_MATERIAL, gui_material_panel},
+    [PANEL_LIGHT]       = {"Light", ICON_LIGHT, gui_light_panel},
+    [PANEL_CAMERAS]     = {"Cameras", ICON_CAMERA, gui_cameras_panel},
+    [PANEL_IMAGE]       = {"Image", ICON_IMAGE, gui_image_panel},
 #if YOCTO
-    {"Render", ICON_RENDER, gui_render_panel},
+    [PANEL_RENDER]      = {"Render", ICON_RENDER, gui_render_panel},
 #endif
-    {"Export", ICON_EXPORT, gui_export_panel},
+    [PANEL_EXPORT]      = {"Export", ICON_EXPORT, gui_export_panel},
 #if DEBUG
-    {"Debug", ICON_DEBUG, gui_debug_panel},
+    [PANEL_DEBUG]       = {"Debug", ICON_DEBUG, gui_debug_panel},
 #endif
 };
 
@@ -157,7 +171,7 @@ void gui_app(void)
         gui_window_end();
     }
 
-    goxel.pathtrace = goxel.gui.current_panel &&
-        PANELS[goxel.gui.current_panel].fn == gui_render_panel &&
-        goxel.pathtracer.status;
+    goxel.pathtrace = goxel.pathtracer.status &&
+        (goxel.gui.current_panel == PANEL_RENDER ||
+         PANELS[PANEL_RENDER].detached);
 }
