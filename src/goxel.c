@@ -438,6 +438,7 @@ int goxel_iter(const inputs_t *inputs)
     double time = sys_get_time();
     uint64_t volume_key;
     float pitch;
+    float menu_w = 20;
     camera_t *camera = get_camera();
 
     if (!goxel.graphics_initialized)
@@ -456,10 +457,9 @@ int goxel_iter(const inputs_t *inputs)
     goxel.rend.scale = inputs->scale;
 
     goxel.gui.viewport[0] = 0;
-    goxel.gui.viewport[1] = 0;
+    goxel.gui.viewport[1] = menu_w;
     goxel.gui.viewport[2] = goxel.screen_size[0];
-    goxel.gui.viewport[3] = goxel.screen_size[1];
-    goxel.gui.viewport[3] -= 20; // For menu.
+    goxel.gui.viewport[3] = goxel.screen_size[1] - menu_w;
 
     camera_update(camera);
     mat4_copy(camera->view_mat, goxel.rend.view_mat);

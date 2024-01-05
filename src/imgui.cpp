@@ -40,6 +40,8 @@
 #include "../ext_src/imgui/imgui_widgets.cpp"
 #include "../ext_src/imgui/imgui_tables.cpp"
 
+#include "../ext_src/imgui/ImGuizmo.cpp"
+
 #ifdef __clang__
 #pragma GCC diagnostic pop
 #endif

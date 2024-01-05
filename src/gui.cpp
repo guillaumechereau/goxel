@@ -58,6 +58,7 @@ void gui_render_panel(void);
 
 #include "../ext_src/imgui/imgui.h"
 #include "../ext_src/imgui/imgui_internal.h"
+#include "../ext_src/imgui/ImGuizmo.h"
 
 #ifndef __clang__
 #pragma GCC diagnostic pop
@@ -500,6 +501,115 @@ static void render_popups(int index)
     ImGui::PopStyleVar();
 }
 
+static void render_view_cube(void)
+{
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+    camera_t *camera = goxel.image->active_camera;
+    float view[4][4];
+    const float w = 128, h = 128;
+    const float *projection= (float*)camera->proj_mat;
+    const float zup2yup[4][4] = {
+        {1, 0, 0, 0},
+        {0, 0, -1, 0},
+        {0, 1, 0, 0},
+        {0, 0, 0, 1},
+    };
+    const float yup2zup[4][4] = {
+        {1, 0, 0, 0},
+        {0, 0, 1, 0},
+        {0, -1, 0, 0},
+        {0, 0, 0, 1},
+    };
+    ImGuizmo::Style &style = ImGuizmo::GetStyle();
+
+    style.Colors[ImGuizmo::DIRECTION_X] = ImVec4(0.666f, 0.000f, 0.000f, 1.000f);
+    style.Colors[ImGuizmo::DIRECTION_Z] = ImVec4(0.000f, 0.666f, 0.000f, 1.000f);
+    style.Colors[ImGuizmo::DIRECTION_Y] = ImVec4(0.000f, 0.000f, 0.666f, 1.000f);
+
+    // XXX: ImGuizmo is using Y up.
+    mat4_mul(zup2yup, camera->mat, view);
+    mat4_invert(view, view);
+
+    ImGui::SetNextWindowSize(ImVec2(w, h));
+    ImGui::SetNextWindowPos(ImVec2(
+                goxel.gui.viewport[2] - w, goxel.gui.viewport[1]));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+    ImGui::Begin("Gizmo", NULL, ImGuiWindowFlags_NoDecoration);
+    ImGuizmo::SetDrawlist();
+
+    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, w, h);
+    ImGuizmo::ViewManipulate(
+           (float*)view, projection,
+           ImGuizmo::ROTATE, ImGuizmo::LOCAL,
+           (float*)&mat4_identity, camera->dist,
+           ImGui::GetWindowPos(),
+           ImVec2(w, h), 0x0);
+
+    mat4_invert(view, view);
+    mat4_mul(yup2zup, view, camera->mat);
+    ImGui::End();
+    ImGui::PopStyleColor();
+
+}
+
+/*
+static void render_view_cube(void)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    static ImGuiWindowFlags gizmoWindowFlags = 0;
+    float viewManipulateRight = io.DisplaySize.x;
+    float viewManipulateTop = 0;
+    static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
+    static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
+    static float camDistance = 8.f;
+
+    (void)viewManipulateRight;
+    (void)viewManipulateTop;
+
+    ImGui::SetNextWindowSize(ImVec2(800, 400), ImGuiCond_Appearing);
+    ImGui::SetNextWindowPos(ImVec2(400,20), ImGuiCond_Appearing);
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.35f, 0.3f, 0.3f));
+    ImGui::Begin("Gizmo", 0, gizmoWindowFlags);
+    ImGuizmo::SetDrawlist();
+    float windowWidth = (float)ImGui::GetWindowWidth();
+    float windowHeight = (float)ImGui::GetWindowHeight();
+    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+    viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
+    viewManipulateTop = ImGui::GetWindowPos().y;
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    gizmoWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
+
+    camera_t *camera = goxel.image->active_camera;
+    float *view = (float*)camera->view_mat;
+    const float *projection= (float*)camera->proj_mat;
+    float matrix[16] = {1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1};
+
+    if (0)
+    ImGuizmo::DrawCubes(view, projection, matrix, 1);
+
+    if (0)
+    ImGuizmo::Manipulate(view, projection,
+            mCurrentGizmoOperation, mCurrentGizmoMode,
+            matrix, NULL,
+            NULL, NULL, NULL);
+
+    ImGuizmo::ViewManipulate(
+           view, projection,
+           ImGuizmo::ROTATE, ImGuizmo::LOCAL,
+           matrix, camDistance,
+           ImVec2(viewManipulateRight - 128, viewManipulateTop),
+           ImVec2(128, 128), 0x10101010);
+
+    ImGui::End();
+    ImGui::PopStyleColor(1);
+}
+*/
+
 static void gui_iter(const inputs_t *inputs)
 {
     gui_init();
@@ -556,8 +666,10 @@ static void gui_iter(const inputs_t *inputs)
 
     // Old code, to remove.
     ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
 
     gui_app();
+    render_view_cube();
     render_popups(0);
 
     // Handle the shortcuts.  XXX: this should be done with actions.
@@ -582,6 +694,7 @@ void gui_render(const inputs_t *inputs)
 {
     gui_init();
     gui_iter(inputs);
+
     ImGui::Render();
     ImImpl_RenderDrawLists(ImGui::GetDrawData());
 }

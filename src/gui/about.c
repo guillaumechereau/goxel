@@ -38,6 +38,7 @@ int gui_about_popup(void *data)
         gui_text("● tinyobjloader (https://github.com/syoyo/tinyobjloader-c)");
         gui_text("● boostrap icons (https://icons.getbootstrap.com)");
         gui_text("● meshoptimizer (https://github.com/zeux/meshoptimizer)");
+        gui_text("● imguizmo (https://github.com/CedricGuillemet/ImGuizmo)");
 
         gui_text("Contributors:");
         gui_text("● Michal (https://github.com/YarlBoro)");
