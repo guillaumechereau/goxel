@@ -16,7 +16,7 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "strings.h"
+#include "i18n.h"
 
 #include <assert.h>
 #include <stdio.h>
