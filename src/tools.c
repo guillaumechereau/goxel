@@ -111,25 +111,23 @@ static bool snap_button(const char *label, int s)
 int tool_gui_snap(void)
 {
     float v;
-    if (gui_section_begin("Snap on", true)) {
+    if (gui_section_begin(_(SNAP), true)) {
         gui_group_begin(NULL);
         gui_row_begin(2);
-        snap_button("Volume", SNAP_VOLUME);
-        snap_button("Plane", SNAP_PLANE);
+        snap_button(_(VOLUME), SNAP_VOLUME);
+        snap_button(_(PLANE), SNAP_PLANE);
         gui_row_end();
         if (!box_is_null(goxel.selection)) {
-            gui_row_begin(2);
-            snap_button("Sel In", SNAP_SELECTION_IN);
-            snap_button("Sel out", SNAP_SELECTION_OUT);
-            gui_row_end();
+            snap_button(_(SELECTION_IN), SNAP_SELECTION_IN);
+            snap_button(_(SELECTION_OUT), SNAP_SELECTION_OUT);
         }
         if (!box_is_null(goxel.image->box)) {
-            snap_button("Image box", SNAP_IMAGE_BOX);
+            snap_button(_(IMAGE_CUBE), SNAP_IMAGE_BOX);
         }
         gui_group_end();
 
         v = goxel.snap_offset;
-        if (gui_input_float("Offset", &v, 0.1, -1, +1, "%.1f"))
+        if (gui_input_float(_(OFFSET), &v, 0.1, -1, +1, "%.1f"))
             goxel.snap_offset = clamp(v, -1, +1);
     }
     gui_section_end();
@@ -151,9 +149,9 @@ int tool_gui_mask_mode(void)
     gui_text("Mask");
     gui_group_begin(NULL);
     gui_row_begin(3);
-    mask_mode_button("Set", MODE_REPLACE);
-    mask_mode_button("Add", MODE_OVER);
-    mask_mode_button("Sub", MODE_SUB);
+    mask_mode_button(_(SET), MODE_REPLACE);
+    mask_mode_button(_(ADD), MODE_OVER);
+    mask_mode_button(_(SUB), MODE_SUB);
     gui_row_end();
     gui_group_end();
     return 0;

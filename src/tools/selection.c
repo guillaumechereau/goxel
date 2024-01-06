@@ -209,7 +209,7 @@ static int gui(tool_t *tool)
 }
 
 TOOL_REGISTER(TOOL_SELECTION, selection, tool_selection_t,
-              .name = "Selection",
+              .name = STR_SELECTION,
               .iter_fn = iter,
               .gui_fn = gui,
               .default_shortcut = "R",

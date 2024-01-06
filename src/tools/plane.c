@@ -140,7 +140,7 @@ static int gui(tool_t *tool_)
 }
 
 TOOL_REGISTER(TOOL_SET_PLANE, plane, tool_plane_t,
-              .name = "plane",
+              .name = STR_PLANE,
               .iter_fn = iter,
               .gui_fn = gui,
               .default_shortcut = "P"

@@ -131,7 +131,7 @@ static int gui(tool_t *tool_)
 }
 
 TOOL_REGISTER(TOOL_FUZZY_SELECT, fuzzy_select, tool_fuzzy_select_t,
-              .name = "Fuzzy Select",
+              .name = STR_FUZZY_SELECT,
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_SHOW_MASK,

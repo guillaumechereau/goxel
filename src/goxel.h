@@ -49,6 +49,7 @@
 #include "pathtracer.h"
 #include "render.h"
 #include "shape.h"
+#include "strings.h"
 #include "system.h"
 #include "theme.h"
 #include "tools.h"

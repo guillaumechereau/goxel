@@ -137,7 +137,7 @@ static int gui(tool_t *tool)
 }
 
 TOOL_REGISTER(TOOL_SHAPE, shape, tool_shape_t,
-              .name = "Shape",
+              .name = STR_SHAPE,
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_ALLOW_PICK_COLOR,

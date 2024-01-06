@@ -60,7 +60,7 @@ struct tool {
     const char *default_shortcut;
     int state; // XXX: to be removed I guess.
     int flags;
-    const char *name;
+    int name; // String index.
 };
 
 #define TOOL_REGISTER(id_, name_, klass_, ...) \

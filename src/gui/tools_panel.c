@@ -52,7 +52,7 @@ void gui_tools_panel(void)
         assert(action);
         if (goxel.tool->id == values[i].tool) current = i;
         grid[i] = (gui_icon_info_t) {
-            .label = tool->name,
+            .label = tr(tool->name),
             .sublabel = action->shortcut,
             .icon = values[i].icon,
         };
@@ -65,7 +65,7 @@ void gui_tools_panel(void)
     }
     gui_section_end();
 
-    if (gui_collapsing_header(goxel.tool->name, true))
+    if (gui_collapsing_header(tr(goxel.tool->name), true))
         tool_gui(goxel.tool);
 }
 
