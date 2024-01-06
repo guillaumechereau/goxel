@@ -25,6 +25,8 @@
  * _(ADD).  For dynamic support we can also use tr(STR_ADD).
  */
 
+#pragma once
+
 enum {
     STR_NULL = 0,
 
