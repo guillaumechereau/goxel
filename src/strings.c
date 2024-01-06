@@ -37,53 +37,193 @@ const char *tr(int id)
 }
 
 static const string_t STRINGS[] = {
+    [STR_2D_IMAGE] = {
+        .en = "2D Image",
+        .fr = "Image 2D",
+    },
     [STR_ADD] = {
         .en = "Add",
         .fr = "Ajouter"
+    },
+    [STR_ADJUSTEMENTS] = {
+        .en = "Adjustments",
+        .fr = "Ajustements",
+    },
+    [STR_ALPHA] = {
+        .en = "Alpha",
+        .fr = "Alpha",
+    },
+    [STR_ANTIALIASING] = {
+        .en = "Antialiasing",
+        .fr = "Anti-aliasing",
     },
     [STR_BRUSH] = {
         .en = "Brush",
         .fr = "Brosse",
     },
+    [STR_CAMERAS] = {
+        .en = "Cameras",
+        .fr = "Caméras",
+    },
+    [STR_CLEAR] = {
+        .en = "Clear",
+        .fr = "Effacer",
+    },
+    [STR_COLOR] = {
+        .en = "Color",
+        .fr = "Couleur",
+    },
     [STR_COLOR_PICKER] = {
         .en = "Color Piper",
         .fr = "Pipette de couleur",
+    },
+    [STR_COPY] = {
+        .en = "Copy",
+        .fr = "Copier",
+    },
+    [STR_CUBE] = {
+        .en = "Cube",
+        .fr = "Cube",
+    },
+    [STR_CYLINDER] = {
+        .en = "Cylinder",
+        .fr = "Cylindre",
+    },
+    [STR_DEBUG] = {
+        .en = "Debug",
+        .fr = "Débug",
+    },
+    [STR_EDIT] = {
+        .en = "Edit",
+        .fr = "Édition",
+    },
+    [STR_EXPORT] = {
+        .en = "Export",
+        .fr = "Exporter",
     },
     [STR_EXTRUDE] = {
         .en = "Extrude",
         .fr = "Extruder",
     },
+    [STR_FILE] = {
+        .en = "File",
+        .fr = "Fichier",
+    },
+    [STR_FRONT] = {
+        .en = "Front",
+        .fr = "Avant",
+    },
     [STR_FUZZY_SELECT] = {
         .en = "Fuzzy Select",
         .fr = "Sélection contiguë",
+    },
+    [STR_IMAGE] = {
+        .en = "Image",
+        .fr = "Image",
     },
     [STR_IMAGE_CUBE] = {
         .en = "Image Cube",
         .fr = "Image cube",
     },
+    [STR_IMPORT] = {
+        .en = "Import",
+        .fr = "Importer",
+    },
     [STR_LASER] = {
         .en = "Laser",
         .fr = "Laser",
+    },
+    [STR_LAYERS] = {
+        .en = "Layers",
+        .fr = "Calques",
+    },
+    [STR_LEFT] = {
+        .en = "Left",
+        .fr = "Gauche",
+    },
+    [STR_LIGHT] = {
+        .en = "Light",
+        .fr = "Éclairage",
     },
     [STR_LINE] = {
         .en = "Line",
         .fr = "Ligne",
     },
+    [STR_MASK] = {
+        .en = "Mask",
+        .fr = "Masque",
+    },
+    [STR_MATERIALS] = {
+        .en = "Materials",
+        .fr = "Matériaux",
+    },
     [STR_MOVE] = {
         .en = "Move",
         .fr = "Déplacer",
+    },
+    [STR_NEW] = {
+        .en = "New",
+        .fr = "Nouveau",
     },
     [STR_OFFSET] = {
         .en = "Offset",
         .fr = "Décalage",
     },
+    [STR_OPEN] = {
+        .en = "Open",
+        .fr = "Ouvrir",
+    },
+    [STR_PAINT] = {
+        .en = "Paint",
+        .fr = "Peindre",
+    },
+    [STR_PALETTE] = {
+        .en = "Palette",
+        .fr = "Palette",
+    },
+    [STR_PASTE] = {
+        .en = "Paste",
+        .fr = "Coller",
+    },
     [STR_PLANE] = {
         .en = "Plane",
         .fr = "Plan",
     },
+    [STR_QUIT] = {
+        .en = "Quit",
+        .fr = "Quitter",
+    },
+    [STR_RENDER] = {
+        .en = "Render",
+        .fr = "Rendu",
+    },
     [STR_RECT_SELECT] = {
         .en = "Rectangle Select",
         .fr = "Sélection rectangulaire",
+    },
+    [STR_REDO] = {
+        .en = "Redo",
+        .fr = "Refaire",
+    },
+    [STR_RESET] = {
+        .en = "Reset",
+        .fr = "Réinitialiser",
+    },
+    [STR_RESIZE] = {
+        .en = "Resize",
+        .fr = "Redimensionner",
+    },
+    [STR_RIGHT] = {
+        .en = "Right",
+        .fr = "Droite",
+    },
+    [STR_SAVE] = {
+        .en = "Save",
+        .fr = "Enregistrer",
+    },
+    [STR_SAVE_AS] = {
+        .en = "Save As",
+        .fr = "Enregistrer sous",
     },
     [STR_SELECTION] = {
         .en = "Selection",
@@ -101,9 +241,21 @@ static const string_t STRINGS[] = {
         .en = "Set",
         .fr = "Définir",
     },
+    [STR_SETTINGS] = {
+        .en = "Settings",
+        .fr = "Réglages",
+    },
     [STR_SHAPE] = {
         .en = "Shape",
         .fr = "Forme",
+    },
+    [STR_SIZE] = {
+        .en = "Size",
+        .fr = "Taille",
+    },
+    [STR_SPHERE] = {
+        .en = "Sphere",
+        .fr = "Sphère",
     },
     [STR_SUB] = {
         .en = "Sub",
@@ -112,6 +264,26 @@ static const string_t STRINGS[] = {
     [STR_SNAP] = {
         .en = "Snap",
         .fr = "Aimanter",
+    },
+    [STR_SYMMETRY] = {
+        .en = "Symmetry",
+        .fr = "Symétrie",
+    },
+    [STR_TOOLS] = {
+        .en = "Tools",
+        .fr = "Outils",
+    },
+    [STR_TOP] = {
+        .en = "Top",
+        .fr = "Dessus",
+    },
+    [STR_UNDO] = {
+        .en = "Undo",
+        .fr = "Annuler",
+    },
+    [STR_VIEW] = {
+        .en = "View",
+        .fr = "Vue",
     },
     [STR_VOLUME] = {
         .en = "Volume",

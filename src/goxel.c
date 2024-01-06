@@ -1322,7 +1322,7 @@ static void copy_action(void)
     }
 }
 
-static void past_action(void)
+static void paste_action(void)
 {
     volume_t *volume = goxel.image->active_layer->volume;
     volume_t *tmp;
@@ -1351,9 +1351,9 @@ ACTION_REGISTER(copy,
     .flags = 0,
 )
 
-ACTION_REGISTER(past,
-    .help = "Past",
-    .cfunc = past_action,
+ACTION_REGISTER(paste,
+    .help = "Paste",
+    .cfunc = paste_action,
     .default_shortcut = "Ctrl V",
     .flags = ACTION_TOUCH_IMAGE,
 )
