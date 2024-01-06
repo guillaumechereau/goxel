@@ -829,39 +829,49 @@ static void label_aligned(const char *label, float size)
     ImGui::PopStyleVar(1);
 }
 
-static bool clicked(void)
+/*
+ * Custom slider widget.
+ */
+static bool slider_float(float *v, float minv, float maxv, const char *format)
 {
-    ImGuiStorage *storage = ImGui::GetStateStorage();
-    ImGuiID key;
-    int state;
-    bool ret = false;
+    bool ret;
+    float step = (maxv - minv) * 0.008;
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 rmin, rmax;
+    float k;
+    bool highlighted;
+    ImVec4 color;
+    ImU32 col;
 
-    if (!ImGui::IsItemHovered()) return false;
+    // Render an imgui DragFloat with transparent background.
+    draw_list->ChannelsSplit(2);
+    draw_list->ChannelsSetCurrent(1);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0, 0, 0, 0));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0, 0, 0, 0));
+    ret = ImGui::DragFloat("", v, step, minv, maxv, format);
+    ImGui::PopStyleColor(3);
+    highlighted = ImGui::IsItemHovered();
 
-    key = ImGui::GetID("clicked");
-    state = storage->GetInt(key, 0);
+    // Render our own slider below the input.
+    rmin = ImGui::GetItemRectMin();
+    rmax = ImGui::GetItemRectMax();
 
-    switch (state) {
-    case 0:
-        if (ImGui::IsMouseClicked(0)) {
-            state = 1;
-            break;
-        }
-        break;
-    case 1:
-        if (ImGui::IsMouseDragging(0)) {
-            state = 0;
-            break;
-        }
-        if (ImGui::IsMouseReleased(0)) {
-            state = 0;
-            ret = true;
-            break;
-        }
-        break;
-    }
+    draw_list->ChannelsSetCurrent(0);
+    k = (*v - minv) / (maxv - minv);
 
-    storage->SetInt(key, state);
+    color = COLOR(NUMBER_INPUT, INNER, false);
+    if (highlighted) color = color_lighten(color);
+    col = ImGui::GetColorU32(color);
+    draw_list->AddRectFilled(rmin, rmax, col, 2);
+
+    rmax.x = mix(rmin.x, rmax.x, k);
+    color = COLOR(NUMBER_INPUT, ITEM, false);
+    if (highlighted) color = color_lighten(color);
+    col = ImGui::GetColorU32(color);
+    draw_list->AddRectFilled(rmin, rmax, col, 2);
+
+    draw_list->ChannelsMerge();
     return ret;
 }
 
@@ -935,10 +945,7 @@ bool gui_input_float(const char *label, float *v, float step,
         if (unbounded) {
             ret = ImGui::DragFloat("", v, step, minv, maxv, format);
         } else {
-            ret = ImGui::SliderFloat("", v, minv, maxv, format);
-            if (clicked()) {
-                ImGui::SetKeyboardFocusHere(-1);
-            }
+            ret = slider_float(v, minv, maxv, format);
         }
 
         is_active = ImGui::IsItemActive();
