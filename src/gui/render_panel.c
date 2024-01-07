@@ -36,15 +36,16 @@ void gui_render_panel(void)
     }
     gui_enabled_begin(goxel.image->export_custom_size);
     i = goxel.image->export_width;
-    if (gui_input_int("w", &i, 1, maxsize))
+    if (gui_input_int("w", &i, 0, 0))
         goxel.image->export_width = clamp(i, 1, maxsize);
     i = goxel.image->export_height;
-    if (gui_input_int("h", &i, 1, maxsize))
+    if (gui_input_int("h", &i, 0, 0))
         goxel.image->export_height = clamp(i, 1, maxsize);
     gui_enabled_end();
     gui_group_end();
 
-    gui_input_int("Samples", &pt->num_samples, 1, 10000);
+    if (gui_input_int("Samples", &pt->num_samples, 0, 0))
+        pt->num_samples = clamp(pt->num_samples, 1, 10000);
 
     if (pt->status == PT_STOPPED && gui_button("Start", 1, 0))
         pt->status = PT_RUNNING;
@@ -67,8 +68,7 @@ void gui_render_panel(void)
         action_exec2(ACTION_export_render_buf_to_photos);
     }
 
-    if (gui_collapsing_header("World", false)) {
-        gui_push_id("world");
+    if (gui_section_begin("World", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_group_begin(NULL);
         gui_selectable_toggle("None", &pt->world.type, PT_WORLD_NONE,
                               NULL, -1);
@@ -81,10 +81,9 @@ void gui_render_panel(void)
             gui_input_float("Energy", &pt->world.energy, 0.1, 0, 10, "%.1f");
             gui_color_small("Color", pt->world.color);
         }
-        gui_pop_id();
-    }
-    if (gui_collapsing_header("Floor", false)) {
-        gui_push_id("floor");
+    } gui_section_end();
+
+    if (gui_section_begin("Floor", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_group_begin(NULL);
         gui_selectable_toggle("None", &pt->floor.type, PT_FLOOR_NONE,
                               NULL, -1);
@@ -93,10 +92,10 @@ void gui_render_panel(void)
         gui_group_end();
 
         if (pt->floor.type == PT_FLOOR_PLANE) {
-            gui_group_begin("size");
-            gui_input_int("x", &pt->floor.size[0], 1, 2048);
-            gui_input_int("y", &pt->floor.size[1], 1, 2048);
-            gui_group_end();
+            gui_input_int("w", &pt->floor.size[0], 0, 0);
+            gui_input_int("h", &pt->floor.size[1], 0, 0);
+            pt->floor.size[0] = fmax(pt->floor.size[0], 1);
+            pt->floor.size[1] = fmax(pt->floor.size[1], 1);
             gui_color_small("Color", pt->floor.color);
 
             gui_text("Material");
@@ -111,18 +110,15 @@ void gui_render_panel(void)
                 gui_combo_end();
             }
         }
+    } gui_section_end();
 
-        gui_pop_id();
-    }
-    if (gui_collapsing_header("Light", false)) {
-        gui_group_begin("Light");
+    if (gui_section_begin("Light", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_angle("Pitch", &goxel.rend.light.pitch, -90, +90);
         gui_angle("Yaw", &goxel.rend.light.yaw, 0, 360);
         gui_checkbox("Fixed", &goxel.rend.light.fixed, NULL);
         gui_input_float("Intensity", &goxel.rend.light.intensity,
                         0.1, 0, 10, NULL);
-        gui_group_end();
-    }
+    } gui_section_end();
 }
 
 static void on_saved_to_photo(int ret) {
