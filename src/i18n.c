@@ -53,6 +53,10 @@ static const string_t STRINGS[] = {
         .en = "Alpha",
         .fr = "Alpha",
     },
+    [STR_ANGLE] = {
+        .en = "Angle",
+        .fr = "Angle",
+    },
     [STR_ANTIALIASING] = {
         .en = "Antialiasing",
         .fr = "Anti-aliasing",
@@ -137,6 +141,10 @@ static const string_t STRINGS[] = {
         .en = "Edges",
         .fr = "Arêtes",
     },
+    [STR_ENVIRONMENT] = {
+        .en = "Environment",
+        .fr = "Environnement",
+    },
     [STR_EFFECTS] = {
         .en = "Effects",
         .fr = "Effets",
@@ -153,6 +161,10 @@ static const string_t STRINGS[] = {
         .en = "File",
         .fr = "Fichier",
     },
+    [STR_FIXED] = {
+        .en = "Fixed",
+        .fr = "Fixe",
+    },
     [STR_FRONT] = {
         .en = "Front",
         .fr = "Avant",
@@ -168,6 +180,10 @@ static const string_t STRINGS[] = {
     [STR_HIDE_BOX] = {
         .en = "Hide Box",
         .fr = "Cacher la Boîte",
+    },
+    [STR_INTENSITY] = {
+        .en = "Intensity",
+        .fr = "Intensité",
     },
     [STR_IMAGE] = {
         .en = "Image",
@@ -312,6 +328,10 @@ static const string_t STRINGS[] = {
     [STR_SHADELESS] = {
         .en = "Shadeless",
         .fr = "Sans ombrage",
+    },
+    [STR_SHADOW] = {
+        .en = "Shadow",
+        .fr = "Ombre",
     },
     [STR_SHAPE] = {
         .en = "Shape",
