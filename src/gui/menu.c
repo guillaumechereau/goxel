@@ -71,6 +71,8 @@ static void on_script(void *user, const char *name)
 
 void gui_menu(void)
 {
+    camera_t *cam;
+
     if (gui_menu_begin(_(FILE), true)) {
         gui_menu_item(ACTION_reset, _(NEW), true);
         gui_menu_item(ACTION_save, _(SAVE),
@@ -102,11 +104,13 @@ void gui_menu(void)
         gui_menu_end();
     }
     if (gui_menu_begin(_(VIEW), true)) {
+        cam = goxel.image->active_camera;
         gui_menu_item(ACTION_view_left, _(LEFT), true);
         gui_menu_item(ACTION_view_right, _(RIGHT), true);
         gui_menu_item(ACTION_view_front, _(FRONT), true);
         gui_menu_item(ACTION_view_top, _(TOP), true);
-        gui_menu_item(ACTION_view_toggle_ortho, "Toggle ortho", true);
+        gui_menu_item(ACTION_view_toggle_ortho,
+                cam->ortho ? _(PERSPECTIVE) : _(ORTHOGRAPHIC), true);
         gui_menu_item(ACTION_view_default, _(RESET), true);
         gui_menu_end();
     }

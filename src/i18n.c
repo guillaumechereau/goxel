@@ -165,6 +165,10 @@ static const string_t STRINGS[] = {
         .en = "File",
         .fr = "Fichier",
     },
+    [STR_FIT_TO_CONTENT] = {
+        .en = "Fit to Content",
+        .fr = "Ajuster au contenu",
+    },
     [STR_FIXED] = {
         .en = "Fixed",
         .fr = "Fixe",
@@ -257,6 +261,10 @@ static const string_t STRINGS[] = {
         .en = "Open",
         .fr = "Ouvrir",
     },
+    [STR_ORIGIN] = {
+        .en = "Origin",
+        .fr = "Origine",
+    },
     [STR_ORTHOGRAPHIC] = {
         .en = "Orthographic",
         .fr = "Orthogonale",
@@ -272,6 +280,10 @@ static const string_t STRINGS[] = {
     [STR_PASTE] = {
         .en = "Paste",
         .fr = "Coller",
+    },
+    [STR_PERSPECTIVE] = {
+        .en = "Perspective",
+        .fr = "Perspective",
     },
     [STR_PLANE] = {
         .en = "Plane",

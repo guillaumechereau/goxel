@@ -924,12 +924,12 @@ bool gui_bbox(float box[4][4])
     y = round(box[3][1] - box[1][1]);
     z = round(box[3][2] - box[2][2]);
 
-    gui_group_begin("Origin");
+    gui_group_begin(_(ORIGIN));
     ret |= gui_input_int("x", &x, 0, 0);
     ret |= gui_input_int("y", &y, 0, 0);
     ret |= gui_input_int("z", &z, 0, 0);
     gui_group_end();
-    gui_group_begin("Size");
+    gui_group_begin(_(SIZE));
     ret |= gui_input_int("w", &w, 0, 0);
     ret |= gui_input_int("h", &h, 0, 0);
     ret |= gui_input_int("d", &d, 0, 0);
