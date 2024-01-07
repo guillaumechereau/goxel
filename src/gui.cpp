@@ -731,7 +731,7 @@ bool gui_section_begin(const char *label, int flags)
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() - padding / 2);
     ImGui::BeginChild(label, ImVec2(w + padding, 0), childflags);
 
-    if (flags & GUI_SECTION_COLLAPSABLE) {
+    if (flags & (GUI_SECTION_COLLAPSABLE | GUI_SECTION_COLLAPSABLE_CLOSED)) {
         ImGui::SetNextItemOpen(
                 !(flags & GUI_SECTION_COLLAPSABLE_CLOSED), ImGuiCond_Once);
         return ImGui::CollapsingHeader(label);

@@ -66,7 +66,7 @@ void gui_group_end(void);
 
 enum {
     GUI_SECTION_COLLAPSABLE             = 1 << 0,
-    GUI_SECTION_COLLAPSABLE_CLOSED      = 1 << 1 | GUI_SECTION_COLLAPSABLE,
+    GUI_SECTION_COLLAPSABLE_CLOSED      = 1 << 1,
 };
 
 bool gui_section_begin(const char *label, int flags);
