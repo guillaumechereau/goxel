@@ -319,7 +319,6 @@ static void load_fonts_texture()
     const void *data;
     int data_size;
     ImFontConfig conf;
-
     const ImWchar ranges[] = {
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
         0x25A0, 0x25FF, // Geometric shapes
@@ -327,10 +326,20 @@ static void load_fonts_texture()
     };
     conf.FontDataOwnedByAtlas = false;
 
-    data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
+    data = assets_get("asset://data/fonts/DejaVuSans.ttf", &data_size);
     assert(data);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14 * scale,
-                                   &conf, ranges);
+    io.Fonts->AddFontFromMemoryTTF(
+            (void*)data, data_size, 14 * scale, &conf, ranges);
+
+    conf.MergeMode = true;
+    data = assets_get(
+            "asset://data/fonts/DroidSansFallbackFull.ttf", &data_size);
+    assert(data);
+    io.Fonts->AddFontFromMemoryTTF(
+            (void*)data, data_size, 14 * scale, &conf,
+            io.Fonts->GetGlyphRangesJapanese());
+    io.Fonts->Build();
+
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
