@@ -65,7 +65,6 @@ enum {
     STR_GRID,
     STR_HIDE_BOX,
     STR_IMAGE,
-    STR_IMAGE_CUBE,
     STR_IMPORT,
     STR_LASER,
     STR_LAYERS,

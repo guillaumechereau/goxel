@@ -122,7 +122,7 @@ int tool_gui_snap(void)
             snap_button(_(SELECTION_OUT), SNAP_SELECTION_OUT);
         }
         if (!box_is_null(goxel.image->box)) {
-            snap_button(_(IMAGE_CUBE), SNAP_IMAGE_BOX);
+            snap_button(_(BOX), SNAP_IMAGE_BOX);
         }
         gui_group_end();
 

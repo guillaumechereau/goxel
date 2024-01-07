@@ -173,10 +173,6 @@ static const string_t STRINGS[] = {
         .en = "Image",
         .fr = "Image",
     },
-    [STR_IMAGE_CUBE] = {
-        .en = "Image Cube",
-        .fr = "Image cube",
-    },
     [STR_IMPORT] = {
         .en = "Import",
         .fr = "Importer",
