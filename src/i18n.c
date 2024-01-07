@@ -57,6 +57,22 @@ static const string_t STRINGS[] = {
         .en = "Antialiasing",
         .fr = "Anti-aliasing",
     },
+    [STR_BACKGROUND] = {
+        .en = "Background",
+        .fr = "Arrière-plan",
+    },
+    [STR_BORDER] = {
+        .en = "Border",
+        .fr = "Bordures",
+    },
+    [STR_BOUNDED] = {
+        .en = "Bounded",
+        .fr = "Bornée",
+    },
+    [STR_BOX] = {
+        .en = "Box",
+        .fr = "Boîte",
+    },
     [STR_BRUSH] = {
         .en = "Brush",
         .fr = "Brosse",
@@ -69,9 +85,17 @@ static const string_t STRINGS[] = {
         .en = "Clear",
         .fr = "Effacer",
     },
+    [STR_CLONE] = {
+        .en = "Clone",
+        .fr = "Cloner",
+    },
     [STR_COLOR] = {
         .en = "Color",
         .fr = "Couleur",
+    },
+    [STR_COLORS] = {
+        .en = "Colors",
+        .fr = "Couleurs",
     },
     [STR_COLOR_PICKER] = {
         .en = "Color Piper",
@@ -80,6 +104,14 @@ static const string_t STRINGS[] = {
     [STR_COPY] = {
         .en = "Copy",
         .fr = "Copier",
+    },
+    [STR_CROP] = {
+        .en = "Crop",
+        .fr = "Rogner",
+    },
+    [STR_CROP_TO_IMAGE] = {
+        .en = "Crop to Image",
+        .fr = "Rogner selon l'image",
     },
     [STR_CUBE] = {
         .en = "Cube",
@@ -93,9 +125,21 @@ static const string_t STRINGS[] = {
         .en = "Debug",
         .fr = "Débug",
     },
+    [STR_DUPLICATE] = {
+        .en = "Duplicate",
+        .fr = "Dupliquer",
+    },
     [STR_EDIT] = {
         .en = "Edit",
         .fr = "Édition",
+    },
+    [STR_EDGES] = {
+        .en = "Edges",
+        .fr = "Arêtes",
+    },
+    [STR_EFFECTS] = {
+        .en = "Effects",
+        .fr = "Effets",
     },
     [STR_EXPORT] = {
         .en = "Export",
@@ -116,6 +160,14 @@ static const string_t STRINGS[] = {
     [STR_FUZZY_SELECT] = {
         .en = "Fuzzy Select",
         .fr = "Sélection contiguë",
+    },
+    [STR_GRID] = {
+        .en = "Grid",
+        .fr = "Grille",
+    },
+    [STR_HIDE_BOX] = {
+        .en = "Hide Box",
+        .fr = "Cacher la Boîte",
     },
     [STR_IMAGE] = {
         .en = "Image",
@@ -149,13 +201,25 @@ static const string_t STRINGS[] = {
         .en = "Line",
         .fr = "Ligne",
     },
+    [STR_MARCHING_CUBES] = {
+        .en = "Marching Cubes",
+        .fr = "Marching cubes",
+    },
     [STR_MASK] = {
         .en = "Mask",
         .fr = "Masque",
     },
+    [STR_MATERIAL] = {
+        .en = "Material",
+        .fr = "Matériau",
+    },
     [STR_MATERIALS] = {
         .en = "Materials",
         .fr = "Matériaux",
+    },
+    [STR_MERGE] = {
+        .en = "Merge",
+        .fr = "Fusionner",
     },
     [STR_MOVE] = {
         .en = "Move",
@@ -164,6 +228,10 @@ static const string_t STRINGS[] = {
     [STR_NEW] = {
         .en = "New",
         .fr = "Nouveau",
+    },
+    [STR_OCCLUSION] = {
+        .en = "Occlusion",
+        .fr = "Occlusion",
     },
     [STR_OFFSET] = {
         .en = "Offset",
@@ -245,6 +313,10 @@ static const string_t STRINGS[] = {
         .en = "Settings",
         .fr = "Réglages",
     },
+    [STR_SHADELESS] = {
+        .en = "Shadeless",
+        .fr = "Sans ombrage",
+    },
     [STR_SHAPE] = {
         .en = "Shape",
         .fr = "Forme",
@@ -252,6 +324,14 @@ static const string_t STRINGS[] = {
     [STR_SIZE] = {
         .en = "Size",
         .fr = "Taille",
+    },
+    [STR_SMOOTH] = {
+        .en = "Smooth",
+        .fr = "Adoucir",
+    },
+    [STR_SMOOTHNESS] = {
+        .en = "Smoothness",
+        .fr = "Adoucissement",
     },
     [STR_SPHERE] = {
         .en = "Sphere",
@@ -277,9 +357,17 @@ static const string_t STRINGS[] = {
         .en = "Top",
         .fr = "Dessus",
     },
+    [STR_TRANSPARENT] = {
+        .en = "Transparent",
+        .fr = "Transparent",
+    },
     [STR_UNDO] = {
         .en = "Undo",
         .fr = "Annuler",
+    },
+    [STR_UNLINK] = {
+        .en = "Unlink",
+        .fr = "Dé-lier",
     },
     [STR_VIEW] = {
         .en = "View",
