@@ -125,6 +125,10 @@ static const string_t STRINGS[] = {
         .en = "Cylinder",
         .fr = "Cylindre",
     },
+    [STR_DISTANCE] = {
+        .en = "Distance",
+        .fr = "Distance",
+    },
     [STR_DEBUG] = {
         .en = "Debug",
         .fr = "Débug",
@@ -252,6 +256,10 @@ static const string_t STRINGS[] = {
     [STR_OPEN] = {
         .en = "Open",
         .fr = "Ouvrir",
+    },
+    [STR_ORTHOGRAPHIC] = {
+        .en = "Orthographic",
+        .fr = "Orthogonale",
     },
     [STR_PAINT] = {
         .en = "Paint",
