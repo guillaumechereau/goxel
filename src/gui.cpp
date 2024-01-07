@@ -206,14 +206,6 @@ static uint32_t get_icon_color(int icon, bool selected)
         return 0xFFFFFFFF;
     theme_get_color(group, THEME_COLOR_ITEM, false, color);
     return ImGui::GetColorU32(color);
-
-    /*
-    if (icon < ICON_COLORIZABLE_START || icon > ICON_COLORIZABLE_END)
-        return 0xFFFFFFFF;
-
-    return (icon >= ICON_COLORIZABLE_START && icon < ICON_COLORIZABLE_END) ?
-            ImGui::GetColorU32(COLOR(WIDGET, TEXT, selected)) : 0xFFFFFFFF;
-    */
 }
 
 static ImVec2 get_icon_uv(int icon)
@@ -553,62 +545,6 @@ static void render_view_cube(void)
     ImGui::PopStyleColor();
 
 }
-
-/*
-static void render_view_cube(void)
-{
-    ImGuiIO& io = ImGui::GetIO();
-    static ImGuiWindowFlags gizmoWindowFlags = 0;
-    float viewManipulateRight = io.DisplaySize.x;
-    float viewManipulateTop = 0;
-    static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
-    static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
-    static float camDistance = 8.f;
-
-    (void)viewManipulateRight;
-    (void)viewManipulateTop;
-
-    ImGui::SetNextWindowSize(ImVec2(800, 400), ImGuiCond_Appearing);
-    ImGui::SetNextWindowPos(ImVec2(400,20), ImGuiCond_Appearing);
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.35f, 0.3f, 0.3f));
-    ImGui::Begin("Gizmo", 0, gizmoWindowFlags);
-    ImGuizmo::SetDrawlist();
-    float windowWidth = (float)ImGui::GetWindowWidth();
-    float windowHeight = (float)ImGui::GetWindowHeight();
-    ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-    viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
-    viewManipulateTop = ImGui::GetWindowPos().y;
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
-    gizmoWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
-
-    camera_t *camera = goxel.image->active_camera;
-    float *view = (float*)camera->view_mat;
-    const float *projection= (float*)camera->proj_mat;
-    float matrix[16] = {1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1};
-
-    if (0)
-    ImGuizmo::DrawCubes(view, projection, matrix, 1);
-
-    if (0)
-    ImGuizmo::Manipulate(view, projection,
-            mCurrentGizmoOperation, mCurrentGizmoMode,
-            matrix, NULL,
-            NULL, NULL, NULL);
-
-    ImGuizmo::ViewManipulate(
-           view, projection,
-           ImGuizmo::ROTATE, ImGuizmo::LOCAL,
-           matrix, camDistance,
-           ImVec2(viewManipulateRight - 128, viewManipulateTop),
-           ImVec2(128, 128), 0x10101010);
-
-    ImGui::End();
-    ImGui::PopStyleColor(1);
-}
-*/
 
 static void gui_iter(const inputs_t *inputs)
 {
@@ -1225,26 +1161,6 @@ bool gui_color_small(const char *label, uint8_t color[4])
         color[3] = colorf[3] * 255;
     }
     return ret;
-    /*
-    uint8_t orig[4];
-    memcpy(orig, color, 4);
-    ImVec4 c = color;
-    ImGui::PushID(label);
-    ImGui::ColorButton(label, c);
-    if (ImGui::BeginPopupContextItem("color context menu", 0)) {
-        gui->capture_mouse = true;
-        color_edit("##edit", color, NULL);
-        if (ImGui::Button("Close")) {
-            ImGui::CloseCurrentPopup();
-            gui->capture_mouse = false;
-        }
-        ImGui::EndPopup();
-    }
-    gui_same_line();
-    ImGui::Text("%s", label);
-    ImGui::PopID();
-    return memcmp(color, orig, 4) != 0;
-    */
 }
 
 bool gui_color_small_f3(const char *label, float color[3])
