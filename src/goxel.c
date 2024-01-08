@@ -457,7 +457,7 @@ int goxel_iter(const inputs_t *inputs)
     goxel.rend.scale = inputs->scale;
 
     goxel.gui.viewport[0] = 0;
-    goxel.gui.viewport[1] = menu_w;
+    goxel.gui.viewport[1] = 0;
     goxel.gui.viewport[2] = goxel.screen_size[0];
     goxel.gui.viewport[3] = goxel.screen_size[1] - menu_w;
 
