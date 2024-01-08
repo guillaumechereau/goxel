@@ -173,6 +173,10 @@ static const string_t STRINGS[] = {
         .en = "Fixed",
         .fr = "Fixe",
     },
+    [STR_FLOOR] = {
+        .en = "Floor",
+        .fr = "Plancher",
+    },
     [STR_FRONT] = {
         .en = "Front",
         .fr = "Avant",
@@ -249,6 +253,10 @@ static const string_t STRINGS[] = {
         .en = "New",
         .fr = "Nouveau",
     },
+    [STR_NONE] = {
+        .en = "None",
+        .fr = "Aucun",
+    },
     [STR_OCCLUSION] = {
         .en = "Occlusion",
         .fr = "Occlusion",
@@ -301,6 +309,10 @@ static const string_t STRINGS[] = {
         .en = "Rectangle Select",
         .fr = "Sélection rectangulaire",
     },
+    [STR_RESTART] = {
+        .en = "Restart",
+        .fr = "Redémarrer",
+    },
     [STR_REDO] = {
         .en = "Redo",
         .fr = "Refaire",
@@ -316,6 +328,10 @@ static const string_t STRINGS[] = {
     [STR_RIGHT] = {
         .en = "Right",
         .fr = "Droite",
+    },
+    [STR_SAMPLES] = {
+        .en = "Samples",
+        .fr = "Échantillons",
     },
     [STR_SAVE] = {
         .en = "Save",
@@ -361,6 +377,10 @@ static const string_t STRINGS[] = {
         .en = "Size",
         .fr = "Taille",
     },
+    [STR_SKY] = {
+        .en = "Sky",
+        .fr = "Ciel",
+    },
     [STR_SMOOTH] = {
         .en = "Smooth",
         .fr = "Adoucir",
@@ -380,6 +400,18 @@ static const string_t STRINGS[] = {
     [STR_SNAP] = {
         .en = "Snap",
         .fr = "Aimanter",
+    },
+    [STR_START] = {
+        .en = "Start",
+        .fr = "Démarrer",
+    },
+    [STR_STOP] = {
+        .en = "Stop",
+        .fr = "Stopper",
+    },
+    [STR_SUCCESS] = {
+        .en = "Success",
+        .fr = "Succès",
     },
     [STR_SYMMETRY] = {
         .en = "Symmetry",
@@ -401,6 +433,10 @@ static const string_t STRINGS[] = {
         .en = "Undo",
         .fr = "Annuler",
     },
+    [STR_UNIFORM] = {
+        .en = "Uniform",
+        .fr = "Uniforme",
+    },
     [STR_UNLINK] = {
         .en = "Unlink",
         .fr = "Dé-lier",
@@ -412,5 +448,9 @@ static const string_t STRINGS[] = {
     [STR_VOLUME] = {
         .en = "Volume",
         .fr = "Volume",
+    },
+    [STR_WORLD] = {
+        .en = "World",
+        .fr = "Monde",
     },
 };
