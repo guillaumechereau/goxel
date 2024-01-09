@@ -448,8 +448,6 @@ int goxel_iter(const inputs_t *inputs)
     if (goxel.delta_time != 0)
         goxel.fps = mix(goxel.fps, 1.0 / goxel.delta_time, 0.1);
     goxel.frame_time = time;
-    goxel_set_help_text(NULL);
-    goxel_set_hint_text(NULL);
     goxel.screen_size[0] = inputs->window_size[0];
     goxel.screen_size[1] = inputs->window_size[1];
     goxel.screen_scale = inputs->scale;

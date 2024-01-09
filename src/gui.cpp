@@ -998,10 +998,11 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
         ImVec2(ICON_HEIGHT, ICON_HEIGHT) :
         ImVec2(w, ITEM_HEIGHT);
 
-    if (!tooltip) {
+    if (!tooltip && icon != -1) {
         tooltip = label;
         while (*tooltip == '#') tooltip++;
     }
+
     ImGui::PushID(label);
     if (icon == -1) {
         ImGui::PushStyleColor(ImGuiCol_Button, COLOR(SELECTABLE, INNER, (*v)));
@@ -1034,7 +1035,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     }
     ImGui::PopStyleColor(3);
     if (ret) *v = !*v;
-    if (ImGui::IsItemHovered()) {
+    if (tooltip && ImGui::IsItemHovered()) {
         gui_tooltip(tooltip);
         goxel_set_help_text(tooltip);
     }

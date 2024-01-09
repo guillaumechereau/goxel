@@ -129,7 +129,8 @@ void gui_app(void)
             gui_menu_begin(goxel.hint_text ?: "", false);
             gui_menu_begin("      ", false);
             gui_menu_begin(goxel.help_text ?: "", false);
-
+            goxel_set_help_text(NULL);
+            goxel_set_hint_text(NULL);
             gui_menu_bar_end();
         }
         y = ITEM_HEIGHT + 2;
