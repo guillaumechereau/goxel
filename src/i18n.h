@@ -140,3 +140,12 @@ enum {
 const char *tr(int str);
 
 #define _(x) tr(STR_##x)
+
+typedef struct {
+    const char *id;
+    const char *name;
+} tr_lang_t;
+
+void tr_set_language(const char *id);
+const tr_lang_t *tr_get_language(void);
+const tr_lang_t *tr_get_supported_languages(void);

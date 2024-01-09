@@ -20,20 +20,57 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
+
+static const tr_lang_t LANGUAGES[] = {
+    {"en", "English"},
+    {"fr", "Français"},
+    {}
+};
 
 typedef struct {
-    const char *en;
-    const char *fr;
+    union {
+        struct {
+            const char *en;
+            const char *fr;
+        };
+        const char *values[2];
+    };
 } string_t;
 
 static const string_t STRINGS[];
+
+static int current_lang_idx = 0;
+
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
 const char *tr(int id)
 {
     // Only return the English for now.
     if (!STRINGS[id].en) fprintf(stderr, "Str %d not defined.\n", id);
     assert(STRINGS[id].en);
-    return STRINGS[id].en;
+    return STRINGS[id].values[current_lang_idx];
+}
+
+void tr_set_language(const char *id)
+{
+    int i;
+    for (i = 0; i < ARRAY_SIZE(LANGUAGES); i++) {
+        if (strcmp(LANGUAGES[i].id, id) == 0) {
+            current_lang_idx = i;
+            break;
+        }
+    }
+}
+
+const tr_lang_t *tr_get_language(void)
+{
+    return &LANGUAGES[current_lang_idx];
+}
+
+const tr_lang_t *tr_get_supported_languages(void)
+{
+    return LANGUAGES;
 }
 
 static const string_t STRINGS[] = {
