@@ -214,6 +214,10 @@ static const string_t STRINGS[] = {
         .en = "Floor",
         .fr = "Plancher",
     },
+    [STR_FORMAT] = {
+        .en = "Format",
+        .fr = "Format",
+    },
     [STR_FRONT] = {
         .en = "Front",
         .fr = "Avant",
@@ -241,6 +245,10 @@ static const string_t STRINGS[] = {
     [STR_IMPORT] = {
         .en = "Import",
         .fr = "Importer",
+    },
+    [STR_LANGUAGE] = {
+        .en = "Language",
+        .fr = "Langue",
     },
     [STR_LASER] = {
         .en = "Laser",
@@ -302,6 +310,10 @@ static const string_t STRINGS[] = {
         .en = "Offset",
         .fr = "Décalage",
     },
+    [STR_OK] = {
+        .en = "OK",
+        .fr = "OK",
+    },
     [STR_OPEN] = {
         .en = "Open",
         .fr = "Ouvrir",
@@ -325,6 +337,10 @@ static const string_t STRINGS[] = {
     [STR_PASTE] = {
         .en = "Paste",
         .fr = "Coller",
+    },
+    [STR_PATHS] = {
+        .en = "Paths",
+        .fr = "Chemins",
     },
     [STR_PERSPECTIVE] = {
         .en = "Perspective",
@@ -410,6 +426,10 @@ static const string_t STRINGS[] = {
         .en = "Shape",
         .fr = "Forme",
     },
+    [STR_SHORTCUTS] = {
+        .en = "Shortcuts",
+        .fr = "Raccourcis",
+    },
     [STR_SIZE] = {
         .en = "Size",
         .fr = "Taille",
@@ -453,6 +473,10 @@ static const string_t STRINGS[] = {
     [STR_SYMMETRY] = {
         .en = "Symmetry",
         .fr = "Symétrie",
+    },
+    [STR_THEME] = {
+        .en = "Theme",
+        .fr = "Thème",
     },
     [STR_TOOLS] = {
         .en = "Tools",

@@ -59,18 +59,18 @@ static void on_format(void *user, file_format_t *f)
 void gui_export_panel(void)
 {
     char label[128];
-    gui_text("Export as");
+    gui_text(_(FORMAT));
     if (!g_current) g_current = file_formats; // First one.
 
     make_label(g_current, label, sizeof(label));
-    if (gui_combo_begin("Export as", label)) {
+    if (gui_combo_begin("#Format", label)) {
         file_format_iter("w", NULL, on_format);
         gui_combo_end();
     }
 
     if (g_current->export_gui)
         g_current->export_gui(g_current);
-    if (gui_button("Export", 1, 0))
+    if (gui_button(_(EXPORT), 1, 0))
         goxel_export_to_file(NULL, g_current->name);
 }
 
