@@ -38,9 +38,9 @@ static void do_move(layer_t *layer, const float mat[4][4])
     mat4_imul(m, mat);
     mat4_itranslate(m, +0.5, +0.5, +0.5);
 
+    mat4_mul(mat, layer->mat, layer->mat);
     if (layer->base_id || layer->image || layer->shape) {
-        mat4_mul(mat, layer->mat, layer->mat);
-        layer->base_volume_key = 0;
+        layer->base_volume_key = 0; // Mark it as dirty.
     } else {
         volume_move(layer->volume, m);
         if (!box_is_null(layer->box)) {
@@ -68,6 +68,7 @@ static int gui(tool_t *tool)
     layer_t *layer;
     float mat[4][4] = MAT4_IDENTITY, v;
     int i;
+    int x, y, z;
 
     layer = goxel.image->active_layer;
     if (layer->shape) {
@@ -76,42 +77,62 @@ static int gui(tool_t *tool)
         goxel.tool_drag_mode = DRAG_MOVE;
     }
 
-    gui_group_begin(NULL);
-    i = 0;
-    if (gui_input_int("Move X", &i, 0, 0))
-        mat4_itranslate(mat, i, 0, 0);
-    i = 0;
-    if (gui_input_int("Move Y", &i, 0, 0))
-        mat4_itranslate(mat, 0, i, 0);
-    i = 0;
-    if (gui_input_int("Move Z", &i, 0, 0))
-        mat4_itranslate(mat, 0, 0, i);
+    x = (int)round(layer->mat[3][0]);
+    y = (int)round(layer->mat[3][1]);
+    z = (int)round(layer->mat[3][2]);
+
+    gui_group_begin("Position");
+    if (gui_input_int("X", &x, 0, 0))
+        mat[3][0] = x - (int)round(layer->mat[3][0]);
+    if (gui_input_int("Y", &y, 0, 0))
+        mat[3][1] = y - (int)round(layer->mat[3][1]);
+    if (gui_input_int("Z", &z, 0, 0))
+        mat[3][2] = z - (int)round(layer->mat[3][2]);
     gui_group_end();
-    gui_group_begin(NULL);
-    i = 0;
-    if (gui_input_int("Rot X", &i, 0, 0))
-        mat4_irotate(mat, i * M_PI / 2, 1, 0, 0);
-    i = 0;
-    if (gui_input_int("Rot Y", &i, 0, 0))
-        mat4_irotate(mat, i * M_PI / 2, 0, 1, 0);
-    i = 0;
-    if (gui_input_int("Rot Z", &i, 0, 0))
-        mat4_irotate(mat, i * M_PI / 2, 0, 0, 1);
+
+    gui_group_begin("Rotation");
+
+    gui_row_begin(2);
+    if (gui_button("-X", 0, 0))
+        mat4_irotate(mat, -M_PI / 2, 1, 0, 0);
+    if (gui_button("+X", 0, 0))
+        mat4_irotate(mat, +M_PI / 2, 1, 0, 0);
+    gui_row_end();
+
+    gui_row_begin(2);
+    if (gui_button("-Y", 0, 0))
+        mat4_irotate(mat, -M_PI / 2, 0, 1, 0);
+    if (gui_button("+Y", 0, 0))
+        mat4_irotate(mat, +M_PI / 2, 0, 1, 0);
+    gui_row_end();
+
+    gui_row_begin(2);
+    if (gui_button("-Z", 0, 0))
+        mat4_irotate(mat, -M_PI / 2, 0, 0, 1);
+    if (gui_button("+Z", 0, 0))
+        mat4_irotate(mat, +M_PI / 2, 0, 0, 1);
+    gui_row_end();
+
     gui_group_end();
+
     if (layer->image && gui_input_int("Scale", &i, 0, 0)) {
         v = pow(2, i);
         mat4_iscale(mat, v, v, v);
     }
 
-    gui_group_begin(NULL);
-    if (gui_button("flip X", -1, 0)) mat4_iscale(mat, -1,  1,  1);
-    if (gui_button("flip Y", -1, 0)) mat4_iscale(mat,  1, -1,  1);
-    if (gui_button("flip Z", -1, 0)) mat4_iscale(mat,  1,  1, -1);
+    gui_group_begin("Flip");
+    gui_row_begin(3);
+    if (gui_button("X", -1, 0)) mat4_iscale(mat, -1,  1,  1);
+    if (gui_button("Y", -1, 0)) mat4_iscale(mat,  1, -1,  1);
+    if (gui_button("Z", -1, 0)) mat4_iscale(mat,  1,  1, -1);
+    gui_row_end();
     gui_group_end();
 
-    gui_group_begin(NULL);
-    if (gui_button("Scale up",   -1, 0)) mat4_iscale(mat, 2, 2, 2);
-    if (gui_button("Scale down", -1, 0)) mat4_iscale(mat, 0.5, 0.5, 0.5);
+    gui_group_begin("Scale");
+    gui_row_begin(3);
+    if (gui_button("x2", -1, 0)) mat4_iscale(mat, 2, 2, 2);
+    if (gui_button("x0.5", -1, 0)) mat4_iscale(mat, 0.5, 0.5, 0.5);
+    gui_row_end();
     gui_group_end();
 
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
