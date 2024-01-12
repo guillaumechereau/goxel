@@ -427,7 +427,13 @@ void goxel_release_graphics(void)
 static void update_window_title(void)
 {
     char buf[1024];
-    sprintf(buf, "Goxel %s%s %s", GOXEL_VERSION_STR, DEBUG ? " (debug)" : "",
+    bool changed;
+
+    changed = image_get_key(goxel.image) != goxel.image->saved_key;
+    sprintf(buf, "Goxel %s%s %s%s",
+            GOXEL_VERSION_STR,
+            DEBUG ? " (debug)" : "",
+            changed ? "*" : "",
             goxel.image->path ?: "");
     sys_set_window_title(buf);
 }
