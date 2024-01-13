@@ -78,6 +78,14 @@ static const string_t STRINGS[] = {
         .en = "2D Image",
         .fr = "Image 2D",
     },
+    [STR_ABOVE] = {
+        .en = "Above",
+        .fr = "Dessus",
+    },
+    [STR_ABSOLUTE] = {
+        .en = "Absolute",
+        .fr = "Absolu",
+    },
     [STR_ACTION_ADD_SELECTION_HELP] = {
         .en = "Adds selected area to the mask",
         .fr = "Ajoute la zone sélectionnée au masque",
@@ -166,6 +174,10 @@ static const string_t STRINGS[] = {
         .en = "Background",
         .fr = "Arrière-plan",
     },
+    [STR_BELOW] = {
+        .en = "Below",
+        .fr = "Dessous",
+    },
     [STR_BORDER] = {
         .en = "Border",
         .fr = "Bordures",
@@ -222,6 +234,14 @@ static const string_t STRINGS[] = {
         .en = "Cube",
         .fr = "Cube",
     },
+    [STR_CUT] = {
+        .en = "Cut",
+        .fr = "Couper",
+    },
+    [STR_CUT_TO_NEW_LAYER] = {
+        .en = "Cut to new Layer",
+        .fr = "Couper vers un nouveau calque",
+    },
     [STR_CYLINDER] = {
         .en = "Cylinder",
         .fr = "Cylindre",
@@ -265,6 +285,10 @@ static const string_t STRINGS[] = {
     [STR_FILE] = {
         .en = "File",
         .fr = "Fichier",
+    },
+    [STR_FILL] = {
+        .en = "Fill",
+        .fr = "Remplir",
     },
     [STR_FIT_TO_CONTENT] = {
         .en = "Fit to Content",
@@ -418,6 +442,10 @@ static const string_t STRINGS[] = {
         .en = "Quit",
         .fr = "Quitter",
     },
+    [STR_RELATIVE] = {
+        .en = "Relative",
+        .fr = "Relative",
+    },
     [STR_RENDER] = {
         .en = "Render",
         .fr = "Rendu",
@@ -446,6 +474,10 @@ static const string_t STRINGS[] = {
         .en = "Right",
         .fr = "Droite",
     },
+    [STR_ROTATION] = {
+        .en = "Rotation",
+        .fr = "Rotation",
+    },
     [STR_SAMPLES] = {
         .en = "Samples",
         .fr = "Échantillons",
@@ -457,6 +489,14 @@ static const string_t STRINGS[] = {
     [STR_SAVE_AS] = {
         .en = "Save As",
         .fr = "Enregistrer sous",
+    },
+    [STR_SAVE_COLORS_AS_VERTEX_ATTRIBUTE] = {
+        .en = "Save colors as vertex attribute",
+        .fr = "Enregistrer les couleurs en tant qu'attribut de sommet",
+    },
+    [STR_SELECT_BY_COLOR] = {
+        .en = "Select by Color",
+        .fr = "Sélection par couleur",
     },
     [STR_SELECTION] = {
         .en = "Selection",
@@ -493,6 +533,10 @@ static const string_t STRINGS[] = {
     [STR_SHORTCUTS] = {
         .en = "Shortcuts",
         .fr = "Raccourcis",
+    },
+    [STR_SIMPLIFY] = {
+        .en = "Simplify",
+        .fr = "Simplifier",
     },
     [STR_SIZE] = {
         .en = "Size",
@@ -550,9 +594,21 @@ static const string_t STRINGS[] = {
         .en = "Top",
         .fr = "Dessus",
     },
+    [STR_TRANSLATION] = {
+        .en = "Translation",
+        .fr = "Translation",
+    },
     [STR_TRANSPARENT] = {
         .en = "Transparent",
         .fr = "Transparent",
+    },
+    [STR_TRANSPARENT_BACKGROUND] = {
+        .en = "Transparent Background",
+        .fr = "Arrière-plan transparent",
+    },
+    [STR_THRESHOLD] = {
+        .en = "Threshold",
+        .fr = "Seuil",
     },
     [STR_UNDO] = {
         .en = "Undo",
@@ -566,9 +622,21 @@ static const string_t STRINGS[] = {
         .en = "Unlink",
         .fr = "Dé-lier",
     },
+    [STR_USE_Y_UP_CONVENTION] = {
+        .en = "Use +Y up convention",
+        .fr = "Utilise la convention +Y up",
+    },
+    [STR_VERTEX_COLOR] = {
+        .en = "Vertex Color",
+        .fr = "Couleur de sommets",
+    },
     [STR_VIEW] = {
         .en = "View",
         .fr = "Vue",
+    },
+    [STR_VISIBLE] = {
+        .en = "Visible",
+        .fr = "Visible",
     },
     [STR_VOLUME] = {
         .en = "Volume",
@@ -577,5 +645,9 @@ static const string_t STRINGS[] = {
     [STR_WORLD] = {
         .en = "World",
         .fr = "Monde",
+    },
+    [STR_Y_UP] = {
+        .en = "Y Up",
+        .fr = "Y haut",
     },
 };

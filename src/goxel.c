@@ -374,6 +374,7 @@ void goxel_reset(void)
         goxel.rend.settings.shadow = 0;
 
     goxel.snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX;
+    goxel.mask_mode = MODE_REPLACE;
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,

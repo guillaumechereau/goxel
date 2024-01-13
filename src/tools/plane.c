@@ -88,33 +88,35 @@ static int gui(tool_t *tool_)
     bool v;
     float rot[3][3];
     float quat[4];
+    char buf[128];
 
     tool_plane_t *tool = (tool_plane_t*)tool_;
     v = goxel.snap_mask & SNAP_PLANE;
-    if (gui_checkbox("Visible", &v, NULL)) {
+    if (gui_checkbox(_(VISIBLE), &v, NULL)) {
         set_flag(&goxel.snap_mask, SNAP_PLANE, v);
     }
 
-    gui_combo("Move", &tool->move_mode, (const char*[]) {
-              "Relative", "Absolute"}, 2);
+    gui_combo(_(MOVE), &tool->move_mode, (const char*[]) {
+              _(RELATIVE), _(ABSOLUTE)}, 2);
 
     switch (tool->move_mode) {
     case 0:
         gui_group_begin(NULL);
         i = 0;
-        if (gui_input_int("Move", &i, 0, 0))
+        if (gui_input_int(_(TRANSLATION), &i, 0, 0))
             mat4_itranslate(goxel.plane, 0, 0, -i);
         i = 0;
-        if (gui_input_int("Rot X", &i, 0, 0))
+        snprintf(buf, sizeof(buf), "%s X", _(ROTATION));
+        if (gui_input_int(buf, &i, 0, 0))
             mat4_irotate(goxel.plane, i * M_PI / 2, 1, 0, 0);
         i = 0;
-        if (gui_input_int("Rot Y", &i, 0, 0))
+        if (gui_input_int("Y", &i, 0, 0))
             mat4_irotate(goxel.plane, i * M_PI / 2, 0, 1, 0);
         gui_group_end();
         break;
 
     case 1:
-        gui_group_begin("Origin");
+        gui_group_begin(_(ORIGIN));
         gui_input_float("X", &goxel.plane[3][0], 1.0, 0, 0, NULL);
         gui_input_float("Y", &goxel.plane[3][1], 1.0, 0, 0, NULL);
         gui_input_float("Z", &goxel.plane[3][2], 1.0, 0, 0, NULL);
@@ -122,19 +124,21 @@ static int gui(tool_t *tool_)
 
         mat4_to_mat3(goxel.plane, rot);
         mat3_to_quat(rot, quat);
-        if (gui_quat("Rotation", quat)) {
+        if (gui_quat(_(ROTATION), quat)) {
             mat4_apply_quat(goxel.plane, quat);
         }
         break;
 
     }
 
-    if (gui_button("Cut Above", 1, 0)) {
+    gui_group_begin(_(CUT));
+    if (gui_button(_(ABOVE), 1, 0)) {
         cut(true);
     }
-    if (gui_button("Cut Below", 1, 0)) {
+    if (gui_button(_(BELOW), 1, 0)) {
         cut(false);
     }
+    gui_group_end();
 
     return 0;
 }

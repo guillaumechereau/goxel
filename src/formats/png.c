@@ -41,7 +41,7 @@ static void export_gui(file_format_t *format)
     maxsize /= 2; // Because png export already double it.
     goxel.show_export_viewport = true;
     gui_group_begin(NULL);
-    gui_checkbox("Custom size", &goxel.image->export_custom_size, NULL);
+    gui_checkbox(_(SIZE), &goxel.image->export_custom_size, NULL);
     if (!goxel.image->export_custom_size) {
         goxel.image->export_width = goxel.gui.viewport[2];
         goxel.image->export_height = goxel.gui.viewport[3];
@@ -57,7 +57,7 @@ static void export_gui(file_format_t *format)
     gui_enabled_end();
     gui_group_end();
 
-    gui_checkbox("Transparent background",
+    gui_checkbox(_(TRANSPARENT_BACKGROUND),
                  &goxel.image->export_transparent_background,
                  NULL);
 }

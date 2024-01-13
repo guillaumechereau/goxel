@@ -98,11 +98,11 @@ static int gui(tool_t *tool_)
     tool_fuzzy_select_t *tool = (void*)tool_;
     bool use_color = tool->threshold < 255;
 
-    if (gui_checkbox("Use color", &use_color, "Stop at different color")) {
+    if (gui_checkbox(_(COLORS), &use_color, _(SELECT_BY_COLOR))) {
         tool->threshold = use_color ? 0 : 255;
     }
     if (use_color) {
-        gui_input_int("Threshold", &tool->threshold, 1, 254);
+        gui_input_int(_(THRESHOLD), &tool->threshold, 1, 254);
     }
 
     tool_gui_mask_mode();
@@ -113,15 +113,15 @@ static int gui(tool_t *tool_)
     volume_t *volume = goxel.image->active_layer->volume;
 
     gui_group_begin(NULL);
-    if (gui_button("Clear", 1, 0)) {
+    if (gui_button(_(CLEAR), 1, 0)) {
         image_history_push(goxel.image);
         volume_merge(volume, goxel.mask, MODE_SUB, NULL);
     }
-    if (gui_button("Fill", 1, 0)) {
+    if (gui_button(_(FILL), 1, 0)) {
         image_history_push(goxel.image);
         volume_merge(volume, goxel.mask, MODE_OVER, goxel.painter.color);
     }
-    if (gui_button("Cut as new layer", 1, 0)) {
+    if (gui_button(_(CUT_TO_NEW_LAYER), 1, 0)) {
         image_history_push(goxel.image);
         cut_as_new_layer(goxel.image, goxel.image->active_layer,
                          goxel.mask);
