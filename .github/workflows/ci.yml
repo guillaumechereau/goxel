@@ -46,7 +46,11 @@ jobs:
 
     - name: Build Goxel
       run: |
-        scons -j 4 mode=release
+        make release
+
+    - name: Install
+      run: |
+        sudo make install
 
     - name: Build AppImage
       run: |
