@@ -3,6 +3,7 @@ on:
   push:
     # branches: [ master ] # Uncomment if you want to only run the workflow when pushing on to the master branch
   pull_request:
+  workflow_dispatch:
 
 jobs:
   windows_x86_64:
