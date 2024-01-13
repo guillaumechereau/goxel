@@ -1,8 +1,9 @@
 SHELL = bash
+MAKEFLAGS+="-j $(shell nproc)"
 .ONESHELL:
 
 all:
-	scons -j 8
+	scons
 
 release:
 	scons mode=release
