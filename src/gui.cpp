@@ -971,8 +971,8 @@ bool gui_action_button(int id, const char *label, float size)
     assert(action);
     ImGui::PushID(action->id);
     ret = gui_button(label, size, action->icon);
-    if (ImGui::IsItemHovered())
-        goxel_set_help_text(action_get(id, true)->help);
+    if (ImGui::IsItemHovered() && action->help)
+        goxel_set_help_text(tr(action->help));
     if (ret) {
         action_exec(action_get(id, true));
     }

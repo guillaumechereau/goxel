@@ -729,7 +729,6 @@ static void image_image_layer_to_volume(image_t *img, layer_t *layer)
 }
 
 ACTION_REGISTER(layer_clear,
-    .help = "Clear the current layer",
     .cfunc = image_clear_layer,
     .icon = ICON_DELETE,
     .flags = ACTION_TOUCH_IMAGE,
@@ -742,7 +741,6 @@ static void a_image_add_layer(void)
 }
 
 ACTION_REGISTER(img_new_layer,
-    .help = "Add a new layer to the image",
     .cfunc = a_image_add_layer,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
@@ -754,7 +752,6 @@ static void a_image_delete_layer(void)
 }
 
 ACTION_REGISTER(img_del_layer,
-    .help = "Delete the active layer",
     .cfunc = a_image_delete_layer,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
@@ -772,14 +769,12 @@ static void a_image_move_layer_down(void)
 
 
 ACTION_REGISTER(img_move_layer_up,
-    .help = "Move the active layer up",
     .cfunc = a_image_move_layer_up,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_UPWARD,
 )
 
 ACTION_REGISTER(img_move_layer_down,
-    .help = "Move the active layer down",
     .cfunc = a_image_move_layer_down,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
@@ -791,7 +786,6 @@ static void a_image_duplicate_layer(void)
 }
 
 ACTION_REGISTER(img_duplicate_layer,
-    .help = "Duplicate the active layer",
     .cfunc = a_image_duplicate_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -802,7 +796,7 @@ static void a_image_clone_layer(void)
 }
 
 ACTION_REGISTER(img_clone_layer,
-    .help = "Clone the active layer",
+    .help = STR_ACTION_CLONE_LAYER_HELP,
     .cfunc = a_image_clone_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -813,7 +807,7 @@ static void a_image_unclone_layer(void)
 }
 
 ACTION_REGISTER(img_unclone_layer,
-    .help = "Unclone the active layer",
+    .help = STR_ACTION_UNLINK_LAYER_HELP,
     .cfunc = a_image_unclone_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -826,7 +820,6 @@ static void a_img_select_parent_layer(void)
 
 
 ACTION_REGISTER(img_select_parent_layer,
-    .help = "Select the parent of a layer",
     .cfunc = a_img_select_parent_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -837,7 +830,6 @@ static void a_img_merge_visible_layers(void)
 }
 
 ACTION_REGISTER(img_merge_visible_layers,
-    .help = "Merge all the visible layers",
     .cfunc = a_img_merge_visible_layers,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -848,7 +840,6 @@ static void a_img_new_camera(void)
 }
 
 ACTION_REGISTER(img_new_camera,
-    .help = "Add a new camera to the image",
     .cfunc = a_img_new_camera,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
@@ -860,7 +851,6 @@ static void a_img_del_camera(void)
 }
 
 ACTION_REGISTER(img_del_camera,
-    .help = "Delete the active camera",
     .cfunc = a_img_del_camera,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
@@ -877,14 +867,12 @@ static void a_img_move_camera_down(void)
 }
 
 ACTION_REGISTER(img_move_camera_up,
-    .help = "Move the active camera up",
     .cfunc = a_img_move_camera_up,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_UPWARD,
 )
 
 ACTION_REGISTER(img_move_camera_down,
-    .help = "Move the active camera down",
     .cfunc = a_img_move_camera_down,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ARROW_DOWNWARD,
@@ -896,7 +884,7 @@ static void a_img_image_layer_to_volume(void)
 }
 
 ACTION_REGISTER(img_image_layer_to_volume,
-    .help = "Turn an image layer into a volume",
+    .help = STR_ACTION_LAYER_TO_VOLUME_HELP,
     .cfunc = a_img_image_layer_to_volume,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -907,7 +895,7 @@ static void a_img_new_shape_layer(void)
 }
 
 ACTION_REGISTER(img_new_shape_layer,
-    .help = "Add a new shape layer to the image",
+    .help = STR_ACTION_NEW_SHAPE_LAYER_HELP,
     .cfunc = a_img_new_shape_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -918,7 +906,6 @@ static void a_img_new_material(void)
 }
 
 ACTION_REGISTER(img_new_material,
-    .help = "Add a new material to the image",
     .cfunc = a_img_new_material,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_ADD,
@@ -930,14 +917,13 @@ static void a_img_del_material(void)
 }
 
 ACTION_REGISTER(img_del_material,
-    .help = "Delete a material",
     .cfunc = a_img_del_material,
     .flags = ACTION_TOUCH_IMAGE,
     .icon = ICON_REMOVE,
 )
 
 ACTION_REGISTER(img_auto_resize,
-    .help = "Auto resize the image to fit the layers",
+    .help = STR_ACTION_IMAGE_AUTO_RESIZE_HELP,
     .cfunc = a_image_auto_resize,
     .flags = ACTION_TOUCH_IMAGE,
 )

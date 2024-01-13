@@ -35,7 +35,6 @@ void tool_register_(tool_t *tool)
     action = (action_t) {
         .id = tool->action_id,
         .default_shortcut = tool->default_shortcut,
-        .help = "set tool",
         .cfunc_data = a_tool_set,
         .data = (void*)tool,
         .flags = ACTION_CAN_EDIT_SHORTCUT,

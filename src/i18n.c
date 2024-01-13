@@ -78,6 +78,70 @@ static const string_t STRINGS[] = {
         .en = "2D Image",
         .fr = "Image 2D",
     },
+    [STR_ACTION_ADD_SELECTION_HELP] = {
+        .en = "Adds selected area to the mask",
+        .fr = "Ajoute la zone sélectionnée au masque",
+    },
+    [STR_ACTION_CLONE_LAYER_HELP] = {
+        .en = "Creates a linked copy of the selected layer",
+        .fr = "Crée une copie liée du calque sélectionné",
+    },
+    [STR_ACTION_CUT_AS_NEW_LAYER] = {
+        .en = "Cuts the selected area into a new layer",
+        .fr = "Coupe la zone sélectionnée dans un nouveau calque",
+    },
+    [STR_ACTION_FILL_SELECTION_HELP] = {
+        .en = "Fills the selected area with the current color",
+        .fr = "Remplit la zone sélectionnée avec la couleur actuelle",
+    },
+    [STR_ACTION_IMAGE_AUTO_RESIZE_HELP] = {
+        .en = "Resizes the image to fit the layers",
+        .fr = "Redimensionne l'image pour l'adapter aux calques",
+    },
+    [STR_ACTION_IMAGE_LAYER_TO_VOLUME_HELP] = {
+        .en = "Converts a 2d image into a volume",
+        .fr = "Convertit une image 2D en volume",
+    },
+    [STR_ACTION_LAYER_TO_VOLUME_HELP] = {
+        .en = "Converts a layer into a volume",
+        .fr = "Convertit un calque en volume",
+    },
+    [STR_ACTION_NEW_SHAPE_LAYER_HELP] = {
+        .en = "Creates a shape layer",
+        .fr = "Crée un calque de forme",
+    },
+    [STR_ACTION_RESET_HELP] = {
+        .en = "Creates a new image (discards the current one)",
+        .fr = "Crée une nouvelle image (rejete l'image actuelle)",
+    },
+    [STR_ACTION_SET_MODE_ADD_HELP] = {
+        .en = "Adds to the voxels",
+        .fr = "Ajoute aux voxels",
+    },
+    [STR_ACTION_SET_MODE_PAINT_HELP] = {
+        .en = "Paints the voxels",
+        .fr = "Peint les voxels",
+    },
+    [STR_ACTION_SET_MODE_SUB_HELP] = {
+        .en = "Subtract to the voxels",
+        .fr = "Soustraire aux voxels",
+    },
+    [STR_ACTION_SUB_SELECTION_HELP] = {
+        .en = "Subtracts selected area from the mask",
+        .fr = "Soustrait la zone sélectionnée du masque",
+    },
+    [STR_ACTION_TOGGLE_MODE_HELP] = {
+        .en = "Switches the mode (add/subtract/paint)",
+        .fr = "Change le mode (ajouter/soustraire/peindre)",
+    },
+    [STR_ACTION_UNLINK_LAYER_HELP] = {
+        .en = "Unlinks the selected layer from its parent",
+        .fr = "Dissocie le calque sélectionné de son parent",
+    },
+    [STR_ACTION_VIEW_TOGGLE_ORTHO_HELP] = {
+        .en = "Switches the projection (perspective/orthographic)",
+        .fr = "Change la projection (perspective/orthographique)",
+    },
     [STR_ADD] = {
         .en = "Add",
         .fr = "Ajouter"
