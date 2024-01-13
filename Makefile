@@ -1,8 +1,9 @@
 SHELL = bash
+MAKEFLAGS+="-j $(shell nproc)"
 .ONESHELL:
 
 all:
-	scons -j 8
+	scons
 
 release:
 	scons mode=release
@@ -45,9 +46,9 @@ install:
 	install -Dm644 snap/gui/goxel.desktop \
 	    $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
 	install -Dm644 \
-	    snap/gui/io.github.guillaumechereau.Goxel.appdata.xml \
+	    snap/gui/io.github.guillaumechereau.Goxel.metainfo.xml \
 	    $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	        io.github.guillaumechereau.Goxel.appdata.xml)
+	        io.github.guillaumechereau.Goxel.metainfo.xml)
 
 .PHONY: uninstall
 uninstall:
@@ -58,4 +59,4 @@ uninstall:
 	done
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
 	rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	         io.github.guillaumechereau.Goxel.appdata.xml)
+	         io.github.guillaumechereau.Goxel.metainfo.xml)
