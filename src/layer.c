@@ -46,7 +46,7 @@ uint32_t layer_get_key(const layer_t *layer)
     uint32_t mat_key;
 
     volume_key = volume_get_key(layer->volume);
-    mat_key = material_get_hash(layer->material);
+    mat_key = layer->material ? material_get_hash(layer->material) : 0;
 
     key = 0;
     key = XXH32(&volume_key, sizeof(volume_key), key);
