@@ -30,6 +30,14 @@ typedef struct {
 static void do_move(layer_t *layer, const float mat[4][4],
                     const float origin[3])
 {
+    /*
+     * Note: for voxel volume layers, rotation and scale are only
+     * applied to the voxels, without modifying the layer transformation
+     * matrix.  For translation we modify the matrix (so that the origin
+     * is moved) but we also modify the voxels because we want all the layer
+     * volume to stay aligned.
+     */
+
     float m[4][4] = MAT4_IDENTITY;
     const float default_origin[3] = {0.5, 0.5, 0.5};
 
@@ -42,10 +50,12 @@ static void do_move(layer_t *layer, const float mat[4][4],
     mat4_imul(m, mat);
     mat4_itranslate(m, -origin[0], -origin[1], -origin[2]);
 
-    mat4_mul(mat, layer->mat, layer->mat);
     if (layer->base_id || layer->image || layer->shape) {
+        mat4_mul(mat, layer->mat, layer->mat);
         layer->base_volume_key = 0; // Mark it as dirty.
     } else {
+        // Only apply translation to the layer->mat.
+        vec3_add(layer->mat[3], mat[3], layer->mat[3]);
         volume_move(layer->volume, m);
         if (!box_is_null(layer->box)) {
             mat4_mul(m, layer->box, layer->box);
