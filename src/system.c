@@ -39,7 +39,6 @@ sys_callbacks_t sys_callbacks = {};
 #define NOC_FILE_DIALOG_IMPLEMENTATION
 #include "noc_file_dialog.h"
 #include <pwd.h>
-#include <gtk/gtk.h>
 
 static const char *get_user_dir(void *user)
 {
@@ -58,33 +57,10 @@ static const char *get_user_dir(void *user)
     return ret;
 }
 
-static const char *get_clipboard_text(void* user)
-{
-    GtkClipboard *cb;
-    static gchar *text = NULL;
-    gtk_init_check(NULL, NULL);
-    g_free(text);
-    cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    text = gtk_clipboard_wait_for_text(cb);
-    return text;
-}
-
-static void set_clipboard_text(void *user, const char *text)
-{
-    GtkClipboard *cb;
-    gtk_init_check(NULL, NULL);
-    cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    gtk_clipboard_set_can_store(cb, NULL, 0);
-    gtk_clipboard_set_text(cb, text, -1);
-    gtk_clipboard_store(cb);
-}
-
 static void init_unix(void) __attribute__((constructor));
 static void init_unix(void)
 {
     sys_callbacks.get_user_dir = get_user_dir;
-    sys_callbacks.get_clipboard_text = get_clipboard_text;
-    sys_callbacks.set_clipboard_text = set_clipboard_text;
 }
 
 #endif
