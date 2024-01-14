@@ -1,15 +1,20 @@
 SHELL = bash
-MAKEFLAGS+="-j $(shell nproc)"
+ifeq ($(OS),Linux)
+	JOBS := "-j $(shell nproc)"
+else
+	JOBS := "-j $(shell getconf _NPROCESSORS_ONLN)"
+endif
+
 .ONESHELL:
 
 all:
-	scons
+	scons $(JOBS)
 
 release:
-	scons mode=release
+	scons $(JOBS) mode=release
 
 profile:
-	scons mode=profile
+	scons $(JOBS) mode=profile
 
 run:
 	./goxel
