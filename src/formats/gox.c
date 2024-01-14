@@ -709,8 +709,7 @@ error:
 static void a_open(void)
 {
     const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
-                                NULL, NULL);
+    path = sys_open_file_dialog("Open", NULL, "gox\0*.gox\0");
     if (!path) return;
     image_delete(goxel.image);
     goxel.image = image_new();

@@ -1170,7 +1170,7 @@ int goxel_import_file(const char *path, const char *format)
         f = file_format_for_path(path, format, "r");
         if (!f) return -1;
         if (!path) {
-            path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, f->ext, NULL, NULL);
+            path = sys_open_file_dialog("Import", NULL, f->ext);
             if (!path) return -1;
         }
         err = f->import_func(f, goxel.image, path);

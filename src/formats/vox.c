@@ -392,8 +392,7 @@ static int vox_import(const file_format_t *format, image_t *image,
     int r, i, version;
     node_t *tree, *size_n, *xyzi_n, *rgba_n;
 
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
-                                        NULL, NULL);
+    path = path ?: sys_open_file_dialog("Open", NULL, "vox\0*.vox\0");
     if (!path) return -1;
     file = fopen(path, "rb");
     r = fread(magic, 1, 4, file);

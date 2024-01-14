@@ -285,3 +285,26 @@ void sys_on_saved(const char *path)
 }
 
 #endif
+
+
+const char *sys_open_file_dialog(const char *title,
+                                 const char *default_path_and_file,
+                                 const char *filters)
+{
+    return noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, filters, NULL,
+                                default_path_and_file);
+}
+
+const char *sys_open_folder_dialog(const char *title,
+                                   const char *default_path)
+{
+    return noc_file_dialog_open(NOC_FILE_DIALOG_DIR, NULL, NULL, default_path);
+}
+
+const char *sys_save_file_dialog(const char *title,
+                                 const char *default_path_and_file,
+                                 const char *filters)
+{
+    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
+                                default_path_and_file);
+}

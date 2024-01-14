@@ -134,4 +134,15 @@ const char *sys_get_save_path(const char *filters, const char *default_name);
  */
 void sys_on_saved(const char *path);
 
+const char *sys_open_file_dialog(const char *title,
+                                 const char *default_path_and_file,
+                                 const char *filters);
+
+const char *sys_open_folder_dialog(const char *title,
+                                   const char *default_path);
+
+const char *sys_save_file_dialog(const char *title,
+                                 const char *default_path_and_file,
+                                 const char *filters);
+
 #endif // SYSTEM_H

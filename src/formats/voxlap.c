@@ -169,8 +169,7 @@ static int kvx_import(const file_format_t *format, image_t *image,
     long datpos;
     (void)r;
 
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-                                        "kvx\0*.kvx\0", NULL, NULL);
+    path = path ?: sys_open_file_dialog("Open", NULL, "kvx\0*.kvx\0");
     if (!path) return -1;
 
     file = fopen(path, "rb");
