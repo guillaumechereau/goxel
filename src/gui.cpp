@@ -1680,9 +1680,10 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
             if (icon->label && ImGui::IsItemHovered())
                 gui_tooltip(icon->label);
             if (v) {
-                draw_list->AddRect(
-                        ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                        0xFFFFFFFF, 0, 0, 1);
+                ImVec2 c1 = ImGui::GetItemRectMin() - ImVec2(1, 1);
+                ImVec2 c2 = ImGui::GetItemRectMax() + ImVec2(1, 1);
+                draw_list->AddRect(c1, c2, 0xFF000000, 0, 0, 2);
+                draw_list->AddRect(c1, c2, 0xFFFFFFFF, 0, 0, 1);
             }
         }
         if (clicked) {
