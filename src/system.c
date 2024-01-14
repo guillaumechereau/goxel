@@ -18,8 +18,7 @@
 
 #include "system.h"
 
-#include "noc_file_dialog.h"
-
+#include <assert.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -34,10 +33,10 @@
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
 
+// Directly include the C file!
+#include "../ext_src/tinyfiledialogs/tinyfiledialogs.c"
+
 #if defined(__unix__) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
-#define NOC_FILE_DIALOG_GTK
-#define NOC_FILE_DIALOG_IMPLEMENTATION
-#include "noc_file_dialog.h"
 #include <pwd.h>
 
 static const char *get_user_dir(void *user)
@@ -66,9 +65,6 @@ static void init_unix(void)
 #endif
 
 #ifdef WIN32
-#define NOC_FILE_DIALOG_WIN32
-#define NOC_FILE_DIALOG_IMPLEMENTATION
-#include "noc_file_dialog.h"
 
 // Defined in utils.
 int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
@@ -100,26 +96,6 @@ static void init_win(void)
 }
 
 #endif
-
-
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-#if TARGET_OS_MAC
-
-const char *sys_get_save_path(const char *filters, const char *default_name)
-{
-    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
-                                default_name);
-}
-
-void sys_on_saved(const char *path)
-{
-    LOG_I("Saved %s", path);
-}
-
-#endif
-#endif
-
 
 void sys_log(const char *msg)
 {
@@ -242,8 +218,7 @@ void sys_save_to_photos(const uint8_t *data, int size,
                                             on_finished);
 
     // Default implementation.
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                   "png\0*.png\0", NULL, "untitled.png");
+    path = sys_get_save_path("png\0*.png\0", "untitled.png");
     if (!path) {
         if (on_finished) on_finished(1);
         return;
@@ -258,53 +233,72 @@ void sys_save_to_photos(const uint8_t *data, int size,
     if (on_finished) on_finished(r == size ? 0 : -1);
 }
 
-
-#ifdef NOC_FILE_DIALOG_IMPLEMENTATION
-const char *sys_get_save_path(const char *filters, const char *default_name)
+/*
+ * Convert from goxel file filter format to a list of filters that works
+ * with tinyfiledialogs
+ *
+ * eg:
+ * input: "png\0*.png\0jpg\0*.jpg;*.jpeg\0"
+ * output: "*.png", "*.jpg", "*.jpeg"
+ */
+static int filters_to_array(const char *filters, const char *out[])
 {
-    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
-                                default_name);
+    char buf[128], *ptr;
+    int nb = 0;
+
+    while (filters && *filters) {
+        filters += strlen(filters) + 1; // skip the name.
+        snprintf(buf, sizeof(buf) - 1, "%s", filters);
+        buf[strlen(buf)] = '\0';
+        // split the ;
+        for (ptr = buf; *ptr; ptr++)
+            if (*ptr == ';') *ptr = '\0';
+        ptr = buf;
+        while (*ptr) {
+            assert(strncmp(ptr, "*.", 2) == 0);
+            out[nb++] = ptr;
+            ptr += strlen(ptr);
+            if (*ptr) ptr++;
+        }
+        filters += strlen(filters) + 1;
+    }
+    return nb;
 }
-
-void sys_on_saved(const char *path)
-{
-    LOG_I("Saved %s", path);
-}
-#endif
-
-#ifdef ANDROID
-
-const char *sys_get_save_path(const char *filters, const char *default_name)
-{
-    return NULL;
-}
-
-void sys_on_saved(const char *path)
-{
-    LOG_I("Saved %s", path);
-}
-
-#endif
-
 
 const char *sys_open_file_dialog(const char *title,
                                  const char *default_path_and_file,
                                  const char *filters)
 {
-    return noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, filters, NULL,
-                                default_path_and_file);
+    const char *filters_array[8];
+    int nb;
+    nb = filters_to_array(filters, filters_array);
+    return tinyfd_openFileDialog(title, default_path_and_file, nb,
+                                 filters_array, NULL, 0);
 }
 
 const char *sys_open_folder_dialog(const char *title,
                                    const char *default_path)
 {
-    return noc_file_dialog_open(NOC_FILE_DIALOG_DIR, NULL, NULL, default_path);
+    return tinyfd_selectFolderDialog(title, default_path);
 }
 
 const char *sys_save_file_dialog(const char *title,
                                  const char *default_path_and_file,
                                  const char *filters)
 {
-    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
-                                default_path_and_file);
+    const char *filters_array[8];
+    int nb;
+    nb = filters_to_array(filters, filters_array);
+    return tinyfd_saveFileDialog(title, default_path_and_file, nb,
+                                 filters_array, NULL);
+}
+
+const char *sys_get_save_path(const char *filters, const char *default_name)
+{
+    return sys_save_file_dialog("Save", default_name, filters);
+}
+
+void sys_on_saved(const char *path)
+{
+    LOG_I("Saved %s", path);
 }
