@@ -257,7 +257,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                    Int32(self.view.frame.size.height))
         self.inputs.scale = Float(window.backingScaleFactor)
         r = goxel_iter(&self.inputs)
-        goxel_render()
+        goxel_render(&self.inputs)
         self.inputs.mouse_wheel = 0
         self.inputs.chars.0 = 0
         glFlush()

@@ -1089,10 +1089,10 @@ void gui_spacing(int w)
 
 static bool color_picker(const char *label, uint8_t color[4])
 {
-    float colorf[4] = {color[0] / 255.,
-                       color[1] / 255.,
-                       color[2] / 255.,
-                       color[3] / 255.};
+    float colorf[4] = {color[0] / 255.f,
+                       color[1] / 255.f,
+                       color[2] / 255.f,
+                       color[3] / 255.f};
     static uint8_t backup_color[4];
     bool ret;
 
@@ -1147,10 +1147,10 @@ bool gui_color(const char *label, uint8_t color[4])
 bool gui_color_small(const char *label, uint8_t color[4])
 {
     bool ret;
-    float colorf[4] = {color[0] / 255.,
-                       color[1] / 255.,
-                       color[2] / 255.,
-                       color[3] / 255.};
+    float colorf[4] = {color[0] / 255.f,
+                       color[1] / 255.f,
+                       color[2] / 255.f,
+                       color[3] / 255.f};
     ImGui::PushID(label);
     label_aligned(label, LABEL_SIZE);
     ret = ImGui::ColorEdit4("", colorf, ImGuiColorEditFlags_NoInputs);
