@@ -1647,8 +1647,13 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     bool clicked;
     float size;
+    bool is_colors_grid;
+    float spacing = 2;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
+    is_colors_grid = (nb > 0 && !icons[0].icon);
+
+    if (is_colors_grid) spacing = 8;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
 
     max_x = ImGui::GetWindowPos().x + ImGui::GetContentRegionAvail().x;
     max_x += 16; // ?
@@ -1663,14 +1668,14 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
             snprintf(label, sizeof(label), "%s", icon->label);
         }
         v = (i == *current);
-        if (icon->icon) {
+        if (!is_colors_grid) {
             size = ICON_HEIGHT;
             clicked = gui_selectable_icon(label, &v, icon->icon);
         } else { // Color icon.
             size = ITEM_HEIGHT;
             ImGui::PushStyleColor(ImGuiCol_Button, icon->color);
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, icon->color);
-            clicked = ImGui::Button("", ImVec2(ITEM_HEIGHT, ITEM_HEIGHT));
+            clicked = ImGui::Button("", ImVec2(size, size));
             ImGui::PopStyleColor(2);
             if (icon->label && ImGui::IsItemHovered())
                 gui_tooltip(icon->label);
