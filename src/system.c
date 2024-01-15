@@ -241,19 +241,21 @@ void sys_save_to_photos(const uint8_t *data, int size,
  * input: "png\0*.png\0jpg\0*.jpg;*.jpeg\0"
  * output: "*.png", "*.jpg", "*.jpeg"
  */
-static int filters_to_array(const char *filters, const char *out[])
+static int filters_to_array(const char *filters,
+                            char buf[128], const char *out[])
 {
-    char buf[128], *ptr;
+    char *ptr, *tmp;
     int nb = 0;
+    int buf_size = 128;
+    memset(buf, 0, 128);
 
+    ptr = buf;
     while (filters && *filters) {
         filters += strlen(filters) + 1; // skip the name.
-        snprintf(buf, sizeof(buf) - 1, "%s", filters);
-        buf[strlen(buf)] = '\0';
+        snprintf(ptr, buf_size - 1, "%s", filters);
         // split the ;
-        for (ptr = buf; *ptr; ptr++)
-            if (*ptr == ';') *ptr = '\0';
-        ptr = buf;
+        for (tmp = ptr; *tmp; tmp++)
+            if (*tmp == ';') *tmp = '\0';
         while (*ptr) {
             assert(strncmp(ptr, "*.", 2) == 0);
             out[nb++] = ptr;
@@ -261,6 +263,7 @@ static int filters_to_array(const char *filters, const char *out[])
             if (*ptr) ptr++;
         }
         filters += strlen(filters) + 1;
+        ptr++;
     }
     return nb;
 }
@@ -270,8 +273,9 @@ const char *sys_open_file_dialog(const char *title,
                                  const char *filters)
 {
     const char *filters_array[8];
+    char buf[128];
     int nb;
-    nb = filters_to_array(filters, filters_array);
+    nb = filters_to_array(filters, buf, filters_array);
     return tinyfd_openFileDialog(title, default_path_and_file, nb,
                                  filters_array, NULL, 0);
 }
@@ -287,8 +291,9 @@ const char *sys_save_file_dialog(const char *title,
                                  const char *filters)
 {
     const char *filters_array[8];
+    char buf[128];
     int nb;
-    nb = filters_to_array(filters, filters_array);
+    nb = filters_to_array(filters, buf, filters_array);
     return tinyfd_saveFileDialog(title, default_path_and_file, nb,
                                  filters_array, NULL);
 }
