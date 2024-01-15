@@ -95,6 +95,7 @@ static int export_as_pov(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(povray,
     .name = "povray",
-    .ext = "povray\0*.povray\0",
+    .exts = {"*.povray"},
+    .exts_desc = "povray",
     .export_func = export_as_pov,
 )

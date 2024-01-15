@@ -26,7 +26,8 @@ struct file_format
 {
     file_format_t   *next, *prev; // For the global list of formats.
     const char      *name;
-    const char      *ext;
+    const char      *exts[8];
+    const char      *exts_desc;
     void            (*export_gui)(file_format_t *format);
     int             (*export_func)(const file_format_t *format,
                                    const image_t *img, const char *path);

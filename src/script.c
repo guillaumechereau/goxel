@@ -564,22 +564,32 @@ static JSValue js_goxel_registerFormat(JSContext *ctx, JSValueConst this_val,
 {
     const char *name, *ext;
     JSValueConst args;
-    JSValue val;
+    JSValue val, ext_val;
     script_file_format_t *format;
+    uint32_t idx;
 
     args = argv[0];
     name = JS_ToCString(ctx, JS_GetPropertyStr(ctx, args, "name"));
-    ext = JS_ToCString(ctx, JS_GetPropertyStr(ctx, args, "ext"));
 
     LOG_I("Register format %s", name);
     format = calloc(1, sizeof(*format));
     *format = (script_file_format_t) {
         .format = {
             .name = name,
-            .ext = ext,
         },
         .data = JS_DupValue(ctx, args),
     };
+
+    val = JS_GetPropertyStr(ctx, args, "exts");
+    if (JS_IsArray(ctx, val)) {
+        for (idx = 0; idx < ARRAY_SIZE(format->format.exts); idx++) {
+            ext_val = JS_GetPropertyUint32(ctx, val, idx);
+            ext = JS_ToCString(ctx, ext_val);
+            format->format.exts[idx] = ext;
+        }
+    }
+    JS_FreeValue(ctx, val);
+
     val = JS_GetPropertyStr(ctx, args, "import");
     if (!JS_IsUndefined(val))
         format->format.import_func = script_format_import_func;

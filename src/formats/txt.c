@@ -97,7 +97,8 @@ static int export_as_txt(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(txt,
     .name = "text",
-    .ext = "text\0*.txt\0",
+    .exts = {"*.txt"},
+    .exts_desc = "text",
     .import_func = import_as_txt,
     .export_func = export_as_txt,
 )

@@ -169,7 +169,8 @@ static int kvx_import(const file_format_t *format, image_t *image,
     long datpos;
     (void)r;
 
-    path = path ?: sys_open_file_dialog("Open", NULL, "kvx\0*.kvx\0");
+    path = path ?: sys_open_file_dialog("Open", NULL, format->exts,
+                                        format->exts_desc);
     if (!path) return -1;
 
     file = fopen(path, "rb");
@@ -514,13 +515,15 @@ static int kvx_export(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(kv6,
     .name = "kv6",
-    .ext = "slab\0*.kv6\0",
+    .exts = {"*.kv6"},
+    .exts_desc = "slab",
     .import_func = kv6_import,
 )
 
 FILE_FORMAT_REGISTER(kvx,
     .name = "kvx",
-    .ext = "slab\0*.kvx\0",
+    .exts = {"*.kvx"},
+    .exts_desc = "slab",
     .import_func = kvx_import,
     .export_func = kvx_export,
 )

@@ -28,8 +28,8 @@ int gui_about_scripts_popup(void *data);
 static void import_image_plane(void)
 {
     const char *path;
-    path = sys_open_file_dialog("Open", NULL,
-            "png\0*.png\0jpg\0*.jpg;*.jpeg\0");
+    const char *filters[] = {"*.png", "*.jpg", "*.jpeg", NULL};
+    path = sys_open_file_dialog("Open", NULL, filters, "png, jpeg");
     if (!path) return;
     goxel_import_image_plane(path);
 }

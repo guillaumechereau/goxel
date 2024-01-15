@@ -126,7 +126,9 @@ void sys_save_to_photos(const uint8_t *data, int size,
  * Function: sys_get_save_path
  * Get the path where to save an image.  By default this opens a file dialog.
  */
-const char *sys_get_save_path(const char *filters, const char *default_name);
+const char *sys_get_save_path(const char *default_name,
+                              const char * const*filters,
+                              const char *filters_desc);
 
 /*
  * Function: sys_on_saved
@@ -136,13 +138,15 @@ void sys_on_saved(const char *path);
 
 const char *sys_open_file_dialog(const char *title,
                                  const char *default_path_and_file,
-                                 const char *filters);
+                                 const char * const *filters,
+                                 const char *filters_desc);
 
 const char *sys_open_folder_dialog(const char *title,
                                    const char *default_path);
 
 const char *sys_save_file_dialog(const char *title,
                                  const char *default_path_and_file,
-                                 const char *filters);
+                                 const char * const *filters,
+                                 const char *filters_desc);
 
 #endif // SYSTEM_H

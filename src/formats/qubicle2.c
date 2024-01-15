@@ -219,6 +219,7 @@ error:
 
 FILE_FORMAT_REGISTER(qubicle,
     .name = "qubicle2",
-    .ext = "qubicle2\0*.qbcl\0",
+    .exts = {"*.qbcl"},
+    .exts_desc = "qubicle2",
     .import_func = qubicle2_import,
 )

@@ -709,7 +709,8 @@ error:
 static void a_open(void)
 {
     const char *path;
-    path = sys_open_file_dialog("Open", NULL, "gox\0*.gox\0");
+    const char *filters[] = {"*.gox", NULL};
+    path = sys_open_file_dialog("Open", NULL, filters, "gox");
     if (!path) return;
     image_delete(goxel.image);
     goxel.image = image_new();
@@ -725,7 +726,8 @@ ACTION_REGISTER(open,
 static void a_save_as(void)
 {
     const char *path;
-    path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
+    const char *filters[] = {"*.gox", NULL};
+    path = sys_get_save_path("untitled.gox", filters, "gox");
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
@@ -744,7 +746,8 @@ ACTION_REGISTER(save_as,
 static void a_save(void)
 {
     const char *path = goxel.image->path;
-    if (!path) path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
+    const char *filters[] = {"*.gox", NULL};
+    if (!path) path = sys_get_save_path("untitled.gox", filters, "gox");
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
@@ -776,7 +779,8 @@ static int gox_export(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(gox,
     .name = "gox",
-    .ext = "gox\0*.gox\0",
+    .exts = {"*.gox"},
+    .exts_desc = "gox",
     .import_func = gox_import,
     .export_func = gox_export,
 )

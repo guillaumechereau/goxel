@@ -7,7 +7,8 @@ import * as std from 'std'
 /*
 goxel.registerFormat({
   name: 'Test',
-  ext: 'test\0*.test\0',
+  exts: ['*.test'],
+  exts_desc: 'test',
   import: function(img, path) {
     let layer = img.addLayer()
     let volume = layer.volume

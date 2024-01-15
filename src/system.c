@@ -212,13 +212,14 @@ void sys_save_to_photos(const uint8_t *data, int size,
     FILE *file;
     const char *path;
     size_t r;
+    const char *filters[] = {"*.png", NULL};
 
     if (sys_callbacks.save_to_photos)
         return sys_callbacks.save_to_photos(sys_callbacks.user, data, size,
                                             on_finished);
 
     // Default implementation.
-    path = sys_get_save_path("png\0*.png\0", "untitled.png");
+    path = sys_get_save_path("untitled.png", filters, "png");
     if (!path) {
         if (on_finished) on_finished(1);
         return;
@@ -233,51 +234,22 @@ void sys_save_to_photos(const uint8_t *data, int size,
     if (on_finished) on_finished(r == size ? 0 : -1);
 }
 
-/*
- * Convert from goxel file filter format to a list of filters that works
- * with tinyfiledialogs
- *
- * eg:
- * input: "png\0*.png\0jpg\0*.jpg;*.jpeg\0"
- * output: "*.png", "*.jpg", "*.jpeg"
- */
-static int filters_to_array(const char *filters,
-                            char buf[128], const char *out[])
+static int filters_count(const char * const*filters)
 {
-    char *ptr, *tmp;
-    int nb = 0;
-    int buf_size = 128;
-    memset(buf, 0, 128);
-
-    ptr = buf;
-    while (filters && *filters) {
-        filters += strlen(filters) + 1; // skip the name.
-        snprintf(ptr, buf_size - 1, "%s", filters);
-        // split the ;
-        for (tmp = ptr; *tmp; tmp++)
-            if (*tmp == ';') *tmp = '\0';
-        while (*ptr) {
-            assert(strncmp(ptr, "*.", 2) == 0);
-            out[nb++] = ptr;
-            ptr += strlen(ptr);
-            if (*ptr) ptr++;
-        }
-        filters += strlen(filters) + 1;
-        ptr++;
-    }
+    int nb;
+    for (nb = 0; filters[nb]; nb++) {}
     return nb;
 }
 
 const char *sys_open_file_dialog(const char *title,
                                  const char *default_path_and_file,
-                                 const char *filters)
+                                 const char * const *filters,
+                                 const char *filters_desc)
 {
-    const char *filters_array[8];
-    char buf[128];
     int nb;
-    nb = filters_to_array(filters, buf, filters_array);
+    nb = filters_count(filters);
     return tinyfd_openFileDialog(title, default_path_and_file, nb,
-                                 filters_array, NULL, 0);
+                                 filters, filters_desc, 0);
 }
 
 const char *sys_open_folder_dialog(const char *title,
@@ -288,19 +260,20 @@ const char *sys_open_folder_dialog(const char *title,
 
 const char *sys_save_file_dialog(const char *title,
                                  const char *default_path_and_file,
-                                 const char *filters)
+                                 const char * const *filters,
+                                 const char *filters_desc)
 {
-    const char *filters_array[8];
-    char buf[128];
     int nb;
-    nb = filters_to_array(filters, buf, filters_array);
+    nb = filters_count(filters);
     return tinyfd_saveFileDialog(title, default_path_and_file, nb,
-                                 filters_array, NULL);
+                                 filters, filters_desc);
 }
 
-const char *sys_get_save_path(const char *filters, const char *default_name)
+const char *sys_get_save_path(const char *default_name,
+                              const char * const *filters,
+                              const char *filters_desc)
 {
-    return sys_save_file_dialog("Save", default_name, filters);
+    return sys_save_file_dialog("Save", default_name, filters, filters_desc);
 }
 
 void sys_on_saved(const char *path)

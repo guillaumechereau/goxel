@@ -306,7 +306,8 @@ static int export_as_vxl(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(vxl,
     .name = "vxl",
-    .ext = "vxl\0*.vxl\0",
+    .exts = {"*.vxl"},
+    .exts_desc = "vxl",
     .import_func = vxl_import,
     .export_func = export_as_vxl,
 )

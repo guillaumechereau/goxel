@@ -161,6 +161,7 @@ error:
 
 FILE_FORMAT_REGISTER(kv6,
     .name = "Minetest",
-    .ext = "mts\0*.mts\0",
+    .exts = {"*.mts"},
+    .exts_desc = "mts",
     .import_func = mts_import,
 )

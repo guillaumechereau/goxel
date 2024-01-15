@@ -1170,7 +1170,7 @@ int goxel_import_file(const char *path, const char *format)
         f = file_format_for_path(path, format, "r");
         if (!f) return -1;
         if (!path) {
-            path = sys_open_file_dialog("Import", NULL, f->ext);
+            path = sys_open_file_dialog("Import", NULL, f->exts, f->exts_desc);
             if (!path) return -1;
         }
         err = f->import_func(f, goxel.image, path);
@@ -1192,8 +1192,8 @@ int goxel_export_to_file(const char *path, const char *format)
     f = file_format_for_path(path, format, "w");
     if (!f) return -1;
     if (!path) {
-        snprintf(name, sizeof(name), "Untitled%s", f->ext + strlen(f->ext) + 2);
-        path = sys_get_save_path(f->ext, name);
+        snprintf(name, sizeof(name), "Untitled.%s", f->exts[0] + 2);
+        path = sys_get_save_path(name, f->exts, f->exts_desc);
         if (!path) return -1;
     }
     err = f->export_func(f, goxel.image, path);
