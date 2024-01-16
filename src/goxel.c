@@ -1184,6 +1184,25 @@ int goxel_import_file(const char *path, const char *format)
     return 0;
 }
 
+static void get_export_path(const file_format_t *f, char *buf, size_t size)
+{
+    const char *ext = f->exts[0] + 2;
+
+    // Use current export path if it exists.
+    if (goxel.image->export_path) {
+        if (str_replace_ext(goxel.image->export_path, ext, buf, size))
+            return;
+    }
+
+    // Use the current file path if it exists.
+    if (goxel.image->path && str_endswith(goxel.image->path, ".gox")) {
+        if (str_replace_ext(goxel.image->path, ext, buf, size))
+            return;
+    }
+
+    snprintf(buf, size, "Untitled.%s", ext);
+}
+
 int goxel_export_to_file(const char *path, const char *format)
 {
     const file_format_t *f;
@@ -1192,9 +1211,11 @@ int goxel_export_to_file(const char *path, const char *format)
     f = file_format_for_path(path, format, "w");
     if (!f) return -1;
     if (!path) {
-        snprintf(name, sizeof(name), "Untitled.%s", f->exts[0] + 2);
+        get_export_path(f, name, sizeof(name));
         path = sys_get_save_path(name, f->exts, f->exts_desc);
         if (!path) return -1;
+        free(goxel.image->export_path);
+        goxel.image->export_path = strdup(path);
     }
     err = f->export_func(f, goxel.image, path);
     if (err) return err;

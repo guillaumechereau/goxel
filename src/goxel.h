@@ -333,6 +333,13 @@ bool str_endswith(const char *str, const char *end);
  */
 bool str_startswith(const char *s1, const char *s2);
 
+/*
+ * Function: str_replace_ext
+ * Replace the extension part of a file path with a new one.
+ */
+bool str_replace_ext(const char *str, const char *new_ext,
+                     char *out, size_t out_size);
+
 
 /*
  * Function: unproject

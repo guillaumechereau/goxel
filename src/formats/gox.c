@@ -727,7 +727,8 @@ static void a_save_as(void)
 {
     const char *path;
     const char *filters[] = {"*.gox", NULL};
-    path = sys_get_save_path("untitled.gox", filters, "gox");
+    path = sys_get_save_path(
+            goxel.image->path ?: "untitled.gox", filters, "gox");
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);

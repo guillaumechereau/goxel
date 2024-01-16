@@ -110,6 +110,17 @@ bool str_startswith(const char *s1, const char *s2)
     return strncmp(s1, s2, strlen(s2)) == 0;
 }
 
+bool str_replace_ext(const char *str, const char *new_ext,
+                     char *out, size_t out_size)
+{
+    char *pos;
+    assert(str && new_ext && out);
+    pos = strrchr(str, '.');
+    if (!pos) return false;
+    snprintf(out, out_size, "%.*s.%s", (int)(pos - str), str, new_ext);
+    return true;
+}
+
 // Like gluUnproject.
 void unproject(const float win[3], const float model[4][4],
                const float proj[4][4], const float viewport[4],
