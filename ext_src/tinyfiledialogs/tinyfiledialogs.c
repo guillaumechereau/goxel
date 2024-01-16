@@ -6465,7 +6465,7 @@ char * tinyfd_saveFileDialog(
 	while ( fgets( lBuff , sizeof( lBuff ) , lIn ) != NULL )
 	{}
 	pclose( lIn ) ;
-	if ( lBuff[strlen( lBuff ) -1] == '\n' )
+	if ( strlen(lBuff) && lBuff[strlen( lBuff ) -1] == '\n' )
 	{
 		lBuff[strlen( lBuff ) -1] = '\0' ;
 	}
