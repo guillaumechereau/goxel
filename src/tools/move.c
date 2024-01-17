@@ -84,7 +84,12 @@ static void update_view(void)
     bool first;
     uint8_t color[4] = {255, 0, 0, 255};
 
+
     layer_t *layer = goxel.image->active_layer;
+
+    if (layer_is_volume(layer)) {
+        goxel.tool_drag_mode = DRAG_MOVE;
+    }
     if (box_edit(SNAP_LAYER_OUT, goxel.tool_drag_mode, transf, &first)) {
         if (first) image_history_push(goxel.image);
         do_move(layer, transf, VEC(0, 0, 0), false);
