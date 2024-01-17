@@ -118,7 +118,7 @@ void gui_menu(void)
     }
     if (gui_menu_begin("Help", true)) {
         if (gui_menu_item(0, "About", true))
-            gui_open_popup("About", 0, NULL, gui_about_popup);
+            gui_open_popup("About", GUI_POPUP_RESIZE, NULL, gui_about_popup);
         gui_menu_end();
     }
 }

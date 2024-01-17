@@ -27,7 +27,7 @@ int gui_about_popup(void *data)
     if (!DEFINED(GOXEL_MOBILE)) gui_text("GPL 3 License");
     gui_text("http://guillaumechereau.github.io/goxel");
 
-    if (gui_collapsing_header("Credits", false)) {
+    if (gui_collapsing_header("Credits", true)) {
         gui_text("Libraries:");
         gui_text("● dear imgui (https://github.com/ocornut/imgui)");
         gui_text("● stb (https://github.com/nothings/stb)");
@@ -39,6 +39,7 @@ int gui_about_popup(void *data)
         gui_text("● boostrap icons (https://icons.getbootstrap.com)");
         gui_text("● meshoptimizer (https://github.com/zeux/meshoptimizer)");
         gui_text("● imguizmo (https://github.com/CedricGuillemet/ImGuizmo)");
+        gui_text("● tinyfiledialogs (https://sourceforge.net/projects/tinyfiledialogs/)");
 
         gui_text("Contributors:");
         gui_text("● Michal (https://github.com/YarlBoro)");
