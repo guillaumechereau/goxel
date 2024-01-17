@@ -7,7 +7,7 @@ Copyright (c) 2014 - 2024 Guillaume Vareille http://ysengrin.com
 
 ********* TINY FILE DIALOGS OFFICIAL WEBSITE IS ON SOURCEFORGE *********
   _________
- /         \ tinyfiledialogs.c v3.16.1 [Jan 1, 2024] zlib licence
+ /         \ tinyfiledialogs.c v3.16.2 [Jan 16, 2024] zlib licence
  |tiny file| Unique code file created [November 9, 2014]
  | dialogs |
  \____  ___/ http://tinyfiledialogs.sourceforge.net
@@ -105,7 +105,7 @@ misrepresented as being the original software.
 #endif
 #define LOW_MULTIPLE_FILES 32
 
-char tinyfd_version[8] = "3.16.1";
+char tinyfd_version[8] = "3.16.2";
 
 /******************************************************************************************************/
 /**************************************** UTF-8 on Windows ********************************************/
@@ -5205,7 +5205,7 @@ my \\$notificationsObject = \\$notificationsService->get_object('/org/freedeskto
 		pclose( lIn ) ;
 
 		/* printf( "lBuff: %s len: %lu \n" , lBuff , strlen(lBuff) ) ; */
-		if ( lBuff[strlen( lBuff ) -1] == '\n' )
+		if ( strlen( lBuff ) && lBuff[strlen( lBuff ) -1] == '\n' )
 		{
 				lBuff[strlen( lBuff ) -1] = '\0' ;
 		}
@@ -6013,7 +6013,7 @@ frontmost of process \\\"Python\\\" to true' ''');");
 
 		/* printf( "len Buff: %lu\n" , strlen(lBuff) ) ; */
 		/* printf( "lBuff0: %s\n" , lBuff ) ; */
-		if ( lBuff[strlen( lBuff ) -1] == '\n' )
+		if ( strlen( lBuff ) && lBuff[strlen( lBuff ) -1] == '\n' )
 		{
 				lBuff[strlen( lBuff ) -1] = '\0' ;
 		}
@@ -7332,7 +7332,7 @@ frontmost of process \\\"Python\\\" to true' ''');");
 		while ( fgets( lBuff , sizeof( lBuff ) , lIn ) != NULL )
 		{}
 		pclose( lIn ) ;
-	if ( lBuff[strlen( lBuff ) -1] == '\n' )
+	if ( strlen( lBuff ) && lBuff[strlen( lBuff ) -1] == '\n' )
 	{
 		lBuff[strlen( lBuff ) -1] = '\0' ;
 	}
