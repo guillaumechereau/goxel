@@ -445,6 +445,8 @@ int goxel_iter(const inputs_t *inputs)
     uint64_t volume_key;
     float pitch;
     float menu_w = 20;
+    int i;
+    inputs_t inputs2;
     camera_t *camera = get_camera();
 
     if (!goxel.graphics_initialized)
@@ -473,8 +475,7 @@ int goxel_iter(const inputs_t *inputs)
     // Test: update the viewport before the UI.
     // Note: the inputs Y coordinates are inverted!
     if (!gui_want_capture_mouse()) {
-        int i;
-        inputs_t inputs2 = *inputs;
+        inputs2 = *inputs;
         for (i = 0; i < (int)ARRAY_SIZE(inputs2.touches); i++) {
             inputs2.touches[i].pos[1] =
                 inputs->window_size[1] - inputs->touches[i].pos[1];
