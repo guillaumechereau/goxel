@@ -918,7 +918,8 @@ void render_box(renderer_t *rend, const float box[4][4],
 {
     render_item_t *item = calloc(1, sizeof(*item));
     assert((effects & (EFFECT_STRIP | EFFECT_WIREFRAME | EFFECT_SEE_BACK |
-                       EFFECT_GRID)) == effects);
+                       EFFECT_GRID | EFFECT_NO_DEPTH_TEST |
+                       EFFECT_NO_SHADING)) == effects);
     item->type = ITEM_MODEL3D;
     mat4_copy(box, item->mat);
     copy_color(color, item->color);
@@ -939,6 +940,9 @@ void render_sphere(renderer_t *rend, const float mat[4][4])
 
 static float item_sort_value(const render_item_t *a)
 {
+    // Item with no depth test last.
+    if (a->effects & EFFECT_NO_DEPTH_TEST) return 11;
+
     // First, non transparent full models (like the image box).
     if ((a->type == ITEM_MODEL3D) && !(a->effects & EFFECT_WIREFRAME) &&
             !(a->tex) && (a->color[3] == 255)) return 0;

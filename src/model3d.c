@@ -318,7 +318,11 @@ void model3d_render(model3d_t *model3d,
     gl_update_uniform(g_shader, "u_proj", proj);
     GL(glEnableVertexAttribArray(A_POS_LOC));
     GL(glEnable(GL_BLEND));
-    GL(glEnable(GL_DEPTH_TEST));
+    if (effects & EFFECT_NO_DEPTH_TEST) {
+        GL(glDisable(GL_DEPTH_TEST));
+    } else {
+        GL(glEnable(GL_DEPTH_TEST));
+    }
     GL(glDepthFunc(GL_LEQUAL));
     GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GL(glCullFace(GL_BACK));
@@ -385,4 +389,5 @@ void model3d_render(model3d_t *model3d,
     GL(glDisableVertexAttribArray(A_POS_LOC));
     GL(glDisableVertexAttribArray(A_COLOR_LOC));
     GL(glCullFace(GL_BACK));
+    GL(glEnable(GL_DEPTH_TEST));
 }

@@ -146,6 +146,13 @@ static int on_drag(gesture3d_t *gest, void *user)
     return 0;
 }
 
+static void normalize_box(const float box[4][4], float out[4][4])
+{
+    mat4_copy(box, out);
+    float vertices[8][3];
+    box_get_vertices(box, vertices);
+    bbox_from_npoints(out, 8, vertices);
+}
 
 int box_edit(int snap, int mode, float transf[4][4], bool *first)
 {
@@ -157,8 +164,9 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
         curs->snap_mask = SNAP_LAYER_OUT;
         volume_get_box(goxel.image->active_layer->volume, true, box);
         // Fix problem with shape layer box.
-        if (goxel.image->active_layer->shape)
-            mat4_copy(goxel.image->active_layer->mat, box);
+        if (goxel.image->active_layer->shape) {
+            normalize_box(goxel.image->active_layer->mat, box);
+        }
     }
     if (snap == SNAP_SELECTION_OUT) {
         curs->snap_mask |= SNAP_SELECTION_OUT;

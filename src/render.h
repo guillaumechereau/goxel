@@ -44,6 +44,7 @@ enum {
     EFFECT_UNLIT            = 1 << 18,
 
     EFFECT_ARROW            = 1 << 19, // Add an arrow at the end of lines.
+    EFFECT_NO_DEPTH_TEST    = 1 << 20,
 };
 
 typedef struct {
