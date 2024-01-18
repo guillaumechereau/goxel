@@ -710,7 +710,7 @@ static void a_open(void)
 {
     const char *path;
     const char *filters[] = {"*.gox", NULL};
-    path = sys_open_file_dialog("Open", NULL, filters, "gox");
+    path = sys_open_file_dialog("Open", goxel.image->path, filters, "gox");
     if (!path) return;
     image_delete(goxel.image);
     goxel.image = image_new();
