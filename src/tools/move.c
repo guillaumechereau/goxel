@@ -131,6 +131,7 @@ static int gui(tool_t *tool)
     float mat[4][4] = MAT4_IDENTITY, v;
     int i;
     int x, y, z;
+    float origin[3];
     bool only_origin = false;
 
     update_view();
@@ -202,16 +203,17 @@ static int gui(tool_t *tool)
 
     if (layer_is_volume(layer)) {
         if (gui_section_begin("Origin", GUI_SECTION_COLLAPSABLE_CLOSED)) {
-            if (gui_input_int("X", &x, 0, 0)) {
-                mat[3][0] = x - (int)round(layer->mat[3][0]);
+            vec3_copy(layer->mat[3], origin);
+            if (gui_input_float("X", &origin[0], 0.5, 0, 0, "%.1f")) {
+                mat[3][0] = origin[0] - layer->mat[3][0];
                 only_origin = true;
             }
-            if (gui_input_int("Y", &y, 0, 0)) {
-                mat[3][1] = y - (int)round(layer->mat[3][1]);
+            if (gui_input_float("Y", &origin[1], 0.5, 0, 0, "%.1f")) {
+                mat[3][1] = origin[1] - layer->mat[3][1];
                 only_origin = true;
             }
-            if (gui_input_int("Z", &z, 0, 0)) {
-                mat[3][2] = z - (int)round(layer->mat[3][2]);
+            if (gui_input_float("Z", &origin[2], 0.5, 0, 0, "%.1f")) {
+                mat[3][2] = origin[2] - layer->mat[3][2];
                 only_origin = true;
             }
             if (gui_button("Center", -1, 0)) {
