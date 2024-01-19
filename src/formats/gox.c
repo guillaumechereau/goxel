@@ -708,7 +708,10 @@ error:
 
 static void a_open(void)
 {
-    const char *path;
+    static const char *path;
+    // reuse last directiory or default to the image path. if both are null then the dialog will open the default
+    path = path ? path : goxel.image->path;
+        
     const char *filters[] = {"*.gox", NULL};
     path = sys_open_file_dialog("Open", goxel.image->path, filters, "gox");
     if (!path) return;
@@ -725,18 +728,17 @@ ACTION_REGISTER(open,
 
 static void a_save_as(void)
 {
-    const char *path;
+    static const char *path;
     const char *filters[] = {"*.gox", NULL};
-    path = sys_get_save_path(
-            goxel.image->path ?: "untitled.gox", filters, "gox");
+    // reuse last path if possible, otherwise reuse the image path, otherwise use the default.
+    path = path ? path : (goxel.image->path ?: "untitled.gox");
+    path = sys_get_save_path(path, filters, "gox");
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
         goxel.image->path = strdup(path);
     }
-    save_to_file(goxel.image, goxel.image->path);
-    goxel.image->saved_key = image_get_key(goxel.image);
-    sys_on_saved(path);
+    save_now();
 }
 
 ACTION_REGISTER(save_as,
@@ -746,17 +748,12 @@ ACTION_REGISTER(save_as,
 
 static void a_save(void)
 {
-    const char *path = goxel.image->path;
-    const char *filters[] = {"*.gox", NULL};
-    if (!path) path = sys_get_save_path("untitled.gox", filters, "gox");
-    if (!path) return;
-    if (path != goxel.image->path) {
-        free(goxel.image->path);
-        goxel.image->path = strdup(path);
+    if (!goxel.image->path) {
+        // reuse the save_as to avoid code duplication and also benefit from last saved directory
+        a_save_as();
+        return;
     }
-    save_to_file(goxel.image, goxel.image->path);
-    goxel.image->saved_key = image_get_key(goxel.image);
-    sys_on_saved(path);
+    save_now();
 }
 
 ACTION_REGISTER(save,
@@ -764,6 +761,14 @@ ACTION_REGISTER(save,
     .cfunc = a_save,
     .default_shortcut = "Ctrl S"
 )
+
+static void save_now(void) {
+    if (!goxel.image || !goxel.image->path) return;
+    
+    save_to_file(goxel.image, goxel.image->path);
+    goxel.image->saved_key = image_get_key(goxel.image);
+    sys_on_saved(path);
+}
 
 static int gox_import(const file_format_t *format, image_t *image,
                       const char *path)
