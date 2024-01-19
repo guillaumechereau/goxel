@@ -7,7 +7,7 @@ Copyright (c) 2014 - 2024 Guillaume Vareille http://ysengrin.com
 
 ********* TINY FILE DIALOGS OFFICIAL WEBSITE IS ON SOURCEFORGE *********
   _________
- /         \ tinyfiledialogs.c v3.16.2 [Jan 16, 2024] zlib licence
+ /         \ tinyfiledialogs.c v3.17.2 [Jan 19, 2024] zlib licence
  |tiny file| Unique code file created [November 9, 2014]
  | dialogs |
  \____  ___/ http://tinyfiledialogs.sourceforge.net
@@ -105,7 +105,7 @@ misrepresented as being the original software.
 #endif
 #define LOW_MULTIPLE_FILES 32
 
-char tinyfd_version[8] = "3.16.2";
+char tinyfd_version[8] = "3.17.2";
 
 /******************************************************************************************************/
 /**************************************** UTF-8 on Windows ********************************************/
@@ -1513,7 +1513,7 @@ name = 'txt_input' value = '' style = 'float:left;width:100%' ><BR>\n\
 
 wchar_t * tinyfd_saveFileDialogW(
 		wchar_t const * aTitle, /* NULL or "" */
-		wchar_t const * aDefaultPathAndFile, /* NULL or "" */
+		wchar_t const * aDefaultPathAndOrFile, /* NULL or "" */
 		int aNumOfFilterPatterns, /* 0 */
 		wchar_t const * const * aFilterPatterns, /* NULL or {"*.jpg","*.png"} */
 		wchar_t const * aSingleFilterDescription) /* NULL or "image files" */
@@ -1531,18 +1531,18 @@ wchar_t * tinyfd_saveFileDialogW(
 
 		if (aTitle&&!wcscmp(aTitle, L"tinyfd_query")){ strcpy(tinyfd_response, "windows_wchar"); return (wchar_t *)1; }
 
-		/*if (quoteDetectedW(aTitle)) return tinyfd_saveFileDialogW(L"INVALID TITLE WITH QUOTES", aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
-		if (quoteDetectedW(aDefaultPathAndFile)) return tinyfd_saveFileDialogW(aTitle, L"INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
-		if (quoteDetectedW(aSingleFilterDescription)) return tinyfd_saveFileDialogW(aTitle, aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, L"INVALID FILTER_DESCRIPTION WITH QUOTES: use the GRAVE ACCENT \\x60 instead.");
+		/*if (quoteDetectedW(aTitle)) return tinyfd_saveFileDialogW(L"INVALID TITLE WITH QUOTES", aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
+		if (quoteDetectedW(aDefaultPathAndOrFile)) return tinyfd_saveFileDialogW(aTitle, L"INVALID DEFAULT_PATH WITH QUOTES", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
+		if (quoteDetectedW(aSingleFilterDescription)) return tinyfd_saveFileDialogW(aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, L"INVALID FILTER_DESCRIPTION WITH QUOTES");
 		for (i = 0; i < aNumOfFilterPatterns; i++)
 		{
-				if (quoteDetectedW(aFilterPatterns[i])) return tinyfd_saveFileDialogW(L"INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndFile, 0, NULL, NULL);
+				if (quoteDetectedW(aFilterPatterns[i])) return tinyfd_saveFileDialogW(L"INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndOrFile, 0, NULL, NULL);
 		}*/
 
 		lHResult = CoInitializeEx(NULL, 0);
 
-		getPathWithoutFinalSlashW(lDirname, aDefaultPathAndFile);
-		getLastNameW(lBuff, aDefaultPathAndFile);
+		getPathWithoutFinalSlashW(lDirname, aDefaultPathAndOrFile);
+		getLastNameW(lBuff, aDefaultPathAndOrFile);
 
 		if (aNumOfFilterPatterns > 0)
 		{
@@ -1615,7 +1615,7 @@ wchar_t * tinyfd_saveFileDialogW(
 
 wchar_t * tinyfd_openFileDialogW(
 		wchar_t const * aTitle, /* NULL or "" */
-		wchar_t const * aDefaultPathAndFile, /* NULL or "" */
+		wchar_t const * aDefaultPathAndOrFile, /* NULL or "" */
 		int aNumOfFilterPatterns, /* 0 */
 		wchar_t const * const * aFilterPatterns, /* NULL or {"*.jpg","*.png"} */
 		wchar_t const * aSingleFilterDescription, /* NULL or "image files" */
@@ -1640,12 +1640,12 @@ wchar_t * tinyfd_openFileDialogW(
 
 		if (aTitle&&!wcscmp(aTitle, L"tinyfd_query")){ strcpy(tinyfd_response, "windows_wchar"); return (wchar_t *)1; }
 
-		/*if (quoteDetectedW(aTitle)) return tinyfd_openFileDialogW(L"INVALID TITLE WITH QUOTES", aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
-		if (quoteDetectedW(aDefaultPathAndFile)) return tinyfd_openFileDialogW(aTitle, L"INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
-		if (quoteDetectedW(aSingleFilterDescription)) return tinyfd_openFileDialogW(aTitle, aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, L"INVALID FILTER_DESCRIPTION WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aAllowMultipleSelects);
+		/*if (quoteDetectedW(aTitle)) return tinyfd_openFileDialogW(L"INVALID TITLE WITH QUOTES", aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
+		if (quoteDetectedW(aDefaultPathAndOrFile)) return tinyfd_openFileDialogW(aTitle, L"INVALID DEFAULT_PATH WITH QUOTES", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
+		if (quoteDetectedW(aSingleFilterDescription)) return tinyfd_openFileDialogW(aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, L"INVALID FILTER_DESCRIPTION WITH QUOTES", aAllowMultipleSelects);
 		for (i = 0; i < aNumOfFilterPatterns; i++)
 		{
-				if (quoteDetectedW(aFilterPatterns[i])) return tinyfd_openFileDialogW(L"INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndFile, 0, NULL, NULL, aAllowMultipleSelects);
+				if (quoteDetectedW(aFilterPatterns[i])) return tinyfd_openFileDialogW(L"INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndOrFile, 0, NULL, NULL, aAllowMultipleSelects);
 		}*/
 
 		if (aAllowMultipleSelects)
@@ -1667,8 +1667,8 @@ wchar_t * tinyfd_openFileDialogW(
 
 		lHResult = CoInitializeEx(NULL, 0);
 
-		getPathWithoutFinalSlashW(lDirname, aDefaultPathAndFile);
-		getLastNameW(lBuff, aDefaultPathAndFile);
+		getPathWithoutFinalSlashW(lDirname, aDefaultPathAndOrFile);
+		getLastNameW(lBuff, aDefaultPathAndOrFile);
 
 		if (aNumOfFilterPatterns > 0)
 		{
@@ -1822,7 +1822,7 @@ wchar_t * tinyfd_selectFolderDialogW(
 		if (aTitle&&!wcscmp(aTitle, L"tinyfd_query")){ strcpy(tinyfd_response, "windows_wchar"); return (wchar_t *)1; }
 
 		/*if (quoteDetectedW(aTitle)) return tinyfd_selectFolderDialogW(L"INVALID TITLE WITH QUOTES", aDefaultPath);
-		if (quoteDetectedW(aDefaultPath)) return tinyfd_selectFolderDialogW(aTitle, L"INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.");*/
+		if (quoteDetectedW(aDefaultPath)) return tinyfd_selectFolderDialogW(aTitle, L"INVALID DEFAULT_PATH WITH QUOTES");*/
 
 		lHResult = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
@@ -2062,7 +2062,7 @@ static int inputBoxWinGui(
 static char * saveFileDialogWinGui(
 		char * aoBuff,
 		char const * aTitle, /* NULL or "" */
-		char const * aDefaultPathAndFile, /* NULL or "" */
+		char const * aDefaultPathAndOrFile, /* NULL or "" */
 		int aNumOfFilterPatterns, /* 0 */
 		char const * const * aFilterPatterns, /* NULL or {"*.jpg","*.png"} */
 		char const * aSingleFilterDescription) /* NULL or "image files" */
@@ -2090,10 +2090,10 @@ static char * saveFileDialogWinGui(
 				else lTmpWChar = tinyfd_mbcsTo16(aTitle);
 				wcscpy(lTitle, lTmpWChar);
 		}
-		if (aDefaultPathAndFile)
+		if (aDefaultPathAndOrFile)
 		{
-				if (tinyfd_winUtf8) lTmpWChar = tinyfd_utf8to16(aDefaultPathAndFile);
-				else lTmpWChar = tinyfd_mbcsTo16(aDefaultPathAndFile);
+				if (tinyfd_winUtf8) lTmpWChar = tinyfd_utf8to16(aDefaultPathAndOrFile);
+				else lTmpWChar = tinyfd_mbcsTo16(aDefaultPathAndOrFile);
 				wcscpy(lDefaultPathAndFile, lTmpWChar);
 		}
 		if (aSingleFilterDescription)
@@ -2133,7 +2133,7 @@ static char * saveFileDialogWinGui(
 
 static char * openFileDialogWinGui(
 		char const * aTitle, /*  NULL or "" */
-		char const * aDefaultPathAndFile, /*  NULL or "" */
+		char const * aDefaultPathAndOrFile, /*  NULL or "" */
 		int aNumOfFilterPatterns, /* 0 */
 		char const * const * aFilterPatterns, /* NULL or {"*.jpg","*.png"} */
 		char const * aSingleFilterDescription, /* NULL or "image files" */
@@ -2162,10 +2162,10 @@ static char * openFileDialogWinGui(
 				else lTmpWChar = tinyfd_mbcsTo16(aTitle);
 				wcscpy(lTitle, lTmpWChar);
 		}
-		if (aDefaultPathAndFile)
+		if (aDefaultPathAndOrFile)
 		{
-				if (tinyfd_winUtf8) lTmpWChar = tinyfd_utf8to16(aDefaultPathAndFile);
-				else lTmpWChar = tinyfd_mbcsTo16(aDefaultPathAndFile);
+				if (tinyfd_winUtf8) lTmpWChar = tinyfd_utf8to16(aDefaultPathAndOrFile);
+				else lTmpWChar = tinyfd_mbcsTo16(aDefaultPathAndOrFile);
 				wcscpy(lDefaultPathAndFile, lTmpWChar);
 		}
 		if (aSingleFilterDescription)
@@ -2533,7 +2533,7 @@ static int inputBoxWinConsole(
 static char * saveFileDialogWinConsole(
 		char * aoBuff ,
 		char const * aTitle , /* NULL or "" */
-		char const * aDefaultPathAndFile ) /* NULL or "" */
+		char const * aDefaultPathAndOrFile ) /* NULL or "" */
 {
 		char lDialogString[MAX_PATH_OR_CMD];
 		char lPathAndFile[MAX_PATH_OR_CMD] = "";
@@ -2553,10 +2553,10 @@ static char * saveFileDialogWinConsole(
 		strcat(lDialogString, "\" ") ;
 
 		strcat( lDialogString , "--fselect \"" ) ;
-		if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+		if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 		{
 				/* dialog.exe uses unix separators even on windows */
-				strcpy(lPathAndFile, aDefaultPathAndFile);
+				strcpy(lPathAndFile, aDefaultPathAndOrFile);
 				replaceChr( lPathAndFile , '\\' , '/' ) ;
 		}
 
@@ -2596,7 +2596,7 @@ static char * saveFileDialogWinConsole(
 
 static char * openFileDialogWinConsole(
 		char const * aTitle , /*  NULL or "" */
-		char const * aDefaultPathAndFile ) /*  NULL or "" */
+		char const * aDefaultPathAndOrFile ) /*  NULL or "" */
 {
 		char lFilterPatterns[MAX_PATH_OR_CMD] = "";
 		char lDialogString[MAX_PATH_OR_CMD] ;
@@ -2618,10 +2618,10 @@ static char * openFileDialogWinConsole(
 		strcat(lDialogString, "\" ") ;
 
 		strcat( lDialogString , "--fselect \"" ) ;
-		if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+		if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 		{
 				/* dialog.exe uses unix separators even on windows */
-				strcpy(lFilterPatterns, aDefaultPathAndFile);
+				strcpy(lFilterPatterns, aDefaultPathAndOrFile);
 				replaceChr( lFilterPatterns , '\\' , '/' ) ;
 		}
 
@@ -3007,7 +3007,7 @@ char * tinyfd_inputBox(
 
 char * tinyfd_saveFileDialog(
 		char const * aTitle , /* NULL or "" */
-		char const * aDefaultPathAndFile , /* NULL or "" */
+		char const * aDefaultPathAndOrFile , /* NULL or "" */
 		int aNumOfFilterPatterns , /* 0 */
 		char const * const * aFilterPatterns , /* NULL or {"*.jpg","*.png"} */
 		char const * aSingleFilterDescription ) /* NULL or "image files" */
@@ -3021,12 +3021,12 @@ char * tinyfd_saveFileDialog(
 		lBuff[0]='\0';
 
 		if ( ! aFilterPatterns ) aNumOfFilterPatterns = 0 ;
-				if (tfd_quoteDetected(aTitle)) return tinyfd_saveFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
-				if (tfd_quoteDetected(aDefaultPathAndFile)) return tinyfd_saveFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
-				if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_saveFileDialog(aTitle, aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES: use the GRAVE ACCENT \\x60 instead.");
+				if (tfd_quoteDetected(aTitle)) return tinyfd_saveFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
+				if (tfd_quoteDetected(aDefaultPathAndOrFile)) return tinyfd_saveFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
+				if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_saveFileDialog(aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES");
 				for (i = 0; i < aNumOfFilterPatterns; i++)
 				{
-						if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_saveFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndFile, 0, NULL, NULL);
+						if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_saveFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndOrFile, 0, NULL, NULL);
 				}
 
 
@@ -3035,12 +3035,12 @@ char * tinyfd_saveFileDialog(
 		{
 			if (aTitle&&!strcmp(aTitle,"tinyfd_query")){strcpy(tinyfd_response,"windows");return (char *)1;}
 			p = saveFileDialogWinGui(lBuff,
-								aTitle, aDefaultPathAndFile, aNumOfFilterPatterns, (char const * const *)aFilterPatterns, aSingleFilterDescription);
+								aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns, (char const * const *)aFilterPatterns, aSingleFilterDescription);
 		}
 				else if (dialogPresent())
 				{
 						if (aTitle&&!strcmp(aTitle, "tinyfd_query")){ strcpy(tinyfd_response, "dialog"); return (char *)0; }
-						p = saveFileDialogWinConsole(lBuff, aTitle, aDefaultPathAndFile);
+						p = saveFileDialogWinConsole(lBuff, aTitle, aDefaultPathAndOrFile);
 				}
 				else
 				{
@@ -3077,7 +3077,7 @@ char * tinyfd_saveFileDialog(
 /* in case of multiple files, the separator is | */
 char * tinyfd_openFileDialog(
 	char const * aTitle , /* NULL or "" */
-		char const * aDefaultPathAndFile, /* NULL or "" */
+		char const * aDefaultPathAndOrFile, /* NULL or "" */
 	int aNumOfFilterPatterns , /* 0 */
 		char const * const * aFilterPatterns, /* NULL or {"*.jpg","*.png"} */
 		char const * aSingleFilterDescription, /* NULL or "image files" */
@@ -3090,25 +3090,25 @@ char * tinyfd_openFileDialog(
 		int i;
 
 	if ( ! aFilterPatterns ) aNumOfFilterPatterns = 0 ;
-		if (tfd_quoteDetected(aTitle)) return tinyfd_openFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
-		if (tfd_quoteDetected(aDefaultPathAndFile)) return tinyfd_openFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
-		if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_openFileDialog(aTitle, aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aAllowMultipleSelects);
+		if (tfd_quoteDetected(aTitle)) return tinyfd_openFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
+		if (tfd_quoteDetected(aDefaultPathAndOrFile)) return tinyfd_openFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
+		if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_openFileDialog(aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES", aAllowMultipleSelects);
 		for (i = 0; i < aNumOfFilterPatterns; i++)
 		{
-				if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_openFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndFile, 0, NULL, NULL, aAllowMultipleSelects);
+				if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_openFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndOrFile, 0, NULL, NULL, aAllowMultipleSelects);
 		}
 
 	if ( ( !tinyfd_forceConsole || !( GetConsoleWindow() || dialogPresent() ) )
 				&& (!getenv("SSH_CLIENT") || getenvDISPLAY()))
 		{
 				if (aTitle&&!strcmp(aTitle,"tinyfd_query")){strcpy(tinyfd_response,"windows");return (char *)1;}
-				p = openFileDialogWinGui( aTitle, aDefaultPathAndFile, aNumOfFilterPatterns,
+				p = openFileDialogWinGui( aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns,
 										(char const * const *)aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
 		}
 				else if (dialogPresent())
 				{
 						if (aTitle&&!strcmp(aTitle, "tinyfd_query")){ strcpy(tinyfd_response, "dialog"); return (char *)0; }
-						p = openFileDialogWinConsole(aTitle, aDefaultPathAndFile);
+						p = openFileDialogWinConsole(aTitle, aDefaultPathAndOrFile);
 				}
 				else
 				{
@@ -3150,7 +3150,7 @@ char * tinyfd_selectFolderDialog(
 		char lString[MAX_PATH_OR_CMD];
 
 		if (tfd_quoteDetected(aTitle)) return tinyfd_selectFolderDialog("INVALID TITLE WITH QUOTES", aDefaultPath);
-		if (tfd_quoteDetected(aDefaultPath)) return tinyfd_selectFolderDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.");
+		if (tfd_quoteDetected(aDefaultPath)) return tinyfd_selectFolderDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES");
 
 	if ( ( !tinyfd_forceConsole || !( GetConsoleWindow() || dialogPresent() ) )
 				&& (!getenv("SSH_CLIENT") || getenvDISPLAY()))
@@ -3647,14 +3647,38 @@ static int graphicMode(void)
 }
 
 
-static int pactlPresent(void)
+static int ffplayPresent(void)
 {
-		static int lPactlPresent = -1 ;
-		if ( lPactlPresent < 0 )
+   static int lFFplayPresent = -1;
+   if (lFFplayPresent < 0)
+   {
+	  lFFplayPresent = detectPresence("ffplay");
+   }
+   return lFFplayPresent;
+}
+
+
+static int pactlPresent( void )
+{
+	static int lPactlPresent = -1 ;
+	char lBuff [256] ;
+	FILE * lIn ;
+
+	if ( lPactlPresent < 0 )
+	{
+		lPactlPresent = detectPresence("pactl") ;
+		if ( lPactlPresent )
 		{
-				lPactlPresent = detectPresence("pactl") ;
+			lIn = popen( "pactl info | grep PipeWire" , "r" ) ;
+			if ( fgets( lBuff , sizeof( lBuff ) , lIn ) )
+			{
+				lPactlPresent = 0 ;
+			}
+			pclose( lIn ) ;
+			if (tinyfd_verbose) printf("is pactl using pulseaudio ? %d\n", lPactlPresent);
 		}
-		return lPactlPresent ;
+	}
+	return lPactlPresent ;
 }
 
 
@@ -3912,12 +3936,30 @@ int tfd_shellementaryPresent(void)
 
 int tfd_xpropPresent(void)
 {
-		static int lXpropPresent = -1 ;
-		if ( lXpropPresent < 0 )
+	static int lXpropReady = 0 ;
+	static int lXpropDetected = -1 ;
+	char lBuff[MAX_PATH_OR_CMD] ;
+	FILE * lIn ;
+
+	if ( lXpropDetected < 0 )
+	{
+		lXpropDetected = detectPresence("xprop") ;
+	}
+
+	if ( !lXpropReady && lXpropDetected )
+	{	/* xwayland Debian issue reported by Kay F. Jahnke and solved with his help */
+		lIn = popen( "xprop -root 32x '	$0' _NET_ACTIVE_WINDOW" , "r" ) ;
+		if ( fgets( lBuff , sizeof( lBuff ) , lIn ) != NULL )
 		{
-				lXpropPresent = detectPresence("xprop") ;
+			if ( ! strstr( lBuff , "not found" ) )
+			{
+				if (tinyfd_verbose) printf("xprop is ready\n");
+				lXpropReady = 1 ;
+			}
 		}
-		return lXpropPresent && graphicMode( ) ;
+		pclose( lIn ) ;
+	}
+	return graphicMode() ? lXpropReady : 0 ;
 }
 
 
@@ -3960,16 +4002,16 @@ int tfd_zenity3Present(void)
 						{
 								if ( atoi(lBuff) >= 3 )
 								{
-										lZenity3Present = 3 ;
-																				lIntTmp = atoi(strtok(lBuff,".")+2 ) ;
-																				if ( lIntTmp >= 18 )
-																				{
-																						lZenity3Present = 5 ;
-																				}
-																				else if ( lIntTmp >= 10 )
-																				{
-																						lZenity3Present = 4 ;
-																				}
+									lZenity3Present = 3 ;
+									lIntTmp = atoi(strtok(lBuff,".")+2 ) ;
+									if ( lIntTmp >= 18 )
+									{
+											lZenity3Present = 5 ;
+									}
+									else if ( lIntTmp >= 10 )
+									{
+											lZenity3Present = 4 ;
+									}
 																}
 								else if ( ( atoi(lBuff) == 2 ) && ( atoi(strtok(lBuff,".")+2 ) >= 32 ) )
 								{
@@ -4174,20 +4216,27 @@ notify=dbus.Interface(notif,'org.freedesktop.Notifications');\nexcept:\n\tprint(
 
 static void sigHandler(int signum)
 {
-		FILE * lIn ;
-		if ( ( lIn = popen( "pactl unload-module module-sine" , "r" ) ) )
-		{
-				pclose( lIn ) ;
-		}
-				if (tinyfd_verbose) printf("tinyfiledialogs caught signal %d\n", signum);
+    FILE * lIn ;
+    if ( ( lIn = popen( "pactl unload-module module-sine" , "r" ) ) )
+    {
+        pclose( lIn ) ;
+    }
+    if (tinyfd_verbose) printf("tinyfiledialogs caught signal %d\n", signum);
 }
+
 
 void tinyfd_beep(void)
 {
 		char lDialogString[256] ;
 		FILE * lIn ;
 
-		if ( osascriptPresent() )
+		if ( pactlPresent() )
+		{
+				signal(SIGINT, sigHandler);
+				/*strcpy( lDialogString , "pactl load-module module-sine frequency=440;sleep .3;pactl unload-module module-sine" ) ;*/
+				strcpy( lDialogString , "thnum=$(pactl load-module module-sine frequency=440);sleep .3;pactl unload-module $thnum" ) ;
+		}
+		else if ( osascriptPresent() )
 		{
 				if ( afplayPresent() >= 2 )
 				{
@@ -4198,16 +4247,14 @@ void tinyfd_beep(void)
 						strcpy( lDialogString , "osascript -e 'tell application \"System Events\" to beep'") ;
 				}
 		}
-		else if ( pactlPresent() )
-		{
-				signal(SIGINT, sigHandler);
-				/*strcpy( lDialogString , "pactl load-module module-sine frequency=440;sleep .3;pactl unload-module module-sine" ) ;*/
-				strcpy( lDialogString , "thnum=$(pactl load-module module-sine frequency=440);sleep .3;pactl unload-module $thnum" ) ;
-		}
 		else if ( speakertestPresent() )
 		{
 				/*strcpy( lDialogString , "timeout -k .3 .3 speaker-test --frequency 440 --test sine > /dev/tty" ) ;*/
 				strcpy( lDialogString , "( speaker-test -t sine -f 440 > /dev/tty )& pid=$!;sleep .5; kill -9 $pid" ) ; /*.3 was too short for mac g3*/
+		}
+		else if ( ffplayPresent() )
+		{
+		    strcpy(lDialogString, "ffplay -f lavfi -i sine=f=440:d=0.15 -autoexit -nodisp" );
 		}
 		else if (beepexePresent())
 		{
@@ -6042,30 +6089,32 @@ frontmost of process \\\"Python\\\" to true' ''');");
 
 
 char * tinyfd_saveFileDialog(
-	char const * aTitle , /* NULL or "" */
-	char const * aDefaultPathAndFile , /* NULL or "" */
-	int aNumOfFilterPatterns , /* 0 */
-	char const * const * aFilterPatterns , /* NULL or {"*.txt","*.doc"} */
-	char const * aSingleFilterDescription ) /* NULL or "text files" */
+        char const * aTitle , /* NULL or "" */
+        char const * aDefaultPathAndOrFile , /* NULL or "" , ends with / to set only a directory */
+        int aNumOfFilterPatterns , /* 0 */
+        char const * const * aFilterPatterns , /* NULL or {"*.txt","*.doc"} */
+        char const * aSingleFilterDescription ) /* NULL or "text files" */
 {
 		static char lBuff[MAX_PATH_OR_CMD] ;
+		static char lLastDirectory[MAX_PATH_OR_CMD] = "$PWD" ;
+
 		char lDialogString[MAX_PATH_OR_CMD] ;
 		char lString[MAX_PATH_OR_CMD] ;
 		int i ;
 		int lWasGraphicDialog = 0 ;
 		int lWasXterm = 0 ;
 		char * p ;
-				char * lPointerInputBox ;
+        char * lPointerInputBox ;
 		FILE * lIn ;
 		lBuff[0]='\0';
 
 		if ( ! aFilterPatterns ) aNumOfFilterPatterns = 0 ;
-				if (tfd_quoteDetected(aTitle)) return tinyfd_saveFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
-				if (tfd_quoteDetected(aDefaultPathAndFile)) return tinyfd_saveFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
-				if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_saveFileDialog(aTitle, aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES: use the GRAVE ACCENT \\x60 instead.");
+				if (tfd_quoteDetected(aTitle)) return tinyfd_saveFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
+				if (tfd_quoteDetected(aDefaultPathAndOrFile)) return tinyfd_saveFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription);
+				if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_saveFileDialog(aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES");
 				for (i = 0; i < aNumOfFilterPatterns; i++)
 				{
-						if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_saveFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndFile, 0, NULL, NULL);
+						if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_saveFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndOrFile, 0, NULL, NULL);
 				}
 
 		if ( osascriptPresent( ) )
@@ -6080,14 +6129,14 @@ char * tinyfd_saveFileDialog(
 						strcat(lDialogString, aTitle) ;
 						strcat(lDialogString, "\" ") ;
 				}
-				getPathWithoutFinalSlash( lString , aDefaultPathAndFile ) ;
+				getPathWithoutFinalSlash( lString , aDefaultPathAndOrFile ) ;
 				if ( strlen(lString) )
 				{
 						strcat(lDialogString, "default location \"") ;
 						strcat(lDialogString, lString ) ;
 						strcat(lDialogString , "\" " ) ;
 				}
-				getLastName( lString , aDefaultPathAndFile ) ;
+				getLastName( lString , aDefaultPathAndOrFile ) ;
 				if ( strlen(lString) )
 				{
 						strcat(lDialogString, "default name \"") ;
@@ -6104,31 +6153,33 @@ char * tinyfd_saveFileDialog(
 				if (aTitle&&!strcmp(aTitle,"tinyfd_query")){strcpy(tinyfd_response,"kdialog");return (char *)1;}
 
 				strcpy( lDialogString , "kdialog" ) ;
-								if ( (tfd_kdialogPresent() == 2) && tfd_xpropPresent() )
+                if ( (tfd_kdialogPresent() == 2) && tfd_xpropPresent() )
 				{
-						strcat(lDialogString, " --attach=$(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2)"); /* contribution: Paul Rouget */
+                    strcat(lDialogString, " --attach=$(xprop -root 32x '\t$0' _NET_ACTIVE_WINDOW | cut -f 2)"); /* contribution: Paul Rouget */
 				}
 				strcat( lDialogString , " --getsavefilename " ) ;
 
-				if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+				if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 				{
-						if ( aDefaultPathAndFile[0] != '/' )
-						{
-								strcat(lDialogString, "$PWD/") ;
-						}
-						strcat(lDialogString, "\"") ;
-						strcat(lDialogString, aDefaultPathAndFile ) ;
-						strcat(lDialogString , "\"" ) ;
+                    if ( aDefaultPathAndOrFile[0] != '/' )
+                    {
+                        strcat(lDialogString, lLastDirectory) ;
+                        strcat(lDialogString , "/" ) ;
+                    }
+                    strcat(lDialogString, "\"") ;
+                    strcat(lDialogString, aDefaultPathAndOrFile ) ;
+                    strcat(lDialogString , "\"" ) ;
 				}
 				else
 				{
-						strcat(lDialogString, "$PWD/") ;
+                    strcat(lDialogString, lLastDirectory) ;
+                    strcat(lDialogString , "/" ) ;
 				}
 
 				if ( aNumOfFilterPatterns > 0 )
 				{
 						strcat(lDialogString , " \"" ) ;
-												strcat( lDialogString , aFilterPatterns[0] ) ;
+                        strcat( lDialogString , aFilterPatterns[0] ) ;
 						for ( i = 1 ; i < aNumOfFilterPatterns ; i ++ )
 						{
 														strcat( lDialogString , " " ) ;
@@ -6184,10 +6235,10 @@ char * tinyfd_saveFileDialog(
 				if (aTitle && strlen(aTitle)) strcat(lDialogString, aTitle) ;
 				strcat(lDialogString, "\"") ;
 
-				if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+				if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 				{
 						strcat(lDialogString, " --filename=\"") ;
-						strcat(lDialogString, aDefaultPathAndFile) ;
+						strcat(lDialogString, aDefaultPathAndOrFile) ;
 						strcat(lDialogString, "\"") ;
 				}
 				if ( aNumOfFilterPatterns > 0 )
@@ -6217,10 +6268,10 @@ char * tinyfd_saveFileDialog(
 			  strcat(lDialogString, aTitle);
 			  strcat(lDialogString, "\"");
 		   }
-		   if (aDefaultPathAndFile && strlen(aDefaultPathAndFile))
+		   if (aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile))
 		   {
 			  strcat(lDialogString, " --filename=\"");
-			  strcat(lDialogString, aDefaultPathAndFile);
+			  strcat(lDialogString, aDefaultPathAndOrFile);
 			  strcat(lDialogString, "\"");
 		   }
 		   if (aNumOfFilterPatterns > 0)
@@ -6253,16 +6304,16 @@ char * tinyfd_saveFileDialog(
 								strcat(lDialogString, aTitle) ;
 								strcat(lDialogString, "',") ;
 						}
-						if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+						if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 						{
-								getPathWithoutFinalSlash( lString , aDefaultPathAndFile ) ;
+								getPathWithoutFinalSlash( lString , aDefaultPathAndOrFile ) ;
 								if ( strlen(lString) )
 								{
 										strcat(lDialogString, "initialdir='") ;
 										strcat(lDialogString, lString ) ;
 										strcat(lDialogString , "'," ) ;
 								}
-								getLastName( lString , aDefaultPathAndFile ) ;
+								getLastName( lString , aDefaultPathAndOrFile ) ;
 								if ( strlen(lString) )
 								{
 										strcat(lDialogString, "initialfile='") ;
@@ -6306,7 +6357,7 @@ char * tinyfd_saveFileDialog(
 
 		if ( tfd_isDarwin( ) )
 		{
-						strcat( lDialogString ,
+                strcat( lDialogString ,
 "import os;os.system('''/usr/bin/osascript -e 'tell app \\\"Finder\\\" to set\
  frontmost of process \\\"Python\\\" to true' ''');");
 				}
@@ -6318,16 +6369,16 @@ char * tinyfd_saveFileDialog(
 						strcat(lDialogString, aTitle) ;
 						strcat(lDialogString, "',") ;
 				}
-			if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+			if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 			{
-						getPathWithoutFinalSlash( lString , aDefaultPathAndFile ) ;
+						getPathWithoutFinalSlash( lString , aDefaultPathAndOrFile ) ;
 						if ( strlen(lString) )
 						{
 								strcat(lDialogString, "initialdir='") ;
 								strcat(lDialogString, lString ) ;
 								strcat(lDialogString , "'," ) ;
 						}
-						getLastName( lString , aDefaultPathAndFile ) ;
+						getLastName( lString , aDefaultPathAndOrFile ) ;
 						if ( strlen(lString) )
 						{
 								strcat(lDialogString, "initialfile='") ;
@@ -6396,13 +6447,13 @@ char * tinyfd_saveFileDialog(
 				}
 
 				strcat( lDialogString , "--fselect \"" ) ;
-				if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+				if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 				{
-						if ( ! strchr(aDefaultPathAndFile, '/') )
+						if ( ! strchr(aDefaultPathAndOrFile, '/') )
 						{
 								strcat(lDialogString, "./") ;
 						}
-						strcat(lDialogString, aDefaultPathAndFile) ;
+						strcat(lDialogString, aDefaultPathAndOrFile) ;
 				}
 				else if ( ! isTerminalRunning( ) && !lWasGraphicDialog )
 				{
@@ -6469,53 +6520,58 @@ char * tinyfd_saveFileDialog(
 	{
 		lBuff[strlen( lBuff ) -1] = '\0' ;
 	}
-		/* printf( "lBuff: %s\n" , lBuff ) ; */
-		if ( ! strlen(lBuff) )
-		{
-				return NULL;
-		}
+    /* printf( "lBuff: %s\n" , lBuff ) ; */
+    if ( ! strlen(lBuff) )
+    {
+            return NULL;
+    }
+
 	getPathWithoutFinalSlash( lString , lBuff ) ;
 	if ( strlen( lString ) && ! dirExists( lString ) )
 	{
 		return NULL ;
 	}
-		getLastName(lString,lBuff);
-		if ( ! filenameValid(lString) )
-		{
-				return NULL;
-		}
+	strcpy(lLastDirectory, lString) ;
+
+    getLastName(lString,lBuff);
+    if ( ! filenameValid(lString) )
+    {
+            return NULL;
+    }
 	return lBuff ;
 }
 
 
 /* in case of multiple files, the separator is | */
 char * tinyfd_openFileDialog(
-		char const * aTitle , /* NULL or "" */
-		char const * aDefaultPathAndFile , /* NULL or "" */
+    char const * aTitle , /* NULL or "" */
+    char const * aDefaultPathAndOrFile , /* NULL or "" , ends with / to set only a directory */
 	int aNumOfFilterPatterns , /* 0 */
-		char const * const * aFilterPatterns , /* NULL or {"*.jpg","*.png"} */
+    char const * const * aFilterPatterns , /* NULL or {"*.jpg","*.png"} */
 	char const * aSingleFilterDescription , /* NULL or "image files" */
 	int aAllowMultipleSelects ) /* 0 or 1 */
 {
-	  char lDialogString[MAX_PATH_OR_CMD] ;
-	  char lString[MAX_PATH_OR_CMD] ;
-	  int i ;
-	  FILE * lIn ;
-	  char * p ;
-	  char * lPointerInputBox ;
-	  int lWasKdialog = 0 ;
-	  int lWasGraphicDialog = 0 ;
-	  int lWasXterm = 0 ;
-	  size_t lFullBuffLen ;
-	  static char * lBuff = NULL;
+    static char * lBuff = NULL;
+    static char lLastDirectory[MAX_PATH_OR_CMD] = "$PWD" ;
+
+    char lDialogString[MAX_PATH_OR_CMD] ;
+    char lString[MAX_PATH_OR_CMD] ;
+    int i ;
+    FILE * lIn ;
+    char * p ;
+    char * lPointerInputBox ;
+    size_t lFullBuffLen ;
+    int lWasKdialog = 0 ;
+    int lWasGraphicDialog = 0 ;
+    int lWasXterm = 0 ;
 
 		if ( ! aFilterPatterns ) aNumOfFilterPatterns = 0 ;
-				if (tfd_quoteDetected(aTitle)) return tinyfd_openFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
-				if (tfd_quoteDetected(aDefaultPathAndFile)) return tinyfd_openFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
-				if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_openFileDialog(aTitle, aDefaultPathAndFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aAllowMultipleSelects);
+				if (tfd_quoteDetected(aTitle)) return tinyfd_openFileDialog("INVALID TITLE WITH QUOTES", aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
+				if (tfd_quoteDetected(aDefaultPathAndOrFile)) return tinyfd_openFileDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES", aNumOfFilterPatterns, aFilterPatterns, aSingleFilterDescription, aAllowMultipleSelects);
+				if (tfd_quoteDetected(aSingleFilterDescription)) return tinyfd_openFileDialog(aTitle, aDefaultPathAndOrFile, aNumOfFilterPatterns, aFilterPatterns, "INVALID FILTER_DESCRIPTION WITH QUOTES", aAllowMultipleSelects);
 				for (i = 0; i < aNumOfFilterPatterns; i++)
 				{
-						if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_openFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndFile, 0, NULL, NULL, aAllowMultipleSelects);
+						if (tfd_quoteDetected(aFilterPatterns[i])) return tinyfd_openFileDialog("INVALID FILTER_PATTERN WITH QUOTES: use the GRAVE ACCENT \\x60 instead.", aDefaultPathAndOrFile, 0, NULL, NULL, aAllowMultipleSelects);
 				}
 
 				free(lBuff);
@@ -6567,7 +6623,7 @@ char * tinyfd_openFileDialog(
 						strcat(lDialogString, aTitle) ;
 						strcat(lDialogString, "\" ") ;
 			}
-				getPathWithoutFinalSlash( lString , aDefaultPathAndFile ) ;
+				getPathWithoutFinalSlash( lString , aDefaultPathAndOrFile ) ;
 				if ( strlen(lString) )
 				{
 						strcat(lDialogString, "default location \"") ;
@@ -6620,19 +6676,21 @@ char * tinyfd_openFileDialog(
 				}
 				strcat( lDialogString , " --getopenfilename " ) ;
 
-				if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+				if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 				{
-						if ( aDefaultPathAndFile[0] != '/' )
-						{
-								strcat(lDialogString, "$PWD/") ;
-						}
-						strcat(lDialogString, "\"") ;
-						strcat(lDialogString, aDefaultPathAndFile ) ;
-						strcat(lDialogString , "\"" ) ;
+                    if ( aDefaultPathAndOrFile[0] != '/' )
+                    {
+                        strcat(lDialogString, lLastDirectory) ;
+                        strcat(lDialogString , "/" ) ;
+                    }
+                    strcat(lDialogString, "\"") ;
+                    strcat(lDialogString, aDefaultPathAndOrFile ) ;
+                    strcat(lDialogString , "\"" ) ;
 				}
 				else
 				{
-						strcat(lDialogString, "$PWD/") ;
+                    strcat(lDialogString, lLastDirectory) ;
+                    strcat(lDialogString , "/" ) ;
 				}
 
 				if ( aNumOfFilterPatterns > 0 )
@@ -6703,10 +6761,10 @@ char * tinyfd_openFileDialog(
 				if (aTitle && strlen(aTitle)) strcat(lDialogString, aTitle) ;
 				strcat(lDialogString, "\"") ;
 
-				if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+				if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 				{
 						strcat(lDialogString, " --filename=\"") ;
-						strcat(lDialogString, aDefaultPathAndFile) ;
+						strcat(lDialogString, aDefaultPathAndOrFile) ;
 						strcat(lDialogString, "\"") ;
 				}
 				if ( aNumOfFilterPatterns > 0 )
@@ -6740,10 +6798,10 @@ char * tinyfd_openFileDialog(
 			  strcat(lDialogString, aTitle);
 			  strcat(lDialogString, "\"");
 		   }
-		   if (aDefaultPathAndFile && strlen(aDefaultPathAndFile))
+		   if (aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile))
 		   {
 			  strcat(lDialogString, " --filename=\"");
-			  strcat(lDialogString, aDefaultPathAndFile);
+			  strcat(lDialogString, aDefaultPathAndOrFile);
 			  strcat(lDialogString, "\"");
 		   }
 		   if (aNumOfFilterPatterns > 0)
@@ -6780,16 +6838,16 @@ char * tinyfd_openFileDialog(
 								strcat(lDialogString, aTitle) ;
 								strcat(lDialogString, "',") ;
 						}
-						if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+						if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 						{
-								getPathWithoutFinalSlash( lString , aDefaultPathAndFile ) ;
+								getPathWithoutFinalSlash( lString , aDefaultPathAndOrFile ) ;
 								if ( strlen(lString) )
 								{
 										strcat(lDialogString, "initialdir='") ;
 										strcat(lDialogString, lString ) ;
 										strcat(lDialogString , "'," ) ;
 								}
-								getLastName( lString , aDefaultPathAndFile ) ;
+								getLastName( lString , aDefaultPathAndOrFile ) ;
 								if ( strlen(lString) )
 								{
 										strcat(lDialogString, "initialfile='") ;
@@ -6851,16 +6909,16 @@ frontmost of process \\\"Python\\\" to true' ''');");
 						strcat(lDialogString, aTitle) ;
 						strcat(lDialogString, "',") ;
 	}
-	if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+	if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 	{
-						getPathWithoutFinalSlash( lString , aDefaultPathAndFile ) ;
+						getPathWithoutFinalSlash( lString , aDefaultPathAndOrFile ) ;
 						if ( strlen(lString) )
 						{
 								strcat(lDialogString, "initialdir='") ;
 								strcat(lDialogString, lString ) ;
 								strcat(lDialogString , "'," ) ;
 						}
-						getLastName( lString , aDefaultPathAndFile ) ;
+						getLastName( lString , aDefaultPathAndOrFile ) ;
 						if ( strlen(lString) )
 						{
 								strcat(lDialogString, "initialfile='") ;
@@ -6932,13 +6990,13 @@ frontmost of process \\\"Python\\\" to true' ''');");
 				}
 
 				strcat( lDialogString , "--fselect \"" ) ;
-				if ( aDefaultPathAndFile && strlen(aDefaultPathAndFile) )
+				if ( aDefaultPathAndOrFile && strlen(aDefaultPathAndOrFile) )
 				{
-						if ( ! strchr(aDefaultPathAndFile, '/') )
+						if ( ! strchr(aDefaultPathAndOrFile, '/') )
 						{
 								strcat(lDialogString, "./") ;
 						}
-						strcat(lDialogString, aDefaultPathAndFile) ;
+						strcat(lDialogString, aDefaultPathAndOrFile) ;
 				}
 				else if ( ! isTerminalRunning( ) && !lWasGraphicDialog )
 				{
@@ -7025,42 +7083,55 @@ frontmost of process \\\"Python\\\" to true' ''');");
 		}
 		if ( aAllowMultipleSelects && strchr(lBuff, '|') )
 		{
-						if( ! ensureFilesExist( lBuff , lBuff ) )
-						{
-								free(lBuff);
-								lBuff = NULL;
-								return NULL;
-						}
+            if( ! ensureFilesExist( lBuff , lBuff ) )
+            {
+                    free(lBuff);
+                    lBuff = NULL;
+                    return NULL;
+            }
 		}
 		else if ( !fileExists(lBuff) )
 		{
 						free(lBuff);
 						lBuff = NULL;
 						return NULL;
-				}
+        }
 
-				lBuff = (char *)( realloc( lBuff, (strlen(lBuff)+1) * sizeof(char)));
+        p = strrchr(lBuff, '|');
+        if ( !p ) p = lBuff ;
+        else p ++ ;
+        getPathWithoutFinalSlash( lString , p ) ;
+        /* printf( "lString [%lu]: %s\n" , strlen(lString) , lString ) ; */
+        if ( strlen( lString ) && ! dirExists( lString ) )
+        {
+            return NULL ;
+        }
+        strcpy(lLastDirectory, lString) ;
 
-		/*printf( "lBuff3 [%lu]: %s\n" , strlen(lBuff) , lBuff ) ; */
-				return lBuff ;
+        lBuff = (char *)( realloc( lBuff, (strlen(lBuff)+1) * sizeof(char)));
+
+        /*printf( "lBuff3 [%lu]: %s\n" , strlen(lBuff) , lBuff ) ; */
+        return lBuff ;
 }
 
 
 char * tinyfd_selectFolderDialog(
-		char const * aTitle , /* "" */
-		char const * aDefaultPath ) /* "" */
+    char const * aTitle , /* "" */
+    char const * aDefaultPath ) /* "" */
 {
-		static char lBuff[MAX_PATH_OR_CMD] ;
-		char lDialogString[MAX_PATH_OR_CMD] ;
-		FILE * lIn ;
-		char * p ;
-				char * lPointerInputBox ;
-		int lWasGraphicDialog = 0 ;
-		int lWasXterm = 0 ;
-		lBuff[0]='\0';
+    static char lBuff[MAX_PATH_OR_CMD] ;
+    static char lLastDirectory[MAX_PATH_OR_CMD] = "$PWD" ;
 
-				if (tfd_quoteDetected(aTitle)) return tinyfd_selectFolderDialog("INVALID TITLE WITH QUOTES", aDefaultPath);
-				if (tfd_quoteDetected(aDefaultPath)) return tinyfd_selectFolderDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES: use the GRAVE ACCENT \\x60 instead.");
+    char lDialogString[MAX_PATH_OR_CMD] ;
+    FILE * lIn ;
+    char * p ;
+    char * lPointerInputBox ;
+    int lWasGraphicDialog = 0 ;
+    int lWasXterm = 0 ;
+    lBuff[0]='\0';
+
+    if (tfd_quoteDetected(aTitle)) return tinyfd_selectFolderDialog("INVALID TITLE WITH QUOTES", aDefaultPath);
+    if (tfd_quoteDetected(aDefaultPath)) return tinyfd_selectFolderDialog(aTitle, "INVALID DEFAULT_PATH WITH QUOTES");
 
 		if ( osascriptPresent( ))
 		{
@@ -7099,7 +7170,8 @@ char * tinyfd_selectFolderDialog(
 				{
 						if ( aDefaultPath[0] != '/' )
 						{
-								strcat(lDialogString, "$PWD/") ;
+                            strcat(lDialogString, lLastDirectory) ;
+                            strcat(lDialogString , "/" ) ;
 						}
 						strcat(lDialogString, "\"") ;
 						strcat(lDialogString, aDefaultPath ) ;
@@ -7107,7 +7179,8 @@ char * tinyfd_selectFolderDialog(
 				}
 				else
 				{
-						strcat(lDialogString, "$PWD/") ;
+                        strcat(lDialogString, lLastDirectory) ;
+                        strcat(lDialogString , "/" ) ;
 				}
 
 				if ( aTitle && strlen(aTitle) )
@@ -7329,19 +7402,22 @@ frontmost of process \\\"Python\\\" to true' ''');");
 	{
 		return NULL ;
 	}
-		while ( fgets( lBuff , sizeof( lBuff ) , lIn ) != NULL )
-		{}
-		pclose( lIn ) ;
+    while ( fgets( lBuff , sizeof( lBuff ) , lIn ) != NULL )
+    {}
+    pclose( lIn ) ;
 	if ( strlen( lBuff ) && lBuff[strlen( lBuff ) -1] == '\n' )
 	{
 		lBuff[strlen( lBuff ) -1] = '\0' ;
 	}
-		/* printf( "lBuff: %s\n" , lBuff ) ; */
-		if ( ! strlen( lBuff ) || ! dirExists( lBuff ) )
-		{
-				return NULL ;
-		}
-		return lBuff ;
+    /* printf( "lBuff: %s\n" , lBuff ) ; */
+    if ( ! strlen( lBuff ) || ! dirExists( lBuff ) )
+    {
+            return NULL ;
+    }
+
+	getPathWithoutFinalSlash( lLastDirectory , lBuff ) ;
+
+    return lBuff ;
 }
 
 

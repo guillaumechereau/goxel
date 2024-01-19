@@ -7,7 +7,7 @@ Copyright (c) 2014 - 2024 Guillaume Vareille http://ysengrin.com
 
 ********* TINY FILE DIALOGS OFFICIAL WEBSITE IS ON SOURCEFORGE *********
   _________
- /         \ tinyfiledialogs.h v3.16.2 [Jan 16, 2024]
+ /         \ tinyfiledialogs.h v3.17.2 [Jan 19, 2024]
  |tiny file| Unique header file created [November 9, 2014]
  | dialogs |
  \____  ___/ http://tinyfiledialogs.sourceforge.net
@@ -153,7 +153,7 @@ char * tinyfd_inputBox(
 
 char * tinyfd_saveFileDialog(
 	char const * aTitle , /* NULL or "" */
-	char const * aDefaultPathAndFile , /* NULL or "" */
+	char const * aDefaultPathAndOrFile , /* NULL or "" , ends with / to set only a directory */
 	int aNumOfFilterPatterns , /* 0  (1 in the following example) */
 	char const * const * aFilterPatterns , /* NULL or char const * lFilterPatterns[1]={"*.txt"} */
 	char const * aSingleFilterDescription ) ; /* NULL or "text files" */
@@ -161,7 +161,7 @@ char * tinyfd_saveFileDialog(
 
 char * tinyfd_openFileDialog(
 	char const * aTitle, /* NULL or "" */
-	char const * aDefaultPathAndFile, /* NULL or "" */
+	char const * aDefaultPathAndOrFile, /* NULL or "" , ends with / to set only a directory */
 	int aNumOfFilterPatterns , /* 0 (2 in the following example) */
 	char const * const * aFilterPatterns, /* NULL or char const * lFilterPatterns[2]={"*.png","*.jpg"}; */
 	char const * aSingleFilterDescription, /* NULL or "image files" */
@@ -213,7 +213,7 @@ wchar_t * tinyfd_inputBoxW(
 /* windows only - utf-16 version */
 wchar_t * tinyfd_saveFileDialogW(
 	wchar_t const * aTitle, /* NULL or L"" */
-	wchar_t const * aDefaultPathAndFile, /* NULL or L"" */
+	wchar_t const * aDefaultPathAndOrFile, /* NULL or L"" , ends with / to set only a directory */
 	int aNumOfFilterPatterns, /* 0 (1 in the following example) */
 	wchar_t const * const * aFilterPatterns, /* NULL or wchar_t const * lFilterPatterns[1]={L"*.txt"} */
 	wchar_t const * aSingleFilterDescription); /* NULL or L"text files" */
@@ -222,7 +222,7 @@ wchar_t * tinyfd_saveFileDialogW(
 /* windows only - utf-16 version */
 wchar_t * tinyfd_openFileDialogW(
 	wchar_t const * aTitle, /* NULL or L"" */
-	wchar_t const * aDefaultPathAndFile, /* NULL or L"" */
+	wchar_t const * aDefaultPathAndOrFile, /* NULL or L"" , ends with / to set only a directory */
 	int aNumOfFilterPatterns , /* 0 (2 in the following example) */
 	wchar_t const * const * aFilterPatterns, /* NULL or wchar_t const * lFilterPatterns[2]={L"*.png","*.jpg"} */
 	wchar_t const * aSingleFilterDescription, /* NULL or L"image files" */
