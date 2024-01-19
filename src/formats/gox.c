@@ -715,6 +715,7 @@ static void a_open(void)
     image_delete(goxel.image);
     goxel.image = image_new();
     load_from_file(path, true);
+    goxel_add_recent_file(path);
 }
 
 ACTION_REGISTER(open,
@@ -737,6 +738,7 @@ static void a_save_as(void)
     save_to_file(goxel.image, goxel.image->path);
     goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
+    goxel_add_recent_file(path);
 }
 
 ACTION_REGISTER(save_as,
@@ -757,6 +759,7 @@ static void a_save(void)
     save_to_file(goxel.image, goxel.image->path);
     goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
+    goxel_add_recent_file(path);
 }
 
 ACTION_REGISTER(save,

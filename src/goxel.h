@@ -551,6 +551,8 @@ typedef struct goxel
         float viewport[4];
     } gui;
 
+    char **recent_files; // stb arraw of most recently used files.
+
 } goxel_t;
 
 // the global goxel instance.
@@ -623,6 +625,8 @@ int goxel_export_to_file(const char *path, const char *format);
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
+void goxel_open_file(const char *path);
+
 void save_to_file(const image_t *img, const char *path);
 int load_from_file(const char *path, bool replace);
 
@@ -655,6 +659,8 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first);
 
 void settings_load(void);
 void settings_save(void);
+
+void goxel_add_recent_file(const char *path);
 
 // Section: tests
 
