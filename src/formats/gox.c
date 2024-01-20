@@ -706,11 +706,27 @@ error:
     return -1;
 }
 
+static void get_default_save_path(char *buf, size_t size)
+{
+    if (goxel.image->path) {
+        snprintf(buf, size, "%s", goxel.image->path);
+        return;
+    }
+    if (goxel.recent_files) {
+        snprintf(buf, size, "%s", goxel.recent_files[0]);
+        return;
+    }
+    snprintf(buf, size, "untitled.gox");
+}
+
 static void a_open(void)
 {
+    char default_save_path[1024];
     const char *path;
     const char *filters[] = {"*.gox", NULL};
-    path = sys_open_file_dialog("Open", goxel.image->path, filters, "gox");
+
+    get_default_save_path(default_save_path, sizeof(default_save_path));
+    path = sys_open_file_dialog("Open", default_save_path, filters, "gox");
     if (!path) return;
     image_delete(goxel.image);
     goxel.image = image_new();
@@ -726,10 +742,12 @@ ACTION_REGISTER(open,
 
 static void a_save_as(void)
 {
+    char default_save_path[1024];
     const char *path;
     const char *filters[] = {"*.gox", NULL};
-    path = sys_get_save_path(
-            goxel.image->path ?: "untitled.gox", filters, "gox");
+
+    get_default_save_path(default_save_path, sizeof(default_save_path));
+    path = sys_get_save_path(default_save_path, filters, "gox");
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
@@ -748,9 +766,14 @@ ACTION_REGISTER(save_as,
 
 static void a_save(void)
 {
+    char default_save_path[1024];
     const char *path = goxel.image->path;
     const char *filters[] = {"*.gox", NULL};
-    if (!path) path = sys_get_save_path("untitled.gox", filters, "gox");
+
+    if (!path) {
+        get_default_save_path(default_save_path, sizeof(default_save_path));
+        path = sys_get_save_path(default_save_path, filters, "gox");
+    }
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
