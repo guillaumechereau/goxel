@@ -57,6 +57,7 @@ uint32_t layer_get_key(const layer_t *layer)
     key = XXH32(&layer->shape, sizeof(layer->shape), key);
     key = XXH32(&layer->color, sizeof(layer->color), key);
     key = XXH32(&mat_key, sizeof(mat_key), key);
+    key = XXH32(&layer->mat, sizeof(layer->mat), key);
     return key;
 }
 
