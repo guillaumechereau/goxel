@@ -103,6 +103,7 @@ void settings_load(void)
 {
     char path[1024];
     snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
+    LOG_I("Read settings file: %s", path);
     ini_parse(path, settings_ini_handler, NULL);
 }
 

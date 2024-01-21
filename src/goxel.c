@@ -321,6 +321,7 @@ static void goxel_load_recent_files(void)
     snprintf(listpath, sizeof(listpath), "%s/recent-files.txt",
              sys_get_user_dir());
     listfile = fopen(listpath, "r");
+    LOG_D("Parse recent files from %s", listpath);
     if (!listfile) {
         LOG_E("Cannot open %s: %s", listpath, strerror(errno));
         return;

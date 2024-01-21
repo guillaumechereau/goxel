@@ -39,7 +39,7 @@ sys_callbacks_t sys_callbacks = {};
 #if defined(__unix__) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
 #include <pwd.h>
 
-static const char *get_user_dir(void *user)
+static const char *get_user_dir_unix(void *user)
 {
     static char ret[PATH_MAX] = "";
     const char *home;
@@ -59,7 +59,7 @@ static const char *get_user_dir(void *user)
 static void init_unix(void) __attribute__((constructor));
 static void init_unix(void)
 {
-    sys_callbacks.get_user_dir = get_user_dir;
+    sys_callbacks.get_user_dir = get_user_dir_unix;
 }
 
 #endif
@@ -165,6 +165,19 @@ void sys_set_window_title(const char *title)
         sys_callbacks.set_window_title(sys_callbacks.user, title);
 }
 
+static const char *get_user_dir_fallback(void)
+{
+    static char ret[PATH_MAX] = "";
+    const char *home;
+    if (!*ret) {
+        home = getenv("HOME");
+        if (home)
+            snprintf(ret, sizeof(ret), "%s/.config/goxel", home);
+        else
+            snprintf(ret, sizeof(ret), "./");
+    }
+    return ret;
+}
 
 /*
  * Function: sys_get_user_dir
@@ -176,7 +189,7 @@ const char *sys_get_user_dir(void)
 {
     if (sys_callbacks.get_user_dir)
         return sys_callbacks.get_user_dir(sys_callbacks.user);
-    return NULL;
+    return get_user_dir_fallback();
 }
 
 const char *sys_get_clipboard_text(void* user)
