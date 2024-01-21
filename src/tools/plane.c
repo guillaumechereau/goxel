@@ -20,7 +20,7 @@
 
 typedef struct {
     tool_t tool;
-    int move_mode;
+    bool custom_rotation;
 } tool_plane_t;
 
 static int iter(tool_t *tool, const painter_t *painter,
@@ -73,7 +73,6 @@ static void cut(bool above)
 
 static int gui(tool_t *tool_)
 {
-    int i;
     bool v;
     int x, y, z;
 
@@ -83,38 +82,21 @@ static int gui(tool_t *tool_)
         set_flag(&goxel.snap_mask, SNAP_PLANE, v);
     }
 
-    gui_combo("Move", &tool->move_mode, (const char*[]) {
-              "Relative", "Absolute"}, 2);
-
-    switch (tool->move_mode) {
-    case 0:
-        gui_group_begin(NULL);
-        i = 0;
-        if (gui_input_int("Move", &i, 0, 0))
-            mat4_itranslate(goxel.plane, 0, 0, -i);
-        i = 0;
-        if (gui_input_int("Rot X", &i, 0, 0))
-            mat4_irotate(goxel.plane, i * M_PI / 2, 1, 0, 0);
-        i = 0;
-        if (gui_input_int("Rot Y", &i, 0, 0))
-            mat4_irotate(goxel.plane, i * M_PI / 2, 0, 1, 0);
-        gui_group_end();
-        break;
-
-    case 1:
-
-        x = (int)round(goxel.plane[3][0]);
-        y = (int)round(goxel.plane[3][1]);
-        z = (int)round(goxel.plane[3][2]);
-        gui_group_begin("Origin");
-        if (gui_input_int("X", &x, 0, 0)) goxel.plane[3][0] = x;
-        if (gui_input_int("Y", &y, 0, 0)) goxel.plane[3][1] = y;
-        if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
-        gui_group_end();
-        gui_rotation_mat4("Rotation", goxel.plane);
-        break;
-
-    }
+    x = (int)round(goxel.plane[3][0]);
+    y = (int)round(goxel.plane[3][1]);
+    z = (int)round(goxel.plane[3][2]);
+    gui_group_begin("Origin");
+    if (gui_input_int("X", &x, 0, 0)) goxel.plane[3][0] = x;
+    if (gui_input_int("Y", &y, 0, 0)) goxel.plane[3][1] = y;
+    if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
+    gui_group_end();
+    gui_group_begin("Rotation");
+    gui_checkbox("Custom", &tool->custom_rotation, NULL);
+    if (tool->custom_rotation)
+        gui_rotation_mat4(goxel.plane);
+    else
+        gui_rotation_mat4_axis(goxel.plane);
+    gui_group_end();
 
     if (gui_button("Cut Above", 1, 0)) {
         cut(true);

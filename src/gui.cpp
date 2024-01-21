@@ -1352,7 +1352,7 @@ void gui_enabled_end(void)
 }
 
 // To remove?
-static bool gui_quat(const char *label, float q[4])
+static bool gui_quat(float q[4])
 {
     // Hack to prevent weird behavior when we change the euler angles.
     // We keep track of the last used euler angles value and reuse them if
@@ -1368,11 +1368,9 @@ static bool gui_quat(const char *label, float q[4])
         vec3_copy(last.eul, eul);
     else
         quat_to_eul(q, EULER_ORDER_DEFAULT, eul);
-    gui_group_begin(label);
     if (gui_angle("x", &eul[0], 0, 0)) ret = true;
     if (gui_angle("y", &eul[1], 0, 0)) ret = true;
     if (gui_angle("z", &eul[2], 0, 0)) ret = true;
-    gui_group_end();
 
     if (ret) {
         eul_to_quat(eul, EULER_ORDER_DEFAULT, q);
@@ -1382,7 +1380,7 @@ static bool gui_quat(const char *label, float q[4])
     return ret;
 }
 
-bool gui_rotation_mat4(const char *label, float m[4][4])
+bool gui_rotation_mat4(float m[4][4])
 {
     float rot[3][3], quat[4];
     bool ret = false;
@@ -1390,12 +1388,51 @@ bool gui_rotation_mat4(const char *label, float m[4][4])
 
     mat4_to_mat3(m, rot);
     mat3_to_quat(rot, quat);
-    if (gui_quat(label, quat)) {
+    if (gui_quat(quat)) {
         quat_to_mat3(quat, rot);
         for (i = 0; i < 3; i++)
             for (j = 0; j < 3; j++)
                 m[i][j] = rot[i][j];
         ret = true;
+    }
+    return ret;
+}
+
+bool gui_rotation_mat4_axis(float m[4][4])
+{
+    float rot[3][3];
+    bool ret = false;
+    bool v;
+    int i, j;
+    const struct {
+        const char *label;
+        float rot[3][3];
+    } axis[] = {
+        {"+X", {{0, 0, -1}, {0, 1, 0}, {1, 0, 0}}},
+        {"-X", {{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}}},
+        {"+Y", {{1, 0, 0}, {0, 0, -1}, {0, 1, 0}}},
+        {"-Y", {{1, 0, 0}, {0, 0, 1}, {-1, 0, 0}}},
+        {"+Z", {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+        {"-Z", {{1, 0, 0}, {0, -1, 0}, {0, 0, -1}}},
+    };
+
+    mat4_to_mat3(m, rot);
+
+    for (i = 0; i < 3; i++) {
+        gui_row_begin(2);
+        for (j = 0; j < 2; j++) {
+            v = memcmp(rot, axis[i * 2 + j].rot, sizeof(rot)) == 0;
+            if (gui_selectable(axis[i * 2 + j].label, &v, NULL, -1)) {
+                memcpy(rot, axis[i * 2 + j].rot, sizeof(rot));
+                ret = true;
+            }
+        }
+        gui_row_end();
+    }
+    if (ret) {
+        for (i = 0; i < 3; i++)
+            for (j = 0; j < 3; j++)
+                m[i][j] = rot[i][j];
     }
     return ret;
 }

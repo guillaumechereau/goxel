@@ -96,7 +96,8 @@ bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);
 bool gui_angle(const char *id, float *v, int vmin, int vmax);
 bool gui_bbox(float box[4][4]);
-bool gui_rotation_mat4(const char *label, float m[4][4]);
+bool gui_rotation_mat4(float m[4][4]);
+bool gui_rotation_mat4_axis(float m[4][4]);
 bool gui_action_button(int id, const char *label, float size);
 bool gui_selectable(const char *name, bool *v, const char *tooltip, float w);
 bool gui_selectable_toggle(const char *name, int *v, int set_v,
