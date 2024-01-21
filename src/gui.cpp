@@ -947,7 +947,8 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax)
             while (a < 0) a += 360;
             a %= 360;
         }
-        a = clamp(a, vmin, vmax);
+        if (vmin != 0 || vmax != 0)
+            a = clamp(a, vmin, vmax);
         *v = (float)(a * DD2R);
     }
     return ret;
@@ -1350,7 +1351,8 @@ void gui_enabled_end(void)
     ImGui::PopStyleColor();
 }
 
-bool gui_quat(const char *label, float q[4])
+// To remove?
+static bool gui_quat(const char *label, float q[4])
 {
     // Hack to prevent weird behavior when we change the euler angles.
     // We keep track of the last used euler angles value and reuse them if
@@ -1367,15 +1369,33 @@ bool gui_quat(const char *label, float q[4])
     else
         quat_to_eul(q, EULER_ORDER_DEFAULT, eul);
     gui_group_begin(label);
-    if (gui_angle("x", &eul[0], -180, +180)) ret = true;
-    if (gui_angle("y", &eul[1], -180, +180)) ret = true;
-    if (gui_angle("z", &eul[2], -180, +180)) ret = true;
+    if (gui_angle("x", &eul[0], 0, 0)) ret = true;
+    if (gui_angle("y", &eul[1], 0, 0)) ret = true;
+    if (gui_angle("z", &eul[2], 0, 0)) ret = true;
     gui_group_end();
 
     if (ret) {
         eul_to_quat(eul, EULER_ORDER_DEFAULT, q);
         quat_copy(q, last.quat);
         vec3_copy(eul, last.eul);
+    }
+    return ret;
+}
+
+bool gui_rotation_mat4(const char *label, float m[4][4])
+{
+    float rot[3][3], quat[4];
+    bool ret = false;
+    int i, j;
+
+    mat4_to_mat3(m, rot);
+    mat3_to_quat(rot, quat);
+    if (gui_quat(label, quat)) {
+        quat_to_mat3(quat, rot);
+        for (i = 0; i < 3; i++)
+            for (j = 0; j < 3; j++)
+                m[i][j] = rot[i][j];
+        ret = true;
     }
     return ret;
 }

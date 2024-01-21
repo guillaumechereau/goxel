@@ -43,17 +43,6 @@ static int iter(tool_t *tool, const painter_t *painter,
     return 0;
 }
 
-static void mat4_apply_quat(float mat[4][4], const float quat[4])
-{
-    float rot[3][3];
-    int i, j;
-    quat_to_mat3(quat, rot);
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-            mat[i][j] = rot[i][j];
-
-}
-
 /*
  * Algo provided by sariug <ugurcansari93@gmail.com>
  * Note: we could probably make it much faster by checking the volume blocks
@@ -86,8 +75,6 @@ static int gui(tool_t *tool_)
 {
     int i;
     bool v;
-    float rot[3][3];
-    float quat[4];
     int x, y, z;
 
     tool_plane_t *tool = (tool_plane_t*)tool_;
@@ -124,12 +111,7 @@ static int gui(tool_t *tool_)
         if (gui_input_int("Y", &y, 0, 0)) goxel.plane[3][1] = y;
         if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
         gui_group_end();
-
-        mat4_to_mat3(goxel.plane, rot);
-        mat3_to_quat(rot, quat);
-        if (gui_quat("Rotation", quat)) {
-            mat4_apply_quat(goxel.plane, quat);
-        }
+        gui_rotation_mat4("Rotation", goxel.plane);
         break;
 
     }
