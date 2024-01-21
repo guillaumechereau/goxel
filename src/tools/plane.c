@@ -88,6 +88,7 @@ static int gui(tool_t *tool_)
     bool v;
     float rot[3][3];
     float quat[4];
+    int x, y, z;
 
     tool_plane_t *tool = (tool_plane_t*)tool_;
     v = goxel.snap_mask & SNAP_PLANE;
@@ -114,10 +115,14 @@ static int gui(tool_t *tool_)
         break;
 
     case 1:
+
+        x = (int)round(goxel.plane[3][0]);
+        y = (int)round(goxel.plane[3][1]);
+        z = (int)round(goxel.plane[3][2]);
         gui_group_begin("Origin");
-        gui_input_float("X", &goxel.plane[3][0], 1.0, 0, 0, NULL);
-        gui_input_float("Y", &goxel.plane[3][1], 1.0, 0, 0, NULL);
-        gui_input_float("Z", &goxel.plane[3][2], 1.0, 0, 0, NULL);
+        if (gui_input_int("X", &x, 0, 0)) goxel.plane[3][0] = x;
+        if (gui_input_int("Y", &y, 0, 0)) goxel.plane[3][1] = y;
+        if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
         gui_group_end();
 
         mat4_to_mat3(goxel.plane, rot);
