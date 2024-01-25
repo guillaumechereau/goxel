@@ -260,7 +260,13 @@ const char *sys_open_file_dialog(const char *title,
                                  const char *filters_desc)
 {
     int nb;
+    static char buf[1024];
     nb = filters_count(filters);
+    if (sys_callbacks.open_dialog) {
+        return sys_callbacks.open_dialog(sys_callbacks.user,
+                buf, sizeof(buf), 0, title, default_path_and_file,
+                nb, filters, filters_desc) ? buf : NULL;
+    }
     return tinyfd_openFileDialog(title, default_path_and_file, nb,
                                  filters, filters_desc, 0);
 }
@@ -268,6 +274,11 @@ const char *sys_open_file_dialog(const char *title,
 const char *sys_open_folder_dialog(const char *title,
                                    const char *default_path)
 {
+    static char buf[1024];
+    if (sys_callbacks.open_dialog) {
+        return sys_callbacks.open_dialog(sys_callbacks.user,
+                buf, sizeof(buf), 2, title, NULL, 0, NULL, NULL) ? buf : NULL;
+    }
     return tinyfd_selectFolderDialog(title, default_path);
 }
 
@@ -277,7 +288,13 @@ const char *sys_save_file_dialog(const char *title,
                                  const char *filters_desc)
 {
     int nb;
+    static char buf[1024];
     nb = filters_count(filters);
+    if (sys_callbacks.open_dialog) {
+        return sys_callbacks.open_dialog(sys_callbacks.user,
+                buf, sizeof(buf), 1, title, default_path_and_file,
+                nb, filters, filters_desc) ? buf : NULL;
+    }
     return tinyfd_saveFileDialog(title, default_path_and_file, nb,
                                  filters, filters_desc);
 }

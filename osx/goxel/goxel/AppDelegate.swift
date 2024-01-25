@@ -235,6 +235,57 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             return UnsafePointer(mySelf.userDirectory)
         }
+
+        sys_callbacks.open_dialog = {(user, buf, bufSize, flags, title,
+                                      defaultPathAndFile,
+                                      nbFilters, filters, filtersDesc) in
+
+            let panel = flags == 1 ? NSSavePanel() : NSOpenPanel()
+
+            if flags == 2 { // Open directory.
+                if let panel = panel as? NSOpenPanel {
+                    panel.canChooseDirectories = false
+                    panel.canChooseFiles = false
+                }
+            }
+
+            if let defaultPathAndFile {
+                let pathString = String(cString: defaultPathAndFile)
+                if pathString.contains("/") {
+                    let url = URL(fileURLWithPath: pathString)
+                    panel.directoryURL = url.deletingLastPathComponent()
+                    panel.nameFieldStringValue = url.lastPathComponent
+                } else {
+                    panel.directoryURL = FileManager.default.urls(
+                        for: .documentDirectory, in: .userDomainMask).first
+                    panel.nameFieldStringValue = pathString
+                }
+            }
+
+            if (nbFilters > 0) {
+                var fileTypes: [String] = []
+                for i in 0..<Int(nbFilters) {
+                    if let filterCStr = filters?[i] {
+                        let filter = String(cString: filterCStr)
+                            .trimmingCharacters(in: CharacterSet(charactersIn: "*."))
+                        fileTypes.append(filter)
+                    }
+                }
+                if let panel = panel as? NSOpenPanel {
+                    panel.allowedFileTypes = fileTypes
+                }
+            }
+
+            panel.runModal()
+            let ret = panel.url?.path.cString(using: .utf8)
+            if ret == nil {
+                return false
+            }
+            strncpy(buf, ret!, bufSize)
+            buf?[bufSize - 1] = 0
+            return true
+        }
+
         goxel_init()
     }
 

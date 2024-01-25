@@ -246,7 +246,6 @@
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
 		F0DC02A022EEE267007E2F17 /* line.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = line.c; sourceTree = "<group>"; };
 		F0DC02A222EEE274007E2F17 /* box.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box.c; sourceTree = "<group>"; };
-		F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noc_file_dialog.h; sourceTree = "<group>"; };
 		F0E5DB2624FBB0D600010FDD /* file_format.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = file_format.c; sourceTree = "<group>"; };
 		F0E5DB2724FBB0D600010FDD /* file_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file_format.h; sourceTree = "<group>"; };
 		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
@@ -441,7 +440,6 @@
 				F09A62662B3BB8E6006A4464 /* meshoptimizer */,
 				F05D6E5A29D3E7EC004CA300 /* voxelizer */,
 				F0C37C8D2317CBF2000EF45F /* xxhash */,
-				F0DE970D1E6FE8BF000354AF /* noc */,
 				F07DEA211BD0F33A00BAA1AD /* stb */,
 				F07DEA271BD0F33A00BAA1AD /* uthash */,
 			);
@@ -519,14 +517,6 @@
 				F0C37C8E2317CBF2000EF45F /* xxhash.h */,
 			);
 			path = xxhash;
-			sourceTree = "<group>";
-		};
-		F0DE970D1E6FE8BF000354AF /* noc */ = {
-			isa = PBXGroup;
-			children = (
-				F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */,
-			);
-			path = noc;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

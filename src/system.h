@@ -42,6 +42,13 @@ typedef struct {
     void (*show_keyboard)(void *user, bool has_text);
     void (*save_to_photos)(void *user, const uint8_t *data, int size,
                            void (*on_finished)(int r));
+
+    bool (*open_dialog)(void *user, char *buf, size_t buf_size,
+                        int flags, // 1: save, 2: folder.
+                        const char *title,
+                        const char *default_path_and_file,
+                        int nb_filters, const char * const *filters,
+                        const char *filters_desc);
 } sys_callbacks_t;
 extern sys_callbacks_t sys_callbacks;
 
