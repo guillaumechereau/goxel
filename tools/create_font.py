@@ -3,7 +3,7 @@
 
 # Goxel 3D voxels editor
 #
-# copyright (c) 2018 Guillaume Chereau <guillaume@noctua-software.com>
+# copyright (c) 2018-present Guillaume Chereau <guillaume@noctua-software.com>
 #
 # Goxel is free software: you can redistribute it and/or modify it under the
 # terms of the GNU General Public License as published by the Free Software
@@ -23,28 +23,25 @@
 # Generate a small font file by removing all unwanted characters from a base
 # font.
 
-import fontforge
-import unicodedata
+import contextlib
+import os
+import subprocess
 
-PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
 CHARS = (u"abcdefghijklmnopqrstuvwxyz"
          u"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
          u"0123456789"
-         u" ?!\"#$%&'()*+,-./°¯[]^:<>{}@_=±"
-         u"◀▶▲▼▴▾●©"
-         )
+         u" ?!\"#$%&'()*+,-./°¯[]^:<>{}@_=±\\"
+         u"◀▶▲▼▴▾●©")
 
-font = fontforge.open(PATH)
-for g in font:
-    u = font[g].unicode
-    if u == -1: continue
-    u = unichr(u)
-    if u not in CHARS: continue
-    font.selection[ord(u)] = True
+def run():
+    dst = "data/fonts/DejaVuSans-light.ttf"
+    subprocess.call(['pyftsubset', FONT_PATH,
+                     '--text=%s' % CHARS,
+                     '--no-hinting', '--output-file=%s' % dst])
 
-font.selection.invert()
-for i in font.selection.byGlyphs:
-    font.removeGlyph(i)
-
-font.generate("data/fonts/DejaVuSans-light.ttf")
+# font.generate("data/fonts/DejaVuSans-light.ttf")
+if __name__ == '__main__':
+    with contextlib.chdir(os.path.join(os.path.dirname(__file__), '../')):
+        run()
