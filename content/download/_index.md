@@ -17,9 +17,6 @@ The current stable version of Goxel for desktop is
 <a href="{{< download-link suffix="mac.zip" >}}"
    class="button is-large is-link">Download for MacOS</a>
 
-<a href="{{< download-link suffix="linux" >}}"
-   class="button is-large is-link">Download for Linux</a>
-
 <a href="{{< download-link suffix="AppImage" >}}"
    class="button is-large is-link">Download for Linux AppImage</a>
 
