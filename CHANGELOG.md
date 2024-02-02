@@ -1,5 +1,13 @@
 #Changelog
 
+## [0.14.0] - 2024-02-02
+
+- Improved the general UI of the app, with a more modern style.
+- Allow to detach UI panels.
+- Improved glTF export.
+- Improved files opening (add recent file list, remember last opened dir).
+- Add layer origin control.
+
 ## [0.13.0] - 2023-12-27
 
 - Some fixes for glTF export.
