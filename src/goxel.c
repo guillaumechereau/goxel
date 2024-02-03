@@ -1150,22 +1150,26 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 void goxel_set_help_text(const char *msg, ...)
 {
     va_list args;
+    int err __attribute__((unused));
     free(goxel.help_text);
     goxel.help_text = NULL;
     if (!msg) return;
     va_start(args, msg);
-    vasprintf(&goxel.help_text, msg, args);
+    err = vasprintf(&goxel.help_text, msg, args);
+    assert(err != -1);
     va_end(args);
 }
 
 void goxel_set_hint_text(const char *msg, ...)
 {
     va_list args;
+    int err __attribute__((unused));
     free(goxel.hint_text);
     goxel.hint_text = NULL;
     if (!msg) return;
     va_start(args, msg);
-    vasprintf(&goxel.hint_text, msg, args);
+    err = vasprintf(&goxel.hint_text, msg, args);
+    assert(err != -1);
     va_end(args);
 }
 

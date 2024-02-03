@@ -247,14 +247,14 @@ static int on_theme(int i, const char *path, void *user)
 
 static int on_theme2(const char *dir, const char *name, void *user)
 {
-    char *data, *path;
-    asprintf(&path, "%s/%s", dir, name);
+    char *data;
+    char path[1024];
+    snprintf(path, sizeof(path), "%s/%s", dir, name);
     theme_t *theme = calloc(1, sizeof(*theme));
     *theme = g_base_theme;
     data = read_file(path, NULL);
     ini_parse_string(data, theme_ini_handler, theme);
     DL_APPEND(g_themes, theme);
-    free(path);
     free(data);
     return 0;
 }
@@ -262,11 +262,10 @@ static int on_theme2(const char *dir, const char *name, void *user)
 static void themes_init(void)
 {
     // Load all the themes.
-    char *dir;
+    char dir[1024];
     assets_list("data/themes/", NULL, on_theme);
-    asprintf(&dir, "%s/themes", sys_get_user_dir());
+    snprintf(dir, sizeof(dir), "%s/themes", sys_get_user_dir());
     sys_list_dir(dir, on_theme2, NULL);
-    free(dir);
 }
 
 theme_t *theme_get(void)
@@ -302,11 +301,11 @@ void theme_revert_default(void)
 
 void theme_save(void)
 {
-    char *path;
+    char path[1024];
     FILE *file;
     const theme_t *t = &g_theme;
     int group, i;
-    asprintf(&path, "%s/themes/default.ini", sys_get_user_dir());
+    snprintf(path, sizeof(path), "%s/themes/default.ini", sys_get_user_dir());
     sys_make_dir(path);
     file = fopen(path, "w");
 
@@ -321,7 +320,6 @@ void theme_save(void)
     }
 
     fclose(file);
-    free(path);
 }
 
 void theme_get_color(int g, int color, bool sel, uint8_t out[4])
