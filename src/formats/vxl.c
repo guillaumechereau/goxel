@@ -24,11 +24,13 @@
 #define READ(type, file) \
     ({ type v; size_t r = fread(&v, sizeof(v), 1, file); (void)r; v;})
 
-#define raise(msg) do { \
-        LOG_E(msg); \
-        ret = -1; \
-        goto end; \
-    } while (0)
+#define CHECK(x) do { \
+        if (!(x)) { \
+            ret = -1; \
+            goto end; \
+        } \
+    } while(0)
+
 
 static inline int AT(int x, int y, int z, int d) {
     x = 511 - x;
@@ -88,7 +90,7 @@ static int vxl_import(const file_format_t *format, image_t *image,
     int ret = 0, size;
     int w = 512, h = 512, d = 64, x, y, z;
     uint8_t (*cube)[4] = NULL;
-    uint8_t *data, *v;
+    uint8_t *data = NULL, *v;
 
     uint32_t *color;
     int i;
@@ -159,6 +161,8 @@ static int vxl_import(const file_format_t *format, image_t *image,
     if (box_is_null(image->box)) {
         bbox_from_extents(image->box, vec3_zero, w / 2, h / 2, d / 2);
     }
+
+end:
     free(cube);
     free(data);
     return ret;

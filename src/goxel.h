@@ -102,26 +102,6 @@
 #define DEFINED___(_, v, ...) v
 // #############################
 
-// CHECK is similar to an assert, but the condition is tested even in release
-// mode.
-#if DEBUG
-    #define CHECK(c) assert(c)
-#else
-    #define CHECK(c) do { \
-        if (!(c)) { \
-            LOG_E("Error %s %s %d", __func__,  __FILE__, __LINE__); \
-            exit(-1); \
-        } \
-    } while (0)
-#endif
-
-// I redefine asprintf so that if the function fails, we just crash the
-// application.  I don't see how we can recover from an asprintf fails
-// anyway.
-#define asprintf(...) CHECK(asprintf(__VA_ARGS__) != -1)
-#define vasprintf(...) CHECK(vasprintf(__VA_ARGS__) != -1)
-
-// #############################
 
 #ifdef __EMSCRIPTEN__
 #   include <emscripten.h>
