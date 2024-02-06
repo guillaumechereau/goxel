@@ -36,6 +36,7 @@ struct layer {
     char        name[256];  // 256 chars max.
     float       box[4][4];  // Bounding box.
     float       mat[4][4];
+    int         mode; // Volume 'blending' mode (from volume_utils.h).
     // For 2d image layers.
     texture_t   *image;
     // For clone layers:

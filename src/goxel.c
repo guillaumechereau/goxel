@@ -1073,6 +1073,7 @@ const volume_t *goxel_get_render_volume(const image_t *img)
 const layer_t *goxel_get_render_layers(bool with_tool_preview)
 {
     uint32_t hash, k;
+    int mode;
     layer_t *l, *layer, *tmp;
 
     hash = image_get_key(goxel.image);
@@ -1103,8 +1104,9 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
             if (    goxel.render_layers &&
                     goxel.render_layers->prev->material == layer->material)
             {
+                mode = layer->mode ?: MODE_OVER;
                 volume_merge(goxel.render_layers->prev->volume, layer->volume,
-                           MODE_OVER, NULL);
+                             mode, NULL);
                 layer_delete(layer);
             } else {
                 DL_APPEND(goxel.render_layers, layer);

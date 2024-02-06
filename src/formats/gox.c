@@ -365,6 +365,8 @@ void save_to_file(const image_t *img, const char *path)
         material_idx = get_material_idx(img, layer->material);
         chunk_write_dict_value(&c, out, "material", &material_idx,
                                sizeof(material_idx));
+        chunk_write_dict_value(&c, out, "mode", &layer->mode,
+                               sizeof(layer->mode));
         if (layer->image) {
             chunk_write_dict_value(&c, out, "img-path", layer->image->path,
                                strlen(layer->image->path));
@@ -600,6 +602,7 @@ int load_from_file(const char *path, bool replace)
 
                 DICT_CPY("base_id", layer->base_id);
                 DICT_CPY("box", layer->box);
+                DICT_CPY("mode", layer->mode);
 
                 if (strcmp(dict_key, "shape") == 0) {
                     for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {

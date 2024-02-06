@@ -38,6 +38,15 @@ static void toggle_layer_only_visible(layer_t *layer)
     layer->visible = true;
 }
 
+static const char *get_mode_name(int mode)
+{
+    switch (mode) {
+        case MODE_OVER: return "Add";
+        case MODE_SUB: return "Substract";
+        case MODE_INTERSECT: return "Intersect";
+        default: return "";
+    }
+}
 
 void gui_layers_panel(void)
 {
@@ -45,6 +54,7 @@ void gui_layers_panel(void)
     material_t *material;
     int i = 0, icon, bbox[2][3];
     bool current, visible, bounded;
+    const int MODES[] = {MODE_OVER, MODE_SUB, MODE_INTERSECT};
 
     gui_group_begin(NULL);
     DL_FOREACH_REVERSE(goxel.image->layers, layer) {
@@ -127,6 +137,18 @@ void gui_layers_panel(void)
         DL_FOREACH(goxel.image->materials, material) {
             if (gui_combo_item(material->name, material == layer->material))
                 layer->material = material;
+        }
+        gui_combo_end();
+    }
+
+    gui_text("Mode");
+    if (layer->mode == MODE_NULL) layer->mode = MODE_OVER;
+    if (gui_combo_begin("##mode", get_mode_name(layer->mode))) {
+        for (i = 0; i < ARRAY_SIZE(MODES); i++) {
+            current = MODES[i] == layer->mode;
+            if (gui_combo_item(get_mode_name(MODES[i]), current)) {
+                layer->mode = MODES[i];
+            }
         }
         gui_combo_end();
     }

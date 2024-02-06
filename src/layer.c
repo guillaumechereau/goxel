@@ -58,6 +58,7 @@ uint32_t layer_get_key(const layer_t *layer)
     key = XXH32(&layer->color, sizeof(layer->color), key);
     key = XXH32(&mat_key, sizeof(mat_key), key);
     key = XXH32(&layer->mat, sizeof(layer->mat), key);
+    key = XXH32(&layer->mode, sizeof(layer->mode), key);
     return key;
 }
 
@@ -78,6 +79,7 @@ layer_t *layer_copy(layer_t *other)
     layer->base_volume_key = other->base_volume_key;
     layer->shape = other->shape;
     layer->shape_key = other->shape_key;
+    layer->mode = other->mode;
     memcpy(layer->color, other->color, sizeof(layer->color));
     return layer;
 }
