@@ -142,7 +142,6 @@ void gui_layers_panel(void)
     }
 
     gui_text("Mode");
-    if (layer->mode == MODE_NULL) layer->mode = MODE_OVER;
     if (gui_combo_begin("##mode", get_mode_name(layer->mode))) {
         for (i = 0; i < ARRAY_SIZE(MODES); i++) {
             current = MODES[i] == layer->mode;
