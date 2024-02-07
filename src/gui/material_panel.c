@@ -28,7 +28,7 @@ void gui_material_panel(void)
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->materials, mat) {
         is_current = goxel.image->active_material == mat;
-        if (gui_layer_item(i, -1, NULL, &is_current, mat->name,
+        if (gui_layer_item(i, 0, NULL, NULL, &is_current, mat->name,
                            sizeof(mat->name))) {
             if (is_current) {
                 goxel.image->active_material = mat;

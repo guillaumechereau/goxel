@@ -1509,25 +1509,28 @@ void gui_request_panel_width(float width)
     goxel.gui.panel_width = width;
 }
 
-bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
+bool gui_layer_item(int idx, int icons_count, const int *icons,
+                    bool *visible, bool *selected,
                     char *name, int len)
 {
     bool ret = false;
-    bool edit_ = *edit;
+    bool selected_ = *selected;
     static char *edit_name = NULL;
     static bool start_edit;
     float font_size = ImGui::GetFontSize();
+    int icon;
+    int i;
     ImVec2 center;
     ImVec2 uv0, uv1;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ImGui::PushID(i);
-    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *edit));
+    ImGui::PushID(idx);
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *selected));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            color_lighten(COLOR(WIDGET, INNER, *edit)));
+            color_lighten(COLOR(WIDGET, INNER, *selected)));
     if (visible) {
-        if (gui_selectable_icon("##visible", &edit_,
+        if (gui_selectable_icon("##visible", &selected_,
                 *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
             *visible = !*visible;
             ret = true;
@@ -1537,18 +1540,19 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
 
     if (edit_name != name) {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
-        if (icon != -1) {
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                    ImVec2(ICON_HEIGHT / 1.5, 0));
-        }
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                    ImVec2(style.FramePadding.x +
+                        ICON_HEIGHT * 0.75 * icons_count, 0));
         if (ImGui::Button(name, ImVec2(-1, ICON_HEIGHT))) {
-            *edit = true;
+            *selected = true;
             ret = true;
         }
-        if (icon != -1) ImGui::PopStyleVar();
-        if (icon > 0) {
+        ImGui::PopStyleVar();
+
+        for (i = 0; i < icons_count; i++) {
+            icon = icons[i];
             center = ImGui::GetItemRectMin() +
-                ImVec2(ICON_HEIGHT / 2 / 1.5, ICON_HEIGHT / 2);
+                ImVec2(ICON_HEIGHT * 0.75 * (i + 0.5), ICON_HEIGHT / 2);
             uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
             uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
             draw_list->AddImage(

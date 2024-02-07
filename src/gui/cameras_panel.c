@@ -28,7 +28,8 @@ void gui_cameras_panel(void)
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->cameras, cam) {
         current = goxel.image->active_camera == cam;
-        if (gui_layer_item(i, -1, NULL, &current, cam->name, sizeof(cam->name))) {
+        if (gui_layer_item(i, 0, NULL, NULL, &current,
+                           cam->name, sizeof(cam->name))) {
             goxel.image->active_camera = cam;
         }
         i++;

@@ -52,7 +52,8 @@ void gui_layers_panel(void)
 {
     layer_t *layer;
     material_t *material;
-    int i = 0, icon, bbox[2][3];
+    int i = 0, bbox[2][3];
+    int icons_count, icons[8];
     bool current, visible, bounded;
     const int MODES[] = {MODE_OVER, MODE_SUB, MODE_INTERSECT};
 
@@ -60,8 +61,10 @@ void gui_layers_panel(void)
     DL_FOREACH_REVERSE(goxel.image->layers, layer) {
         current = goxel.image->active_layer == layer;
         visible = layer->visible;
-        icon = layer->base_id ? ICON_LINK : layer->shape ? ICON_SHAPE : -1;
-        gui_layer_item(i, icon, &visible, &current,
+        icons_count = 0;
+        if (layer->base_id) icons[icons_count++] = ICON_LINK;
+        if (layer->shape) icons[icons_count++] = ICON_SHAPE;
+        gui_layer_item(i, icons_count, icons, &visible, &current,
                        layer->name, sizeof(layer->name));
         if (current && goxel.image->active_layer != layer) {
             goxel.image->active_layer = layer;

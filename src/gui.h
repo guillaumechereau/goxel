@@ -130,7 +130,8 @@ void gui_separator(void);
 void gui_push_id(const char *id);
 void gui_pop_id(void);
 
-bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
+bool gui_layer_item(int idx, int icons_count, const int *icons,
+                    bool *visible, bool *edit,
                     char *name, int len);
 
 bool gui_is_key_down(int key);
