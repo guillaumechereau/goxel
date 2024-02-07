@@ -42,7 +42,7 @@ static const char *get_mode_name(int mode)
 {
     switch (mode) {
         case MODE_OVER: return "Add";
-        case MODE_SUB: return "Substract";
+        case MODE_SUB: return "Subtract";
         case MODE_INTERSECT: return "Intersect";
         default: return "";
     }
