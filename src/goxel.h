@@ -407,6 +407,8 @@ enum {
     X(ICON_MATERIAL,                1, 6, THEME_GROUP_ICON_VIEW),
     X(ICON_LIGHT,                   2, 6, THEME_GROUP_ICON_VIEW),
     X(ICON_TOOL_SELECTION,          3, 6, 0),
+    X(ICON_INTERSECT,               4, 6, 0),
+    X(ICON_SUBTRACT,                5, 6, 0),
 };
 
 #undef X

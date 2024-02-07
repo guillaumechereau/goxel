@@ -64,6 +64,9 @@ void gui_layers_panel(void)
         icons_count = 0;
         if (layer->base_id) icons[icons_count++] = ICON_LINK;
         if (layer->shape) icons[icons_count++] = ICON_SHAPE;
+        if (layer->mode == MODE_SUB) icons[icons_count++] = ICON_SUBTRACT;
+        if (layer->mode == MODE_INTERSECT)
+            icons[icons_count++] = ICON_INTERSECT;
         gui_layer_item(i, icons_count, icons, &visible, &current,
                        layer->name, sizeof(layer->name));
         if (current && goxel.image->active_layer != layer) {
