@@ -1073,7 +1073,7 @@ const volume_t *goxel_get_render_volume(const image_t *img)
 const layer_t *goxel_get_render_layers(bool with_tool_preview)
 {
     uint32_t hash, k;
-    int mode;
+    bool no_merge;
     layer_t *l, *layer, *tmp;
 
     hash = image_get_key(goxel.image);
@@ -1101,15 +1101,17 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
                 volume_set(layer->volume, goxel.tool_volume);
             }
 
-            if (    goxel.render_layers &&
-                    goxel.render_layers->prev->material == layer->material)
-            {
-                mode = layer->mode ?: MODE_OVER;
-                volume_merge(goxel.render_layers->prev->volume, layer->volume,
-                             mode, NULL);
-                layer_delete(layer);
-            } else {
+            // Don't merge different materials unless we do a boolean op.
+            no_merge = (goxel.render_layers == NULL) || (
+                (layer->mode == MODE_OVER) &&
+                (goxel.render_layers->prev->material != layer->material));
+
+            if (no_merge) {
                 DL_APPEND(goxel.render_layers, layer);
+            } else {
+                volume_merge(goxel.render_layers->prev->volume, layer->volume,
+                             layer->mode, NULL);
+                layer_delete(layer);
             }
         }
     }
