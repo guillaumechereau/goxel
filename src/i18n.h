@@ -106,7 +106,7 @@ enum {
     STR_MASK,
     STR_MATERIAL,
     STR_MATERIALS,
-    STR_MERGE,
+    STR_MERGE_VISIBLE,
     STR_MOVE,
     STR_NEW,
     STR_NONE,
