@@ -71,7 +71,8 @@ static int export_as_png(const file_format_t *format, const image_t *img,
 
 FILE_FORMAT_REGISTER(png,
     .name = "png",
-    .ext = "png\0*.png\0",
+    .exts = {"*.png"},
+    .exts_desc = "png",
     .export_gui = export_gui,
     .export_func = export_as_png,
 )

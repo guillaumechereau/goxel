@@ -45,9 +45,11 @@ void dolog(int level, const char *msg,
     const char *format;
     char time_str[32] = "";
     va_list args;
+    int err __attribute__((unused));
 
     va_start(args, line);
-    vasprintf(&msg_formatted, msg, args);
+    err = vasprintf(&msg_formatted, msg, args);
+    assert(err != -1);
     va_end(args);
 
     if (use_colors && level >= GOX_LOG_WARN) {
@@ -60,7 +62,8 @@ void dolog(int level, const char *msg,
         sprintf(time_str, "%.3f: ", get_log_time());
 
     file = file + max(0, (int)strlen(file) - 20); // Truncate file path.
-    asprintf(&full_msg, format, time_str, msg_formatted, func, file, line);
+    err = asprintf(&full_msg, format, time_str, msg_formatted, func, file, line);
+    assert(err != -1);
     sys_log(full_msg);
 
     free(msg_formatted);
@@ -108,6 +111,17 @@ bool str_startswith(const char *s1, const char *s2)
     if (!s1 || !s2) return false;
     if (strlen(s1) < strlen(s2)) return false;
     return strncmp(s1, s2, strlen(s2)) == 0;
+}
+
+bool str_replace_ext(const char *str, const char *new_ext,
+                     char *out, size_t out_size)
+{
+    char *pos;
+    assert(str && new_ext && out);
+    pos = strrchr(str, '.');
+    if (!pos) return false;
+    snprintf(out, out_size, "%.*s.%s", (int)(pos - str), str, new_ext);
+    return true;
 }
 
 // Like gluUnproject.

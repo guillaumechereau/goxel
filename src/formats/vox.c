@@ -392,8 +392,8 @@ static int vox_import(const file_format_t *format, image_t *image,
     int r, i, version;
     node_t *tree, *size_n, *xyzi_n, *rgba_n;
 
-    path = path ?: noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "vox\0*.vox\0",
-                                        NULL, NULL);
+    path = path ?: sys_open_file_dialog("Open", NULL, format->exts,
+                                        format->exts_desc);
     if (!path) return -1;
     file = fopen(path, "rb");
     r = fread(magic, 1, 4, file);
@@ -567,7 +567,8 @@ static int vox_export(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(vox,
     .name = "Magica Voxel",
-    .ext = "vox\0*.vox\0",
+    .exts = {"*.vox"},
+    .exts_desc = "vox",
     .import_func = vox_import,
     .export_func = vox_export,
 )

@@ -3,6 +3,7 @@ on:
   push:
     # branches: [ master ] # Uncomment if you want to only run the workflow when pushing on to the master branch
   pull_request:
+  workflow_dispatch:
 
 jobs:
   windows_x86_64:
@@ -23,7 +24,7 @@ jobs:
 
       - name: Build Goxel
         run: |
-          scons -j 4 mode=release
+          make release
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -46,7 +47,11 @@ jobs:
 
     - name: Build Goxel
       run: |
-        scons -j 4 mode=release
+        make release
+
+    - name: Install
+      run: |
+        sudo make install
 
     - name: Build AppImage
       run: |
@@ -78,7 +83,7 @@ jobs:
 
     - name: Build
       run: |
-        scons -j 4 mode=release
+        make release
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v3

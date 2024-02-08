@@ -20,7 +20,7 @@
 
 typedef struct {
     tool_t tool;
-    int move_mode;
+    bool custom_rotation;
 } tool_plane_t;
 
 static int iter(tool_t *tool, const painter_t *painter,
@@ -41,17 +41,6 @@ static int iter(tool_t *tool, const painter_t *painter,
         goxel.snap_mask |= SNAP_PLANE;
     }
     return 0;
-}
-
-static void mat4_apply_quat(float mat[4][4], const float quat[4])
-{
-    float rot[3][3];
-    int i, j;
-    quat_to_mat3(quat, rot);
-    for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-            mat[i][j] = rot[i][j];
-
 }
 
 /*
@@ -84,11 +73,8 @@ static void cut(bool above)
 
 static int gui(tool_t *tool_)
 {
-    int i;
     bool v;
-    float rot[3][3];
-    float quat[4];
-    char buf[128];
+    int x, y, z;
 
     tool_plane_t *tool = (tool_plane_t*)tool_;
     v = goxel.snap_mask & SNAP_PLANE;
@@ -96,6 +82,47 @@ static int gui(tool_t *tool_)
         set_flag(&goxel.snap_mask, SNAP_PLANE, v);
     }
 
+    x = (int)round(goxel.plane[3][0]);
+    y = (int)round(goxel.plane[3][1]);
+    z = (int)round(goxel.plane[3][2]);
+    gui_group_begin("Origin");
+    if (gui_input_int("X", &x, 0, 0)) goxel.plane[3][0] = x;
+    if (gui_input_int("Y", &y, 0, 0)) goxel.plane[3][1] = y;
+    if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
+    gui_group_end();
+    gui_group_begin("Rotation");
+    gui_checkbox("Custom", &tool->custom_rotation, NULL);
+    if (tool->custom_rotation)
+        gui_rotation_mat4(goxel.plane);
+    else
+        gui_rotation_mat4_axis(goxel.plane);
+    gui_group_end();
+
+    if (gui_button("Cut Above", 1, 0)) {
+        cut(true);
+    }
+    if (gui_button("Cut Below", 1, 0)) {
+        cut(false);
+    }
+
+    return 0;
+#if 0
+    bool v;
+<<<<<<< HEAD
+    float rot[3][3];
+    float quat[4];
+    char buf[128];
+=======
+    int x, y, z;
+>>>>>>> master
+
+    tool_plane_t *tool = (tool_plane_t*)tool_;
+    v = goxel.snap_mask & SNAP_PLANE;
+    if (gui_checkbox(_(VISIBLE), &v, NULL)) {
+        set_flag(&goxel.snap_mask, SNAP_PLANE, v);
+    }
+
+<<<<<<< HEAD
     gui_combo(_(MOVE), &tool->move_mode, (const char*[]) {
               _(RELATIVE), _(ABSOLUTE)}, 2);
 
@@ -130,6 +157,23 @@ static int gui(tool_t *tool_)
         break;
 
     }
+=======
+    x = (int)round(goxel.plane[3][0]);
+    y = (int)round(goxel.plane[3][1]);
+    z = (int)round(goxel.plane[3][2]);
+    gui_group_begin("Origin");
+    if (gui_input_int("X", &x, 0, 0)) goxel.plane[3][0] = x;
+    if (gui_input_int("Y", &y, 0, 0)) goxel.plane[3][1] = y;
+    if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
+    gui_group_end();
+    gui_group_begin("Rotation");
+    gui_checkbox("Custom", &tool->custom_rotation, NULL);
+    if (tool->custom_rotation)
+        gui_rotation_mat4(goxel.plane);
+    else
+        gui_rotation_mat4_axis(goxel.plane);
+    gui_group_end();
+>>>>>>> master
 
     gui_group_begin(_(CUT));
     if (gui_button(_(ABOVE), 1, 0)) {
@@ -141,6 +185,7 @@ static int gui(tool_t *tool_)
     gui_group_end();
 
     return 0;
+#endif
 }
 
 TOOL_REGISTER(TOOL_SET_PLANE, plane, tool_plane_t,

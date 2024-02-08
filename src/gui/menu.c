@@ -21,6 +21,8 @@
 #include "file_format.h"
 #include "script.h"
 
+#include "../../ext_src/stb/stb_ds.h"
+
 int gui_settings_popup(void *data);
 int gui_about_popup(void *data);
 int gui_about_scripts_popup(void *data);
@@ -28,8 +30,8 @@ int gui_about_scripts_popup(void *data);
 static void import_image_plane(void)
 {
     const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN,
-            "png\0*.png\0jpg\0*.jpg;*.jpeg\0", NULL, NULL);
+    const char *filters[] = {"*.png", "*.jpg", "*.jpeg", NULL};
+    path = sys_open_file_dialog("Open", NULL, filters, "png, jpeg");
     if (!path) return;
     goxel_import_image_plane(path);
 }
@@ -72,6 +74,7 @@ static void on_script(void *user, const char *name)
 void gui_menu(void)
 {
     camera_t *cam;
+    int i;
 
     if (gui_menu_begin(_(FILE), true)) {
         gui_menu_item(ACTION_reset, _(NEW), true);
@@ -79,6 +82,14 @@ void gui_menu(void)
                 image_get_key(goxel.image) != goxel.image->saved_key);
         gui_menu_item(ACTION_save_as, _(SAVE_AS), true);
         gui_menu_item(ACTION_open, _(OPEN), true);
+        if (gui_menu_begin("Open Recent", true)) {
+            for (i = 0; i < arrlen(goxel.recent_files); i++) {
+                if (gui_menu_item(0, goxel.recent_files[i], true)) {
+                    goxel_open_file(goxel.recent_files[i]);
+                }
+            }
+            gui_menu_end();
+        };
         if (gui_menu_begin(_(IMPORT), true)) {
             if (gui_menu_item(0, _(2D_IMAGE), true))
                 import_image_plane();
@@ -122,7 +133,7 @@ void gui_menu(void)
     }
     if (gui_menu_begin("Help", true)) {
         if (gui_menu_item(0, "About", true))
-            gui_open_popup("About", 0, NULL, gui_about_popup);
+            gui_open_popup("About", GUI_POPUP_RESIZE, NULL, gui_about_popup);
         gui_menu_end();
     }
 }

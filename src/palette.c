@@ -152,7 +152,8 @@ static int on_palette(int i, const char *path, void *user)
 static int on_palette2(const char *dir, const char *name, void *user)
 {
     palette_t **list = user;
-    char *data, *path;
+    char *data;
+    char path[1024];
     int size, err = 0;
     palette_t *pal;
 
@@ -161,7 +162,7 @@ static int on_palette2(const char *dir, const char *name, void *user)
             !str_endswith(name, ".png"))
         return 0;
 
-    asprintf(&path, "%s/%s", dir, name);
+    snprintf(path, sizeof(path), "%s/%s", dir, name);
     pal = calloc(1, sizeof(*pal));
     data = read_file(path, &size);
     if (str_endswith(name, ".gpl")) {
@@ -188,7 +189,6 @@ static int on_palette2(const char *dir, const char *name, void *user)
 
     DL_APPEND(*list, pal);
 end:
-    free(path);
     free(data);
     return 0;
 }
@@ -196,11 +196,10 @@ end:
 
 void palette_load_all(palette_t **list)
 {
-    char *dir;
+    char dir[1024];
     assets_list("data/palettes/", list, on_palette);
     if (sys_get_user_dir()) {
-        asprintf(&dir, "%s/palettes", sys_get_user_dir());
+        snprintf(dir, sizeof(dir), "%s/palettes", sys_get_user_dir());
         sys_list_dir(dir, on_palette2, list);
-        free(dir);
     }
 }

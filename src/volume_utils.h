@@ -40,18 +40,20 @@
  * MODE_INTERSECT   - Set alpha to the min of the source and destination.
  * MODE_INTERSECT_FILL - Like intersect but use the color of the source.
  * MODE_MULT_ALPHA  - Multiply the source and dest using source alpha.
+ *
+ * IMPORTANT: never change those values, because we save them in the
+ * gox files!
  */
 enum {
-    MODE_NULL,
-    MODE_OVER,
-    MODE_SUB,
-    MODE_SUB_CLAMP,
-    MODE_PAINT,
-    MODE_MAX,
-    MODE_INTERSECT,
-    MODE_INTERSECT_FILL,
-    MODE_MULT_ALPHA,
-    MODE_REPLACE,
+    MODE_OVER                                   = 0,
+    MODE_SUB                                    = 1,
+    MODE_SUB_CLAMP                              = 2,
+    MODE_PAINT                                  = 3,
+    MODE_MAX                                    = 4,
+    MODE_INTERSECT                              = 5,
+    MODE_INTERSECT_FILL                         = 6,
+    MODE_MULT_ALPHA                             = 7,
+    MODE_REPLACE                                = 8,
 };
 
 

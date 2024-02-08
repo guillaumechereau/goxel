@@ -420,7 +420,7 @@ void image_merge_visible_layers(image_t *img)
                 }
             }
             SWAP(layer->volume, last->volume);
-            volume_merge(layer->volume, last->volume, MODE_OVER, NULL);
+            volume_merge(layer->volume, last->volume, layer->mode, NULL);
             DL_DELETE(img->layers, last);
             layer_delete(last);
         }

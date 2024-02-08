@@ -956,7 +956,8 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax)
             while (a < 0) a += 360;
             a %= 360;
         }
-        a = clamp(a, vmin, vmax);
+        if (vmin != 0 || vmax != 0)
+            a = clamp(a, vmin, vmax);
         *v = (float)(a * DD2R);
     }
     return ret;
@@ -1098,10 +1099,10 @@ void gui_spacing(int w)
 
 static bool color_picker(const char *label, uint8_t color[4])
 {
-    float colorf[4] = {color[0] / 255.,
-                       color[1] / 255.,
-                       color[2] / 255.,
-                       color[3] / 255.};
+    float colorf[4] = {color[0] / 255.f,
+                       color[1] / 255.f,
+                       color[2] / 255.f,
+                       color[3] / 255.f};
     static uint8_t backup_color[4];
     bool ret;
 
@@ -1156,10 +1157,10 @@ bool gui_color(const char *label, uint8_t color[4])
 bool gui_color_small(const char *label, uint8_t color[4])
 {
     bool ret;
-    float colorf[4] = {color[0] / 255.,
-                       color[1] / 255.,
-                       color[2] / 255.,
-                       color[3] / 255.};
+    float colorf[4] = {color[0] / 255.f,
+                       color[1] / 255.f,
+                       color[2] / 255.f,
+                       color[3] / 255.f};
     ImGui::PushID(label);
     label_aligned(label, LABEL_SIZE);
     ret = ImGui::ColorEdit4("", colorf, ImGuiColorEditFlags_NoInputs);
@@ -1359,7 +1360,8 @@ void gui_enabled_end(void)
     ImGui::PopStyleColor();
 }
 
-bool gui_quat(const char *label, float q[4])
+// To remove?
+static bool gui_quat(float q[4])
 {
     // Hack to prevent weird behavior when we change the euler angles.
     // We keep track of the last used euler angles value and reuse them if
@@ -1375,16 +1377,71 @@ bool gui_quat(const char *label, float q[4])
         vec3_copy(last.eul, eul);
     else
         quat_to_eul(q, EULER_ORDER_DEFAULT, eul);
-    gui_group_begin(label);
-    if (gui_angle("x", &eul[0], -180, +180)) ret = true;
-    if (gui_angle("y", &eul[1], -180, +180)) ret = true;
-    if (gui_angle("z", &eul[2], -180, +180)) ret = true;
-    gui_group_end();
+    if (gui_angle("x", &eul[0], 0, 0)) ret = true;
+    if (gui_angle("y", &eul[1], 0, 0)) ret = true;
+    if (gui_angle("z", &eul[2], 0, 0)) ret = true;
 
     if (ret) {
         eul_to_quat(eul, EULER_ORDER_DEFAULT, q);
         quat_copy(q, last.quat);
         vec3_copy(eul, last.eul);
+    }
+    return ret;
+}
+
+bool gui_rotation_mat4(float m[4][4])
+{
+    float rot[3][3], quat[4];
+    bool ret = false;
+    int i, j;
+
+    mat4_to_mat3(m, rot);
+    mat3_to_quat(rot, quat);
+    if (gui_quat(quat)) {
+        quat_to_mat3(quat, rot);
+        for (i = 0; i < 3; i++)
+            for (j = 0; j < 3; j++)
+                m[i][j] = rot[i][j];
+        ret = true;
+    }
+    return ret;
+}
+
+bool gui_rotation_mat4_axis(float m[4][4])
+{
+    float rot[3][3];
+    bool ret = false;
+    bool v;
+    int i, j;
+    const struct {
+        const char *label;
+        float rot[3][3];
+    } axis[] = {
+        {"+X", {{0, 0, -1}, {0, 1, 0}, {1, 0, 0}}},
+        {"-X", {{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}}},
+        {"+Y", {{1, 0, 0}, {0, 0, -1}, {0, 1, 0}}},
+        {"-Y", {{1, 0, 0}, {0, 0, 1}, {-1, 0, 0}}},
+        {"+Z", {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
+        {"-Z", {{1, 0, 0}, {0, -1, 0}, {0, 0, -1}}},
+    };
+
+    mat4_to_mat3(m, rot);
+
+    for (i = 0; i < 3; i++) {
+        gui_row_begin(2);
+        for (j = 0; j < 2; j++) {
+            v = memcmp(rot, axis[i * 2 + j].rot, sizeof(rot)) == 0;
+            if (gui_selectable(axis[i * 2 + j].label, &v, NULL, -1)) {
+                memcpy(rot, axis[i * 2 + j].rot, sizeof(rot));
+                ret = true;
+            }
+        }
+        gui_row_end();
+    }
+    if (ret) {
+        for (i = 0; i < 3; i++)
+            for (j = 0; j < 3; j++)
+                m[i][j] = rot[i][j];
     }
     return ret;
 }
@@ -1461,25 +1518,28 @@ void gui_request_panel_width(float width)
     goxel.gui.panel_width = width;
 }
 
-bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
+bool gui_layer_item(int idx, int icons_count, const int *icons,
+                    bool *visible, bool *selected,
                     char *name, int len)
 {
     bool ret = false;
-    bool edit_ = *edit;
+    bool selected_ = *selected;
     static char *edit_name = NULL;
     static bool start_edit;
     float font_size = ImGui::GetFontSize();
+    int icon;
+    int i;
     ImVec2 center;
     ImVec2 uv0, uv1;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    ImGui::PushID(i);
-    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *edit));
+    ImGui::PushID(idx);
+    ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *selected));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            color_lighten(COLOR(WIDGET, INNER, *edit)));
+            color_lighten(COLOR(WIDGET, INNER, *selected)));
     if (visible) {
-        if (gui_selectable_icon("##visible", &edit_,
+        if (gui_selectable_icon("##visible", &selected_,
                 *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
             *visible = !*visible;
             ret = true;
@@ -1489,18 +1549,19 @@ bool gui_layer_item(int i, int icon, bool *visible, bool *edit,
 
     if (edit_name != name) {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
-        if (icon != -1) {
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                    ImVec2(ICON_HEIGHT / 1.5, 0));
-        }
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
+                    ImVec2(style.FramePadding.x +
+                        ICON_HEIGHT * 0.75 * icons_count, 0));
         if (ImGui::Button(name, ImVec2(-1, ICON_HEIGHT))) {
-            *edit = true;
+            *selected = true;
             ret = true;
         }
-        if (icon != -1) ImGui::PopStyleVar();
-        if (icon > 0) {
+        ImGui::PopStyleVar();
+
+        for (i = 0; i < icons_count; i++) {
+            icon = icons[i];
             center = ImGui::GetItemRectMin() +
-                ImVec2(ICON_HEIGHT / 2 / 1.5, ICON_HEIGHT / 2);
+                ImVec2(ICON_HEIGHT * 0.75 * (i + 0.5), ICON_HEIGHT / 2);
             uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
             uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
             draw_list->AddImage(
@@ -1656,8 +1717,13 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     bool clicked;
     float size;
+    bool is_colors_grid;
+    float spacing = 2;
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
+    is_colors_grid = (nb > 0 && !icons[0].icon);
+
+    if (is_colors_grid) spacing = 8;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
 
     max_x = ImGui::GetWindowPos().x + ImGui::GetContentRegionAvail().x;
     max_x += 16; // ?
@@ -1672,21 +1738,22 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
             snprintf(label, sizeof(label), "%s", icon->label);
         }
         v = (i == *current);
-        if (icon->icon) {
+        if (!is_colors_grid) {
             size = ICON_HEIGHT;
             clicked = gui_selectable_icon(label, &v, icon->icon);
         } else { // Color icon.
             size = ITEM_HEIGHT;
             ImGui::PushStyleColor(ImGuiCol_Button, icon->color);
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, icon->color);
-            clicked = ImGui::Button("", ImVec2(ITEM_HEIGHT, ITEM_HEIGHT));
+            clicked = ImGui::Button("", ImVec2(size, size));
             ImGui::PopStyleColor(2);
             if (icon->label && ImGui::IsItemHovered())
                 gui_tooltip(icon->label);
             if (v) {
-                draw_list->AddRect(
-                        ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
-                        0xFFFFFFFF, 0, 0, 1);
+                ImVec2 c1 = ImGui::GetItemRectMin() - ImVec2(1, 1);
+                ImVec2 c2 = ImGui::GetItemRectMax() + ImVec2(1, 1);
+                draw_list->AddRect(c1, c2, 0xFF000000, 0, 0, 2);
+                draw_list->AddRect(c1, c2, 0xFFFFFFFF, 0, 0, 1);
             }
         }
         if (clicked) {

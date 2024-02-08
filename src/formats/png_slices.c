@@ -58,6 +58,7 @@ static int export_as_png_slices(const file_format_t *format,
 
 FILE_FORMAT_REGISTER(png_slices,
     .name = "png slices",
-    .ext = "png\0*.png\0",
+    .exts = {"*.png"},
+    .exts_desc = "png",
     .export_func = export_as_png_slices,
 )

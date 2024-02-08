@@ -188,7 +188,8 @@ static int qubicle_export(const file_format_t *format, const image_t *img,
 
 FILE_FORMAT_REGISTER(qubicle,
     .name = "qubicle",
-    .ext = "qubicle\0*.qb\0",
+    .exts = {"*.qb"},
+    .exts_desc = "qubicle",
     .import_func = qubicle_import,
     .export_func = qubicle_export,
 )

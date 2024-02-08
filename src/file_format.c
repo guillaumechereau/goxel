@@ -56,7 +56,7 @@ const file_format_t *file_format_for_path(const char *path, const char *name,
         if (need_write && !f->export_func) continue;
         if (name && strcasecmp(f->name, name) != 0) continue;
         if (path) {
-            ext = f->ext + strlen(f->ext) + 2; // Pick the string after '*'.
+            ext = f->exts[0] + 1; // Pick the string after '*'.
             if (!endswith(path, ext)) continue;
         }
         return f;

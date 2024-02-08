@@ -29,7 +29,8 @@ void gui_cameras_panel(void)
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->cameras, cam) {
         current = goxel.image->active_camera == cam;
-        if (gui_layer_item(i, -1, NULL, &current, cam->name, sizeof(cam->name))) {
+        if (gui_layer_item(i, 0, NULL, NULL, &current,
+                           cam->name, sizeof(cam->name))) {
             goxel.image->active_camera = cam;
         }
         i++;
@@ -49,9 +50,7 @@ void gui_cameras_panel(void)
 
     if (gui_section_begin(cam->name, GUI_SECTION_COLLAPSABLE)) {
         gui_input_float(_(DISTANCE), &cam->dist, 10.0, 0, 0, NULL);
-
         gui_checkbox(_(ORTHOGRAPHIC), &cam->ortho, NULL);
-
         gui_group_begin(NULL);
         gui_row_begin(2);
         gui_action_button(ACTION_view_left, _(LEFT), 1.0);

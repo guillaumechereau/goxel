@@ -448,7 +448,8 @@ static void export_gui(file_format_t *format)
 
 FILE_FORMAT_REGISTER(gltf,
     .name = "gltf",
-    .ext = "glTF2\0*.gltf\0",
+    .exts = {"*.gltf"},
+    .exts_desc = "glTF2",
     .export_gui = export_gui,
     .export_func = export_as_gltf,
 )

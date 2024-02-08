@@ -1,14 +1,20 @@
 SHELL = bash
+ifeq ($(OS),Linux)
+	JOBS := "-j $(shell nproc)"
+else
+	JOBS := "-j $(shell getconf _NPROCESSORS_ONLN)"
+endif
+
 .ONESHELL:
 
 all:
-	scons -j 8
+	scons $(JOBS)
 
 release:
-	scons mode=release
+	scons $(JOBS) mode=release
 
 profile:
-	scons mode=profile
+	scons $(JOBS) mode=profile
 
 run:
 	./goxel
@@ -26,10 +32,8 @@ appimage:
 	DESTDIR=AppDir PREFIX=/usr make install
 	curl https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20231206-1/linuxdeploy-x86_64.AppImage \
 		--output linuxdeploy.AppImage -L -f
-	curl https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh \
-		--output linuxdeploy-plugin-gtk.sh
-	chmod +x linuxdeploy.AppImage linuxdeploy-plugin-gtk.sh
-	./linuxdeploy.AppImage --output=appimage --appdir=AppDir --plugin=gtk
+	chmod +x linuxdeploy.AppImage
+	./linuxdeploy.AppImage --output=appimage --appdir=AppDir
 
 # Targets to install/uninstall goxel and its data files on unix system.
 PREFIX ?= /usr/local
@@ -45,9 +49,9 @@ install:
 	install -Dm644 snap/gui/goxel.desktop \
 	    $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
 	install -Dm644 \
-	    snap/gui/io.github.guillaumechereau.Goxel.appdata.xml \
+	    snap/gui/io.github.guillaumechereau.Goxel.metainfo.xml \
 	    $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	        io.github.guillaumechereau.Goxel.appdata.xml)
+	        io.github.guillaumechereau.Goxel.metainfo.xml)
 
 .PHONY: uninstall
 uninstall:
@@ -58,4 +62,4 @@ uninstall:
 	done
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
 	rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	         io.github.guillaumechereau.Goxel.appdata.xml)
+	         io.github.guillaumechereau.Goxel.metainfo.xml)

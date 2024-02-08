@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-	<id>io.github.guillaumechereau.Goxel.desktop</id>
+	<id>io.github.guillaumechereau.Goxel</id>
 	<name>Goxel</name>
 	<project_license>GPL-3.0-only</project_license>
 	<metadata_license>CC0-1.0</metadata_license>
@@ -17,15 +17,23 @@
 			<li>Many export formats: Goxel can export to obj, pyl, magica voxel, png, qubicle, povray, and more.</li>
 		</ul>
 	</description>
+	<launchable type="desktop-id">goxel.desktop</launchable>
 	<screenshots>
 		<screenshot type="default">
-			<image type="source">https://github.com/guillaumechereau/goxel/raw/b06a56c3c10fa54d5616367195251d84ff95124f/screenshots/screenshot-plane.png</image>
+			<caption>Fisherman house, made with Goxel by Thibault Simar</caption>
+			<image type="source">https://goxel.xyz/gallery/thibault-fisherman-house.jpg</image>
 		</screenshot>
 	</screenshots>
+	<provides>
+		<binary>goxel</binary>
+	</provides>
 	<releases>
-		<release version="v0.10.6" date="2020-06-09"/>
+		<release version="0.13.0" date="2023-12-27"/>
 	</releases>
 	<url type="homepage">https://goxel.xyz/</url>
 	<url type="bugtracker">https://github.com/guillaumechereau/goxel/issues</url>
+	<url type="donation">https://github.com/guillaumechereau/goxel#donations</url>
+	<url type="vcs-browser">https://github.com/guillaumechereau/goxel</url>
+	<url type="contribute">https://github.com/guillaumechereau/goxel/blob/master/CONTRIBUTING.md</url>
 	<content_rating type="oars-1.1" />
 </component>

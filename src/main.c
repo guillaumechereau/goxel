@@ -275,6 +275,16 @@ static void set_window_title(void *user, const char *title)
     glfwSetWindowTitle(g_window, title);
 }
 
+static const char *get_clipboard_text(void *user)
+{
+    return glfwGetClipboardString(g_window);
+}
+
+static void set_clipboard_text(void *user, const char *text)
+{
+    glfwSetClipboardString(g_window, text);
+}
+
 int main(int argc, char **argv)
 {
     args_t args = {.scale = 1};
@@ -287,6 +297,8 @@ int main(int argc, char **argv)
 
     // Setup sys callbacks.
     sys_callbacks.set_window_title = set_window_title;
+    sys_callbacks.get_clipboard_text = get_clipboard_text;
+    sys_callbacks.set_clipboard_text = set_clipboard_text;
     parse_options(argc, argv, &args);
 
     g_scale = args.scale;

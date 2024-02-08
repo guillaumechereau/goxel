@@ -42,14 +42,23 @@ void layer_delete(layer_t *layer)
 uint32_t layer_get_key(const layer_t *layer)
 {
     uint32_t key;
-    key = volume_get_key(layer->volume);
+    uint64_t volume_key;
+    uint32_t mat_key;
+
+    volume_key = volume_get_key(layer->volume);
+    mat_key = layer->material ? material_get_hash(layer->material) : 0;
+
+    key = 0;
+    key = XXH32(&volume_key, sizeof(volume_key), key);
     key = XXH32(&layer->visible, sizeof(layer->visible), key);
     key = XXH32(&layer->name, sizeof(layer->name), key);
     key = XXH32(&layer->box, sizeof(layer->box), key);
     key = XXH32(&layer->mat, sizeof(layer->mat), key);
     key = XXH32(&layer->shape, sizeof(layer->shape), key);
     key = XXH32(&layer->color, sizeof(layer->color), key);
-    key = XXH32(&layer->material, sizeof(layer->material), key);
+    key = XXH32(&mat_key, sizeof(mat_key), key);
+    key = XXH32(&layer->mat, sizeof(layer->mat), key);
+    key = XXH32(&layer->mode, sizeof(layer->mode), key);
     return key;
 }
 
@@ -70,6 +79,7 @@ layer_t *layer_copy(layer_t *other)
     layer->base_volume_key = other->base_volume_key;
     layer->shape = other->shape;
     layer->shape_key = other->shape_key;
+    layer->mode = other->mode;
     memcpy(layer->color, other->color, sizeof(layer->color));
     return layer;
 }

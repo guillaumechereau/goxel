@@ -47,6 +47,7 @@ static void test_file(const char *b64_data, uint32_t crc32)
     TEST(volume_crc32(goxel.image->active_layer->volume) == crc32);
     image_delete(goxel.image);
     goxel.image = image_new();
+    sys_delete_file("/tmp/goxel_test.gox");
 }
 
 static void test_load_file_v2(void)
@@ -125,6 +126,7 @@ static void test_load_corrupt(void)
     fclose(file);
     err = goxel_import_file("/tmp/goxel_test.gox", NULL);
     TEST(err != 0);
+    sys_delete_file("/tmp/goxel_test.gox");
 }
 
 void tests_run(void)

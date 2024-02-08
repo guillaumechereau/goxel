@@ -38,21 +38,37 @@ static void toggle_layer_only_visible(layer_t *layer)
     layer->visible = true;
 }
 
+static const char *get_mode_name(int mode)
+{
+    switch (mode) {
+        case MODE_OVER: return "Add";
+        case MODE_SUB: return "Subtract";
+        case MODE_INTERSECT: return "Intersect";
+        default: return "";
+    }
+}
 
 void gui_layers_panel(void)
 {
     layer_t *layer;
     material_t *material;
-    int i = 0, icon, bbox[2][3];
+    int i = 0, bbox[2][3];
+    int icons_count, icons[8];
     bool current, visible, bounded;
     char buf[256];
+    const int MODES[] = {MODE_OVER, MODE_SUB, MODE_INTERSECT};
 
     gui_group_begin(NULL);
     DL_FOREACH_REVERSE(goxel.image->layers, layer) {
         current = goxel.image->active_layer == layer;
         visible = layer->visible;
-        icon = layer->base_id ? ICON_LINK : layer->shape ? ICON_SHAPE : -1;
-        gui_layer_item(i, icon, &visible, &current,
+        icons_count = 0;
+        if (layer->base_id) icons[icons_count++] = ICON_LINK;
+        if (layer->shape) icons[icons_count++] = ICON_SHAPE;
+        if (layer->mode == MODE_SUB) icons[icons_count++] = ICON_SUBTRACT;
+        if (layer->mode == MODE_INTERSECT)
+            icons[icons_count++] = ICON_INTERSECT;
+        gui_layer_item(i, icons_count, icons, &visible, &current,
                        layer->name, sizeof(layer->name));
         if (current && goxel.image->active_layer != layer) {
             goxel.image->active_layer = layer;
@@ -134,6 +150,17 @@ void gui_layers_panel(void)
         DL_FOREACH(goxel.image->materials, material) {
             if (gui_combo_item(material->name, material == layer->material))
                 layer->material = material;
+        }
+        gui_combo_end();
+    }
+
+    gui_text("Mode");
+    if (gui_combo_begin("##mode", get_mode_name(layer->mode))) {
+        for (i = 0; i < ARRAY_SIZE(MODES); i++) {
+            current = MODES[i] == layer->mode;
+            if (gui_combo_item(get_mode_name(MODES[i]), current)) {
+                layer->mode = MODES[i];
+            }
         }
         gui_combo_end();
     }

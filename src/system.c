@@ -18,8 +18,7 @@
 
 #include "system.h"
 
-#include "noc_file_dialog.h"
-
+#include <assert.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -34,14 +33,13 @@
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
 
-#if defined(__unix__) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
-#define NOC_FILE_DIALOG_GTK
-#define NOC_FILE_DIALOG_IMPLEMENTATION
-#include "noc_file_dialog.h"
-#include <pwd.h>
-#include <gtk/gtk.h>
+// Directly include the C file!
+#include "../ext_src/tinyfiledialogs/tinyfiledialogs.c"
 
-static const char *get_user_dir(void *user)
+#if defined(__unix__) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
+#include <pwd.h>
+
+static const char *get_user_dir_unix(void *user)
 {
     static char ret[PATH_MAX] = "";
     const char *home;
@@ -58,41 +56,15 @@ static const char *get_user_dir(void *user)
     return ret;
 }
 
-static const char *get_clipboard_text(void* user)
-{
-    GtkClipboard *cb;
-    static gchar *text = NULL;
-    gtk_init_check(NULL, NULL);
-    g_free(text);
-    cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    text = gtk_clipboard_wait_for_text(cb);
-    return text;
-}
-
-static void set_clipboard_text(void *user, const char *text)
-{
-    GtkClipboard *cb;
-    gtk_init_check(NULL, NULL);
-    cb = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    gtk_clipboard_set_can_store(cb, NULL, 0);
-    gtk_clipboard_set_text(cb, text, -1);
-    gtk_clipboard_store(cb);
-}
-
 static void init_unix(void) __attribute__((constructor));
 static void init_unix(void)
 {
-    sys_callbacks.get_user_dir = get_user_dir;
-    sys_callbacks.get_clipboard_text = get_clipboard_text;
-    sys_callbacks.set_clipboard_text = set_clipboard_text;
+    sys_callbacks.get_user_dir = get_user_dir_unix;
 }
 
 #endif
 
 #ifdef WIN32
-#define NOC_FILE_DIALOG_WIN32
-#define NOC_FILE_DIALOG_IMPLEMENTATION
-#include "noc_file_dialog.h"
 
 // Defined in utils.
 int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
@@ -124,26 +96,6 @@ static void init_win(void)
 }
 
 #endif
-
-
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-#if TARGET_OS_MAC
-
-const char *sys_get_save_path(const char *filters, const char *default_name)
-{
-    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
-                                default_name);
-}
-
-void sys_on_saved(const char *path)
-{
-    LOG_I("Saved %s", path);
-}
-
-#endif
-#endif
-
 
 void sys_log(const char *msg)
 {
@@ -213,6 +165,19 @@ void sys_set_window_title(const char *title)
         sys_callbacks.set_window_title(sys_callbacks.user, title);
 }
 
+static const char *get_user_dir_fallback(void)
+{
+    static char ret[PATH_MAX] = "";
+    const char *home;
+    if (!*ret) {
+        home = getenv("HOME");
+        if (home)
+            snprintf(ret, sizeof(ret), "%s/.config/goxel", home);
+        else
+            snprintf(ret, sizeof(ret), "./");
+    }
+    return ret;
+}
 
 /*
  * Function: sys_get_user_dir
@@ -224,7 +189,7 @@ const char *sys_get_user_dir(void)
 {
     if (sys_callbacks.get_user_dir)
         return sys_callbacks.get_user_dir(sys_callbacks.user);
-    return NULL;
+    return get_user_dir_fallback();
 }
 
 const char *sys_get_clipboard_text(void* user)
@@ -260,14 +225,14 @@ void sys_save_to_photos(const uint8_t *data, int size,
     FILE *file;
     const char *path;
     size_t r;
+    const char *filters[] = {"*.png", NULL};
 
     if (sys_callbacks.save_to_photos)
         return sys_callbacks.save_to_photos(sys_callbacks.user, data, size,
                                             on_finished);
 
     // Default implementation.
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE,
-                   "png\0*.png\0", NULL, "untitled.png");
+    path = sys_get_save_path("untitled.png", filters, "png");
     if (!path) {
         if (on_finished) on_finished(1);
         return;
@@ -282,30 +247,66 @@ void sys_save_to_photos(const uint8_t *data, int size,
     if (on_finished) on_finished(r == size ? 0 : -1);
 }
 
-
-#ifdef NOC_FILE_DIALOG_IMPLEMENTATION
-const char *sys_get_save_path(const char *filters, const char *default_name)
+static int filters_count(const char * const*filters)
 {
-    return noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, filters, NULL,
-                                default_name);
+    int nb;
+    for (nb = 0; filters[nb]; nb++) {}
+    return nb;
+}
+
+const char *sys_open_file_dialog(const char *title,
+                                 const char *default_path_and_file,
+                                 const char * const *filters,
+                                 const char *filters_desc)
+{
+    int nb;
+    static char buf[1024];
+    nb = filters_count(filters);
+    if (sys_callbacks.open_dialog) {
+        return sys_callbacks.open_dialog(sys_callbacks.user,
+                buf, sizeof(buf), 0, title, default_path_and_file,
+                nb, filters, filters_desc) ? buf : NULL;
+    }
+    return tinyfd_openFileDialog(title, default_path_and_file, nb,
+                                 filters, filters_desc, 0);
+}
+
+const char *sys_open_folder_dialog(const char *title,
+                                   const char *default_path)
+{
+    static char buf[1024];
+    if (sys_callbacks.open_dialog) {
+        return sys_callbacks.open_dialog(sys_callbacks.user,
+                buf, sizeof(buf), 2, title, NULL, 0, NULL, NULL) ? buf : NULL;
+    }
+    return tinyfd_selectFolderDialog(title, default_path);
+}
+
+const char *sys_save_file_dialog(const char *title,
+                                 const char *default_path_and_file,
+                                 const char * const *filters,
+                                 const char *filters_desc)
+{
+    int nb;
+    static char buf[1024];
+    nb = filters_count(filters);
+    if (sys_callbacks.open_dialog) {
+        return sys_callbacks.open_dialog(sys_callbacks.user,
+                buf, sizeof(buf), 1, title, default_path_and_file,
+                nb, filters, filters_desc) ? buf : NULL;
+    }
+    return tinyfd_saveFileDialog(title, default_path_and_file, nb,
+                                 filters, filters_desc);
+}
+
+const char *sys_get_save_path(const char *default_name,
+                              const char * const *filters,
+                              const char *filters_desc)
+{
+    return sys_save_file_dialog("Save", default_name, filters, filters_desc);
 }
 
 void sys_on_saved(const char *path)
 {
     LOG_I("Saved %s", path);
 }
-#endif
-
-#ifdef ANDROID
-
-const char *sys_get_save_path(const char *filters, const char *default_name)
-{
-    return NULL;
-}
-
-void sys_on_saved(const char *path)
-{
-    LOG_I("Saved %s", path);
-}
-
-#endif

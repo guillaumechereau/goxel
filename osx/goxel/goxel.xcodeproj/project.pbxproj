@@ -106,7 +106,6 @@
 		F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */ = {isa = PBXBuildFile; fileRef = F0C5368A1F42EE43003A0DCA /* extrude.c */; };
 		F0DC02A122EEE267007E2F17 /* line.c in Sources */ = {isa = PBXBuildFile; fileRef = F0DC02A022EEE267007E2F17 /* line.c */; };
 		F0DC02A322EEE274007E2F17 /* box.c in Sources */ = {isa = PBXBuildFile; fileRef = F0DC02A222EEE274007E2F17 /* box.c */; };
-		F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */ = {isa = PBXBuildFile; fileRef = F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */; };
 		F0E5DB2824FBB0D600010FDD /* file_format.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E5DB2624FBB0D600010FDD /* file_format.c */; };
 		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
 		F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */; };
@@ -247,8 +246,6 @@
 		F0C5368A1F42EE43003A0DCA /* extrude.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = extrude.c; sourceTree = "<group>"; };
 		F0DC02A022EEE267007E2F17 /* line.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = line.c; sourceTree = "<group>"; };
 		F0DC02A222EEE274007E2F17 /* box.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box.c; sourceTree = "<group>"; };
-		F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = noc_file_dialog.h; sourceTree = "<group>"; };
-		F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = dialogs_osx.m; sourceTree = "<group>"; };
 		F0E5DB2624FBB0D600010FDD /* file_format.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = file_format.c; sourceTree = "<group>"; };
 		F0E5DB2724FBB0D600010FDD /* file_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file_format.h; sourceTree = "<group>"; };
 		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
@@ -417,7 +414,6 @@
 				F037D5C61EA6069A00C96D10 /* tools */,
 				F0A160061E962F4600C6EF33 /* marchingcube.c */,
 				F0A15FF11E962F1300C6EF33 /* formats */,
-				F0DE970F1E6FEA1F000354AF /* dialogs_osx.m */,
 				F06C68391D2EAECC00887FCE /* camera.c */,
 				F06C683A1D2EAECC00887FCE /* quantization.c */,
 				F0AE90F51C8EE01200C29080 /* assets.c */,
@@ -444,7 +440,6 @@
 				F09A62662B3BB8E6006A4464 /* meshoptimizer */,
 				F05D6E5A29D3E7EC004CA300 /* voxelizer */,
 				F0C37C8D2317CBF2000EF45F /* xxhash */,
-				F0DE970D1E6FE8BF000354AF /* noc */,
 				F07DEA211BD0F33A00BAA1AD /* stb */,
 				F07DEA271BD0F33A00BAA1AD /* uthash */,
 			);
@@ -522,14 +517,6 @@
 				F0C37C8E2317CBF2000EF45F /* xxhash.h */,
 			);
 			path = xxhash;
-			sourceTree = "<group>";
-		};
-		F0DE970D1E6FE8BF000354AF /* noc */ = {
-			isa = PBXGroup;
-			children = (
-				F0DE970E1E6FE8BF000354AF /* noc_file_dialog.h */,
-			);
-			path = noc;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -674,7 +661,6 @@
 				F05D6E8529D3EB1F004CA300 /* rect_select.c in Sources */,
 				F09A627D2B3BB8E7006A4464 /* vcacheanalyzer.cpp in Sources */,
 				F00FC31D226B2F7C0002F251 /* color.c in Sources */,
-				F0DE97101E6FEA1F000354AF /* dialogs_osx.m in Sources */,
 				F0A160021E962F1300C6EF33 /* vox.c in Sources */,
 				F07DEA121BD0F31500BAA1AD /* tools.c in Sources */,
 				F03B4388224CCDDF00798CAB /* yocto.cpp in Sources */,

@@ -20,9 +20,11 @@
 #include "script.h"
 #include "xxhash.h"
 #include "file_format.h"
+#include "../ext_src/stb/stb_ds.h"
 
 #include "shader_cache.h"
 
+#include <errno.h>
 #include <stdarg.h>
 
 // The global goxel instance.
@@ -308,6 +310,37 @@ void goxel_add_gesture(int type, int button,
     goxel.gestures_count++;
 }
 
+static void goxel_load_recent_files(void)
+{
+    char listpath[1024];
+    char path[1024];
+    FILE *listfile, *file;
+
+    assert(goxel.recent_files == NULL);
+
+    snprintf(listpath, sizeof(listpath), "%s/recent-files.txt",
+             sys_get_user_dir());
+    listfile = fopen(listpath, "r");
+    LOG_D("Parse recent files from %s", listpath);
+    if (!listfile) {
+        LOG_E("Cannot open %s: %s", listpath, strerror(errno));
+        return;
+    }
+
+    while (fgets(path, sizeof(path), listfile)) {
+        if (strlen(path) < 1) continue;
+        if (path[strlen(path) - 1] == '\n')
+            path[strlen(path) - 1] = '\0';
+        file = fopen(path, "r");
+        if (!file) continue;
+        fclose(file);
+        arrput(goxel.recent_files, strdup(path));
+    }
+
+    fclose(listfile);
+}
+
+
 KEEPALIVE
 void goxel_init(void)
 {
@@ -329,6 +362,8 @@ void goxel_init(void)
     goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_CTRL, on_zoom);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB, on_rotate);
     goxel_add_gesture(GESTURE_HOVER, 0, on_hover);
+
+    goxel_load_recent_files();
 
     goxel_reset();
 }
@@ -428,7 +463,13 @@ void goxel_release_graphics(void)
 static void update_window_title(void)
 {
     char buf[1024];
-    sprintf(buf, "Goxel %s%s %s", GOXEL_VERSION_STR, DEBUG ? " (debug)" : "",
+    bool changed;
+
+    changed = image_get_key(goxel.image) != goxel.image->saved_key;
+    sprintf(buf, "Goxel %s%s %s%s",
+            GOXEL_VERSION_STR,
+            DEBUG ? " (debug)" : "",
+            changed ? "*" : "",
             goxel.image->path ?: "");
     sys_set_window_title(buf);
 }
@@ -440,6 +481,8 @@ int goxel_iter(const inputs_t *inputs)
     uint64_t volume_key;
     float pitch;
     float menu_w = 20;
+    int i;
+    inputs_t inputs2;
     camera_t *camera = get_camera();
 
     if (!goxel.graphics_initialized)
@@ -468,8 +511,7 @@ int goxel_iter(const inputs_t *inputs)
     // Test: update the viewport before the UI.
     // Note: the inputs Y coordinates are inverted!
     if (!gui_want_capture_mouse()) {
-        int i;
-        inputs_t inputs2 = *inputs;
+        inputs2 = *inputs;
         for (i = 0; i < (int)ARRAY_SIZE(inputs2.touches); i++) {
             inputs2.touches[i].pos[1] =
                 inputs->window_size[1] - inputs->touches[i].pos[1];
@@ -1032,6 +1074,7 @@ const volume_t *goxel_get_render_volume(const image_t *img)
 const layer_t *goxel_get_render_layers(bool with_tool_preview)
 {
     uint32_t hash, k;
+    bool no_merge;
     layer_t *l, *layer, *tmp;
 
     hash = image_get_key(goxel.image);
@@ -1059,14 +1102,17 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
                 volume_set(layer->volume, goxel.tool_volume);
             }
 
-            if (    goxel.render_layers &&
-                    goxel.render_layers->prev->material == layer->material)
-            {
-                volume_merge(goxel.render_layers->prev->volume, layer->volume,
-                           MODE_OVER, NULL);
-                layer_delete(layer);
-            } else {
+            // Don't merge different materials unless we do a boolean op.
+            no_merge = (goxel.render_layers == NULL) || (
+                (layer->mode == MODE_OVER) &&
+                (goxel.render_layers->prev->material != layer->material));
+
+            if (no_merge) {
                 DL_APPEND(goxel.render_layers, layer);
+            } else {
+                volume_merge(goxel.render_layers->prev->volume, layer->volume,
+                             layer->mode, NULL);
+                layer_delete(layer);
             }
         }
     }
@@ -1109,22 +1155,26 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
 void goxel_set_help_text(const char *msg, ...)
 {
     va_list args;
+    int err __attribute__((unused));
     free(goxel.help_text);
     goxel.help_text = NULL;
     if (!msg) return;
     va_start(args, msg);
-    vasprintf(&goxel.help_text, msg, args);
+    err = vasprintf(&goxel.help_text, msg, args);
+    assert(err != -1);
     va_end(args);
 }
 
 void goxel_set_hint_text(const char *msg, ...)
 {
     va_list args;
+    int err __attribute__((unused));
     free(goxel.hint_text);
     goxel.hint_text = NULL;
     if (!msg) return;
     va_start(args, msg);
-    vasprintf(&goxel.hint_text, msg, args);
+    err = vasprintf(&goxel.hint_text, msg, args);
+    assert(err != -1);
     va_end(args);
 }
 
@@ -1165,7 +1215,7 @@ int goxel_import_file(const char *path, const char *format)
         f = file_format_for_path(path, format, "r");
         if (!f) return -1;
         if (!path) {
-            path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, f->ext, NULL, NULL);
+            path = sys_open_file_dialog("Import", NULL, f->exts, f->exts_desc);
             if (!path) return -1;
         }
         err = f->import_func(f, goxel.image, path);
@@ -1179,6 +1229,25 @@ int goxel_import_file(const char *path, const char *format)
     return 0;
 }
 
+static void get_export_path(const file_format_t *f, char *buf, size_t size)
+{
+    const char *ext = f->exts[0] + 2;
+
+    // Use current export path if it exists.
+    if (goxel.image->export_path) {
+        if (str_replace_ext(goxel.image->export_path, ext, buf, size))
+            return;
+    }
+
+    // Use the current file path if it exists.
+    if (goxel.image->path && str_endswith(goxel.image->path, ".gox")) {
+        if (str_replace_ext(goxel.image->path, ext, buf, size))
+            return;
+    }
+
+    snprintf(buf, size, "Untitled.%s", ext);
+}
+
 int goxel_export_to_file(const char *path, const char *format)
 {
     const file_format_t *f;
@@ -1187,14 +1256,51 @@ int goxel_export_to_file(const char *path, const char *format)
     f = file_format_for_path(path, format, "w");
     if (!f) return -1;
     if (!path) {
-        snprintf(name, sizeof(name), "Untitled%s", f->ext + strlen(f->ext) + 2);
-        path = sys_get_save_path(f->ext, name);
+        get_export_path(f, name, sizeof(name));
+        path = sys_get_save_path(name, f->exts, f->exts_desc);
         if (!path) return -1;
+        free(goxel.image->export_path);
+        goxel.image->export_path = strdup(path);
     }
     err = f->export_func(f, goxel.image, path);
     if (err) return err;
     sys_on_saved(path);
     return 0;
+}
+
+void goxel_add_recent_file(const char *path)
+{
+    char listpath[1024];
+    FILE *file;
+    int i;
+
+    if (goxel.recent_files && strcmp(goxel.recent_files[0], path) == 0)
+        return;
+
+    // Remove the path from the list if it exists already.
+    for (i = 0; i < arrlen(goxel.recent_files); i++) {
+        if (strcmp(goxel.recent_files[i], path) == 0) {
+            free(goxel.recent_files[i]);
+            arrdel(goxel.recent_files, i);
+        }
+    }
+
+    // Push the path at index 0.
+    arrins(goxel.recent_files, 0, strdup(path));
+
+    // Save the new array on disk.
+    snprintf(listpath, sizeof(listpath), "%s/recent-files.txt",
+             sys_get_user_dir());
+    sys_make_dir(listpath);
+    file = fopen(listpath, "w");
+    if (!file) {
+        LOG_E("Cannot save to %s: %s", listpath, strerror(errno));
+        return;
+    }
+    for (i = 0; i < arrlen(goxel.recent_files); i++) {
+        fprintf(file, "%s\n", goxel.recent_files[i]);
+    }
+    fclose(file);
 }
 
 static void a_cut_as_new_layer(void)
@@ -1436,14 +1542,18 @@ ACTION_REGISTER(quit,
     .default_shortcut = "Ctrl Q",
 )
 
-static int new_file_popup(void *data)
+static int unsaved_change_popup(void *data)
 {
     gui_text("Discard current image?");
     int ret = 0;
 
     gui_row_begin(0);
     if (gui_button("Discard", 0, 0)) {
-        goxel_reset();
+        if (!data) {
+            goxel_reset();
+        } else {
+            load_from_file((const char *)data, true);
+        }
         ret = 1;
     }
     if (gui_button("Cancel", 0, 0)) {
@@ -1453,13 +1563,24 @@ static int new_file_popup(void *data)
     return ret;
 }
 
-static void a_reset(void)
+void goxel_open_file(const char *path)
 {
     if (image_get_key(goxel.image) == goxel.image->saved_key) {
-        goxel_reset();
+        if (!path) {
+            goxel_reset();
+        } else {
+            load_from_file(path, true);
+        }
         return;
     }
-    gui_open_popup("Unsaved Changes", GUI_POPUP_RESIZE, NULL, new_file_popup);
+    gui_open_popup("Unsaved Changes", GUI_POPUP_RESIZE,
+                   path ? strdup(path) : NULL,
+                   unsaved_change_popup);
+}
+
+static void a_reset(void)
+{
+    goxel_open_file(NULL);
 }
 
 ACTION_REGISTER(reset,

@@ -45,7 +45,6 @@
 #include "volume.h"
 #include "volume_utils.h"
 #include "model3d.h"
-#include "noc_file_dialog.h"
 #include "palette.h"
 #include "pathtracer.h"
 #include "render.h"
@@ -73,7 +72,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GOXEL_VERSION_STR "0.13.0"
+#define GOXEL_VERSION_STR "0.14.0"
 #ifndef GOXEL_DEFAULT_THEME
 #   define GOXEL_DEFAULT_THEME "dark"
 #endif
@@ -104,26 +103,6 @@
 #define DEFINED___(_, v, ...) v
 // #############################
 
-// CHECK is similar to an assert, but the condition is tested even in release
-// mode.
-#if DEBUG
-    #define CHECK(c) assert(c)
-#else
-    #define CHECK(c) do { \
-        if (!(c)) { \
-            LOG_E("Error %s %s %d", __func__,  __FILE__, __LINE__); \
-            exit(-1); \
-        } \
-    } while (0)
-#endif
-
-// I redefine asprintf so that if the function fails, we just crash the
-// application.  I don't see how we can recover from an asprintf fails
-// anyway.
-#define asprintf(...) CHECK(asprintf(__VA_ARGS__) != -1)
-#define vasprintf(...) CHECK(vasprintf(__VA_ARGS__) != -1)
-
-// #############################
 
 #ifdef __EMSCRIPTEN__
 #   include <emscripten.h>
@@ -335,6 +314,13 @@ bool str_endswith(const char *str, const char *end);
  */
 bool str_startswith(const char *s1, const char *s2);
 
+/*
+ * Function: str_replace_ext
+ * Replace the extension part of a file path with a new one.
+ */
+bool str_replace_ext(const char *str, const char *new_ext,
+                     char *out, size_t out_size);
+
 
 /*
  * Function: unproject
@@ -422,6 +408,8 @@ enum {
     X(ICON_MATERIAL,                1, 6, THEME_GROUP_ICON_VIEW),
     X(ICON_LIGHT,                   2, 6, THEME_GROUP_ICON_VIEW),
     X(ICON_TOOL_SELECTION,          3, 6, 0),
+    X(ICON_INTERSECT,               4, 6, 0),
+    X(ICON_SUBTRACT,                5, 6, 0),
 };
 
 #undef X
@@ -546,6 +534,8 @@ typedef struct goxel
         float viewport[4];
     } gui;
 
+    char **recent_files; // stb arraw of most recently used files.
+
 } goxel_t;
 
 // the global goxel instance.
@@ -618,6 +608,8 @@ int goxel_export_to_file(const char *path, const char *format);
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
 
+void goxel_open_file(const char *path);
+
 void save_to_file(const image_t *img, const char *path);
 int load_from_file(const char *path, bool replace);
 
@@ -650,6 +642,8 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first);
 
 void settings_load(void);
 void settings_save(void);
+
+void goxel_add_recent_file(const char *path);
 
 // Section: tests
 

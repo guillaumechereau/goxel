@@ -20,6 +20,13 @@
 #include "file_format.h"
 #include <errno.h>
 
+#define CHECK(x) do { \
+        if (!(x)) { \
+            ret = -1; \
+            goto end; \
+        } \
+    } while(0)
+
 static int import_as_txt(const file_format_t *format, image_t *image,
                          const char *path)
 {
@@ -30,6 +37,7 @@ static int import_as_txt(const file_format_t *format, image_t *image,
     int pos[3];
     unsigned int c[4];
     char *token;
+    int ret = 0;
 
     LOG_I("Reading text file. One line per voxel. Format should be: X Y Z RRGGBB");
     file = fopen(path, "r");
@@ -47,22 +55,23 @@ static int import_as_txt(const file_format_t *format, image_t *image,
         if (line[0] == '\n' || line[0] == '\0')
             continue;
 
-        token = strtok(line, " "); // get first token (X)
+        CHECK(token = strtok(line, " ")); // get first token (X)
         if (strcmp(token, "#") == 0)
             continue;
         pos[0] = atoi(token);
-        token = strtok(NULL, " "); // get second token (Y)
+        CHECK(token = strtok(NULL, " ")); // get second token (Y)
         pos[1] = atoi(token);
-        token = strtok(NULL, " "); // get third token (Z)
+        CHECK(token = strtok(NULL, " ")); // get third token (Z)
         pos[2] = atoi(token);
-        token = strtok(NULL, " "); // get forth token (RRGGBB)
-        sscanf(token, "%02x%02x%02x", &c[0], &c[1], &c[2]);
+        CHECK(token = strtok(NULL, " ")); // get forth token (RRGGBB)
+        CHECK(sscanf(token, "%02x%02x%02x", &c[0], &c[1], &c[2]) == 3);
         volume_set_at(layer->volume, &iter, pos,
                       (uint8_t[]){c[0], c[1], c[2], 255});
     }
 
+end:
     fclose(file);
-    return 0;
+    return ret;
 }
 
 
@@ -97,7 +106,8 @@ static int export_as_txt(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(txt,
     .name = "text",
-    .ext = "text\0*.txt\0",
+    .exts = {"*.txt"},
+    .exts_desc = "text",
     .import_func = import_as_txt,
     .export_func = export_as_txt,
 )

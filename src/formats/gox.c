@@ -365,6 +365,8 @@ void save_to_file(const image_t *img, const char *path)
         material_idx = get_material_idx(img, layer->material);
         chunk_write_dict_value(&c, out, "material", &material_idx,
                                sizeof(material_idx));
+        chunk_write_dict_value(&c, out, "mode", &layer->mode,
+                               sizeof(layer->mode));
         if (layer->image) {
             chunk_write_dict_value(&c, out, "img-path", layer->image->path,
                                strlen(layer->image->path));
@@ -600,6 +602,7 @@ int load_from_file(const char *path, bool replace)
 
                 DICT_CPY("base_id", layer->base_id);
                 DICT_CPY("box", layer->box);
+                DICT_CPY("mode", layer->mode);
 
                 if (strcmp(dict_key, "shape") == 0) {
                     for (i = 0; i < ARRAY_SIZE(SHAPES); i++) {
@@ -706,15 +709,32 @@ error:
     return -1;
 }
 
+static void get_default_save_path(char *buf, size_t size)
+{
+    if (goxel.image->path) {
+        snprintf(buf, size, "%s", goxel.image->path);
+        return;
+    }
+    if (goxel.recent_files) {
+        snprintf(buf, size, "%s", goxel.recent_files[0]);
+        return;
+    }
+    snprintf(buf, size, "untitled.gox");
+}
+
 static void a_open(void)
 {
+    char default_save_path[1024];
     const char *path;
-    path = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "gox\0*.gox\0",
-                                NULL, NULL);
+    const char *filters[] = {"*.gox", NULL};
+
+    get_default_save_path(default_save_path, sizeof(default_save_path));
+    path = sys_open_file_dialog("Open", default_save_path, filters, "gox");
     if (!path) return;
     image_delete(goxel.image);
     goxel.image = image_new();
     load_from_file(path, true);
+    goxel_add_recent_file(path);
 }
 
 ACTION_REGISTER(open,
@@ -724,8 +744,12 @@ ACTION_REGISTER(open,
 
 static void a_save_as(void)
 {
+    char default_save_path[1024];
     const char *path;
-    path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
+    const char *filters[] = {"*.gox", NULL};
+
+    get_default_save_path(default_save_path, sizeof(default_save_path));
+    path = sys_get_save_path(default_save_path, filters, "gox");
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
@@ -734,6 +758,7 @@ static void a_save_as(void)
     save_to_file(goxel.image, goxel.image->path);
     goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
+    goxel_add_recent_file(path);
 }
 
 ACTION_REGISTER(save_as,
@@ -742,8 +767,14 @@ ACTION_REGISTER(save_as,
 
 static void a_save(void)
 {
+    char default_save_path[1024];
     const char *path = goxel.image->path;
-    if (!path) path = sys_get_save_path("gox\0*.gox\0", "untitled.gox");
+    const char *filters[] = {"*.gox", NULL};
+
+    if (!path) {
+        get_default_save_path(default_save_path, sizeof(default_save_path));
+        path = sys_get_save_path(default_save_path, filters, "gox");
+    }
     if (!path) return;
     if (path != goxel.image->path) {
         free(goxel.image->path);
@@ -752,6 +783,7 @@ static void a_save(void)
     save_to_file(goxel.image, goxel.image->path);
     goxel.image->saved_key = image_get_key(goxel.image);
     sys_on_saved(path);
+    goxel_add_recent_file(path);
 }
 
 ACTION_REGISTER(save,
@@ -774,7 +806,8 @@ static int gox_export(const file_format_t *format, const image_t *image,
 
 FILE_FORMAT_REGISTER(gox,
     .name = "gox",
-    .ext = "gox\0*.gox\0",
+    .exts = {"*.gox"},
+    .exts_desc = "gox",
     .import_func = gox_import,
     .export_func = gox_export,
 )
