@@ -25,7 +25,10 @@ static int shortcut_callback(action_t *action, void *user)
 {
     if (!(action->flags & ACTION_CAN_EDIT_SHORTCUT)) return 0;
     gui_push_id(action->id);
-    gui_text("%s: %s", action->id, action->help);
+    if (action->help)
+        gui_text("%s: %s", action->id, tr(action->help));
+    else
+        gui_text("%s", action->id);
     gui_next_column();
     // XXX: need to check if the inputs are valid!
     gui_input_text("", action->shortcut, sizeof(action->shortcut));
