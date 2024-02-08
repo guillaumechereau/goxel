@@ -53,6 +53,7 @@ int gui_settings_popup(void *data)
                 if (gui_combo_item(languages[i].name,
                             &languages[i] == language)) {
                     tr_set_language(languages[i].id);
+                    settings_save();
                 }
             }
             gui_combo_end();
@@ -69,6 +70,7 @@ int gui_settings_popup(void *data)
         }
         if (gui_combo("##themes", &current, names, nb)) {
             theme_set(names[current]);
+            settings_save();
         }
         free(names);
     } gui_section_end();
@@ -88,8 +90,6 @@ int gui_settings_popup(void *data)
     } gui_section_end();
 
     gui_popup_bottom_begin();
-    if (gui_button(_(SAVE), 0, 0))
-        settings_save();
     ret = gui_button(_(OK), 0, 0);
     gui_popup_bottom_end();
     return ret;
