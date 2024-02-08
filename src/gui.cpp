@@ -323,6 +323,7 @@ static void load_fonts_texture()
     io.Fonts->AddFontFromMemoryTTF(
             (void*)data, data_size, 14 * scale, &conf, ranges);
 
+    #if 0
     conf.MergeMode = true;
     data = assets_get(
             "asset://data/fonts/DroidSansFallbackFull.ttf", &data_size);
@@ -330,6 +331,7 @@ static void load_fonts_texture()
     io.Fonts->AddFontFromMemoryTTF(
             (void*)data, data_size, 14 * scale, &conf,
             io.Fonts->GetGlyphRangesJapanese());
+    #endif
     io.Fonts->Build();
 
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
