@@ -319,7 +319,7 @@ static void load_fonts_texture()
     };
     conf.FontDataOwnedByAtlas = false;
 
-    data = assets_get("asset://data/fonts/DejaVuSans-light.ttf", &data_size);
+    data = assets_get("asset://data/fonts/DejaVuSans.ttf", &data_size);
     assert(data);
     io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14 * scale,
                                    &conf, ranges);
