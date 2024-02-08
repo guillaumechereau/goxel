@@ -536,6 +536,8 @@ typedef struct goxel
 
     char **recent_files; // stb arraw of most recently used files.
 
+    const char *lang; // Current set language.
+
 } goxel_t;
 
 // the global goxel instance.

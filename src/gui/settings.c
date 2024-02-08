@@ -55,7 +55,9 @@ int gui_settings_popup(void *data)
             for (i = 0; languages[i].id; i++) {
                 if (gui_combo_item(languages[i].name,
                             &languages[i] == language)) {
-                    tr_set_language(languages[i].id);
+                    // Note: we don't change the language yet, we do it in
+                    // goxel_iter so not to mess up the UI render.
+                    goxel.lang = languages[i].id;
                     settings_save();
                 }
             }
@@ -109,6 +111,7 @@ static int settings_ini_handler(void *user, const char *section,
         }
         if (strcmp(name, "language") == 0) {
             tr_set_language(value);
+            goxel.lang = tr_get_language()->id;
         }
     }
     if (strcmp(section, "shortcuts") == 0) {
@@ -141,9 +144,7 @@ void settings_save(void)
 {
     char path[1024];
     FILE *file;
-    const tr_lang_t *lang;
 
-    lang = tr_get_language();
     snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
     LOG_I("Save settings to %s", path);
     sys_make_dir(path);
@@ -154,7 +155,7 @@ void settings_save(void)
     }
     fprintf(file, "[ui]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
-    fprintf(file, "language=%s\n", lang->id);
+    fprintf(file, "language=%s\n", goxel.lang);
 
     fprintf(file, "[shortcuts]\n");
     actions_iter(shortcut_save_callback, file);

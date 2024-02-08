@@ -55,6 +55,7 @@ const char *tr(int id)
 void tr_set_language(const char *id)
 {
     int i;
+    if (strcmp(LANGUAGES[current_lang_idx].id, id) == 0) return;
     for (i = 0; i < ARRAY_SIZE(LANGUAGES); i++) {
         if (strcmp(LANGUAGES[i].id, id) == 0) {
             current_lang_idx = i;

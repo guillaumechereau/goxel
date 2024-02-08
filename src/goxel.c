@@ -372,6 +372,7 @@ void goxel_reset(void)
 {
     image_delete(goxel.image);
     goxel.image = image_new();
+    goxel.lang = "en";
     settings_load();
 
     // Put plane horizontal at the origin.
@@ -485,6 +486,7 @@ int goxel_iter(const inputs_t *inputs)
     inputs_t inputs2;
     camera_t *camera = get_camera();
 
+    tr_set_language(goxel.lang);
     if (!goxel.graphics_initialized)
         goxel_create_graphics();
 
