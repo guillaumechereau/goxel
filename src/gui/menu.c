@@ -73,13 +73,15 @@ static void on_script(void *user, const char *name)
 
 void gui_menu(void)
 {
+    camera_t *cam;
     int i;
-    if (gui_menu_begin("File", true)) {
-        gui_menu_item(ACTION_reset, "New", true);
-        gui_menu_item(ACTION_save, "Save",
+
+    if (gui_menu_begin(_(FILE), true)) {
+        gui_menu_item(ACTION_reset, _(NEW), true);
+        gui_menu_item(ACTION_save, _(SAVE),
                 image_get_key(goxel.image) != goxel.image->saved_key);
-        gui_menu_item(ACTION_save_as, "Save as", true);
-        gui_menu_item(ACTION_open, "Open", true);
+        gui_menu_item(ACTION_save_as, _(SAVE_AS), true);
+        gui_menu_item(ACTION_open, _(OPEN), true);
         if (gui_menu_begin("Open Recent", true)) {
             for (i = 0; i < arrlen(goxel.recent_files); i++) {
                 if (gui_menu_item(0, goxel.recent_files[i], true)) {
@@ -88,37 +90,39 @@ void gui_menu(void)
             }
             gui_menu_end();
         };
-        if (gui_menu_begin("Import...", true)) {
-            if (gui_menu_item(0, "image plane", true))
+        if (gui_menu_begin(_(IMPORT), true)) {
+            if (gui_menu_item(0, _(2D_IMAGE), true))
                 import_image_plane();
             file_format_iter("r", NULL, import_menu_callback);
             gui_menu_end();
         }
-        if (gui_menu_begin("Export As..", true)) {
+        if (gui_menu_begin(_(EXPORT), true)) {
             file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
         }
-        gui_menu_item(ACTION_quit, "Quit", true);
+        gui_menu_item(ACTION_quit, _(QUIT), true);
         gui_menu_end();
     }
-    if (gui_menu_begin("Edit", true)) {
-        gui_menu_item(ACTION_layer_clear, "Clear", true);
-        gui_menu_item(ACTION_undo, "Undo", true);
-        gui_menu_item(ACTION_redo, "Redo", true);
-        gui_menu_item(ACTION_copy, "Copy", true);
-        gui_menu_item(ACTION_past, "Paste", true);
-        if (gui_menu_item(0, "Settings", true))
-            gui_open_popup("Settings", GUI_POPUP_FULL | GUI_POPUP_RESIZE,
+    if (gui_menu_begin(_(EDIT), true)) {
+        gui_menu_item(ACTION_layer_clear, _(CLEAR), true);
+        gui_menu_item(ACTION_undo, _(UNDO), true);
+        gui_menu_item(ACTION_redo, _(REDO), true);
+        gui_menu_item(ACTION_copy, _(COPY), true);
+        gui_menu_item(ACTION_paste, _(PASTE), true);
+        if (gui_menu_item(0, _(SETTINGS), true))
+            gui_open_popup(_(SETTINGS), GUI_POPUP_FULL | GUI_POPUP_RESIZE,
                            NULL, gui_settings_popup);
         gui_menu_end();
     }
-    if (gui_menu_begin("View", true)) {
-        gui_menu_item(ACTION_view_left, "Left", true);
-        gui_menu_item(ACTION_view_right, "Right", true);
-        gui_menu_item(ACTION_view_front, "Front", true);
-        gui_menu_item(ACTION_view_top, "Top", true);
-        gui_menu_item(ACTION_view_toggle_ortho, "Toggle ortho", true);
-        gui_menu_item(ACTION_view_default, "Default", true);
+    if (gui_menu_begin(_(VIEW), true)) {
+        cam = goxel.image->active_camera;
+        gui_menu_item(ACTION_view_left, _(LEFT), true);
+        gui_menu_item(ACTION_view_right, _(RIGHT), true);
+        gui_menu_item(ACTION_view_front, _(FRONT), true);
+        gui_menu_item(ACTION_view_top, _(TOP), true);
+        gui_menu_item(ACTION_view_toggle_ortho,
+                cam->ortho ? _(PERSPECTIVE) : _(ORTHOGRAPHIC), true);
+        gui_menu_item(ACTION_view_default, _(RESET), true);
         gui_menu_end();
     }
     if (gui_menu_begin("Scripts", true)) {

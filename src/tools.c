@@ -35,7 +35,6 @@ void tool_register_(tool_t *tool)
     action = (action_t) {
         .id = tool->action_id,
         .default_shortcut = tool->default_shortcut,
-        .help = "set tool",
         .cfunc_data = a_tool_set,
         .data = (void*)tool,
         .flags = ACTION_CAN_EDIT_SHORTCUT,
@@ -111,25 +110,23 @@ static bool snap_button(const char *label, int s)
 int tool_gui_snap(void)
 {
     float v;
-    if (gui_section_begin("Snap on", true)) {
+    if (gui_section_begin(_(SNAP), true)) {
         gui_group_begin(NULL);
         gui_row_begin(2);
-        snap_button("Volume", SNAP_VOLUME);
-        snap_button("Plane", SNAP_PLANE);
+        snap_button(_(VOLUME), SNAP_VOLUME);
+        snap_button(_(PLANE), SNAP_PLANE);
         gui_row_end();
         if (!box_is_null(goxel.selection)) {
-            gui_row_begin(2);
-            snap_button("Sel In", SNAP_SELECTION_IN);
-            snap_button("Sel out", SNAP_SELECTION_OUT);
-            gui_row_end();
+            snap_button(_(SELECTION_IN), SNAP_SELECTION_IN);
+            snap_button(_(SELECTION_OUT), SNAP_SELECTION_OUT);
         }
         if (!box_is_null(goxel.image->box)) {
-            snap_button("Image box", SNAP_IMAGE_BOX);
+            snap_button(_(BOX), SNAP_IMAGE_BOX);
         }
         gui_group_end();
 
         v = goxel.snap_offset;
-        if (gui_input_float("Offset", &v, 0.1, -1, +1, "%.1f"))
+        if (gui_input_float(_(OFFSET), &v, 0.1, -1, +1, "%.1f"))
             goxel.snap_offset = clamp(v, -1, +1);
     }
     gui_section_end();
@@ -148,12 +145,12 @@ static bool mask_mode_button(const char *label, int s)
 
 int tool_gui_mask_mode(void)
 {
-    gui_text("Mask");
+    gui_text(_(MASK));
     gui_group_begin(NULL);
     gui_row_begin(3);
-    mask_mode_button("Set", MODE_REPLACE);
-    mask_mode_button("Add", MODE_OVER);
-    mask_mode_button("Sub", MODE_SUB);
+    mask_mode_button(_(SET), MODE_REPLACE);
+    mask_mode_button(_(ADD), MODE_OVER);
+    mask_mode_button(_(SUB), MODE_SUB);
     gui_row_end();
     gui_group_end();
     return 0;
@@ -161,14 +158,14 @@ int tool_gui_mask_mode(void)
 
 int tool_gui_shape(const shape_t **shape)
 {
-    struct {
-        const char  *name;
+    const struct {
+        int         name;
         shape_t     *shape;
         int         icon;
     } shapes[] = {
-        {"Sphere", &shape_sphere, ICON_SHAPE_SPHERE},
-        {"Cube", &shape_cube, ICON_SHAPE_CUBE},
-        {"Cylinder", &shape_cylinder, ICON_SHAPE_CYLINDER},
+        {STR_SPHERE, &shape_sphere, ICON_SHAPE_SPHERE},
+        {STR_CUBE, &shape_cube, ICON_SHAPE_CUBE},
+        {STR_CYLINDER, &shape_cylinder, ICON_SHAPE_CYLINDER},
     };
     gui_icon_info_t grid[64] = {};
     shape = shape ?: &goxel.painter.shape;
@@ -176,10 +173,10 @@ int tool_gui_shape(const shape_t **shape)
     int current;
     const int nb = ARRAY_SIZE(shapes);
 
-    if (gui_section_begin("Shape", true)) {
+    if (gui_section_begin(_(SHAPE), true)) {
         for (i = 0; i < nb; i++) {
             grid[i] = (gui_icon_info_t) {
-                .label = shapes[i].name,
+                .label = tr(shapes[i].name),
                 .icon = shapes[i].icon,
             };
             if (*shape == shapes[i].shape) current = i;
@@ -197,7 +194,7 @@ int tool_gui_radius(void)
 {
     int i;
     i = goxel.tool_radius * 2;
-    if (gui_input_int("Size", &i, 0, 0)) {
+    if (gui_input_int(_(SIZE), &i, 0, 0)) {
         i = clamp(i, 1, 128);
         goxel.tool_radius = i / 2.0;
     }
@@ -208,7 +205,7 @@ int tool_gui_smoothness(void)
 {
     bool s;
     s = goxel.painter.smoothness;
-    if (gui_checkbox("Antialiased", &s, NULL)) {
+    if (gui_checkbox(_(ANTIALIASING), &s, NULL)) {
         goxel.painter.smoothness = s ? 1 : 0;
     }
     return 0;
@@ -217,10 +214,10 @@ int tool_gui_smoothness(void)
 int tool_gui_color(void)
 {
     float alpha;
-    gui_color_small("Color", goxel.painter.color);
+    gui_color_small(_(COLOR), goxel.painter.color);
     if (goxel.painter.mode == MODE_PAINT) {
         alpha = goxel.painter.color[3] / 255.;
-        if (gui_input_float("Alpha", &alpha, 0.1, 0, 1, "%.1f"))
+        if (gui_input_float(_(ALPHA), &alpha, 0.1, 0, 1, "%.1f"))
             goxel.painter.color[3] = alpha * 255;
     }
     return 0;
@@ -232,7 +229,7 @@ int tool_gui_symmetry(void)
     bool v;
     const char *labels_u[] = {"X", "Y", "Z"};
     const char *labels_l[] = {"x", "y", "z"};
-    if (gui_section_begin("Symmetry", true)) {
+    if (gui_section_begin(_(SYMMETRY), true)) {
         gui_group_begin("##Axis");
         gui_row_begin(3);
         for (i = 0; i < 3; i++) {
@@ -256,15 +253,15 @@ int tool_gui_drag_mode(int *mode)
     int ret = 0;
     bool b;
 
-    gui_group_begin("Drag mode");
+    gui_group_begin(_(ADJUSTEMENTS));
     gui_row_begin(2);
     b = *mode == 0;
-    if (gui_selectable("Move", &b, NULL, 0)) {
+    if (gui_selectable(_(MOVE), &b, NULL, 0)) {
         *mode = 0;
         ret = 1;
     }
     b = *mode == 1;
-    if (gui_selectable("Resize", &b, NULL, 0)) {
+    if (gui_selectable(_(RESIZE), &b, NULL, 0)) {
         *mode = 1;
         ret = 1;
     }

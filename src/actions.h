@@ -55,7 +55,7 @@ enum {
     X(add_selection),
     X(sub_selection),
     X(copy),
-    X(past),
+    X(paste),
     X(view_left),
     X(view_right),
     X(view_top),

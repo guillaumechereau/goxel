@@ -36,6 +36,7 @@
 #include "gesture.h"
 #include "gesture3d.h"
 #include "gui.h"
+#include "i18n.h"
 #include "image.h"
 #include "inputs.h"
 #include "layer.h"

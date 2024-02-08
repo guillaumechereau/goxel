@@ -409,6 +409,7 @@ void goxel_reset(void)
         goxel.rend.settings.shadow = 0;
 
     goxel.snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX;
+    goxel.mask_mode = MODE_REPLACE;
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,
@@ -1331,7 +1332,7 @@ static void a_cut_as_new_layer(void)
 }
 
 ACTION_REGISTER(cut_as_new_layer,
-    .help = "Cut into a new layer",
+    .help = STR_ACTION_CUT_AS_NEW_LAYER,
     .cfunc = a_cut_as_new_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -1347,7 +1348,6 @@ static void a_reset_selection(void)
 }
 
 ACTION_REGISTER(reset_selection,
-    .help = "Reset the selection",
     .cfunc = a_reset_selection,
 )
 
@@ -1365,7 +1365,7 @@ static void a_fill_selection(void)
 }
 
 ACTION_REGISTER(fill_selection,
-    .help = "Fill the selection with the current paint settings",
+    .help = STR_ACTION_FILL_SELECTION_HELP,
     .cfunc = a_fill_selection,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -1389,7 +1389,7 @@ static void a_add_selection(void)
 }
 
 ACTION_REGISTER(add_selection,
-    .help = "Add the selection to the current mask",
+    .help = STR_ACTION_ADD_SELECTION_HELP,
     .cfunc = a_add_selection,
 )
 
@@ -1406,7 +1406,7 @@ static void a_sub_selection(void)
 }
 
 ACTION_REGISTER(sub_selection,
-    .help = "Subtract the selection from the current mask",
+    .help = STR_ACTION_SUB_SELECTION_HELP,
     .cfunc = a_sub_selection,
 )
 
@@ -1426,7 +1426,7 @@ static void copy_action(void)
     }
 }
 
-static void past_action(void)
+static void paste_action(void)
 {
     volume_t *volume = goxel.image->active_layer->volume;
     volume_t *tmp;
@@ -1449,15 +1449,13 @@ static void past_action(void)
 }
 
 ACTION_REGISTER(copy,
-    .help = "Copy",
     .cfunc = copy_action,
     .default_shortcut = "Ctrl C",
     .flags = 0,
 )
 
-ACTION_REGISTER(past,
-    .help = "Past",
-    .cfunc = past_action,
+ACTION_REGISTER(paste,
+    .cfunc = paste_action,
     .default_shortcut = "Ctrl V",
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -1494,7 +1492,6 @@ static void a_view_toggle_ortho(void)
 }
 
 ACTION_REGISTER(view_left,
-    .help = "Set camera view to left",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){90, 90},
@@ -1502,7 +1499,6 @@ ACTION_REGISTER(view_left,
 )
 
 ACTION_REGISTER(view_right,
-    .help = "Set camera view to right",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){-90, 90},
@@ -1510,7 +1506,6 @@ ACTION_REGISTER(view_right,
 )
 
 ACTION_REGISTER(view_top,
-    .help = "Set camera view to top",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){0, 0},
@@ -1518,14 +1513,12 @@ ACTION_REGISTER(view_top,
 )
 
 ACTION_REGISTER(view_default,
-    .help = "Set camera view to default",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_view_default,
     .default_shortcut = "0",
 )
 
 ACTION_REGISTER(view_front,
-    .help = "Set camera view to front",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){0, 90},
@@ -1533,7 +1526,7 @@ ACTION_REGISTER(view_front,
 )
 
 ACTION_REGISTER(view_toggle_ortho,
-    .help = "Toggle between perspective and orthoggraphic view",
+    .help = STR_ACTION_VIEW_TOGGLE_ORTHO_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_view_toggle_ortho,
     .default_shortcut = "5",
@@ -1544,7 +1537,6 @@ static void quit(void)
     gui_query_quit();
 }
 ACTION_REGISTER(quit,
-    .help = "Quit the application",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = quit,
     .default_shortcut = "Ctrl Q",
@@ -1592,7 +1584,7 @@ static void a_reset(void)
 }
 
 ACTION_REGISTER(reset,
-    .help = "New",
+    .help = STR_ACTION_RESET_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_reset,
     .default_shortcut = "Ctrl N"
@@ -1602,7 +1594,6 @@ static void undo(void) { image_undo(goxel.image); }
 static void redo(void) { image_redo(goxel.image); }
 
 ACTION_REGISTER(undo,
-    .help = "Undo",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = undo,
     .default_shortcut = "Ctrl Z",
@@ -1610,7 +1601,6 @@ ACTION_REGISTER(undo,
 )
 
 ACTION_REGISTER(redo,
-    .help = "Redo",
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = redo,
     .default_shortcut = "Ctrl Y",
@@ -1629,7 +1619,7 @@ static void toggle_mode(void)
 }
 
 ACTION_REGISTER(toggle_mode,
-    .help = "Toggle the tool mode (add, sub, paint)",
+    .help = STR_ACTION_TOGGLE_MODE_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = toggle_mode,
 )
@@ -1641,7 +1631,7 @@ static void a_set_mode(void *data)
 }
 
 ACTION_REGISTER(set_mode_add,
-    .help = "Set tool mode to 'add'",
+    .help = STR_ACTION_SET_MODE_ADD_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
     .data = (int[]){MODE_OVER},
@@ -1650,7 +1640,7 @@ ACTION_REGISTER(set_mode_add,
 )
 
 ACTION_REGISTER(set_mode_sub,
-    .help = "Set tool mode to 'sub'",
+    .help = STR_ACTION_SET_MODE_SUB_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
     .data = (int[]){MODE_SUB},
@@ -1659,7 +1649,7 @@ ACTION_REGISTER(set_mode_sub,
 )
 
 ACTION_REGISTER(set_mode_paint,
-    .help = "Set tool mode to 'sub'",
+    .help = STR_ACTION_SET_MODE_PAINT_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
     .data = (int[]){MODE_PAINT},

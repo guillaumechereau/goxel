@@ -311,7 +311,6 @@ static void load_fonts_texture()
     const void *data;
     int data_size;
     ImFontConfig conf;
-
     const ImWchar ranges[] = {
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
         0x25A0, 0x25FF, // Geometric shapes
@@ -321,8 +320,20 @@ static void load_fonts_texture()
 
     data = assets_get("asset://data/fonts/DejaVuSans.ttf", &data_size);
     assert(data);
-    io.Fonts->AddFontFromMemoryTTF((void*)data, data_size, 14 * scale,
-                                   &conf, ranges);
+    io.Fonts->AddFontFromMemoryTTF(
+            (void*)data, data_size, 14 * scale, &conf, ranges);
+
+    #if 0
+    conf.MergeMode = true;
+    data = assets_get(
+            "asset://data/fonts/DroidSansFallbackFull.ttf", &data_size);
+    assert(data);
+    io.Fonts->AddFontFromMemoryTTF(
+            (void*)data, data_size, 14 * scale, &conf,
+            io.Fonts->GetGlyphRangesJapanese());
+    #endif
+    io.Fonts->Build();
+
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
 
     GLuint tex_id;
@@ -915,12 +926,12 @@ bool gui_bbox(float box[4][4])
     y = round(box[3][1] - box[1][1]);
     z = round(box[3][2] - box[2][2]);
 
-    gui_group_begin("Origin");
+    gui_group_begin(_(ORIGIN));
     ret |= gui_input_int("x", &x, 0, 0);
     ret |= gui_input_int("y", &y, 0, 0);
     ret |= gui_input_int("z", &z, 0, 0);
     gui_group_end();
-    gui_group_begin("Size");
+    gui_group_begin(_(SIZE));
     ret |= gui_input_int("w", &w, 0, 0);
     ret |= gui_input_int("h", &h, 0, 0);
     ret |= gui_input_int("d", &d, 0, 0);
@@ -963,8 +974,8 @@ bool gui_action_button(int id, const char *label, float size)
     assert(action);
     ImGui::PushID(action->id);
     ret = gui_button(label, size, action->icon);
-    if (ImGui::IsItemHovered())
-        goxel_set_help_text(action_get(id, true)->help);
+    if (ImGui::IsItemHovered() && action->help)
+        goxel_set_help_text(tr(action->help));
     if (ret) {
         action_exec(action_get(id, true));
     }

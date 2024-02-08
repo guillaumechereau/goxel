@@ -118,17 +118,17 @@ static int gui(tool_t *tool_)
     tool_gui_mask_mode();
 
     gui_group_begin(NULL);
-    gui_action_button(ACTION_reset_selection, "Reset", 1.0);
-    gui_action_button(ACTION_layer_clear, "Clear", 1.0);
-    gui_action_button(ACTION_fill_selection, "Fill", 1.0);
-    gui_action_button(ACTION_cut_as_new_layer, "Cut as new layer", 1.0);
+    gui_action_button(ACTION_reset_selection, _(RESET), 1.0);
+    gui_action_button(ACTION_layer_clear, _(CLEAR), 1.0);
+    gui_action_button(ACTION_fill_selection, _(FILL), 1.0);
+    gui_action_button(ACTION_cut_as_new_layer, _(CUT_TO_NEW_LAYER), 1.0);
     gui_group_end();
 
     return 0;
 }
 
 TOOL_REGISTER(TOOL_RECT_SELECT, rect_select, tool_rect_select_t,
-              .name = "Rect Select",
+              .name = STR_RECT_SELECT,
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_SHOW_MASK,

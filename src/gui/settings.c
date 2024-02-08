@@ -42,8 +42,24 @@ int gui_settings_popup(void *data)
     int i, nb, current;
     theme_t *themes = theme_get_list();
     int ret = 0;
+    const tr_lang_t *language;
+    const tr_lang_t *languages;
 
-    if (gui_section_begin("Theme", GUI_SECTION_COLLAPSABLE_CLOSED)) {
+    if (gui_section_begin(_(LANGUAGE), GUI_SECTION_COLLAPSABLE)) {
+        language = tr_get_language();
+        if (gui_combo_begin("##lang", language->name)) {
+            languages = tr_get_supported_languages();
+            for (i = 0; languages[i].id; i++) {
+                if (gui_combo_item(languages[i].name,
+                            &languages[i] == language)) {
+                    tr_set_language(languages[i].id);
+                }
+            }
+            gui_combo_end();
+        }
+    } gui_section_end();
+
+    if (gui_section_begin(_(THEME), GUI_SECTION_COLLAPSABLE)) {
         DL_COUNT(themes, theme, nb);
         names = (const char**)calloc(nb, sizeof(*names));
         i = 0;
@@ -58,12 +74,12 @@ int gui_settings_popup(void *data)
     } gui_section_end();
 
 
-    if (gui_section_begin("Paths", GUI_SECTION_COLLAPSABLE_CLOSED)) {
+    if (gui_section_begin(_(PATHS), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_text("Palettes: %s/palettes", sys_get_user_dir());
         gui_text("Progs: %s/progs", sys_get_user_dir());
     } gui_section_end();
 
-    if (gui_section_begin("Shortcuts", GUI_SECTION_COLLAPSABLE_CLOSED)) {
+    if (gui_section_begin(_(SHORTCUTS), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_columns(2);
         gui_separator();
         actions_iter(shortcut_callback, NULL);
@@ -72,9 +88,9 @@ int gui_settings_popup(void *data)
     } gui_section_end();
 
     gui_popup_bottom_begin();
-    if (gui_button("Save", 0, 0))
+    if (gui_button(_(SAVE), 0, 0))
         settings_save();
-    ret = gui_button("OK", 0, 0);
+    ret = gui_button(_(OK), 0, 0);
     gui_popup_bottom_end();
     return ret;
 }
@@ -87,6 +103,9 @@ static int settings_ini_handler(void *user, const char *section,
     if (strcmp(section, "ui") == 0) {
         if (strcmp(name, "theme") == 0) {
             theme_set(value);
+        }
+        if (strcmp(name, "language") == 0) {
+            tr_set_language(value);
         }
     }
     if (strcmp(section, "shortcuts") == 0) {
@@ -119,7 +138,11 @@ void settings_save(void)
 {
     char path[1024];
     FILE *file;
+    const tr_lang_t *lang;
+
+    lang = tr_get_language();
     snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
+    LOG_I("Save settings to %s", path);
     sys_make_dir(path);
     file = fopen(path, "w");
     if (!file) {
@@ -128,6 +151,7 @@ void settings_save(void)
     }
     fprintf(file, "[ui]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
+    fprintf(file, "language=%s\n", lang->id);
 
     fprintf(file, "[shortcuts]\n");
     actions_iter(shortcut_save_callback, file);

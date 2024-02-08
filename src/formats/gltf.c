@@ -440,9 +440,9 @@ static int export_as_gltf(const file_format_t *format, const image_t *img,
 
 static void export_gui(file_format_t *format)
 {
-    gui_checkbox("Vertex color", &g_export_options.vertex_color,
-                 "Save colors as a vertex attribute");
-    gui_input_float("Simplify", &g_export_options.simplify, 0.1,
+    gui_checkbox(_(VERTEX_COLOR), &g_export_options.vertex_color,
+                 _(SAVE_COLORS_AS_VERTEX_ATTRIBUTE));
+    gui_input_float(_(SIMPLIFY), &g_export_options.simplify, 0.1,
                     0, 1, "%.1f");
 }
 

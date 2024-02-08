@@ -24,6 +24,7 @@ void gui_cameras_panel(void)
     int i = 0;
     bool current;
     float rot[3][3], e1[3], e2[3], eul[3], pitch, yaw, v;
+    char buf[256];
 
     gui_group_begin(NULL);
     DL_FOREACH(goxel.image->cameras, cam) {
@@ -46,45 +47,47 @@ void gui_cameras_panel(void)
     if (!goxel.image->cameras) image_add_camera(goxel.image, NULL);
 
     cam = goxel.image->active_camera;
-    gui_input_float("dist", &cam->dist, 10.0, 0, 0, NULL);
 
-    gui_checkbox("Ortho", &cam->ortho, NULL);
+    if (gui_section_begin(cam->name, GUI_SECTION_COLLAPSABLE)) {
+        gui_input_float(_(DISTANCE), &cam->dist, 10.0, 0, 0, NULL);
+        gui_checkbox(_(ORTHOGRAPHIC), &cam->ortho, NULL);
+        gui_group_begin(NULL);
+        gui_row_begin(2);
+        gui_action_button(ACTION_view_left, _(LEFT), 1.0);
+        gui_action_button(ACTION_view_right, _(RIGHT), 1.0);
+        gui_row_end();
+        gui_row_begin(2);
+        gui_action_button(ACTION_view_front, _(FRONT), 1.0);
+        gui_action_button(ACTION_view_top, _(TOP), 1.0);
+        gui_row_end();
+        gui_action_button(ACTION_view_default, _(RESET), 1.0);
+        gui_group_end();
 
-    gui_group_begin("Set");
-    gui_row_begin(2);
-    gui_action_button(ACTION_view_left, "left", 1.0);
-    gui_action_button(ACTION_view_right, "right", 1.0);
-    gui_row_end();
-    gui_row_begin(2);
-    gui_action_button(ACTION_view_front, "front", 1.0);
-    gui_action_button(ACTION_view_top, "top", 1.0);
-    gui_row_end();
-    gui_action_button(ACTION_view_default, "default", 1.0);
-    gui_group_end();
+        // Allow to edit euler angles (Should this be a generic widget?)
+        gui_group_begin(NULL);
+        mat4_to_mat3(cam->mat, rot);
+        mat3_to_eul2(rot, EULER_ORDER_XYZ, e1, e2);
+        if (fabs(e1[1]) < fabs(e2[1]))
+            vec3_copy(e1, eul);
+        else
+            vec3_copy(e2, eul);
 
-    // Allow to edit euler angles (Should this be a generic widget?)
-    gui_group_begin(NULL);
-    mat4_to_mat3(cam->mat, rot);
-    mat3_to_eul2(rot, EULER_ORDER_XYZ, e1, e2);
-    if (fabs(e1[1]) < fabs(e2[1]))
-        vec3_copy(e1, eul);
-    else
-        vec3_copy(e2, eul);
+        pitch = round(eul[0] * DR2D);
+        if (pitch < 0) pitch += 360;
+        v = pitch;
+        snprintf(buf, sizeof(buf), "%s: X", _(ANGLE));
+        if (gui_input_float(buf, &v, 1, -90, 90, "%.0f")) {
+            v = (v - pitch) * DD2R;
+            camera_turntable(cam, 0, v);
+        }
 
-    pitch = round(eul[0] * DR2D);
-    if (pitch < 0) pitch += 360;
-    v = pitch;
-    if (gui_input_float("Pitch", &v, 1, -90, 90, "%.0f")) {
-        v = (v - pitch) * DD2R;
-        camera_turntable(cam, 0, v);
-    }
-
-    yaw = round(eul[2] * DR2D);
-    v = yaw;
-    if (gui_input_float("Yaw", &v, 1, -180, 180, "%.0f")) {
-        v = (v - yaw) * DD2R;
-        camera_turntable(cam, v, 0);
-    }
-    gui_group_end();
+        yaw = round(eul[2] * DR2D);
+        v = yaw;
+        if (gui_input_float("Z", &v, 1, -180, 180, "%.0f")) {
+            v = (v - yaw) * DD2R;
+            camera_turntable(cam, v, 0);
+        }
+        gui_group_end();
+    } gui_section_end();
 }
 

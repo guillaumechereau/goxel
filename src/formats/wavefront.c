@@ -228,8 +228,7 @@ int ply_export(const file_format_t *format, const image_t *image,
 
 static void export_gui(file_format_t *format)
 {
-    gui_checkbox("Y-up", &g_export_options.y_up,
-                 "Use Y up instead of Z up");
+    gui_checkbox(_(Y_UP), &g_export_options.y_up, _(USE_Y_UP_CONVENTION));
 }
 
 static void get_file_data(void *ctx, const char *filename, const int is_mtl,

@@ -69,25 +69,25 @@ enum {
 };
 
 static struct {
-    const char *name;
+    int name;
     int icon;
     void (*fn)(void);
     bool detached;
 } PANELS[] = {
-    [PANEL_TOOLS]       = {"Tools", ICON_TOOLS, gui_tools_panel},
-    [PANEL_PALETTE]     = {"Palette", ICON_PALETTE, gui_palette_panel},
-    [PANEL_LAYERS]      = {"Layers", ICON_LAYERS, gui_layers_panel},
-    [PANEL_VIEW]        = {"View", ICON_VIEW, gui_view_panel},
-    [PANEL_MATERIAL]    = {"Material", ICON_MATERIAL, gui_material_panel},
-    [PANEL_LIGHT]       = {"Light", ICON_LIGHT, gui_light_panel},
-    [PANEL_CAMERAS]     = {"Cameras", ICON_CAMERA, gui_cameras_panel},
-    [PANEL_IMAGE]       = {"Image", ICON_IMAGE, gui_image_panel},
+    [PANEL_TOOLS]       = {STR_TOOLS, ICON_TOOLS, gui_tools_panel},
+    [PANEL_PALETTE]     = {STR_PALETTE, ICON_PALETTE, gui_palette_panel},
+    [PANEL_LAYERS]      = {STR_LAYERS, ICON_LAYERS, gui_layers_panel},
+    [PANEL_VIEW]        = {STR_VIEW, ICON_VIEW, gui_view_panel},
+    [PANEL_MATERIAL]    = {STR_MATERIALS, ICON_MATERIAL, gui_material_panel},
+    [PANEL_LIGHT]       = {STR_LIGHT, ICON_LIGHT, gui_light_panel},
+    [PANEL_CAMERAS]     = {STR_CAMERAS, ICON_CAMERA, gui_cameras_panel},
+    [PANEL_IMAGE]       = {STR_IMAGE, ICON_IMAGE, gui_image_panel},
 #if YOCTO
-    [PANEL_RENDER]      = {"Render", ICON_RENDER, gui_render_panel},
+    [PANEL_RENDER]      = {STR_RENDER, ICON_RENDER, gui_render_panel},
 #endif
-    [PANEL_EXPORT]      = {"Export", ICON_EXPORT, gui_export_panel},
+    [PANEL_EXPORT]      = {STR_EXPORT, ICON_EXPORT, gui_export_panel},
 #if DEBUG
-    [PANEL_DEBUG]       = {"Debug", ICON_DEBUG, gui_debug_panel},
+    [PANEL_DEBUG]       = {STR_DEBUG, ICON_DEBUG, gui_debug_panel},
 #endif
 };
 
@@ -104,7 +104,7 @@ static void render_left_panel(void)
 
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
         selected = (goxel.gui.current_panel == i);
-        if (gui_tab(PANELS[i].name, PANELS[i].icon, &selected)) {
+        if (gui_tab(tr(PANELS[i].name), PANELS[i].icon, &selected)) {
             on_click();
             goxel.gui.current_panel = selected ? i : 0;
         }
@@ -147,7 +147,7 @@ void gui_app(void)
 
     if (goxel.gui.current_panel) {
         x += ICON_HEIGHT + 28;
-        name = PANELS[goxel.gui.current_panel].name;
+        name = tr(PANELS[goxel.gui.current_panel].name);
         gui_window_begin(name, x, y, goxel.gui.panel_width, 0, &moved);
         if (gui_panel_header(name))
             goxel.gui.current_panel = 0;
@@ -163,7 +163,7 @@ void gui_app(void)
 
     for (i = 0; i < ARRAY_SIZE(PANELS); i++) {
         if (!PANELS[i].detached) continue;
-        name = PANELS[i].name;
+        name = tr(PANELS[i].name);
         gui_window_begin(name, 0, 0, goxel.gui.panel_width, 0, &moved);
         if (gui_panel_header(name)) {
             PANELS[i].detached = false;

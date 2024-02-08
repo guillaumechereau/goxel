@@ -738,7 +738,6 @@ static void a_open(void)
 }
 
 ACTION_REGISTER(open,
-    .help = "Open an image",
     .cfunc = a_open,
     .default_shortcut = "Ctrl O",
 )
@@ -763,7 +762,6 @@ static void a_save_as(void)
 }
 
 ACTION_REGISTER(save_as,
-    .help = "Save the image as",
     .cfunc = a_save_as,
 )
 
@@ -789,7 +787,6 @@ static void a_save(void)
 }
 
 ACTION_REGISTER(save,
-    .help = "Save the image",
     .cfunc = a_save,
     .default_shortcut = "Ctrl S"
 )
