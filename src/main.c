@@ -32,7 +32,6 @@ static float        g_scale = 1;
 static void on_glfw_error(int code, const char *msg)
 {
     fprintf(stderr, "glfw error %d (%s)\n", code, msg);
-    assert(false);
 }
 
 void on_scroll(GLFWwindow *win, double x, double y)
