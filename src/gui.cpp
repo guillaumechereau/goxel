@@ -480,6 +480,10 @@ static void render_popups(int index)
         flags &= ~(ImGuiWindowFlags_NoMove |
                    ImGuiWindowFlags_AlwaysAutoResize);
     }
+    if (popup->title[0] == '#') {
+        flags |= ImGuiWindowFlags_NoTitleBar;
+    }
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WINDOW, BACKGROUND, false));
     ImGui::PushStyleColor(ImGuiCol_TitleBgActive, COLOR(WINDOW, INNER, false));

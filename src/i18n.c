@@ -199,6 +199,10 @@ static const string_t STRINGS[] = {
         .en = "Cameras",
         .fr = "Caméras",
     },
+    [STR_CANCEL] = {
+        .en = "Cancel",
+        .fr = "Annuler",
+    },
     [STR_CLEAR] = {
         .en = "Clear",
         .fr = "Effacer",
@@ -286,6 +290,10 @@ static const string_t STRINGS[] = {
     [STR_FILE] = {
         .en = "File",
         .fr = "Fichier",
+    },
+    [STR_FILE_HAS_UNSAVED_CHANGES] = {
+        .en = "File Has Unsaved Changes",
+        .fr = "Le fichier a des modifications non-enregistrées",
     },
     [STR_FILL] = {
         .en = "Fill",
