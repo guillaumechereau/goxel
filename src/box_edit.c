@@ -64,7 +64,7 @@ static void render_gizmo(const float plane[4][4], int face)
     vec3_copy(plane[3], a);
     vec3_addk(a, dir, 3, b);
     color[3] = 255;
-    render_line(&goxel.rend, a, b, color, EFFECT_ARROW);
+    render_line(&goxel.rend, a, b, color, EFFECT_ARROW | EFFECT_NO_DEPTH_TEST);
 }
 
 static int on_hover(gesture3d_t *gest, void *user)

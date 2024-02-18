@@ -890,6 +890,7 @@ void render_line(renderer_t *rend, const float a[3], const float b[3],
 {
     render_item_t *item = calloc(1, sizeof(*item));
     item->type = ITEM_MODEL3D;
+    item->effects = effects;
     item->model3d = g_line_model;
     line_create_plane(a, b, item->mat);
     copy_color(color, item->color);
@@ -901,7 +902,7 @@ void render_line(renderer_t *rend, const float a[3], const float b[3],
         item = calloc(1, sizeof(*item));
         item->type = ITEM_MODEL3D;
         item->model3d = g_cone_model;
-        item->effects = EFFECT_NO_SHADING;
+        item->effects = EFFECT_NO_SHADING | effects;
         line_create_plane(a, b, item->mat);
         vec3_normalize(item->mat[0], item->mat[0]);
         vec3_normalize(item->mat[1], item->mat[1]);
