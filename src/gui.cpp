@@ -508,13 +508,14 @@ static void render_popups(int index)
     ImGui::PopStyleVar();
 }
 
-static void render_view_cube(void)
+static bool render_view_cube(void)
 {
     ImGuiIO& io = ImGui::GetIO();
-
+    bool ret = false;
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     camera_t *camera = goxel.image->active_camera;
     float view[4][4];
+    float view_prev[4][4];
     const float w = 128, h = 128;
     const float *projection= (float*)camera->proj_mat;
     const float zup2yup[4][4] = {
@@ -538,6 +539,7 @@ static void render_view_cube(void)
     // XXX: ImGuizmo is using Y up.
     mat4_mul(zup2yup, camera->mat, view);
     mat4_invert(view, view);
+    mat4_copy(view, view_prev);
 
     ImGui::SetNextWindowSize(ImVec2(w, h));
     ImGui::SetNextWindowPos(ImVec2(
@@ -554,11 +556,14 @@ static void render_view_cube(void)
            ImGui::GetWindowPos(),
            ImVec2(w, h), 0x0);
 
-    mat4_invert(view, view);
-    mat4_mul(yup2zup, view, camera->mat);
+    ret = memcmp(view, view_prev, sizeof(view_prev)) != 0;
+    if (ret) {
+        mat4_invert(view, view);
+        mat4_mul(yup2zup, view, camera->mat);
+    }
     ImGui::End();
     ImGui::PopStyleColor();
-
+    return ret;
 }
 
 static void gui_iter(const inputs_t *inputs)
