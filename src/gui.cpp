@@ -67,9 +67,14 @@ void gui_render_panel(void);
 // How much space we keep for the labels on the left.
 static const float LABEL_SIZE = 90;
 
-// Base height of items (note: maybe remove and use the font size instead?).
-static const float ITEM_HEIGHT = 18;
-static const float ICON_HEIGHT = 32;
+#ifndef GUI_ITEM_HEIGHT
+#   define GUI_ITEM_HEIGHT 18
+#endif
+
+#ifndef GUI_ICON_HEIGHT
+#   define GUI_ICON_HEIGHT 32
+#endif
+
 static const ImVec2 ITEM_SPACING = ImVec2(8, 4);
 
 #define COL_HEX(x) ImVec4( \
@@ -1007,8 +1012,8 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
 
     v = v ? v : &default_v;
     size = (icon != -1) ?
-        ImVec2(ICON_HEIGHT, ICON_HEIGHT) :
-        ImVec2(w, ITEM_HEIGHT);
+        ImVec2(GUI_ICON_HEIGHT, GUI_ICON_HEIGHT) :
+        ImVec2(w, GUI_ITEM_HEIGHT);
 
     if (!tooltip && icon != -1) {
         tooltip = label;
@@ -1147,7 +1152,7 @@ static bool color_picker(const char *label, uint8_t color[4])
 bool gui_color(const char *label, uint8_t color[4])
 {
     bool ret = false;
-    ImVec2 size(ICON_HEIGHT, ICON_HEIGHT);
+    ImVec2 size(GUI_ICON_HEIGHT, GUI_ICON_HEIGHT);
 
     ImGui::PushID(label);
     if (ImGui::ColorButton(label, color, 0, size)) {
@@ -1232,16 +1237,17 @@ bool gui_button(const char *label, float size, int icon)
     ImVec2 center;
     int w, isize;
 
-    button_size = ImVec2(size * ImGui::GetContentRegionAvail().x, ITEM_HEIGHT);
+    button_size = ImVec2(size * ImGui::GetContentRegionAvail().x,
+                         GUI_ITEM_HEIGHT);
     if (size == -1) button_size.x = ImGui::GetContentRegionAvail().x;
     if (size == 0 && (label == NULL || label[0] == '#')) {
-        button_size.x = ICON_HEIGHT;
-        button_size.y = ICON_HEIGHT;
+        button_size.x = GUI_ICON_HEIGHT;
+        button_size.y = GUI_ICON_HEIGHT;
     }
     if (size == 0 && label && label[0] != '#') {
         w = ImGui::CalcTextSize(label, NULL, true).x + style.FramePadding.x * 2;
-        if (w < ITEM_HEIGHT)
-            button_size.x = ITEM_HEIGHT;
+        if (w < GUI_ITEM_HEIGHT)
+            button_size.x = GUI_ITEM_HEIGHT;
     }
 
     if (gui->item_size) button_size.x = gui->item_size;
@@ -1273,7 +1279,7 @@ bool gui_button_right(const char *label, int icon)
     const ImGuiStyle& style = ImGui::GetStyle();
     float text_size = ImGui::CalcTextSize(label).x;
     float w = text_size + 2 * style.FramePadding.x;
-    w = max(w, ITEM_HEIGHT);
+    w = max(w, GUI_ITEM_HEIGHT);
     w += style.FramePadding.x;
     ImGui::SameLine();
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
@@ -1562,8 +1568,8 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
                     ImVec2(style.FramePadding.x +
-                        ICON_HEIGHT * 0.75 * icons_count, 0));
-        if (ImGui::Button(name, ImVec2(-1, ICON_HEIGHT))) {
+                        GUI_ICON_HEIGHT * 0.75 * icons_count, 0));
+        if (ImGui::Button(name, ImVec2(-1, GUI_ICON_HEIGHT))) {
             *selected = true;
             ret = true;
         }
@@ -1572,7 +1578,7 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
         for (i = 0; i < icons_count; i++) {
             icon = icons[i];
             center = ImGui::GetItemRectMin() +
-                ImVec2(ICON_HEIGHT * 0.75 * (i + 0.5), ICON_HEIGHT / 2);
+                ImVec2(GUI_ICON_HEIGHT * 0.75 * (i + 0.5), GUI_ICON_HEIGHT / 2);
             uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
             uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
             draw_list->AddImage(
@@ -1590,7 +1596,7 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
         if (start_edit) ImGui::SetKeyboardFocusHere();
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
                             ImVec2(style.FramePadding.x,
-                            (ICON_HEIGHT - font_size) / 2));
+                            (GUI_ICON_HEIGHT - font_size) / 2));
         ImGui::InputText("##name_edit", name, len,
                          ImGuiInputTextFlags_AutoSelectAll);
         if (!start_edit && !ImGui::IsItemActive()) edit_name = NULL;
@@ -1678,12 +1684,12 @@ static bool panel_header_close_button(void)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     bool ret;
 
-    w = ITEM_HEIGHT + style.FramePadding.x;
+    w = GUI_ITEM_HEIGHT + style.FramePadding.x;
     ImGui::SameLine();
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    ret = ImGui::Button("", ImVec2(ITEM_HEIGHT, ITEM_HEIGHT));
+    ret = ImGui::Button("", ImVec2(GUI_ITEM_HEIGHT, GUI_ITEM_HEIGHT));
     ImGui::PopStyleColor();
 
     center = ImGui::GetItemRectMin() +
@@ -1702,7 +1708,7 @@ bool gui_panel_header(const char *label)
 {
     bool ret;
     float label_w = ImGui::CalcTextSize(label).x;
-    float w = ImGui::GetContentRegionAvail().x - ITEM_HEIGHT;
+    float w = ImGui::GetContentRegionAvail().x - GUI_ITEM_HEIGHT;
 
     ImGui::PushID("panel_header");
     ImGui::Dummy(ImVec2((w - label_w) / 2, 0));
@@ -1750,10 +1756,10 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
         }
         v = (i == *current);
         if (!is_colors_grid) {
-            size = ICON_HEIGHT;
+            size = GUI_ICON_HEIGHT;
             clicked = gui_selectable_icon(label, &v, icon->icon);
         } else { // Color icon.
-            size = ITEM_HEIGHT;
+            size = GUI_ITEM_HEIGHT;
             ImGui::PushStyleColor(ImGuiCol_Button, icon->color);
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, icon->color);
             clicked = ImGui::Button("", ImVec2(size, size));
