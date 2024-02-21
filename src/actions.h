@@ -39,6 +39,7 @@ enum {
     X(img_unclone_layer),
     X(img_select_parent_layer),
     X(img_merge_visible_layers),
+    X(img_merge_layer_down),
     X(img_new_camera),
     X(img_del_camera),
     X(img_move_camera_up),

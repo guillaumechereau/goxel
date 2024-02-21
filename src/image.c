@@ -429,6 +429,30 @@ void image_merge_visible_layers(image_t *img)
     if (last) img->active_layer = last;
 }
 
+void image_merge_layer_down(image_t *img, layer_t *layer)
+{
+    layer_t *target, *other;
+    assert(img);
+    assert(layer);
+
+    if (layer == img->layers) return; // First layer.
+    target = layer->prev;
+
+    image_unclone_layer(img, layer);
+    image_unclone_layer(img, target);
+
+    // Unclone all layers cloned from this one.
+    DL_FOREACH(goxel.image->layers, other) {
+        if (other->base_id == layer->id) {
+            other->base_id = 0;
+        }
+    }
+
+    volume_merge(target->volume, layer->volume, layer->mode, NULL);
+    DL_DELETE(img->layers, layer);
+    layer_delete(layer);
+    img->active_layer = target;
+}
 
 camera_t *image_add_camera(image_t *img, camera_t *cam)
 {
@@ -831,6 +855,16 @@ static void a_img_merge_visible_layers(void)
 
 ACTION_REGISTER(img_merge_visible_layers,
     .cfunc = a_img_merge_visible_layers,
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+static void a_img_merge_layer_down(void)
+{
+    image_merge_layer_down(goxel.image, goxel.image->active_layer);
+}
+
+ACTION_REGISTER(img_merge_layer_down,
+    .cfunc = a_img_merge_layer_down,
     .flags = ACTION_TOUCH_IMAGE,
 )
 

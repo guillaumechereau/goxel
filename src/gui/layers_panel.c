@@ -92,6 +92,7 @@ void gui_layers_panel(void)
     gui_group_begin(NULL);
     gui_action_button(ACTION_img_duplicate_layer, _(DUPLICATE), 1);
     gui_action_button(ACTION_img_clone_layer, _(CLONE), 1);
+    gui_action_button(ACTION_img_merge_layer_down, _(MERGE_DOWN), 1);
     gui_action_button(ACTION_img_merge_visible_layers, _(MERGE_VISIBLE), 1);
 
     layer = goxel.image->active_layer;

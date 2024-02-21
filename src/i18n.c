@@ -383,9 +383,13 @@ static const string_t STRINGS[] = {
         .en = "Materials",
         .fr = "Matériaux",
     },
+    [STR_MERGE_DOWN] = {
+        .en = "Merge Down",
+        .fr = "Fusionner vers le bas",
+    },
     [STR_MERGE_VISIBLE] = {
         .en = "Merge Visible",
-        .fr = "Fusionner Visibles",
+        .fr = "Fusionner visibles",
     },
     [STR_MOVE] = {
         .en = "Move",
