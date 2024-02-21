@@ -619,6 +619,8 @@ static void gui_iter(const inputs_t *inputs)
     style.WindowRounding = 6;
     style.ChildBorderSize = 0;
     style.SelectableTextAlign = ImVec2(0.5, 0.5);
+    style.FramePadding = ImVec2(4,
+            (GUI_ITEM_HEIGHT - ImGui::GetFontSize()) / 2);
     style.Colors[ImGuiCol_WindowBg] = COLOR(WINDOW, BACKGROUND, false);
     style.Colors[ImGuiCol_ChildBg] = COLOR(SECTION, BACKGROUND, false);
     style.Colors[ImGuiCol_Header] = ImVec4(0, 0, 0, 0);
@@ -840,7 +842,6 @@ bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
     bool ret = false;
-    float button_width = 20; // Compute exactly.
     const char *left_utf = "◀";
     const char *right_utf = "▶";
     float v_speed = step / 10;
@@ -849,6 +850,10 @@ bool gui_input_float(const char *label, float *v, float step,
     bool is_active = false;
     ImGuiID key;
     ImGuiStorage *storage = ImGui::GetStateStorage();
+    const ImGuiStyle& style = ImGui::GetStyle();
+    const ImVec2 button_size = ImVec2(
+            GUI_ITEM_HEIGHT,
+            ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
 
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
@@ -886,18 +891,18 @@ bool gui_input_float(const char *label, float *v, float step,
     }
 
     if (show_arrows) {
-        if (ImGui::Button(left_utf)) {
+        if (ImGui::Button(left_utf, button_size)) {
             (*v) -= step;
             ret = true;
         }
         ImGui::SameLine();
         ImGui::PushItemWidth(
-                ImGui::GetContentRegionAvail().x - button_width);
+                ImGui::GetContentRegionAvail().x - button_size.x - 4);
         ret = ImGui::DragFloat("", v, v_speed, minv, maxv, format) || ret;
         is_active = ImGui::IsItemActive();
         ImGui::PopItemWidth();
         ImGui::SameLine();
-        if (ImGui::Button(right_utf)) {
+        if (ImGui::Button(right_utf, button_size)) {
             (*v) += step;
             ret = true;
         }
@@ -1167,6 +1172,7 @@ bool gui_color(const char *label, uint8_t color[4])
     }
 
     ImGui::PopID();
+    if (gui->is_row) ImGui::SameLine();
     return ret;
 }
 
@@ -1482,8 +1488,9 @@ void gui_on_popup_closed(void (*func)(int))
 
 void gui_popup_bottom_begin(void)
 {
-    float w = ImGui::GetContentRegionAvail().y -
-              ImGui::GetFrameHeightWithSpacing();
+    const ImGuiStyle& style = ImGui::GetStyle();
+    float bottom_y = GUI_ITEM_HEIGHT + style.FramePadding.y * 2;
+    float w = ImGui::GetContentRegionAvail().y - bottom_y;
     ImGui::Dummy(ImVec2(0, w));
     gui_row_begin(0);
 }
