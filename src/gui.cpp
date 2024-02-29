@@ -26,6 +26,7 @@ extern "C" {
 
 void gui_app(void);
 void gui_render_panel(void);
+bool gui_pan_scroll_behavior(void);
 }
 
 #ifndef typeof
@@ -158,7 +159,11 @@ typedef struct gui_t {
     GLuint  array_buffer;
     GLuint  index_buffer;
     margins_t margins;
-    bool    is_scrolling;
+
+    // bitmask: 1 - some window is scrolling.
+    //          2 - some window was scrolling last frame.
+    int     scrolling;
+
     bool    can_move_window;
 
     int     is_row;
@@ -628,6 +633,8 @@ static void gui_iter(const inputs_t *inputs)
     style.Colors[ImGuiCol_Text] = COLOR(BASE, TEXT, false);
     style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, false);
 
+    gui->scrolling = (gui->scrolling & 1) ? 2 : 0;
+
     // Old code, to remove.
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
@@ -742,6 +749,8 @@ void gui_window_begin(const char *label, float x, float y, float w, float h,
     float max_h;
 
     if (!gui->can_move_window) flags |= ImGuiWindowFlags_NoMove;
+    if (gui->scrolling)
+        flags |= ImGuiWindowFlags_NoMouseInputs;
     ImGui::SetNextWindowPos(ImVec2(x, y),
             moved == NULL ? ImGuiCond_Always : ImGuiCond_Appearing);
     ImGui::SetNextWindowSize(ImVec2(w, h));
@@ -755,10 +764,18 @@ void gui_window_begin(const char *label, float x, float y, float w, float h,
     if (moved != NULL) {
         *moved = ImGui::GetWindowPos() != ImVec2(x, y);
     }
+
+    ImGui::BeginGroup();
 }
 
 void gui_window_end(void)
 {
+
+    ImGui::EndGroup();
+    if (!GUI_HAS_SCROLLBARS) {
+        if (gui_pan_scroll_behavior())
+            gui->scrolling |= 1;
+    }
     ImGui::End();
 }
 
@@ -1673,7 +1690,7 @@ bool gui_menu_item(int action, const char *label, bool enabled)
 
 void gui_tooltip(const char *str)
 {
-    if (gui->is_scrolling) return;
+    if (gui->scrolling) return;
     ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(TOOLTIP, BACKGROUND, 0));
     ImGui::SetTooltip("%s", str);
     ImGui::PopStyleColor();
