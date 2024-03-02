@@ -164,7 +164,7 @@ typedef struct gui_t {
     //          2 - some window was scrolling last frame.
     int     scrolling;
 
-    bool    can_move_window;
+    int     can_move_window;
 
     int     is_row;
     float   item_size;
@@ -634,6 +634,7 @@ static void gui_iter(const inputs_t *inputs)
     style.Colors[ImGuiCol_MenuBarBg] = COLOR(MENU, BACKGROUND, false);
 
     gui->scrolling = (gui->scrolling & 1) ? 2 : 0;
+    gui->can_move_window = (gui->can_move_window & 1) ? 2 : 0;
 
     // Old code, to remove.
     ImGui::NewFrame();
@@ -748,7 +749,8 @@ void gui_window_begin(const char *label, float x, float y, float w, float h,
         ImGuiWindowFlags_NoDecoration;
     float max_h;
 
-    if (!gui->can_move_window) flags |= ImGuiWindowFlags_NoMove;
+    if (!gui->can_move_window)
+        flags |= ImGuiWindowFlags_NoMove;
     if (gui->scrolling)
         flags |= ImGuiWindowFlags_NoMouseInputs;
     ImGui::SetNextWindowPos(ImVec2(x, y),
@@ -1745,7 +1747,8 @@ bool gui_panel_header(const char *label)
     ret = panel_header_close_button();
     ImGui::EndGroup();
     ImGui::PopID();
-    gui->can_move_window = ImGui::IsItemHovered();
+    if (ImGui::IsItemHovered())
+        gui->can_move_window |= 1;
     return ret;
 }
 
