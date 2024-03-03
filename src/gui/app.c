@@ -138,9 +138,8 @@ void gui_app(void)
 
     gui_window_begin("Top Bar", x, y, 0, 0, NULL);
     gui_top_bar();
-    gui_window_end();
+    y += gui_window_end().h;
 
-    y += ICON_HEIGHT + 28;
     gui_window_begin("Left Bar", x, y, 0, 0, NULL);
     render_left_panel();
     gui_window_end();

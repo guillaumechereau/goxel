@@ -35,10 +35,15 @@
 #   define GUI_PANEL_WIDTH_LARGE 400
 #endif
 
+typedef struct {
+    float h;
+    float w;
+} gui_window_ret_t;
+
 void gui_window_begin(const char *label, float x, float y, float w, float h,
                       bool *moved);
 
-void gui_window_end(void);
+gui_window_ret_t gui_window_end(void);
 
 bool gui_want_capture_mouse(void);
 

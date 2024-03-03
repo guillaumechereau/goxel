@@ -748,7 +748,11 @@ void gui_window_begin(const char *label, float x, float y, float w, float h,
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoDecoration;
     float max_h;
+    ImGuiStorage *storage = ImGui::GetStateStorage();
+    ImGuiID key;
+    float *last_y;
 
+    ImGui::PushID(label);
     if (!gui->can_move_window)
         flags |= ImGuiWindowFlags_NoMove;
     if (gui->scrolling)
@@ -756,8 +760,12 @@ void gui_window_begin(const char *label, float x, float y, float w, float h,
     ImGui::SetNextWindowPos(ImVec2(x, y),
             moved == NULL ? ImGuiCond_Always : ImGuiCond_Appearing);
     ImGui::SetNextWindowSize(ImVec2(w, h));
+
+    key = ImGui::GetID("lasty");
+    last_y = storage->GetFloatRef(key, y);
+
     if (h == 0) {
-        max_h = ImGui::GetMainViewport()->Size.y - y;
+        max_h = ImGui::GetMainViewport()->Size.y - *last_y;
         ImGui::SetNextWindowSizeConstraints(
                 ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
     }
@@ -765,20 +773,26 @@ void gui_window_begin(const char *label, float x, float y, float w, float h,
 
     if (moved != NULL) {
         *moved = ImGui::GetWindowPos() != ImVec2(x, y);
+        *last_y = ImGui::GetWindowPos().y;
     }
 
     ImGui::BeginGroup();
 }
 
-void gui_window_end(void)
+gui_window_ret_t gui_window_end(void)
 {
-
+    gui_window_ret_t ret = {};
     ImGui::EndGroup();
-    if (!GUI_HAS_SCROLLBARS) {
+    if (!GUI_HAS_SCROLLBARS && !gui->can_move_window) {
         if (gui_pan_scroll_behavior())
             gui->scrolling |= 1;
     }
+    ret.h = ImGui::GetWindowHeight();
+    ret.w = ImGui::GetWindowWidth();
     ImGui::End();
+    ImGui::PopID();
+
+    return ret;
 }
 
 bool gui_input_int(const char *label, int *v, int minv, int maxv)
