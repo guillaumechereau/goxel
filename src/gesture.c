@@ -93,10 +93,12 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
             break;
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
-            vec2_copy(ts[0].pos, gest->pos);
-            gest->state = GESTURE_UPDATE;
-            if (!test_button(inputs, &ts[0], gest->button))
+            if (!test_button(inputs, &ts[0], gest->button)) {
                 gest->state = GESTURE_END;
+            } else {
+                vec2_copy(ts[0].pos, gest->pos);
+                gest->state = GESTURE_UPDATE;
+            }
             break;
         }
     }
