@@ -284,6 +284,7 @@ end:
 }
 
 static int on_drag(const gesture_t *gest, void *user);
+static int on_drag_rotate(const gesture_t *gest, void *user);
 static int on_pan(const gesture_t *gest, void *user);
 static int on_zoom(const gesture_t *gest, void *user);
 static int on_rotate(const gesture_t *gest, void *user);
@@ -356,6 +357,7 @@ void goxel_init(void)
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
 
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag_rotate);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_RMB, on_pan);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_SHIFT, on_pan);
@@ -579,6 +581,24 @@ static int on_drag(const gesture_t *gest, void *user)
     return 0;
 }
 
+/*
+ * Allow to rotate the view when we click outside the image bound.
+ * Behave the same as doing a middle mouse panning.
+ */
+static int on_drag_rotate(const gesture_t *gest, void *user)
+{
+    float pos[3], normal[3];
+    bool snap;
+    if (gest->state == GESTURE_BEGIN) {
+        snap = goxel_unproject(
+            gest->viewport, gest->pos,
+            SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME, 0,
+            pos, normal);
+        if (snap) return 1;
+    }
+    return on_rotate(gest, user);
+}
+
 // XXX: can we merge this with unproject?
 static bool unproject_delta(const float win[3], const float model[4][4],
                             const float proj[4][4], const float viewport[4],
@@ -620,6 +640,9 @@ static int on_pan(const gesture_t *gest, void *user)
     return 0;
 }
 
+/*
+ * Turntable rotation.
+ */
 static int on_rotate(const gesture_t *gest, void *user)
 {
     float x1, y1, x2, y2, x_rot, z_rot;

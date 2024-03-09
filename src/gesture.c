@@ -204,7 +204,10 @@ int gesture_update(int nb, gesture_t *gestures[],
                 gest->state == GESTURE_END ||
                 gest->state == GESTURE_TRIGGERED)
         {
-            gest->callback(gest, user);
+            if (gest->callback(gest, user) != 0) {
+                gest->state = GESTURE_FAILED;
+                continue;
+            }
             vec2_copy(gest->pos, gest->last_pos);
             triggered = gest;
             break;
