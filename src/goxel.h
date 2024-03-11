@@ -550,7 +550,7 @@ void goxel_reset(void);
 
 // Probably better to merge those two.
 int goxel_iter(const inputs_t *inputs);
-void goxel_render(const inputs_t *inputs);
+void goxel_render(inputs_t *inputs);
 
 /*
  * Function: goxel_create_graphics

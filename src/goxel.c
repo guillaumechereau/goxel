@@ -773,7 +773,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 }
 
 KEEPALIVE
-void goxel_render(const inputs_t *inputs)
+void goxel_render(inputs_t *inputs)
 {
     uint8_t color[4];
 
