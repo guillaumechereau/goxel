@@ -173,4 +173,6 @@ void gui_app(void)
     goxel.pathtrace = goxel.pathtracer.status &&
         (goxel.gui.current_panel == PANEL_RENDER ||
          PANELS[PANEL_RENDER].detached);
+
+    gui_view_cube(goxel.gui.viewport[2] - 128, ITEM_HEIGHT + 2, 128, 128);
 }

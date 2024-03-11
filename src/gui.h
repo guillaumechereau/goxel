@@ -175,4 +175,6 @@ bool gui_menu_item(int action, const char *label, bool enabled);
 
 void gui_tooltip(const char *str);
 
+bool gui_view_cube(float x, float y, float w, float h);
+
 #endif // GUI_H

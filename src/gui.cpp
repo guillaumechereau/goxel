@@ -519,7 +519,7 @@ static void render_popups(int index)
     ImGui::PopStyleVar();
 }
 
-static bool render_view_cube(void)
+bool gui_view_cube(float x, float y, float w, float h)
 {
     ImGuiIO& io = ImGui::GetIO();
     bool ret = false;
@@ -527,7 +527,6 @@ static bool render_view_cube(void)
     camera_t *camera = goxel.image->active_camera;
     float view[4][4];
     float view_prev[4][4];
-    const float w = 128, h = 128;
     const float *projection= (float*)camera->proj_mat;
     const float zup2yup[4][4] = {
         {1, 0, 0, 0},
@@ -553,8 +552,7 @@ static bool render_view_cube(void)
     mat4_copy(view, view_prev);
 
     ImGui::SetNextWindowSize(ImVec2(w, h));
-    ImGui::SetNextWindowPos(ImVec2(
-                goxel.gui.viewport[2] - w, goxel.gui.viewport[1]));
+    ImGui::SetNextWindowPos(ImVec2(x, y));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
     ImGui::Begin("Gizmo", NULL, ImGuiWindowFlags_NoDecoration);
     ImGuizmo::SetDrawlist();
@@ -641,7 +639,6 @@ static void gui_iter(const inputs_t *inputs)
     ImGuizmo::BeginFrame();
 
     gui_app();
-    render_view_cube();
     render_popups(0);
 
     // Handle the shortcuts.  XXX: this should be done with actions.
