@@ -36,7 +36,6 @@
 
 // Note: duplicated from gui.cpp!  To remove.
 static const float ITEM_HEIGHT = 18;
-static const float ICON_HEIGHT = 32;
 
 void gui_menu(void);
 void gui_tools_panel(void);
@@ -116,6 +115,7 @@ void gui_app(void)
     float x = 0, y = 0;
     bool moved;
     const char *name;
+    const float spacing = 8;
     int i;
 
     goxel.show_export_viewport = false;
@@ -138,14 +138,13 @@ void gui_app(void)
 
     gui_window_begin("Top Bar", x, y, 0, 0, NULL);
     gui_top_bar();
-    y += gui_window_end().h;
+    y += gui_window_end().h + spacing;
 
     gui_window_begin("Left Bar", x, y, 0, 0, NULL);
     render_left_panel();
-    gui_window_end();
+    x += gui_window_end().w + spacing;
 
     if (goxel.gui.current_panel) {
-        x += ICON_HEIGHT + 28;
         name = tr(PANELS[goxel.gui.current_panel].name);
         gui_window_begin(name, x, y, goxel.gui.panel_width, 0, &moved);
         if (gui_panel_header(name))
