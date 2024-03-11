@@ -129,6 +129,7 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
                 gest->pinch = 1;
                 gest->rotation = 0;
                 vec2_mix(ts[0].pos, ts[1].pos, 0.5, gest->pos);
+                vec2_copy(gest->pos, gest->last_pos);
             }
             break;
         case GESTURE_BEGIN:
