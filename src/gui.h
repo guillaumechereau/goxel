@@ -35,13 +35,20 @@
 #   define GUI_PANEL_WIDTH_LARGE 400
 #endif
 
+enum {
+    GUI_WINDOW_MOVABLE      = 1 << 0,
+
+    // Return flags.
+    GUI_WINDOW_MOVED        = 1 << 1,
+};
+
 typedef struct {
     float h;
     float w;
 } gui_window_ret_t;
 
-void gui_window_begin(const char *label, float x, float y, float w, float h,
-                      bool *moved);
+int gui_window_begin(const char *label, float x, float y, float w, float h,
+                     int flags);
 
 gui_window_ret_t gui_window_end(void);
 
