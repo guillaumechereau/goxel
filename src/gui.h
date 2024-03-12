@@ -36,10 +36,11 @@
 #endif
 
 enum {
-    GUI_WINDOW_MOVABLE      = 1 << 0,
+    GUI_WINDOW_MOVABLE                  = 1 << 0,
+    GUI_WINDOW_HORIZONTAL               = 1 << 1, // For scrolling.
 
     // Return flags.
-    GUI_WINDOW_MOVED        = 1 << 1,
+    GUI_WINDOW_MOVED                    = 1 << 2,
 };
 
 typedef struct {

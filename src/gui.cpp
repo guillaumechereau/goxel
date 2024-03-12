@@ -26,7 +26,7 @@ extern "C" {
 
 void gui_app(void);
 void gui_render_panel(void);
-bool gui_pan_scroll_behavior(void);
+bool gui_pan_scroll_behavior(int dir);
 }
 
 #ifndef typeof
@@ -168,6 +168,8 @@ typedef struct gui_t {
 
     int     is_row;
     float   item_size;
+
+    int     win_dir; // Store the current window direction (for scrolling).
 
     struct {
         const char *title;
@@ -744,38 +746,49 @@ int gui_window_begin(const char *label, float x, float y, float w, float h,
     ImGuiWindowFlags win_flags =
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize  |
         ImGuiWindowFlags_NoDecoration;
-    float max_h;
+    float max_size;
     ImGuiStorage *storage = ImGui::GetStateStorage();
     ImGuiID key;
-    float *last_y;
+    float *last_pos;
     int ret = 0;
+    int dir = (flags & GUI_WINDOW_HORIZONTAL) ? 0 : 1;
 
     ImGui::PushID(label);
     if (!gui->can_move_window)
         win_flags |= ImGuiWindowFlags_NoMove;
     if (gui->scrolling)
         win_flags |= ImGuiWindowFlags_NoMouseInputs;
+    if (dir == 0)
+        win_flags |= ImGuiWindowFlags_HorizontalScrollbar;
     ImGui::SetNextWindowPos(ImVec2(x, y),
             (flags & GUI_WINDOW_MOVABLE) ?
             ImGuiCond_Appearing : ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h));
 
-    key = ImGui::GetID("lasty");
-    last_y = storage->GetFloatRef(key, y);
+    key = ImGui::GetID("last_pos");
+    last_pos = storage->GetFloatRef(key, dir == 0 ? x : y);
 
-    if (h == 0) {
-        max_h = ImGui::GetMainViewport()->Size.y - *last_y;
+    if ((w == 0) && (dir == 0)) {
+        max_size = ImGui::GetMainViewport()->Size.x - *last_pos;
         ImGui::SetNextWindowSizeConstraints(
-                ImVec2(0, 0), ImVec2(FLT_MAX, max_h));
+                ImVec2(0, 0), ImVec2(max_size, FLT_MAX));
     }
+    if ((h == 0) && (dir == 1)) {
+        max_size = ImGui::GetMainViewport()->Size.y - *last_pos;
+        ImGui::SetNextWindowSizeConstraints(
+                ImVec2(0, 0), ImVec2(FLT_MAX, max_size));
+    }
+
     ImGui::Begin(label, NULL, win_flags);
 
     if (flags & GUI_WINDOW_MOVABLE) {
          if (ImGui::GetWindowPos() != ImVec2(x, y))
              ret |= GUI_WINDOW_MOVED;
-        *last_y = ImGui::GetWindowPos().y;
+        *last_pos = dir == 0 ? ImGui::GetWindowPos().x :
+                               ImGui::GetWindowPos().y;
     }
 
+    gui->win_dir = dir;
     ImGui::BeginGroup();
     return ret;
 }
@@ -785,7 +798,7 @@ gui_window_ret_t gui_window_end(void)
     gui_window_ret_t ret = {};
     ImGui::EndGroup();
     if (!GUI_HAS_SCROLLBARS && !gui->can_move_window) {
-        if (gui_pan_scroll_behavior())
+        if (gui_pan_scroll_behavior(gui->win_dir))
             gui->scrolling |= 1;
     }
     ret.h = ImGui::GetWindowHeight();
