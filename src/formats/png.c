@@ -22,6 +22,10 @@
 // XXX: this function has to be rewritten.
 static int png_export(const image_t *img, const char *path, int w, int h)
 {
+    if (!goxel.graphics_initialized) {
+        goxel_create_graphics();
+    }
+
     uint8_t *buf;
     int bpp = img->export_transparent_background ? 4 : 3;
     if (!path) return -1;
