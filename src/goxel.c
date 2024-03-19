@@ -469,11 +469,12 @@ static void update_window_title(void)
     bool changed;
 
     changed = image_get_key(goxel.image) != goxel.image->saved_key;
-    sprintf(buf, "Goxel %s%s %s%s",
+    sprintf(buf, "Goxel %s%s %s%s%s",
             GOXEL_VERSION_STR,
             DEBUG ? " (debug)" : "",
             changed ? "*" : "",
-            goxel.image->path ?: "");
+            goxel.image->path ?: goxel.image->export_path ?: "",
+            goxel.image->export_path != NULL ? " (exported)" : "");
     sys_set_window_title(buf);
 }
 
