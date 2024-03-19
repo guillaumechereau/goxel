@@ -96,6 +96,7 @@ void gui_menu(void)
             file_format_iter("r", NULL, import_menu_callback);
             gui_menu_end();
         }
+        gui_menu_item(ACTION_overwrite_export, _(OVERWRITE_EXPORT), goxel.image->export_path != NULL);
         if (gui_menu_begin(_(EXPORT), true)) {
             file_format_iter("w", NULL, export_menu_callback);
             gui_menu_end();
