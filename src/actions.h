@@ -74,6 +74,7 @@ enum {
     X(open),
     X(save_as),
     X(save),
+    X(overwrite_export),
     X(reset),
 
     X(tool_set_brush),

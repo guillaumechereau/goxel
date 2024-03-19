@@ -1249,6 +1249,8 @@ int goxel_import_file(const char *path, const char *format)
 
     if (image_was_empty) {
         image_auto_resize(goxel.image);
+        assert(!goxel.image->export_path);
+        goxel.image->export_path = strdup(path);
     }
 
     return 0;
@@ -1284,14 +1286,31 @@ int goxel_export_to_file(const char *path, const char *format)
         get_export_path(f, name, sizeof(name));
         path = sys_get_save_path(name, f->exts, f->exts_desc);
         if (!path) return -1;
-        free(goxel.image->export_path);
-        goxel.image->export_path = strdup(path);
     }
     err = f->export_func(f, goxel.image, path);
     if (err) return err;
-    sys_on_saved(path);
+    
+    // path might be equal to export_path, so we must strdup() it before we free export_path
+    char *new_export_path = strdup(path);
+    free(goxel.image->export_path);
+    goxel.image->export_path = new_export_path;
+    sys_on_saved(new_export_path);
     return 0;
 }
+
+static void a_overwrite_export(void)
+{
+    if (!goxel.image->export_path) {
+        return;
+    }
+
+    goxel_export_to_file(goxel.image->export_path, NULL);
+}
+
+ACTION_REGISTER(overwrite_export,
+    .cfunc = a_overwrite_export,
+    .default_shortcut = "Ctrl E"
+)
 
 void goxel_add_recent_file(const char *path)
 {
