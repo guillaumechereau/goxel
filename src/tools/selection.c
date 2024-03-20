@@ -156,6 +156,9 @@ static int gui(tool_t *tool)
     float x_mag, y_mag, z_mag;
     int x, y, z, w, h, d;
     float (*box)[4][4] = &goxel.selection;
+    int wrap_aabb[2][3];
+    int wrap_axis, wrap_sign;
+
     if (box_is_null(*box)) return 0;
 
     gui_text("Drag mode");
@@ -201,6 +204,21 @@ static int gui(tool_t *tool)
     h = max(1, h);
     d = max(1, d);
     gui_group_end();
+
+    if (gui_wrap_box(&wrap_axis, &wrap_sign)) {
+        wrap_aabb[0][0] = x;
+        wrap_aabb[0][1] = y;
+        wrap_aabb[0][2] = z;
+        wrap_aabb[1][0] = x + w;
+        wrap_aabb[1][1] = y + h;
+        wrap_aabb[1][2] = z + d;
+
+        for (layer_t *layer = goxel.image->layers; layer; layer=layer->next) {
+            if (layer->visible) {
+                volume_wrap(layer->volume, wrap_axis, wrap_sign, wrap_aabb);
+            }
+        }
+    }
 
     bbox_from_extents(*box,
             VEC(x + w / 2., y + h / 2., z + d / 2.),
