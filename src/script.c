@@ -419,7 +419,7 @@ static JSValue js_volume_save(JSContext *ctx, JSValueConst this_val,
     if (argc > 1)
         format = JS_ToCString(ctx, argv[1]);
 
-    f = file_format_for_path(path, format, "w");
+    f = get_file_format(path, format, "w");
     if (!f) {
         fprintf(stderr, "Cannot find format for file %s\n", path);
         return JS_EXCEPTION;
