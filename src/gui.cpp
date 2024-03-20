@@ -1033,7 +1033,7 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax)
     return ret;
 }
 
-bool gui_wrap(int *out_axis, int *sign)
+bool gui_wrap_box(int *out_axis, int *sign)
 {
     char buf[8];
     bool ret = false;

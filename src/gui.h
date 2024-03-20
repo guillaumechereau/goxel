@@ -109,7 +109,7 @@ bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format);
 bool gui_angle(const char *id, float *v, int vmin, int vmax);
 bool gui_bbox(float box[4][4]);
-bool gui_wrap(int *out_axis, int *out_sign);
+bool gui_wrap_box(int *out_axis, int *out_sign);
 bool gui_rotation_mat4(float m[4][4]);
 bool gui_rotation_mat4_axis(float m[4][4]);
 bool gui_action_button(int id, const char *label, float size);

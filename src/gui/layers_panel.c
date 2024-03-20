@@ -139,7 +139,7 @@ void gui_layers_panel(void)
     if (bounded) {
         gui_bbox(layer->box);
 
-        if (gui_wrap(&axis, &sign)) {
+        if (gui_wrap_box(&axis, &sign)) {
             image_history_push(goxel.image);
             layer_wrap(layer, axis, sign);
         }
