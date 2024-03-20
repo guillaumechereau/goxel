@@ -178,6 +178,7 @@ enum {
     STR_VISIBLE,
     STR_VOLUME,
     STR_WORLD,
+    STR_WRAP,
     STR_Y_UP,
 };
 
