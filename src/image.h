@@ -46,6 +46,7 @@ struct image {
     // XXX: I think those should be persistend data of export code instead.
     char     *path;         // Path to save the gox file.
     char     *export_path;  // Path to export.
+    const char *export_fmt; // Format of the export_path.
     bool     export_custom_size;
     int      export_width;
     int      export_height;
