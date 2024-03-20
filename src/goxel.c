@@ -1235,10 +1235,10 @@ int goxel_import_file(const char *path, const char *format)
 
     image_was_empty = image_is_empty(goxel.image);
 
+    f = file_format_for_path(path, format, "r");
     if (str_endswith(path, ".gox")) {
         err = load_from_file(path, false);
     } else {
-        f = file_format_for_path(path, format, "r");
         if (!f) return -1;
         if (!path) {
             path = sys_open_file_dialog("Import", NULL, f->exts, f->exts_desc);
@@ -1252,6 +1252,7 @@ int goxel_import_file(const char *path, const char *format)
         image_auto_resize(goxel.image);
         assert(!goxel.image->export_path);
         goxel.image->export_path = strdup(path);
+        goxel.image->export_fmt = f->name;
     }
 
     return 0;
@@ -1295,6 +1296,7 @@ int goxel_export_to_file(const char *path, const char *format)
     char *new_export_path = strdup(path);
     free(goxel.image->export_path);
     goxel.image->export_path = new_export_path;
+    goxel.image->export_fmt = f->name;
     sys_on_saved(new_export_path);
     return 0;
 }
@@ -1305,7 +1307,7 @@ static void a_overwrite_export(void)
         return;
     }
 
-    goxel_export_to_file(goxel.image->export_path, NULL);
+    goxel_export_to_file(goxel.image->export_path, goxel.image->export_fmt);
 }
 
 ACTION_REGISTER(overwrite_export,
