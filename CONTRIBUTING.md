@@ -17,8 +17,8 @@ For more information about that.
 
 Try to follow the code style I used for Goxel, as I am unlikely to merge a pull
 request that doesn't.  The coding style is almost the one used by the linux
-kernel, but using four spaces for indentation (I also accept typedef).  When in
-doubt, just look at other part of the code.  The most important rules are:
+kernel, but using four spaces for indentation, and I also accept typedef.  When
+in doubt, just look at other part of the code.  The most important rules are:
 
 - Use 4 spaces indentations.  No tabs characters anywhere in the code.
 
@@ -94,7 +94,5 @@ doubt, just look at other part of the code.  The most important rules are:
 - The rest of the commit message separated by a blank line.  Wrap lines at
   72 characters.
 
-- Try to separate the commits into small logical parts.  For example if you
-  need to add a new public function in order to fix a bug, the first commit
-  should be about adding the function, and the second one about fixing the
-  bug.
+- Try to separate the commits into smaller logical parts, so it is easier to
+  review them independently.
