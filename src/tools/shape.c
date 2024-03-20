@@ -130,9 +130,7 @@ static int gui(tool_t *tool)
     tool_gui_color();
     tool_gui_smoothness();
     gui_checkbox("Planar", &tool_shape->planar, "Stay on original plane");
-    tool_gui_snap();
     tool_gui_shape(NULL);
-    tool_gui_symmetry();
     return 0;
 }
 

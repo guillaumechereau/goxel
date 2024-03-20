@@ -410,6 +410,8 @@ enum {
     X(ICON_TOOL_SELECTION,          3, 6, 0),
     X(ICON_INTERSECT,               4, 6, 0),
     X(ICON_SUBTRACT,                5, 6, 0),
+    X(ICON_SNAP,                    6, 6, 0),
+    X(ICON_SYMMETRY,                7, 6, 0),
 };
 
 #undef X

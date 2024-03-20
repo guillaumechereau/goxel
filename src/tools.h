@@ -81,13 +81,11 @@ const tool_t *tool_get(int id);
 int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4]);
 int tool_gui(tool_t *tool);
 
-int tool_gui_snap(void);
 int tool_gui_mask_mode(void);
 int tool_gui_shape(const shape_t **shape);
 int tool_gui_radius(void);
 int tool_gui_smoothness(void);
 int tool_gui_color(void);
-int tool_gui_symmetry(void);
 int tool_gui_drag_mode(int *mode);
 
 #endif // TOOLS_H

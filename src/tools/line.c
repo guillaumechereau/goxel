@@ -177,9 +177,7 @@ static int gui(tool_t *tool)
     tool_gui_color();
     tool_gui_radius();
     tool_gui_smoothness();
-    tool_gui_snap();
     tool_gui_shape(NULL);
-    tool_gui_symmetry();
     return 0;
 }
 

@@ -96,43 +96,6 @@ int tool_gui(tool_t *tool)
     return tool->gui_fn(tool);
 }
 
-
-static bool snap_button(const char *label, int s)
-{
-    bool v = goxel.snap_mask & s;
-    if (gui_selectable(label, &v, NULL, -1)) {
-        set_flag(&goxel.snap_mask, s, v);
-        return true;
-    }
-    return false;
-}
-
-int tool_gui_snap(void)
-{
-    float v;
-    if (gui_section_begin(_(SNAP), true)) {
-        gui_group_begin(NULL);
-        gui_row_begin(2);
-        snap_button(_(VOLUME), SNAP_VOLUME);
-        snap_button(_(PLANE), SNAP_PLANE);
-        gui_row_end();
-        if (!box_is_null(goxel.selection)) {
-            snap_button(_(SELECTION_IN), SNAP_SELECTION_IN);
-            snap_button(_(SELECTION_OUT), SNAP_SELECTION_OUT);
-        }
-        if (!box_is_null(goxel.image->box)) {
-            snap_button(_(BOX), SNAP_IMAGE_BOX);
-        }
-        gui_group_end();
-
-        v = goxel.snap_offset;
-        if (gui_input_float(_(OFFSET), &v, 0.1, -1, +1, "%.1f"))
-            goxel.snap_offset = clamp(v, -1, +1);
-    }
-    gui_section_end();
-    return 0;
-}
-
 static bool mask_mode_button(const char *label, int s)
 {
     bool v = goxel.mask_mode == s;
@@ -220,31 +183,6 @@ int tool_gui_color(void)
         if (gui_input_float(_(ALPHA), &alpha, 0.1, 0, 1, "%.1f"))
             goxel.painter.color[3] = alpha * 255;
     }
-    return 0;
-}
-
-int tool_gui_symmetry(void)
-{
-    int i;
-    bool v;
-    const char *labels_u[] = {"X", "Y", "Z"};
-    const char *labels_l[] = {"x", "y", "z"};
-    if (gui_section_begin(_(SYMMETRY), true)) {
-        gui_group_begin("##Axis");
-        gui_row_begin(3);
-        for (i = 0; i < 3; i++) {
-            v = (goxel.painter.symmetry >> i) & 0x1;
-            if (gui_selectable(labels_u[i], &v, NULL, 0))
-                set_flag(&goxel.painter.symmetry, 1 << i, v);
-        }
-        gui_row_end();
-        gui_group_end();
-        for (i = 0; i < 3; i++) {
-            gui_input_float(labels_l[i], &goxel.painter.symmetry_origin[i],
-                             0.5, -FLT_MAX, +FLT_MAX, "%.1f");
-        }
-    }
-    gui_section_end();
     return 0;
 }
 

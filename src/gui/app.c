@@ -50,6 +50,8 @@ void gui_image_panel(void);
 void gui_render_panel(void);
 void gui_debug_panel(void);
 void gui_export_panel(void);
+void gui_snap_panel(void);
+void gui_symmetry_panel(void);
 bool gui_rotation_bar(void);
 
 enum {
@@ -57,6 +59,8 @@ enum {
     PANEL_TOOLS,
     PANEL_PALETTE,
     PANEL_LAYERS,
+    PANEL_SNAP,
+    PANEL_SYMMETRY,
     PANEL_VIEW,
     PANEL_MATERIAL,
     PANEL_LIGHT,
@@ -76,6 +80,8 @@ static struct {
     [PANEL_TOOLS]       = {STR_TOOLS, ICON_TOOLS, gui_tools_panel},
     [PANEL_PALETTE]     = {STR_PALETTE, ICON_PALETTE, gui_palette_panel},
     [PANEL_LAYERS]      = {STR_LAYERS, ICON_LAYERS, gui_layers_panel},
+    [PANEL_SNAP]        = {STR_SNAP, ICON_SNAP, gui_snap_panel},
+    [PANEL_SYMMETRY]    = {STR_SYMMETRY, ICON_SYMMETRY, gui_symmetry_panel},
     [PANEL_VIEW]        = {STR_VIEW, ICON_VIEW, gui_view_panel},
     [PANEL_MATERIAL]    = {STR_MATERIALS, ICON_MATERIAL, gui_material_panel},
     [PANEL_LIGHT]       = {STR_LIGHT, ICON_LIGHT, gui_light_panel},
