@@ -1604,6 +1604,7 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
     int i;
     ImVec2 center;
     ImVec2 uv0, uv1;
+    ImVec2 padding;
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     ImGuiStyle& style = ImGui::GetStyle();
 
@@ -1622,9 +1623,9 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
 
     if (edit_name != name) {
         ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
-                    ImVec2(style.FramePadding.x +
-                        GUI_ICON_HEIGHT * 0.75 * icons_count, 0));
+        padding = style.FramePadding;
+        padding.x += GUI_ICON_HEIGHT * 0.75 * icons_count;
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, padding);
         if (ImGui::Button(name, ImVec2(-1, GUI_ICON_HEIGHT))) {
             *selected = true;
             ret = true;
