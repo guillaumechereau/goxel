@@ -1294,7 +1294,8 @@ int goxel_export_to_file(const char *path, const char *format)
     err = f->export_func(f, goxel.image, path);
     if (err) return err;
     
-    // path might be equal to export_path, so we must strdup() it before we free export_path
+    // path might be equal to export_path, so we must strdup() it before we
+    // free export_path
     new_export_path = strdup(path);
     free(goxel.image->export_path);
     goxel.image->export_path = new_export_path;
