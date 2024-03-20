@@ -18,7 +18,6 @@
 
 #include "goxel.h"
 
-
 enum {
     DRAG_RESIZE,
     DRAG_MOVE,
@@ -213,6 +212,7 @@ static int gui(tool_t *tool)
         wrap_aabb[1][1] = y + h;
         wrap_aabb[1][2] = z + d;
 
+        image_history_push(goxel.image);
         for (layer_t *layer = goxel.image->layers; layer; layer=layer->next) {
             if (layer->visible) {
                 volume_wrap(layer->volume, wrap_axis, wrap_sign, wrap_aabb);
