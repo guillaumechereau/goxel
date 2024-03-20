@@ -1235,7 +1235,7 @@ int goxel_import_file(const char *path, const char *format)
 
     image_was_empty = image_is_empty(goxel.image);
 
-    f = file_format_for_path(path, format, "r");
+    f = get_file_format(path, format, "r");
     if (str_endswith(path, ".gox")) {
         err = load_from_file(path, false);
     } else {
@@ -1282,7 +1282,9 @@ int goxel_export_to_file(const char *path, const char *format)
     const file_format_t *f;
     char name[128];
     int err;
-    f = file_format_for_path(path, format, "w");
+    char *new_export_path;
+
+    f = get_file_format(path, format, "w");
     if (!f) return -1;
     if (!path) {
         get_export_path(f, name, sizeof(name));
@@ -1293,7 +1295,7 @@ int goxel_export_to_file(const char *path, const char *format)
     if (err) return err;
     
     // path might be equal to export_path, so we must strdup() it before we free export_path
-    char *new_export_path = strdup(path);
+    new_export_path = strdup(path);
     free(goxel.image->export_path);
     goxel.image->export_path = new_export_path;
     goxel.image->export_fmt = f->name;

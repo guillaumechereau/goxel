@@ -38,7 +38,7 @@ struct file_format
 
 void file_format_register(file_format_t *format);
 
-const file_format_t *file_format_for_path(const char *path, const char *name,
+const file_format_t *get_file_format(const char *path, const char *name,
                                           const char *mode);
 
 void file_format_iter(const char *mode, void *user,
