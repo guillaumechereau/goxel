@@ -428,8 +428,8 @@ static const string_t STRINGS[] = {
         .fr = "Orthogonale",
     },
     [STR_OVERWRITE_EXPORT] = {
-        .en = "Overwrite export",
-        .fr = "Écraser l'exportation"
+        .en = "Overwrite %s",
+        .fr = "Écraser %s"
     },
     [STR_PAINT] = {
         .en = "Paint",
