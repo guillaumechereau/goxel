@@ -52,12 +52,11 @@ void gui_layers_panel(void)
 {
     layer_t *layer;
     material_t *material;
-    int i = 0, bbox[2][3];
+    int i = 0, bbox[2][3], axis, sign;
     int icons_count, icons[8];
     bool current, visible, bounded;
     char buf[256];
     const int MODES[] = {MODE_OVER, MODE_SUB, MODE_INTERSECT};
-    static const char* AXIS_NAMES[] = {"X", "Y", "Z"};
 
     gui_group_begin(NULL);
     DL_FOREACH_REVERSE(goxel.image->layers, layer) {
@@ -140,27 +139,10 @@ void gui_layers_panel(void)
     if (bounded) {
         gui_bbox(layer->box);
 
-        gui_group_begin(_(WRAP));
-
-        for (int axis = 0; axis < 3; axis++) {
-            gui_row_begin(2);
-
-            snprintf(buf, sizeof(buf), "-%s", AXIS_NAMES[axis]);
-            if (gui_button(buf, 1.0, 0)) {
-                image_history_push(goxel.image);
-                layer_wrap(layer, axis, -1);
-            }
-
-            snprintf(buf, sizeof(buf), "+%s", AXIS_NAMES[axis]);
-            if (gui_button(buf, 1.0, 0)) {
-                image_history_push(goxel.image);
-                layer_wrap(layer, axis, 1);
-            }
-
-            gui_row_end();
+        if (gui_wrap(&axis, &sign)) {
+            image_history_push(goxel.image);
+            layer_wrap(layer, axis, sign);
         }
-
-        gui_group_end();
     }
 
     if (layer->shape) {
