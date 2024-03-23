@@ -17,7 +17,6 @@
  */
 
 #include "goxel.h"
-#include "gui.h"
 
 /*
  * A filter for moving voxels along an axis and wrapping at the boundary
@@ -62,7 +61,18 @@ static int gui(filter_t *filter)
 {
     filter_wrap_t *wrap = (void*)filter;
     int axis, sign;
+    float box[4][4] = {};
+    int aabb[2][3];
     bool should_wrap;
+    layer_t *layer;
+
+    memcpy(box, goxel.selection, sizeof(box));
+    
+    if (box_is_null(box))
+        memcpy(box, goxel.image->active_layer->box, sizeof(box));
+
+    if (box_is_null(box))
+        memcpy(box, goxel.image->box, sizeof(box));
 
     gui_group_begin(NULL);
 
@@ -78,22 +88,23 @@ static int gui(filter_t *filter)
     gui_group_end();
 
     if (should_wrap) {
-#if 0
-        wrap_aabb[0][0] = x;
-        wrap_aabb[0][1] = y;
-        wrap_aabb[0][2] = z;
-        wrap_aabb[1][0] = x + w;
-        wrap_aabb[1][1] = y + h;
-        wrap_aabb[1][2] = z + d;
+        if (box_is_null(box))
+            return 0;
 
+        if (wrap->current_only && !goxel.image->active_layer->visible)
+            return 0;
+
+        bbox_to_aabb(box, aabb);
         image_history_push(goxel.image);
-        for (layer_t *layer = goxel.image->layers; layer; layer=layer->next) {
-            if (layer->visible) {
-                volume_wrap(layer->volume, axis, sign, wrap_aabb);
-            }
+
+        DL_FOREACH(goxel.image->layers, layer) {
+            if (wrap->current_only && layer != goxel.image->active_layer)
+                continue;
+
+            volume_wrap(layer->volume, axis, sign, aabb);
         }
-#endif
     }
+
     return 0;
 }
 
