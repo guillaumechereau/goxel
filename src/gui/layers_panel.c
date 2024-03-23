@@ -52,7 +52,7 @@ void gui_layers_panel(void)
 {
     layer_t *layer;
     material_t *material;
-    int i = 0, bbox[2][3], axis, sign;
+    int i = 0, bbox[2][3];
     int icons_count, icons[8];
     bool current, visible, bounded;
     char buf[256];
@@ -136,14 +136,8 @@ void gui_layers_panel(void)
             mat4_copy(mat4_zero, layer->box);
         }
     }
-    if (bounded) {
+    if (bounded)
         gui_bbox(layer->box);
-
-        if (layer->visible && gui_wrap_box(&axis, &sign)) {
-            image_history_push(goxel.image);
-            layer_wrap(layer, axis, sign);
-        }
-    }
 
     if (layer->shape) {
         tool_gui_drag_mode(&goxel.tool_drag_mode);

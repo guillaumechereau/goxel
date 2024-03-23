@@ -1033,38 +1033,6 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax)
     return ret;
 }
 
-bool gui_wrap_box(int *out_axis, int *sign)
-{
-    char buf[8];
-    bool ret = false;
-    static const char* AXIS_NAMES[] = {"X", "Y", "Z"};
-
-    gui_group_begin(_(WRAP));
-
-    for (int axis = 0; axis < 3; axis++) {
-        gui_row_begin(2);
-
-        snprintf(buf, sizeof(buf), "-%s", AXIS_NAMES[axis]);
-        if (gui_button(buf, 1.0, 0)) {
-            *out_axis = axis;
-            *sign = -1;
-            ret = true;
-        }
-
-        snprintf(buf, sizeof(buf), "+%s", AXIS_NAMES[axis]);
-        if (gui_button(buf, 1.0, 0)) {
-            *out_axis = axis;
-            *sign = 1;
-            ret = true;
-        }
-
-        gui_row_end();
-    }
-
-    gui_group_end();
-    return ret;
-}
-
 bool gui_action_button(int id, const char *label, float size)
 {
     bool ret;
