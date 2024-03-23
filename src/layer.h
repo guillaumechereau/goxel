@@ -60,10 +60,4 @@ layer_t *layer_copy(layer_t *other);
  */
 void layer_get_bounding_box(const layer_t *layer, float box[4][4]);
 
-/*
- * Function: layer_wrap
- * Move all voxels in the given-signed direction on the given axis, and wrap around.
- */
-void layer_wrap(layer_t *layer, int axis, int sign);
-
 #endif // LAYER_H

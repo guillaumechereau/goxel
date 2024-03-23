@@ -100,13 +100,3 @@ void layer_get_bounding_box(const layer_t *layer, float box[4][4])
     if (aabb[0][0] > aabb[1][0]) memset(aabb, 0, sizeof(aabb));
     bbox_from_aabb(box, aabb);
 }
-
-void layer_wrap(layer_t *layer, int axis, int sign)
-{
-    float bbox[4][4];
-    int aabb[2][3];
-
-    layer_get_bounding_box(layer, bbox);
-    bbox_to_aabb(bbox, aabb);
-    volume_wrap(layer->volume, axis, sign, aabb);
-}
