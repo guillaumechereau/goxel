@@ -123,6 +123,7 @@ void gui_app(void)
     const float spacing = 8;
     int flags;
     int i;
+    filter_t *filter;
 
     goxel.show_export_viewport = false;
 
@@ -175,6 +176,18 @@ void gui_app(void)
             PANELS[i].detached = false;
         }
         PANELS[i].fn();
+        gui_window_end();
+    }
+
+    filter = goxel.gui.current_filter;
+    if (filter) {
+        // XXX: we should have a way to center the filter window.
+        gui_window_begin(filter->name, 100, 100, goxel.gui.panel_width, 0,
+                         GUI_WINDOW_MOVABLE);
+        if (gui_panel_header(filter->name)) {
+            goxel.gui.current_filter = NULL;
+        }
+        filter->gui_fn(filter);
         gui_window_end();
     }
 

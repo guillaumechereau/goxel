@@ -46,6 +46,7 @@ int gui_about_popup(void *data)
         gui_text("● Dustin Willis Webber <dustin.webber@gmail.com>");
         gui_text("● Pablo Hugo Reda <pabloreda@gmail.com>");
         gui_text("● Othelarian (https://github.com/othelarian)");
+        gui_text("● Mariusz Pilipczuk (https://gitlab.com/madd-games)");
     }
     return gui_button("OK", 0, 0);
 }

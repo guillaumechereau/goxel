@@ -18,16 +18,19 @@
 
 #include "goxel.h"
 
-// Global array of actions.
+#include "../ext_src/stb/stb_ds.h"
+
+// stb array of actions.
 static action_t *g_actions = NULL;
 
 void action_register(const action_t *action, int idx)
 {
     action_t *a;
-    assert(idx > 0 && idx < ACTION_COUNT);
 
-    if (!g_actions)
-        g_actions = calloc(ACTION_COUNT, sizeof(*g_actions));
+    if (!g_actions) {
+        arraddnindex(g_actions, ACTION_COUNT);
+        memset(g_actions, 0, ACTION_COUNT * sizeof(action_t));
+    }
 
     a = &g_actions[idx];
     *a = *action;
@@ -57,9 +60,9 @@ action_t *action_get_by_name(const char *name)
     int i;
     action_t *action;
     assert(g_actions);
-    for (i = 0; i < ACTION_COUNT; i++) {
+    for (i = 0; i < arrlen(g_actions); i++) {
         action = &g_actions[i];
-        if (!action->idx) continue;
+        if (action->id == NULL) continue;
         if (strcmp(name, action->id) == 0)
             return action;
     }
@@ -70,7 +73,7 @@ void actions_iter(int (*f)(action_t *action, void *user), void *user)
 {
     action_t *action;
     int i;
-    for (i = 0; i < ACTION_COUNT; i++) {
+    for (i = 0; i < arrlen(g_actions); i++) {
         action = &g_actions[i];
         if (!action->idx) continue;
         if (f(action, user)) return;
