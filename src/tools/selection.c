@@ -155,7 +155,6 @@ static int gui(tool_t *tool)
     float x_mag, y_mag, z_mag;
     int x, y, z, w, h, d;
     float (*box)[4][4] = &goxel.selection;
-
     if (box_is_null(*box)) return 0;
 
     gui_text("Drag mode");

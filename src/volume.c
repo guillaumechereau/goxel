@@ -21,7 +21,6 @@
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
-#include <stdio.h>
 
 #define min(a, b) ({ \
       __typeof__ (a) _a = (a); \

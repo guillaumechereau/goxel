@@ -663,10 +663,6 @@ static const string_t STRINGS[] = {
         .en = "World",
         .fr = "Monde",
     },
-    [STR_WRAP] = {
-        .en = "Wrap",
-        .fr = "Appliquer modulo",
-    },
     [STR_Y_UP] = {
         .en = "Y Up",
         .fr = "Y haut",

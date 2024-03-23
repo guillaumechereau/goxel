@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "gui.h"
 
 /*
  * A filter for moving voxels along an axis and wrapping at the boundary
@@ -25,7 +26,7 @@
 
 typedef struct {
     filter_t filter;
-    int x;
+    bool current_only;
 } filter_wrap_t;
 
 static bool wrap_box(int *out_axis, int *sign)
@@ -33,8 +34,6 @@ static bool wrap_box(int *out_axis, int *sign)
     char buf[8];
     bool ret = false;
     static const char* AXIS_NAMES[] = {"X", "Y", "Z"};
-
-    gui_group_begin(_(WRAP));
 
     for (int axis = 0; axis < 3; axis++) {
         gui_row_begin(2);
@@ -56,16 +55,29 @@ static bool wrap_box(int *out_axis, int *sign)
         gui_row_end();
     }
 
-    gui_group_end();
     return ret;
 }
 
 static int gui(filter_t *filter)
 {
-    //filter_wrap_t *wrap = (void*)filter;
+    filter_wrap_t *wrap = (void*)filter;
     int axis, sign;
+    bool should_wrap;
 
-    if (wrap_box(&axis, &sign)) {
+    gui_group_begin(NULL);
+
+    should_wrap = wrap_box(&axis, &sign);
+
+    gui_checkbox(
+        "Current layer only",
+        &wrap->current_only,
+        "If checked, only voxels on the current layer will be wrapped.\n"
+        "If unchecked, voxels on all layers will be wrapped."
+    );
+
+    gui_group_end();
+
+    if (should_wrap) {
 #if 0
         wrap_aabb[0][0] = x;
         wrap_aabb[0][1] = y;
