@@ -33,6 +33,7 @@
 #include "assets.h"
 #include "block_def.h"
 #include "camera.h"
+#include "filters.h"
 #include "gesture.h"
 #include "gesture3d.h"
 #include "gui.h"
@@ -534,6 +535,7 @@ typedef struct goxel
         int current_panel; // Index of the current visible control panel.
         float panel_width;
         float viewport[4];
+        filter_t *current_filter;
     } gui;
 
     char **recent_files; // stb arraw of most recently used files.
