@@ -28,13 +28,88 @@ typedef struct {
     bool current_only;
 } filter_wrap_t;
 
+static void volume_wrap(volume_t *volume, int axis, int sign,
+                        const int aabb[2][3])
+{
+    int pos[3];
+    int buffer_pos[3];
+    int volume_pos[3];
+    int size[3];
+    uint8_t *buffer;
+    int i;
+    size_t buffer_offset;
+
+    if (aabb[1][axis] - aabb[0][axis] == 1) {
+        return;
+    }
+
+    size[0] = aabb[1][0] - aabb[0][0];
+    size[1] = aabb[1][1] - aabb[0][1];
+    size[2] = aabb[1][2] - aabb[0][2];
+
+    buffer =  malloc(4 * size[0] * size[1] * size[2]);
+
+    for (pos[0] = 0; pos[0] < size[0]; pos[0]++) {
+        for (pos[1] = 0; pos[1] < size[1]; pos[1]++) {
+            for (pos[2] = 0; pos[2] < size[2]; pos[2]++) {
+                memcpy(buffer_pos, pos, sizeof(pos));
+                memcpy(volume_pos, pos, sizeof(pos));
+
+                for (i = 0; i < 3; i++) {
+                    volume_pos[i] += aabb[0][i];
+                }
+
+                buffer_pos[axis] += sign;
+
+                if (buffer_pos[axis] < 0) {
+                    buffer_pos[axis] += size[axis];
+                }
+
+                buffer_pos[axis] %= size[axis];
+
+                buffer_offset = 4 * (
+                    buffer_pos[2] * size[0] * size[1] +
+                    buffer_pos[1] * size[0] + buffer_pos[0]
+                );
+
+                volume_get_at(volume, NULL, volume_pos, &buffer[buffer_offset]);
+            }
+        }
+    }
+
+    for (pos[0] = 0; pos[0] < size[0]; pos[0]++) {
+        for (pos[1] = 0; pos[1] < size[1]; pos[1]++) {
+            for (pos[2] = 0; pos[2] < size[2]; pos[2]++) {
+                memcpy(volume_pos, pos, sizeof(pos));
+
+                for (i = 0; i < 3; i++) {
+                    volume_pos[i] += aabb[0][i];
+                }
+
+                buffer_offset = 4 * (
+                    pos[2] * size[0] * size[1] +
+                    pos[1] * size[0] + pos[0]
+                );
+
+                volume_set_at(volume, NULL, volume_pos, &buffer[buffer_offset]);
+            }
+        }
+    }
+
+    free(buffer);
+}
+
 static bool wrap_box(int *out_axis, int *sign)
 {
     char buf[8];
     bool ret = false;
-    static const char* AXIS_NAMES[] = {"X", "Y", "Z"};
+    int axis;
+    const char *AXIS_NAMES[] = {"X", "Y", "Z"};
 
-    for (int axis = 0; axis < 3; axis++) {
+    *out_axis = 0;
+    *sign = 1;
+
+    for (axis = 0; axis < 3; axis++) {
         gui_row_begin(2);
 
         snprintf(buf, sizeof(buf), "-%s", AXIS_NAMES[axis]);

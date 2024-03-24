@@ -237,6 +237,5 @@ typedef struct {
 } volume_global_stats_t;
 
 void volume_get_global_stats(volume_global_stats_t *stats);
-void volume_wrap(volume_t *volume, int axis, int sign, int aabb[2][3]);
 
 #endif // VOLUME_H
