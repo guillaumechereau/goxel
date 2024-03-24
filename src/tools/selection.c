@@ -18,7 +18,6 @@
 
 #include "goxel.h"
 
-
 enum {
     DRAG_RESIZE,
     DRAG_MOVE,
