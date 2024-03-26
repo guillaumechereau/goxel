@@ -40,8 +40,8 @@ void file_format_register(file_format_t *format)
     DL_APPEND(file_formats, format);
 }
 
-const file_format_t *get_file_format(const char *path, const char *name,
-                                          const char *mode)
+const file_format_t *file_format_get(
+        const char *path, const char *name, const char *mode)
 {
     const file_format_t *f;
     bool need_read = strchr(mode, 'r');

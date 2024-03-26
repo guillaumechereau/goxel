@@ -38,8 +38,15 @@ struct file_format
 
 void file_format_register(file_format_t *format);
 
-const file_format_t *get_file_format(const char *path, const char *name,
-                                          const char *mode);
+/**
+ * Return the recomended file format for a path or by explicit name.
+ *
+ * path         - Optional file path.
+ * format_name  - Optional explicit format name.
+ * mode         - String that can contain 'r' and or 'w'.
+ */
+const file_format_t *file_format_get(
+        const char *path, const char *format_name, const char *mode);
 
 void file_format_iter(const char *mode, void *user,
                       void (*f)(void *user, file_format_t *f));
