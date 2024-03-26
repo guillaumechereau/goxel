@@ -202,7 +202,7 @@ const char *sys_get_user_dir(void)
  * Function: sys_get_global_dir
  * Return the global config directory for goxel
  *
- * On linux, this should be $HOME/.config/goxel.
+ * On linux, this should be /etc/goxel.
  */
 const char *sys_get_global_dir(void)
 {
