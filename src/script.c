@@ -810,6 +810,12 @@ void script_init(void)
         LOG_I("Loading scripts from %s\n", dir);
         sys_list_dir(dir, on_user_script, NULL);
     }
+    
+    if (sys_get_global_dir()) {
+        snprintf(dir, sizeof(dir), "%s/scripts", sys_get_global_dir());
+        LOG_I("Loading scripts from %s\n", dir);
+        sys_list_dir(dir, on_user_script, NULL);
+    }
 }
 
 void script_release(void)
