@@ -30,6 +30,8 @@
 #define PATH_MAX 1024
 #endif
 
+#define PATH_MAX_DIR (PATH_MAX - 128)
+
 #define USER_PASS(...) ((const void*[]){__VA_ARGS__})
 #define USER_GET(var, n) (((void**)var)[n])
 
@@ -44,7 +46,7 @@ sys_callbacks_t sys_callbacks = {};
 
 static const char *get_user_dir(void)
 {
-    static char ret[PATH_MAX] = "";
+    static char ret[PATH_MAX_DIR] = "";
     const char *home;
     if (!*ret) {
         home = getenv("XDG_CONFIG_HOME");
@@ -338,7 +340,7 @@ static bool path_exists(const char *path)
 int sys_iter_paths(int location, int options, const char *name,
                    void *arg, int (*f)(void *arg, const char *path))
 {
-    char base_dir[PATH_MAX];
+    char base_dir[PATH_MAX_DIR];
     char path[PATH_MAX];
     int r;
 
