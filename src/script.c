@@ -800,16 +800,17 @@ static int on_user_script(const char *dir, const char *name, void *user)
     return 0;
 }
 
+static int on_dir(void *arg, const char *path)
+{
+    LOG_I("Loading scripts from %s\n", path);
+    sys_list_dir(path, on_user_script, NULL);
+    return 0;
+}
+
 void script_init(void)
 {
-    char dir[1024];
-
     assets_list("data/scripts/", NULL, on_script);
-    if (sys_get_user_dir()) {
-        snprintf(dir, sizeof(dir), "%s/scripts", sys_get_user_dir());
-        LOG_I("Loading scripts from %s\n", dir);
-        sys_list_dir(dir, on_user_script, NULL);
-    }
+    sys_iter_paths(SYS_LOCATION_CONFIG, SYS_DIR, "scripts", NULL, on_dir);
 }
 
 void script_release(void)

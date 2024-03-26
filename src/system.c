@@ -30,6 +30,9 @@
 #define PATH_MAX 1024
 #endif
 
+#define USER_PASS(...) ((const void*[]){__VA_ARGS__})
+#define USER_GET(var, n) (((void**)var)[n])
+
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
 
@@ -39,7 +42,7 @@ sys_callbacks_t sys_callbacks = {};
 #if defined(__unix__) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
 #include <pwd.h>
 
-static const char *get_user_dir_unix(void *user)
+static const char *get_user_dir(void)
 {
     static char ret[PATH_MAX] = "";
     const char *home;
@@ -56,15 +59,7 @@ static const char *get_user_dir_unix(void *user)
     return ret;
 }
 
-static void init_unix(void) __attribute__((constructor));
-static void init_unix(void)
-{
-    sys_callbacks.get_user_dir = get_user_dir_unix;
-}
-
-#endif
-
-#ifdef WIN32
+#elif defined(WIN32)
 
 // Defined in utils.
 int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
@@ -72,7 +67,7 @@ int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
 // On mingw mkdir takes only one argument!
 #define mkdir(p, m) mkdir(p)
 
-const char *get_user_dir(void *user)
+const char *get_user_dir(void)
 {
     static char ret[MAX_PATH * 3 + 128] = {0};
     wchar_t knownpath_16[MAX_PATH];
@@ -89,10 +84,20 @@ const char *get_user_dir(void *user)
     return ret;
 }
 
-static void init_win(void) __attribute__((constructor));
-static void init_win(void)
+#else
+
+static const char *get_user_dir(void)
 {
-    sys_callbacks.get_user_dir = get_user_dir;
+    static char ret[PATH_MAX] = "";
+    const char *home;
+    if (!*ret) {
+        home = getenv("HOME");
+        if (home)
+            snprintf(ret, sizeof(ret), "%s/.config/goxel", home);
+        else
+            snprintf(ret, sizeof(ret), "./");
+    }
+    return ret;
 }
 
 #endif
@@ -165,20 +170,6 @@ void sys_set_window_title(const char *title)
         sys_callbacks.set_window_title(sys_callbacks.user, title);
 }
 
-static const char *get_user_dir_fallback(void)
-{
-    static char ret[PATH_MAX] = "";
-    const char *home;
-    if (!*ret) {
-        home = getenv("HOME");
-        if (home)
-            snprintf(ret, sizeof(ret), "%s/.config/goxel", home);
-        else
-            snprintf(ret, sizeof(ret), "./");
-    }
-    return ret;
-}
-
 /*
  * Function: sys_get_user_dir
  * Return the user config directory for goxel
@@ -187,9 +178,11 @@ static const char *get_user_dir_fallback(void)
  */
 const char *sys_get_user_dir(void)
 {
-    if (sys_callbacks.get_user_dir)
-        return sys_callbacks.get_user_dir(sys_callbacks.user);
-    return get_user_dir_fallback();
+    static char ret[PATH_MAX] = "";
+    if (!*ret) {
+        sys_get_path(SYS_LOCATION_CONFIG, SYS_DIR, "", ret, sizeof(ret));
+    }
+    return ret;
 }
 
 const char *sys_get_clipboard_text(void* user)
@@ -309,4 +302,48 @@ const char *sys_get_save_path(const char *default_name,
 void sys_on_saved(const char *path)
 {
     LOG_I("Saved %s", path);
+}
+
+static int on_path(void *arg, const char *path)
+{
+    char *buf = USER_GET(arg, 0);
+    size_t size = *(size_t*)USER_GET(arg, 1);
+    snprintf(buf, size, "%s", path);
+    return 1;
+}
+
+int sys_get_path(int location, int options, const char *name,
+                 char *buf, size_t size)
+{
+    sys_iter_paths(location, options, name, USER_PASS(buf, &size), on_path);
+    return 0;
+}
+
+static void path_join(char *buf, size_t size, const char *a, const char *b)
+{
+    bool need_sep;
+    need_sep = (a[strlen(a) - 1] != '/') && (b[0] != '\0');
+    snprintf(buf, size, "%s%s%s", a, need_sep ? "/" : "", b);
+}
+
+int sys_iter_paths(int location, int options, const char *name,
+                   void *arg, int (*f)(void *arg, const char *path))
+{
+    char base_dir[PATH_MAX];
+    char path[PATH_MAX];
+
+    if (sys_callbacks.iter_paths) {
+        return sys_callbacks.iter_paths(
+                sys_callbacks.user, location, options, name, arg, f);
+    }
+
+    // Fallback.
+    if (location == SYS_LOCATION_CONFIG) {
+        snprintf(base_dir, sizeof(base_dir), "%s", get_user_dir());
+        path_join(path, sizeof(path), base_dir, name);
+        f(arg, path);
+        return 0;
+    }
+
+    return -1;
 }

@@ -224,8 +224,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let title = String(cString: title!)
             mySelf.window.title = title
         }
-        sys_callbacks.get_user_dir = { (user) in
+
+        sys_callbacks.iter_paths = { (user, location, options, name, args, f) in
             let mySelf = Unmanaged<AppDelegate>.fromOpaque(user!).takeUnretainedValue()
+
             if mySelf.userDirectory == nil {
                 let paths = NSSearchPathForDirectoriesInDomains(
                     .applicationSupportDirectory, .userDomainMask, true)
@@ -233,7 +235,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     mySelf.userDirectory = (paths[0] + "/Goxel").cString(using: .utf8);
                 }
             }
-            return UnsafePointer(mySelf.userDirectory)
+
+            f?(args, UnsafePointer(mySelf.userDirectory))
+            return 0;
         }
 
         sys_callbacks.open_dialog = {(user, buf, bufSize, flags, title,

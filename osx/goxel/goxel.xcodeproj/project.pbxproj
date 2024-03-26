@@ -109,6 +109,11 @@
 		F0E5DB2824FBB0D600010FDD /* file_format.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E5DB2624FBB0D600010FDD /* file_format.c */; };
 		F0E71BAC1F1DA30D00D20C7C /* theme.c in Sources */ = {isa = PBXBuildFile; fileRef = F0E71BAB1F1DA30D00D20C7C /* theme.c */; };
 		F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */; };
+		F0EDCB6D2BB2728C00D95B51 /* wrap.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EDCB6B2BB2728B00D95B51 /* wrap.c */; };
+		F0EDCB702BB272AC00D95B51 /* filters.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EDCB6F2BB272AC00D95B51 /* filters.c */; };
+		F0EDCB722BB272C200D95B51 /* i18n.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EDCB712BB272C200D95B51 /* i18n.c */; };
+		F0EDCB752BB272EF00D95B51 /* snap_panel.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EDCB732BB272EF00D95B51 /* snap_panel.c */; };
+		F0EDCB762BB272EF00D95B51 /* symmetry_panel.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EDCB742BB272EF00D95B51 /* symmetry_panel.c */; };
 		F0EEB7E41C8EC27C004AB676 /* action.c in Sources */ = {isa = PBXBuildFile; fileRef = F0EEB7E31C8EC27C004AB676 /* action.c */; };
 		F0EEB7E81C8EC4D1004AB676 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F0EEB7E71C8EC4D1004AB676 /* libz.tbd */; };
 		F0F14C6720AF282E0006E575 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F0F14C6620AF282E0006E575 /* imgui.cpp */; };
@@ -250,6 +255,11 @@
 		F0E5DB2724FBB0D600010FDD /* file_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file_format.h; sourceTree = "<group>"; };
 		F0E71BAB1F1DA30D00D20C7C /* theme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = theme.c; sourceTree = "<group>"; };
 		F0EC57FE22CB268B009A42A2 /* fuzzy_select.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fuzzy_select.c; sourceTree = "<group>"; };
+		F0EDCB6B2BB2728B00D95B51 /* wrap.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wrap.c; sourceTree = "<group>"; };
+		F0EDCB6F2BB272AC00D95B51 /* filters.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = filters.c; sourceTree = "<group>"; };
+		F0EDCB712BB272C200D95B51 /* i18n.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = i18n.c; sourceTree = "<group>"; };
+		F0EDCB732BB272EF00D95B51 /* snap_panel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = snap_panel.c; sourceTree = "<group>"; };
+		F0EDCB742BB272EF00D95B51 /* symmetry_panel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = symmetry_panel.c; sourceTree = "<group>"; };
 		F0EEB7E31C8EC27C004AB676 /* action.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = action.c; sourceTree = "<group>"; };
 		F0EEB7E71C8EC4D1004AB676 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		F0F14C6620AF282E0006E575 /* imgui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = imgui.cpp; sourceTree = "<group>"; };
@@ -305,6 +315,8 @@
 		F00FC31E226B2FCF0002F251 /* gui */ = {
 			isa = PBXGroup;
 			children = (
+				F0EDCB732BB272EF00D95B51 /* snap_panel.c */,
+				F0EDCB742BB272EF00D95B51 /* symmetry_panel.c */,
 				F0BC9B352315550500B2A56A /* app.c */,
 				F076EA352284162400B74F0C /* light_panel.c */,
 				F00FC31F226B2FCF0002F251 /* cameras_panel.c */,
@@ -389,6 +401,9 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F0EDCB712BB272C200D95B51 /* i18n.c */,
+				F0EDCB6F2BB272AC00D95B51 /* filters.c */,
+				F0EDCB6A2BB2728B00D95B51 /* filters */,
 				F05D6E7E29D3EA36004CA300 /* quickjs.c */,
 				F05D6E7D29D3EA36004CA300 /* volume_to_vertices.c */,
 				F05D6E7F29D3EA36004CA300 /* volume_utils.c */,
@@ -519,6 +534,14 @@
 			path = xxhash;
 			sourceTree = "<group>";
 		};
+		F0EDCB6A2BB2728B00D95B51 /* filters */ = {
+			isa = PBXGroup;
+			children = (
+				F0EDCB6B2BB2728B00D95B51 /* wrap.c */,
+			);
+			path = filters;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -595,9 +618,11 @@
 			files = (
 				F025C7DB1F33239000C52709 /* png_slices.c in Sources */,
 				F037D5D31EA6069A00C96D10 /* plane.c in Sources */,
+				F0EDCB702BB272AC00D95B51 /* filters.c in Sources */,
 				F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */,
 				F05D6E8329D3EA36004CA300 /* volume_utils.c in Sources */,
 				F037D5CF1EA6069A00C96D10 /* brush.c in Sources */,
+				F0EDCB6D2BB2728C00D95B51 /* wrap.c in Sources */,
 				F09A62822B3BB8E7006A4464 /* indexgenerator.cpp in Sources */,
 				F00FC32E226B2FCF0002F251 /* material_panel.c in Sources */,
 				F00FC339226B2FCF0002F251 /* export_panel.c in Sources */,
@@ -625,6 +650,7 @@
 				F09A62832B3BB8E7006A4464 /* vfetchanalyzer.cpp in Sources */,
 				F09A627E2B3BB8E7006A4464 /* indexcodec.cpp in Sources */,
 				F09A62772B3BB8E6006A4464 /* vertexfilter.cpp in Sources */,
+				F0EDCB762BB272EF00D95B51 /* symmetry_panel.c in Sources */,
 				F037D5D11EA6069A00C96D10 /* laser.c in Sources */,
 				F00FC318226B2F7C0002F251 /* vec.c in Sources */,
 				F09A627F2B3BB8E7006A4464 /* vfetchoptimizer.cpp in Sources */,
@@ -668,10 +694,12 @@
 				F00FC31A226B2F7C0002F251 /* cache.c in Sources */,
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
 				F0ACA2A12271ACD400376C82 /* gltf.c in Sources */,
+				F0EDCB752BB272EF00D95B51 /* snap_panel.c in Sources */,
 				F05D6E8229D3EA36004CA300 /* quickjs.c in Sources */,
 				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,
 				F0EC57FF22CB268C009A42A2 /* fuzzy_select.c in Sources */,
 				F097B3F31F0C97DB00A3622B /* gesture.c in Sources */,
+				F0EDCB722BB272C200D95B51 /* i18n.c in Sources */,
 				F0DC02A122EEE267007E2F17 /* line.c in Sources */,
 				F00FC337226B2FCF0002F251 /* view_panel.c in Sources */,
 				F07DEA0B1BD0F31500BAA1AD /* palette.c in Sources */,

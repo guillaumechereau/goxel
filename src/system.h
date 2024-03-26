@@ -37,12 +37,13 @@ typedef struct {
     void *user;
     void (*log)(void *user, const char *msg);
     void (*set_window_title)(void *user, const char *title);
-    const char *(*get_user_dir)(void *user);
     const char *(*get_clipboard_text)(void* user);
     void (*set_clipboard_text)(void *user, const char *text);
     void (*show_keyboard)(void *user, bool has_text);
     void (*save_to_photos)(void *user, const uint8_t *data, int size,
                            void (*on_finished)(int r));
+    int (*iter_paths)(void *user, int location, int options, const char *name,
+                      void *arg, int (*f)(void *arg, const char *path));
 
     bool (*open_dialog)(void *user, char *buf, size_t buf_size,
                         int flags, // 1: save, 2: folder.
@@ -89,8 +90,46 @@ int sys_delete_file(const char *path);
  * Return the user config directory for goxel
  *
  * On linux, this should be $HOME/.config/goxel.
+ * Note: deprecated, we should use sys_get_path instead.
  */
 const char *sys_get_user_dir(void);
+
+/**
+ * Enum that defines the possible location for sys_get_path and sys_iter_paths.
+ *
+ * SYS_LOCATION_CONFIG  - $HOME/.config/goxel, /etc/goxel
+ */
+enum {
+    SYS_LOCATION_CONFIG     = 1,
+};
+
+/**
+ * Enum for options to sys_get_path and sys_iter_paths
+ */
+enum {
+    SYS_DIR         = 1 << 0,
+    SYS_FILE        = 1 << 1,
+};
+
+/**
+ * sys_get_path
+ * Find a file or directory.
+ *
+ * location - one of the SYS_LOCATION_ enum value.
+ * options  - union of SYS_DIR or SYS_FILE.
+ * name     - name of the file or directory we want.
+ */
+int sys_get_path(int location, int options, const char *name,
+                 char *buf, size_t size);
+
+/**
+ * Iter all paths matching a pattern.
+ * Useful for example to get both $HOME/.config/goxel/scripts and
+ * /etc/goxel/scripts
+ */
+int sys_iter_paths(int location, int options, const char *name,
+                   void *arg, int (*f)(void *arg, const char *path));
+
 
 /*
  * Function: sys_make_dir
