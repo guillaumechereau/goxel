@@ -81,13 +81,17 @@ static void on_filter(void *user, const filter_t *filter)
     }
 }
 
+static const char *path_get_file(const char *path)
+{
+    if (strrchr(path, '/')) return strrchr(path, '/') + 1;
+    return path;
+}
+
 void gui_menu(void)
 {
     camera_t *cam;
     int i;
-    char overwrite_export_label[64];
-    char* last_slash;
-    char* overwrite_export_base_name;
+    char overwrite_export_label[1024];
 
     if (gui_menu_begin(_(FILE), true)) {
         gui_menu_item(ACTION_reset, _(NEW), true);
@@ -110,27 +114,11 @@ void gui_menu(void)
             gui_menu_end();
         }
         if (goxel.image->export_path != NULL) {
-            last_slash = strrchr(goxel.image->export_path, '/');
-            if (!last_slash)
-                last_slash = strrchr(goxel.image->export_path, '\\');
-
-            if (last_slash)
-                overwrite_export_base_name = last_slash + 1;
-            else
-                overwrite_export_base_name = goxel.image->export_path;
-
-            snprintf(
-                overwrite_export_label,
-                sizeof(overwrite_export_label),
-                _(OVERWRITE_EXPORT),
-                overwrite_export_base_name
-            );
-
-            gui_menu_item(
-                ACTION_overwrite_export,
-                overwrite_export_label,
-                true
-            );
+            snprintf(overwrite_export_label, sizeof(overwrite_export_label),
+                     _(OVERWRITE_EXPORT),
+                     path_get_file(goxel.image->export_path));
+            gui_menu_item(ACTION_overwrite_export, overwrite_export_label,
+                          true);
         }
         if (gui_menu_begin(_(EXPORT), true)) {
             file_format_iter("w", NULL, export_menu_callback);
