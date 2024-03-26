@@ -38,6 +38,7 @@ typedef struct {
     void (*log)(void *user, const char *msg);
     void (*set_window_title)(void *user, const char *title);
     const char *(*get_user_dir)(void *user);
+    const char *(*get_global_dir)(void *user);
     const char *(*get_clipboard_text)(void* user);
     void (*set_clipboard_text)(void *user, const char *text);
     void (*show_keyboard)(void *user, bool has_text);
@@ -91,6 +92,14 @@ int sys_delete_file(const char *path);
  * On linux, this should be $HOME/.config/goxel.
  */
 const char *sys_get_user_dir(void);
+
+/*
+ * Function: sys_get_global_dir
+ * Return the global config directory for goxel
+ *
+ * On linux, this should be /etc/goxel.
+ */
+const char *sys_get_global_dir(void);
 
 /*
  * Function: sys_make_dir

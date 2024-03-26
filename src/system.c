@@ -56,10 +56,16 @@ static const char *get_user_dir_unix(void *user)
     return ret;
 }
 
+static const char *get_global_dir_unix(void *user)
+{
+    return "/etc/goxel";
+}
+
 static void init_unix(void) __attribute__((constructor));
 static void init_unix(void)
 {
     sys_callbacks.get_user_dir = get_user_dir_unix;
+    sys_callbacks.get_global_dir = get_global_dir_unix;
 }
 
 #endif
@@ -190,6 +196,19 @@ const char *sys_get_user_dir(void)
     if (sys_callbacks.get_user_dir)
         return sys_callbacks.get_user_dir(sys_callbacks.user);
     return get_user_dir_fallback();
+}
+
+/*
+ * Function: sys_get_global_dir
+ * Return the global config directory for goxel
+ *
+ * On linux, this should be $HOME/.config/goxel.
+ */
+const char *sys_get_global_dir(void)
+{
+    if (sys_callbacks.get_global_dir)
+        return sys_callbacks.get_global_dir(sys_callbacks.user);
+    return NULL;
 }
 
 const char *sys_get_clipboard_text(void* user)
