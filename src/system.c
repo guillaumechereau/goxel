@@ -304,10 +304,11 @@ void sys_on_saved(const char *path)
     LOG_I("Saved %s", path);
 }
 
-static int on_path(void *arg, const char *path)
+static int sys_get_path_(void *arg, const char *path)
 {
     char *buf = USER_GET(arg, 0);
     size_t size = *(size_t*)USER_GET(arg, 1);
+    assert(buf[0] == '\0');
     snprintf(buf, size, "%s", path);
     return 1;
 }
@@ -315,7 +316,9 @@ static int on_path(void *arg, const char *path)
 int sys_get_path(int location, int options, const char *name,
                  char *buf, size_t size)
 {
-    sys_iter_paths(location, options, name, USER_PASS(buf, &size), on_path);
+    buf[0] = '\0';
+    sys_iter_paths(location, options, name, USER_PASS(buf, &size),
+                   sys_get_path_);
     return 0;
 }
 
@@ -326,11 +329,18 @@ static void path_join(char *buf, size_t size, const char *a, const char *b)
     snprintf(buf, size, "%s%s%s", a, need_sep ? "/" : "", b);
 }
 
+static bool path_exists(const char *path)
+{
+    struct stat path_stat;
+    return stat(path, &path_stat) == 0;
+}
+
 int sys_iter_paths(int location, int options, const char *name,
                    void *arg, int (*f)(void *arg, const char *path))
 {
     char base_dir[PATH_MAX];
     char path[PATH_MAX];
+    int r;
 
     if (sys_callbacks.iter_paths) {
         return sys_callbacks.iter_paths(
@@ -341,7 +351,16 @@ int sys_iter_paths(int location, int options, const char *name,
     if (location == SYS_LOCATION_CONFIG) {
         snprintf(base_dir, sizeof(base_dir), "%s", get_user_dir());
         path_join(path, sizeof(path), base_dir, name);
-        f(arg, path);
+        r = f(arg, path);
+        if (r != 0) return r < 0 ? r : 0;
+
+        // Also consider /etc/goxel.
+        if (path_exists("/etc/goxel")) {
+            path_join(path, sizeof(path), "/etc/goxel", name);
+            r = f(arg, path);
+            if (r != 0) return r < 0 ? r : 0;
+        }
+
         return 0;
     }
 
