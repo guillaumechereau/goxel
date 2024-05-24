@@ -31,6 +31,7 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 #ifdef WIN32
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
 #endif
 #endif
 
