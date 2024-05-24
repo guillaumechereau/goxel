@@ -147,7 +147,7 @@ static int gui(tool_t *tool)
     y = (int)round(layer->mat[3][1]);
     z = (int)round(layer->mat[3][2]);
 
-    gui_group_begin("Position");
+    gui_group_begin(_(POSITION));
     if (gui_input_int("X", &x, 0, 0))
         mat[3][0] = x - (int)round(layer->mat[3][0]);
     if (gui_input_int("Y", &y, 0, 0))
@@ -156,7 +156,7 @@ static int gui(tool_t *tool)
         mat[3][2] = z - (int)round(layer->mat[3][2]);
     gui_group_end();
 
-    gui_group_begin("Rotation");
+    gui_group_begin(_(ROTATION));
 
     gui_row_begin(2);
     if (gui_button("-X", 0, 0))
@@ -181,12 +181,12 @@ static int gui(tool_t *tool)
 
     gui_group_end();
 
-    if (layer->image && gui_input_int("Scale", &i, 0, 0)) {
+    if (layer->image && gui_input_int(_(SCALE), &i, 0, 0)) {
         v = pow(2, i);
         mat4_iscale(mat, v, v, v);
     }
 
-    gui_group_begin("Flip");
+    gui_group_begin(_(FLIP));
     gui_row_begin(3);
     if (gui_button("X", -1, 0)) mat4_iscale(mat, -1,  1,  1);
     if (gui_button("Y", -1, 0)) mat4_iscale(mat,  1, -1,  1);
@@ -194,7 +194,7 @@ static int gui(tool_t *tool)
     gui_row_end();
     gui_group_end();
 
-    gui_group_begin("Scale");
+    gui_group_begin(_(SCALE));
     gui_row_begin(3);
     if (gui_button("x2", -1, 0)) mat4_iscale(mat, 2, 2, 2);
     if (gui_button("x0.5", -1, 0)) mat4_iscale(mat, 0.5, 0.5, 0.5);
@@ -202,7 +202,7 @@ static int gui(tool_t *tool)
     gui_group_end();
 
     if (layer_is_volume(layer)) {
-        if (gui_section_begin("Origin", GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_section_begin(_(ORIGIN), GUI_SECTION_COLLAPSABLE_CLOSED)) {
             vec3_copy(layer->mat[3], origin);
             if (gui_input_float("X", &origin[0], 0.5, 0, 0, "%.1f")) {
                 mat[3][0] = origin[0] - layer->mat[3][0];
@@ -216,7 +216,7 @@ static int gui(tool_t *tool)
                 mat[3][2] = origin[2] - layer->mat[3][2];
                 only_origin = true;
             }
-            if (gui_button("Center", -1, 0)) {
+            if (gui_button(_(RECENTER), -1, 0)) {
                 center_origin(layer);
             }
         } gui_section_end();
