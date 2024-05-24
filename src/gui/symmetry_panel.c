@@ -18,6 +18,34 @@
 
 #include "goxel.h"
 
+static void recenter(int mode)
+{
+    int bbox[2][3];
+    int i;
+    float v;
+
+    if (mode == 2 && box_is_null(goxel.image->box)) mode = 1;
+    if (mode == 1 && box_is_null(goxel.image->active_layer->box)) mode = 0;
+
+    switch (mode) {
+    case 0: // Volume.
+        volume_get_bbox(goxel.image->active_layer->volume, bbox, true);
+        break;
+    case 1: // Layer.
+        bbox_to_aabb(goxel.image->active_layer->box, bbox);
+        break;
+    case 2: // Image.
+        bbox_to_aabb(goxel.image->box, bbox);
+        break;
+    }
+
+    for (i = 0; i < 3; i++) {
+        if (!(goxel.painter.symmetry & (1 << i))) continue;
+        v = round(bbox[0][i] + bbox[1][i] - 1) / 2.0;
+        goxel.painter.symmetry_origin[i] = v;
+    }
+}
+
 void gui_symmetry_panel(void)
 {
     int i;
@@ -37,4 +65,10 @@ void gui_symmetry_panel(void)
         gui_input_float(labels_l[i], &goxel.painter.symmetry_origin[i],
                          0.5, -FLT_MAX, +FLT_MAX, "%.1f");
     }
+
+    if (gui_section_begin(_(RECENTER), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_button(_(VOLUME), -1, 0)) recenter(0);
+        if (gui_button(_(LAYER), -1, 0)) recenter(1);
+        if (gui_button(_(IMAGE), -1, 0)) recenter(2);
+    } gui_section_end();
 }

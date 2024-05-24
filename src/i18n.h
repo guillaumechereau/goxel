@@ -101,6 +101,7 @@ enum {
     STR_INTENSITY,
     STR_LANGUAGE,
     STR_LASER,
+    STR_LAYER,
     STR_LAYERS,
     STR_LEFT,
     STR_LIGHT,

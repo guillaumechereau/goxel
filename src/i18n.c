@@ -355,6 +355,10 @@ static const string_t STRINGS[] = {
         .en = "Laser",
         .fr = "Laser",
     },
+    [STR_LAYER] = {
+        .en = "Layer",
+        .fr = "Calque",
+    },
     [STR_LAYERS] = {
         .en = "Layers",
         .fr = "Calques",
