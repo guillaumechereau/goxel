@@ -85,11 +85,15 @@ jobs:
       run: |
         make release
 
+    - name: Compress artifact
+      run: |
+        zip goxel.zip goxel
+
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: osx_binary
-        path: ./goxel
+        path: ./goxel.zip
         if-no-files-found: error
 
   Success: # Not Neccessary
