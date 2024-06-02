@@ -12,7 +12,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -27,7 +27,7 @@ jobs:
           make release
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: win_x86_64_binary
           path: goxel.exe
@@ -36,7 +36,7 @@ jobs:
   linux_x86_64:
     runs-on: ubuntu-20.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -58,14 +58,14 @@ jobs:
         make appimage
 
     - name: Upload Binary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux_x86_64_binary
         path: goxel
         if-no-files-found: error
 
     - name: Upload AppImage
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: appimage
         path: Goxel*.AppImage
@@ -74,7 +74,7 @@ jobs:
   osx_x86_64:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -86,7 +86,7 @@ jobs:
         make release
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: osx_binary
         path: ./goxel
@@ -96,6 +96,6 @@ jobs:
     needs: [linux_x86_64, osx_x86_64, windows_x86_64]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
