@@ -72,7 +72,7 @@ jobs:
         if-no-files-found: error
 
   osx_x86_64:
-    runs-on: macos-11
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
       with:
