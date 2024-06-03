@@ -96,6 +96,18 @@ jobs:
         path: ./goxel.zip
         if-no-files-found: error
 
+    - name: Build with xcode
+      run: |
+        cd oxs/goxel
+        xcodebuild build
+
+    - name: Upload app Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: goxel-mac.app
+        path: ./osx/goxel/build/Release/goxel.app
+        if-no-files-found: error
+
   Success: # Not Neccessary
     needs: [linux_x86_64, osx_x86_64, windows_x86_64]
     runs-on: ubuntu-latest
