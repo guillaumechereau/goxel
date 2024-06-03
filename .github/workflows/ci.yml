@@ -99,7 +99,7 @@ jobs:
     - name: Build with xcode
       run: |
         cd osx/goxel
-        xcodebuild build
+        xcodebuild build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
 
     - name: Upload app Artifacts
       uses: actions/upload-artifact@v4
