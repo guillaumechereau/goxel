@@ -101,7 +101,7 @@ jobs:
         cd osx/goxel
         xcodebuild build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
         mkdir out
-        cp -rf Release/goxel.app out/
+        cp -rf build/Release/goxel.app out/
 
     - name: Upload app Artifacts
       uses: actions/upload-artifact@v4
