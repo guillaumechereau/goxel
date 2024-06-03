@@ -98,7 +98,7 @@ jobs:
 
     - name: Build with xcode
       run: |
-        cd oxs/goxel
+        cd osx/goxel
         xcodebuild build
 
     - name: Upload app Artifacts
