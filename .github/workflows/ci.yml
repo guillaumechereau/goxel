@@ -100,12 +100,14 @@ jobs:
       run: |
         cd osx/goxel
         xcodebuild build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+        mkdir out
+        cp -rf Release/goxel.app out/
 
     - name: Upload app Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: goxel-mac.app
-        path: ./osx/goxel/build/Release/goxel.app
+        path: ./osx/goxel/out
         if-no-files-found: error
 
   Success: # Not Neccessary
