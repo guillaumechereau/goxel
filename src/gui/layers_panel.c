@@ -48,6 +48,39 @@ static const char *get_mode_name(int mode)
     }
 }
 
+static void layers_context_menu(void)
+{
+    layer_t *layer;
+    bool bounded;
+    char buf[256];
+
+    gui_action_button(ACTION_img_duplicate_layer, _(DUPLICATE), 1);
+    gui_action_button(ACTION_img_clone_layer, _(CLONE), 1);
+    gui_action_button(ACTION_img_merge_layer_down, _(MERGE_DOWN), 1);
+    gui_action_button(ACTION_img_merge_visible_layers, _(MERGE_VISIBLE), 1);
+
+    layer = goxel.image->active_layer;
+    bounded = !box_is_null(layer->box);
+
+    if (bounded && gui_button(_(CROP), 1, 0)) {
+        volume_crop(layer->volume, layer->box);
+    }
+    if (!box_is_null(goxel.image->box)) {
+        snprintf(buf, sizeof(buf), "%s: %s", _(CROP), _(IMAGE));
+        if (gui_button(buf, 1, 0))
+            volume_crop(layer->volume, goxel.image->box);
+    }
+    if (layer->shape) {
+        snprintf(buf, sizeof(buf), "▶ %s", _(VOLUME));
+        gui_action_button(ACTION_img_unclone_layer, buf, 1);
+    }
+
+    snprintf(buf, sizeof(buf), "%s: %s", _(ADD), _(SHAPE));
+    if (gui_action_button(ACTION_img_new_shape_layer, buf, 1)) {
+        action_exec2(ACTION_tool_set_move);
+    }
+}
+
 void gui_layers_panel(void)
 {
     layer_t *layer;
@@ -87,35 +120,17 @@ void gui_layers_panel(void)
     gui_action_button(ACTION_img_del_layer, NULL, 0);
     gui_action_button(ACTION_img_move_layer_up, NULL, 0);
     gui_action_button(ACTION_img_move_layer_down, NULL, 0);
-    gui_row_end();
 
-    gui_group_begin(NULL);
-    gui_action_button(ACTION_img_duplicate_layer, _(DUPLICATE), 1);
-    gui_action_button(ACTION_img_clone_layer, _(CLONE), 1);
-    gui_action_button(ACTION_img_merge_layer_down, _(MERGE_DOWN), 1);
-    gui_action_button(ACTION_img_merge_visible_layers, _(MERGE_VISIBLE), 1);
+    if (gui_context_menu_begin("##Actions")) {
+        layers_context_menu();
+        gui_context_menu_end();
+    }
+    gui_context_menu_button("##Actions", ICON_THREE_DOTS);
+
+    gui_row_end();
 
     layer = goxel.image->active_layer;
     bounded = !box_is_null(layer->box);
-    if (bounded && gui_button(_(CROP), 1, 0)) {
-        volume_crop(layer->volume, layer->box);
-    }
-    if (!box_is_null(goxel.image->box)) {
-        snprintf(buf, sizeof(buf), "%s: %s", _(CROP), _(IMAGE));
-        if (gui_button(buf, 1, 0))
-            volume_crop(layer->volume, goxel.image->box);
-    }
-    if (layer->shape) {
-        snprintf(buf, sizeof(buf), "▶ %s", _(VOLUME));
-        gui_action_button(ACTION_img_unclone_layer, buf, 1);
-    }
-
-    snprintf(buf, sizeof(buf), "%s: %s", _(ADD), _(SHAPE));
-    if (gui_action_button(ACTION_img_new_shape_layer, buf, 1)) {
-        action_exec2(ACTION_tool_set_move);
-    }
-
-    gui_group_end();
 
     if (layer->base_id) {
         gui_group_begin(NULL);

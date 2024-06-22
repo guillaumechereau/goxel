@@ -169,6 +169,9 @@ typedef struct gui_t {
     int     is_row;
     float   item_size;
 
+    bool    is_context_menu;
+    int     context_menu_row;
+
     int     win_dir; // Store the current window direction (for scrolling).
 
     struct {
@@ -1324,7 +1327,12 @@ bool gui_button(const char *label, float size, int icon)
                             center + ImVec2(isize, isize),
                             uv0, uv1, get_icon_color(icon, 0));
     }
-    if (ret) on_click();
+    if (ret) {
+        on_click();
+        if (gui->is_context_menu)  {
+            ImGui::CloseCurrentPopup();
+        }
+    }
     if (gui->is_row) ImGui::SameLine();
     return ret;
 }
@@ -1856,4 +1864,29 @@ bool gui_want_capture_mouse(void)
     gui_init();
     ImGuiIO& io = ImGui::GetIO();
     return io.WantCaptureMouse;
+}
+
+bool gui_context_menu_begin(const char *label)
+{
+    if (!ImGui::BeginPopupContextItem(label)) return false;
+    gui->is_context_menu = true;
+    gui->context_menu_row = gui->is_row;
+    gui->is_row = 0;
+    gui_group_begin(NULL);
+    return true;
+}
+
+void gui_context_menu_end(void)
+{
+    gui_group_end();
+    ImGui::EndPopup();
+    gui->is_context_menu = false;
+    gui->is_row = gui->context_menu_row;
+}
+
+void gui_context_menu_button(const char *label, int icon)
+{
+    if (gui_button(label, 0, icon)) {
+        ImGui::OpenPopup(label);
+    }
 }

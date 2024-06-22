@@ -185,4 +185,11 @@ void gui_tooltip(const char *str);
 
 bool gui_view_cube(float x, float y, float w, float h);
 
+/*
+ * Support for context menu popup (like the one on layers).
+ */
+bool gui_context_menu_begin(const char *label);
+void gui_context_menu_end(void);
+void gui_context_menu_button(const char *label, int icon);
+
 #endif // GUI_H
