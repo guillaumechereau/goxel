@@ -18,6 +18,15 @@
 
 #include "goxel.h"
 
+static const uint8_t FACES_COLOR[6][3] = {
+    {0, 255, 0},
+    {0, 255, 0},
+    {0, 0, 255},
+    {0, 0, 255},
+    {255, 0, 0},
+    {255, 0, 0},
+};
+
 typedef struct data
 {
     int snap;
@@ -57,13 +66,15 @@ static void get_transf(const float src[4][4], const float dst[4][4],
 
 static void render_gizmo(const float plane[4][4], int face)
 {
-    uint8_t color[4] = {255, 0, 0, 16};
+    uint8_t color[4] = {0, 0, 0, 16};
     float a[3], b[3], dir[3];
+
+    memcpy(color, FACES_COLOR[face], 3);
     render_rect_fill(&goxel.rend, plane, color);
     vec3_normalize(plane[2], dir);
     vec3_copy(plane[3], a);
     vec3_addk(a, dir, 3, b);
-    color[3] = 255;
+    color[3] = 100;
     render_line(&goxel.rend, a, b, color, EFFECT_ARROW | EFFECT_NO_DEPTH_TEST);
 }
 
