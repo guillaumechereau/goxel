@@ -36,5 +36,4 @@ void rgb_to_srgb8(const float rgb[3], uint8_t srgb[3]);
  */
 void srgba8_to_rgba(const uint8_t srgba[4], float rgba[4]);
 
-
 #endif // COLOR_H

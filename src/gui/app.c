@@ -185,6 +185,9 @@ void gui_app(void)
         gui_window_begin(filter->name, 100, 100, goxel.gui.panel_width, 0,
                          GUI_WINDOW_MOVABLE);
         if (gui_panel_header(filter->name)) {
+            if (goxel.gui.current_filter->on_close) {
+                goxel.gui.current_filter->on_close(goxel.gui.current_filter);
+            }
             goxel.gui.current_filter = NULL;
         }
         filter->gui_fn(filter);

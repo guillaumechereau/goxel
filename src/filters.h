@@ -23,6 +23,8 @@ typedef struct filter filter_t;
 
 struct filter {
     int (*gui_fn)(filter_t *filter);
+    void (*on_open)(filter_t *filter);
+    void (*on_close)(filter_t *filter);
     const char *name;
     const char *action_id;
     const char *default_shortcut;

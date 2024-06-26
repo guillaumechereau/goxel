@@ -27,6 +27,9 @@ static void a_filter_open(void *data)
     filter_t *filter = data;
     LOG_D("Open filter %s", filter->name);
     goxel.gui.current_filter = (filter_t*)data;
+    if (filter->on_open) {
+        filter->on_open(filter);
+    }
 }
 
 void filter_register_(filter_t *filter)
