@@ -1868,12 +1868,21 @@ bool gui_want_capture_mouse(void)
 
 bool gui_context_menu_begin(const char *label)
 {
-    if (!ImGui::BeginPopupContextItem(label)) return false;
-    gui->is_context_menu = true;
-    gui->context_menu_row = gui->is_row;
-    gui->is_row = 0;
-    gui_group_begin(NULL);
-    return true;
+    bool ret;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10, 10));
+    ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(WINDOW, BACKGROUND, false));
+    ImGui::PushStyleColor(ImGuiCol_TitleBgActive, COLOR(WINDOW, INNER, false));
+
+    ret = ImGui::BeginPopupContextItem(label);
+    if (ret) {
+        gui->is_context_menu = true;
+        gui->context_menu_row = gui->is_row;
+        gui->is_row = 0;
+        gui_group_begin(NULL);
+    }
+    ImGui::PopStyleColor(2);
+    ImGui::PopStyleVar();
+    return ret;
 }
 
 void gui_context_menu_end(void)
