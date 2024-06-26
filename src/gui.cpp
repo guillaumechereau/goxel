@@ -1433,10 +1433,12 @@ void gui_enabled_begin(bool enabled)
     ImVec4 color = style.Colors[ImGuiCol_Text];
     if (!enabled) color.w /= 2;
     ImGui::PushStyleColor(ImGuiCol_Text, color);
+    ImGui::BeginDisabled(!enabled);
 }
 
 void gui_enabled_end(void)
 {
+    ImGui::EndDisabled();
     ImGui::PopStyleColor();
 }
 
