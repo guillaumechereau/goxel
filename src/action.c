@@ -32,7 +32,13 @@ void action_register(const action_t *action, int idx)
         memset(g_actions, 0, ACTION_COUNT * sizeof(action_t));
     }
 
-    a = &g_actions[idx];
+    if (idx) {
+        a = &g_actions[idx];
+    } else {
+        arraddnindex(g_actions, 1);
+        a = &g_actions[arrlen(g_actions) - 1];
+    }
+
     *a = *action;
     a->idx = idx;
     assert(!a->shortcut[0]);
