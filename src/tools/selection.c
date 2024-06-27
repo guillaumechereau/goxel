@@ -125,11 +125,13 @@ static int iter(tool_t *tool, const painter_t *painter,
     if (goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
         .callback = on_hover,
-    }, curs, selection)) goto end;
+        .user = selection,
+    })) goto end;
     if (goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .callback = on_drag,
-    }, curs, selection)) goto end;
+        .user = selection,
+    })) goto end;
 
 end:
     return tool->state;

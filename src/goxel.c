@@ -478,8 +478,7 @@ static void update_window_title(void)
     sys_set_window_title(buf);
 }
 
-bool goxel_gesture3d(const gesture3d_t *gesture, cursor_t *curs,
-                     void *user)
+bool goxel_gesture3d(const gesture3d_t *gesture)
 {
     int i;
     typeof(goxel.gesture3ds[0]) *slot = NULL;
@@ -500,7 +499,7 @@ bool goxel_gesture3d(const gesture3d_t *gesture, cursor_t *curs,
     }
 
     slot->alive = true;
-    return gesture3d(&slot->gesture, curs, user);
+    return gesture3d(&slot->gesture, &goxel.cursor, gesture->user);
 }
 
 // Cleanup the unused 3d gestures.

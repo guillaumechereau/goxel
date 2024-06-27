@@ -675,8 +675,7 @@ void goxel_apply_color_filter(
  * Used by the tools to react to 3d gesture.
  * Should be called once per frame for each gesture we are listening to.
  */
-bool goxel_gesture3d(const gesture3d_t *gesture, cursor_t *curs,
-                     void *user);
+bool goxel_gesture3d(const gesture3d_t *gesture);
 
 // Section: tests
 

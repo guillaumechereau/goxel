@@ -153,11 +153,13 @@ static int iter(tool_t *tool_, const painter_t *painter,
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .callback = on_drag,
-    }, curs, USER_PASS(tool, painter));
+        .user = USER_PASS(tool, painter),
+    });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
         .callback = on_hover,
-    }, curs, USER_PASS(tool, painter));
+        .user = USER_PASS(tool, painter),
+    });
 
     return 0;
 }

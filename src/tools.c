@@ -83,7 +83,7 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
             .type = GESTURE_HOVER,
             .callback = pick_color_gesture,
             .buttons = CURSOR_CTRL,
-        }, &goxel.cursor, NULL);
+        });
     }
 
     return tool->state;

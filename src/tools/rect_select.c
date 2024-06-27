@@ -87,7 +87,8 @@ static int iter(tool_t *tool_, const painter_t *painter,
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .callback = on_drag,
-    }, curs, tool);
+        .user = tool,
+    });
 
     if (    tool->rect[0] == 0 && tool->rect[1] == 0 &&
             tool->rect[2] == 0 && tool->rect[3] == 0) {

@@ -189,11 +189,13 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
         .callback = on_hover,
-    }, curs, &g_data);
+        .user = &g_data,
+    });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .callback = on_drag,
-    }, curs, &g_data);
+        .user = &g_data,
+    });
 
     ret = g_data.state;
 

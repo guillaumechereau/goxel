@@ -73,7 +73,8 @@ static int iter(tool_t *tool, const painter_t *painter,
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .callback = on_drag,
-    }, curs, USER_PASS(laser, painter));
+        .user = USER_PASS(laser, painter),
+    });
 
     return tool->state;
 }

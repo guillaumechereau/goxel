@@ -49,6 +49,7 @@ struct gesture3d
     int         buttons; // CURSOR_SHIFT | CURSOR_CTRL
     cursor_t    *cursor;
     int         (*callback)(gesture3d_t *gest, void *user);
+    void        *user;
 };
 
 int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user);
