@@ -515,14 +515,16 @@ int goxel_iter(const inputs_t *inputs)
 
     // Test: update the viewport before the UI.
     // Note: the inputs Y coordinates are inverted!
-    if (!gui_want_capture_mouse()) {
-        inputs2 = *inputs;
-        for (i = 0; i < (int)ARRAY_SIZE(inputs2.touches); i++) {
-            inputs2.touches[i].pos[1] =
-                inputs->window_size[1] - inputs->touches[i].pos[1];
+    inputs2 = *inputs;
+    for (i = 0; i < (int)ARRAY_SIZE(inputs2.touches); i++) {
+        inputs2.touches[i].pos[1] =
+            inputs->window_size[1] - inputs->touches[i].pos[1];
+        if (gui_want_capture_mouse()) {
+            inputs2.touches[i].pos[0] = NAN;
+            inputs2.touches[i].pos[1] = NAN;
         }
-        goxel_mouse_in_view(goxel.gui.viewport, &inputs2, true);
     }
+    goxel_mouse_in_view(goxel.gui.viewport, &inputs2, true);
 
     if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
         volume_key = volume_get_key(goxel_get_render_volume(goxel.image));
@@ -706,6 +708,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 {
     float p[3], n[3];
     camera_t *camera = get_camera();
+
 
     painter_t painter = goxel.painter;
     gesture_update(goxel.gestures_count, goxel.gestures,
