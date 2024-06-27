@@ -688,27 +688,6 @@ static void render_volume_(renderer_t *rend, volume_t *volume,
     GL(glDisable(GL_BLEND));
 }
 
-// XXX: this is quite ugly.  We could maybe use a callback of some sort
-// in the renderer instead.
-void render_get_tile_pos(renderer_t *rend, const volume_t *volume,
-                          int id, int pos[3])
-{
-    // Basically we simulate the algo of render_volume_ but without rendering
-    // anything.
-    int tile_id, tile_pos[3];
-    volume_iterator_t iter;
-    tile_id = 1;
-    iter = volume_get_iterator(volume,
-            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
-    while (volume_iter(&iter, tile_pos)) {
-        if (tile_id == id) {
-            memcpy(pos, tile_pos, sizeof(tile_pos));
-            return;
-        }
-        tile_id++;
-    }
-}
-
 void render_volume(renderer_t *rend, const volume_t *volume,
                  const material_t *material, int effects)
 {

@@ -152,12 +152,14 @@ static bool goxel_unproject_on_box(
     return false;
 }
 
-static bool goxel_unproject_on_volume(
-        const float view[4], const float pos[2], const volume_t *volume,
-        float out[3], float normal[3])
+static void update_pick_fbo(const int view_size[2], const volume_t *volume)
 {
-    int view_size[2] = {view[2], view[3]};
-    // XXX: No need to render the fbo if it is not dirty.
+    // TODO: use a cache to avoid calling this twice in the same frame.
+
+    renderer_t rend = {.settings = goxel.rend.settings};
+    uint8_t clear_color[4] = {0, 0, 0, 0};
+    float rect[4] = {0, 0, view_size[0], view_size[1]};
+
     if (goxel.pick_fbo && (goxel.pick_fbo->w != view_size[0] ||
                            goxel.pick_fbo->h != view_size[1])) {
         texture_delete(goxel.pick_fbo);
@@ -169,22 +171,44 @@ static bool goxel_unproject_on_volume(
                 view_size[0], view_size[1], TF_DEPTH);
     }
 
-    renderer_t rend = {.settings = goxel.rend.settings};
     mat4_copy(goxel.rend.view_mat, rend.view_mat);
     mat4_copy(goxel.rend.proj_mat, rend.proj_mat);
-
-    uint32_t pixel;
-    int voxel_pos[3];
-    int face, tile_id, tile_pos[3];
-    int x, y;
-    float rect[4] = {0, 0, view_size[0], view_size[1]};
-    uint8_t clear_color[4] = {0, 0, 0, 0};
 
     rend.settings.shadow = 0;
     rend.fbo = goxel.pick_fbo->framebuffer;
     rend.scale = 1;
     render_volume(&rend, volume, NULL, EFFECT_RENDER_POS);
     render_submit(&rend, rect, clear_color);
+}
+
+static void volume_get_tile_pos(const volume_t *volume, int id, int pos[3])
+{
+    int tile_id, tile_pos[3];
+    volume_iterator_t iter;
+    tile_id = 1;
+    iter = volume_get_iterator(volume,
+            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+    while (volume_iter(&iter, tile_pos)) {
+        if (tile_id == id) {
+            memcpy(pos, tile_pos, sizeof(tile_pos));
+            return;
+        }
+        tile_id++;
+    }
+}
+
+static bool goxel_unproject_on_volume(
+        const float view[4], const float pos[2], const volume_t *volume,
+        float out[3], float normal[3])
+{
+    int view_size[2] = {view[2], view[3]};
+
+    uint32_t pixel;
+    int voxel_pos[3];
+    int face, tile_id, tile_pos[3] = {};
+    int x, y;
+
+    update_pick_fbo(view_size, volume);
 
     x = round(pos[0] - view[0]);
     y = round(pos[1] - view[1]);
@@ -195,7 +219,7 @@ static bool goxel_unproject_on_volume(
 
     unpack_pos_data(pixel, voxel_pos, &face, &tile_id);
     if (!tile_id) return false;
-    render_get_tile_pos(&rend, volume, tile_id, tile_pos);
+    volume_get_tile_pos(volume, tile_id, tile_pos);
     out[0] = tile_pos[0] + voxel_pos[0] + 0.5;
     out[1] = tile_pos[1] + voxel_pos[1] + 0.5;
     out[2] = tile_pos[2] + voxel_pos[2] + 0.5;

@@ -115,11 +115,6 @@ void render_submit(renderer_t *rend, const float viewport[4],
 // Compute the light direction in the model coordinates (toward the light)
 void render_get_light_dir(const renderer_t *rend, float out[3]);
 
-// Ugly function that return the position of the tile at a given id
-// when the volume is rendered with render_volume.
-void render_get_tile_pos(renderer_t *rend, const volume_t *volume,
-                         int id, int pos[3]);
-
 // Attempt to release some memory.
 void render_on_low_memory(renderer_t *rend);
 
