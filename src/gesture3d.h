@@ -47,7 +47,10 @@ struct gesture3d
     int         type;
     int         state;
     int         buttons; // CURSOR_SHIFT | CURSOR_CTRL
-    int         (*callback)(gesture3d_t *gest, cursor_t *curs, void *user);
+    int         snap_mask;
+    float       snap_offset;
+    int         (*callback)(gesture3d_t *gest, const cursor_t *curs,
+                            void *user);
     void        *user;
 };
 

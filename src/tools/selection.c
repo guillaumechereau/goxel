@@ -77,7 +77,7 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     float box[4][4];
     uint8_t box_color[4] = {255, 255, 0, 255};
@@ -88,13 +88,12 @@ static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     tool_selection_t *tool = user;
 
     if (gest->state == GESTURE_BEGIN)
         vec3_copy(curs->pos, tool->start_pos);
-    curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
     goxel_set_help_text("Drag.");
     get_box(tool->start_pos, curs->pos, curs->normal,
             0, goxel.plane, goxel.selection);
@@ -109,10 +108,15 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     tool_selection_t *selection = (tool_selection_t*)tool;
     cursor_t *curs = &goxel.cursor;
-    curs->snap_mask |= SNAP_ROUNDED;
-    curs->snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
+    int snap_mask = goxel.snap_mask;
+
+    // To cleanup.
+    snap_mask |= SNAP_ROUNDED;
+    snap_mask &= ~SNAP_SELECTION_IN;
+    snap_mask |= SNAP_SELECTION_OUT;
+
+    curs->snap_mask = snap_mask;
     curs->snap_offset = 0.5;
-    curs->snap_mask |= SNAP_SELECTION_OUT;
 
     if (box_edit(SNAP_SELECTION_OUT, g_drag_mode == DRAG_RESIZE ? 1 : 0,
                  transf, NULL)) {
@@ -122,11 +126,15 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     if (goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
+        .snap_mask = snap_mask,
+        .snap_offset = 0.5,
         .callback = on_hover,
         .user = selection,
     })) goto end;
     if (goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .snap_mask = snap_mask & ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT),
+        .snap_offset = 0.5,
         .callback = on_drag,
         .user = selection,
     })) goto end;

@@ -48,15 +48,14 @@ const tool_t *tool_get(int id)
     return g_tools[id];
 }
 
-static int pick_color_gesture(gesture3d_t *gest, cursor_t *curs, void *user)
+static int pick_color_gesture(gesture3d_t *gest, const cursor_t *curs,
+                              void *user)
 {
     const volume_t *volume = goxel_get_layers_volume(goxel.image);
     int pi[3] = {floor(curs->pos[0]),
                  floor(curs->pos[1]),
                  floor(curs->pos[2])};
     uint8_t color[4];
-    curs->snap_mask = SNAP_VOLUME;
-    curs->snap_offset = -0.5;
 
     goxel_set_help_text("Click on a voxel to pick the color");
     if (!curs->snaped) return 0;
@@ -80,6 +79,8 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
     if (tool->flags & TOOL_ALLOW_PICK_COLOR) {
         goxel_gesture3d(&(gesture3d_t) {
             .type = GESTURE_HOVER,
+            .snap_mask = SNAP_VOLUME,
+            .snap_offset = -0.5,
             .callback = pick_color_gesture,
             .buttons = CURSOR_CTRL,
         });

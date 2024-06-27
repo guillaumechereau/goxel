@@ -103,7 +103,7 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     tool_brush_t *brush = USER_GET(user, 0);
     painter_t painter = *(painter_t*)USER_GET(user, 1);
@@ -165,7 +165,7 @@ static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
     return 0;
 }
 
-static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     volume_t *volume = goxel.image->active_layer->volume;
     tool_brush_t *brush = USER_GET(user, 0);
@@ -216,11 +216,15 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .snap_mask = curs->snap_mask,
+        .snap_offset = curs->snap_offset,
         .callback = on_drag,
         .user = USER_PASS(brush, painter),
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
+        .snap_mask = curs->snap_mask,
+        .snap_offset = curs->snap_offset,
         .callback = on_hover,
         .user = USER_PASS(brush, painter),
     });

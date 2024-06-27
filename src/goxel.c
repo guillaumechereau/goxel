@@ -481,7 +481,9 @@ static void update_window_title(void)
 bool goxel_gesture3d(const gesture3d_t *gesture)
 {
     int i;
+    bool ret;
     typeof(goxel.gesture3ds[0]) *slot = NULL;
+    cursor_t *curs = &goxel.cursor;
 
     // Search if we already have this gesture in the list.
     for (i = 0; i < goxel.gesture3ds_count; i++) {
@@ -499,7 +501,12 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
     }
 
     slot->alive = true;
-    return gesture3d(&slot->gesture, &goxel.cursor, gesture->user);
+    ret = gesture3d(&slot->gesture, curs, gesture->user);
+    if (ret) {
+        curs->snap_mask = gesture->snap_mask;
+        curs->snap_offset = gesture->snap_offset;
+    }
+    return ret;
 }
 
 // Cleanup the unused 3d gestures.

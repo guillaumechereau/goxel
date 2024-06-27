@@ -67,7 +67,7 @@ static int get_face(const float n[3])
 // XXX: this code is just too ugly.  Needs a lot of cleanup.
 // The problem is that we should use some generic functions to handle
 // box resize, since we do it a lot, and the code is never very clear.
-static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     tool_extrude_t *tool = (tool_extrude_t*)user;
     volume_t *volume = goxel.image->active_layer->volume;
@@ -160,6 +160,8 @@ static int iter(tool_t *tool_, const painter_t *painter,
     if (!tool->volume_orig) tool->volume_orig = volume_new();
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .snap_mask = curs->snap_mask,
+        .snap_offset = -0.5,
         .callback = on_drag,
         .user = tool,
     });

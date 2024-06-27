@@ -52,7 +52,7 @@ static void apply(const float rect_[4])
     }
 }
 
-static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     tool_rect_select_t *tool = user;
     float pos[4];
@@ -85,6 +85,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .snap_mask = SNAP_CAMERA,
         .callback = on_drag,
         .user = tool,
     });

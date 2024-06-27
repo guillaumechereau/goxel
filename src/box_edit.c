@@ -74,7 +74,7 @@ static void render_gizmo(const float plane[4][4], int face)
     render_line(&goxel.rend, a, b, color, EFFECT_ARROW | EFFECT_NO_DEPTH_TEST);
 }
 
-static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     data_t *data = (void*)user;
     float face_plane[4][4];
@@ -86,8 +86,6 @@ static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
     }
     data->state = 1; // Snaped.
     data->snap_face = get_face(curs->normal);
-    curs->snap_offset = 0;
-    curs->snap_mask &= ~SNAP_ROUNDED;
     // Render a white box on the side.
     // XXX: replace that with something better like an arrow.
     mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
@@ -97,7 +95,7 @@ static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     data_t *data = (void*)user;
     float face_plane[4][4], v[3], pos[3], n[3], d[3], ofs[3], box[4][4];
@@ -115,13 +113,9 @@ static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
         mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
         plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
-        curs->snap_offset = 0;
-        curs->snap_mask &= ~SNAP_ROUNDED;
         return 0;
     }
     data->state = 3;
-    curs->snap_offset = 0;
-    curs->snap_mask &= ~SNAP_ROUNDED;
 
     mat4_mul(data->start_box, FACES_MATS[data->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
@@ -186,11 +180,15 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
+        .snap_offset = 0,
+        .snap_mask = curs->snap_mask & ~SNAP_ROUNDED,
         .callback = on_hover,
         .user = &g_data,
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .snap_offset = 0,
+        .snap_mask = curs->snap_mask & ~SNAP_ROUNDED,
         .callback = on_drag,
         .user = &g_data,
     });

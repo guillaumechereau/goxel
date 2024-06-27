@@ -43,7 +43,7 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     float box[4][4];
     uint8_t box_color[4] = {255, 255, 0, 255};
@@ -54,7 +54,7 @@ static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     tool_shape_t *shape = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
@@ -100,11 +100,15 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .snap_mask = curs->snap_mask,
+        .snap_offset = curs->snap_offset,
         .callback = on_drag,
         .user = USER_PASS(shape, painter),
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
+        .snap_mask = curs->snap_mask,
+        .snap_offset = curs->snap_offset,
         .callback = on_hover,
         .user = USER_PASS(shape, painter),
     });
