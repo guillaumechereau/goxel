@@ -23,6 +23,18 @@ typedef struct {
     bool custom_rotation;
 } tool_plane_t;
 
+
+static int on_click(gesture3d_t *gest, const cursor_t *curs, void *user)
+{
+    float pos[3];
+    pos[0] = round(curs->pos[0]);
+    pos[1] = round(curs->pos[1]);
+    pos[2] = round(curs->pos[2]);
+    plane_from_normal(goxel.plane, pos, curs->normal);
+    mat4_itranslate(goxel.plane, 0, 0, -1);
+    return 0;
+}
+
 static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
@@ -31,15 +43,13 @@ static int iter(tool_t *tool, const painter_t *painter,
     curs->snap_offset = 0;
 
     goxel_set_help_text("Click on the volume to set plane.");
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_CLICK,
+        .snap_mask = SNAP_VOLUME,
+        .callback = on_click,
+        .user = tool,
+    });
 
-    if (curs->snaped && (curs->flags & CURSOR_PRESSED)) {
-        curs->pos[0] = round(curs->pos[0]);
-        curs->pos[1] = round(curs->pos[1]);
-        curs->pos[2] = round(curs->pos[2]);
-        plane_from_normal(goxel.plane, curs->pos, curs->normal);
-        mat4_itranslate(goxel.plane, 0, 0, -1);
-        goxel.snap_mask |= SNAP_PLANE;
-    }
     return 0;
 }
 
