@@ -178,9 +178,6 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
 
-    goxel.cursor.snap_mask = snap_mask;
-    goxel.cursor.snap_offset = 0;
-
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
         .snap_offset = 0,

@@ -483,7 +483,7 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
     int i;
     bool ret;
     typeof(goxel.gesture3ds[0]) *slot = NULL;
-    cursor_t *curs = &goxel.cursor;
+    cursor_t *curs;
 
     // Search if we already have this gesture in the list.
     for (i = 0; i < goxel.gesture3ds_count; i++) {
@@ -501,11 +501,10 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
     }
 
     slot->alive = true;
+    curs = &slot->cursor;
+    curs->snap_mask = gesture->snap_mask;
+    curs->snap_offset = gesture->snap_offset;
     ret = gesture3d(&slot->gesture, curs, gesture->user);
-    if (ret) {
-        curs->snap_mask = gesture->snap_mask;
-        curs->snap_offset = gesture->snap_offset;
-    }
     return ret;
 }
 
@@ -620,22 +619,24 @@ static void set_cursor_hint(cursor_t *curs)
 
 static int on_drag(const gesture_t *gest, void *user)
 {
-    cursor_t *c = &goxel.cursor;
-    if (gest->state == GESTURE_BEGIN)
-        c->flags |= CURSOR_PRESSED;
-    if (gest->state == GESTURE_END)
-        c->flags &= ~CURSOR_PRESSED;
+    int i;
+    gesture3d_t *gest3d;
+    cursor_t *c;
 
-    c->snaped = goxel_unproject(
-            gest->viewport, gest->pos, c->snap_mask,
-            c->snap_offset, c->pos, c->normal);
-    set_cursor_hint(c);
+    for (i = 0; i < goxel.gesture3ds_count; i++) {
+        gest3d = &goxel.gesture3ds[i].gesture;
+        c = &goxel.gesture3ds[i].cursor;
+        if (gest->state == GESTURE_BEGIN)
+            c->flags |= CURSOR_PRESSED;
+        if (gest->state == GESTURE_END)
+            c->flags &= ~CURSOR_PRESSED;
 
-    // Set some default values.  The tools can override them.
-    // XXX: would be better to reset the cursor when we change tool!
-    c->snap_mask = goxel.snap_mask;
-    set_flag(&c->snap_mask, SNAP_ROUNDED, goxel.painter.smoothness == 0);
-    c->snap_offset = 0;
+        if (gest3d->type == GESTURE_HOVER) continue;
+        c->snaped = goxel_unproject(
+                gest->viewport, gest->pos, c->snap_mask,
+                c->snap_offset, c->pos, c->normal);
+        set_cursor_hint(c);
+    }
     return 0;
 }
 
@@ -743,17 +744,20 @@ static int on_zoom(const gesture_t *gest, void *user)
 
 static int on_hover(const gesture_t *gest, void *user)
 {
-    cursor_t *c = &goxel.cursor;
-    c->snaped = goxel_unproject(gest->viewport, gest->pos, c->snap_mask,
-                                c->snap_offset, c->pos, c->normal);
-    set_cursor_hint(c);
-    c->flags &= ~CURSOR_PRESSED;
-    // Set some default values.  The tools can override them.
-    // XXX: would be better to reset the cursor when we change tool!
-    c->snap_mask = goxel.snap_mask;
-    set_flag(&c->snap_mask, SNAP_ROUNDED, goxel.painter.smoothness == 0);
-    c->snap_offset = 0;
-    set_flag(&c->flags, CURSOR_OUT, gest->state == GESTURE_END);
+    int i;
+    gesture3d_t *gest3d;
+    cursor_t *c;
+
+    for (i = 0; i < goxel.gesture3ds_count; i++) {
+        gest3d = &goxel.gesture3ds[i].gesture;
+        if (gest3d->type != GESTURE_HOVER) continue;
+        c = &goxel.gesture3ds[i].cursor;
+        c->snaped = goxel_unproject(gest->viewport, gest->pos, c->snap_mask,
+                                    c->snap_offset, c->pos, c->normal);
+        set_cursor_hint(c);
+        c->flags &= ~CURSOR_PRESSED;
+        set_flag(&c->flags, CURSOR_OUT, gest->state == GESTURE_END);
+    }
     return 0;
 }
 
@@ -763,17 +767,20 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 {
     float p[3], n[3];
     camera_t *camera = get_camera();
+    int i;
+    cursor_t *curs;
 
 
     painter_t painter = goxel.painter;
     gesture_update(goxel.gestures_count, goxel.gestures,
                    inputs, viewport, NULL);
-    set_flag(&goxel.cursor.flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
-    set_flag(&goxel.cursor.flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
 
-    // Need to set the cursor snap mask to default because the tool might
-    // change it.
-    goxel.cursor.snap_mask = goxel.snap_mask;
+    for (i = 0; i < goxel.gesture3ds_count; i++) {
+        curs = &goxel.gesture3ds[i].cursor;
+        set_flag(&curs->flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
+        set_flag(&curs->flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
+    }
+
     painter.box = !box_is_null(goxel.image->active_layer->box) ?
                          &goxel.image->active_layer->box :
                          !box_is_null(goxel.image->box) ?

@@ -201,7 +201,6 @@ static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
     tool_brush_t *brush = (tool_brush_t*)tool;
-    cursor_t *curs = &goxel.cursor;
     float snap_offset;
 
     if (!brush->volume_orig)
@@ -211,8 +210,6 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     snap_offset = goxel.snap_offset * goxel.tool_radius +
         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
-    curs->snap_offset = snap_offset;
-    curs->snap_mask |= SNAP_ROUNDED;
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,

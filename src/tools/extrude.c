@@ -153,14 +153,10 @@ static int iter(tool_t *tool_, const painter_t *painter,
                 const float viewport[4])
 {
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
-    cursor_t *curs = &goxel.cursor;
-    curs->snap_offset = -0.5;
-    curs->snap_mask &= ~SNAP_ROUNDED; // Why?
-
     if (!tool->volume_orig) tool->volume_orig = volume_new();
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
-        .snap_mask = goxel.snap_mask & ~SNAP_ROUNDED,
+        .snap_mask = goxel.snap_mask & ~SNAP_ROUNDED, // Why?
         .snap_offset = -0.5,
         .callback = on_drag,
         .user = tool,

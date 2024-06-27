@@ -80,8 +80,6 @@ static int iter(tool_t *tool_, const painter_t *painter,
 {
     float plane[4][4], w, h, center[2];
     tool_rect_select_t *tool = (tool_rect_select_t*)tool_;
-    cursor_t *curs = &goxel.cursor;
-    curs->snap_mask = SNAP_CAMERA;
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,

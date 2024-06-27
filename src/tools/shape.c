@@ -91,12 +91,9 @@ static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
     tool_shape_t *shape = (tool_shape_t*)tool;
-    cursor_t *curs = &goxel.cursor;
     float snap_offset;
 
     snap_offset = (painter->mode == MODE_OVER) ? 0.5 : -0.5;
-    curs->snap_offset = snap_offset;
-    curs->snap_mask |= SNAP_ROUNDED;
 
     if (!shape->volume_orig)
         shape->volume_orig = volume_copy(goxel.image->active_layer->volume);

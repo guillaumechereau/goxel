@@ -62,12 +62,7 @@ static int on_click(gesture3d_t *gest, const cursor_t *curs, void *user)
 static int iter(tool_t *tool_, const painter_t *painter,
                 const float viewport[4])
 {
-    cursor_t *curs = &goxel.cursor;
     tool_fuzzy_select_t *tool = (void*)tool_;
-
-    curs->snap_offset = -0.5;
-    curs->snap_mask &= ~SNAP_ROUNDED;
-
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_CLICK,
         .snap_mask = SNAP_VOLUME,
@@ -75,7 +70,6 @@ static int iter(tool_t *tool_, const painter_t *painter,
         .callback = on_click,
         .user = tool,
     });
-
     return 0;
 }
 

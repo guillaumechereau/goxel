@@ -73,9 +73,6 @@ static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
     tool_laser_t *laser = (tool_laser_t*)tool;
-    cursor_t *curs = &goxel.cursor;
-    curs->snap_mask = SNAP_CAMERA;
-    curs->snap_offset = 0;
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,

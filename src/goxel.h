@@ -487,8 +487,6 @@ typedef struct goxel
     painter_t  painter;
     renderer_t rend;
 
-    cursor_t   cursor;
-
     tool_t     *tool;
     float      tool_radius;
     bool       pathtrace; // Render pathtraced mode.
@@ -528,6 +526,7 @@ typedef struct goxel
     // All the 3d gestures we listen to.
     struct {
         gesture3d_t gesture;
+        cursor_t cursor;
         bool alive;
     } gesture3ds[16];
     int gesture3ds_count;

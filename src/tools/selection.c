@@ -105,9 +105,7 @@ static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
     float transf[4][4];
-
     tool_selection_t *selection = (tool_selection_t*)tool;
-    cursor_t *curs = &goxel.cursor;
     int snap_mask = goxel.snap_mask;
 
     // To cleanup.
@@ -115,31 +113,28 @@ static int iter(tool_t *tool, const painter_t *painter,
     snap_mask &= ~SNAP_SELECTION_IN;
     snap_mask |= SNAP_SELECTION_OUT;
 
-    curs->snap_mask = snap_mask;
-    curs->snap_offset = 0.5;
-
     if (box_edit(SNAP_SELECTION_OUT, g_drag_mode == DRAG_RESIZE ? 1 : 0,
                  transf, NULL)) {
         mat4_mul(transf, goxel.selection, goxel.selection);
         return 0;
     }
 
-    if (goxel_gesture3d(&(gesture3d_t) {
+    goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
         .snap_mask = snap_mask,
         .snap_offset = 0.5,
         .callback = on_hover,
         .user = selection,
-    })) goto end;
-    if (goxel_gesture3d(&(gesture3d_t) {
+    });
+
+    goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .snap_mask = snap_mask & ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT),
         .snap_offset = 0.5,
         .callback = on_drag,
         .user = selection,
-    })) goto end;
+    });
 
-end:
     return tool->state;
 }
 
