@@ -68,12 +68,6 @@ static int pick_color_gesture(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static gesture3d_t g_pick_color_gesture = {
-    .type = GESTURE_HOVER,
-    .callback = pick_color_gesture,
-    .buttons = CURSOR_CTRL,
-};
-
 int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
 {
     assert(tool);
@@ -84,8 +78,13 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
     }
     tool->state = tool->iter_fn(tool, painter, viewport);
 
-    if (tool->flags & TOOL_ALLOW_PICK_COLOR)
-        gesture3d(&g_pick_color_gesture, &goxel.cursor, NULL);
+    if (tool->flags & TOOL_ALLOW_PICK_COLOR) {
+        goxel_gesture3d(&(gesture3d_t) {
+            .type = GESTURE_HOVER,
+            .callback = pick_color_gesture,
+            .buttons = CURSOR_CTRL,
+        }, &goxel.cursor, NULL);
+    }
 
     return tool->state;
 }

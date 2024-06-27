@@ -9,9 +9,6 @@
 typedef struct {
     tool_t tool;
     float rect[4];
-    struct {
-        gesture3d_t drag;
-    } gestures;
 } tool_rect_select_t;
 
 static void apply(const float rect_[4])
@@ -85,15 +82,12 @@ static int iter(tool_t *tool_, const painter_t *painter,
     float plane[4][4], w, h, center[2];
     tool_rect_select_t *tool = (tool_rect_select_t*)tool_;
     cursor_t *curs = &goxel.cursor;
-    if (!tool->gestures.drag.type) {
-        tool->gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-    }
-
     curs->snap_mask = SNAP_CAMERA;
-    gesture3d(&tool->gestures.drag, curs, tool);
+
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, tool);
 
     if (    tool->rect[0] == 0 && tool->rect[1] == 0 &&
             tool->rect[2] == 0 && tool->rect[3] == 0) {

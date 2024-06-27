@@ -525,6 +525,13 @@ typedef struct goxel
     gesture_t *gestures[16];
     int gestures_count;
 
+    // All the 3d gestures we listen to.
+    struct {
+        gesture3d_t gesture;
+        bool alive;
+    } gesture3ds[16];
+    int gesture3ds_count;
+
     pathtracer_t pathtracer;
 
     // Used to check if the active volume changed to play tick sound.
@@ -661,6 +668,15 @@ void goxel_add_recent_file(const char *path);
  */
 void goxel_apply_color_filter(
         void (*fn)(void *args, uint8_t color[4]), void *args);
+
+/*
+ * Process a 3d gesture.
+ *
+ * Used by the tools to react to 3d gesture.
+ * Should be called once per frame for each gesture we are listening to.
+ */
+bool goxel_gesture3d(const gesture3d_t *gesture, cursor_t *curs,
+                     void *user);
 
 // Section: tests
 

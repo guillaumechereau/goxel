@@ -22,12 +22,6 @@
 typedef struct {
     tool_t tool;
     float  box[4][4];
-
-    struct {
-        gesture3d_t drag;
-        gesture3d_t hover;
-    } gestures;
-
 } tool_laser_t;
 
 static int on_drag(gesture3d_t *gest, void *user)
@@ -58,13 +52,6 @@ static int iter(tool_t *tool, const painter_t *painter,
     float view_mat_inv[4][4] = {};
     camera_t *camera = goxel.image->active_camera;
 
-    if (!laser->gestures.drag.type) {
-        laser->gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-    }
-
     if (curs->snaped & SNAP_CAMERA) {
         // Create the tool box from the camera along the visible ray.
         mat4_set_identity(laser->box);
@@ -83,7 +70,10 @@ static int iter(tool_t *tool, const painter_t *painter,
         render_box(&goxel.rend, laser->box, NULL, EFFECT_WIREFRAME);
     }
 
-    gesture3d(&laser->gestures.drag, curs, USER_PASS(laser, painter));
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, USER_PASS(laser, painter));
 
     return tool->state;
 }

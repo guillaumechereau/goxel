@@ -478,6 +478,54 @@ static void update_window_title(void)
     sys_set_window_title(buf);
 }
 
+bool goxel_gesture3d(const gesture3d_t *gesture, cursor_t *curs,
+                     void *user)
+{
+    int i;
+    typeof(goxel.gesture3ds[0]) *slot = NULL;
+
+    // Search if we already have this gesture in the list.
+    for (i = 0; i < goxel.gesture3ds_count; i++) {
+        slot = &goxel.gesture3ds[i];
+        if (    slot->gesture.callback == gesture->callback &&
+                slot->gesture.type == gesture->type) {
+            break;
+        }
+    }
+    // If no match add the gesture in the list.
+    if (i == goxel.gesture3ds_count) {
+        slot = &goxel.gesture3ds[goxel.gesture3ds_count++];
+        memset(slot, 0, sizeof(*slot));
+        slot->gesture = *gesture;
+    }
+
+    slot->alive = true;
+    return gesture3d(&slot->gesture, curs, user);
+}
+
+// Cleanup the unused 3d gestures.
+static void gesture3ds_iter(void)
+{
+    int i, count;
+    typeof(goxel.gesture3ds[0]) *slot;
+
+    for (i = goxel.gesture3ds_count - 1; i >= 0; i--) {
+        slot = &goxel.gesture3ds[i];
+        if (slot->alive) {
+            slot->alive = false;
+            continue;
+        }
+        count = goxel.gesture3ds_count - i - 1;
+        if (count > 0) {
+            memmove(&goxel.gesture3ds[i], &goxel.gesture3ds[i + 1],
+                    count * sizeof(*slot));
+        }
+        goxel.gesture3ds_count--;
+    }
+}
+
+
+
 KEEPALIVE
 int goxel_iter(const inputs_t *inputs)
 {
@@ -539,6 +587,7 @@ int goxel_iter(const inputs_t *inputs)
         }
     }
 
+    gesture3ds_iter();
     sound_iter();
     update_window_title();
 
@@ -1391,7 +1440,6 @@ void goxel_apply_color_filter(
     volume_merge(layer->volume, volume, MODE_OVER, NULL);
     volume_delete(volume);
 }
-
 
 static void a_cut_as_new_layer(void)
 {

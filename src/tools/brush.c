@@ -37,11 +37,6 @@ typedef struct {
         uint64_t   volume_key;
     } last_op;
 
-    struct {
-        gesture3d_t drag;
-        gesture3d_t hover;
-    } gestures;
-
 } tool_brush_t;
 
 static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
@@ -218,22 +213,17 @@ static int iter(tool_t *tool, const painter_t *painter,
     if (!brush->volume)
         brush->volume = volume_new();
 
-    if (!brush->gestures.drag.type) {
-        brush->gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-        brush->gestures.hover = (gesture3d_t) {
-            .type = GESTURE_HOVER,
-            .callback = on_hover,
-        };
-    }
-
     curs->snap_offset = goxel.snap_offset * goxel.tool_radius +
         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
-    gesture3d(&brush->gestures.hover, curs, USER_PASS(brush, painter));
-    gesture3d(&brush->gestures.drag, curs, USER_PASS(brush, painter));
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, USER_PASS(brush, painter));
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_HOVER,
+        .callback = on_hover,
+    }, curs, USER_PASS(brush, painter));
 
     return tool->state;
 }

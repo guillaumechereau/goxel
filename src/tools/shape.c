@@ -24,12 +24,6 @@ typedef struct {
     float  start_pos[3];
     volume_t *volume_orig;
     bool   planar; // Stay on the original plane.
-
-    struct {
-        gesture3d_t drag;
-        gesture3d_t hover;
-    } gestures;
-
 } tool_shape_t;
 
 
@@ -106,19 +100,14 @@ static int iter(tool_t *tool, const painter_t *painter,
     if (!shape->volume_orig)
         shape->volume_orig = volume_copy(goxel.image->active_layer->volume);
 
-    if (!shape->gestures.drag.type) {
-        shape->gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-        shape->gestures.hover = (gesture3d_t) {
-            .type = GESTURE_HOVER,
-            .callback = on_hover,
-        };
-    }
-
-    gesture3d(&shape->gestures.drag, curs, USER_PASS(shape, painter));
-    gesture3d(&shape->gestures.hover, curs, USER_PASS(shape, painter));
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, USER_PASS(shape, painter));
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_HOVER,
+        .callback = on_hover,
+    }, curs, USER_PASS(shape, painter));
 
     return tool->state;
 }

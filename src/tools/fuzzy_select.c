@@ -21,9 +21,6 @@
 typedef struct {
     tool_t tool;
     int threshold;
-    struct {
-        gesture3d_t click;
-    } gestures;
 } tool_fuzzy_select_t;
 
 static int select_cond(void *user, const volume_t *volume,
@@ -72,13 +69,11 @@ static int iter(tool_t *tool_, const painter_t *painter,
     curs->snap_offset = -0.5;
     curs->snap_mask &= ~SNAP_ROUNDED;
 
-    if (!tool->gestures.click.type) {
-        tool->gestures.click = (gesture3d_t) {
-            .type = GESTURE_CLICK,
-            .callback = on_click,
-        };
-    }
-    gesture3d(&tool->gestures.click, curs, tool);
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_CLICK,
+        .callback = on_click,
+    }, curs, tool);
+
     return 0;
 }
 

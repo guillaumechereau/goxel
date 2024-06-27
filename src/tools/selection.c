@@ -30,12 +30,6 @@ typedef struct {
 
     int     snap_face;
     float   start_pos[3];
-
-    struct {
-        gesture3d_t hover;
-        gesture3d_t drag;
-    } gestures;
-
 } tool_selection_t;
 
 static void get_box(const float p0[3], const float p1[3], const float n[3],
@@ -122,24 +116,20 @@ static int iter(tool_t *tool, const painter_t *painter,
     curs->snap_offset = 0.5;
     curs->snap_mask |= SNAP_SELECTION_OUT;
 
-    if (!selection->gestures.drag.type) {
-        selection->gestures.hover = (gesture3d_t) {
-            .type = GESTURE_HOVER,
-            .callback = on_hover,
-        };
-        selection->gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-    }
     if (box_edit(SNAP_SELECTION_OUT, g_drag_mode == DRAG_RESIZE ? 1 : 0,
                  transf, NULL)) {
         mat4_mul(transf, goxel.selection, goxel.selection);
         return 0;
     }
 
-    if (gesture3d(&selection->gestures.drag, curs, selection)) goto end;
-    if (gesture3d(&selection->gestures.hover, curs, selection)) goto end;
+    if (goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_HOVER,
+        .callback = on_hover,
+    }, curs, selection)) goto end;
+    if (goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, selection)) goto end;
 
 end:
     return tool->state;

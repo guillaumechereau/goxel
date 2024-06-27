@@ -24,9 +24,6 @@ typedef struct {
     volume_t *volume;
     int    snap_face;
     int    last_delta;
-    struct {
-        gesture3d_t drag;
-    } gestures;
 } tool_extrude_t;
 
 static int select_cond(void *user, const volume_t *volume,
@@ -162,13 +159,10 @@ static int iter(tool_t *tool_, const painter_t *painter,
     curs->snap_mask &= ~SNAP_ROUNDED;
 
     if (!tool->volume_orig) tool->volume_orig = volume_new();
-    if (!tool->gestures.drag.type) {
-        tool->gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-    }
-    gesture3d(&tool->gestures.drag, curs, tool);
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, tool);
     return 0;
 }
 

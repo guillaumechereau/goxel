@@ -24,12 +24,6 @@ typedef struct {
     volume_t *volume_orig; // Original volume.
     volume_t *volume;      // Volume containing only the tool path.
     float start_pos[3];
-
-    struct {
-        gesture3d_t drag;
-        gesture3d_t hover;
-    } gestures;
-
 } tool_line_t;
 
 // XXX: same as in brush.c.
@@ -153,22 +147,18 @@ static int iter(tool_t *tool_, const painter_t *painter,
     if (!tool->volume)
         tool->volume = volume_new();
 
-    if (!tool->gestures.drag.type) {
-        tool->gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-        tool->gestures.hover = (gesture3d_t) {
-            .type = GESTURE_HOVER,
-            .callback = on_hover,
-        };
-    }
-
     curs->snap_offset = goxel.snap_offset * goxel.tool_radius +
         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
-    gesture3d(&tool->gestures.hover, curs, USER_PASS(tool, painter));
-    gesture3d(&tool->gestures.drag, curs, USER_PASS(tool, painter));
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, USER_PASS(tool, painter));
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_HOVER,
+        .callback = on_hover,
+    }, curs, USER_PASS(tool, painter));
+
     return 0;
 }
 

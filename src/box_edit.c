@@ -35,10 +35,6 @@ typedef struct data
     float start_box[4][4];
     float transf[4][4];
     int snap_face;
-    struct {
-        gesture3d_t hover;
-        gesture3d_t drag;
-    } gestures;
     int state; // 0: init, 1: snaped, 2: first change, 3: following changes.
 } data_t;
 
@@ -185,23 +181,20 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
     }
     if (box_is_null(box)) return 0;
 
-    if (!g_data.gestures.drag.type) {
-        g_data.gestures.hover = (gesture3d_t) {
-            .type = GESTURE_HOVER,
-            .callback = on_hover,
-        };
-        g_data.gestures.drag = (gesture3d_t) {
-            .type = GESTURE_DRAG,
-            .callback = on_drag,
-        };
-    }
-
     g_data.snap = snap;
     g_data.mode = mode;
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
-    gesture3d(&g_data.gestures.hover, curs, &g_data);
-    gesture3d(&g_data.gestures.drag, curs, &g_data);
+
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_HOVER,
+        .callback = on_hover,
+    }, curs, &g_data);
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .callback = on_drag,
+    }, curs, &g_data);
+
     ret = g_data.state;
 
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
