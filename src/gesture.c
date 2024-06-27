@@ -160,8 +160,9 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
         case GESTURE_BEGIN:
         case GESTURE_UPDATE:
             vec2_copy(ts[0].pos, gest->pos);
-            gest->state = rect_contains(gest->viewport, gest->pos) ?
-                GESTURE_UPDATE : GESTURE_END;
+            gest->state = GESTURE_UPDATE;
+            if (!rect_contains(gest->viewport, gest->pos))
+                gest->state = GESTURE_END;
             break;
         }
     }
