@@ -155,12 +155,12 @@ static void normalize_box(const float box[4][4], float out[4][4])
 
 int box_edit(int snap, int mode, float transf[4][4], bool *first)
 {
-    cursor_t *curs = &goxel.cursor;
+    int snap_mask = goxel.snap_mask;
     float box[4][4] = {};
     int ret;
 
     if (snap == SNAP_LAYER_OUT) {
-        curs->snap_mask = SNAP_LAYER_OUT;
+        snap_mask = SNAP_LAYER_OUT;
         volume_get_box(goxel.image->active_layer->volume, true, box);
         // Fix problem with shape layer box.
         if (goxel.image->active_layer->shape) {
@@ -168,7 +168,7 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
         }
     }
     if (snap == SNAP_SELECTION_OUT) {
-        curs->snap_mask |= SNAP_SELECTION_OUT;
+        snap_mask |= SNAP_SELECTION_OUT;
         mat4_copy(goxel.selection, box);
     }
     if (box_is_null(box)) return 0;
@@ -178,17 +178,20 @@ int box_edit(int snap, int mode, float transf[4][4], bool *first)
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
 
+    goxel.cursor.snap_mask = snap_mask;
+    goxel.cursor.snap_offset = 0;
+
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
         .snap_offset = 0,
-        .snap_mask = curs->snap_mask & ~SNAP_ROUNDED,
+        .snap_mask = snap_mask & ~SNAP_ROUNDED,
         .callback = on_hover,
         .user = &g_data,
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .snap_offset = 0,
-        .snap_mask = curs->snap_mask & ~SNAP_ROUNDED,
+        .snap_mask = snap_mask & ~SNAP_ROUNDED,
         .callback = on_drag,
         .user = &g_data,
     });
