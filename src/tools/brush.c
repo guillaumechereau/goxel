@@ -103,12 +103,11 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     tool_brush_t *brush = USER_GET(user, 0);
     painter_t painter = *(painter_t*)USER_GET(user, 1);
     float box[4][4];
-    cursor_t *curs = gest->cursor;
     bool shift = curs->flags & CURSOR_SHIFT;
     float r = goxel.tool_radius;
     int nb, i;
@@ -166,12 +165,11 @@ static int on_drag(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     volume_t *volume = goxel.image->active_layer->volume;
     tool_brush_t *brush = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
-    cursor_t *curs = gest->cursor;
     float box[4][4];
     bool shift = curs->flags & CURSOR_SHIFT;
 

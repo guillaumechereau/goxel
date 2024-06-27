@@ -77,10 +77,9 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     float box[4][4];
-    cursor_t *curs = gest->cursor;
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to set selection.");
@@ -89,10 +88,9 @@ static int on_hover(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     tool_selection_t *tool = user;
-    cursor_t *curs = gest->cursor;
 
     if (gest->state == GESTURE_BEGIN)
         vec3_copy(curs->pos, tool->start_pos);

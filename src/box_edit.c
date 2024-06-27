@@ -74,10 +74,9 @@ static void render_gizmo(const float plane[4][4], int face)
     render_line(&goxel.rend, a, b, color, EFFECT_ARROW | EFFECT_NO_DEPTH_TEST);
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     data_t *data = (void*)user;
-    cursor_t *curs = gest->cursor;
     float face_plane[4][4];
 
     goxel_set_help_text("Drag to move face");
@@ -98,10 +97,9 @@ static int on_hover(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     data_t *data = (void*)user;
-    cursor_t *curs = gest->cursor;
     float face_plane[4][4], v[3], pos[3], n[3], d[3], ofs[3], box[4][4];
 
     goxel_set_help_text("Drag to move face");

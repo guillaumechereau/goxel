@@ -24,7 +24,7 @@ typedef struct {
     float  box[4][4];
 } tool_laser_t;
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     tool_laser_t *laser = (tool_laser_t*)USER_GET(user, 0);
     painter_t painter = *(painter_t*)USER_GET(user, 1);

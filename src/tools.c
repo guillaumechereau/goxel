@@ -48,9 +48,8 @@ const tool_t *tool_get(int id)
     return g_tools[id];
 }
 
-static int pick_color_gesture(gesture3d_t *gest, void *user)
+static int pick_color_gesture(gesture3d_t *gest, cursor_t *curs, void *user)
 {
-    cursor_t *curs = &goxel.cursor;
     const volume_t *volume = goxel_get_layers_volume(goxel.image);
     int pi[3] = {floor(curs->pos[0]),
                  floor(curs->pos[1]),

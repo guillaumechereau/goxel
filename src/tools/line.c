@@ -75,12 +75,11 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     tool_line_t *tool = USER_GET(user, 0);
     painter_t painter;
     const float radius = goxel.tool_radius;
-    cursor_t *curs = gest->cursor;
     float box[4][4];
 
     if (gest->state == GESTURE_BEGIN) {
@@ -112,12 +111,11 @@ static int on_drag(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     volume_t *volume = goxel.image->active_layer->volume;
 
     const painter_t *painter = USER_GET(user, 1);
-    cursor_t *curs = gest->cursor;
     float box[4][4];
 
     if (gest->state == GESTURE_END) {

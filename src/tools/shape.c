@@ -43,10 +43,9 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     float box[4][4];
-    cursor_t *curs = gest->cursor;
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to draw.");
@@ -55,13 +54,12 @@ static int on_hover(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest, cursor_t *curs, void *user)
 {
     tool_shape_t *shape = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
     volume_t *layer_volume = goxel.image->active_layer->volume;
     float box[4][4], pos[3];
-    cursor_t *curs = gest->cursor;
 
     if (gest->state == GESTURE_BEGIN) {
         volume_set(shape->volume_orig, layer_volume);

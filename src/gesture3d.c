@@ -24,8 +24,6 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
     int r, ret = 0;
     const int btns_mask = CURSOR_CTRL;
 
-    gest->cursor = curs;
-
     if (gest->state == GESTURE_FAILED && !pressed)
         gest->state = GESTURE_POSSIBLE;
 
@@ -81,7 +79,7 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
             gest->state == GESTURE_END ||
             gest->state == GESTURE_TRIGGERED)
     {
-        r = gest->callback(gest, user);
+        r = gest->callback(gest, curs, user);
         if (r == GESTURE_FAILED) {
             gest->state = GESTURE_FAILED;
             ret = 0;
