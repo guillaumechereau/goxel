@@ -160,6 +160,16 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
     uint8_t clear_color[4] = {0, 0, 0, 0};
     float rect[4] = {0, 0, view_size[0], view_size[1]};
 
+    typedef struct {
+        uint64_t volume_key;
+        render_settings_t rend_settings;
+        float view_mat[4][4];
+        float proj_mat[4][4];
+    } key_t;
+
+    key_t key = {0};
+    static key_t cache_key = {0};
+
     if (goxel.pick_fbo && (goxel.pick_fbo->w != view_size[0] ||
                            goxel.pick_fbo->h != view_size[1])) {
         texture_delete(goxel.pick_fbo);
@@ -169,7 +179,21 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
     if (!goxel.pick_fbo) {
         goxel.pick_fbo = texture_new_buffer(
                 view_size[0], view_size[1], TF_DEPTH);
+        cache_key = (key_t){0};
     }
+
+    key = (key_t) {
+        .volume_key = volume_get_key(volume),
+        .rend_settings = goxel.rend.settings,
+        .view_mat = MAT4_COPY(goxel.rend.view_mat),
+        .proj_mat = MAT4_COPY(goxel.rend.proj_mat),
+    };
+
+    if (memcmp(&key, &cache_key, sizeof(key_t)) == 0) {
+        GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel.pick_fbo->framebuffer));
+        return;
+    }
+    memcpy(&cache_key, &key, sizeof(key_t));
 
     mat4_copy(goxel.rend.view_mat, rend.view_mat);
     mat4_copy(goxel.rend.proj_mat, rend.proj_mat);
