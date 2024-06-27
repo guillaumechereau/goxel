@@ -202,29 +202,29 @@ static int iter(tool_t *tool, const painter_t *painter,
 {
     tool_brush_t *brush = (tool_brush_t*)tool;
     cursor_t *curs = &goxel.cursor;
-    // XXX: for the moment we force rounded positions for the brush tool
-    // to make things easier.
-    curs->snap_mask |= SNAP_ROUNDED;
+    float snap_offset;
 
     if (!brush->volume_orig)
         brush->volume_orig = volume_copy(goxel.image->active_layer->volume);
     if (!brush->volume)
         brush->volume = volume_new();
 
-    curs->snap_offset = goxel.snap_offset * goxel.tool_radius +
+    snap_offset = goxel.snap_offset * goxel.tool_radius +
         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
+    curs->snap_offset = snap_offset;
+    curs->snap_mask |= SNAP_ROUNDED;
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
-        .snap_mask = curs->snap_mask,
-        .snap_offset = curs->snap_offset,
+        .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
+        .snap_offset = snap_offset,
         .callback = on_drag,
         .user = USER_PASS(brush, painter),
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
-        .snap_mask = curs->snap_mask,
-        .snap_offset = curs->snap_offset,
+        .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
+        .snap_offset = snap_offset,
         .callback = on_hover,
         .user = USER_PASS(brush, painter),
     });

@@ -92,23 +92,26 @@ static int iter(tool_t *tool, const painter_t *painter,
 {
     tool_shape_t *shape = (tool_shape_t*)tool;
     cursor_t *curs = &goxel.cursor;
+    float snap_offset;
+
+    snap_offset = (painter->mode == MODE_OVER) ? 0.5 : -0.5;
+    curs->snap_offset = snap_offset;
     curs->snap_mask |= SNAP_ROUNDED;
-    curs->snap_offset = (painter->mode == MODE_OVER) ? 0.5 : -0.5;
 
     if (!shape->volume_orig)
         shape->volume_orig = volume_copy(goxel.image->active_layer->volume);
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
-        .snap_mask = curs->snap_mask,
-        .snap_offset = curs->snap_offset,
+        .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
+        .snap_offset = snap_offset,
         .callback = on_drag,
         .user = USER_PASS(shape, painter),
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
-        .snap_mask = curs->snap_mask,
-        .snap_offset = curs->snap_offset,
+        .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
+        .snap_offset = snap_offset,
         .callback = on_hover,
         .user = USER_PASS(shape, painter),
     });
