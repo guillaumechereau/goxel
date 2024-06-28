@@ -67,7 +67,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         image_history_push(goxel.image);
         if (shape->planar) {
             vec3_addk(curs->pos, curs->normal, -gest->snap_offset, pos);
-            gest->snap_mask = SNAP_PLANE;
+            gest->snap_mask = SNAP_SHAPE_PLANE;
             plane_from_normal(gest->snap_shape, pos, curs->normal);
         }
     }

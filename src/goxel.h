@@ -435,9 +435,10 @@ enum {
     SNAP_SELECTION_IN   = 1 << 1,
     SNAP_SELECTION_OUT  = 1 << 2,
     SNAP_VOLUME         = 1 << 3,
-    SNAP_PLANE          = 1 << 4,
+    SNAP_PLANE          = 1 << 4, // The global plane.
     SNAP_CAMERA         = 1 << 5, // Used for laser tool.
     SNAP_LAYER_OUT      = 1 << 6, // Snap the layer box.
+    SNAP_SHAPE_PLANE    = 1 << 7, // Snap to custom plane.
 
     SNAP_ROUNDED        = 1 << 8, // Round the result.
 };

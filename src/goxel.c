@@ -266,13 +266,17 @@ int goxel_unproject(const float viewport[4],
     float v[3], p[3] = {}, n[3] = {}, box[4][4];
     camera_t *cam = get_camera();
 
-    for (i = 0; i < 7; i++) {
+    for (i = 0; i < 8; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_VOLUME) {
             r = goxel_unproject_on_volume(viewport, pos,
                             goxel_get_layers_volume(goxel.image), p, n);
         }
         if ((1 << i) == SNAP_PLANE) {
+            r = goxel_unproject_on_plane(
+                    viewport, pos, goxel.plane, p, n);
+        }
+        if ((1 << i) == SNAP_SHAPE_PLANE) {
             r = goxel_unproject_on_plane(
                     viewport, pos, snap_shape, p, n);
         }

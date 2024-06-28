@@ -96,7 +96,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         volume_get_box(tool->volume, true, box);
         mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
-        gest->snap_mask = SNAP_PLANE;
+        gest->snap_mask = SNAP_SHAPE_PLANE;
         plane_from_vectors(gest->snap_shape, curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
