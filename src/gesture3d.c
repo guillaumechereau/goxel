@@ -69,6 +69,7 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
             if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
                 gest->state = GESTURE_END;
             if (pressed) gest->state = GESTURE_END;
+            if (!curs->snaped) gest->state = GESTURE_END;
             if (curs->flags & CURSOR_OUT) gest->state = GESTURE_END;
             break;
         }
