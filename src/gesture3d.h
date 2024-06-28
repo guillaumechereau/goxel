@@ -47,6 +47,7 @@ struct gesture3d
     int         buttons; // CURSOR_SHIFT | CURSOR_CTRL
     int         snap_mask;
     float       snap_offset;
+    float       snap_shape[4][4]; // Used for plane snapping.
     int         (*callback)(gesture3d_t *gest, const cursor_t *curs,
                             void *user);
     void        *user;

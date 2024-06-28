@@ -96,7 +96,8 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         volume_get_box(tool->volume, true, box);
         mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
-        plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
+        gest->snap_mask = SNAP_PLANE;
+        plane_from_vectors(gest->snap_shape, curs->pos, curs->normal, v);
         tool->last_delta = 0;
     }
 
@@ -107,7 +108,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
     // XXX: Is there a better way to compute the delta??
-    vec3_sub(curs->pos, goxel.tool_plane[3], v);
+    vec3_sub(curs->pos, gest->snap_shape[3], v);
     vec3_project(v, n, v);
     delta = vec3_dot(n, v);
     // render_box(&goxel.rend, &box, NULL, EFFECT_WIREFRAME);
@@ -116,9 +117,9 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
-    vec3_sub(curs->pos, goxel.tool_plane[3], v);
+    vec3_sub(curs->pos, gest->snap_shape[3], v);
     vec3_project(v, n, v);
-    vec3_add(goxel.tool_plane[3], v, pos);
+    vec3_add(gest->snap_shape[3], v, pos);
     pos[0] = round(pos[0]);
     pos[1] = round(pos[1]);
     pos[2] = round(pos[2]);
@@ -144,7 +145,6 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 end:
     if (gest->state == GESTURE_END) {
         volume_delete(tool->volume);
-        mat4_copy(plane_null, goxel.tool_plane);
     }
     return 0;
 }

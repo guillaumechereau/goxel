@@ -492,7 +492,6 @@ typedef struct goxel
     bool       pathtrace; // Render pathtraced mode.
 
     // Some state for the tool iter functions.
-    float      tool_plane[4][4];
     int        tool_drag_mode; // 0: move, 1: resize.
 
     float      selection[4][4];   // The selection box.
@@ -582,7 +581,9 @@ void goxel_release_graphics(void);
 void goxel_on_low_memory(void);
 
 int goxel_unproject(const float viewport[4],
-                    const float pos[2], int snap_mask, float offset,
+                    const float pos[2], int snap_mask,
+                    const float snap_shape[4][4],
+                    float offset,
                     float out[3], float normal[3]);
 
 void goxel_render_view(const float viewport[4], bool render_mode);

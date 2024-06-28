@@ -256,7 +256,8 @@ static bool goxel_unproject_on_volume(
 
 
 int goxel_unproject(const float viewport[4],
-                    const float pos[2], int snap_mask, float offset,
+                    const float pos[2], int snap_mask,
+                    const float snap_shape[4][4], float offset,
                     float out[3], float normal[3])
 {
     int i, ret = 0;
@@ -265,23 +266,16 @@ int goxel_unproject(const float viewport[4],
     float v[3], p[3] = {}, n[3] = {}, box[4][4];
     camera_t *cam = get_camera();
 
-    // If tool_plane is set, we specifically use it.
-    if (!plane_is_null(goxel.tool_plane)) {
-        r = goxel_unproject_on_plane(viewport, pos,
-                                     goxel.tool_plane, out, normal);
-        ret = r ? SNAP_PLANE : 0;
-        goto end;
-    }
-
     for (i = 0; i < 7; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_VOLUME) {
             r = goxel_unproject_on_volume(viewport, pos,
                             goxel_get_layers_volume(goxel.image), p, n);
         }
-        if ((1 << i) == SNAP_PLANE)
-            r = goxel_unproject_on_plane(viewport, pos,
-                                         goxel.plane, p, n);
+        if ((1 << i) == SNAP_PLANE) {
+            r = goxel_unproject_on_plane(
+                    viewport, pos, snap_shape, p, n);
+        }
         if ((1 << i) == SNAP_SELECTION_IN)
             r = goxel_unproject_on_box(viewport, pos,
                                        goxel.selection, true,
@@ -320,7 +314,7 @@ int goxel_unproject(const float viewport[4],
         ret = 1 << i;
         best = dist;
     }
-end:
+
     // Post effects.
     // Note: should probably move outside of this function.
     if (ret && offset)
@@ -691,7 +685,8 @@ static int on_drag(const gesture_t *gest, void *user)
         if (gest3d->type == GESTURE_HOVER) continue;
         c->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_offset, c->pos, c->normal);
+                gest3d->snap_shape, gest3d->snap_offset,
+                c->pos, c->normal);
         set_cursor_hint(c);
     }
     return 0;
@@ -708,8 +703,8 @@ static int on_drag_rotate(const gesture_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN) {
         snap = goxel_unproject(
             gest->viewport, gest->pos,
-            SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME, 0,
-            pos, normal);
+            SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME,
+            NULL, 0, pos, normal);
         if (snap) return 1;
     }
     return on_rotate(gest, user);
@@ -811,7 +806,8 @@ static int on_hover(const gesture_t *gest, void *user)
         c = &goxel.gesture3ds[i].cursor;
         c->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_offset, c->pos, c->normal);
+                gest3d->snap_shape, gest3d->snap_offset,
+                c->pos, c->normal);
         set_cursor_hint(c);
         c->flags &= ~CURSOR_PRESSED;
         set_flag(&c->flags, CURSOR_OUT, gest->state == GESTURE_END);

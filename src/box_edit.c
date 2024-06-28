@@ -112,16 +112,17 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         data->snap_face = get_face(curs->normal);
         mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
-        plane_from_vectors(goxel.tool_plane, curs->pos, curs->normal, v);
+        gest->snap_mask = SNAP_PLANE;
+        plane_from_vectors(gest->snap_shape, curs->pos, curs->normal, v);
         return 0;
     }
     data->state = 3;
 
     mat4_mul(data->start_box, FACES_MATS[data->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
-    vec3_sub(curs->pos, goxel.tool_plane[3], v);
+    vec3_sub(curs->pos, gest->snap_shape[3], v);
     vec3_project(v, n, v);
-    vec3_add(goxel.tool_plane[3], v, pos);
+    vec3_add(gest->snap_shape[3], v, pos);
     pos[0] = round(pos[0]);
     pos[1] = round(pos[1]);
     pos[2] = round(pos[2]);
@@ -139,7 +140,6 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     }
 
     if (gest->state == GESTURE_END) {
-        mat4_copy(plane_null, goxel.tool_plane);
         data->state = 0;
     }
     return 0;

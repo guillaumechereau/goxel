@@ -67,7 +67,8 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         image_history_push(goxel.image);
         if (shape->planar) {
             vec3_addk(curs->pos, curs->normal, -gest->snap_offset, pos);
-            plane_from_normal(goxel.tool_plane, pos, curs->normal);
+            gest->snap_mask = SNAP_PLANE;
+            plane_from_normal(gest->snap_shape, pos, curs->normal);
         }
     }
 
@@ -81,7 +82,6 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         volume_set(layer_volume, goxel.tool_volume);
         volume_delete(goxel.tool_volume);
         goxel.tool_volume = NULL;
-        mat4_copy(plane_null, goxel.tool_plane);
     }
     return 0;
 }
