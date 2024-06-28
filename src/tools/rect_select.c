@@ -32,7 +32,7 @@ static void apply(const float rect_[4])
     if (goxel.mask_mode == MODE_SUB)
         memset(color, 0, sizeof(color));
 
-    if (goxel.mask_mode == MODE_REPLACE || goxel.mask_mode == 0)
+    if (goxel.mask_mode == MODE_REPLACE)
         volume_clear(goxel.mask);
 
     // XXX: very slow implementation!
