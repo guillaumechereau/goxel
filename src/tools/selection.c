@@ -160,7 +160,6 @@ static int gui(tool_t *tool)
         return 0;
     }
     gui_action_button(ACTION_fill_selection, "Fill", 1.0);
-    gui_action_button(ACTION_layer_clear, "Clear", 1.0);
     gui_row_begin(2);
     gui_action_button(ACTION_add_selection, "Add", 0.5);
     gui_action_button(ACTION_sub_selection, "Sub", 1.0);
