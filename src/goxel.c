@@ -263,7 +263,7 @@ int goxel_unproject(const float viewport[4],
     int i, ret = 0;
     bool r = false;
     float dist, best = INFINITY;
-    float v[3], p[3] = {}, n[3] = {}, box[4][4];
+    float v[3], p[3] = {}, n[3] = {};
     camera_t *cam = get_camera();
 
     for (i = 0; i < 8; i++) {
@@ -288,9 +288,8 @@ int goxel_unproject(const float viewport[4],
             r = goxel_unproject_on_box(viewport, pos,
                                        goxel.selection, false,
                                        p, n, NULL);
-        if ((1 << i) == SNAP_LAYER_OUT) {
-            volume_get_box(goxel.image->active_layer->volume, true, box);
-            r = goxel_unproject_on_box(viewport, pos, box, false,
+        if ((1 << i) == SNAP_SHAPE_BOX) {
+            r = goxel_unproject_on_box(viewport, pos, snap_shape, false,
                                        p, n, NULL);
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
@@ -529,8 +528,21 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
 {
     int i;
     bool ret;
+    gesture3d_t *gest;
     typeof(goxel.gesture3ds[0]) *slot = NULL;
     cursor_t *curs;
+
+    // Search if we already have a different active gesture.
+    for (i = 0; i < goxel.gesture3ds_count; i++) {
+        gest = &goxel.gesture3ds[i].gesture;
+        if (    gest->callback == gesture->callback &&
+                gest->type == gesture->type) {
+            continue;
+        }
+        if (gest->type != GESTURE_HOVER && gest->state != 0) {
+            return false;
+        }
+    }
 
     // Search if we already have this gesture in the list.
     for (i = 0; i < goxel.gesture3ds_count; i++) {

@@ -77,20 +77,35 @@ static void do_move(layer_t *layer, const float mat[4][4],
     }
 }
 
+static void normalize_box(const float box[4][4], float out[4][4])
+{
+    mat4_copy(box, out);
+    float vertices[8][3];
+    box_get_vertices(box, vertices);
+    bbox_from_npoints(out, 8, vertices);
+}
+
 static void update_view(void)
 {
     float transf[4][4];
     float origin_box[4][4] = MAT4_IDENTITY;
     bool first;
     uint8_t color[4] = {255, 0, 0, 255};
-
+    float box[4][4];
 
     layer_t *layer = goxel.image->active_layer;
 
     if (layer_is_volume(layer)) {
         goxel.tool_drag_mode = DRAG_MOVE;
     }
-    if (box_edit(SNAP_LAYER_OUT, goxel.tool_drag_mode, transf, &first)) {
+
+    volume_get_box(goxel.image->active_layer->volume, true, box);
+    // Fix problem with shape layer box.
+    if (goxel.image->active_layer->shape) {
+        normalize_box(goxel.image->active_layer->mat, box);
+    }
+
+    if (box_edit(box, goxel.tool_drag_mode, transf, &first)) {
         if (first) image_history_push(goxel.image);
         do_move(layer, transf, VEC(0, 0, 0), false);
     }

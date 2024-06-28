@@ -83,10 +83,9 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     // To cleanup.
     snap_mask |= SNAP_ROUNDED;
-    snap_mask &= ~SNAP_SELECTION_IN;
-    snap_mask |= SNAP_SELECTION_OUT;
+    snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
-    if (box_edit(SNAP_SELECTION_OUT, g_drag_mode == DRAG_RESIZE ? 1 : 0,
+    if (box_edit(goxel.selection, g_drag_mode == DRAG_RESIZE ? 1 : 0,
                  transf, NULL)) {
         mat4_mul(transf, goxel.selection, goxel.selection);
         return 0;

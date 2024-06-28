@@ -29,7 +29,6 @@ static const uint8_t FACES_COLOR[6][3] = {
 
 typedef struct data
 {
-    int snap;
     int mode; // 0: move, 1: resize.
     float box[4][4];
     float start_box[4][4];
@@ -80,9 +79,9 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
     float face_plane[4][4];
 
     goxel_set_help_text("Drag to move face");
-    if (curs->snaped != data->snap) {
+    if (gest->state == GESTURE_END) {
         data->state = 0;
-        return GESTURE_FAILED;
+        return 0;
     }
     data->state = 1; // Snaped.
     data->snap_face = get_face(curs->normal);
@@ -103,10 +102,6 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     goxel_set_help_text("Drag to move face");
 
     if (gest->state == GESTURE_BEGIN) {
-        if (curs->snaped != data->snap) {
-            data->state = 0;
-            return GESTURE_FAILED;
-        }
         mat4_copy(data->box, data->start_box);
         data->state = 2;
         data->snap_face = get_face(curs->normal);
@@ -145,50 +140,26 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     return 0;
 }
 
-static void normalize_box(const float box[4][4], float out[4][4])
+int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
 {
-    mat4_copy(box, out);
-    float vertices[8][3];
-    box_get_vertices(box, vertices);
-    bbox_from_npoints(out, 8, vertices);
-}
-
-int box_edit(int snap, int mode, float transf[4][4], bool *first)
-{
-    int snap_mask = goxel.snap_mask;
-    float box[4][4] = {};
     int ret;
 
-    if (snap == SNAP_LAYER_OUT) {
-        snap_mask = SNAP_LAYER_OUT;
-        volume_get_box(goxel.image->active_layer->volume, true, box);
-        // Fix problem with shape layer box.
-        if (goxel.image->active_layer->shape) {
-            normalize_box(goxel.image->active_layer->mat, box);
-        }
-    }
-    if (snap == SNAP_SELECTION_OUT) {
-        snap_mask |= SNAP_SELECTION_OUT;
-        mat4_copy(goxel.selection, box);
-    }
     if (box_is_null(box)) return 0;
-
-    g_data.snap = snap;
     g_data.mode = mode;
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
-        .snap_offset = 0,
-        .snap_mask = snap_mask & ~SNAP_ROUNDED,
+        .snap_mask = SNAP_SHAPE_BOX,
+        .snap_shape = MAT4_COPY(box),
         .callback = on_hover,
         .user = &g_data,
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
-        .snap_offset = 0,
-        .snap_mask = snap_mask & ~SNAP_ROUNDED,
+        .snap_mask = SNAP_SHAPE_BOX,
+        .snap_shape = MAT4_COPY(box),
         .callback = on_drag,
         .user = &g_data,
     });

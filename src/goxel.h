@@ -437,7 +437,7 @@ enum {
     SNAP_VOLUME         = 1 << 3,
     SNAP_PLANE          = 1 << 4, // The global plane.
     SNAP_CAMERA         = 1 << 5, // Used for laser tool.
-    SNAP_LAYER_OUT      = 1 << 6, // Snap the layer box.
+    SNAP_SHAPE_BOX      = 1 << 6, // Snap to custom box.
     SNAP_SHAPE_PLANE    = 1 << 7, // Snap to custom plane.
 
     SNAP_ROUNDED        = 1 << 8, // Round the result.
@@ -641,18 +641,16 @@ int gox_iter_infos(const char *path,
  * Render a box that can be edited with the mouse.
  *
  * This is used for the move and selection tools.
- * Still a bit experimental.  In theory we should be able to edit any box,
- * but because of the snap mechanism, we can only edit the layer or selection
- * for the moment.
+ * Still a bit experimental.
  *
  * Parameters:
- *   snap   - SNAP_LAYER_OUT for layer edit, SNAP_SELECTION_OUT for selection
- *            edit.
+ *   box    - The box we want to edit.
  *   mode   - 0: move, 1: resize.
  *   transf - Receive the output transformation.
  *   first  - Set to true if the edit is the first one.
  */
-int box_edit(int snap, int mode, float transf[4][4], bool *first);
+int box_edit(const float box[4][4], int mode, float transf[4][4],
+             bool *first);
 
 
 void settings_load(void);
