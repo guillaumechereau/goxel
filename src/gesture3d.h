@@ -35,10 +35,8 @@ enum {
 typedef struct cursor {
     float  pos[3];
     float  normal[3];
-    int    snap_mask;
     int    snaped;
     int    flags; // Union of CURSOR_* values.
-    float  snap_offset; // XXX: fix this.
 } cursor_t;
 
 // #### 3d gestures

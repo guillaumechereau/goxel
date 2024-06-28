@@ -66,7 +66,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         vec3_copy(curs->pos, shape->start_pos);
         image_history_push(goxel.image);
         if (shape->planar) {
-            vec3_addk(curs->pos, curs->normal, -curs->snap_offset, pos);
+            vec3_addk(curs->pos, curs->normal, -gest->snap_offset, pos);
             plane_from_normal(goxel.tool_plane, pos, curs->normal);
         }
     }

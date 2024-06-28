@@ -553,10 +553,14 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
         slot->gesture = *gesture;
     }
 
+    // Update the gesture data until it has started.  That way we can
+    // modify the gesture inside its callback function.
+    if (slot->gesture.state == 0) {
+        slot->gesture = *gesture;
+    }
+
     slot->alive = true;
     curs = &slot->cursor;
-    curs->snap_mask = gesture->snap_mask;
-    curs->snap_offset = gesture->snap_offset;
     ret = gesture3d(&slot->gesture, curs, gesture->user);
     return ret;
 }
@@ -686,8 +690,8 @@ static int on_drag(const gesture_t *gest, void *user)
 
         if (gest3d->type == GESTURE_HOVER) continue;
         c->snaped = goxel_unproject(
-                gest->viewport, gest->pos, c->snap_mask,
-                c->snap_offset, c->pos, c->normal);
+                gest->viewport, gest->pos, gest3d->snap_mask,
+                gest3d->snap_offset, c->pos, c->normal);
         set_cursor_hint(c);
     }
     return 0;
@@ -805,8 +809,9 @@ static int on_hover(const gesture_t *gest, void *user)
         gest3d = &goxel.gesture3ds[i].gesture;
         if (gest3d->type != GESTURE_HOVER) continue;
         c = &goxel.gesture3ds[i].cursor;
-        c->snaped = goxel_unproject(gest->viewport, gest->pos, c->snap_mask,
-                                    c->snap_offset, c->pos, c->normal);
+        c->snaped = goxel_unproject(
+                gest->viewport, gest->pos, gest3d->snap_mask,
+                gest3d->snap_offset, c->pos, c->normal);
         set_cursor_hint(c);
         c->flags &= ~CURSOR_PRESSED;
         set_flag(&c->flags, CURSOR_OUT, gest->state == GESTURE_END);
