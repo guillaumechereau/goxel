@@ -32,17 +32,11 @@ typedef struct {
     float   start_pos[3];
 } tool_selection_t;
 
-static void get_box(const float p0[3], const float p1[3], const float n[3],
-                    const float plane[4][4], float out[4][4])
+static void get_box(const float p0[3], const float p1[3], float out[4][4])
 {
-    float rot[4][4], box[4][4];
-
+    float box[4][4];
     bbox_from_points(box, p0, p1);
     bbox_grow(box, 0.5, 0.5, 0.5, box);
-    // Apply the plane rotation.
-    mat4_copy(plane, rot);
-    vec4_set(rot[3], 0, 0, 0, 1);
-    mat4_imul(box, rot);
     mat4_copy(box, out);
 }
 
@@ -52,7 +46,7 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to set selection.");
-    get_box(curs->pos, curs->pos, curs->normal, goxel.plane, box);
+    get_box(curs->pos, curs->pos, box);
     render_box(&goxel.rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
@@ -64,8 +58,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     if (gest->state == GESTURE_BEGIN)
         vec3_copy(curs->pos, tool->start_pos);
     goxel_set_help_text("Drag.");
-    get_box(tool->start_pos, curs->pos, curs->normal,
-            goxel.plane, goxel.selection);
+    get_box(tool->start_pos, curs->pos, goxel.selection);
     return 0;
 }
 
