@@ -293,10 +293,6 @@ int goxel_unproject(const float viewport[4],
             r = goxel_unproject_on_box(viewport, pos,
                                        goxel.image->box, true,
                                        p, n, NULL);
-        if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(viewport, pos,
-                                       goxel.image->box, true,
-                                       p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
             camera_get_ray(cam, pos, viewport, p, n);
             r = true;
