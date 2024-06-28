@@ -321,13 +321,18 @@ int goxel_unproject(const float viewport[4],
         best = dist;
     }
 end:
+    // Post effects.
+    // Note: should probably move outside of this function.
     if (ret && offset)
         vec3_iaddk(out, normal, offset);
     if (ret && (snap_mask & SNAP_ROUNDED)) {
-        out[0] = round(out[0] - 0.5) + 0.5;
-        out[1] = round(out[1] - 0.5) + 0.5;
-        out[2] = round(out[2] - 0.5) + 0.5;
+        for (i = 0; i < 3; i++) {
+            if (normal[i] == 0) {
+                out[i] = round(out[i] - 0.5) + 0.5;
+            }
+        }
     }
+
     return ret;
 }
 
