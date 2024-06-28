@@ -29,36 +29,47 @@ typedef struct {
     tool_t  tool;
 
     int     snap_face;
-    float   start_pos[3];
+    float   start_rect[4][4];
 } tool_selection_t;
 
-static void get_box(const float p0[3], const float p1[3], float out[4][4])
+static void get_rect(const float pos[3], const float normal[3],
+                     float out[4][4])
 {
-    float box[4][4];
-    bbox_from_points(box, p0, p1);
-    bbox_grow(box, 0.5, 0.5, 0.5, box);
-    mat4_copy(box, out);
+    plane_from_normal(out, pos, normal);
+    mat4_iscale(out, 0.5, 0.5, 0);
 }
 
 static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
-    float box[4][4];
-    uint8_t box_color[4] = {255, 255, 0, 255};
+    float rect[4][4];
+    uint8_t rect_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to set selection.");
-    get_box(curs->pos, curs->pos, box);
-    render_box(&goxel.rend, box, box_color, EFFECT_WIREFRAME);
+    get_rect(curs->pos, curs->normal, rect);
+    render_box(&goxel.rend, rect, rect_color, EFFECT_WIREFRAME);
     return 0;
 }
 
 static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     tool_selection_t *tool = user;
+    float rect[4][4];
+    float p[3];
+    int dir;
 
-    if (gest->state == GESTURE_BEGIN)
-        vec3_copy(curs->pos, tool->start_pos);
     goxel_set_help_text("Drag.");
-    get_box(tool->start_pos, curs->pos, goxel.selection);
+
+    get_rect(curs->pos, curs->normal, rect);
+    if (gest->state == GESTURE_BEGIN)
+        mat4_copy(rect, tool->start_rect);
+
+    box_union(tool->start_rect, rect, goxel.selection);
+    // If the selection is flat, we grow it one voxel.
+    if (box_get_volume(goxel.selection) == 0) {
+        dir = curs->snaped == SNAP_VOLUME ? -1 : 1;
+        vec3_addk(curs->pos, curs->normal, dir, p);
+        bbox_extends_from_points(goxel.selection, 1, &p, goxel.selection);
+    }
     return 0;
 }
 
@@ -84,7 +95,6 @@ static int iter(tool_t *tool, const painter_t *painter,
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
         .snap_mask = snap_mask,
-        .snap_offset = 0.5,
         .callback = on_hover,
         .user = selection,
     });
@@ -92,7 +102,6 @@ static int iter(tool_t *tool, const painter_t *painter,
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
         .snap_mask = snap_mask & ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT),
-        .snap_offset = 0.5,
         .callback = on_drag,
         .user = selection,
     });

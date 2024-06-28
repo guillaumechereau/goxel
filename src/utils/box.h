@@ -314,4 +314,11 @@ void box_union(const float a[4][4], const float b[4][4], float out[4][4]);
 
 void box_get_aabb(const float box[4][4], int aabb[2][3]);
 
+/*
+ * box_extends_from_points
+ * Extends a bbox to contain some extra points.
+ */
+void bbox_extends_from_points(
+        const float b[4][4], int n, const float (*points)[3], float out[4][4]);
+
 #endif // BOX_H

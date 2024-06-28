@@ -98,3 +98,11 @@ void box_get_aabb(const float box[4][4], int aabb[2][3])
     }
     memcpy(aabb, ret, sizeof(ret));
 }
+
+void bbox_extends_from_points(
+        const float b[4][4], int n, const float (*points)[3], float out[4][4])
+{
+    float b2[4][4];
+    bbox_from_npoints(b2, n, points);
+    box_union(b, b2, out);
+}
