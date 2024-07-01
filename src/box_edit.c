@@ -197,7 +197,7 @@ static int on_gizmo_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 static void gizmo(const float box[4][4], int face)
 {
     float shape[4][4];
-    float alpha = 0.2;
+    float alpha = 0.15;
 
     // Compute the gizmo bounding box.
     mat4_mul(box, FACES_MATS[face], shape);
