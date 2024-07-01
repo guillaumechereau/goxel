@@ -529,11 +529,10 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
     int i;
     bool ret;
     gesture3d_t *gest;
-    typeof(goxel.gesture3ds[0]) *slot = NULL;
 
     // Search if we already have a different active gesture.
     for (i = 0; i < goxel.gesture3ds_count; i++) {
-        gest = &goxel.gesture3ds[i].gesture;
+        gest = &goxel.gesture3ds[i];
         if (    gest->callback == gesture->callback &&
                 gest->type == gesture->type) {
             continue;
@@ -545,33 +544,33 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
 
     // Search if we already have this gesture in the list.
     for (i = 0; i < goxel.gesture3ds_count; i++) {
-        slot = &goxel.gesture3ds[i];
-        if (    slot->gesture.callback == gesture->callback &&
-                slot->gesture.type == gesture->type) {
+        gest = &goxel.gesture3ds[i];
+        if (    gest->callback == gesture->callback &&
+                gest->type == gesture->type) {
             break;
         }
     }
     // If no match add the gesture in the list.
     if (i == goxel.gesture3ds_count) {
-        slot = &goxel.gesture3ds[goxel.gesture3ds_count++];
-        memset(slot, 0, sizeof(*slot));
-        slot->gesture = *gesture;
+        gest = &goxel.gesture3ds[goxel.gesture3ds_count++];
+        memset(gest, 0, sizeof(*gest));
+        *gest = *gesture;
     }
 
     // Update the gesture data until it has started.  That way we can
     // modify the gesture inside its callback function.
-    if (slot->gesture.state == 0) {
-        slot->gesture.type = gesture->type;
-        slot->gesture.buttons = gesture->buttons;
-        slot->gesture.snap_mask = gesture->snap_mask;
-        slot->gesture.snap_offset = gesture->snap_offset;
-        mat4_copy(gesture->snap_shape, slot->gesture.snap_shape);
-        slot->gesture.callback = gesture->callback;
-        slot->gesture.user = gesture->user;
+    if (gest->state == 0) {
+        gest->type = gesture->type;
+        gest->buttons = gesture->buttons;
+        gest->snap_mask = gesture->snap_mask;
+        gest->snap_offset = gesture->snap_offset;
+        mat4_copy(gesture->snap_shape, gest->snap_shape);
+        gest->callback = gesture->callback;
+        gest->user = gesture->user;
     }
 
-    slot->alive = true;
-    ret = gesture3d(&slot->gesture, gesture->user);
+    gest->alive = true;
+    ret = gesture3d(gest, gesture->user);
     return ret;
 }
 
@@ -579,18 +578,18 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
 static void gesture3ds_iter(void)
 {
     int i, count;
-    typeof(goxel.gesture3ds[0]) *slot;
+    gesture3d_t *gest;
 
     for (i = goxel.gesture3ds_count - 1; i >= 0; i--) {
-        slot = &goxel.gesture3ds[i];
-        if (slot->alive) {
-            slot->alive = false;
+        gest = &goxel.gesture3ds[i];
+        if (gest->alive) {
+            gest->alive = false;
             continue;
         }
         count = goxel.gesture3ds_count - i - 1;
         if (count > 0) {
             memmove(&goxel.gesture3ds[i], &goxel.gesture3ds[i + 1],
-                    count * sizeof(*slot));
+                    count * sizeof(*gest));
         }
         goxel.gesture3ds_count--;
     }
@@ -690,7 +689,7 @@ static int on_drag(const gesture_t *gest, void *user)
     gesture3d_t *gest3d;
 
     for (i = 0; i < goxel.gesture3ds_count; i++) {
-        gest3d = &goxel.gesture3ds[i].gesture;
+        gest3d = &goxel.gesture3ds[i];
         if (gest->state == GESTURE_BEGIN)
             gest3d->flags |= GESTURE3D_FLAG_PRESSED;
         if (gest->state == GESTURE_END)
@@ -813,7 +812,7 @@ static int on_hover(const gesture_t *gest, void *user)
     gesture3d_t *gest3d;
 
     for (i = 0; i < goxel.gesture3ds_count; i++) {
-        gest3d = &goxel.gesture3ds[i].gesture;
+        gest3d = &goxel.gesture3ds[i];
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
                 gest3d->snap_shape, gest3d->snap_offset,
@@ -840,7 +839,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                    inputs, viewport, NULL);
 
     for (i = 0; i < goxel.gesture3ds_count; i++) {
-        gest3d = &goxel.gesture3ds[i].gesture;
+        gest3d = &goxel.gesture3ds[i];
         set_flag(&gest3d->flags, GESTURE3D_FLAG_SHIFT,
                  inputs->keys[KEY_LEFT_SHIFT]);
         set_flag(&gest3d->flags, GESTURE3D_FLAG_CTRL,

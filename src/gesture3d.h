@@ -56,6 +56,7 @@ struct gesture3d
     void        *user;
 
     // Automatically updated attributes.
+    bool        alive;
     int         state;
     float       pos[3];
     float       normal[3];
