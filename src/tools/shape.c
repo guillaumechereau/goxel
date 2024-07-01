@@ -43,18 +43,18 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, void *user)
 {
     float box[4][4];
     uint8_t box_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to draw.");
-    get_box(curs->pos, curs->pos, curs->normal, box);
+    get_box(gest->pos, gest->pos, gest->normal, box);
     render_box(&goxel.rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_shape_t *shape = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
@@ -63,17 +63,17 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {
         volume_set(shape->volume_orig, layer_volume);
-        vec3_copy(curs->pos, shape->start_pos);
+        vec3_copy(gest->pos, shape->start_pos);
         image_history_push(goxel.image);
         if (shape->planar) {
-            vec3_addk(curs->pos, curs->normal, -gest->snap_offset, pos);
+            vec3_addk(gest->pos, gest->normal, -gest->snap_offset, pos);
             gest->snap_mask = SNAP_SHAPE_PLANE;
-            plane_from_normal(gest->snap_shape, pos, curs->normal);
+            plane_from_normal(gest->snap_shape, pos, gest->normal);
         }
     }
 
     goxel_set_help_text("Drag.");
-    get_box(shape->start_pos, curs->pos, curs->normal, box);
+    get_box(shape->start_pos, gest->pos, gest->normal, box);
     if (!goxel.tool_volume) goxel.tool_volume = volume_new();
     volume_set(goxel.tool_volume, shape->volume_orig);
     volume_op(goxel.tool_volume, painter, box);

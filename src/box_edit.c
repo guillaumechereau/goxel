@@ -91,19 +91,19 @@ static void highlight_face(const float box[4][4], int face)
     render_rect_fill(&goxel.rend, plane, color);
 }
 
-static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, void *user)
 {
     data_t *data = (void*)user;
 
     goxel_set_help_text("Drag to move face");
     data->flags |= FLAG_SNAPED;
-    data->snap_face = get_face(curs->normal);
+    data->snap_face = get_face(gest->normal);
     highlight_face(data->box, data->snap_face);
     render_gizmo(data->box, data->snap_face);
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     data_t *data = (void*)user;
     float face_plane[4][4], v[3], pos[3], n[3], d[3], ofs[3], box[4][4];
@@ -114,17 +114,17 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     if (gest->state == GESTURE3D_STATE_BEGIN) {
         data->flags |= FLAG_FIRST;
         mat4_copy(data->box, data->start_box);
-        data->snap_face = get_face(curs->normal);
+        data->snap_face = get_face(gest->normal);
         mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
         gest->snap_mask = SNAP_SHAPE_PLANE;
-        plane_from_vectors(gest->snap_shape, curs->pos, curs->normal, v);
+        plane_from_vectors(gest->snap_shape, gest->pos, gest->normal, v);
         return 0;
     }
 
     mat4_mul(data->start_box, FACES_MATS[data->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
-    vec3_sub(curs->pos, gest->snap_shape[3], v);
+    vec3_sub(gest->pos, gest->snap_shape[3], v);
     vec3_project(v, n, v);
     vec3_add(gest->snap_shape[3], v, pos);
     pos[0] = round(pos[0]);

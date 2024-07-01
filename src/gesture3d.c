@@ -18,9 +18,9 @@
 
 #include "goxel.h"
 
-int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
+int gesture3d(gesture3d_t *gest, void *user)
 {
-    bool pressed = curs->flags & GESTURE3D_FLAG_PRESSED;
+    bool pressed = gest->flags & GESTURE3D_FLAG_PRESSED;
     int r, ret = 0;
     const int btns_mask = GESTURE3D_FLAG_CTRL;
 
@@ -30,9 +30,9 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
     if (gest->type == GESTURE3D_TYPE_DRAG) {
         switch (gest->state) {
         case GESTURE3D_STATE_POSSIBLE:
-            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
+            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask))
                 break;
-            if (curs->snaped && pressed) {
+            if (gest->snaped && pressed) {
                 gest->state = GESTURE3D_STATE_BEGIN;
             }
             break;
@@ -52,14 +52,14 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
     if (gest->type == GESTURE3D_TYPE_CLICK) {
         switch (gest->state) {
         case GESTURE3D_STATE_POSSIBLE:
-            if (curs->snaped && !pressed) {
+            if (gest->snaped && !pressed) {
                 gest->state = GESTURE3D_STATE_RECOGNISED;
             }
             break;
         case GESTURE3D_STATE_RECOGNISED:
-            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
+            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask))
                 break;
-            if (curs->snaped && pressed) {
+            if (gest->snaped && pressed) {
                 gest->state = GESTURE3D_STATE_TRIGGERED;
             }
             break;
@@ -72,26 +72,26 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
     if (!DEFINED(GOXEL_MOBILE) && gest->type == GESTURE3D_TYPE_HOVER) {
         switch (gest->state) {
         case GESTURE3D_STATE_POSSIBLE:
-            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
+            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask))
                 break;
-            if (curs->snaped && !pressed &&
-                    !(curs->flags & GESTURE3D_FLAG_OUT)) {
+            if (gest->snaped && !pressed &&
+                    !(gest->flags & GESTURE3D_FLAG_OUT)) {
                 gest->state = GESTURE3D_STATE_BEGIN;
             }
             break;
         case GESTURE3D_STATE_BEGIN:
         case GESTURE3D_STATE_UPDATE:
             gest->state = GESTURE3D_STATE_UPDATE;
-            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask)) {
+            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask)) {
                 gest->state = GESTURE3D_STATE_END;
             }
             if (pressed) {
                 gest->state = GESTURE3D_STATE_END;
             }
-            if (!curs->snaped) {
+            if (!gest->snaped) {
                 gest->state = GESTURE3D_STATE_END;
             }
-            if (curs->flags & GESTURE3D_FLAG_OUT) {
+            if (gest->flags & GESTURE3D_FLAG_OUT) {
                 gest->state = GESTURE3D_STATE_END;
             }
             break;
@@ -106,7 +106,7 @@ int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
             gest->state == GESTURE3D_STATE_END ||
             gest->state == GESTURE3D_STATE_TRIGGERED)
     {
-        r = gest->callback(gest, curs, user);
+        r = gest->callback(gest, user);
         if (r == GESTURE3D_STATE_FAILED) {
             gest->state = GESTURE3D_STATE_FAILED;
             ret = 0;

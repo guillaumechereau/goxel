@@ -39,18 +39,18 @@ static void get_rect(const float pos[3], const float normal[3],
     mat4_iscale(out, 0.5, 0.5, 0);
 }
 
-static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, void *user)
 {
     float rect[4][4];
     uint8_t rect_color[4] = {255, 255, 0, 255};
 
     goxel_set_help_text("Click and drag to set selection.");
-    get_rect(curs->pos, curs->normal, rect);
+    get_rect(gest->pos, gest->normal, rect);
     render_box(&goxel.rend, rect, rect_color, EFFECT_WIREFRAME);
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_selection_t *tool = user;
     float rect[4][4];
@@ -59,15 +59,15 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
 
     goxel_set_help_text("Drag.");
 
-    get_rect(curs->pos, curs->normal, rect);
+    get_rect(gest->pos, gest->normal, rect);
     if (gest->state == GESTURE3D_STATE_BEGIN)
         mat4_copy(rect, tool->start_rect);
 
     box_union(tool->start_rect, rect, goxel.selection);
     // If the selection is flat, we grow it one voxel.
     if (box_get_volume(goxel.selection) == 0) {
-        dir = curs->snaped == SNAP_VOLUME ? -1 : 1;
-        vec3_addk(curs->pos, curs->normal, dir, p);
+        dir = gest->snaped == SNAP_VOLUME ? -1 : 1;
+        vec3_addk(gest->pos, gest->normal, dir, p);
         bbox_extends_from_points(goxel.selection, 1, &p, goxel.selection);
     }
     return 0;

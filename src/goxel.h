@@ -526,7 +526,6 @@ typedef struct goxel
     // All the 3d gestures we listen to.
     struct {
         gesture3d_t gesture;
-        cursor_t cursor;
         bool alive;
     } gesture3ds[16];
     int gesture3ds_count;

@@ -67,7 +67,7 @@ static int get_face(const float n[3])
 // XXX: this code is just too ugly.  Needs a lot of cleanup.
 // The problem is that we should use some generic functions to handle
 // box resize, since we do it a lot, and the code is never very clear.
-static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_extrude_t *tool = (tool_extrude_t*)user;
     volume_t *volume = goxel.image->active_layer->volume;
@@ -78,13 +78,13 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     float delta;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {
-        tool->snap_face = get_face(curs->normal);
+        tool->snap_face = get_face(gest->normal);
 
         tmp_volume = volume_new();
         tool->volume = volume_copy(volume);
-        pi[0] = floor(curs->pos[0]);
-        pi[1] = floor(curs->pos[1]);
-        pi[2] = floor(curs->pos[2]);
+        pi[0] = floor(gest->pos[0]);
+        pi[1] = floor(gest->pos[1]);
+        pi[2] = floor(gest->pos[2]);
         volume_select(volume, pi, select_cond, &tool->snap_face, tmp_volume);
         volume_merge(tool->volume, tmp_volume, MODE_MULT_ALPHA, NULL);
         volume_delete(tmp_volume);
@@ -97,7 +97,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
         gest->snap_mask = SNAP_SHAPE_PLANE;
-        plane_from_vectors(gest->snap_shape, curs->pos, curs->normal, v);
+        plane_from_vectors(gest->snap_shape, gest->pos, gest->normal, v);
         tool->last_delta = 0;
     }
 
@@ -108,7 +108,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
     // XXX: Is there a better way to compute the delta??
-    vec3_sub(curs->pos, gest->snap_shape[3], v);
+    vec3_sub(gest->pos, gest->snap_shape[3], v);
     vec3_project(v, n, v);
     delta = vec3_dot(n, v);
     // render_box(&goxel.rend, &box, NULL, EFFECT_WIREFRAME);
@@ -117,7 +117,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
-    vec3_sub(curs->pos, gest->snap_shape[3], v);
+    vec3_sub(gest->pos, gest->snap_shape[3], v);
     vec3_project(v, n, v);
     vec3_add(gest->snap_shape[3], v, pos);
     pos[0] = round(pos[0]);

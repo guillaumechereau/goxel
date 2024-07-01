@@ -48,21 +48,20 @@ const tool_t *tool_get(int id)
     return g_tools[id];
 }
 
-static int pick_color_gesture(gesture3d_t *gest, const cursor_t *curs,
-                              void *user)
+static int pick_color_gesture(gesture3d_t *gest, void *user)
 {
     const volume_t *volume = goxel_get_layers_volume(goxel.image);
-    int pi[3] = {floor(curs->pos[0]),
-                 floor(curs->pos[1]),
-                 floor(curs->pos[2])};
+    int pi[3] = {floor(gest->pos[0]),
+                 floor(gest->pos[1]),
+                 floor(gest->pos[2])};
     uint8_t color[4];
 
     goxel_set_help_text("Click on a voxel to pick the color");
-    if (!curs->snaped) return 0;
+    if (!gest->snaped) return 0;
     volume_get_at(volume, NULL, pi, color);
     color[3] = 255;
     goxel_set_help_text("pick: %d %d %d", color[0], color[1], color[2]);
-    if (curs->flags & GESTURE3D_FLAG_PRESSED) {
+    if (gest->flags & GESTURE3D_FLAG_PRESSED) {
         vec4_copy(color, goxel.painter.color);
     }
     return 0;

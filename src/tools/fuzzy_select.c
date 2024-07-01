@@ -40,16 +40,16 @@ static int select_cond(void *user, const volume_t *volume,
     return d <= tool->threshold ? 255 : 0;
 }
 
-static int on_click(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_click(gesture3d_t *gest, void *user)
 {
     volume_t *volume = goxel.image->active_layer->volume;
     volume_t *sel;
     int pi[3];
     tool_fuzzy_select_t *tool = (void*)user;
 
-    pi[0] = floor(curs->pos[0]);
-    pi[1] = floor(curs->pos[1]);
-    pi[2] = floor(curs->pos[2]);
+    pi[0] = floor(gest->pos[0]);
+    pi[1] = floor(gest->pos[1]);
+    pi[2] = floor(gest->pos[2]);
     sel = volume_new();
     volume_select(volume, pi, select_cond, tool, sel);
     if (goxel.mask == NULL) goxel.mask = volume_new();

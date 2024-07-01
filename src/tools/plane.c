@@ -24,13 +24,13 @@ typedef struct {
 } tool_plane_t;
 
 
-static int on_click(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_click(gesture3d_t *gest,  void *user)
 {
     float pos[3];
-    pos[0] = round(curs->pos[0]);
-    pos[1] = round(curs->pos[1]);
-    pos[2] = round(curs->pos[2]);
-    plane_from_normal(goxel.plane, pos, curs->normal);
+    pos[0] = round(gest->pos[0]);
+    pos[1] = round(gest->pos[1]);
+    pos[2] = round(gest->pos[2]);
+    plane_from_normal(goxel.plane, pos, gest->normal);
     mat4_itranslate(goxel.plane, 0, 0, -1);
     return 0;
 }

@@ -52,13 +52,13 @@ static void apply(const float rect_[4])
     }
 }
 
-static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_rect_select_t *tool = user;
     float pos[4];
     const camera_t *cam = goxel.image->active_camera;
 
-    vec4_set(pos, curs->pos[0], curs->pos[1], curs->pos[2], 1.0);
+    vec4_set(pos, gest->pos[0], gest->pos[1], gest->pos[2], 1.0);
     mat4_mul_vec4(cam->view_mat, pos, pos);
     mat4_mul_vec4(cam->proj_mat, pos, pos);
     vec3_mul(pos, 1 / pos[3], pos);

@@ -25,7 +25,7 @@ typedef struct {
 } tool_laser_t;
 
 
-static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_hover(gesture3d_t *gest, void *user)
 {
     tool_laser_t *laser = user;
     float v[4];
@@ -41,8 +41,8 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
     vec3_copy(v, laser->box[1]);
     mat4_mul_vec4(view_mat_inv, VEC(0, 0, 1, 0), v);
     vec3_copy(v, laser->box[2]);
-    vec3_neg(curs->normal, laser->box[2]);
-    vec3_copy(curs->pos, laser->box[3]);
+    vec3_neg(gest->normal, laser->box[2]);
+    vec3_copy(gest->pos, laser->box[3]);
     // Just a large value for the size of the laser box.
     mat4_itranslate(laser->box, 0, 0, -1024);
     mat4_iscale(laser->box, goxel.tool_radius, goxel.tool_radius, 1024);
@@ -51,13 +51,13 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 }
 
 
-static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
+static int on_drag(gesture3d_t *gest, void *user)
 {
     tool_laser_t *laser = (tool_laser_t*)USER_GET(user, 0);
     painter_t painter = *(painter_t*)USER_GET(user, 1);
     volume_t *volume = goxel.image->active_layer->volume;
 
-    on_hover(gest, curs, laser);
+    on_hover(gest, laser);
     painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
     vec4_set(painter.color, 255, 255, 255, 255);
