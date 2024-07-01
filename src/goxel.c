@@ -532,6 +532,8 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
     typeof(goxel.gesture3ds[0]) *slot = NULL;
     cursor_t *curs;
 
+    assert(goxel.gesture3ds_count < ARRAY_SIZE(goxel.gesture3ds));
+
     // Search if we already have a different active gesture.
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         gest = &goxel.gesture3ds[i].gesture;

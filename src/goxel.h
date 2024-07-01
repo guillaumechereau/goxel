@@ -528,7 +528,7 @@ typedef struct goxel
         gesture3d_t gesture;
         cursor_t cursor;
         bool alive;
-    } gesture3ds[16];
+    } gesture3ds[32];
     int gesture3ds_count;
 
     pathtracer_t pathtracer;
