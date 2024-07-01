@@ -18,7 +18,8 @@
 
 #include "goxel.h"
 
-int gesture3d(gesture3d_t *gest)
+
+static int update_state(gesture3d_t *gest)
 {
     bool pressed = gest->flags & GESTURE3D_FLAG_PRESSED;
     int r, ret = 0;
@@ -120,4 +121,70 @@ int gesture3d(gesture3d_t *gest)
     }
 
     return ret;
+}
+
+int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
+{
+    int i;
+    gesture3d_t *other, *match;
+
+    // Search if we already have this gesture in the list.
+    for (i = 0; i < goxel.gesture3ds_count; i++) {
+        match = &gestures[i];
+        if (    match->callback == gest->callback &&
+                match->type == gest->type) {
+            break;
+        }
+    }
+    // If no match add the gesture in the list.
+    if (i == *nb) {
+        match = &gestures[(*nb)++];
+        memset(match, 0, sizeof(*match));
+    }
+
+    // Search if we already have a different active gesture.
+    // XXX: should depend on the type.
+    for (i = 0; i < *nb; i++) {
+        other = &gestures[i];
+        if (    other->callback == gest->callback &&
+                other->type == gest->type) {
+            continue;
+        }
+        if (other->type != GESTURE3D_TYPE_HOVER && other->state != 0) {
+            return false;
+        }
+    }
+
+    // Update the gesture data until it has started.  That way we can
+    // modify the gesture inside its callback function.
+    if (match->state == 0) {
+        match->type = gest->type;
+        match->buttons = gest->buttons;
+        match->snap_mask = gest->snap_mask;
+        match->snap_offset = gest->snap_offset;
+        mat4_copy(gest->snap_shape, match->snap_shape);
+        match->callback = gest->callback;
+    }
+    match->user = gest->user;
+    match->alive = true;
+    return update_state(match);
+}
+
+void gesture3d_remove_dead(int *nb, gesture3d_t gestures[])
+{
+    int i, count;
+    gesture3d_t *gest;
+
+    for (i = *nb - 1; i >= 0; i--) {
+        gest = &gestures[i];
+        if (gest->alive) {
+            gest->alive = false;
+            continue;
+        }
+        count = *nb - i - 1;
+        if (count > 0) {
+            memmove(&gestures[i], &gestures[i + 1], count * sizeof(*gest));
+        }
+        (*nb)--;
+    }
 }

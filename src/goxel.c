@@ -526,76 +526,14 @@ static void update_window_title(void)
 
 bool goxel_gesture3d(const gesture3d_t *gesture)
 {
-    int i;
-    bool ret;
-    gesture3d_t *gest;
-
-    // Search if we already have a different active gesture.
-    for (i = 0; i < goxel.gesture3ds_count; i++) {
-        gest = &goxel.gesture3ds[i];
-        if (    gest->callback == gesture->callback &&
-                gest->type == gesture->type) {
-            continue;
-        }
-        if (gest->type != GESTURE3D_TYPE_HOVER && gest->state != 0) {
-            return false;
-        }
-    }
-
-    // Search if we already have this gesture in the list.
-    for (i = 0; i < goxel.gesture3ds_count; i++) {
-        gest = &goxel.gesture3ds[i];
-        if (    gest->callback == gesture->callback &&
-                gest->type == gesture->type) {
-            break;
-        }
-    }
-    // If no match add the gesture in the list.
-    if (i == goxel.gesture3ds_count) {
-        gest = &goxel.gesture3ds[goxel.gesture3ds_count++];
-        memset(gest, 0, sizeof(*gest));
-        *gest = *gesture;
-    }
-
-    // Update the gesture data until it has started.  That way we can
-    // modify the gesture inside its callback function.
-    if (gest->state == 0) {
-        gest->type = gesture->type;
-        gest->buttons = gesture->buttons;
-        gest->snap_mask = gesture->snap_mask;
-        gest->snap_offset = gesture->snap_offset;
-        mat4_copy(gesture->snap_shape, gest->snap_shape);
-        gest->callback = gesture->callback;
-        gest->user = gesture->user;
-    }
-    gest->user = gesture->user;
-
-    gest->alive = true;
-    ret = gesture3d(gest);
-    return ret;
+    return gesture3d(gesture, &goxel.gesture3ds_count, goxel.gesture3ds);
 }
 
 // Cleanup the unused 3d gestures.
 static void gesture3ds_iter(void)
 {
-    int i, count;
-    gesture3d_t *gest;
-
-    for (i = goxel.gesture3ds_count - 1; i >= 0; i--) {
-        gest = &goxel.gesture3ds[i];
-        if (gest->alive) {
-            gest->alive = false;
-            continue;
-        }
-        count = goxel.gesture3ds_count - i - 1;
-        if (count > 0) {
-            memmove(&goxel.gesture3ds[i], &goxel.gesture3ds[i + 1],
-                    count * sizeof(*gest));
-        }
-        goxel.gesture3ds_count--;
-    }
+    gesture3d_remove_dead(&goxel.gesture3ds_count, goxel.gesture3ds);
 }
-
 
 
 KEEPALIVE

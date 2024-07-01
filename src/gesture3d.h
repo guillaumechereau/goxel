@@ -55,15 +55,30 @@ struct gesture3d
     int         (*callback)(gesture3d_t *gest);
     void        *user;
 
-    // Automatically updated attributes.
+    // Need to be updated manually.
     bool        alive;
-    int         state;
     float       pos[3];
     float       normal[3];
     int         snaped;
     int         flags;
+
+    // Updated by the 'gesture3d' function.
+    int         state;
 };
 
-int gesture3d(gesture3d_t *gest);
+/*
+ * Process a single 3d gesture state.
+ *
+ * Parameters:
+ *   gest       - The gesture we want to process.
+ *   nb         - The total number of gestures.
+ *   gestures   - Array of registered gestures.
+ */
+int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[]);
+
+/*
+ * Remove the dead gestures from an array of 3d gestures.
+ */
+void gesture3d_remove_dead(int *nb, gesture3d_t gestures[]);
 
 #endif // GESTURE3D_H
