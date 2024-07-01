@@ -16,6 +16,14 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * 3d gesture support.  Still experimental.
+ *
+ * The idea is to make it work in immediate mode, where we can call
+ * the `gesture3d` function at anytime and it will directly call the
+ * passed callback if the gesture is recognised.  A bit like imgui.
+ */
+
 #ifndef GESTURE3D_H
 #define GESTURE3D_H
 
@@ -55,14 +63,14 @@ struct gesture3d
     int         (*callback)(gesture3d_t *gest);
     void        *user;
 
-    // Need to be updated manually.
-    bool        alive;
+    // Need to be updated manually at each frame for each gestures.
     float       pos[3];
     float       normal[3];
     int         snaped;
     int         flags;
 
     // Updated by the 'gesture3d' function.
+    bool        alive;
     int         state;
 };
 
