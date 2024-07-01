@@ -27,6 +27,12 @@ static const uint8_t FACES_COLOR[6][3] = {
     {255, 0, 0},
 };
 
+enum {
+    FLAG_SNAPED     = 1 << 0,
+    FLAG_MOVING     = 1 << 1,
+    FLAG_FIRST      = 1 << 2,
+};
+
 typedef struct data
 {
     int mode; // 0: move, 1: resize.
@@ -34,7 +40,7 @@ typedef struct data
     float start_box[4][4];
     float transf[4][4];
     int snap_face;
-    int state; // 0: init, 1: snaped, 2: first change, 3: following changes.
+    int flags;
 } data_t;
 
 static data_t g_data = {};
@@ -90,11 +96,7 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
     data_t *data = (void*)user;
 
     goxel_set_help_text("Drag to move face");
-    if (gest->state == GESTURE_END) {
-        data->state = 0;
-        return 0;
-    }
-    data->state = 1; // Snaped.
+    data->flags |= FLAG_SNAPED;
     data->snap_face = get_face(curs->normal);
     highlight_face(data->box, data->snap_face);
     render_gizmo(data->box, data->snap_face);
@@ -107,10 +109,11 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     float face_plane[4][4], v[3], pos[3], n[3], d[3], ofs[3], box[4][4];
 
     goxel_set_help_text("Drag to move face");
+    data->flags |= FLAG_MOVING;
 
     if (gest->state == GESTURE_BEGIN) {
+        data->flags |= FLAG_FIRST;
         mat4_copy(data->box, data->start_box);
-        data->state = 2;
         data->snap_face = get_face(curs->normal);
         mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
@@ -118,7 +121,6 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         plane_from_vectors(gest->snap_shape, curs->pos, curs->normal, v);
         return 0;
     }
-    data->state = 3;
 
     mat4_mul(data->start_box, FACES_MATS[data->snap_face], face_plane);
     vec3_normalize(face_plane[2], n);
@@ -140,10 +142,6 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
         mat4_set_identity(data->transf);
         mat4_itranslate(data->transf, ofs[0], ofs[1], ofs[2]);
     }
-
-    if (gest->state == GESTURE_END) {
-        data->state = 0;
-    }
     return 0;
 }
 
@@ -155,6 +153,8 @@ int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
     g_data.mode = mode;
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
+
+    g_data.flags &= ~(FLAG_SNAPED | FLAG_MOVING);
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
@@ -171,11 +171,14 @@ int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
         .user = &g_data,
     });
 
-    ret = g_data.state;
 
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
     if (transf) mat4_copy(g_data.transf, transf);
-    if (first) *first = g_data.state == 2;
-    if (g_data.state == 2) g_data.state = 3;
+
+    ret = g_data.flags & FLAG_MOVING;
+    if (first) {
+        *first = g_data.flags & FLAG_FIRST;
+        g_data.flags &= ~FLAG_FIRST;
+    }
     return ret;
 }
