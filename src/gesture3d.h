@@ -21,22 +21,37 @@
 
 typedef struct gesture3d gesture3d_t;
 
+enum {
+    GESTURE3D_TYPE_DRAG         = 1 << 0,
+    GESTURE3D_TYPE_CLICK        = 1 << 1,
+    GESTURE3D_TYPE_HOVER        = 1 << 3,
+};
+
+enum {
+    GESTURE3D_STATE_POSSIBLE = 0,
+    GESTURE3D_STATE_RECOGNISED,
+    GESTURE3D_STATE_BEGIN,
+    GESTURE3D_STATE_UPDATE,
+    GESTURE3D_STATE_END,
+    GESTURE3D_STATE_TRIGGERED,
+    GESTURE3D_STATE_FAILED,
+};
+
 // Represent a 3d cursor.
 // The program keeps track of two cursors, that are then used by the tools.
 enum {
     // The state flags of the cursor.
-    CURSOR_PRESSED      = 1 << 0,
-    CURSOR_SHIFT        = 1 << 1,
-    CURSOR_CTRL         = 1 << 2,
-
-    CURSOR_OUT          = 1 << 3, // Outside of sensing area.
+    GESTURE3D_FLAG_PRESSED      = 1 << 0,
+    GESTURE3D_FLAG_SHIFT        = 1 << 1,
+    GESTURE3D_FLAG_CTRL         = 1 << 2,
+    GESTURE3D_FLAG_OUT          = 1 << 3, // Outside of sensing area.
 };
 
 typedef struct cursor {
     float  pos[3];
     float  normal[3];
     int    snaped;
-    int    flags; // Union of CURSOR_* values.
+    int    flags;
 } cursor_t;
 
 // #### 3d gestures

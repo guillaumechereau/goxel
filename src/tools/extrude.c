@@ -77,7 +77,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     int pi[3];
     float delta;
 
-    if (gest->state == GESTURE_BEGIN) {
+    if (gest->state == GESTURE3D_STATE_BEGIN) {
         tool->snap_face = get_face(curs->normal);
 
         tmp_volume = volume_new();
@@ -143,7 +143,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     volume_delete(tmp_volume);
 
 end:
-    if (gest->state == GESTURE_END) {
+    if (gest->state == GESTURE3D_STATE_END) {
         volume_delete(tool->volume);
     }
     return 0;
@@ -155,7 +155,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
     if (!tool->volume_orig) tool->volume_orig = volume_new();
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_DRAG,
+        .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = goxel.snap_mask & ~SNAP_ROUNDED, // Why?
         .snap_offset = -0.5,
         .callback = on_drag,

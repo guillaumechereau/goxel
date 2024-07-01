@@ -61,7 +61,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     volume_t *layer_volume = goxel.image->active_layer->volume;
     float box[4][4], pos[3];
 
-    if (gest->state == GESTURE_BEGIN) {
+    if (gest->state == GESTURE3D_STATE_BEGIN) {
         volume_set(shape->volume_orig, layer_volume);
         vec3_copy(curs->pos, shape->start_pos);
         image_history_push(goxel.image);
@@ -78,7 +78,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     volume_set(goxel.tool_volume, shape->volume_orig);
     volume_op(goxel.tool_volume, painter, box);
 
-    if (gest->state == GESTURE_END) {
+    if (gest->state == GESTURE3D_STATE_END) {
         volume_set(layer_volume, goxel.tool_volume);
         volume_delete(goxel.tool_volume);
         goxel.tool_volume = NULL;
@@ -99,14 +99,14 @@ static int iter(tool_t *tool, const painter_t *painter,
         shape->volume_orig = volume_copy(goxel.image->active_layer->volume);
 
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_DRAG,
+        .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
         .snap_offset = snap_offset,
         .callback = on_drag,
         .user = USER_PASS(shape, painter),
     });
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_HOVER,
+        .type = GESTURE3D_TYPE_HOVER,
         .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
         .snap_offset = snap_offset,
         .callback = on_hover,

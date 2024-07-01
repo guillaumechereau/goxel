@@ -63,11 +63,11 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     mat4_mul_vec4(cam->proj_mat, pos, pos);
     vec3_mul(pos, 1 / pos[3], pos);
 
-    if (gest->state == GESTURE_BEGIN)
+    if (gest->state == GESTURE3D_STATE_BEGIN)
         vec2_copy(pos, tool->rect);
     vec2_copy(pos, &tool->rect[2]);
 
-    if (gest->state == GESTURE_END) {
+    if (gest->state == GESTURE3D_STATE_END) {
         apply(tool->rect);
         vec4_set(tool->rect, 0, 0, 0, 0);
     }
@@ -82,7 +82,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
     tool_rect_select_t *tool = (tool_rect_select_t*)tool_;
 
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_DRAG,
+        .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = SNAP_CAMERA,
         .callback = on_drag,
         .user = tool,

@@ -111,7 +111,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     goxel_set_help_text("Drag to move face");
     data->flags |= FLAG_MOVING;
 
-    if (gest->state == GESTURE_BEGIN) {
+    if (gest->state == GESTURE3D_STATE_BEGIN) {
         data->flags |= FLAG_FIRST;
         mat4_copy(data->box, data->start_box);
         data->snap_face = get_face(curs->normal);

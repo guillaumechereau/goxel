@@ -539,7 +539,7 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
                 gest->type == gesture->type) {
             continue;
         }
-        if (gest->type != GESTURE_HOVER && gest->state != 0) {
+        if (gest->type != GESTURE3D_TYPE_HOVER && gest->state != 0) {
             return false;
         }
     }
@@ -690,9 +690,9 @@ static int on_drag(const gesture_t *gest, void *user)
         gest3d = &goxel.gesture3ds[i].gesture;
         c = &goxel.gesture3ds[i].cursor;
         if (gest->state == GESTURE_BEGIN)
-            c->flags |= CURSOR_PRESSED;
+            c->flags |= GESTURE3D_FLAG_PRESSED;
         if (gest->state == GESTURE_END)
-            c->flags &= ~CURSOR_PRESSED;
+            c->flags &= ~GESTURE3D_FLAG_PRESSED;
 
         c->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
@@ -819,8 +819,8 @@ static int on_hover(const gesture_t *gest, void *user)
                 gest3d->snap_shape, gest3d->snap_offset,
                 c->pos, c->normal);
         set_cursor_hint(c);
-        c->flags &= ~CURSOR_PRESSED;
-        set_flag(&c->flags, CURSOR_OUT, gest->state == GESTURE_END);
+        c->flags &= ~GESTURE3D_FLAG_PRESSED;
+        set_flag(&c->flags, GESTURE3D_FLAG_OUT, gest->state == GESTURE_END);
     }
     return 0;
 }
@@ -841,8 +841,10 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         curs = &goxel.gesture3ds[i].cursor;
-        set_flag(&curs->flags, CURSOR_SHIFT, inputs->keys[KEY_LEFT_SHIFT]);
-        set_flag(&curs->flags, CURSOR_CTRL, inputs->keys[KEY_CONTROL]);
+        set_flag(&curs->flags, GESTURE3D_FLAG_SHIFT,
+                 inputs->keys[KEY_LEFT_SHIFT]);
+        set_flag(&curs->flags, GESTURE3D_FLAG_CTRL,
+                 inputs->keys[KEY_CONTROL]);
     }
 
     painter.box = !box_is_null(goxel.image->active_layer->box) ?

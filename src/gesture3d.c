@@ -20,76 +20,104 @@
 
 int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user)
 {
-    bool pressed = curs->flags & CURSOR_PRESSED;
+    bool pressed = curs->flags & GESTURE3D_FLAG_PRESSED;
     int r, ret = 0;
-    const int btns_mask = CURSOR_CTRL;
+    const int btns_mask = GESTURE3D_FLAG_CTRL;
 
-    if (gest->state == GESTURE_FAILED && !pressed)
-        gest->state = GESTURE_POSSIBLE;
+    if (gest->state == GESTURE3D_STATE_FAILED && !pressed)
+        gest->state = GESTURE3D_STATE_POSSIBLE;
 
-    if (gest->type == GESTURE_DRAG) {
+    if (gest->type == GESTURE3D_TYPE_DRAG) {
         switch (gest->state) {
-        case GESTURE_POSSIBLE:
+        case GESTURE3D_STATE_POSSIBLE:
             if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
                 break;
-            if (curs->snaped && pressed) gest->state = GESTURE_BEGIN;
+            if (curs->snaped && pressed) {
+                gest->state = GESTURE3D_STATE_BEGIN;
+            }
             break;
-        case GESTURE_BEGIN:
-        case GESTURE_UPDATE:
-            gest->state = GESTURE_UPDATE;
-            if (!pressed) gest->state = GESTURE_END;
+        case GESTURE3D_STATE_BEGIN:
+        case GESTURE3D_STATE_UPDATE:
+            gest->state = GESTURE3D_STATE_UPDATE;
+            if (!pressed) {
+                gest->state = GESTURE3D_STATE_END;
+            }
+            break;
+        default:
+            assert(false);
             break;
         }
     }
 
-    if (gest->type == GESTURE_CLICK) {
+    if (gest->type == GESTURE3D_TYPE_CLICK) {
         switch (gest->state) {
-        case GESTURE_POSSIBLE:
-            if (curs->snaped && !pressed) gest->state = GESTURE_RECOGNISED;
+        case GESTURE3D_STATE_POSSIBLE:
+            if (curs->snaped && !pressed) {
+                gest->state = GESTURE3D_STATE_RECOGNISED;
+            }
             break;
-        case GESTURE_RECOGNISED:
+        case GESTURE3D_STATE_RECOGNISED:
             if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
                 break;
-            if (curs->snaped && pressed) gest->state = GESTURE_TRIGGERED;
+            if (curs->snaped && pressed) {
+                gest->state = GESTURE3D_STATE_TRIGGERED;
+            }
+            break;
+        default:
+            assert(false);
             break;
         }
     }
 
-    if (!DEFINED(GOXEL_MOBILE) && gest->type == GESTURE_HOVER) {
+    if (!DEFINED(GOXEL_MOBILE) && gest->type == GESTURE3D_TYPE_HOVER) {
         switch (gest->state) {
-        case GESTURE_POSSIBLE:
+        case GESTURE3D_STATE_POSSIBLE:
             if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
                 break;
-            if (curs->snaped && !pressed && !(curs->flags & CURSOR_OUT))
-                gest->state = GESTURE_BEGIN;
+            if (curs->snaped && !pressed &&
+                    !(curs->flags & GESTURE3D_FLAG_OUT)) {
+                gest->state = GESTURE3D_STATE_BEGIN;
+            }
             break;
-        case GESTURE_BEGIN:
-        case GESTURE_UPDATE:
-            gest->state = GESTURE_UPDATE;
-            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask))
-                gest->state = GESTURE_END;
-            if (pressed) gest->state = GESTURE_END;
-            if (!curs->snaped) gest->state = GESTURE_END;
-            if (curs->flags & CURSOR_OUT) gest->state = GESTURE_END;
+        case GESTURE3D_STATE_BEGIN:
+        case GESTURE3D_STATE_UPDATE:
+            gest->state = GESTURE3D_STATE_UPDATE;
+            if ((gest->buttons & btns_mask) != (curs->flags & btns_mask)) {
+                gest->state = GESTURE3D_STATE_END;
+            }
+            if (pressed) {
+                gest->state = GESTURE3D_STATE_END;
+            }
+            if (!curs->snaped) {
+                gest->state = GESTURE3D_STATE_END;
+            }
+            if (curs->flags & GESTURE3D_FLAG_OUT) {
+                gest->state = GESTURE3D_STATE_END;
+            }
+            break;
+        default:
+            assert(false);
             break;
         }
     }
 
-    if (    gest->state == GESTURE_BEGIN ||
-            gest->state == GESTURE_UPDATE ||
-            gest->state == GESTURE_END ||
-            gest->state == GESTURE_TRIGGERED)
+    if (    gest->state == GESTURE3D_STATE_BEGIN ||
+            gest->state == GESTURE3D_STATE_UPDATE ||
+            gest->state == GESTURE3D_STATE_END ||
+            gest->state == GESTURE3D_STATE_TRIGGERED)
     {
         r = gest->callback(gest, curs, user);
-        if (r == GESTURE_FAILED) {
-            gest->state = GESTURE_FAILED;
+        if (r == GESTURE3D_STATE_FAILED) {
+            gest->state = GESTURE3D_STATE_FAILED;
             ret = 0;
         } else {
             ret = gest->state;
         }
     }
-    if (gest->state == GESTURE_END || gest->state == GESTURE_TRIGGERED)
-        gest->state = GESTURE_POSSIBLE;
+    if (    gest->state == GESTURE3D_STATE_END ||
+            gest->state == GESTURE3D_STATE_TRIGGERED) {
+        gest->state = GESTURE3D_STATE_POSSIBLE;
+    }
 
     return ret;
 }

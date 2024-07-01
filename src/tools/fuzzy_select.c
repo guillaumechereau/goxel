@@ -64,7 +64,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
 {
     tool_fuzzy_select_t *tool = (void*)tool_;
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_CLICK,
+        .type = GESTURE3D_TYPE_CLICK,
         .snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX,
         .snap_offset = -0.5,
         .callback = on_click,

@@ -43,7 +43,7 @@ static bool check_can_skip(tool_brush_t *brush, const cursor_t *curs,
                            int mode)
 {
     volume_t *volume = goxel.tool_volume;
-    const bool pressed = curs->flags & CURSOR_PRESSED;
+    const bool pressed = curs->flags & GESTURE3D_FLAG_PRESSED;
     if (    pressed == brush->last_op.pressed &&
             mode == brush->last_op.mode &&
             brush->last_op.volume_key == volume_get_key(volume) &&
@@ -108,12 +108,12 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     tool_brush_t *brush = USER_GET(user, 0);
     painter_t painter = *(painter_t*)USER_GET(user, 1);
     float box[4][4];
-    bool shift = curs->flags & CURSOR_SHIFT;
+    bool shift = curs->flags & GESTURE3D_FLAG_SHIFT;
     float r = goxel.tool_radius;
     int nb, i;
     float pos[3];
 
-    if (gest->state == GESTURE_BEGIN) {
+    if (gest->state == GESTURE3D_STATE_BEGIN) {
         volume_set(brush->volume_orig, goxel.image->active_layer->volume);
         brush->last_op.mode = 0; // Discard last op.
         vec3_copy(curs->pos, brush->last_pos);
@@ -130,7 +130,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     }
 
     painter = *(painter_t*)USER_GET(user, 1);
-    if (    (gest->state == GESTURE_UPDATE) &&
+    if (    (gest->state == GESTURE3D_STATE_UPDATE) &&
             (check_can_skip(brush, curs, painter.mode))) {
         return 0;
     }
@@ -155,7 +155,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     vec3_copy(curs->pos, brush->start_pos);
     brush->last_op.volume_key = volume_get_key(goxel.tool_volume);
 
-    if (gest->state == GESTURE_END) {
+    if (gest->state == GESTURE3D_STATE_END) {
         volume_set(goxel.image->active_layer->volume, goxel.tool_volume);
         volume_set(brush->volume_orig, goxel.tool_volume);
         volume_delete(goxel.tool_volume);
@@ -171,9 +171,9 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
     tool_brush_t *brush = USER_GET(user, 0);
     const painter_t *painter = USER_GET(user, 1);
     float box[4][4];
-    bool shift = curs->flags & CURSOR_SHIFT;
+    bool shift = curs->flags & GESTURE3D_FLAG_SHIFT;
 
-    if (gest->state == GESTURE_END || !curs->snaped) {
+    if (gest->state == GESTURE3D_STATE_END || !curs->snaped) {
         volume_delete(goxel.tool_volume);
         goxel.tool_volume = NULL;
         return 0;
@@ -212,14 +212,14 @@ static int iter(tool_t *tool, const painter_t *painter,
         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_DRAG,
+        .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
         .snap_offset = snap_offset,
         .callback = on_drag,
         .user = USER_PASS(brush, painter),
     });
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_HOVER,
+        .type = GESTURE3D_TYPE_HOVER,
         .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
         .snap_offset = snap_offset,
         .callback = on_hover,

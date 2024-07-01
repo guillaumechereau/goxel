@@ -62,7 +62,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     painter.shape = &shape_cylinder;
     vec4_set(painter.color, 255, 255, 255, 255);
 
-    if (gest->state == GESTURE_BEGIN)
+    if (gest->state == GESTURE3D_STATE_BEGIN)
         image_history_push(goxel.image);
 
     volume_op(volume, &painter, laser->box);
@@ -75,14 +75,14 @@ static int iter(tool_t *tool, const painter_t *painter,
     tool_laser_t *laser = (tool_laser_t*)tool;
 
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_HOVER,
+        .type = GESTURE3D_TYPE_HOVER,
         .callback = on_hover,
         .snap_mask = SNAP_CAMERA,
         .user = laser,
     });
 
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_DRAG,
+        .type = GESTURE3D_TYPE_DRAG,
         .callback = on_drag,
         .snap_mask = SNAP_CAMERA,
         .user = USER_PASS(laser, painter),

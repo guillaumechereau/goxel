@@ -60,7 +60,7 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     goxel_set_help_text("Drag.");
 
     get_rect(curs->pos, curs->normal, rect);
-    if (gest->state == GESTURE_BEGIN)
+    if (gest->state == GESTURE3D_STATE_BEGIN)
         mat4_copy(rect, tool->start_rect);
 
     box_union(tool->start_rect, rect, goxel.selection);
@@ -92,14 +92,14 @@ static int iter(tool_t *tool, const painter_t *painter,
     }
 
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_HOVER,
+        .type = GESTURE3D_TYPE_HOVER,
         .snap_mask = snap_mask,
         .callback = on_hover,
         .user = selection,
     });
 
     goxel_gesture3d(&(gesture3d_t) {
-        .type = GESTURE_DRAG,
+        .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = snap_mask & ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT),
         .callback = on_drag,
         .user = selection,
