@@ -698,7 +698,6 @@ static int on_drag(const gesture_t *gest, void *user)
         if (gest->state == GESTURE_END)
             c->flags &= ~CURSOR_PRESSED;
 
-        if (gest3d->type == GESTURE_HOVER) continue;
         c->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
                 gest3d->snap_shape, gest3d->snap_offset,
@@ -818,7 +817,6 @@ static int on_hover(const gesture_t *gest, void *user)
 
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         gest3d = &goxel.gesture3ds[i].gesture;
-        if (gest3d->type != GESTURE_HOVER) continue;
         c = &goxel.gesture3ds[i].cursor;
         c->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
