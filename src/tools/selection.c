@@ -39,7 +39,7 @@ static void get_rect(const float pos[3], const float normal[3],
     mat4_iscale(out, 0.5, 0.5, 0);
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest)
 {
     float rect[4][4];
     uint8_t rect_color[4] = {255, 255, 0, 255};
@@ -50,9 +50,9 @@ static int on_hover(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest)
 {
-    tool_selection_t *tool = user;
+    tool_selection_t *tool = gest->user;
     float rect[4][4];
     float p[3];
     int dir;

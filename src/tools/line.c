@@ -75,9 +75,9 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest)
 {
-    tool_line_t *tool = USER_GET(user, 0);
+    tool_line_t *tool = USER_GET(gest->user, 0);
     painter_t painter;
     const float radius = goxel.tool_radius;
     float box[4][4];
@@ -89,14 +89,14 @@ static int on_drag(gesture3d_t *gest, void *user)
         image_history_push(goxel.image);
     }
 
-    painter = *(painter_t*)USER_GET(user, 1);
+    painter = *(painter_t*)USER_GET(gest->user, 1);
     painter.mode = MODE_MAX;
     vec4_set(painter.color, 255, 255, 255, 255);
     get_box(tool->start_pos, gest->pos, gest->normal, radius, NULL, box);
     volume_clear(tool->volume);
     volume_op(tool->volume, &painter, box);
 
-    painter = *(painter_t*)USER_GET(user, 1);
+    painter = *(painter_t*)USER_GET(gest->user, 1);
     if (!goxel.tool_volume) goxel.tool_volume = volume_new();
     volume_set(goxel.tool_volume, tool->volume_orig);
     volume_merge(goxel.tool_volume, tool->volume, painter.mode, painter.color);
@@ -111,11 +111,11 @@ static int on_drag(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest)
 {
     volume_t *volume = goxel.image->active_layer->volume;
 
-    const painter_t *painter = USER_GET(user, 1);
+    const painter_t *painter = USER_GET(gest->user, 1);
     float box[4][4];
 
     if (gest->state == GESTURE3D_STATE_END) {

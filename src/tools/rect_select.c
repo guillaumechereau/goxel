@@ -52,9 +52,9 @@ static void apply(const float rect_[4])
     }
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest)
 {
-    tool_rect_select_t *tool = user;
+    tool_rect_select_t *tool = gest->user;
     float pos[4];
     const camera_t *cam = goxel.image->active_camera;
 

@@ -103,10 +103,10 @@ static void get_box(const float p0[3], const float p1[3], const float n[3],
     mat4_copy(box, out);
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest)
 {
-    tool_brush_t *brush = USER_GET(user, 0);
-    painter_t painter = *(painter_t*)USER_GET(user, 1);
+    tool_brush_t *brush = USER_GET(gest->user, 0);
+    painter_t painter = *(painter_t*)USER_GET(gest->user, 1);
     float box[4][4];
     bool shift = gest->flags & GESTURE3D_FLAG_SHIFT;
     float r = goxel.tool_radius;
@@ -129,7 +129,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         }
     }
 
-    painter = *(painter_t*)USER_GET(user, 1);
+    painter = *(painter_t*)USER_GET(gest->user, 1);
     if (    (gest->state == GESTURE3D_STATE_UPDATE) &&
             (check_can_skip(brush, gest, painter.mode))) {
         return 0;
@@ -148,7 +148,7 @@ static int on_drag(gesture3d_t *gest, void *user)
         volume_op(brush->volume, &painter, box);
     }
 
-    painter = *(painter_t*)USER_GET(user, 1);
+    painter = *(painter_t*)USER_GET(gest->user, 1);
     if (!goxel.tool_volume) goxel.tool_volume = volume_new();
     volume_set(goxel.tool_volume, brush->volume_orig);
     volume_merge(goxel.tool_volume, brush->volume, painter.mode, painter.color);
@@ -165,11 +165,11 @@ static int on_drag(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest)
 {
     volume_t *volume = goxel.image->active_layer->volume;
-    tool_brush_t *brush = USER_GET(user, 0);
-    const painter_t *painter = USER_GET(user, 1);
+    tool_brush_t *brush = USER_GET(gest->user, 0);
+    const painter_t *painter = USER_GET(gest->user, 1);
     float box[4][4];
     bool shift = gest->flags & GESTURE3D_FLAG_SHIFT;
 

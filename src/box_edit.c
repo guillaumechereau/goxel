@@ -91,9 +91,9 @@ static void highlight_face(const float box[4][4], int face)
     render_rect_fill(&goxel.rend, plane, color);
 }
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest)
 {
-    data_t *data = (void*)user;
+    data_t *data = gest->user;;
 
     goxel_set_help_text("Drag to move face");
     data->flags |= FLAG_SNAPED;
@@ -103,9 +103,9 @@ static int on_hover(gesture3d_t *gest, void *user)
     return 0;
 }
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest)
 {
-    data_t *data = (void*)user;
+    data_t *data = gest->user;
     float face_plane[4][4], v[3], pos[3], n[3], d[3], ofs[3], box[4][4];
 
     goxel_set_help_text("Drag to move face");

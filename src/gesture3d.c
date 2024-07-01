@@ -18,7 +18,7 @@
 
 #include "goxel.h"
 
-int gesture3d(gesture3d_t *gest, void *user)
+int gesture3d(gesture3d_t *gest)
 {
     bool pressed = gest->flags & GESTURE3D_FLAG_PRESSED;
     int r, ret = 0;
@@ -106,7 +106,7 @@ int gesture3d(gesture3d_t *gest, void *user)
             gest->state == GESTURE3D_STATE_END ||
             gest->state == GESTURE3D_STATE_TRIGGERED)
     {
-        r = gest->callback(gest, user);
+        r = gest->callback(gest);
         if (r == GESTURE3D_STATE_FAILED) {
             gest->state = GESTURE3D_STATE_FAILED;
             ret = 0;

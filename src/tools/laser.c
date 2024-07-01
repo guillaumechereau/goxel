@@ -25,9 +25,9 @@ typedef struct {
 } tool_laser_t;
 
 
-static int on_hover(gesture3d_t *gest, void *user)
+static int on_hover(gesture3d_t *gest)
 {
-    tool_laser_t *laser = user;
+    tool_laser_t *laser = USER_GET(gest->user, 0);
     float v[4];
     float view_mat_inv[4][4] = {};
     camera_t *camera = goxel.image->active_camera;
@@ -51,13 +51,13 @@ static int on_hover(gesture3d_t *gest, void *user)
 }
 
 
-static int on_drag(gesture3d_t *gest, void *user)
+static int on_drag(gesture3d_t *gest)
 {
-    tool_laser_t *laser = (tool_laser_t*)USER_GET(user, 0);
-    painter_t painter = *(painter_t*)USER_GET(user, 1);
+    tool_laser_t *laser = (tool_laser_t*)USER_GET(gest->user, 0);
+    painter_t painter = *(painter_t*)USER_GET(gest->user, 1);
     volume_t *volume = goxel.image->active_layer->volume;
 
-    on_hover(gest, laser);
+    on_hover(gest);
     painter.mode = MODE_SUB_CLAMP;
     painter.shape = &shape_cylinder;
     vec4_set(painter.color, 255, 255, 255, 255);
@@ -78,7 +78,7 @@ static int iter(tool_t *tool, const painter_t *painter,
         .type = GESTURE3D_TYPE_HOVER,
         .callback = on_hover,
         .snap_mask = SNAP_CAMERA,
-        .user = laser,
+        .user = USER_PASS(laser, painter),
     });
 
     goxel_gesture3d(&(gesture3d_t) {

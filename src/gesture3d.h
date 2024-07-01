@@ -52,7 +52,7 @@ struct gesture3d
     int         snap_mask;
     float       snap_offset;
     float       snap_shape[4][4]; // Used for plane snapping.
-    int         (*callback)(gesture3d_t *gest, void *user);
+    int         (*callback)(gesture3d_t *gest);
     void        *user;
 
     // Automatically updated attributes.
@@ -64,6 +64,6 @@ struct gesture3d
     int         flags;
 };
 
-int gesture3d(gesture3d_t *gest, void *user);
+int gesture3d(gesture3d_t *gest);
 
 #endif // GESTURE3D_H

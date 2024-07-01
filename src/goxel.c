@@ -568,9 +568,10 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
         gest->callback = gesture->callback;
         gest->user = gesture->user;
     }
+    gest->user = gesture->user;
 
     gest->alive = true;
-    ret = gesture3d(gest, gesture->user);
+    ret = gesture3d(gest);
     return ret;
 }
 

@@ -24,7 +24,7 @@ typedef struct {
 } tool_plane_t;
 
 
-static int on_click(gesture3d_t *gest,  void *user)
+static int on_click(gesture3d_t *gest)
 {
     float pos[3];
     pos[0] = round(gest->pos[0]);
