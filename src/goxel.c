@@ -536,6 +536,7 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         gest = &goxel.gesture3ds[i].gesture;
         if (    gest->callback == gesture->callback &&
+                gest->user_key == gesture->user_key &&
                 gest->type == gesture->type) {
             continue;
         }
@@ -548,6 +549,7 @@ bool goxel_gesture3d(const gesture3d_t *gesture)
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         slot = &goxel.gesture3ds[i];
         if (    slot->gesture.callback == gesture->callback &&
+                slot->gesture.user_key == gesture->user_key &&
                 slot->gesture.type == gesture->type) {
             break;
         }

@@ -28,9 +28,10 @@ static const uint8_t FACES_COLOR[6][3] = {
 };
 
 enum {
-    FLAG_SNAPED     = 1 << 0,
-    FLAG_MOVING     = 1 << 1,
-    FLAG_FIRST      = 1 << 2,
+    FLAG_SNAP_FACE      = 1 << 0,
+    FLAG_SNAP_GIZMO     = 1 << 1,
+    FLAG_MOVING         = 1 << 2,
+    FLAG_FIRST          = 1 << 3,
 };
 
 typedef struct data
@@ -65,10 +66,10 @@ static void get_transf(const float src[4][4], const float dst[4][4],
     mat4_mul(dst, out, out);
 }
 
-static void render_gizmo(const float box[4][4], int face)
+static void render_gizmo(const float box[4][4], int face, float alpha)
 {
     float plane[4][4];
-    uint8_t color[4] = {0, 0, 0, 100};
+    uint8_t color[4] = {0, 0, 0, alpha * 255};
     float a[3], b[3], dir[3];
 
     mat4_mul(box, FACES_MATS[face], plane);
@@ -95,11 +96,11 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     data_t *data = (void*)user;
 
+    if (g_data.flags & FLAG_SNAP_GIZMO) return GESTURE_FAILED;
     goxel_set_help_text("Drag to move face");
-    data->flags |= FLAG_SNAPED;
+    data->flags |= FLAG_SNAP_FACE;
     data->snap_face = get_face(curs->normal);
     highlight_face(data->box, data->snap_face);
-    render_gizmo(data->box, data->snap_face);
     return 0;
 }
 
@@ -145,8 +146,91 @@ static int on_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
     return 0;
 }
 
+
+static int on_gizmo_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
+{
+    g_data.snap_face = gest->user_key;
+    g_data.flags |= FLAG_SNAP_GIZMO;
+    return 0;
+}
+
+// XXX: should try to merge with face drag!
+static int on_gizmo_drag(gesture3d_t *gest, const cursor_t *curs, void *user)
+{
+    float face_plane[4][4], v[3], n[3];
+    int face = gest->user_key;
+    float box[4][4];
+
+    goxel_set_help_text("Drag to move face");
+    g_data.flags |= FLAG_MOVING;
+
+    if (gest->state == GESTURE_BEGIN) {
+        g_data.flags |= FLAG_FIRST;
+        mat4_copy(g_data.box, g_data.start_box);
+        g_data.snap_face = face;
+
+        // Compute the new snapping plane for the translation.
+        mat4_mul(g_data.box, FACES_MATS[face], face_plane);
+        vec3_normalize(face_plane[0], v);
+        vec3_normalize(face_plane[2], n);
+        plane_from_vectors(gest->snap_shape, curs->pos, n, v);
+
+        gest->snap_mask = SNAP_SHAPE_PLANE;
+        return 0;
+    }
+
+    mat4_mul(g_data.start_box, FACES_MATS[face], face_plane);
+    vec3_normalize(face_plane[2], n);
+    vec3_sub(curs->pos, gest->snap_shape[3], v);
+    vec3_project(v, n, v);
+
+    v[0] = round(v[0]);
+    v[1] = round(v[1]);
+    v[2] = round(v[2]);
+    mat4_copy(g_data.start_box, box);
+    vec3_add(box[3], v, box[3]);
+    get_transf(g_data.box, box, g_data.transf);
+
+    return 0;
+}
+
+static void gizmo(const float box[4][4], int face)
+{
+    float shape[4][4];
+    float alpha = 0.2;
+
+    // Compute the gizmo bounding box.
+    mat4_mul(box, FACES_MATS[face], shape);
+    vec3_normalize(shape[0], shape[0]);
+    vec3_normalize(shape[1], shape[1]);
+    vec3_normalize(shape[2], shape[2]);
+    mat4_iscale(shape, 0.5, 0.5, 4 / 2.0);
+    mat4_itranslate(shape, 0, 0, 1);
+
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_HOVER,
+        .snap_mask = SNAP_SHAPE_BOX,
+        .snap_shape = MAT4_COPY(shape),
+        .callback = on_gizmo_hover,
+        .user_key = face,
+    });
+
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE_DRAG,
+        .snap_mask = SNAP_SHAPE_BOX,
+        .snap_shape = MAT4_COPY(shape),
+        .callback = on_gizmo_drag,
+        .user_key = face,
+    });
+
+    if ((g_data.flags & FLAG_SNAP_GIZMO) && g_data.snap_face == face)
+        alpha = 1.0;
+    render_gizmo(box, face, alpha);
+}
+
 int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
 {
+    int i;
     int ret;
 
     if (box_is_null(box)) return 0;
@@ -154,7 +238,11 @@ int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
 
-    g_data.flags &= ~(FLAG_SNAPED | FLAG_MOVING);
+    g_data.flags &= ~(FLAG_SNAP_FACE | FLAG_SNAP_GIZMO | FLAG_MOVING);
+
+    for (i = 0; i < 6; i++) {
+        gizmo(box, i);
+    }
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
@@ -175,7 +263,7 @@ int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
     if (transf) mat4_copy(g_data.transf, transf);
 
-    ret = g_data.flags & FLAG_MOVING;
+    ret = g_data.flags & (FLAG_MOVING | FLAG_SNAP_GIZMO | FLAG_SNAP_FACE);
     if (first) {
         *first = g_data.flags & FLAG_FIRST;
         g_data.flags &= ~FLAG_FIRST;

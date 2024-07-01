@@ -51,6 +51,7 @@ struct gesture3d
     int         (*callback)(gesture3d_t *gest, const cursor_t *curs,
                             void *user);
     void        *user;
+    int         user_key;
 };
 
 int gesture3d(gesture3d_t *gest, cursor_t *curs, void *user);
