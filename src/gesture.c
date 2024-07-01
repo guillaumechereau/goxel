@@ -163,6 +163,9 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
             gest->state = GESTURE_UPDATE;
             if (!rect_contains(gest->viewport, gest->pos))
                 gest->state = GESTURE_END;
+            if (nb_ts != 0) {
+                gest->state = GESTURE_END;
+            }
             break;
         }
     }
@@ -213,8 +216,12 @@ int gesture_update(int nb, gesture_t *gestures[],
                 continue;
             }
             vec2_copy(gest->pos, gest->last_pos);
-            triggered = gest;
-            break;
+
+            if (    gest->state == GESTURE_BEGIN ||
+                    gest->state == GESTURE_TRIGGERED) {
+                triggered = gest;
+                break;
+            }
         }
     }
 
