@@ -126,10 +126,10 @@ static int update_state(gesture3d_t *gest)
 int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
 {
     int i;
-    gesture3d_t *other, *match;
+    gesture3d_t *other, *match = NULL;
 
     // Search if we already have this gesture in the list.
-    for (i = 0; i < goxel.gesture3ds_count; i++) {
+    for (i = 0; i < *nb; i++) {
         match = &gestures[i];
         if (    match->callback == gest->callback &&
                 match->type == gest->type) {
@@ -141,6 +141,7 @@ int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
         match = &gestures[(*nb)++];
         memset(match, 0, sizeof(*match));
     }
+    assert(match);
 
     // Search if we already have a different active gesture.
     // XXX: should depend on the type.
