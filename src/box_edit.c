@@ -59,24 +59,35 @@ static void get_transf(const float src[4][4], const float dst[4][4],
     mat4_mul(dst, out, out);
 }
 
-static void render_gizmo(const float plane[4][4], int face)
+static void render_gizmo(const float box[4][4], int face)
 {
-    uint8_t color[4] = {0, 0, 0, 16};
+    float plane[4][4];
+    uint8_t color[4] = {0, 0, 0, 100};
     float a[3], b[3], dir[3];
 
+    mat4_mul(box, FACES_MATS[face], plane);
     memcpy(color, FACES_COLOR[face], 3);
-    render_rect_fill(&goxel.rend, plane, color);
     vec3_normalize(plane[2], dir);
     vec3_copy(plane[3], a);
     vec3_addk(a, dir, 3, b);
-    color[3] = 100;
     render_line(&goxel.rend, a, b, color, EFFECT_ARROW | EFFECT_NO_DEPTH_TEST);
+}
+
+static void highlight_face(const float box[4][4], int face)
+{
+    float plane[4][4];
+    uint8_t color[4] = {0, 0, 0, 16};
+
+    mat4_mul(box, FACES_MATS[face], plane);
+    mat4_iscale(plane, 2, 2, 1);
+    mat4_itranslate(plane, 0, 0, 0.001);
+    memcpy(color, FACES_COLOR[face], 3);
+    render_rect_fill(&goxel.rend, plane, color);
 }
 
 static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
 {
     data_t *data = (void*)user;
-    float face_plane[4][4];
 
     goxel_set_help_text("Drag to move face");
     if (gest->state == GESTURE_END) {
@@ -85,12 +96,8 @@ static int on_hover(gesture3d_t *gest, const cursor_t *curs, void *user)
     }
     data->state = 1; // Snaped.
     data->snap_face = get_face(curs->normal);
-    // Render a white box on the side.
-    // XXX: replace that with something better like an arrow.
-    mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
-    mat4_iscale(face_plane, 2, 2, 1);
-    mat4_itranslate(face_plane, 0, 0, 0.001);
-    render_gizmo(face_plane, data->snap_face);
+    highlight_face(data->box, data->snap_face);
+    render_gizmo(data->box, data->snap_face);
     return 0;
 }
 
