@@ -36,13 +36,9 @@ enum {
 };
 
 enum {
-    GESTURE3D_STATE_POSSIBLE = 0,
-    GESTURE3D_STATE_RECOGNISED,
-    GESTURE3D_STATE_BEGIN,
+    GESTURE3D_STATE_BEGIN   = 8,
     GESTURE3D_STATE_UPDATE,
     GESTURE3D_STATE_END,
-    GESTURE3D_STATE_TRIGGERED,
-    GESTURE3D_STATE_FAILED,
 };
 
 enum {
@@ -50,6 +46,7 @@ enum {
     GESTURE3D_FLAG_SHIFT        = 1 << 1,
     GESTURE3D_FLAG_CTRL         = 1 << 2,
     GESTURE3D_FLAG_OUT          = 1 << 3, // Outside of sensing area.
+    GESTURE3D_FLAG_DRAG_DELAY   = 1 << 4, // Don't drag until we move.
 };
 
 // #### 3d gestures
@@ -70,6 +67,8 @@ struct gesture3d
     int         flags;
 
     // Updated by the 'gesture3d' function.
+    float       start_pos[3];
+    float       start_normal[3];
     bool        alive;
     int         state;
 };

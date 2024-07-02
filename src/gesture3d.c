@@ -18,15 +18,43 @@
 
 #include "goxel.h"
 
-static void update_drag(gesture3d_t *gest, bool pressed, bool btns_match)
+enum {
+    GESTURE3D_STATE_FAILED      = -1,
+    GESTURE3D_STATE_POSSIBLE    = 0,
+    GESTURE3D_STATE_SNAPED      = 1,
+    GESTURE3D_STATE_DOWN,
+    GESTURE3D_STATE_TRIGGERED,
+};
+
+static void update_drag(gesture3d_t *gest, bool pressed, bool btns_match,
+                        int others_mask)
 {
     switch (gest->state) {
     case GESTURE3D_STATE_POSSIBLE:
         if (!btns_match) break;
+        if (others_mask & GESTURE3D_TYPE_DRAG) break;
+
         if (gest->snaped && pressed) {
+            vec3_copy(gest->pos, gest->start_pos);
+            vec3_copy(gest->normal, gest->start_normal);
+            if (gest->flags & GESTURE3D_FLAG_DRAG_DELAY)
+                gest->state = GESTURE3D_STATE_DOWN;
+            else
+                gest->state = GESTURE3D_STATE_BEGIN;
+        }
+        break;
+
+    case GESTURE3D_STATE_DOWN:
+        // Require a bit of movement before starting.
+        if (!pressed) {
+            gest->state = GESTURE3D_STATE_POSSIBLE;
+        }
+        // XXX: should depend on 2d distance.
+        if (vec3_dist2(gest->pos, gest->start_pos) > 1) {
             gest->state = GESTURE3D_STATE_BEGIN;
         }
         break;
+
     case GESTURE3D_STATE_BEGIN:
     case GESTURE3D_STATE_UPDATE:
         gest->state = GESTURE3D_STATE_UPDATE;
@@ -44,13 +72,20 @@ static void update_click(gesture3d_t *gest, bool pressed, bool btns_match)
 {
     switch (gest->state) {
     case GESTURE3D_STATE_POSSIBLE:
-        if (gest->snaped && !pressed) {
-            gest->state = GESTURE3D_STATE_RECOGNISED;
+        if (gest->snaped && !pressed && btns_match) {
+            gest->state = GESTURE3D_STATE_SNAPED;
         }
         break;
-    case GESTURE3D_STATE_RECOGNISED:
-        if (!btns_match) break;
-        if (gest->snaped && pressed) {
+    case GESTURE3D_STATE_SNAPED:
+        if (!gest->snaped || !btns_match) {
+            gest->state = GESTURE3D_STATE_POSSIBLE;
+        }
+        if (pressed) {
+            gest->state = GESTURE3D_STATE_DOWN;
+        }
+        break;
+    case GESTURE3D_STATE_DOWN:
+        if (!pressed) {
             gest->state = GESTURE3D_STATE_TRIGGERED;
         }
         break;
@@ -87,12 +122,11 @@ static void update_hover(gesture3d_t *gest, bool pressed, bool btns_match)
         }
         break;
     default:
-        assert(false);
         break;
     }
 }
 
-static int update_state(gesture3d_t *gest)
+static int update_state(gesture3d_t *gest, int others_mask)
 {
     bool pressed = gest->flags & GESTURE3D_FLAG_PRESSED;
     int r, ret = 0;
@@ -105,7 +139,7 @@ static int update_state(gesture3d_t *gest)
         gest->state = GESTURE3D_STATE_POSSIBLE;
 
     if (gest->type == GESTURE3D_TYPE_DRAG) {
-        update_drag(gest, pressed, btns_match);
+        update_drag(gest, pressed, btns_match, others_mask);
     }
 
     if (gest->type == GESTURE3D_TYPE_CLICK) {
@@ -139,7 +173,7 @@ static int update_state(gesture3d_t *gest)
 
 int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
 {
-    int i;
+    int i, others_mask = 0;
     gesture3d_t *other, *match = NULL;
 
     // Search if we already have this gesture in the list.
@@ -153,7 +187,7 @@ int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
     // If no match add the gesture in the list.
     if (i == *nb) {
         match = &gestures[(*nb)++];
-        memset(match, 0, sizeof(*match));
+        *match = *gest;
     }
     assert(match);
 
@@ -165,14 +199,19 @@ int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
                 other->type == gest->type) {
             continue;
         }
-        if (other->type != GESTURE3D_TYPE_HOVER && other->state != 0) {
-            return false;
+        if (    other->type != GESTURE3D_TYPE_HOVER &&
+                other->state >= GESTURE3D_STATE_BEGIN) {
+            return 0;
+        }
+
+        if (other->state > GESTURE3D_STATE_POSSIBLE) {
+            others_mask |= other->type;
         }
     }
 
     // Update the gesture data until it has started.  That way we can
     // modify the gesture inside its callback function.
-    if (match->state == 0) {
+    if (match->state < GESTURE3D_STATE_BEGIN) {
         match->type = gest->type;
         match->buttons = gest->buttons;
         match->snap_mask = gest->snap_mask;
@@ -182,7 +221,7 @@ int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
     }
     match->user = gest->user;
     match->alive = true;
-    return update_state(match);
+    return update_state(match, others_mask);
 }
 
 void gesture3d_remove_dead(int *nb, gesture3d_t gestures[])

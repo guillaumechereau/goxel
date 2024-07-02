@@ -53,6 +53,12 @@ static int on_hover(gesture3d_t *gest)
     return 0;
 }
 
+static int on_click(gesture3d_t *gest)
+{
+    action_exec2(ACTION_reset_selection);
+    return 0;
+}
+
 static int on_drag(gesture3d_t *gest)
 {
     tool_selection_t *tool = gest->user;
@@ -63,8 +69,9 @@ static int on_drag(gesture3d_t *gest)
     goxel_set_help_text("Drag.");
 
     get_rect(gest->pos, gest->normal, rect);
-    if (gest->state == GESTURE3D_STATE_BEGIN)
-        mat4_copy(rect, tool->start_rect);
+    if (gest->state == GESTURE3D_STATE_BEGIN) {
+        get_rect(gest->start_pos, gest->start_normal, tool->start_rect);
+    }
 
     box_union(tool->start_rect, rect, goxel.selection);
     // If the selection is flat, we grow it one voxel.
@@ -102,9 +109,17 @@ static int iter(tool_t *tool, const painter_t *painter,
     });
 
     goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE3D_TYPE_CLICK,
+        .snap_mask = snap_mask | SNAP_SELECTION_OUT,
+        .callback = on_click,
+        .user = selection,
+    });
+
+    goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = snap_mask & ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT),
         .callback = on_drag,
+        .flags = GESTURE3D_FLAG_DRAG_DELAY,
         .user = selection,
     });
 
