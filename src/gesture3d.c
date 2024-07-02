@@ -18,88 +18,102 @@
 
 #include "goxel.h"
 
+static void update_drag(gesture3d_t *gest, bool pressed, bool btns_match)
+{
+    switch (gest->state) {
+    case GESTURE3D_STATE_POSSIBLE:
+        if (!btns_match) break;
+        if (gest->snaped && pressed) {
+            gest->state = GESTURE3D_STATE_BEGIN;
+        }
+        break;
+    case GESTURE3D_STATE_BEGIN:
+    case GESTURE3D_STATE_UPDATE:
+        gest->state = GESTURE3D_STATE_UPDATE;
+        if (!pressed) {
+            gest->state = GESTURE3D_STATE_END;
+        }
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
+
+static void update_click(gesture3d_t *gest, bool pressed, bool btns_match)
+{
+    switch (gest->state) {
+    case GESTURE3D_STATE_POSSIBLE:
+        if (gest->snaped && !pressed) {
+            gest->state = GESTURE3D_STATE_RECOGNISED;
+        }
+        break;
+    case GESTURE3D_STATE_RECOGNISED:
+        if (!btns_match) break;
+        if (gest->snaped && pressed) {
+            gest->state = GESTURE3D_STATE_TRIGGERED;
+        }
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
+
+static void update_hover(gesture3d_t *gest, bool pressed, bool btns_match)
+{
+    switch (gest->state) {
+    case GESTURE3D_STATE_POSSIBLE:
+        if (!btns_match) break;
+        if (gest->snaped && !pressed &&
+                !(gest->flags & GESTURE3D_FLAG_OUT)) {
+            gest->state = GESTURE3D_STATE_BEGIN;
+        }
+        break;
+    case GESTURE3D_STATE_BEGIN:
+    case GESTURE3D_STATE_UPDATE:
+        gest->state = GESTURE3D_STATE_UPDATE;
+        if (!btns_match) {
+            gest->state = GESTURE3D_STATE_END;
+        }
+        if (pressed) {
+            gest->state = GESTURE3D_STATE_END;
+        }
+        if (!gest->snaped) {
+            gest->state = GESTURE3D_STATE_END;
+        }
+        if (gest->flags & GESTURE3D_FLAG_OUT) {
+            gest->state = GESTURE3D_STATE_END;
+        }
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
 
 static int update_state(gesture3d_t *gest)
 {
     bool pressed = gest->flags & GESTURE3D_FLAG_PRESSED;
     int r, ret = 0;
     const int btns_mask = GESTURE3D_FLAG_CTRL;
+    bool btns_match;
+
+    btns_match = (gest->buttons & btns_mask) == (gest->flags & btns_mask);
 
     if (gest->state == GESTURE3D_STATE_FAILED && !pressed)
         gest->state = GESTURE3D_STATE_POSSIBLE;
 
     if (gest->type == GESTURE3D_TYPE_DRAG) {
-        switch (gest->state) {
-        case GESTURE3D_STATE_POSSIBLE:
-            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask))
-                break;
-            if (gest->snaped && pressed) {
-                gest->state = GESTURE3D_STATE_BEGIN;
-            }
-            break;
-        case GESTURE3D_STATE_BEGIN:
-        case GESTURE3D_STATE_UPDATE:
-            gest->state = GESTURE3D_STATE_UPDATE;
-            if (!pressed) {
-                gest->state = GESTURE3D_STATE_END;
-            }
-            break;
-        default:
-            assert(false);
-            break;
-        }
+        update_drag(gest, pressed, btns_match);
     }
 
     if (gest->type == GESTURE3D_TYPE_CLICK) {
-        switch (gest->state) {
-        case GESTURE3D_STATE_POSSIBLE:
-            if (gest->snaped && !pressed) {
-                gest->state = GESTURE3D_STATE_RECOGNISED;
-            }
-            break;
-        case GESTURE3D_STATE_RECOGNISED:
-            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask))
-                break;
-            if (gest->snaped && pressed) {
-                gest->state = GESTURE3D_STATE_TRIGGERED;
-            }
-            break;
-        default:
-            assert(false);
-            break;
-        }
+        update_click(gest, pressed, btns_match);
     }
 
     if (!DEFINED(GOXEL_MOBILE) && gest->type == GESTURE3D_TYPE_HOVER) {
-        switch (gest->state) {
-        case GESTURE3D_STATE_POSSIBLE:
-            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask))
-                break;
-            if (gest->snaped && !pressed &&
-                    !(gest->flags & GESTURE3D_FLAG_OUT)) {
-                gest->state = GESTURE3D_STATE_BEGIN;
-            }
-            break;
-        case GESTURE3D_STATE_BEGIN:
-        case GESTURE3D_STATE_UPDATE:
-            gest->state = GESTURE3D_STATE_UPDATE;
-            if ((gest->buttons & btns_mask) != (gest->flags & btns_mask)) {
-                gest->state = GESTURE3D_STATE_END;
-            }
-            if (pressed) {
-                gest->state = GESTURE3D_STATE_END;
-            }
-            if (!gest->snaped) {
-                gest->state = GESTURE3D_STATE_END;
-            }
-            if (gest->flags & GESTURE3D_FLAG_OUT) {
-                gest->state = GESTURE3D_STATE_END;
-            }
-            break;
-        default:
-            assert(false);
-            break;
-        }
+        update_hover(gest, pressed, btns_match);
     }
 
     if (    gest->state == GESTURE3D_STATE_BEGIN ||
