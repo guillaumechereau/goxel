@@ -92,12 +92,11 @@ static void update_view(void)
     bool first;
     uint8_t color[4] = {255, 0, 0, 255};
     float box[4][4];
+    int drag_mode = DRAG_MOVE;
 
     layer_t *layer = goxel.image->active_layer;
 
-    if (layer_is_volume(layer)) {
-        goxel.tool_drag_mode = DRAG_MOVE;
-    }
+    if (layer->shape) drag_mode = DRAG_RESIZE;
 
     volume_get_box(goxel.image->active_layer->volume, true, box);
     // Fix problem with shape layer box.
@@ -105,7 +104,7 @@ static void update_view(void)
         normalize_box(goxel.image->active_layer->mat, box);
     }
 
-    if (box_edit(box, goxel.tool_drag_mode, transf, &first)) {
+    if (box_edit(box, drag_mode, transf, &first)) {
         if (first) image_history_push(goxel.image);
         do_move(layer, transf, VEC(0, 0, 0), false);
     }
@@ -152,12 +151,6 @@ static int gui(tool_t *tool)
     update_view();
 
     layer = goxel.image->active_layer;
-    if (layer->shape) {
-        tool_gui_drag_mode(&goxel.tool_drag_mode);
-    } else {
-        goxel.tool_drag_mode = DRAG_MOVE;
-    }
-
     x = (int)round(layer->mat[3][0]);
     y = (int)round(layer->mat[3][1]);
     z = (int)round(layer->mat[3][2]);

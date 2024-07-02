@@ -155,7 +155,6 @@ void gui_layers_panel(void)
         gui_bbox(layer->box);
 
     if (layer->shape) {
-        tool_gui_drag_mode(&goxel.tool_drag_mode);
         tool_gui_shape(&layer->shape);
         gui_color("##color", layer->color);
     }

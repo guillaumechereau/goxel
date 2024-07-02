@@ -186,25 +186,3 @@ int tool_gui_color(void)
     }
     return 0;
 }
-
-int tool_gui_drag_mode(int *mode)
-{
-    int ret = 0;
-    bool b;
-
-    gui_group_begin(_(ADJUSTEMENTS));
-    gui_row_begin(2);
-    b = *mode == 0;
-    if (gui_selectable(_(MOVE), &b, NULL, 0)) {
-        *mode = 0;
-        ret = 1;
-    }
-    b = *mode == 1;
-    if (gui_selectable(_(RESIZE), &b, NULL, 0)) {
-        *mode = 1;
-        ret = 1;
-    }
-    gui_row_end();
-    gui_group_end();
-    return ret;
-}

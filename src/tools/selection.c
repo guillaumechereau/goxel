@@ -23,8 +23,6 @@ enum {
     DRAG_MOVE,
 };
 
-static int g_drag_mode = 0;
-
 typedef struct {
     tool_t  tool;
 
@@ -95,8 +93,7 @@ static int iter(tool_t *tool, const painter_t *painter,
     snap_mask |= SNAP_ROUNDED;
     snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
-    if (box_edit(goxel.selection, g_drag_mode == DRAG_RESIZE ? 1 : 0,
-                 transf, NULL)) {
+    if (box_edit(goxel.selection, 1, transf, NULL)) {
         mat4_mul(transf, goxel.selection, goxel.selection);
         return 0;
     }
@@ -140,10 +137,6 @@ static int gui(tool_t *tool)
     int x, y, z, w, h, d;
     float (*box)[4][4] = &goxel.selection;
     if (box_is_null(*box)) return 0;
-
-    gui_text("Drag mode");
-    gui_combo("##drag_mode", &g_drag_mode,
-              (const char*[]) {"Resize", "Move"}, 2);
 
     gui_group_begin(NULL);
     if (gui_action_button(ACTION_reset_selection, "Reset", 1.0)) {

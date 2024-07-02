@@ -148,6 +148,7 @@ static int on_drag(gesture3d_t *gest)
 
 static int on_gizmo_hover(gesture3d_t *gest)
 {
+    goxel_set_help_text("Drag to move");
     g_data.snap_face = gest->user_key;
     g_data.flags |= FLAG_SNAP_GIZMO;
     return 0;
@@ -159,7 +160,7 @@ static int on_gizmo_drag(gesture3d_t *gest)
     int face = gest->user_key;
     float box[4][4];
 
-    goxel_set_help_text("Drag to move face");
+    goxel_set_help_text("Drag to move");
     g_data.flags |= FLAG_MOVING;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {

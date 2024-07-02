@@ -496,9 +496,6 @@ typedef struct goxel
     float      tool_radius;
     bool       pathtrace; // Render pathtraced mode.
 
-    // Some state for the tool iter functions.
-    int        tool_drag_mode; // 0: move, 1: resize.
-
     float      selection[4][4];   // The selection box.
     volume_t   *mask; // Global selection mask volume.
     int        mask_mode;
