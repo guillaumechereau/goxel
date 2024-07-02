@@ -59,6 +59,7 @@
 
 #include "utils/box.h"
 #include "utils/cache.h"
+#include "utils/geometry.h"
 #include "utils/gl.h"
 #include "utils/img.h"
 #include "utils/plane.h"
@@ -437,10 +438,13 @@ enum {
     SNAP_VOLUME         = 1 << 3,
     SNAP_PLANE          = 1 << 4, // The global plane.
     SNAP_CAMERA         = 1 << 5, // Used for laser tool.
+
     SNAP_SHAPE_BOX      = 1 << 6, // Snap to custom box.
     SNAP_SHAPE_PLANE    = 1 << 7, // Snap to custom plane.
+    SNAP_SHAPE_LINE     = 1 << 8, // Snap to custom line.
+    SNAP_SHAPE_SEGMENT  = 1 << 9, // Snap to custom line.
 
-    SNAP_ROUNDED        = 1 << 8, // Round the result.
+    SNAP_ROUNDED        = 1 << 10, // Round the result.
 };
 
 typedef struct goxel

@@ -124,4 +124,10 @@ uint32_t camera_get_key(const camera_t *camera);
 
 void camera_turntable(camera_t *camera, float rz, float rx);
 
+/*
+ * Project a 3d position into screen space.
+ */
+void camera_project(const camera_t *camera, const float pos[3],
+                    const float viewport[4], float out[3]);
+
 #endif // CAMERA_H

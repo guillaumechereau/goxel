@@ -180,6 +180,7 @@ int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
     for (i = 0; i < *nb; i++) {
         match = &gestures[i];
         if (    match->callback == gest->callback &&
+                match->user_key == gest->user_key &&
                 match->type == gest->type) {
             break;
         }
@@ -196,11 +197,13 @@ int gesture3d(const gesture3d_t *gest, int *nb, gesture3d_t gestures[])
     for (i = 0; i < *nb; i++) {
         other = &gestures[i];
         if (    other->callback == gest->callback &&
+                other->user_key == gest->user_key &&
                 other->type == gest->type) {
             continue;
         }
         if (    other->type != GESTURE3D_TYPE_HOVER &&
                 other->state >= GESTURE3D_STATE_BEGIN) {
+            match->state = GESTURE3D_STATE_FAILED;
             return 0;
         }
 

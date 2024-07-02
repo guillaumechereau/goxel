@@ -118,6 +118,35 @@ static bool goxel_unproject_on_plane(
     return true;
 }
 
+static bool goxel_unproject_on_line(
+        const float viewport[4], const float pos[2], const float line[4][4],
+        bool bounded, float max_dist_px, float out[3], float normal[3])
+{
+    const camera_t *cam = get_camera();
+    float wpos[3] = {pos[0], pos[1], 0};
+    float opos[3], onorm[3];
+    float t1, t2, p1[3], p2[3], w1[3], w2[3];
+    camera_get_ray(cam, wpos, viewport, opos, onorm);
+
+    rays_distance(opos, onorm, line[3], line[2], &t1, &t2);
+
+    if (bounded) {
+        if (t2 < -1 || t2 > +1) return false;
+    }
+
+    vec3_addk(opos, onorm, t1, p1);
+    vec3_addk(line[3], line[2], t2, p2);
+
+    vec3_copy(p2, out);
+    vec3_sub(p1, p2, normal);
+    vec3_normalize(normal, normal);
+
+    if (!bounded) return true;
+    camera_project(cam, p1, viewport, w1);
+    camera_project(cam, p2, viewport, w2);
+    return vec2_dist(w1, w2) <= max_dist_px;
+}
+
 static bool goxel_unproject_on_box(
         const float viewport[4], const float pos[2],
         const float box[4][4], bool inside, float out[3],
@@ -266,7 +295,7 @@ int goxel_unproject(const float viewport[4],
     float v[3], p[3] = {}, n[3] = {};
     camera_t *cam = get_camera();
 
-    for (i = 0; i < 8; i++) {
+    for (i = 0; i < 10; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_VOLUME) {
             r = goxel_unproject_on_volume(viewport, pos,
@@ -279,6 +308,14 @@ int goxel_unproject(const float viewport[4],
         if ((1 << i) == SNAP_SHAPE_PLANE) {
             r = goxel_unproject_on_plane(
                     viewport, pos, snap_shape, p, n);
+        }
+        if ((1 << i) == SNAP_SHAPE_LINE) {
+            r = goxel_unproject_on_line(
+                    viewport, pos, snap_shape, false, 8, p, n);
+        }
+        if ((1 << i) == SNAP_SHAPE_SEGMENT) {
+            r = goxel_unproject_on_line(
+                    viewport, pos, snap_shape, true, 8, p, n);
         }
         if ((1 << i) == SNAP_SELECTION_IN)
             r = goxel_unproject_on_box(viewport, pos,

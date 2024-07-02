@@ -106,6 +106,7 @@ static int iter(tool_t *tool, const painter_t *painter,
         .snap_mask = snap_mask | SNAP_SELECTION_OUT,
         .callback = on_hover,
         .user = selection,
+        .name = "Selection Hover",
     });
 
     goxel_gesture3d(&(gesture3d_t) {
@@ -113,6 +114,7 @@ static int iter(tool_t *tool, const painter_t *painter,
         .snap_mask = snap_mask | SNAP_SELECTION_OUT,
         .callback = on_click,
         .user = selection,
+        .name = "Selection Click",
     });
 
     goxel_gesture3d(&(gesture3d_t) {
@@ -121,6 +123,7 @@ static int iter(tool_t *tool, const painter_t *painter,
         .callback = on_drag,
         .flags = GESTURE3D_FLAG_DRAG_DELAY,
         .user = selection,
+        .name = "Selection Drag",
     });
 
     return tool->state;

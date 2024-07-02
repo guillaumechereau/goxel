@@ -59,6 +59,8 @@ struct gesture3d
     float       snap_shape[4][4]; // Used for plane snapping.
     int         (*callback)(gesture3d_t *gest);
     void        *user;
+    int         user_key;
+    const char  *name; // For debug only.
 
     // Need to be updated manually at each frame for each gestures.
     float       pos[3];

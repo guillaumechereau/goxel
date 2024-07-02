@@ -186,3 +186,17 @@ void camera_turntable(camera_t *camera, float rz, float rx)
     mat4_irotate(camera->mat, rx, 1, 0, 0);
     mat4_itranslate(camera->mat, 0, 0, camera->dist);
 }
+
+void camera_project(const camera_t *camera, const float pos[3],
+                    const float viewport[4], float out[3])
+{
+    float p[4] = {pos[0], pos[1], pos[2], 1};
+    mat4_mul_vec4(camera->view_mat, p, p);
+    mat4_mul_vec4(camera->proj_mat, p, p);
+    vec3_mul(p, 1 / p[3], p);
+
+    // Convert to screen space
+    out[0] = (p[0] * 0.5f + 0.5f) * viewport[2] + viewport[0];
+    out[1] = (p[1] * 0.5f + 0.5f) * viewport[3] + viewport[1];
+    out[2] = (p[2] * 0.5f + 0.5f);  // Depth value in range [0, 1]
+}
