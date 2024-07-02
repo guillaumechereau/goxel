@@ -108,7 +108,7 @@ static int update_state(gesture3d_t *gest)
             gest->state == GESTURE3D_STATE_TRIGGERED)
     {
         r = gest->callback(gest);
-        if (r == GESTURE3D_STATE_FAILED) {
+        if (r != 0) {
             gest->state = GESTURE3D_STATE_FAILED;
             ret = 0;
         } else {

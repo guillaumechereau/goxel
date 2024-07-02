@@ -44,6 +44,9 @@ static int on_hover(gesture3d_t *gest)
     float rect[4][4];
     uint8_t rect_color[4] = {255, 255, 0, 255};
 
+    if (gest->snaped & (SNAP_SELECTION_OUT | SNAP_SELECTION_IN)) {
+        return -1;
+    }
     goxel_set_help_text("Click and drag to set selection.");
     get_rect(gest->pos, gest->normal, rect);
     render_box(&goxel.rend, rect, rect_color, EFFECT_WIREFRAME);
@@ -93,7 +96,7 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_HOVER,
-        .snap_mask = snap_mask,
+        .snap_mask = snap_mask | SNAP_SELECTION_OUT,
         .callback = on_hover,
         .user = selection,
     });
