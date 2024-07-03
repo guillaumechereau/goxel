@@ -131,7 +131,7 @@ static bool goxel_unproject_on_line(
     rays_distance(opos, onorm, line[3], line[2], &t1, &t2);
 
     if (bounded) {
-        if (t2 < -1 || t2 > +1) return false;
+        if (t2 < 0 || t2 > 1) return false;
     }
 
     vec3_addk(opos, onorm, t1, p1);

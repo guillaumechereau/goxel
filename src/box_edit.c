@@ -66,17 +66,14 @@ static void get_transf(const float src[4][4], const float dst[4][4],
     mat4_mul(dst, out, out);
 }
 
-static void render_gizmo(const float box[4][4], int face, float alpha)
+static void render_gizmo(const float pose[4][4], int face, float alpha)
 {
-    float plane[4][4];
     uint8_t color[4] = {0, 0, 0, 255 * alpha};
-    float a[3], b[3], dir[3];
+    float a[3], b[3];
 
-    mat4_mul(box, FACES_MATS[face], plane);
     memcpy(color, FACES_COLOR[face], 3);
-    vec3_normalize(plane[2], dir);
-    vec3_copy(plane[3], a);
-    vec3_addk(a, dir, 3, b);
+    vec3_copy(pose[3], a);
+    vec3_add(a, pose[2], b);
     render_line(&goxel.rend, a, b, color, EFFECT_ARROW | EFFECT_NO_DEPTH_TEST);
 }
 
@@ -192,8 +189,7 @@ static void gizmo(const float box[4][4], int face)
     vec3_normalize(shape[0], shape[0]);
     vec3_normalize(shape[1], shape[1]);
     vec3_normalize(shape[2], shape[2]);
-    mat4_iscale(shape, 0.5, 0.5, 4 / 2.0);
-    mat4_itranslate(shape, 0, 0, 1);
+    mat4_iscale(shape, 0.5, 0.5, 3.0);
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
@@ -214,7 +210,7 @@ static void gizmo(const float box[4][4], int face)
 
     if ((g_data.flags & FLAG_SNAP_GIZMO) && g_data.snap_face == face)
         alpha = 1.0;
-    render_gizmo(box, face, alpha);
+    render_gizmo(shape, face, alpha);
 }
 
 int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
