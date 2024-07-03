@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F007DFE82C35546700526FA2 /* geometry.c in Sources */ = {isa = PBXBuildFile; fileRef = F007DFE62C35546700526FA2 /* geometry.c */; };
 		F00FC312226B2F7C0002F251 /* ini.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC2FC226B2F7B0002F251 /* ini.c */; };
 		F00FC313226B2F7C0002F251 /* gl.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC2FD226B2F7B0002F251 /* gl.c */; };
 		F00FC314226B2F7C0002F251 /* sound_openal.inl in Resources */ = {isa = PBXBuildFile; fileRef = F00FC2FE226B2F7B0002F251 /* sound_openal.inl */; };
@@ -120,6 +121,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F007DFE62C35546700526FA2 /* geometry.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = geometry.c; sourceTree = "<group>"; };
+		F007DFE72C35546700526FA2 /* geometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geometry.h; sourceTree = "<group>"; };
 		F00FC2F9226B2F7B0002F251 /* sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sound.h; sourceTree = "<group>"; };
 		F00FC2FA226B2F7B0002F251 /* box.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = box.h; sourceTree = "<group>"; };
 		F00FC2FB226B2F7B0002F251 /* mustache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mustache.h; sourceTree = "<group>"; };
@@ -282,6 +285,8 @@
 		F00FC2F8226B2F7B0002F251 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				F007DFE62C35546700526FA2 /* geometry.c */,
+				F007DFE72C35546700526FA2 /* geometry.h */,
 				F0DC02A222EEE274007E2F17 /* box.c */,
 				F0ACA2A32271ACEA00376C82 /* json.c */,
 				F0ACA2A22271ACEA00376C82 /* json.h */,
@@ -668,6 +673,7 @@
 				F00FC338226B2FCF0002F251 /* image_panel.c in Sources */,
 				F00FC316226B2F7C0002F251 /* mustache.c in Sources */,
 				F00FC335226B2FCF0002F251 /* topbar.c in Sources */,
+				F007DFE82C35546700526FA2 /* geometry.c in Sources */,
 				F00FC32D226B2FCF0002F251 /* cameras_panel.c in Sources */,
 				F07DEA0F1BD0F31500BAA1AD /* shape.c in Sources */,
 				F0A160011E962F1300C6EF33 /* txt.c in Sources */,
