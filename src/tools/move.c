@@ -89,10 +89,10 @@ static void update_view(void)
 {
     float transf[4][4];
     float origin_box[4][4] = MAT4_IDENTITY;
-    bool first;
     uint8_t color[4] = {255, 0, 0, 255};
     float box[4][4];
     int drag_mode = DRAG_MOVE;
+    int box_edit_state;
 
     layer_t *layer = goxel.image->active_layer;
 
@@ -104,8 +104,11 @@ static void update_view(void)
         normalize_box(goxel.image->active_layer->mat, box);
     }
 
-    if (box_edit(box, drag_mode, transf, &first)) {
-        if (first) image_history_push(goxel.image);
+    box_edit_state = box_edit(box, drag_mode, transf);
+    if (box_edit_state) {
+        if (box_edit_state == GESTURE3D_STATE_BEGIN) {
+            image_history_push(goxel.image);
+        }
         do_move(layer, transf, VEC(0, 0, 0), false);
     }
 

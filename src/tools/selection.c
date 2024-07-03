@@ -88,12 +88,14 @@ static int iter(tool_t *tool, const painter_t *painter,
     float transf[4][4];
     tool_selection_t *selection = (tool_selection_t*)tool;
     int snap_mask = goxel.snap_mask;
+    int box_edit_state;
 
     // To cleanup.
     snap_mask |= SNAP_ROUNDED;
     snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
-    if (box_edit(goxel.selection, 1, transf, NULL)) {
+    box_edit_state = box_edit(goxel.selection, 1, transf);
+    if (box_edit_state) {
         mat4_mul(transf, goxel.selection, goxel.selection);
         return 0;
     }

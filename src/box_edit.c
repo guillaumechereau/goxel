@@ -30,8 +30,6 @@ static const uint8_t FACES_COLOR[6][3] = {
 enum {
     FLAG_SNAP_FACE      = 1 << 0,
     FLAG_SNAP_GIZMO     = 1 << 1,
-    FLAG_MOVING         = 1 << 1,
-    FLAG_FIRST          = 1 << 2,
 };
 
 typedef struct data
@@ -42,6 +40,7 @@ typedef struct data
     float transf[4][4];
     int snap_face;
     int flags;
+    int gesture_state;
 } data_t;
 
 static data_t g_data = {};
@@ -111,10 +110,9 @@ static int on_drag(gesture3d_t *gest)
     float face_plane[4][4], v[3], pos[3], n[3], d[3], ofs[3], box[4][4];
 
     goxel_set_help_text("Drag to move face");
-    data->flags |= FLAG_MOVING;
+    data->gesture_state = gest->state;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {
-        data->flags |= FLAG_FIRST;
         mat4_copy(data->box, data->start_box);
         data->snap_face = get_face(gest->normal);
         mat4_mul(data->box, FACES_MATS[data->snap_face], face_plane);
@@ -162,10 +160,9 @@ static int on_gizmo_drag(gesture3d_t *gest)
     float box[4][4];
 
     goxel_set_help_text("Drag to move");
-    g_data.flags |= FLAG_MOVING;
+    g_data.gesture_state = gest->state;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {
-        g_data.flags |= FLAG_FIRST;
         mat4_copy(g_data.box, g_data.start_box);
         g_data.snap_face = face;
         gest->snap_mask = SNAP_SHAPE_LINE;
@@ -244,17 +241,16 @@ static void gizmo(const float box[4][4], int face)
     render_gizmo(shape, face, alpha);
 }
 
-int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
+int box_edit(const float box[4][4], int mode, float transf[4][4])
 {
     int i;
-    int ret;
 
     if (box_is_null(box)) return 0;
     g_data.mode = mode;
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
-
-    g_data.flags &= ~(FLAG_SNAP_FACE | FLAG_SNAP_GIZMO | FLAG_MOVING);
+    g_data.flags = 0;
+    g_data.gesture_state = 0;
 
     for (i = 0; i < 6; i++) {
         gizmo(box, i);
@@ -279,10 +275,5 @@ int box_edit(const float box[4][4], int mode, float transf[4][4], bool *first)
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
     if (transf) mat4_copy(g_data.transf, transf);
 
-    ret = g_data.flags & (FLAG_MOVING | FLAG_SNAP_GIZMO | FLAG_SNAP_FACE);
-    if (first) {
-        *first = g_data.flags & FLAG_FIRST;
-        g_data.flags &= ~FLAG_FIRST;
-    }
-    return ret;
+    return g_data.gesture_state;
 }
