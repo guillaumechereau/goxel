@@ -1487,7 +1487,6 @@ static void a_reset_selection(void)
     if (!volume_is_empty(goxel.mask)) {
         volume_delete(goxel.mask);
         goxel.mask = NULL;
-        return;
     }
     mat4_copy(mat4_zero, goxel.selection);
 }
@@ -1496,22 +1495,29 @@ ACTION_REGISTER(reset_selection,
     .cfunc = a_reset_selection,
 )
 
-static void a_fill_selection(void)
+static void a_fill_selection_box(void)
 {
     layer_t *layer = goxel.image->active_layer;
-
-    if (!volume_is_empty(goxel.mask)) {
-        volume_merge(layer->volume, goxel.mask, MODE_OVER, goxel.painter.color);
-        return;
-    }
-
     if (box_is_null(goxel.selection)) return;
     volume_op(layer->volume, &goxel.painter, goxel.selection);
 }
 
-ACTION_REGISTER(fill_selection,
-    .help = STR_ACTION_FILL_SELECTION_HELP,
-    .cfunc = a_fill_selection,
+ACTION_REGISTER(fill_selection_box,
+    .help = STR_ACTION_FILL_SELECTION_BOX_HELP,
+    .cfunc = a_fill_selection_box,
+    .flags = ACTION_TOUCH_IMAGE,
+)
+
+static void a_paint_selection(void)
+{
+    layer_t *layer = goxel.image->active_layer;
+    if (volume_is_empty(goxel.mask)) return;
+    volume_merge(layer->volume, goxel.mask, MODE_OVER, goxel.painter.color);
+}
+
+ACTION_REGISTER(paint_selection,
+    .help = STR_ACTION_PAINT_SELECTION_HELP,
+    .cfunc = a_paint_selection,
     .flags = ACTION_TOUCH_IMAGE,
 )
 

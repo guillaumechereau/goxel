@@ -112,7 +112,7 @@ static int gui(tool_t *tool_)
 
     gui_group_begin(NULL);
     gui_action_button(ACTION_reset_selection, _(RESET), 1.0);
-    gui_action_button(ACTION_fill_selection, _(FILL), 1.0);
+    gui_action_button(ACTION_paint_selection, _(PAINT), 1.0);
     gui_action_button(ACTION_cut_as_new_layer, _(CUT_TO_NEW_LAYER), 1.0);
     gui_group_end();
 

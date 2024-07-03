@@ -99,9 +99,9 @@ static const string_t STRINGS[] = {
         .en = "Cuts the selected area into a new layer",
         .fr = "Coupe la zone sélectionnée dans un nouveau calque",
     },
-    [STR_ACTION_FILL_SELECTION_HELP] = {
-        .en = "Fills the selected area with the current color",
-        .fr = "Remplit la zone sélectionnée avec la couleur actuelle",
+    [STR_ACTION_FILL_SELECTION_BOX_HELP] = {
+        .en = "Fills the selected box with the current color",
+        .fr = "Remplit la boite sélectionnée avec la couleur actuelle",
     },
     [STR_ACTION_IMAGE_AUTO_RESIZE_HELP] = {
         .en = "Resizes the image to fit the layers",
@@ -118,6 +118,10 @@ static const string_t STRINGS[] = {
     [STR_ACTION_NEW_SHAPE_LAYER_HELP] = {
         .en = "Creates a shape layer",
         .fr = "Crée un calque de forme",
+    },
+    [STR_ACTION_PAINT_SELECTION_HELP] = {
+        .en = "Fills the selected voxels with the current color",
+        .fr = "Remplit les voxels sélectionnés avec la couleur actuelle",
     },
     [STR_ACTION_RESET_HELP] = {
         .en = "Creates a new image (discards the current one)",
