@@ -43,7 +43,6 @@ enum {
     EFFECT_ANTIALIASING     = 1 << 17,
     EFFECT_UNLIT            = 1 << 18,
 
-    EFFECT_ARROW            = 1 << 19, // Add an arrow at the end of lines.
     EFFECT_NO_DEPTH_TEST    = 1 << 20,
 };
 
@@ -84,6 +83,8 @@ void render_volume(renderer_t *rend, const volume_t *volume,
 void render_grid(renderer_t *rend, const float plane[4][4],
                  const uint8_t color[4], const float clip_box[4][4]);
 void render_line(renderer_t *rend, const float a[3], const float b[3],
+                 const uint8_t color[4], int effects);
+void render_cone(renderer_t *rend, const float mat[4][4],
                  const uint8_t color[4], int effects);
 void render_box(renderer_t *rend, const float box[4][4],
                 const uint8_t color[4], int effects);

@@ -69,12 +69,16 @@ static void get_transf(const float src[4][4], const float dst[4][4],
 static void render_gizmo(const float pose[4][4], int face, float alpha)
 {
     uint8_t color[4] = {0, 0, 0, 255 * alpha};
-    float a[3], b[3];
+    float a[3], b[3], cone_mat[4][4];
 
     memcpy(color, FACES_COLOR[face], 3);
     vec3_copy(pose[3], a);
     vec3_add(a, pose[2], b);
-    render_line(&goxel.rend, a, b, color, EFFECT_ARROW | EFFECT_NO_DEPTH_TEST);
+    render_line(&goxel.rend, a, b, color, EFFECT_NO_DEPTH_TEST);
+    mat4_translate(pose, 0, 0, 1, cone_mat);
+    mat4_iscale(cone_mat, 0.15, 0.15, 0.3);
+    mat4_itranslate(cone_mat, 0, 0, -1);
+    render_cone(&goxel.rend, cone_mat, color, EFFECT_NO_DEPTH_TEST);
 }
 
 static void highlight_face(const float box[4][4], int face)
@@ -179,17 +183,44 @@ static int on_gizmo_drag(gesture3d_t *gest)
     return 0;
 }
 
+static float compute_gizmo_scale(const float pos[3])
+{
+    const float base_scale = 40;
+    float p[4] = {pos[0], pos[1], pos[2], 1};
+    float viewproj[4][4];
+    const camera_t *cam = goxel.image->active_camera;
+    float vx[3], vy[3];
+    float len_px, len_sc, pixsize;
+
+    mat4_mul(cam->proj_mat, cam->view_mat, viewproj);
+
+    // Compute pixel size of the projection.
+    mat4_mul_dir3(cam->proj_mat, VEC(1, 0, 0), vx);
+    mat4_mul_dir3(cam->proj_mat, VEC(0, 1, 0), vy);
+    len_px = 2.0f / sqrtf(fmin(vec3_norm2(vx), vec3_norm2(vy)));
+    len_sc = fmax(goxel.gui.viewport[2], goxel.gui.viewport[3]);
+    pixsize = len_px / len_sc;
+
+    // Multiply by the W factor.
+    mat4_mul_vec4(viewproj, p, p);
+    return base_scale * p[3] * pixsize;
+}
+
 static void gizmo(const float box[4][4], int face)
 {
     float shape[4][4];
     float alpha = 0.15;
+    float scale;
 
     // Compute the gizmo arrow shape.
     mat4_mul(box, FACES_MATS[face], shape);
     vec3_normalize(shape[0], shape[0]);
     vec3_normalize(shape[1], shape[1]);
     vec3_normalize(shape[2], shape[2]);
-    mat4_iscale(shape, 0.5, 0.5, 3.0);
+    mat4_iscale(shape, 0.5, 0.5, 1.0);
+
+    scale = compute_gizmo_scale(shape[3]);
+    mat4_iscale(shape, scale, scale, scale);
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,

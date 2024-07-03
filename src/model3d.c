@@ -254,6 +254,21 @@ model3d_t *model3d_wire_rect(void)
     return model;
 }
 
+/*
+ * Cone with top at the point Z = 1:
+ *
+ *          ^ z
+ *          |
+ *          +
+ *         /|\
+ *       /  |  \
+ *      /   |   \
+ *     /    |    \
+ *   /      |      \
+ *  /       |       \
+ * +--------+--------+---->x
+ *
+ */
 model3d_t *model3d_cone(void)
 {
     int i, j, idx;
@@ -271,9 +286,9 @@ model3d_t *model3d_cone(void)
             vec4_set(v[idx + 0].color, 255, 255, 255, 255);
             vec4_set(v[idx + 1].color, 255, 255, 255, 255);
             vec4_set(v[idx + 2].color, 255, 255, 255, 255);
-            vec3_set(v[idx].pos, i, 0, 0);
-            vec3_set(v[idx + 1].pos, 0, cos(da * (j + 0)), sin(da * (j + 0)));
-            vec3_set(v[idx + 2].pos, 0, cos(da * (j + 1)), sin(da * (j + 1)));
+            vec3_set(v[idx].pos, 0, 0, i);
+            vec3_set(v[idx + 1].pos, cos(da * (j + 0)), sin(da * (j + 0)), 0);
+            vec3_set(v[idx + 2].pos, cos(da * (j + 1)), sin(da * (j + 1)), 0);
             // Todo: normals.
         }
     }

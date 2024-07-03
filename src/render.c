@@ -876,21 +876,19 @@ void render_line(renderer_t *rend, const float a[3], const float b[3],
     mat4_itranslate(item->mat, 0.5, 0, 0);
     item->proj_screen = effects & EFFECT_PROJ_SCREEN;
     DL_APPEND(rend->items, item);
+}
 
-    if (effects & EFFECT_ARROW) {
-        item = calloc(1, sizeof(*item));
-        item->type = ITEM_MODEL3D;
-        item->model3d = g_cone_model;
-        item->effects = EFFECT_NO_SHADING | effects;
-        line_create_plane(a, b, item->mat);
-        vec3_normalize(item->mat[0], item->mat[0]);
-        vec3_normalize(item->mat[1], item->mat[1]);
-        vec3_normalize(item->mat[2], item->mat[2]);
-        vec3_copy(b, item->mat[3]);
-        mat4_iscale(item->mat, 1, 0.5, 0.5);
-        copy_color(color, item->color);
-        DL_APPEND(rend->items, item);
-    }
+void render_cone(renderer_t *rend, const float mat[4][4],
+                 const uint8_t color[4], int effects)
+{
+    render_item_t *item;
+    item = calloc(1, sizeof(*item));
+    item->type = ITEM_MODEL3D;
+    item->model3d = g_cone_model;
+    item->effects = EFFECT_NO_SHADING | effects;
+    mat4_copy(mat, item->mat);
+    copy_color(color, item->color);
+    DL_APPEND(rend->items, item);
 }
 
 void render_box(renderer_t *rend, const float box[4][4],
