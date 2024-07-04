@@ -194,6 +194,7 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
         render_settings_t rend_settings;
         float view_mat[4][4];
         float proj_mat[4][4];
+        int view_size[2];
     } key_t;
 
     key_t key = {0};
@@ -216,6 +217,7 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
         .rend_settings = goxel.rend.settings,
         .view_mat = MAT4_COPY(goxel.rend.view_mat),
         .proj_mat = MAT4_COPY(goxel.rend.proj_mat),
+        .view_size = {view_size[0], view_size[1]},
     };
 
     if (memcmp(&key, &cache_key, sizeof(key_t)) == 0) {
@@ -269,6 +271,7 @@ static bool goxel_unproject_on_volume(
     if (x < 0 || x >= view_size[0] ||
         y < 0 || y >= view_size[1]) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
+    GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     unpack_pos_data(pixel, voxel_pos, &face, &tile_id);
     if (!tile_id) return false;
