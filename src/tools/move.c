@@ -131,11 +131,11 @@ static void center_origin(layer_t *layer)
     vec3_copy(pos, layer->mat[3]);
 }
 
+
 static int gui(tool_t *tool)
 {
     layer_t *layer;
-    float mat[4][4] = MAT4_IDENTITY, v;
-    int i;
+    float mat[4][4] = MAT4_IDENTITY;
     int x, y, z;
     float origin[3];
     bool only_origin = false;
@@ -178,11 +178,6 @@ static int gui(tool_t *tool)
     gui_row_end();
 
     gui_group_end();
-
-    if (layer->image && gui_input_int(_(SCALE), &i, 0, 0)) {
-        v = pow(2, i);
-        mat4_iscale(mat, v, v, v);
-    }
 
     gui_group_begin(_(FLIP));
     gui_row_begin(3);
