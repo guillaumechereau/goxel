@@ -85,7 +85,8 @@ static void normalize_box(const float box[4][4], float out[4][4])
     bbox_from_npoints(out, 8, vertices);
 }
 
-static void update_view(void)
+static int iter(tool_t *tool, const painter_t *painter,
+                const float viewport[4])
 {
     float transf[4][4];
     float origin_box[4][4] = MAT4_IDENTITY;
@@ -112,18 +113,13 @@ static void update_view(void)
         do_move(layer, transf, VEC(0, 0, 0), false);
     }
 
+    // Render the origin point.
     if (layer_is_volume(layer)) {
         vec3_copy(layer->mat[3], origin_box[3]);
         mat4_iscale(origin_box, 0.1, 0.1, 0.1);
         render_box(&goxel.rend, origin_box, color,
                 EFFECT_NO_DEPTH_TEST | EFFECT_NO_SHADING);
     }
-}
-
-static int iter(tool_t *tool, const painter_t *painter,
-                const float viewport[4])
-{
-    update_view();
     return 0;
 }
 
@@ -150,8 +146,6 @@ static int gui(tool_t *tool)
     int x, y, z;
     float origin[3];
     bool only_origin = false;
-
-    update_view();
 
     layer = goxel.image->active_layer;
     x = (int)round(layer->mat[3][0]);
