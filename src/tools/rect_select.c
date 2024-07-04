@@ -8,10 +8,11 @@
 
 typedef struct {
     tool_t tool;
+    int mode; // MODE_REPLACE, MODE_OVER, MODE_SUB
     float rect[4];
 } tool_rect_select_t;
 
-static void apply(const float rect_[4])
+static void apply(const float rect_[4], int mode)
 {
     int vp[3];
     float p[4], rect[4];
@@ -29,10 +30,10 @@ static void apply(const float rect_[4])
 
     mat4_mul(cam->proj_mat, cam->view_mat, view_proj_mat);
     if (goxel.mask == NULL) goxel.mask = volume_new();
-    if (goxel.mask_mode == MODE_SUB)
+    if (mode == MODE_SUB)
         memset(color, 0, sizeof(color));
 
-    if (goxel.mask_mode == MODE_REPLACE)
+    if (mode == MODE_REPLACE)
         volume_clear(goxel.mask);
 
     // XXX: very slow implementation!
@@ -57,6 +58,7 @@ static int on_drag(gesture3d_t *gest)
     tool_rect_select_t *tool = gest->user;
     float pos[4];
     const camera_t *cam = goxel.image->active_camera;
+    int mode = tool->mode;
 
     vec4_set(pos, gest->pos[0], gest->pos[1], gest->pos[2], 1.0);
     mat4_mul_vec4(cam->view_mat, pos, pos);
@@ -68,11 +70,21 @@ static int on_drag(gesture3d_t *gest)
     vec2_copy(pos, &tool->rect[2]);
 
     if (gest->state == GESTURE3D_STATE_END) {
-        apply(tool->rect);
+        if (gest->flags & GESTURE3D_FLAG_SHIFT)
+            mode = MODE_OVER;
+        else if (gest->flags & GESTURE3D_FLAG_CTRL)
+            mode = MODE_SUB;
+        apply(tool->rect, mode);
         vec4_set(tool->rect, 0, 0, 0, 0);
     }
 
     return 0;
+}
+
+static void init(tool_t *tool_)
+{
+    tool_rect_select_t *tool = (void*)tool_;
+    tool->mode = MODE_REPLACE;
 }
 
 static int iter(tool_t *tool_, const painter_t *painter,
@@ -108,7 +120,8 @@ static int iter(tool_t *tool_, const painter_t *painter,
 
 static int gui(tool_t *tool_)
 {
-    tool_gui_mask_mode(&goxel.mask_mode);
+    tool_rect_select_t *tool = (void*)tool_;
+    tool_gui_mask_mode(&tool->mode);
 
     gui_group_begin(NULL);
     gui_action_button(ACTION_reset_selection, _(RESET), 1.0);
@@ -121,6 +134,7 @@ static int gui(tool_t *tool_)
 
 TOOL_REGISTER(TOOL_RECT_SELECT, rect_select, tool_rect_select_t,
               .name = STR_RECT_SELECT,
+              .init_fn = init,
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_SHOW_MASK,

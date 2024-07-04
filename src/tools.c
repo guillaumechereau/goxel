@@ -41,6 +41,7 @@ void tool_register_(tool_t *tool)
     };
     action_register(&action, tool->action_idx);
     g_tools[tool->id] = tool;
+    if (tool->init_fn) tool->init_fn(tool);
 }
 
 const tool_t *tool_get(int id)
@@ -109,7 +110,6 @@ static bool mask_mode_button(const char *label, int *value, int s)
 
 int tool_gui_mask_mode(int *value)
 {
-    gui_text(_(MASK));
     gui_group_begin(NULL);
     gui_row_begin(3);
     mask_mode_button(_(SET), value, MODE_REPLACE);

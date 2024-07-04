@@ -54,6 +54,7 @@ struct tool {
     int id;
     const char *action_id;
     int action_idx;
+    void (*init_fn)(tool_t *tool);
     int (*iter_fn)(tool_t *tool, const painter_t *painter,
                    const float viewport[4]);
     int (*gui_fn)(tool_t *tool);

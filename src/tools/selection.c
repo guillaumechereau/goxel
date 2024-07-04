@@ -25,7 +25,8 @@ typedef struct {
     float   start_rect[4][4];
 
     volume_t *start_mask; // The mask when we started a new selection.
-    int      mode; // MODE_REPLACE | MODE_OVER | MODE_SUB
+    int     mode; // MODE_REPLACE | MODE_OVER | MODE_SUB
+    int     current_mode; // The mode for the current box only.
 
 } tool_selection_t;
 
@@ -55,7 +56,7 @@ static void update_mask(tool_selection_t *tool)
     // Apply the new volume.
     if (goxel.mask == NULL) goxel.mask = volume_new();
     volume_set(goxel.mask, tool->start_mask);
-    volume_merge(goxel.mask, tmp, tool->mode, painter.color);
+    volume_merge(goxel.mask, tmp, tool->current_mode, painter.color);
     volume_delete(tmp);
 }
 
@@ -96,12 +97,11 @@ static int on_drag(gesture3d_t *gest)
         if (goxel.mask == NULL) goxel.mask = volume_new();
         volume_set(tool->start_mask, goxel.mask);
 
+        tool->current_mode = tool->mode;
         if (gest->flags & GESTURE3D_FLAG_SHIFT)
-            tool->mode = MODE_OVER;
+            tool->current_mode = MODE_OVER;
         else if (gest->flags & GESTURE3D_FLAG_CTRL)
-            tool->mode = MODE_SUB;
-        else
-            tool->mode = MODE_REPLACE;
+            tool->current_mode = MODE_SUB;
     }
 
     box_union(tool->start_rect, rect, goxel.selection);
@@ -116,6 +116,13 @@ static int on_drag(gesture3d_t *gest)
         update_mask(tool);
     }
     return 0;
+}
+
+static void init(tool_t *tool_)
+{
+    tool_selection_t *tool = (void*)tool_;
+    tool->mode = MODE_REPLACE;
+    tool->current_mode = MODE_REPLACE;
 }
 
 // XXX: this is very close to tool_shape_iter.
@@ -173,13 +180,17 @@ static float get_magnitude(float box[4][4], int axis_index)
     return box[0][axis_index] + box[1][axis_index] + box[2][axis_index];
 }
 
-static int gui(tool_t *tool)
+static int gui(tool_t *tool_)
 {
+    tool_selection_t *tool = (void*)tool_;
     float x_mag, y_mag, z_mag;
     int x, y, z, w, h, d;
     float (*box)[4][4] = &goxel.selection;
-    if (box_is_null(*box)) return 0;
 
+
+    tool_gui_mask_mode(&tool->mode);
+
+    if (box_is_null(*box)) return 0;
     gui_group_begin(NULL);
     gui_action_button(ACTION_fill_selection_box, _(FILL), 1.0);
     gui_action_button(ACTION_paint_selection, _(PAINT), 1.0);
@@ -220,6 +231,7 @@ static int gui(tool_t *tool)
 
 TOOL_REGISTER(TOOL_SELECTION, selection, tool_selection_t,
               .name = STR_SELECTION,
+              .init_fn = init,
               .iter_fn = iter,
               .gui_fn = gui,
               .default_shortcut = "R",

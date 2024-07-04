@@ -20,6 +20,7 @@
 
 typedef struct {
     tool_t tool;
+    int mode; // MODE_REPLACE, MODE_OVER, MODE_SUB
     int threshold;
 } tool_fuzzy_select_t;
 
@@ -46,6 +47,12 @@ static int on_click(gesture3d_t *gest)
     volume_t *sel;
     int pi[3];
     tool_fuzzy_select_t *tool = gest->user;
+    int mode = tool->mode;
+
+    if (gest->flags & GESTURE3D_FLAG_SHIFT)
+        mode = MODE_OVER;
+    else if (gest->flags & GESTURE3D_FLAG_CTRL)
+        mode = MODE_SUB;
 
     pi[0] = floor(gest->pos[0]);
     pi[1] = floor(gest->pos[1]);
@@ -53,11 +60,16 @@ static int on_click(gesture3d_t *gest)
     sel = volume_new();
     volume_select(volume, pi, select_cond, tool, sel);
     if (goxel.mask == NULL) goxel.mask = volume_new();
-    volume_merge(goxel.mask, sel, goxel.mask_mode ?: MODE_REPLACE, NULL);
+    volume_merge(goxel.mask, sel, mode, NULL);
     volume_delete(sel);
     return 0;
 }
 
+static void init(tool_t *tool_)
+{
+    tool_fuzzy_select_t *tool = (void*)tool_;
+    tool->mode = MODE_REPLACE;
+}
 
 static int iter(tool_t *tool_, const painter_t *painter,
                 const float viewport[4])
@@ -89,14 +101,14 @@ static int gui(tool_t *tool_)
     tool_fuzzy_select_t *tool = (void*)tool_;
     bool use_color = tool->threshold < 255;
 
+    tool_gui_mask_mode(&tool->mode);
+
     if (gui_checkbox(_(COLORS), &use_color, _(SELECT_BY_COLOR))) {
         tool->threshold = use_color ? 0 : 255;
     }
     if (use_color) {
         gui_input_int(_(THRESHOLD), &tool->threshold, 1, 254);
     }
-
-    tool_gui_mask_mode(&goxel.mask_mode);
 
     if (volume_is_empty(goxel.mask))
         return 0;
@@ -123,6 +135,7 @@ static int gui(tool_t *tool_)
 
 TOOL_REGISTER(TOOL_FUZZY_SELECT, fuzzy_select, tool_fuzzy_select_t,
               .name = STR_FUZZY_SELECT,
+              .init_fn = init,
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_SHOW_MASK,
