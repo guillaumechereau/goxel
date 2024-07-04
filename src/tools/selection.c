@@ -186,7 +186,7 @@ static int gui(tool_t *tool_)
     float x_mag, y_mag, z_mag;
     int x, y, z, w, h, d;
     float (*box)[4][4] = &goxel.selection;
-
+    bool deactivated = false;
 
     tool_gui_mask_mode(&tool->mode);
 
@@ -210,14 +210,20 @@ static int gui(tool_t *tool_)
 
     gui_group_begin("Origin");
     gui_input_int("x", &x, 0, 0);
+    deactivated |= gui_is_item_deactivated();
     gui_input_int("y", &y, 0, 0);
+    deactivated |= gui_is_item_deactivated();
     gui_input_int("z", &z, 0, 0);
+    deactivated |= gui_is_item_deactivated();
     gui_group_end();
 
     gui_group_begin("Size");
     gui_input_int("w", &w, 0, 0);
+    deactivated |= gui_is_item_deactivated();
     gui_input_int("h", &h, 0, 0);
+    deactivated |= gui_is_item_deactivated();
     gui_input_int("d", &d, 0, 0);
+    deactivated |= gui_is_item_deactivated();
     w = max(1, w);
     h = max(1, h);
     d = max(1, d);
@@ -226,6 +232,10 @@ static int gui(tool_t *tool_)
     bbox_from_extents(*box,
             VEC(x + w / 2., y + h / 2., z + d / 2.),
             w / 2., h / 2., d / 2.);
+
+    if (deactivated) {
+        update_mask(tool);
+    }
     return 0;
 }
 

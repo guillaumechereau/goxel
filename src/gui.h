@@ -149,6 +149,8 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
 
 bool gui_is_key_down(int key);
 
+bool gui_is_item_deactivated(void);
+
 void gui_query_quit(void);
 
 enum {

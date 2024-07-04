@@ -183,6 +183,8 @@ typedef struct gui_t {
         bool        opened;
     } popup[8]; // Stack of modal popups
     int popup_count;
+
+    bool item_deactivated;
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -907,6 +909,7 @@ bool gui_input_float(const char *label, float *v, float step,
             GUI_ITEM_HEIGHT,
             ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
 
+    gui->item_deactivated = false;
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
         maxv = +FLT_MAX;
@@ -947,10 +950,12 @@ bool gui_input_float(const char *label, float *v, float step,
             (*v) -= step;
             ret = true;
         }
+        if (ImGui::IsItemDeactivated()) gui->item_deactivated  = true;
         ImGui::SameLine();
         ImGui::PushItemWidth(
                 ImGui::GetContentRegionAvail().x - button_size.x - 4);
         ret = ImGui::DragFloat("", v, v_speed, minv, maxv, format) || ret;
+        if (ImGui::IsItemDeactivated()) gui->item_deactivated  = true;
         is_active = ImGui::IsItemActive();
         ImGui::PopItemWidth();
         ImGui::SameLine();
@@ -958,6 +963,7 @@ bool gui_input_float(const char *label, float *v, float step,
             (*v) += step;
             ret = true;
         }
+        if (ImGui::IsItemDeactivated()) gui->item_deactivated  = true;
     } else {
         ImGui::SetNextItemWidth(-1);
         if (unbounded) {
@@ -1900,4 +1906,9 @@ void gui_context_menu_button(const char *label, int icon)
     if (gui_button(label, 0, icon)) {
         ImGui::OpenPopup(label);
     }
+}
+
+bool gui_is_item_deactivated(void)
+{
+    return gui->item_deactivated;
 }
