@@ -32,8 +32,7 @@ static bool layer_is_volume(const layer_t *layer)
     return !layer->base_id && !layer->image && !layer->shape;
 }
 
-static void do_move(layer_t *layer, const float mat[4][4],
-                    const float origin_[3], bool only_origin)
+static void move(layer_t *layer, const float mat[4][4])
 {
     /*
      * Note: for voxel volume layers, rotation and scale are only
@@ -48,9 +47,8 @@ static void do_move(layer_t *layer, const float mat[4][4],
 
     if (mat4_equal(mat, mat4_identity)) return;
 
-    vec3_copy(origin_ ?: layer->mat[3], origin);
-
     // Make sure we always center on a grid point.
+    vec3_copy(layer->mat[3], origin);
     origin[0] = floor(layer->mat[3][0]) + 0.5;
     origin[1] = floor(layer->mat[3][1]) + 0.5;
     origin[2] = floor(layer->mat[3][2]) + 0.5;
@@ -67,12 +65,10 @@ static void do_move(layer_t *layer, const float mat[4][4],
     } else {
         // Only apply translation to the layer->mat.
         vec3_add(layer->mat[3], mat[3], layer->mat[3]);
-        if (!only_origin) {
-            volume_move(layer->volume, m);
-            if (!box_is_null(layer->box)) {
-                mat4_mul(m, layer->box, layer->box);
-                box_get_bbox(layer->box, layer->box);
-            }
+        volume_move(layer->volume, m);
+        if (!box_is_null(layer->box)) {
+            mat4_mul(m, layer->box, layer->box);
+            box_get_bbox(layer->box, layer->box);
         }
     }
 }
@@ -110,7 +106,7 @@ static int iter(tool_t *tool, const painter_t *painter,
         if (box_edit_state == GESTURE3D_STATE_BEGIN) {
             image_history_push(goxel.image);
         }
-        do_move(layer, transf, VEC(0, 0, 0), false);
+        move(layer, transf);
     }
 
     // Render the origin point.
@@ -127,15 +123,12 @@ static void center_origin(layer_t *layer)
 {
     int bbox[2][3];
     float pos[3];
-    float translation[4][4] = MAT4_IDENTITY;
 
     volume_get_bbox(layer->volume, bbox, true);
     pos[0] = round((bbox[0][0] + bbox[1][0] - 1) / 2.0);
     pos[1] = round((bbox[0][1] + bbox[1][1] - 1) / 2.0);
     pos[2] = round((bbox[0][2] + bbox[1][2] - 1) / 2.0);
-
-    vec3_sub(pos, layer->mat[3], translation[3]);
-    do_move(layer, translation, NULL, true);
+    vec3_copy(pos, layer->mat[3]);
 }
 
 static int gui(tool_t *tool)
@@ -229,7 +222,11 @@ static int gui(tool_t *tool)
 
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
         image_history_push(goxel.image);
-        do_move(layer, mat, NULL, only_origin);
+        if (only_origin) {
+            vec3_add(layer->mat[3], mat[3], layer->mat[3]);
+        } else {
+            move(layer, mat);
+        }
     }
 
     return 0;
