@@ -131,97 +131,105 @@ static void center_origin(layer_t *layer)
     vec3_copy(pos, layer->mat[3]);
 }
 
-
-static int gui(tool_t *tool)
+// Could move into gui.c ?
+static bool input_tranform(const float mat[4][4], float transf[4][4])
 {
-    layer_t *layer;
-    float mat[4][4] = MAT4_IDENTITY;
     int x, y, z;
-    float origin[3];
-    bool only_origin = false;
 
-    layer = goxel.image->active_layer;
-    x = (int)round(layer->mat[3][0]);
-    y = (int)round(layer->mat[3][1]);
-    z = (int)round(layer->mat[3][2]);
+    mat4_set_identity(transf);
+
+    x = (int)round(mat[3][0]);
+    y = (int)round(mat[3][1]);
+    z = (int)round(mat[3][2]);
 
     gui_group_begin(_(POSITION));
     if (gui_input_int("X", &x, 0, 0))
-        mat[3][0] = x - (int)round(layer->mat[3][0]);
+        transf[3][0] = x - (int)round(mat[3][0]);
     if (gui_input_int("Y", &y, 0, 0))
-        mat[3][1] = y - (int)round(layer->mat[3][1]);
+        transf[3][1] = y - (int)round(mat[3][1]);
     if (gui_input_int("Z", &z, 0, 0))
-        mat[3][2] = z - (int)round(layer->mat[3][2]);
+        transf[3][2] = z - (int)round(mat[3][2]);
     gui_group_end();
 
     gui_group_begin(_(ROTATION));
-
     gui_row_begin(2);
     if (gui_button("-X", 0, 0))
-        mat4_irotate(mat, -M_PI / 2, 1, 0, 0);
+        mat4_irotate(transf, -M_PI / 2, 1, 0, 0);
     if (gui_button("+X", 0, 0))
-        mat4_irotate(mat, +M_PI / 2, 1, 0, 0);
+        mat4_irotate(transf, +M_PI / 2, 1, 0, 0);
     gui_row_end();
-
     gui_row_begin(2);
     if (gui_button("-Y", 0, 0))
-        mat4_irotate(mat, -M_PI / 2, 0, 1, 0);
+        mat4_irotate(transf, -M_PI / 2, 0, 1, 0);
     if (gui_button("+Y", 0, 0))
-        mat4_irotate(mat, +M_PI / 2, 0, 1, 0);
+        mat4_irotate(transf, +M_PI / 2, 0, 1, 0);
     gui_row_end();
-
     gui_row_begin(2);
     if (gui_button("-Z", 0, 0))
-        mat4_irotate(mat, -M_PI / 2, 0, 0, 1);
+        mat4_irotate(transf, -M_PI / 2, 0, 0, 1);
     if (gui_button("+Z", 0, 0))
-        mat4_irotate(mat, +M_PI / 2, 0, 0, 1);
+        mat4_irotate(transf, +M_PI / 2, 0, 0, 1);
     gui_row_end();
-
     gui_group_end();
 
     gui_group_begin(_(FLIP));
     gui_row_begin(3);
-    if (gui_button("X", -1, 0)) mat4_iscale(mat, -1,  1,  1);
-    if (gui_button("Y", -1, 0)) mat4_iscale(mat,  1, -1,  1);
-    if (gui_button("Z", -1, 0)) mat4_iscale(mat,  1,  1, -1);
+    if (gui_button("X", -1, 0)) mat4_iscale(transf, -1,  1,  1);
+    if (gui_button("Y", -1, 0)) mat4_iscale(transf,  1, -1,  1);
+    if (gui_button("Z", -1, 0)) mat4_iscale(transf,  1,  1, -1);
     gui_row_end();
     gui_group_end();
 
     gui_group_begin(_(SCALE));
     gui_row_begin(3);
-    if (gui_button("x2", -1, 0)) mat4_iscale(mat, 2, 2, 2);
-    if (gui_button("x0.5", -1, 0)) mat4_iscale(mat, 0.5, 0.5, 0.5);
+    if (gui_button("x2", -1, 0)) mat4_iscale(transf, 2, 2, 2);
+    if (gui_button("x0.5", -1, 0)) mat4_iscale(transf, 0.5, 0.5, 0.5);
     gui_row_end();
     gui_group_end();
 
-    if (layer_is_volume(layer)) {
-        if (gui_section_begin(_(ORIGIN), GUI_SECTION_COLLAPSABLE_CLOSED)) {
-            vec3_copy(layer->mat[3], origin);
-            if (gui_input_float("X", &origin[0], 0.5, 0, 0, "%.1f")) {
-                mat[3][0] = origin[0] - layer->mat[3][0];
-                only_origin = true;
-            }
-            if (gui_input_float("Y", &origin[1], 0.5, 0, 0, "%.1f")) {
-                mat[3][1] = origin[1] - layer->mat[3][1];
-                only_origin = true;
-            }
-            if (gui_input_float("Z", &origin[2], 0.5, 0, 0, "%.1f")) {
-                mat[3][2] = origin[2] - layer->mat[3][2];
-                only_origin = true;
-            }
-            if (gui_button(_(RECENTER), -1, 0)) {
-                center_origin(layer);
-            }
-        } gui_section_end();
-    }
+    return !mat4_is_identity(transf);
+}
 
+static void gui_origin(layer_t *layer)
+{
+    // XXX: to cleanup.
+    float mat[4][4] = MAT4_IDENTITY;
+    float origin[3];
+
+    if (gui_section_begin(_(ORIGIN), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        vec3_copy(layer->mat[3], origin);
+        if (gui_input_float("X", &origin[0], 0.5, 0, 0, "%.1f")) {
+            mat[3][0] = origin[0] - layer->mat[3][0];
+        }
+        if (gui_input_float("Y", &origin[1], 0.5, 0, 0, "%.1f")) {
+            mat[3][1] = origin[1] - layer->mat[3][1];
+        }
+        if (gui_input_float("Z", &origin[2], 0.5, 0, 0, "%.1f")) {
+            mat[3][2] = origin[2] - layer->mat[3][2];
+        }
+        if (gui_button(_(RECENTER), -1, 0)) {
+            center_origin(layer);
+        }
+    } gui_section_end();
     if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
         image_history_push(goxel.image);
-        if (only_origin) {
-            vec3_add(layer->mat[3], mat[3], layer->mat[3]);
-        } else {
-            move(layer, mat);
-        }
+        vec3_add(layer->mat[3], mat[3], layer->mat[3]);
+    }
+}
+
+static int gui(tool_t *tool)
+{
+    layer_t *layer;
+    float mat[4][4] = MAT4_IDENTITY;
+
+    layer = goxel.image->active_layer;
+    if (input_tranform(layer->mat, mat)) {
+        image_history_push(goxel.image);
+        move(layer, mat);
+    }
+
+    if (layer_is_volume(layer)) {
+        gui_origin(layer);
     }
 
     return 0;
