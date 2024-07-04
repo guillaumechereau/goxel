@@ -142,6 +142,8 @@ static bool input_tranform(const float mat[4][4], float transf[4][4])
     y = (int)round(mat[3][1]);
     z = (int)round(mat[3][2]);
 
+    gui_group_begin(NULL);
+
     gui_group_begin(_(POSITION));
     if (gui_input_int("X", &x, 0, 0))
         transf[3][0] = x - (int)round(mat[3][0]);
@@ -187,6 +189,7 @@ static bool input_tranform(const float mat[4][4], float transf[4][4])
     gui_row_end();
     gui_group_end();
 
+    gui_group_end();
     return !mat4_is_identity(transf);
 }
 
@@ -198,6 +201,7 @@ static void gui_origin(layer_t *layer)
 
     if (gui_section_begin(_(ORIGIN), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         vec3_copy(layer->mat[3], origin);
+        gui_group_begin(NULL);
         if (gui_input_float("X", &origin[0], 0.5, 0, 0, "%.1f")) {
             mat[3][0] = origin[0] - layer->mat[3][0];
         }
@@ -210,11 +214,13 @@ static void gui_origin(layer_t *layer)
         if (gui_button(_(RECENTER), -1, 0)) {
             center_origin(layer);
         }
+        gui_group_end();
+        if (gui_is_item_activated()) image_history_push(goxel.image);
+        if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
+            vec3_add(layer->mat[3], mat[3], layer->mat[3]);
+        }
     } gui_section_end();
-    if (memcmp(&mat, &mat4_identity, sizeof(mat))) {
-        image_history_push(goxel.image);
-        vec3_add(layer->mat[3], mat[3], layer->mat[3]);
-    }
+
 }
 
 static int gui(tool_t *tool)
@@ -224,8 +230,10 @@ static int gui(tool_t *tool)
 
     layer = goxel.image->active_layer;
     if (input_tranform(layer->mat, mat)) {
-        image_history_push(goxel.image);
         move(layer, mat);
+    }
+    if (gui_is_item_activated()) {
+        image_history_push(goxel.image);
     }
 
     if (layer_is_volume(layer)) {

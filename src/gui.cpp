@@ -184,7 +184,16 @@ typedef struct gui_t {
     } popup[8]; // Stack of modal popups
     int popup_count;
 
+    bool item_activated;
     bool item_deactivated;
+
+    // Stack of the groups.
+    int groups_count;
+    struct {
+        bool activated;
+        bool deactivated;
+    } groups[16];
+
 } gui_t;
 
 static gui_t *gui = NULL;
@@ -681,6 +690,8 @@ void gui_group_begin(const char *label)
     ImGui::PushID(label ?: "group");
     ImGui::BeginGroup();
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
+
+    memset(&gui->groups[gui->groups_count++], 0, sizeof(gui->groups[0]));
 }
 
 void gui_group_end(void)
@@ -690,6 +701,14 @@ void gui_group_end(void)
     ImGui::Dummy(ImVec2(0, 0));
     ImGui::EndGroup();
     if (gui->is_row) ImGui::SameLine();
+
+    // Make sure gui_is_item_activated works at group level.
+    assert(gui->groups_count > 0);
+    if (gui->groups[gui->groups_count - 1].activated)
+        gui->item_activated = true;
+    if (gui->groups[gui->groups_count - 1].deactivated)
+        gui->item_deactivated = true;
+    gui->groups_count--;
 }
 
 bool gui_section_begin(const char *label, int flags)
@@ -892,6 +911,24 @@ static bool slider_float(float *v, float minv, float maxv, const char *format)
     return ret;
 }
 
+// To be called after imgui inputs function, to udpate our internal state.
+static void update_activation_state(void)
+{
+    int i;
+    if (ImGui::IsItemActivated()) {
+        gui->item_activated = true;
+        for (i = 0; i < gui->groups_count; i++) {
+            gui->groups[i].activated = true;
+        }
+    }
+    if (ImGui::IsItemDeactivated()) {
+        gui->item_deactivated = true;
+        for (i = 0; i < gui->groups_count; i++) {
+            gui->groups[i].deactivated = true;
+        }
+    }
+}
+
 bool gui_input_float(const char *label, float *v, float step,
                      float minv, float maxv, const char *format)
 {
@@ -902,13 +939,14 @@ bool gui_input_float(const char *label, float *v, float step,
     bool unbounded;
     bool show_arrows = false;
     bool is_active = false;
-    ImGuiID key;
+    ImGuiID key = 0;
     ImGuiStorage *storage = ImGui::GetStateStorage();
     const ImGuiStyle& style = ImGui::GetStyle();
     const ImVec2 button_size = ImVec2(
             GUI_ITEM_HEIGHT,
             ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
 
+    gui->item_activated = false;
     gui->item_deactivated = false;
     if (minv == 0.f && maxv == 0.f) {
         minv = -FLT_MAX;
@@ -950,12 +988,13 @@ bool gui_input_float(const char *label, float *v, float step,
             (*v) -= step;
             ret = true;
         }
-        if (ImGui::IsItemDeactivated()) gui->item_deactivated  = true;
+        update_activation_state();
+
         ImGui::SameLine();
         ImGui::PushItemWidth(
                 ImGui::GetContentRegionAvail().x - button_size.x - 4);
         ret = ImGui::DragFloat("", v, v_speed, minv, maxv, format) || ret;
-        if (ImGui::IsItemDeactivated()) gui->item_deactivated  = true;
+        update_activation_state();
         is_active = ImGui::IsItemActive();
         ImGui::PopItemWidth();
         ImGui::SameLine();
@@ -963,7 +1002,7 @@ bool gui_input_float(const char *label, float *v, float step,
             (*v) += step;
             ret = true;
         }
-        if (ImGui::IsItemDeactivated()) gui->item_deactivated  = true;
+        update_activation_state();
     } else {
         ImGui::SetNextItemWidth(-1);
         if (unbounded) {
@@ -1321,6 +1360,7 @@ bool gui_button(const char *label, float size, int icon)
             (label && (label[0] != '#')) ?
             COLOR(BUTTON, INNER, false) : COLOR(ICON, INNER, false));
     ret = ImGui::Button(label ?: "", button_size);
+    update_activation_state();
     ImGui::PopStyleColor();
     if (icon) {
         center = ImGui::GetItemRectMin() +
@@ -1906,6 +1946,11 @@ void gui_context_menu_button(const char *label, int icon)
     if (gui_button(label, 0, icon)) {
         ImGui::OpenPopup(label);
     }
+}
+
+bool gui_is_item_activated(void)
+{
+    return gui->item_activated;
 }
 
 bool gui_is_item_deactivated(void)
