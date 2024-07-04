@@ -97,24 +97,24 @@ int tool_gui(tool_t *tool)
     return tool->gui_fn(tool);
 }
 
-static bool mask_mode_button(const char *label, int s)
+static bool mask_mode_button(const char *label, int *value, int s)
 {
-    bool v = goxel.mask_mode == s;
+    bool v = (*value == s);
     if (gui_selectable(label, &v, NULL, 0)) {
-        goxel.mask_mode = s;
+        *value = s;
         return true;
     }
     return false;
 }
 
-int tool_gui_mask_mode(void)
+int tool_gui_mask_mode(int *value)
 {
     gui_text(_(MASK));
     gui_group_begin(NULL);
     gui_row_begin(3);
-    mask_mode_button(_(SET), MODE_REPLACE);
-    mask_mode_button(_(ADD), MODE_OVER);
-    mask_mode_button(_(SUB), MODE_SUB);
+    mask_mode_button(_(SET), value, MODE_REPLACE);
+    mask_mode_button(_(ADD), value, MODE_OVER);
+    mask_mode_button(_(SUB), value, MODE_SUB);
     gui_row_end();
     gui_group_end();
     return 0;

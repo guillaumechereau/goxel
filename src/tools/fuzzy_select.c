@@ -96,7 +96,7 @@ static int gui(tool_t *tool_)
         gui_input_int(_(THRESHOLD), &tool->threshold, 1, 254);
     }
 
-    tool_gui_mask_mode();
+    tool_gui_mask_mode(&goxel.mask_mode);
 
     if (volume_is_empty(goxel.mask))
         return 0;

@@ -108,7 +108,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
 
 static int gui(tool_t *tool_)
 {
-    tool_gui_mask_mode();
+    tool_gui_mask_mode(&goxel.mask_mode);
 
     gui_group_begin(NULL);
     gui_action_button(ACTION_reset_selection, _(RESET), 1.0);
