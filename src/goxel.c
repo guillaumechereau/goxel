@@ -691,6 +691,7 @@ static int on_drag_rotate(const gesture_t *gest, void *user)
     float pos[3], normal[3];
     bool snap;
     if (gest->state == GESTURE_BEGIN) {
+        if (box_edit_is_active()) return 1; // XXX: to remve.
         snap = goxel_unproject(
             gest->viewport, gest->pos,
             SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME,

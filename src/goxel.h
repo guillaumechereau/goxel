@@ -654,6 +654,8 @@ int gox_iter_infos(const char *path,
  */
 int box_edit(const float box[4][4], int mode, float transf[4][4]);
 
+bool box_edit_is_active(void);
+
 
 void settings_load(void);
 void settings_save(void);
