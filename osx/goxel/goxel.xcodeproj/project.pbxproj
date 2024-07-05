@@ -51,6 +51,7 @@
 		F05D6E8329D3EA36004CA300 /* volume_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E7F29D3EA36004CA300 /* volume_utils.c */; };
 		F05D6E8529D3EB1F004CA300 /* rect_select.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E8429D3EB1F004CA300 /* rect_select.c */; };
 		F05E2DD9268F451D00E47D33 /* quit.c in Sources */ = {isa = PBXBuildFile; fileRef = F05E2DD8268F451D00E47D33 /* quit.c */; };
+		F05F8AA62C37D95A00CF1B3E /* gizmos.c in Sources */ = {isa = PBXBuildFile; fileRef = F05F8AA52C37D95A00CF1B3E /* gizmos.c */; };
 		F06C683C1D2EAECC00887FCE /* camera.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C68391D2EAECC00887FCE /* camera.c */; };
 		F06C683D1D2EAECC00887FCE /* quantization.c in Sources */ = {isa = PBXBuildFile; fileRef = F06C683A1D2EAECC00887FCE /* quantization.c */; };
 		F076EA362284162400B74F0C /* light_panel.c in Sources */ = {isa = PBXBuildFile; fileRef = F076EA352284162400B74F0C /* light_panel.c */; };
@@ -88,7 +89,6 @@
 		F09A62832B3BB8E7006A4464 /* vfetchanalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62742B3BB8E6006A4464 /* vfetchanalyzer.cpp */; };
 		F09A62842B3BB8E7006A4464 /* clusterizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62752B3BB8E6006A4464 /* clusterizer.cpp */; };
 		F09A62852B3BB8E7006A4464 /* simplifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F09A62762B3BB8E6006A4464 /* simplifier.cpp */; };
-		F09FFC5721CE161400B6976A /* box_edit.c in Sources */ = {isa = PBXBuildFile; fileRef = F09FFC5621CE161400B6976A /* box_edit.c */; };
 		F0A15FFD1E962F1300C6EF33 /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF31E962F1300C6EF33 /* png.c */; };
 		F0A15FFE1E962F1300C6EF33 /* povray.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF41E962F1300C6EF33 /* povray.c */; };
 		F0A15FFF1E962F1300C6EF33 /* qubicle.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FF51E962F1300C6EF33 /* qubicle.c */; };
@@ -179,6 +179,8 @@
 		F05D6E7F29D3EA36004CA300 /* volume_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volume_utils.c; sourceTree = "<group>"; };
 		F05D6E8429D3EB1F004CA300 /* rect_select.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rect_select.c; sourceTree = "<group>"; };
 		F05E2DD8268F451D00E47D33 /* quit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = quit.c; path = gui/quit.c; sourceTree = "<group>"; };
+		F05F8AA42C37D95A00CF1B3E /* gizmos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gizmos.h; sourceTree = "<group>"; };
+		F05F8AA52C37D95A00CF1B3E /* gizmos.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gizmos.c; sourceTree = "<group>"; };
 		F06C68391D2EAECC00887FCE /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
 		F06C683A1D2EAECC00887FCE /* quantization.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = quantization.c; sourceTree = "<group>"; };
 		F076EA352284162400B74F0C /* light_panel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = light_panel.c; sourceTree = "<group>"; };
@@ -232,7 +234,6 @@
 		F09A62742B3BB8E6006A4464 /* vfetchanalyzer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vfetchanalyzer.cpp; sourceTree = "<group>"; };
 		F09A62752B3BB8E6006A4464 /* clusterizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = clusterizer.cpp; sourceTree = "<group>"; };
 		F09A62762B3BB8E6006A4464 /* simplifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplifier.cpp; sourceTree = "<group>"; };
-		F09FFC5621CE161400B6976A /* box_edit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = box_edit.c; sourceTree = "<group>"; };
 		F0A15FF31E962F1300C6EF33 /* png.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = png.c; sourceTree = "<group>"; };
 		F0A15FF41E962F1300C6EF33 /* povray.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = povray.c; sourceTree = "<group>"; };
 		F0A15FF51E962F1300C6EF33 /* qubicle.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = qubicle.c; sourceTree = "<group>"; };
@@ -406,6 +407,8 @@
 		F07DE9E31BD0F31500BAA1AD /* src */ = {
 			isa = PBXGroup;
 			children = (
+				F05F8AA52C37D95A00CF1B3E /* gizmos.c */,
+				F05F8AA42C37D95A00CF1B3E /* gizmos.h */,
 				F0EDCB712BB272C200D95B51 /* i18n.c */,
 				F0EDCB6F2BB272AC00D95B51 /* filters.c */,
 				F0EDCB6A2BB2728B00D95B51 /* filters */,
@@ -426,7 +429,6 @@
 				F00FC2F8226B2F7B0002F251 /* utils */,
 				F03B4385224CCDDF00798CAB /* pathtracer.cpp */,
 				F03B4386224CCDDF00798CAB /* yocto.cpp */,
-				F09FFC5621CE161400B6976A /* box_edit.c */,
 				F0F14C6620AF282E0006E575 /* imgui.cpp */,
 				F0E71BAB1F1DA30D00D20C7C /* theme.c */,
 				F097B3F11F0C97DB00A3622B /* gesture.c */,
@@ -650,7 +652,6 @@
 				F06C683C1D2EAECC00887FCE /* camera.c in Sources */,
 				F09A62782B3BB8E7006A4464 /* vertexcodec.cpp in Sources */,
 				F05D6E8129D3EA36004CA300 /* volume_to_vertices.c in Sources */,
-				F09FFC5721CE161400B6976A /* box_edit.c in Sources */,
 				F00FC330226B2FCF0002F251 /* menu.c in Sources */,
 				F09A62832B3BB8E7006A4464 /* vfetchanalyzer.cpp in Sources */,
 				F09A627E2B3BB8E7006A4464 /* indexcodec.cpp in Sources */,
@@ -668,6 +669,7 @@
 				F03B4387224CCDDF00798CAB /* pathtracer.cpp in Sources */,
 				F00FC334226B2FCF0002F251 /* render_panel.c in Sources */,
 				F07DEA0A1BD0F31500BAA1AD /* model3d.c in Sources */,
+				F05F8AA62C37D95A00CF1B3E /* gizmos.c in Sources */,
 				F00FC315226B2F7C0002F251 /* texture.c in Sources */,
 				F0A160051E962F1300C6EF33 /* wavefront.c in Sources */,
 				F00FC338226B2FCF0002F251 /* image_panel.c in Sources */,
