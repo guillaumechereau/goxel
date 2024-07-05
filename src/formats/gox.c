@@ -701,6 +701,7 @@ int load_from_file(const char *path, bool replace)
     // Update plane, snap mask not to confuse people.
     plane_from_vectors(goxel.plane, goxel.image->box[3],
                        VEC(1, 0, 0), VEC(0, 1, 0));
+    image_history_push(goxel.image);
 
     return 0;
 

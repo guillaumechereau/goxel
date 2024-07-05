@@ -163,6 +163,7 @@ image_t *image_new(void)
     img->active_layer = layer;
     // Prevent saving an empty image.
     img->saved_key = image_get_key(img);
+    image_history_push(img);
     return img;
 }
 
