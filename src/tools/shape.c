@@ -64,7 +64,6 @@ static int on_drag(gesture3d_t *gest)
     if (gest->state == GESTURE3D_STATE_BEGIN) {
         volume_set(shape->volume_orig, layer_volume);
         vec3_copy(gest->pos, shape->start_pos);
-        image_history_push(goxel.image);
         if (shape->planar) {
             vec3_addk(gest->pos, gest->normal, -gest->snap_offset, pos);
             gest->snap_mask = SNAP_SHAPE_PLANE;
@@ -82,6 +81,7 @@ static int on_drag(gesture3d_t *gest)
         volume_set(layer_volume, goxel.tool_volume);
         volume_delete(goxel.tool_volume);
         goxel.tool_volume = NULL;
+        image_history_push(goxel.image);
     }
     return 0;
 }

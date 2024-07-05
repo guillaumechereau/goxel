@@ -117,17 +117,17 @@ static int gui(tool_t *tool_)
 
     gui_group_begin(NULL);
     if (gui_button(_(CLEAR), 1, 0)) {
-        image_history_push(goxel.image);
         volume_merge(volume, goxel.mask, MODE_SUB, NULL);
+        image_history_push(goxel.image);
     }
     if (gui_button(_(FILL), 1, 0)) {
-        image_history_push(goxel.image);
         volume_merge(volume, goxel.mask, MODE_OVER, goxel.painter.color);
+        image_history_push(goxel.image);
     }
     if (gui_button(_(CUT_TO_NEW_LAYER), 1, 0)) {
-        image_history_push(goxel.image);
         cut_as_new_layer(goxel.image, goxel.image->active_layer,
                          goxel.mask);
+        image_history_push(goxel.image);
     }
     gui_group_end();
     return 0;

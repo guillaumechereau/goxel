@@ -62,10 +62,11 @@ static int on_drag(gesture3d_t *gest)
     painter.shape = &shape_cylinder;
     vec4_set(painter.color, 255, 255, 255, 255);
 
-    if (gest->state == GESTURE3D_STATE_BEGIN)
+    volume_op(volume, &painter, laser->box);
+
+    if (gest->state == GESTURE3D_STATE_END)
         image_history_push(goxel.image);
 
-    volume_op(volume, &painter, laser->box);
     return 0;
 }
 

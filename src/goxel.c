@@ -1272,7 +1272,6 @@ void goxel_import_image_plane(const char *path)
     texture_t *tex;
     tex = texture_new_image(path, TF_NEAREST);
     if (!tex) return;
-    image_history_push(goxel.image);
     layer = image_add_layer(goxel.image, NULL);
     sprintf(layer->name, "img");
     layer->image = tex;
@@ -1282,6 +1281,7 @@ void goxel_import_image_plane(const char *path)
     if (tex->h % 2 == 1)
         mat4_itranslate(layer->mat, 0, 0.5, 0);
     mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);
+    image_history_push(goxel.image);
 }
 
 void goxel_on_low_memory(void)

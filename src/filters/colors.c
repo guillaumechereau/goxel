@@ -86,13 +86,13 @@ static void on_open(filter_t *filter_)
     filter->lightness = 0;
     filter->saturation = 0;
     filter->original = volume_copy(goxel.image->active_layer->volume);
-    image_history_push(goxel.image);
 }
 
 static void on_close(filter_t *filter_)
 {
     filter_colors_t *filter = (void*)filter_;
     volume_delete(filter->original);
+    image_history_push(goxel.image);
 }
 
 static void move_value(float *x, float v)

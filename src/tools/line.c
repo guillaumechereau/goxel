@@ -86,7 +86,6 @@ static int on_drag(gesture3d_t *gest)
         vec3_copy(gest->pos, tool->start_pos);
         assert(tool->volume_orig);
         volume_set(tool->volume_orig, goxel.image->active_layer->volume);
-        image_history_push(goxel.image);
     }
 
     painter = *(painter_t*)USER_GET(gest->user, 1);
@@ -106,6 +105,7 @@ static int on_drag(gesture3d_t *gest)
         volume_set(tool->volume_orig, goxel.tool_volume);
         volume_delete(goxel.tool_volume);
         goxel.tool_volume = NULL;
+        image_history_push(goxel.image);
     }
 
     return 0;
