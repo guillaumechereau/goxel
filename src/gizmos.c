@@ -150,7 +150,6 @@ static int on_gizmo_hover(gesture3d_t *gest)
     goxel_set_help_text("Drag to move");
     g_data.snap_face = gest->user_key;
     g_data.flags |= FLAG_SNAP_GIZMO;
-    g_data.gesture_state = gest->state;
     return 0;
 }
 
@@ -281,5 +280,6 @@ int box_edit(const float box[4][4], int mode, float transf[4][4])
 
 bool box_edit_is_active(void)
 {
-    return g_data.gesture_state;
+    return g_data.gesture_state ||
+           (g_data.flags & (FLAG_SNAP_GIZMO | FLAG_SNAP_FACE));
 }

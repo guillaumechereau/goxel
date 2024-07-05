@@ -146,6 +146,7 @@ static int iter(tool_t *tool, const painter_t *painter,
         }
         return 0;
     }
+    if (box_edit_is_active()) return 0;
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_HOVER,

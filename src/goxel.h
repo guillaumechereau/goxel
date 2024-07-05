@@ -36,6 +36,7 @@
 #include "filters.h"
 #include "gesture.h"
 #include "gesture3d.h"
+#include "gizmos.h"
 #include "gui.h"
 #include "i18n.h"
 #include "image.h"
@@ -630,31 +631,6 @@ int gox_iter_infos(const char *path,
                    int (*callback)(const char *attr, int size,
                                    void *value, void *user),
                    void *user);
-
-// Section: box_edit
-
-/*
- * Function: gox_edit
- * Render a box that can be edited with the mouse.
- *
- * This is used for the move and selection tools.
- * Still a bit experimental.
- *
- * Parameters:
- *   box    - The box we want to edit.
- *   mode   - 0: move, 1: resize.
- *   transf - Receive the output transformation.
- *   first  - Set to true if the edit is the first one.
- *
- * Return on of:
- *   0 (no action)
- *   GESTURE3D_BEGIN
- *   GESTURE3D_UPDATE
- *   GESTURE3D_END
- */
-int box_edit(const float box[4][4], int mode, float transf[4][4]);
-
-bool box_edit_is_active(void);
 
 
 void settings_load(void);
