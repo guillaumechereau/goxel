@@ -22,11 +22,12 @@ static const tool_t *g_tools[TOOL_COUNT] = {};
 
 static void a_tool_set(void *data)
 {
+    tool_t *tool = data;
     if (goxel.tool_volume) {
         volume_delete(goxel.tool_volume);
         goxel.tool_volume = NULL;
     }
-    goxel.tool = (tool_t*)data;
+    goxel.tool = tool;
 }
 
 void tool_register_(tool_t *tool)

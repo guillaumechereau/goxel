@@ -25,6 +25,12 @@ enum {
 
 typedef struct {
     tool_t tool;
+
+    uint64_t start_mask_key;
+    volume_t *start_volume;
+    volume_t *start_selection;
+    float box[4][4];
+    float start_box[4][4];
 } tool_move_t;
 
 static bool layer_is_volume(const layer_t *layer)
@@ -73,6 +79,14 @@ static void move(layer_t *layer, const float mat[4][4])
     }
 }
 
+// Compute transformation betwen two matrices.
+static void get_transf(const float src[4][4], const float dst[4][4],
+                       float out[4][4])
+{
+    mat4_invert(src, out);
+    mat4_mul(dst, out, out);
+}
+
 static void normalize_box(const float box[4][4], float out[4][4])
 {
     mat4_copy(box, out);
@@ -81,9 +95,57 @@ static void normalize_box(const float box[4][4], float out[4][4])
     bbox_from_npoints(out, 8, vertices);
 }
 
-static int iter(tool_t *tool, const painter_t *painter,
+static int iter_selection(tool_move_t *tool, const painter_t *painter,
+                          const float viewport[4])
+{
+    float transf[4][4];
+    float transf_tot[4][4];
+    int box_edit_state;
+    layer_t *layer = goxel.image->active_layer;
+    volume_t *tmp;
+
+    if (tool->start_mask_key != volume_get_key(goxel.mask)) {
+        volume_get_box(goxel.mask, true, tool->box);
+        tool->start_mask_key = volume_get_key(goxel.mask);
+    }
+
+    box_edit_state = box_edit(tool->box, DRAG_MOVE, transf);
+    if (!box_edit_state) return 0;
+
+    if (box_edit_state == GESTURE3D_STATE_BEGIN) {
+        assert(!tool->start_volume && !tool->start_selection);
+        mat4_copy(tool->box, tool->start_box);
+        tool->start_volume = volume_copy(layer->volume);
+        volume_merge(tool->start_volume, goxel.mask, MODE_SUB, NULL);
+        tool->start_selection = volume_copy(layer->volume);
+        volume_merge(tool->start_selection, goxel.mask, MODE_INTERSECT, NULL);
+    }
+
+    mat4_mul(transf, tool->box, tool->box);
+    get_transf(tool->start_box, tool->box, transf_tot);
+    tmp = volume_copy(tool->start_selection);
+    volume_move(tmp, transf_tot);
+    volume_set(layer->volume, tool->start_volume);
+    volume_merge(layer->volume, tmp, MODE_OVER, NULL);
+    volume_delete(tmp);
+
+    if (box_edit_state == GESTURE3D_STATE_END) {
+        volume_delete(tool->start_volume);
+        volume_delete(tool->start_selection);
+        tool->start_volume = NULL;
+        tool->start_selection = NULL;
+        tool->box[3][3] = 0;
+        volume_move(goxel.mask, transf_tot);
+        image_history_push(goxel.image);
+    }
+
+    return 0;
+}
+
+static int iter(tool_t *tool_, const painter_t *painter,
                 const float viewport[4])
 {
+    tool_move_t *tool = (void*)tool_;
     float transf[4][4];
     float origin_box[4][4] = MAT4_IDENTITY;
     uint8_t color[4] = {255, 0, 0, 255};
@@ -92,6 +154,10 @@ static int iter(tool_t *tool, const painter_t *painter,
     int box_edit_state;
 
     layer_t *layer = goxel.image->active_layer;
+
+    if (goxel.mask && !volume_is_empty(goxel.mask)) {
+        return iter_selection(tool, painter, viewport);
+    }
 
     if (layer->shape) drag_mode = DRAG_RESIZE;
 
