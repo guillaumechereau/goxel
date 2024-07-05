@@ -53,8 +53,10 @@ struct image {
     bool     export_transparent_background;
     uint32_t saved_key;     // image_get_key() value of saved file.
 
+    // Undo history.
     image_t *history;
     image_t *history_next, *history_prev;
+    image_t *history_pos; // Point to the current position in the history.
 };
 
 image_t *image_new(void);

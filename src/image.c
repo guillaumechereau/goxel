@@ -19,36 +19,6 @@
 #include "goxel.h"
 #include "xxhash.h"
 
-/* History
-    the images undo history is stored in a linked list.  Every time we call
-    image_history_push, we add the current image snapshot in the list.
-
-    For example, if we did three operations, A, B, C, and now the image is
-    in the D state, the history list looks like this:
-
-    img->history                                        img
-        |                                                |
-        v                                                v
-    +--------+       +--------+       +--------+      +--------+
-    |        |       |        |       |        |      |        |
-    |   A    |------>|   B    |------>|   C    |----->|   D    |
-    |        |       |        |       |        |      |        |
-    +--------+       +--------+       +--------+      +--------+
-
-    After an undo, we get:
-
-    img->history                        img
-        |                                |
-        v                                v
-    +--------+       +--------+       +--------+     +--------+
-    |        |       |        |       |        |     |        |
-    |   A    |------>|   B    |------>|   C    |---->|   D    |
-    |        |       |        |       |        |     |        |
-    +--------+       +--------+       +--------+     +--------+
-
-
-*/
-
 
 static bool material_name_exists(void *user, const char *name)
 {
@@ -190,17 +160,73 @@ image_t *image_new(void)
     layer->id = img_get_new_id(img);
     layer->material = img->active_material;
     DL_APPEND(img->layers, layer);
-    DL_APPEND2(img->history, img, history_prev, history_next);
     img->active_layer = layer;
     // Prevent saving an empty image.
     img->saved_key = image_get_key(img);
     return img;
 }
 
+static void image_restore(image_t *img, const image_t *snap)
+{
+    layer_t *layer, *snap_layer;
+    camera_t *camera, *snap_camera;
+    material_t *material, *snap_material;
+    // Note: this would be easier if we has some generic object array
+    // objects.
+
+    // First remove all the layer, cameras, and materials.
+    while ((layer = img->layers)) {
+        DL_DELETE(img->layers, layer);
+        layer_delete(layer);
+    }
+    while ((camera = img->cameras)) {
+        DL_DELETE(img->cameras, camera);
+        camera_delete(camera);
+    }
+    while ((material = img->materials)) {
+        DL_DELETE(img->materials, material);
+        material_delete(material);
+    }
+    mat4_copy(snap->box, img->box);
+
+    // Set copy from the other.
+    img->layers = NULL;
+    img->active_layer = NULL;
+    DL_FOREACH(snap->layers, snap_layer) {
+        layer = layer_copy(snap_layer);
+        DL_APPEND(img->layers, layer);
+        if (snap_layer == snap->active_layer)
+            img->active_layer = layer;
+    }
+    assert(img->active_layer);
+
+    img->cameras = NULL;
+    img->active_camera = NULL;
+    DL_FOREACH(snap->cameras, snap_camera) {
+        camera = camera_copy(snap_camera);
+        DL_APPEND(img->cameras, camera);
+        if (snap_camera == snap->active_camera)
+            img->active_camera = camera;
+    }
+
+    img->materials = NULL;
+    img->active_material = NULL;
+    DL_FOREACH(snap->materials, snap_material) {
+        material = material_copy(snap_material);
+        DL_APPEND(img->materials, material);
+        if (snap_material == snap->active_material)
+            img->active_material = material;
+        DL_FOREACH(img->layers, layer) {
+            if (layer->material == snap_material)
+                layer->material = material;
+        }
+    }
+}
+
 /*
  * Generate a copy of the image that can be put into the history.
  */
-static image_t *image_snap(image_t *other)
+static image_t *image_snap(const image_t *other)
 {
     image_t *img;
     layer_t *layer, *other_layer;
@@ -243,6 +269,7 @@ static image_t *image_snap(image_t *other)
     }
 
     img->history = img->history_next = img->history_prev = NULL;
+    img->history_pos = NULL;
     return img;
 }
 
@@ -557,12 +584,14 @@ void image_set(image_t *img, image_t *other)
 }
 
 #if 0 // For debugging purpose.
-static void debug_print_history(image_t *img)
+void debug_print_history(image_t *img)
 {
     int i = 0;
+
     image_t *hist;
     DL_FOREACH2(img->history, hist, history_next) {
-        printf("%d%s  ", i++, hist == img ? "*" : " ");
+        assert(hist != img);
+        printf("%d%s  ", i++, hist == img->history_pos ? "*" : " ");
     }
     printf("\n");
 }
@@ -572,19 +601,20 @@ static void debug_print_history(image_t *img) {}
 
 void image_history_push(image_t *img)
 {
-    image_t *snap = image_snap(img);
-    image_t *hist;
+    image_t *snap;
 
     // Discard previous undo.
-    while ((hist = img->history_next)) {
-        DL_DELETE2(img->history, hist, history_prev, history_next);
-        assert(hist != img->history_next);
-        image_delete(hist);
+    if (img->history_pos) {
+        while (img->history_pos->history_next) {
+            snap = img->history_pos->history_next;
+            DL_DELETE2(img->history, snap, history_prev, history_next);
+            debug_print_history(img);
+        }
     }
 
-    DL_DELETE2(img->history, img,  history_prev, history_next);
+    snap = image_snap(img);
     DL_APPEND2(img->history, snap, history_prev, history_next);
-    DL_APPEND2(img->history, img,  history_prev, history_next);
+    img->history_pos = snap;
     debug_print_history(img);
 }
 
@@ -612,32 +642,24 @@ void image_history_resize(image_t *img, int size)
     }
 }
 
-// XXX: not clear what this is doing.  We should try to remove it.
-// It swap the content of two images without touching their pointer or
-// history.
-static void swap(image_t *a, image_t *b)
-{
-    SWAP(*a, *b);
-    SWAP(a->history, b->history);
-    SWAP(a->history_next, b->history_next);
-    SWAP(a->history_prev, b->history_prev);
-}
-
 void image_undo(image_t *img)
 {
-    image_t *prev = img->history_prev;
-    if (img->history == img) {
+    image_t copy, *prev;
+    if (img->history_pos == img->history) {
         LOG_D("No more undo");
+        debug_print_history(img);
         return;
     }
-    DL_DELETE2(img->history, img, history_prev, history_next);
-    DL_PREPEND_ELEM2(img->history, prev, img, history_prev, history_next);
-    swap(img, prev);
+    assert(img->history_pos);
+    prev = img->history_pos->history_prev;
+    copy = *img;
+    image_restore(img, prev);
+    img->history_pos = prev;
 
     // Don't move the camera for an undo.
-    if (img->active_camera && prev->active_camera &&
-            strcmp(img->active_camera->name, prev->active_camera->name) == 0) {
-        camera_set(img->active_camera, prev->active_camera);
+    if (img->active_camera && copy.active_camera &&
+            strcmp(img->active_camera->name, copy.active_camera->name) == 0) {
+        camera_set(img->active_camera, copy.active_camera);
     }
 
     debug_print_history(img);
@@ -645,14 +667,14 @@ void image_undo(image_t *img)
 
 void image_redo(image_t *img)
 {
-    image_t *next = img->history_next;
-    if (!next) {
+    image_t *next;
+    if (!img->history_pos || !img->history_pos->history_next) {
         LOG_D("No more redo");
         return;
     }
-    DL_DELETE2(img->history, next, history_prev, history_next);
-    DL_PREPEND_ELEM2(img->history, img, next, history_prev, history_next);
-    swap(img, next);
+    next = img->history_pos->history_next;
+    image_restore(img, next);
+    img->history_pos = next;
     debug_print_history(img);
 }
 

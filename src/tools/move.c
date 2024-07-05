@@ -103,10 +103,10 @@ static int iter(tool_t *tool, const painter_t *painter,
 
     box_edit_state = box_edit(box, drag_mode, transf);
     if (box_edit_state) {
-        if (box_edit_state == GESTURE3D_STATE_BEGIN) {
+        move(layer, transf);
+        if (box_edit_state == GESTURE3D_STATE_END) {
             image_history_push(goxel.image);
         }
-        move(layer, transf);
     }
 
     // Render the origin point.
@@ -232,7 +232,7 @@ static int gui(tool_t *tool)
     if (input_tranform(layer->mat, mat)) {
         move(layer, mat);
     }
-    if (gui_is_item_activated()) {
+    if (gui_is_item_deactivated()) {
         image_history_push(goxel.image);
     }
 

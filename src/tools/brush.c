@@ -117,7 +117,6 @@ static int on_drag(gesture3d_t *gest)
         volume_set(brush->volume_orig, goxel.image->active_layer->volume);
         brush->last_op.mode = 0; // Discard last op.
         vec3_copy(gest->pos, brush->last_pos);
-        image_history_push(goxel.image);
         volume_clear(brush->volume);
 
         if (shift) {
@@ -160,6 +159,7 @@ static int on_drag(gesture3d_t *gest)
         volume_set(brush->volume_orig, goxel.tool_volume);
         volume_delete(goxel.tool_volume);
         goxel.tool_volume = NULL;
+        image_history_push(goxel.image);
     }
     vec3_copy(gest->pos, brush->last_pos);
     return 0;

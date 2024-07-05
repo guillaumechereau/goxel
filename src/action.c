@@ -92,16 +92,16 @@ int action_exec(const action_t *action)
     // So that we do not add undo snapshot when an action calls an other one.
     static int reentry = 0;
 
-    if (reentry == 0 && (action->flags & ACTION_TOUCH_IMAGE)) {
-        image_history_push(goxel.image);
-    }
-
     reentry++;
 
     if (action->data)
         action->cfunc_data(action->data);
     else
         action->cfunc();
+
+    if (reentry == 1 && (action->flags & ACTION_TOUCH_IMAGE)) {
+        image_history_push(goxel.image);
+    }
 
     reentry--;
     return 0;

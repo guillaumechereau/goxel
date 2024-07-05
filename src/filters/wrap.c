@@ -170,7 +170,6 @@ static int gui(filter_t *filter)
             return 0;
 
         bbox_to_aabb(box, aabb);
-        image_history_push(goxel.image);
 
         DL_FOREACH(goxel.image->layers, layer) {
             if (wrap->current_only && layer != goxel.image->active_layer)
@@ -178,6 +177,7 @@ static int gui(filter_t *filter)
 
             volume_wrap(layer->volume, axis, sign, aabb);
         }
+        image_history_push(goxel.image);
     }
 
     return 0;

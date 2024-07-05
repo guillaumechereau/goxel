@@ -90,7 +90,6 @@ static int on_drag(gesture3d_t *gest)
         volume_delete(tmp_volume);
 
         volume_set(tool->volume_orig, volume);
-        image_history_push(goxel.image);
 
         // XXX: to remove: this is duplicated from selection tool.
         volume_get_box(tool->volume, true, box);
@@ -145,6 +144,7 @@ static int on_drag(gesture3d_t *gest)
 end:
     if (gest->state == GESTURE3D_STATE_END) {
         volume_delete(tool->volume);
+        image_history_push(goxel.image);
     }
     return 0;
 }

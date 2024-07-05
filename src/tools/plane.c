@@ -63,7 +63,6 @@ static void cut(bool above)
     volume_iterator_t iter;
     volume_accessor_t accessor;
 
-    image_history_push(goxel.image);
     iter = volume_get_iterator(volume,
             VOLUME_ITER_VOXELS | VOLUME_ITER_SKIP_EMPTY);
     accessor = volume_get_accessor(volume);
@@ -75,6 +74,7 @@ static void cut(bool above)
         if (d > 0)
             volume_set_at(volume, &accessor, vp, color);
     }
+    image_history_push(goxel.image);
 }
 
 static int gui(tool_t *tool_)
