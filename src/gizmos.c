@@ -275,6 +275,12 @@ int box_edit(const float box[4][4], int mode, float transf[4][4])
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
     if (transf) mat4_copy(g_data.transf, transf);
 
+    // Avoid sending an update event if we didn't actually move.
+    if (    (g_data.gesture_state == GESTURE3D_STATE_UPDATE) &&
+            mat4_is_identity(g_data.transf)) {
+        return 0;
+    }
+
     return g_data.gesture_state;
 }
 
