@@ -42,8 +42,9 @@ static void update_mask(tool_selection_t *tool)
 {
     volume_t *tmp;
     painter_t painter;
+    image_t *img = goxel.image;
 
-    if (box_is_null(goxel.selection)) return;
+    if (box_is_null(img->selection_box)) return;
     // Compute interesection of volume and selection rect.
     painter = (painter_t) {
         .shape = &shape_cube,
@@ -51,13 +52,14 @@ static void update_mask(tool_selection_t *tool)
         .color = {255, 255, 255, 255},
     };
     tmp = volume_copy(goxel.image->active_layer->volume);
-    volume_op(tmp, &painter, goxel.selection);
+    volume_op(tmp, &painter, img->selection_box);
 
     // Apply the new volume.
-    if (goxel.mask == NULL) goxel.mask = volume_new();
-    volume_set(goxel.mask, tool->start_mask);
-    volume_merge(goxel.mask, tmp, tool->current_mode, painter.color);
+    if (img->selection_mask == NULL) img->selection_mask = volume_new();
+    volume_set(img->selection_mask, tool->start_mask);
+    volume_merge(img->selection_mask, tmp, tool->current_mode, painter.color);
     volume_delete(tmp);
+    image_history_push(goxel.image);
 }
 
 static int on_hover(gesture3d_t *gest)
@@ -86,6 +88,7 @@ static int on_drag(gesture3d_t *gest)
     float rect[4][4];
     float p[3];
     int dir;
+    image_t *img = goxel.image;
 
     goxel_set_help_text("Drag.");
 
@@ -94,8 +97,8 @@ static int on_drag(gesture3d_t *gest)
         get_rect(gest->start_pos, gest->start_normal, tool->start_rect);
 
         if (tool->start_mask == NULL) tool->start_mask = volume_new();
-        if (goxel.mask == NULL) goxel.mask = volume_new();
-        volume_set(tool->start_mask, goxel.mask);
+        if (img->selection_mask == NULL) img->selection_mask = volume_new();
+        volume_set(tool->start_mask, img->selection_mask);
 
         tool->current_mode = tool->mode;
         if (gest->flags & GESTURE3D_FLAG_SHIFT)
@@ -104,12 +107,13 @@ static int on_drag(gesture3d_t *gest)
             tool->current_mode = MODE_SUB;
     }
 
-    box_union(tool->start_rect, rect, goxel.selection);
+    box_union(tool->start_rect, rect, img->selection_box);
     // If the selection is flat, we grow it one voxel.
-    if (box_get_volume(goxel.selection) == 0) {
+    if (box_get_volume(img->selection_box) == 0) {
         dir = gest->snaped == SNAP_VOLUME ? -1 : 1;
         vec3_addk(gest->pos, gest->normal, dir, p);
-        bbox_extends_from_points(goxel.selection, 1, &p, goxel.selection);
+        bbox_extends_from_points(img->selection_box, 1, &p,
+                                 img->selection_box);
     }
 
     if (gest->state == GESTURE3D_STATE_END) {
@@ -133,14 +137,15 @@ static int iter(tool_t *tool, const painter_t *painter,
     tool_selection_t *selection = (tool_selection_t*)tool;
     int snap_mask = goxel.snap_mask;
     int box_edit_state;
+    image_t *img = goxel.image;
 
     // To cleanup.
     snap_mask |= SNAP_ROUNDED;
     snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
-    box_edit_state = box_edit(goxel.selection, 1, transf);
+    box_edit_state = box_edit(img->selection_box, 1, transf);
     if (box_edit_state) {
-        mat4_mul(transf, goxel.selection, goxel.selection);
+        mat4_mul(transf, img->selection_box, img->selection_box);
         if (box_edit_state == GESTURE3D_STATE_END) {
             update_mask(selection);
         }
@@ -186,7 +191,7 @@ static int gui(tool_t *tool_)
     tool_selection_t *tool = (void*)tool_;
     float x_mag, y_mag, z_mag;
     int x, y, z, w, h, d;
-    float (*box)[4][4] = &goxel.selection;
+    float (*box)[4][4] = &goxel.image->selection_box;
     bool deactivated = false;
 
     tool_gui_mask_mode(&tool->mode);

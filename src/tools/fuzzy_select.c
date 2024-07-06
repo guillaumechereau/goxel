@@ -43,10 +43,11 @@ static int select_cond(void *user, const volume_t *volume,
 
 static int on_click(gesture3d_t *gest)
 {
-    volume_t *volume = goxel.image->active_layer->volume;
+    tool_fuzzy_select_t *tool = gest->user;
+    image_t *img = goxel.image;
+    volume_t *volume = img->active_layer->volume;
     volume_t *sel;
     int pi[3];
-    tool_fuzzy_select_t *tool = gest->user;
     int mode = tool->mode;
 
     if (gest->flags & GESTURE3D_FLAG_SHIFT)
@@ -59,8 +60,8 @@ static int on_click(gesture3d_t *gest)
     pi[2] = floor(gest->pos[2]);
     sel = volume_new();
     volume_select(volume, pi, select_cond, tool, sel);
-    if (goxel.mask == NULL) goxel.mask = volume_new();
-    volume_merge(goxel.mask, sel, mode, NULL);
+    if (img->selection_mask == NULL) img->selection_mask = volume_new();
+    volume_merge(img->selection_mask, sel, mode, NULL);
     volume_delete(sel);
     return 0;
 }
@@ -100,6 +101,7 @@ static int gui(tool_t *tool_)
 {
     tool_fuzzy_select_t *tool = (void*)tool_;
     bool use_color = tool->threshold < 255;
+    image_t *img = goxel.image;
 
     tool_gui_mask_mode(&tool->mode);
 
@@ -110,23 +112,24 @@ static int gui(tool_t *tool_)
         gui_input_int(_(THRESHOLD), &tool->threshold, 1, 254);
     }
 
-    if (volume_is_empty(goxel.mask))
+    if (volume_is_empty(img->selection_mask))
         return 0;
 
-    volume_t *volume = goxel.image->active_layer->volume;
+    volume_t *volume = img->active_layer->volume;
 
     gui_group_begin(NULL);
+    // XXX: should use actions here?
     if (gui_button(_(CLEAR), 1, 0)) {
-        volume_merge(volume, goxel.mask, MODE_SUB, NULL);
+        volume_merge(volume, img->selection_mask, MODE_SUB, NULL);
         image_history_push(goxel.image);
     }
     if (gui_button(_(FILL), 1, 0)) {
-        volume_merge(volume, goxel.mask, MODE_OVER, goxel.painter.color);
+        volume_merge(volume, img->selection_mask, MODE_OVER,
+                     goxel.painter.color);
         image_history_push(goxel.image);
     }
     if (gui_button(_(CUT_TO_NEW_LAYER), 1, 0)) {
-        cut_as_new_layer(goxel.image, goxel.image->active_layer,
-                         goxel.mask);
+        cut_as_new_layer(img, img->active_layer, img->selection_mask);
         image_history_push(goxel.image);
     }
     gui_group_end();

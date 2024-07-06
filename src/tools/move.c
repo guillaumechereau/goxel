@@ -101,12 +101,14 @@ static int iter_selection(tool_move_t *tool, const painter_t *painter,
     float transf[4][4];
     float transf_tot[4][4];
     int box_edit_state;
-    layer_t *layer = goxel.image->active_layer;
+    image_t *img = goxel.image;
+    layer_t *layer = img->active_layer;
+    volume_t *mask = img->selection_mask;
     volume_t *tmp;
 
-    if (tool->start_mask_key != volume_get_key(goxel.mask)) {
-        volume_get_box(goxel.mask, true, tool->box);
-        tool->start_mask_key = volume_get_key(goxel.mask);
+    if (tool->start_mask_key != volume_get_key(mask)) {
+        volume_get_box(mask, true, tool->box);
+        tool->start_mask_key = volume_get_key(mask);
     }
 
     box_edit_state = box_edit(tool->box, DRAG_MOVE, transf);
@@ -116,9 +118,9 @@ static int iter_selection(tool_move_t *tool, const painter_t *painter,
         assert(!tool->start_volume && !tool->start_selection);
         mat4_copy(tool->box, tool->start_box);
         tool->start_volume = volume_copy(layer->volume);
-        volume_merge(tool->start_volume, goxel.mask, MODE_SUB, NULL);
+        volume_merge(tool->start_volume, mask, MODE_SUB, NULL);
         tool->start_selection = volume_copy(layer->volume);
-        volume_merge(tool->start_selection, goxel.mask, MODE_INTERSECT, NULL);
+        volume_merge(tool->start_selection, mask, MODE_INTERSECT, NULL);
     }
 
     mat4_mul(transf, tool->box, tool->box);
@@ -135,7 +137,7 @@ static int iter_selection(tool_move_t *tool, const painter_t *painter,
         tool->start_volume = NULL;
         tool->start_selection = NULL;
         tool->box[3][3] = 0;
-        volume_move(goxel.mask, transf_tot);
+        volume_move(mask, transf_tot);
         image_history_push(goxel.image);
     }
 
@@ -152,10 +154,10 @@ static int iter(tool_t *tool_, const painter_t *painter,
     float box[4][4];
     int drag_mode = DRAG_MOVE;
     int box_edit_state;
+    image_t *img = goxel.image;
+    layer_t *layer = img->active_layer;
 
-    layer_t *layer = goxel.image->active_layer;
-
-    if (goxel.mask && !volume_is_empty(goxel.mask)) {
+    if (img->selection_mask && !volume_is_empty(img->selection_mask)) {
         return iter_selection(tool, painter, viewport);
     }
 

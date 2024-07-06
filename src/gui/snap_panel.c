@@ -36,7 +36,7 @@ void gui_snap_panel(void)
     snap_button(_(VOLUME), SNAP_VOLUME);
     snap_button(_(PLANE), SNAP_PLANE);
     gui_row_end();
-    if (!box_is_null(goxel.selection)) {
+    if (!box_is_null(goxel.image->selection_box)) {
         snap_button(_(SELECTION_IN), SNAP_SELECTION_IN);
         snap_button(_(SELECTION_OUT), SNAP_SELECTION_OUT);
     }

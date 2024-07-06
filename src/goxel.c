@@ -322,11 +322,11 @@ int goxel_unproject(const float viewport[4],
         }
         if ((1 << i) == SNAP_SELECTION_IN)
             r = goxel_unproject_on_box(viewport, pos,
-                                       goxel.selection, true,
+                                       goxel.image->selection_box, true,
                                        p, n, NULL);
         if ((1 << i) == SNAP_SELECTION_OUT)
             r = goxel_unproject_on_box(viewport, pos,
-                                       goxel.selection, false,
+                                       goxel.image->selection_box, false,
                                        p, n, NULL);
         if ((1 << i) == SNAP_SHAPE_BOX) {
             r = goxel_unproject_on_box(viewport, pos, snap_shape, false,
@@ -1059,10 +1059,13 @@ void goxel_render_view(const float viewport[4], bool render_mode)
             render_img(rend, layer->image, layer->mat, EFFECT_NO_SHADING);
     }
 
-    render_box(rend, goxel.selection, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
+    render_box(rend, goxel.image->selection_box, NULL,
+               EFFECT_STRIP | EFFECT_WIREFRAME);
 
-    if (goxel.tool->flags & TOOL_SHOW_MASK)
-        render_volume(rend, goxel.mask, NULL, EFFECT_GRID_ONLY);
+    if (goxel.tool->flags & TOOL_SHOW_MASK) {
+        render_volume(rend, goxel.image->selection_mask, NULL,
+                      EFFECT_GRID_ONLY);
+    }
 
     // Debug: show the current layer volume tiles.
     if ((0)) {
@@ -1424,19 +1427,20 @@ void goxel_apply_color_filter(
     int p[3];
     uint8_t color[4];
     painter_t painter;
+    image_t *img = goxel.image;
 
     /* Compute the volume where we want to apply the filter.  Mask, rect
      * selection, or the whole layer.  */
     volume = volume_copy(layer->volume);
-    if (!volume_is_empty(goxel.mask)) {
-        volume_merge(volume, goxel.mask, MODE_INTERSECT, NULL);
-    } else if (!box_is_null(goxel.selection)) {
+    if (!volume_is_empty(img->selection_mask)) {
+        volume_merge(volume, img->selection_mask, MODE_INTERSECT, NULL);
+    } else if (!box_is_null(img->selection_box)) {
         painter = (painter_t) {
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
             .color = {255, 255, 255, 255},
         };
-        volume_op(volume, &painter, goxel.selection);
+        volume_op(volume, &painter, img->selection_box);
     }
     iter = volume_get_iterator(volume,
             VOLUME_ITER_VOXELS | VOLUME_ITER_SKIP_EMPTY);
@@ -1455,17 +1459,17 @@ static void a_cut_as_new_layer(void)
 {
     layer_t *new_layer;
     painter_t painter;
-
     image_t *img = goxel.image;
     layer_t *layer = img->active_layer;
-    const float (*box)[4][4] = &goxel.selection;
+    const float (*box)[4][4] = &img->selection_box;
 
     new_layer = image_duplicate_layer(img, layer);
 
     // Use the mask in priority.
-    if (!volume_is_empty(goxel.mask)) {
-        volume_merge(new_layer->volume, goxel.mask, MODE_INTERSECT, NULL);
-        volume_merge(layer->volume, goxel.mask , MODE_SUB, NULL);
+    if (!volume_is_empty(img->selection_mask)) {
+        volume_merge(new_layer->volume, img->selection_mask,
+                     MODE_INTERSECT, NULL);
+        volume_merge(layer->volume, img->selection_mask , MODE_SUB, NULL);
         return;
     }
 
@@ -1487,11 +1491,12 @@ ACTION_REGISTER(cut_as_new_layer,
 
 static void a_reset_selection(void)
 {
-    if (!volume_is_empty(goxel.mask)) {
-        volume_delete(goxel.mask);
-        goxel.mask = NULL;
+    image_t *img = goxel.image;
+    if (!volume_is_empty(img->selection_mask)) {
+        volume_delete(img->selection_mask);
+        img->selection_mask = NULL;
     }
-    mat4_copy(mat4_zero, goxel.selection);
+    mat4_copy(mat4_zero, img->selection_box);
 }
 
 ACTION_REGISTER(reset_selection,
@@ -1500,9 +1505,10 @@ ACTION_REGISTER(reset_selection,
 
 static void a_fill_selection_box(void)
 {
-    layer_t *layer = goxel.image->active_layer;
-    if (box_is_null(goxel.selection)) return;
-    volume_op(layer->volume, &goxel.painter, goxel.selection);
+    image_t *img = goxel.image;
+    layer_t *layer = img->active_layer;
+    if (box_is_null(img->selection_box)) return;
+    volume_op(layer->volume, &goxel.painter, img->selection_box);
 }
 
 ACTION_REGISTER(fill_selection_box,
@@ -1513,9 +1519,11 @@ ACTION_REGISTER(fill_selection_box,
 
 static void a_paint_selection(void)
 {
-    layer_t *layer = goxel.image->active_layer;
-    if (volume_is_empty(goxel.mask)) return;
-    volume_merge(layer->volume, goxel.mask, MODE_OVER, goxel.painter.color);
+    image_t *img = goxel.image;
+    layer_t *layer = img->active_layer;
+    if (volume_is_empty(img->selection_mask)) return;
+    volume_merge(layer->volume, img->selection_mask, MODE_OVER,
+                 goxel.painter.color);
 }
 
 ACTION_REGISTER(paint_selection,
@@ -1528,17 +1536,18 @@ static void a_add_selection(void)
 {
     volume_t *tmp;
     painter_t painter;
+    image_t *img = goxel.image;
 
-    if (box_is_null(goxel.selection)) return;
+    if (box_is_null(img->selection_box)) return;
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_INTERSECT_FILL,
         .color = {255, 255, 255, 255},
     };
     tmp = volume_copy(goxel.image->active_layer->volume);
-    volume_op(tmp, &painter, goxel.selection);
-    if (goxel.mask == NULL) goxel.mask = volume_new();
-    volume_merge(goxel.mask, tmp, MODE_OVER, painter.color);
+    volume_op(tmp, &painter, img->selection_box);
+    if (img->selection_mask == NULL) img->selection_mask = volume_new();
+    volume_merge(img->selection_mask, tmp, MODE_OVER, painter.color);
     volume_delete(tmp);
 }
 
@@ -1550,13 +1559,16 @@ ACTION_REGISTER(add_selection,
 static void a_sub_selection(void)
 {
     painter_t painter;
-    if (goxel.mask == NULL || box_is_null(goxel.selection)) return;
+    image_t *img = goxel.image;
+
+    if (img->selection_mask == NULL || box_is_null(img->selection_box))
+        return;
     painter = (painter_t) {
         .shape = &shape_cube,
         .mode = MODE_SUB,
         .color = {255, 255, 255, 255},
     };
-    volume_op(goxel.mask, &painter, goxel.selection);
+    volume_op(img->selection_mask, &painter, img->selection_box);
 }
 
 ACTION_REGISTER(sub_selection,
@@ -1567,22 +1579,25 @@ ACTION_REGISTER(sub_selection,
 static void copy_action(void)
 {
     painter_t painter;
+    image_t *img = goxel.image;
+
     volume_delete(goxel.clipboard.volume);
-    mat4_copy(goxel.selection, goxel.clipboard.box);
+    mat4_copy(img->selection_box, goxel.clipboard.box);
     goxel.clipboard.volume = volume_copy(goxel.image->active_layer->volume);
-    if (!box_is_null(goxel.selection)) {
+    if (!box_is_null(img->selection_box)) {
         painter = (painter_t) {
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
             .color = {255, 255, 255, 255},
         };
-        volume_op(goxel.clipboard.volume, &painter, goxel.selection);
+        volume_op(goxel.clipboard.volume, &painter, img->selection_box);
     }
 }
 
 static void paste_action(void)
 {
-    volume_t *volume = goxel.image->active_layer->volume;
+    image_t *img = goxel.image;
+    volume_t *volume = img->active_layer->volume;
     volume_t *tmp;
     float p1[3], p2[3], mat[4][4];
 
@@ -1590,9 +1605,9 @@ static void paste_action(void)
     if (!goxel.clipboard.volume) return;
 
     tmp = volume_copy(goxel.clipboard.volume);
-    if (    !box_is_null(goxel.selection) &&
+    if (    !box_is_null(img->selection_box) &&
             !box_is_null(goxel.clipboard.box)) {
-        vec3_copy(goxel.selection[3], p1);
+        vec3_copy(img->selection_box[3], p1);
         vec3_copy(goxel.clipboard.box[3], p2);
         mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
         mat4_itranslate(mat, -p2[0], -p2[1], -p2[2]);

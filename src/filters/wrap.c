@@ -141,7 +141,7 @@ static int gui(filter_t *filter)
     bool should_wrap;
     layer_t *layer;
 
-    memcpy(box, goxel.selection, sizeof(box));
+    memcpy(box, goxel.image->selection_box, sizeof(box));
     
     if (box_is_null(box))
         memcpy(box, goxel.image->active_layer->box, sizeof(box));

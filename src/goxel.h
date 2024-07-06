@@ -497,9 +497,6 @@ typedef struct goxel
     float      tool_radius;
     bool       pathtrace; // Render pathtraced mode.
 
-    float      selection[4][4];   // The selection box.
-    volume_t   *mask; // Global selection mask volume.
-
     struct {
         float  rotation[4];
         float  pos[2];

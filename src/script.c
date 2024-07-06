@@ -494,6 +494,7 @@ static klass_t image_klass = {
         {"addLayer", .fn=js_image_addLayer},
         {"activeLayer", .klass=&layer_klass, MEMBER(image_t, active_layer)},
         {"getLayersVolume", .fn=js_image_getLayersVolume},
+        {"selectionBox", .klass=&box_klass, MEMBER(image_t, selection_box)},
         {}
     }
 };
@@ -625,7 +626,6 @@ static klass_t goxel_klass = {
     .def.class_name = "Goxel",
     .attributes = {
         {"image", .klass=&image_klass, MEMBER(goxel_t, image)},
-        {"selection", .klass=&box_klass, MEMBER(goxel_t, selection)},
         {"registerFormat", .fn=js_goxel_registerFormat},
         {"registerScript", .fn=js_goxel_registerScript},
         {}

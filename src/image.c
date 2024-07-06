@@ -188,7 +188,6 @@ static void image_restore(image_t *img, const image_t *snap)
         DL_DELETE(img->materials, material);
         material_delete(material);
     }
-    mat4_copy(snap->box, img->box);
 
     // Set copy from the other.
     img->layers = NULL;
@@ -222,6 +221,15 @@ static void image_restore(image_t *img, const image_t *snap)
                 layer->material = material;
         }
     }
+
+    // Copy other attributes.
+    mat4_copy(snap->box, img->box);
+    mat4_copy(snap->selection_box, img->selection_box);
+
+    volume_delete(img->selection_mask);
+    img->selection_mask = NULL;
+    if (snap->selection_mask)
+        img->selection_mask = volume_copy(snap->selection_mask);
 }
 
 /*
@@ -235,7 +243,7 @@ static image_t *image_snap(const image_t *other)
     material_t *material, *other_material;
 
     img = calloc(1, sizeof(*img));
-    *img = *other;
+    *img = *other; // XXX: better to copy manually I think!
 
     img->layers = NULL;
     img->active_layer = NULL;
@@ -268,6 +276,10 @@ static image_t *image_snap(const image_t *other)
                 layer->material = material;
         }
     }
+
+    img->selection_mask = NULL;
+    if (other->selection_mask)
+        img->selection_mask = volume_copy(other->selection_mask);
 
     img->history = img->history_next = img->history_prev = NULL;
     img->history_pos = NULL;
@@ -340,8 +352,8 @@ layer_t *image_add_shape_layer(image_t *img)
     layer->shape = &shape_sphere;
     vec4_copy(goxel.painter.color, layer->color);
     // If the selection is on use it, otherwise center it in the image.
-    if (!box_is_null(goxel.selection)) {
-        mat4_copy(goxel.selection, layer->mat);
+    if (!box_is_null(img->selection_box)) {
+        mat4_copy(img->selection_box, layer->mat);
     } else {
         vec3_copy(img->box[3], layer->mat[3]);
         mat4_iscale(layer->mat, 4, 4, 4);
@@ -683,15 +695,17 @@ void image_redo(image_t *img)
 static void image_clear_layer(void)
 {
     painter_t painter;
-    layer_t *layer = goxel.image->active_layer;
-    if (box_is_null(goxel.selection) && volume_is_empty(goxel.mask)) {
+    image_t *img = goxel.image;
+    layer_t *layer = img->active_layer;
+    if (    box_is_null(img->selection_box) &&
+            volume_is_empty(img->selection_mask)) {
         volume_clear(layer->volume);
         return;
     }
 
     // Use the mask in priority if it exists.
-    if (!volume_is_empty(goxel.mask)) {
-        volume_merge(layer->volume, goxel.mask, MODE_SUB, NULL);
+    if (!volume_is_empty(img->selection_mask)) {
+        volume_merge(layer->volume, img->selection_mask, MODE_SUB, NULL);
         return;
     }
 
@@ -700,7 +714,7 @@ static void image_clear_layer(void)
         .mode = MODE_SUB,
         .color = {255, 255, 255, 255},
     };
-    volume_op(layer->volume, &painter, goxel.selection);
+    volume_op(layer->volume, &painter, img->selection_box);
 }
 
 bool image_layer_can_edit(const image_t *img, const layer_t *layer)
@@ -731,6 +745,9 @@ uint32_t image_get_key(const image_t *img)
         k = material_get_hash(material);
         key = XXH32(&k, sizeof(k), key);
     }
+    key = XXH32(img->selection_box, sizeof(img->selection_box), key);
+    k = volume_get_key(img->selection_mask);
+    key = XXH32(&k, sizeof(k), key);
     return key;
 }
 

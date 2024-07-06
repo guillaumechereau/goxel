@@ -19,9 +19,10 @@ static void apply(const float rect_[4], int mode)
     uint8_t value[4];
     uint8_t color[4] = {255, 255, 255, 255};
     float view_proj_mat[4][4];
-    volume_t *volume = goxel.image->active_layer->volume;
+    image_t *img = goxel.image;
+    volume_t *volume = img->active_layer->volume;
     volume_iterator_t iter;
-    const camera_t *cam = goxel.image->active_camera;
+    const camera_t *cam = img->active_camera;
 
     rect[0] = min(rect_[0], rect_[2]);
     rect[1] = min(rect_[1], rect_[3]);
@@ -29,12 +30,12 @@ static void apply(const float rect_[4], int mode)
     rect[3] = max(rect_[1], rect_[3]);
 
     mat4_mul(cam->proj_mat, cam->view_mat, view_proj_mat);
-    if (goxel.mask == NULL) goxel.mask = volume_new();
+    if (img->selection_mask == NULL) img->selection_mask = volume_new();
     if (mode == MODE_SUB)
         memset(color, 0, sizeof(color));
 
     if (mode == MODE_REPLACE)
-        volume_clear(goxel.mask);
+        volume_clear(img->selection_mask);
 
     // XXX: very slow implementation!
 
@@ -49,7 +50,7 @@ static void apply(const float rect_[4], int mode)
         if (    p[0] < rect[0] || p[0] > rect[2] ||
                 p[1] < rect[1] || p[1] > rect[3])
             continue;
-        volume_set_at(goxel.mask, NULL, vp, color);
+        volume_set_at(img->selection_mask, NULL, vp, color);
     }
 }
 

@@ -42,6 +42,9 @@ struct image {
 
     float    box[4][4];
 
+    float       selection_box[4][4];
+    volume_t    *selection_mask;
+
     // For saving.
     // XXX: I think those should be persistend data of export code instead.
     char     *path;         // Path to save the gox file.
