@@ -645,22 +645,23 @@ void image_history_resize(image_t *img, int size)
 
 void image_undo(image_t *img)
 {
-    image_t copy, *prev;
+    camera_t camera = {};
+    image_t *prev;
     if (img->history_pos == img->history) {
         LOG_D("No more undo");
         debug_print_history(img);
         return;
     }
     assert(img->history_pos);
+    if (img->active_camera) camera = *img->active_camera;
     prev = img->history_pos->history_prev;
-    copy = *img;
     image_restore(img, prev);
     img->history_pos = prev;
 
     // Don't move the camera for an undo.
-    if (img->active_camera && copy.active_camera &&
-            strcmp(img->active_camera->name, copy.active_camera->name) == 0) {
-        camera_set(img->active_camera, copy.active_camera);
+    if (img->active_camera &&
+            strcmp(img->active_camera->name, camera.name) == 0) {
+        camera_set(img->active_camera, &camera);
     }
 
     debug_print_history(img);
