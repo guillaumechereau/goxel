@@ -44,6 +44,7 @@
 		F037D5D61EA6069A00C96D10 /* shape.c in Sources */ = {isa = PBXBuildFile; fileRef = F037D5CE1EA6069A00C96D10 /* shape.c */; };
 		F03B4387224CCDDF00798CAB /* pathtracer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F03B4385224CCDDF00798CAB /* pathtracer.cpp */; };
 		F03B4388224CCDDF00798CAB /* yocto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F03B4386224CCDDF00798CAB /* yocto.cpp */; };
+		F056EAB32C3AD8D400E23BD3 /* edit_panel.c in Sources */ = {isa = PBXBuildFile; fileRef = F056EAB22C3AD8D400E23BD3 /* edit_panel.c */; };
 		F05D6E5D29D3E952004CA300 /* script.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E5C29D3E952004CA300 /* script.c */; };
 		F05D6E8029D3EA36004CA300 /* volume.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E7C29D3EA36004CA300 /* volume.c */; };
 		F05D6E8129D3EA36004CA300 /* volume_to_vertices.c in Sources */ = {isa = PBXBuildFile; fileRef = F05D6E7D29D3EA36004CA300 /* volume_to_vertices.c */; };
@@ -171,6 +172,7 @@
 		F037D5CE1EA6069A00C96D10 /* shape.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = shape.c; sourceTree = "<group>"; };
 		F03B4385224CCDDF00798CAB /* pathtracer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pathtracer.cpp; sourceTree = "<group>"; };
 		F03B4386224CCDDF00798CAB /* yocto.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = yocto.cpp; sourceTree = "<group>"; };
+		F056EAB22C3AD8D400E23BD3 /* edit_panel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = edit_panel.c; sourceTree = "<group>"; };
 		F05D6E5B29D3E7EC004CA300 /* voxelizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = voxelizer.h; sourceTree = "<group>"; };
 		F05D6E5C29D3E952004CA300 /* script.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = script.c; sourceTree = "<group>"; };
 		F05D6E7C29D3EA36004CA300 /* volume.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = volume.c; sourceTree = "<group>"; };
@@ -321,6 +323,7 @@
 		F00FC31E226B2FCF0002F251 /* gui */ = {
 			isa = PBXGroup;
 			children = (
+				F056EAB22C3AD8D400E23BD3 /* edit_panel.c */,
 				F0EDCB732BB272EF00D95B51 /* snap_panel.c */,
 				F0EDCB742BB272EF00D95B51 /* symmetry_panel.c */,
 				F0BC9B352315550500B2A56A /* app.c */,
@@ -629,6 +632,7 @@
 				F0C5368B1F42EE43003A0DCA /* extrude.c in Sources */,
 				F05D6E8329D3EA36004CA300 /* volume_utils.c in Sources */,
 				F037D5CF1EA6069A00C96D10 /* brush.c in Sources */,
+				F056EAB32C3AD8D400E23BD3 /* edit_panel.c in Sources */,
 				F0EDCB6D2BB2728C00D95B51 /* wrap.c in Sources */,
 				F09A62822B3BB8E7006A4464 /* indexgenerator.cpp in Sources */,
 				F00FC32E226B2FCF0002F251 /* material_panel.c in Sources */,
