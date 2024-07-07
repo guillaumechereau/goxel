@@ -100,9 +100,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8051986"
-     inkscape:cx="124.23363"
-     inkscape:cy="170.57616"
+     inkscape:zoom="3.9671499"
+     inkscape:cx="146.07464"
+     inkscape:cy="110.53275"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="true"
@@ -1028,4 +1028,7 @@
        style="stroke-width:0.117244;font-variation-settings:normal;opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-linecap:butt;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0;-inkscape-stroke:none;paint-order:stroke fill markers;stop-color:#000000;stop-opacity:1" /><path
        d="m 26.19375,27.913542 a 0.39687501,0.39687501 0 1 1 0,-0.79375 0.39687501,0.39687501 0 0 1 0,0.79375 m 1.322917,0 a 0.39687501,0.39687501 0 1 1 0,-0.79375 0.39687501,0.39687501 0 0 1 0,0.79375 m 1.322916,0 a 0.39687501,0.39687501 0 1 1 0,-0.79375 0.39687501,0.39687501 0 0 1 0,0.79375"
        id="path936"
-       style="stroke-width:0.264583" /></g></svg>
+       style="stroke-width:0.264583" /><path
+       d="m 34.166176,26.028383 a 0.13229167,0.13229167 0 0 0 -0.04233,-0.147108 l -0.0471,-0.03413 a 1.3229167,1.3229167 0 0 0 -0.549275,-0.207168 c -0.355336,-0.0471 -0.808038,0.05001 -1.248304,0.553773 h -0.278871 a 0.13229167,0.13229167 0 0 0 -0.09366,0.03889 l -0.340254,0.340519 a 0.13229167,0.13229167 0 0 0 0,0.186796 l 0.680244,0.68236 a 0.13229167,0.13229167 0 0 0 0.187325,0 l 0.340254,-0.341312 a 0.13229167,0.13229167 0 0 0 0.03863,-0.0934 v -0.169069 l 2.219061,2.347648 a 0.13229167,0.13229167 0 0 0 0.200025,0.01508 l 0.396875,-0.396875 a 0.13229167,0.13229167 0 0 0 0.0045,-0.182298 l -2.415382,-2.283354 c 0.197644,-0.12065 0.468842,-0.221985 0.823384,-0.221985 a 0.13229167,0.13229167 0 0 0 0.124883,-0.08837"
+       id="path939"
+       style="stroke-width:0.264583;font-variation-settings:normal;opacity:1;vector-effect:none;fill:#ffffff;fill-opacity:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;-inkscape-stroke:none;stop-color:#000000;stop-opacity:1" /></g></svg>

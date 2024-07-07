@@ -197,11 +197,6 @@ static int gui(tool_t *tool_)
     tool_gui_mask_mode(&tool->mode);
 
     if (box_is_null(*box)) return 0;
-    gui_group_begin(NULL);
-    gui_action_button(ACTION_fill_selection_box, _(FILL), 1.0);
-    gui_action_button(ACTION_paint_selection, _(PAINT), 1.0);
-    gui_action_button(ACTION_cut_as_new_layer, "Cut as new layer", 1.0);
-    gui_group_end();
 
     // XXX: why not using gui_bbox here?
     x_mag = fabs(get_magnitude(*box, 0));

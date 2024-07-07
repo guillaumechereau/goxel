@@ -63,6 +63,8 @@ static int on_click(gesture3d_t *gest)
     if (img->selection_mask == NULL) img->selection_mask = volume_new();
     volume_merge(img->selection_mask, sel, mode, NULL);
     volume_delete(sel);
+    image_history_push(goxel.image);
+
     return 0;
 }
 
@@ -86,17 +88,6 @@ static int iter(tool_t *tool_, const painter_t *painter,
     return 0;
 }
 
-static layer_t *cut_as_new_layer(image_t *img, layer_t *layer,
-                                 const volume_t *mask)
-{
-    layer_t *new_layer;
-
-    new_layer = image_duplicate_layer(img, layer);
-    volume_merge(new_layer->volume, mask, MODE_INTERSECT, NULL);
-    volume_merge(layer->volume, mask, MODE_SUB, NULL);
-    return new_layer;
-}
-
 static int gui(tool_t *tool_)
 {
     tool_fuzzy_select_t *tool = (void*)tool_;
@@ -115,24 +106,6 @@ static int gui(tool_t *tool_)
     if (volume_is_empty(img->selection_mask))
         return 0;
 
-    volume_t *volume = img->active_layer->volume;
-
-    gui_group_begin(NULL);
-    // XXX: should use actions here?
-    if (gui_button(_(CLEAR), 1, 0)) {
-        volume_merge(volume, img->selection_mask, MODE_SUB, NULL);
-        image_history_push(goxel.image);
-    }
-    if (gui_button(_(FILL), 1, 0)) {
-        volume_merge(volume, img->selection_mask, MODE_OVER,
-                     goxel.painter.color);
-        image_history_push(goxel.image);
-    }
-    if (gui_button(_(CUT_TO_NEW_LAYER), 1, 0)) {
-        cut_as_new_layer(img, img->active_layer, img->selection_mask);
-        image_history_push(goxel.image);
-    }
-    gui_group_end();
     return 0;
 }
 

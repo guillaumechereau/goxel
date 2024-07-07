@@ -37,6 +37,7 @@
 // Note: duplicated from gui.cpp!  To remove.
 static const float ITEM_HEIGHT = 18;
 
+void gui_edit_panel(void);
 void gui_menu(void);
 void gui_tools_panel(void);
 void gui_top_bar(void);
@@ -58,6 +59,7 @@ enum {
     PANEL_NULL,
     PANEL_TOOLS,
     PANEL_PALETTE,
+    PANEL_EDIT,
     PANEL_LAYERS,
     PANEL_SNAP,
     PANEL_SYMMETRY,
@@ -79,6 +81,7 @@ static struct {
 } PANELS[] = {
     [PANEL_TOOLS]       = {STR_TOOLS, ICON_TOOLS, gui_tools_panel},
     [PANEL_PALETTE]     = {STR_PALETTE, ICON_PALETTE, gui_palette_panel},
+    [PANEL_EDIT]        = {STR_EDIT, ICON_HAMMER, gui_edit_panel},
     [PANEL_LAYERS]      = {STR_LAYERS, ICON_LAYERS, gui_layers_panel},
     [PANEL_SNAP]        = {STR_SNAP, ICON_SNAP, gui_snap_panel},
     [PANEL_SYMMETRY]    = {STR_SYMMETRY, ICON_SYMMETRY, gui_symmetry_panel},
