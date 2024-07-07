@@ -616,6 +616,13 @@ void image_history_push(image_t *img)
 {
     image_t *snap;
 
+    // Don't do anything if the image didn't actually changed.
+    if (img->history_pos) {
+        if (image_get_key(img) == image_get_key(img->history_pos)) {
+            return;
+        }
+    }
+
     // Discard previous undo.
     if (img->history_pos) {
         while (img->history_pos->history_next) {
