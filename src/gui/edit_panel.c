@@ -35,4 +35,13 @@ void gui_edit_panel(void)
     gui_action_button(ACTION_cut_as_new_layer, "Cut as new layer", 1.0);
     gui_enabled_end();
     gui_group_end();
+
+    gui_group_begin(NULL);
+    gui_enabled_begin(!volume_is_empty(goxel.image->selection_mask));
+    gui_action_button(ACTION_copy, _(COPY), 1.0);
+    gui_enabled_end();
+    gui_enabled_begin(!volume_is_empty(goxel.clipboard.volume));
+    gui_action_button(ACTION_paste, _(PASTE), 1.0);
+    gui_enabled_end();
+    gui_group_end();
 }
