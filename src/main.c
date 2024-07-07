@@ -313,6 +313,7 @@ int main(int argc, char **argv)
     }
     window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
     assert(window);
+    glfwSetWindowPos(window, 0, 0);
     g_window = window;
     glfwMakeContextCurrent(window);
     if (!DEFINED(EMSCRIPTEN))
