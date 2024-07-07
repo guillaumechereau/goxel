@@ -305,6 +305,7 @@ int main(int argc, char **argv)
     glfwSetErrorCallback(on_glfw_error);
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 4);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
     monitor = glfwGetPrimaryMonitor();
     mode = glfwGetVideoMode(monitor);
     if (mode) {
@@ -318,7 +319,6 @@ int main(int argc, char **argv)
     glfwMakeContextCurrent(window);
     if (!DEFINED(EMSCRIPTEN))
         glfwSetScrollCallback(window, on_scroll);
-    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
     glfwSwapInterval(1);
     glfwSetDropCallback(window, on_drop);
     glfwSetCharCallback(window, on_char);
