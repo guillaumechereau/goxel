@@ -315,6 +315,6 @@ TOOL_REGISTER(TOOL_MOVE, move, tool_move_t,
               .name = STR_MOVE,
               .iter_fn = iter,
               .gui_fn = gui,
-              .flags = TOOL_REQUIRE_CAN_MOVE,
+              .flags = TOOL_REQUIRE_CAN_MOVE | TOOL_SHOW_MASK,
               .default_shortcut = "M",
 )
