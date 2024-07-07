@@ -744,6 +744,7 @@ static void render_model_item(renderer_t *rend, const render_item_t *item,
     const float (*proj_mat)[4][4];
     const float (*view_mat)[4][4];
     float light[3];
+    float line_width = 1.0;
 
     if (item->proj_screen) {
         mat4_ortho(proj, 0, viewport[2], 0, viewport[3], -128, +128);
@@ -757,6 +758,10 @@ static void render_model_item(renderer_t *rend, const render_item_t *item,
     if (!(item->effects & EFFECT_WIREFRAME))
         get_light_dir(rend, light);
 
+    if (item->effects & EFFECT_LINE_THICK)
+        line_width = 2.0;
+
+    GL(glLineWidth(rend->scale * line_width));
     model3d_render(item->model3d,
                    item->mat, *view_mat, *proj_mat,
                    item->color,

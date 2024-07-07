@@ -19,12 +19,12 @@
 #include "goxel.h"
 
 static const uint8_t FACES_COLOR[6][3] = {
-    {0, 255, 0},
-    {0, 255, 0},
-    {0, 0, 255},
-    {0, 0, 255},
-    {255, 0, 0},
-    {255, 0, 0},
+    {138, 255, 0},
+    {138, 255, 0},
+    {44, 143, 255},
+    {44, 143, 255},
+    {255, 54, 83},
+    {255, 54, 83},
 };
 
 enum {
@@ -73,9 +73,10 @@ static void render_gizmo(const float pose[4][4], int face, float alpha)
     memcpy(color, FACES_COLOR[face], 3);
     vec3_copy(pose[3], a);
     vec3_add(a, pose[2], b);
-    render_line(&goxel.rend, a, b, color, EFFECT_NO_DEPTH_TEST);
+    render_line(&goxel.rend, a, b, color,
+                EFFECT_NO_DEPTH_TEST | EFFECT_LINE_THICK);
     mat4_translate(pose, 0, 0, 1, cone_mat);
-    mat4_iscale(cone_mat, 0.15, 0.15, 0.3);
+    mat4_iscale(cone_mat, 0.2, 0.2, 0.3);
     mat4_itranslate(cone_mat, 0, 0, -1);
     render_cone(&goxel.rend, cone_mat, color, EFFECT_NO_DEPTH_TEST);
 }
@@ -206,7 +207,7 @@ static float compute_gizmo_scale(const float pos[3])
 static void gizmo(const float box[4][4], int face)
 {
     float shape[4][4];
-    float alpha = 0.15;
+    float alpha = 0.5;
     float scale;
 
     // Compute the gizmo arrow shape.

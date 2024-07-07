@@ -42,6 +42,7 @@ enum {
     EFFECT_PROJ_SCREEN      = 1 << 16, // Image project in screen.
     EFFECT_ANTIALIASING     = 1 << 17,
     EFFECT_UNLIT            = 1 << 18,
+    EFFECT_LINE_THICK       = 1 << 19,
 
     EFFECT_NO_DEPTH_TEST    = 1 << 20,
 };
