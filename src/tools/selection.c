@@ -251,5 +251,5 @@ TOOL_REGISTER(TOOL_SELECTION, selection, tool_selection_t,
               .iter_fn = iter,
               .gui_fn = gui,
               .default_shortcut = "R",
-              .flags = TOOL_SHOW_MASK,
+              .flags = TOOL_SHOW_MASK | TOOL_SHOW_SELECTION_BOX,
 )

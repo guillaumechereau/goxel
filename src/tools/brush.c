@@ -203,6 +203,11 @@ static int iter(tool_t *tool, const painter_t *painter,
     tool_brush_t *brush = (tool_brush_t*)tool;
     float snap_offset;
 
+    if (goxel.snap_mask & (SNAP_SELECTION_IN | SNAP_SELECTION_OUT)) {
+        render_box(&goxel.rend, goxel.image->selection_box, NULL,
+                   EFFECT_STRIP | EFFECT_WIREFRAME);
+    }
+
     if (!brush->volume_orig)
         brush->volume_orig = volume_copy(goxel.image->active_layer->volume);
     if (!brush->volume)

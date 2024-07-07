@@ -42,10 +42,11 @@ enum {
 
 enum {
     // Tools flags.
-    TOOL_REQUIRE_CAN_EDIT = 1 << 0, // Set to tools that can edit the layer.
-    TOOL_REQUIRE_CAN_MOVE = 1 << 1, // Set to tools that can move the layer.
-    TOOL_ALLOW_PICK_COLOR = 1 << 2, // Ctrl switches to pick color tool.
-    TOOL_SHOW_MASK        = 1 << 3,
+    TOOL_REQUIRE_CAN_EDIT   = 1 << 0, // Set to tools that can edit the layer.
+    TOOL_REQUIRE_CAN_MOVE   = 1 << 1, // Set to tools that can move the layer.
+    TOOL_ALLOW_PICK_COLOR   = 1 << 2, // Ctrl switches to pick color tool.
+    TOOL_SHOW_MASK          = 1 << 3,
+    TOOL_SHOW_SELECTION_BOX = 1 << 4,
 };
 
 // Tools

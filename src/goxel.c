@@ -1059,8 +1059,10 @@ void goxel_render_view(const float viewport[4], bool render_mode)
             render_img(rend, layer->image, layer->mat, EFFECT_NO_SHADING);
     }
 
-    render_box(rend, goxel.image->selection_box, NULL,
-               EFFECT_STRIP | EFFECT_WIREFRAME);
+    if (goxel.tool->flags & TOOL_SHOW_SELECTION_BOX) {
+        render_box(rend, goxel.image->selection_box, NULL,
+                   EFFECT_STRIP | EFFECT_WIREFRAME);
+    }
 
     if (goxel.tool->flags & TOOL_SHOW_MASK) {
         render_volume(rend, goxel.image->selection_mask, NULL,

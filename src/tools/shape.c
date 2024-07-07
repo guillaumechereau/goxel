@@ -93,6 +93,11 @@ static int iter(tool_t *tool, const painter_t *painter,
     tool_shape_t *shape = (tool_shape_t*)tool;
     float snap_offset;
 
+    if (goxel.snap_mask & (SNAP_SELECTION_IN | SNAP_SELECTION_OUT)) {
+        render_box(&goxel.rend, goxel.image->selection_box, NULL,
+                   EFFECT_STRIP | EFFECT_WIREFRAME);
+    }
+
     snap_offset = (painter->mode == MODE_OVER) ? 0.5 : -0.5;
 
     if (!shape->volume_orig)
