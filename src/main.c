@@ -26,7 +26,6 @@
 #include <GLFW/glfw3.h>
 
 static inputs_t     *g_inputs = NULL;
-static GLFWwindow   *g_window = NULL;
 static float        g_scale = 1;
 
 static void on_glfw_error(int code, const char *msg)
@@ -165,7 +164,7 @@ static void parse_options(int argc, char **argv, args_t *args)
 }
 
 
-static void loop_function(void)
+static void loop_function(void *arg)
 {
     int fb_size[2];
     int i;
@@ -173,14 +172,15 @@ static void loop_function(void)
     float scale;
     float scales[2];
     GLFWmonitor *monitor;
+    GLFWwindow *window = arg;
 
-    if (    !glfwGetWindowAttrib(g_window, GLFW_VISIBLE) ||
-             glfwGetWindowAttrib(g_window, GLFW_ICONIFIED)) {
+    if (    !glfwGetWindowAttrib(window, GLFW_VISIBLE) ||
+             glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
         glfwWaitEvents();
         goto end;
     }
 
-    glfwGetFramebufferSize(g_window, &fb_size[0], &fb_size[1]);
+    glfwGetFramebufferSize(window, &fb_size[0], &fb_size[1]);
     monitor = glfwGetPrimaryMonitor();
     glfwGetMonitorContentScale(monitor, &scales[0], &scales[1]);
     scale = g_scale * scales[0];
@@ -192,9 +192,9 @@ static void loop_function(void)
     GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     for (i = GLFW_KEY_SPACE; i <= GLFW_KEY_LAST; i++) {
-        g_inputs->keys[i] = glfwGetKey(g_window, i) == GLFW_PRESS;
+        g_inputs->keys[i] = glfwGetKey(window, i) == GLFW_PRESS;
     }
-    glfwGetCursorPos(g_window, &xpos, &ypos);
+    glfwGetCursorPos(window, &xpos, &ypos);
 #ifndef __APPLE__ // As far as I can tell this is a bug in glfw on Mac.
     xpos /= scales[0];
     ypos /= scales[1];
@@ -202,34 +202,34 @@ static void loop_function(void)
     vec2_set(g_inputs->touches[0].pos, xpos / g_scale, ypos / g_scale);
 
     g_inputs->touches[0].down[0] =
-        glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
-        glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
     g_inputs->touches[0].down[2] =
-        glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
     goxel_iter(g_inputs);
     goxel_render(g_inputs);
 
     memset(g_inputs, 0, sizeof(*g_inputs));
-    glfwSwapBuffers(g_window);
+    glfwSwapBuffers(window);
 end:
     glfwPollEvents();
 }
 
 #ifndef __EMSCRIPTEN__
-static void start_main_loop(void (*func)(void))
+static void start_main_loop(void (*func)(void *arg), GLFWwindow *window)
 {
-    while (!glfwWindowShouldClose(g_window)) {
-        func();
+    while (!glfwWindowShouldClose(window)) {
+        func(window);
         if (goxel.quit) break;
     }
     glfwTerminate();
 }
 #else
-static void start_main_loop(void (*func)(void))
+static void start_main_loop(void (*func)(void *arg), GLFWwindow *window)
 {
-    emscripten_set_main_loop(func, 0, 1);
+    emscripten_set_main_loop_arg(func, window, 0, 1);
 }
 #endif
 
@@ -271,17 +271,20 @@ static void set_window_icon(GLFWwindow *window) {}
 
 static void set_window_title(void *user, const char *title)
 {
-    glfwSetWindowTitle(g_window, title);
+    GLFWwindow *window = user;
+    glfwSetWindowTitle(window, title);
 }
 
 static const char *get_clipboard_text(void *user)
 {
-    return glfwGetClipboardString(g_window);
+    GLFWwindow *window = user;
+    return glfwGetClipboardString(window);
 }
 
 static void set_clipboard_text(void *user, const char *text)
 {
-    glfwSetClipboardString(g_window, text);
+    GLFWwindow *window = user;
+    glfwSetClipboardString(window, text);
 }
 
 int main(int argc, char **argv)
@@ -314,8 +317,8 @@ int main(int argc, char **argv)
     }
     window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
     assert(window);
+    sys_callbacks.user = window;
     glfwSetWindowPos(window, 0, 0);
-    g_window = window;
     glfwMakeContextCurrent(window);
     if (!DEFINED(EMSCRIPTEN))
         glfwSetScrollCallback(window, on_scroll);
@@ -354,7 +357,7 @@ int main(int argc, char **argv)
         }
         goto end;
     }
-    start_main_loop(loop_function);
+    start_main_loop(loop_function, window);
 end:
     glfwTerminate();
     goxel_release();
