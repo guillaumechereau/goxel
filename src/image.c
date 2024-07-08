@@ -235,7 +235,7 @@ static void image_restore(image_t *img, const image_t *snap)
 /*
  * Generate a copy of the image that can be put into the history.
  */
-static image_t *image_snap(const image_t *other)
+static image_t *image_snapshot(const image_t *other)
 {
     image_t *img;
     layer_t *layer, *other_layer;
@@ -243,10 +243,9 @@ static image_t *image_snap(const image_t *other)
     material_t *material, *other_material;
 
     img = calloc(1, sizeof(*img));
-    *img = *other; // XXX: better to copy manually I think!
+    mat4_copy(other->box, img->box);
+    mat4_copy(other->selection_box, img->selection_box);
 
-    img->layers = NULL;
-    img->active_layer = NULL;
     DL_FOREACH(other->layers, other_layer) {
         layer = layer_copy(other_layer);
         DL_APPEND(img->layers, layer);
@@ -255,8 +254,6 @@ static image_t *image_snap(const image_t *other)
     }
     assert(img->active_layer);
 
-    img->cameras = NULL;
-    img->active_camera = NULL;
     DL_FOREACH(other->cameras, other_camera) {
         camera = camera_copy(other_camera);
         DL_APPEND(img->cameras, camera);
@@ -264,8 +261,6 @@ static image_t *image_snap(const image_t *other)
             img->active_camera = camera;
     }
 
-    img->materials = NULL;
-    img->active_material = NULL;
     DL_FOREACH(other->materials, other_material) {
         material = material_copy(other_material);
         DL_APPEND(img->materials, material);
@@ -277,19 +272,16 @@ static image_t *image_snap(const image_t *other)
         }
     }
 
-    img->selection_mask = NULL;
     if (other->selection_mask)
         img->selection_mask = volume_copy(other->selection_mask);
 
-    img->history = img->history_next = img->history_prev = NULL;
-    img->history_pos = NULL;
     return img;
 }
 
 
 void image_delete(image_t *img)
 {
-    image_t *hist, *snap, *snap_tmp;
+    image_t *snap, *snap_tmp;
     camera_t *cam;
     layer_t *layer;
     material_t *mat;
@@ -310,17 +302,12 @@ void image_delete(image_t *img)
         material_delete(mat);
     }
 
-    // Path is shared between images and snaps!
-    // XXX: find a better way.
-    if (img->history) {
-        free(img->path);
-        img->path = NULL;
-    }
+    free(img->path);
+    free(img->export_path);
 
-    hist = img->history;
-    DL_FOREACH_SAFE2(hist, snap, snap_tmp, history_next) {
-        if (snap == img) continue;
-        DL_DELETE2(hist, snap, history_prev, history_next);
+    DL_FOREACH_SAFE2 (img->history, snap, snap_tmp, history_next) {
+        DL_DELETE2(img->history, snap, history_prev, history_next);
+        assert(snap->ref <= 1);
         image_delete(snap);
     }
 
@@ -632,7 +619,7 @@ void image_history_push(image_t *img)
         }
     }
 
-    snap = image_snap(img);
+    snap = image_snapshot(img);
     DL_APPEND2(img->history, snap, history_prev, history_next);
     img->history_pos = snap;
     debug_print_history(img);
