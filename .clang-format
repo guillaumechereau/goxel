@@ -30,4 +30,8 @@ PenaltyIndentedWhitespace: 2
 
 ForEachMacros:
   - DL_FOREACH
+  - DL_FOREACH
+  - DL_FOREACH2
   - DL_FOREACH_SAFE
+  - DL_FOREACH_SAFE2
+  - DL_FOREACH_REVERSE
