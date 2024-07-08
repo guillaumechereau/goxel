@@ -166,7 +166,7 @@ static void parse_options(int argc, char **argv, args_t *args)
 
 static void loop_function(void *arg)
 {
-    int fb_size[2];
+    int fb_size[2], win_size[2];
     int i;
     double xpos, ypos;
     float scale;
@@ -180,6 +180,7 @@ static void loop_function(void *arg)
         goto end;
     }
 
+    glfwGetWindowSize(window, &win_size[0], &win_size[1]);
     glfwGetFramebufferSize(window, &fb_size[0], &fb_size[1]);
     monitor = glfwGetPrimaryMonitor();
     glfwGetMonitorContentScale(monitor, &scales[0], &scales[1]);
@@ -195,10 +196,8 @@ static void loop_function(void *arg)
         g_inputs->keys[i] = glfwGetKey(window, i) == GLFW_PRESS;
     }
     glfwGetCursorPos(window, &xpos, &ypos);
-#ifndef __APPLE__ // As far as I can tell this is a bug in glfw on Mac.
-    xpos /= scales[0];
-    ypos /= scales[1];
-#endif
+    xpos *= (float)g_inputs->window_size[0] / win_size[0];
+    ypos *= (float)g_inputs->window_size[1] / win_size[1];
     vec2_set(g_inputs->touches[0].pos, xpos / g_scale, ypos / g_scale);
 
     g_inputs->touches[0].down[0] =
