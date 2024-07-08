@@ -439,6 +439,7 @@ volume_mesh_t *volume_generate_mesh(
         if (nb == 0) continue;
         fill_mesh(mesh, verts, nb, size, subdivide, bpos, palette);
     }
+    free(verts);
 
     optimize_mesh(mesh, simplify);
 
