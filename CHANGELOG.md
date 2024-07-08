@@ -1,5 +1,16 @@
 #Changelog
 
+## [0.15.0] - 2024-07-08
+
+- Improved the selection tool: the selection mask is now automatically updated
+  when we move the selection box, and the move tool automatically applies to
+  the selection mask.
+- Improved the gizmos to move the selection box, so that we can move or grow
+  without having to select the mode in the UI.
+- Add support for adding and subtracting the selection box.
+- Added a new 'edit' panel for the selection mask operations.
+
+
 ## [0.14.0] - 2024-02-02
 
 - Improved the general UI of the app, with a more modern style.
