@@ -1,0 +1,33 @@
+# Style for goxel.
+# Still a work in progress.
+
+BasedOnStyle: LLVM
+
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: WithoutElse
+
+ColumnLimit: 80
+PenaltyExcessCharacter: 1000
+
+# Never use tabs for indentation.
+UseTab: Never
+TabWidth: 4
+IndentWidth: 4
+
+ContinuationIndentWidth: 8
+BracedInitializerIndentWidth: 4
+
+BreakBeforeBraces: Linux
+
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: true
+
+SortIncludes: true
+
+PenaltyReturnTypeOnItsOwnLine: 10000
+PenaltyBreakAssignment: 100
+PenaltyIndentedWhitespace: 2
+
+ForEachMacros:
+  - DL_FOREACH
+  - DL_FOREACH_SAFE

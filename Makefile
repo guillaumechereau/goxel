@@ -7,7 +7,7 @@ endif
 
 .ONESHELL:
 
-all:
+all: .FORCE
 	scons $(JOBS)
 
 release:
@@ -19,11 +19,16 @@ profile:
 run:
 	./goxel
 
-clean:
+clean: .FORCE
 	scons -c
 
 analyze:
 	scan-build scons mode=analyze
+
+# For the moment only apply the format to uncommited changes.
+format: .FORCE
+	git clang-format -f
+
 
 # Generate an AppImage.  Used by github CI.
 appimage:
@@ -63,3 +68,7 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
 	rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
 	         io.github.guillaumechereau.Goxel.metainfo.xml)
+
+.PHONY: all
+
+.FORCE:
