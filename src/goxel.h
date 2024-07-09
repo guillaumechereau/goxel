@@ -140,7 +140,7 @@
  * int x, y;
  * f(USER_PASS(&x, &y));
  */
-#define USER_PASS(...) ((const void*[]){__VA_ARGS__})
+#define USER_PASS(...) ((void *)(const void *[]){__VA_ARGS__})
 
 /*
  * Macro: USER_GET
