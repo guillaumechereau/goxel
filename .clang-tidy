@@ -1,0 +1,21 @@
+
+Checks:  >
+  readability-*,
+  -readability-identifier-length,
+  -readability-braces-around-statements,
+  -readability-magic-numbers,
+  -readability-isolate-declaration,
+  -readability-function-cognitive-complexity,
+  -readability-uppercase-literal-suffix,
+  -readability-avoid-unconditional-preprocessor-if,
+  -readability-suspicious-call-argument,
+
+  bugprone-*,
+  -bugprone-narrowing-conversions,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-suspicious-include,
+  -bugprone-sizeof-expression,
+
+  modernize-*,
+  -modernize-macro-to-enum,
