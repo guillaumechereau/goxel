@@ -16,6 +16,12 @@ Checks:  >
   -bugprone-implicit-widening-of-multiplication-result,
   -bugprone-suspicious-include,
   -bugprone-sizeof-expression,
+  -bugprone-casting-through-void,
+  -bugprone-suspicious-realloc-usage,
 
   modernize-*,
   -modernize-macro-to-enum,
+
+  clang-analyzer-*,
+  llvm-*,
+  portability-*,
