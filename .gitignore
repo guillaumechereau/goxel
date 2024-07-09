@@ -11,3 +11,5 @@
 xcuserdata/
 /todo
 /.vimrc
+/compile_commands.json
+/TAGS
