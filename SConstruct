@@ -31,8 +31,7 @@ vars.AddVariables(
 
 target_os = str(Platform())
 
-env = Environment(variables=vars, ENV=os.environ,
-                  tools=['default', 'compilation_db'])
+env = Environment(variables=vars, ENV=os.environ)
 conf = env.Configure()
 
 if env['mode'] == 'analyze':
@@ -140,4 +139,10 @@ env.Append(
 )
 
 env.Program(target='goxel', source=sorted(sources))
-env.CompilationDatabase()
+
+# Build compile_commands.json.
+try:
+    env.Tool('compilation_db')
+    env.CompilationDatabase()
+except:
+    pass
