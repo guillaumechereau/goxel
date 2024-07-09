@@ -138,11 +138,11 @@ env.Append(
     LINKFLAGS=os.environ.get("LDFLAGS", "").split()
 )
 
-env.Program(target='goxel', source=sorted(sources))
-
 # Build compile_commands.json.
 try:
     env.Tool('compilation_db')
     env.CompilationDatabase()
 except:
     pass
+
+env.Program(target='goxel', source=sorted(sources))
