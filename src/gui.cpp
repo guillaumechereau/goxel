@@ -146,9 +146,9 @@ enum {
 };
 
 static const char *ATTR_NAMES[] = {
-    [A_POS_LOC]         = "a_pos",
-    [A_TEX_POS_LOC]     = "a_tex_pos",
-    [A_COLOR_LOC]       = "a_color",
+    "a_pos",
+    "a_tex_pos",
+    "a_color",
     NULL
 };
 

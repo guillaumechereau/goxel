@@ -18,6 +18,7 @@
 
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wimplicit-const-int-float-conversion"
 
 #define CONFIG_VERSION "2021-03-27"
 

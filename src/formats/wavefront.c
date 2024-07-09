@@ -16,11 +16,14 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
 #include "file_format.h"
+#include "goxel.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-const-int-float-conversion"
 #define VOXELIZER_IMPLEMENTATION
 #include "../ext_src/voxelizer/voxelizer.h"
+#pragma GCC diagnostic pop
 
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "../ext_src/tinyobjloader/tinyobj_loader_c.h"
