@@ -241,11 +241,12 @@ static int gui(tool_t *tool_)
     return 0;
 }
 
-TOOL_REGISTER(TOOL_SELECTION, selection, tool_selection_t,
-              .name = STR_SELECTION,
-              .init_fn = init,
-              .iter_fn = iter,
-              .gui_fn = gui,
-              .default_shortcut = "R",
-              .flags = TOOL_SHOW_MASK | TOOL_SHOW_SELECTION_BOX,
-)
+TOOL_REGISTER(TOOL_SELECTION,
+              selection,
+              tool_selection_t,
+              .name             = STR_SELECTION,
+              .init_fn          = init,
+              .iter_fn          = iter,
+              .gui_fn           = gui,
+              .default_shortcut = "Shift R",
+              .flags            = TOOL_SHOW_MASK | TOOL_SHOW_SELECTION_BOX, )

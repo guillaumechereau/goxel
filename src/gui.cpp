@@ -465,16 +465,22 @@ static int check_action_shortcut(action_t *action, void *user)
     bool check_key = true;
     bool check_char = true;
     if (!*s) return 0;
+
     if (io.KeyCtrl) {
         if (!str_startswith(s, "Ctrl")) return 0;
         s += strlen("Ctrl ");
         check_char = false;
-    } else {
-        if (str_startswith(s, "Ctrl")) return 0;
     }
+
     if (io.KeyShift) {
-        check_key = false;
+        if (!str_startswith(s, "Shift")) return 0;
+        s += strlen("Shift ");
+        check_char = false;
     }
+
+    if (str_startswith(s, "Ctrl")) return 0;
+    if (str_startswith(s, "Shift")) return 0;
+
     if (    (check_char && isCharPressed(s[0])) ||
             (check_key && ImGui::IsKeyPressed((ImGuiKey)s[0], false))) {
         action_exec(action);
