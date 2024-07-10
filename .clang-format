@@ -6,11 +6,16 @@ BasedOnStyle: LLVM
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: WithoutElse
 
-AlignConsecutiveAssignments: true
-AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveMacros: Consecutive
+
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AlignFunctionPointers: true
+
 Cpp11BracedListStyle: false
 
-ColumnLimit: 80
+ColumnLimit: 79
 PenaltyExcessCharacter: 1000
 
 # Never use tabs for indentation.
