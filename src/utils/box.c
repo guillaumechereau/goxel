@@ -195,24 +195,19 @@ void box_swap_axis(const float b[4][4], int x, int y, int z, float out[4][4])
 void box_move_face(
         const float b[4][4], int f, const float p[3], float out[4][4])
 {
-    const float PS[8][3] = {
-        { -1, -1, -1 }, { +1, -1, -1 }, { +1, -1, +1 }, { -1, -1, +1 },
-        { -1, +1, -1 }, { +1, +1, -1 }, { +1, +1, +1 }, { -1, +1, +1 },
+    float inv[4][4];
+    float p_inv[3];
+    float aabb[2][3] = { { -1, -1, -1 }, { +1, +1, +1 } };
+    float ret[4][4];
+    // face -> direction, axis.
+    const int F[6][2] = {
+        { 0, 1 }, { 1, 1 }, { 0, 2 }, { 1, 2 }, { 1, 0 }, { 0, 0 },
     };
-    const int FS[6][4] = { { 0, 1, 2, 3 }, { 5, 4, 7, 6 }, { 0, 4, 5, 1 },
-                           { 2, 6, 7, 3 }, { 1, 5, 6, 2 }, { 0, 3, 7, 4 } };
-    const int FO[6]    = { 1, 0, 3, 2, 5, 4 };
-    float ps[5][3];
-    int i;
-
-    // XXX: for the moment we only support bbox, but we could make the
-    // function generic.
-    assert(box_is_bbox(b));
-    f = FO[f];
-    for (i = 0; i < 4; i++)
-        mat4_mul_vec3(b, PS[FS[f][i]], ps[i]);
-    vec3_copy(p, ps[4]);
-    bbox_from_npoints(out, 5, ps);
+    mat4_invert(b, inv);
+    mat4_mul_vec3(inv, p, p_inv);
+    aabb[F[f][0]][F[f][1]] = p_inv[F[f][1]];
+    bbox_from_npoints(ret, 2, aabb);
+    mat4_mul(b, ret, out);
 }
 
 float box_get_volume(const float box[4][4])
