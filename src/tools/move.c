@@ -144,6 +144,37 @@ static int iter_selection(tool_move_t *tool, const painter_t *painter,
     return 0;
 }
 
+static int iter_shape_layer(
+        tool_move_t *tool, const painter_t *painter, const float viewport[4])
+{
+    float transf[4][4];
+    float transf_tot[4][4];
+    int box_edit_state;
+    image_t *img = goxel.image;
+    layer_t *layer = img->active_layer;
+
+    normalize_box(layer->mat, tool->box); // Needed?
+    box_edit_state = box_edit(tool->box, DRAG_RESIZE, transf);
+    if (box_edit_state == 0) return 0;
+
+    if (box_edit_state == GESTURE3D_STATE_BEGIN) {
+        mat4_copy(tool->box, tool->start_box);
+    }
+
+    mat4_mul(transf, tool->box, tool->box);
+    get_transf(tool->start_box, tool->box, transf_tot);
+
+    mat4_mul(transf_tot, tool->start_box, layer->mat);
+    layer->base_volume_key = 0; // Mark it as dirty.
+
+    if (box_edit_state == GESTURE3D_STATE_END) {
+        image_history_push(goxel.image);
+        tool->box[3][3] = 0;
+    }
+
+    return 0;
+}
+
 static int iter(tool_t *tool_, const painter_t *painter,
                 const float viewport[4])
 {
@@ -152,24 +183,21 @@ static int iter(tool_t *tool_, const painter_t *painter,
     float origin_box[4][4] = MAT4_IDENTITY;
     uint8_t color[4] = {255, 0, 0, 255};
     float box[4][4];
-    int drag_mode = DRAG_MOVE;
     int box_edit_state;
     image_t *img = goxel.image;
     layer_t *layer = img->active_layer;
+
+    if (layer->shape) {
+        return iter_shape_layer(tool, painter, viewport);
+    }
 
     if (img->selection_mask && !volume_is_empty(img->selection_mask)) {
         return iter_selection(tool, painter, viewport);
     }
 
-    if (layer->shape) drag_mode = DRAG_RESIZE;
-
     volume_get_box(goxel.image->active_layer->volume, true, box);
-    // Fix problem with shape layer box.
-    if (goxel.image->active_layer->shape) {
-        normalize_box(goxel.image->active_layer->mat, box);
-    }
 
-    box_edit_state = box_edit(box, drag_mode, transf);
+    box_edit_state = box_edit(box, DRAG_MOVE, transf);
     if (box_edit_state) {
         move(layer, transf);
         if (box_edit_state == GESTURE3D_STATE_END) {
