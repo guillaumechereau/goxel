@@ -44,7 +44,7 @@ void action_register(const action_t *action, int idx)
     assert(!a->shortcut[0]);
     if (a->default_shortcut) {
         assert(strlen(a->default_shortcut) < sizeof(a->shortcut));
-        strcpy(a->shortcut, a->default_shortcut);
+        snprintf(a->shortcut, sizeof(a->shortcut), "%s", a->default_shortcut);
     }
 }
 

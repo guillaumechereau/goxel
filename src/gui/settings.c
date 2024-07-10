@@ -17,7 +17,7 @@
  */
 
 #include "goxel.h"
-#include <errno.h>
+#include <errno.h> // IWYU pragma: keep.
 
 #include "utils/ini.h"
 
@@ -40,7 +40,7 @@ static int shortcut_callback(action_t *action, void *user)
 
 int gui_settings_popup(void *data)
 {
-    const char **names;
+    const char *names[128];
     theme_t *theme;
     int i, nb, current;
     theme_t *themes = theme_get_list();
@@ -67,7 +67,6 @@ int gui_settings_popup(void *data)
 
     if (gui_section_begin(_(THEME), GUI_SECTION_COLLAPSABLE)) {
         DL_COUNT(themes, theme, nb);
-        names = (const char**)calloc(nb, sizeof(*names));
         i = 0;
         DL_FOREACH(themes, theme) {
             if (strcmp(theme->name, theme_get()->name) == 0) current = i;
@@ -77,7 +76,6 @@ int gui_settings_popup(void *data)
             theme_set(names[current]);
             settings_save();
         }
-        free(names);
     } gui_section_end();
 
 
@@ -115,7 +113,8 @@ static int settings_ini_handler(void *user, const char *section,
         }
     }
     if (strcmp(section, "shortcuts") == 0) {
-        if ((a = action_get_by_name(name))) {
+        a = action_get_by_name(name);
+        if (a) {
             strncpy(a->shortcut, value, sizeof(a->shortcut) - 1);
         } else {
             LOG_W("Cannot set shortcut for unknown action '%s'", name);
