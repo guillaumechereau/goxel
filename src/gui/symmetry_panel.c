@@ -62,8 +62,8 @@ void gui_symmetry_panel(void)
     gui_row_end();
     gui_group_end();
     for (i = 0; i < 3; i++) {
-        gui_input_float(labels_l[i], &goxel.painter.symmetry_origin[i],
-                         0.5, -FLT_MAX, +FLT_MAX, "%.1f");
+        gui_input_float(labels_l[i], &goxel.painter.symmetry_origin[i], 0.5, 0,
+                        0, "%.1f");
     }
 
     if (gui_section_begin(_(RECENTER), GUI_SECTION_COLLAPSABLE_CLOSED)) {

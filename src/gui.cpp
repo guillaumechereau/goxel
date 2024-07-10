@@ -839,10 +839,6 @@ bool gui_input_int(const char *label, int *v, int minv, int maxv)
     float maxvf = maxv;
     bool ret;
     float vf = *v;
-    if (minv == 0 && maxv == 0) {
-        minvf = -FLT_MAX;
-        maxvf = +FLT_MAX;
-    }
     ret = gui_input_float(label, &vf, 1, minvf, maxvf, "%.0f");
     if (ret) *v = vf;
     return ret;
@@ -945,20 +941,29 @@ bool gui_input_float(const char *label, float *v, float step,
     const ImVec2 button_size = ImVec2(
             GUI_ITEM_HEIGHT,
             ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
+    int v_int;
+    char v_label[128];
 
     gui->item_activated = false;
     gui->item_deactivated = false;
-    if (minv == 0.f && maxv == 0.f) {
-        minv = -FLT_MAX;
-        maxv = +FLT_MAX;
+
+    // To remove: use 0, 0 instead.
+    if (minv == -FLT_MAX && maxv == +FLT_MAX) {
+        assert(false);
+        minv = 0;
+        maxv = 0;
     }
+
     if (step == 0.f) step = 0.1f;
     if (!format) format = "%.1f";
 
-    unbounded = (minv == -FLT_MAX || maxv == +FLT_MAX);
+    // Because imgui doesn't round to the step, we use DragInt with a
+    // custom label to make it work properly.
+    v_int = round(*v / step);
+    snprintf(v_label, sizeof(v_label), format, v_int * step);
+    unbounded = (minv == 0 && maxv == 0);
 
     ImGui::PushID(label);
-
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, COLOR(NUMBER_INPUT, INNER, false));
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
@@ -993,7 +998,10 @@ bool gui_input_float(const char *label, float *v, float step,
         ImGui::SameLine();
         ImGui::PushItemWidth(
                 ImGui::GetContentRegionAvail().x - button_size.x - 4);
-        ret = ImGui::DragFloat("", v, v_speed, minv, maxv, format) || ret;
+        if (ImGui::DragInt("", &v_int, v_speed, minv, maxv, v_label)) {
+            *v  = v_int * step;
+            ret = true;
+        }
         update_activation_state();
         is_active = ImGui::IsItemActive();
         ImGui::PopItemWidth();
@@ -1006,7 +1014,10 @@ bool gui_input_float(const char *label, float *v, float step,
     } else {
         ImGui::SetNextItemWidth(-1);
         if (unbounded) {
-            ret = ImGui::DragFloat("", v, step, minv, maxv, format);
+            if (ImGui::DragInt("", &v_int, step, minv, maxv, v_label)) {
+                *v  = v_int * step;
+                ret = true;
+            }
         } else {
             ret = slider_float(v, minv, maxv, format);
         }
@@ -1024,7 +1035,9 @@ bool gui_input_float(const char *label, float *v, float step,
     ImGui::PopID();
 
     if (ret) {
-        *v = clamp(*v, minv, maxv);
+        if (minv != 0 || maxv != 0) {
+            *v = clamp(*v, minv, maxv);
+        }
         on_click();
     }
     return ret;
