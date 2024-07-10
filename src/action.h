@@ -76,6 +76,11 @@ inline void action_exec2(int id)
     action_exec(action_get(id, true));
 }
 
+/**
+ * Show a log if two actions have the same shortcut.
+ */
+void actions_check_shortcuts(void);
+
 // Convenience macro to register an action from anywere in a c file.
 #define ACTION_REGISTER(id_, ...) \
     static const action_t GOX_action_##id_ = {.id = #id_, __VA_ARGS__}; \

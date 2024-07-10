@@ -106,3 +106,21 @@ int action_exec(const action_t *action)
     reentry--;
     return 0;
 }
+
+void actions_check_shortcuts(void)
+{
+    action_t *a, *b;
+    int i, j;
+    for (i = 0; i < arrlen(g_actions); i++) {
+        a = &g_actions[i];
+        if (!a->shortcut[0]) continue;
+        for (j = i + 1; j < arrlen(g_actions); j++) {
+            b = &g_actions[j];
+            if (!b->shortcut[0]) continue;
+            if (strcmp(a->shortcut, b->shortcut) == 0) {
+                LOG_W("Actions `%s` and `%s` both have the same shortcut '%s'",
+                      a->id, b->id, a->shortcut);
+            }
+        }
+    }
+}

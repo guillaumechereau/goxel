@@ -129,6 +129,7 @@ void settings_load(void)
     snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
     LOG_I("Read settings file: %s", path);
     ini_parse(path, settings_ini_handler, NULL);
+    actions_check_shortcuts();
 }
 
 static int shortcut_save_callback(action_t *a, void *user)
