@@ -1,19 +1,17 @@
-# Style for goxel.
-# Still a work in progress.
+# Style for Goxel.
+#
+# This is still a work in progress, and shouldn't be used systematically yet.
+# Unfortunately I couldn't make it work with the style I like, so for the
+# moment I disable all alignments.
 
 BasedOnStyle: LLVM
 
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: WithoutElse
 
-AlignConsecutiveAssignments: Consecutive
-AlignConsecutiveMacros: Consecutive
-
-AlignConsecutiveDeclarations:
-  Enabled: true
-  AlignFunctionPointers: true
-
 Cpp11BracedListStyle: false
+
+SpacesInContainerLiterals: false
 
 ColumnLimit: 79
 PenaltyExcessCharacter: 1000
