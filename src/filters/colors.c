@@ -28,6 +28,7 @@ typedef struct {
     float hue;
     float lightness;
     float saturation;
+    float contrast;
 } filter_colors_t;
 
 static float mod(float x, float y)
@@ -79,13 +80,28 @@ static void srgb_to_hsl(const uint8_t rgb[3], float hsl[3])
     hsl[2] = l;
 }
 
+// Contrast 0 => grey, 1 => original color.
+static void srgb_apply_contrast(uint8_t srgb[3], float contrast)
+{
+    float rgb[3];
+    int i;
+
+    srgb8_to_rgb(srgb, rgb);
+    for (i = 0; i < 3; i++) {
+        rgb[i] = (rgb[i] - 0.5f) * contrast + 0.5f;
+        rgb[i] = clamp(rgb[i], 0.0, 1.0);
+    }
+    rgb_to_srgb8(rgb, srgb);
+}
+
 static void on_open(filter_t *filter_)
 {
     filter_colors_t *filter = (void*)filter_;
-    filter->hue = 0;
-    filter->lightness = 0;
-    filter->saturation = 0;
-    filter->original = volume_copy(goxel.image->active_layer->volume);
+    filter->hue             = 0;
+    filter->lightness       = 0;
+    filter->saturation      = 0;
+    filter->contrast        = 0;
+    filter->original        = volume_copy(goxel.image->active_layer->volume);
 }
 
 static void on_close(filter_t *filter_)
@@ -112,36 +128,41 @@ static void apply_values(void *args, uint8_t color[4])
     move_value(&hsl[1], filter->saturation / 100);
     move_value(&hsl[2], filter->lightness / 100);
     hsl_to_srgb(hsl, color);
+    srgb_apply_contrast(color, filter->contrast / 100 + 1);
 }
 
 static int gui(filter_t *filter_)
 {
-    filter_colors_t *filter = (void*)filter_;
+    filter_colors_t *filter = (void *)filter_;
     layer_t *layer = goxel.image->active_layer;
-    float hue = filter->hue;
-    float lightness = filter->lightness;
-    float saturation = filter->saturation;
+    float hue               = filter->hue;
+    float lightness         = filter->lightness;
+    float saturation        = filter->saturation;
+    float contrast          = filter->contrast;
+    bool changed;
 
     gui_input_float("Hue", &hue, 1, -180, +180, "%.1f");
     gui_input_float("Lightness", &lightness, 1, -100, +100, "%.1f");
     gui_input_float("Saturation", &saturation, 1, -100, +100, "%.1f");
+    gui_input_float("Contrast", &contrast, 1, -100, +100, "%.1f");
 
-    if (    hue != filter->hue ||
-            lightness != filter->lightness ||
-            saturation != filter->saturation)
-    {
+    changed = hue != filter->hue || lightness != filter->lightness ||
+              saturation != filter->saturation || contrast != filter->contrast;
+    if (changed) {
         volume_set(layer->volume, filter->original);
-        filter->hue = hue;
-        filter->lightness = lightness;
+        filter->hue        = hue;
+        filter->lightness  = lightness;
         filter->saturation = saturation;
+        filter->contrast   = contrast;
         goxel_apply_color_filter(apply_values, filter);
     }
 
     if (gui_button(_(RESET), -1, 0)) {
         volume_set(layer->volume, filter->original);
-        filter->hue = 0;
-        filter->lightness = 0;
+        filter->hue        = 0;
+        filter->lightness  = 0;
         filter->saturation = 0;
+        filter->contrast   = 0;
     }
     return 0;
 }

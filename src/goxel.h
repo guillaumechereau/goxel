@@ -60,6 +60,7 @@
 
 #include "utils/box.h"
 #include "utils/cache.h"
+#include "utils/color.h"
 #include "utils/geometry.h"
 #include "utils/gl.h"
 #include "utils/img.h"
