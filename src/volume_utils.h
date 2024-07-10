@@ -97,13 +97,13 @@ typedef struct volume_mesh
 // Attributes:
 //   mode - Define how colors are applied.  One of the <MODE> enum value.
 typedef struct painter {
-    int             mode;
-    const shape_t   *shape;
-    uint8_t         color[4];
-    float           smoothness;
-    int             symmetry; // bitfield X Y Z
-    float           symmetry_origin[3];
-    float           (*box)[4][4];     // Clipping box (can be null)
+    int            mode;
+    const shape_t *shape;
+    uint8_t        color[4];
+    float          smoothness;
+    int            symmetry; // bitfield X Y Z
+    float          symmetry_origin[3];
+    const float    (*box)[4][4]; // Clipping box (can be null)
 } painter_t;
 
 
