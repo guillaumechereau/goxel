@@ -1387,7 +1387,7 @@ static void a_overwrite_export(void)
     goxel_export_to_file(goxel.image->export_path, goxel.image->export_fmt);
 }
 
-ACTION_REGISTER(overwrite_export,
+ACTION_REGISTER(ACTION_overwrite_export,
     .cfunc = a_overwrite_export,
     .default_shortcut = "Ctrl E"
 )
@@ -1492,7 +1492,7 @@ static void a_cut_as_new_layer(void)
     volume_op(layer->volume, &painter, *box);
 }
 
-ACTION_REGISTER(cut_as_new_layer,
+ACTION_REGISTER(ACTION_cut_as_new_layer,
     .help = STR_ACTION_CUT_AS_NEW_LAYER,
     .cfunc = a_cut_as_new_layer,
     .flags = ACTION_TOUCH_IMAGE,
@@ -1508,7 +1508,7 @@ static void a_reset_selection(void)
     mat4_copy(mat4_zero, img->selection_box);
 }
 
-ACTION_REGISTER(reset_selection,
+ACTION_REGISTER(ACTION_reset_selection,
     .cfunc = a_reset_selection,
 )
 
@@ -1520,7 +1520,7 @@ static void a_fill_selection_box(void)
     volume_op(layer->volume, &goxel.painter, img->selection_box);
 }
 
-ACTION_REGISTER(fill_selection_box,
+ACTION_REGISTER(ACTION_fill_selection_box,
     .help = STR_ACTION_FILL_SELECTION_BOX_HELP,
     .cfunc = a_fill_selection_box,
     .flags = ACTION_TOUCH_IMAGE,
@@ -1535,7 +1535,7 @@ static void a_paint_selection(void)
                  goxel.painter.color);
 }
 
-ACTION_REGISTER(paint_selection,
+ACTION_REGISTER(ACTION_paint_selection,
     .help = STR_ACTION_PAINT_SELECTION_HELP,
     .cfunc = a_paint_selection,
     .flags = ACTION_TOUCH_IMAGE,
@@ -1560,7 +1560,7 @@ static void a_add_selection(void)
     volume_delete(tmp);
 }
 
-ACTION_REGISTER(add_selection,
+ACTION_REGISTER(ACTION_add_selection,
     .help = STR_ACTION_ADD_SELECTION_HELP,
     .cfunc = a_add_selection,
 )
@@ -1580,7 +1580,7 @@ static void a_sub_selection(void)
     volume_op(img->selection_mask, &painter, img->selection_box);
 }
 
-ACTION_REGISTER(sub_selection,
+ACTION_REGISTER(ACTION_sub_selection,
     .help = STR_ACTION_SUB_SELECTION_HELP,
     .cfunc = a_sub_selection,
 )
@@ -1626,13 +1626,13 @@ static void paste_action(void)
     volume_delete(tmp);
 }
 
-ACTION_REGISTER(copy,
+ACTION_REGISTER(ACTION_copy,
     .cfunc = copy_action,
     .default_shortcut = "Ctrl C",
     .flags = 0,
 )
 
-ACTION_REGISTER(paste,
+ACTION_REGISTER(ACTION_paste,
     .cfunc = paste_action,
     .default_shortcut = "Ctrl V",
     .flags = ACTION_TOUCH_IMAGE,
@@ -1669,41 +1669,41 @@ static void a_view_toggle_ortho(void)
     camera->ortho = !camera->ortho;
 }
 
-ACTION_REGISTER(view_left,
+ACTION_REGISTER(ACTION_view_left,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){90, 90},
     .default_shortcut = "Ctrl 3",
 )
 
-ACTION_REGISTER(view_right,
+ACTION_REGISTER(ACTION_view_right,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){-90, 90},
     .default_shortcut = "3",
 )
 
-ACTION_REGISTER(view_top,
+ACTION_REGISTER(ACTION_view_top,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){0, 0},
     .default_shortcut = "7",
 )
 
-ACTION_REGISTER(view_default,
+ACTION_REGISTER(ACTION_view_default,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_view_default,
     .default_shortcut = "0",
 )
 
-ACTION_REGISTER(view_front,
+ACTION_REGISTER(ACTION_view_front,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_view_set,
     .data = (float[]){0, 90},
     .default_shortcut = "1",
 )
 
-ACTION_REGISTER(view_toggle_ortho,
+ACTION_REGISTER(ACTION_view_toggle_ortho,
     .help = STR_ACTION_VIEW_TOGGLE_ORTHO_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_view_toggle_ortho,
@@ -1714,7 +1714,7 @@ static void quit(void)
 {
     gui_query_quit();
 }
-ACTION_REGISTER(quit,
+ACTION_REGISTER(ACTION_quit,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = quit,
     .default_shortcut = "Ctrl Q",
@@ -1761,7 +1761,7 @@ static void a_reset(void)
     goxel_open_file(NULL);
 }
 
-ACTION_REGISTER(reset,
+ACTION_REGISTER(ACTION_reset,
     .help = STR_ACTION_RESET_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_reset,
@@ -1771,14 +1771,14 @@ ACTION_REGISTER(reset,
 static void undo(void) { image_undo(goxel.image); }
 static void redo(void) { image_redo(goxel.image); }
 
-ACTION_REGISTER(undo,
+ACTION_REGISTER(ACTION_undo,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = undo,
     .default_shortcut = "Ctrl Z",
     .icon = ICON_ARROW_BACK,
 )
 
-ACTION_REGISTER(redo,
+ACTION_REGISTER(ACTION_redo,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = redo,
     .default_shortcut = "Ctrl Y",
@@ -1799,7 +1799,7 @@ static void toggle_mode(void)
     goxel.painter.mode = mode;
 }
 
-ACTION_REGISTER(toggle_mode,
+ACTION_REGISTER(ACTION_toggle_mode,
     .help = STR_ACTION_TOGGLE_MODE_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = toggle_mode,
@@ -1811,7 +1811,7 @@ static void a_set_mode(void *data)
     goxel.painter.mode = mode;
 }
 
-ACTION_REGISTER(set_mode_add,
+ACTION_REGISTER(ACTION_set_mode_add,
     .help = STR_ACTION_SET_MODE_ADD_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
@@ -1820,7 +1820,7 @@ ACTION_REGISTER(set_mode_add,
     .default_shortcut = "T",
 )
 
-ACTION_REGISTER(set_mode_sub,
+ACTION_REGISTER(ACTION_set_mode_sub,
     .help = STR_ACTION_SET_MODE_SUB_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
@@ -1829,7 +1829,7 @@ ACTION_REGISTER(set_mode_sub,
     .default_shortcut = "R",
 )
 
-ACTION_REGISTER(set_mode_paint,
+ACTION_REGISTER(ACTION_set_mode_paint,
     .help = STR_ACTION_SET_MODE_PAINT_HELP,
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,

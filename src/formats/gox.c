@@ -738,7 +738,7 @@ static void a_open(void)
     goxel_add_recent_file(path);
 }
 
-ACTION_REGISTER(open,
+ACTION_REGISTER(ACTION_open,
     .cfunc = a_open,
     .default_shortcut = "Ctrl O",
 )
@@ -762,7 +762,7 @@ static void a_save_as(void)
     goxel_add_recent_file(path);
 }
 
-ACTION_REGISTER(save_as,
+ACTION_REGISTER(ACTION_save_as,
     .cfunc = a_save_as,
 )
 
@@ -787,7 +787,7 @@ static void a_save(void)
     goxel_add_recent_file(path);
 }
 
-ACTION_REGISTER(save,
+ACTION_REGISTER(ACTION_save,
     .cfunc = a_save,
     .default_shortcut = "Ctrl S"
 )

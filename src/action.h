@@ -83,10 +83,10 @@ void actions_check_shortcuts(void);
 
 // Convenience macro to register an action from anywere in a c file.
 #define ACTION_REGISTER(id_, ...) \
-    static const action_t GOX_action_##id_ = {.id = #id_, __VA_ARGS__}; \
+    static const action_t GOX_action_##id_ = {.id = &#id_[7], __VA_ARGS__}; \
     static void GOX_register_action_##id_(void) __attribute__((constructor)); \
     static void GOX_register_action_##id_(void) { \
-        action_register(&GOX_action_##id_, ACTION_##id_); \
+        action_register(&GOX_action_##id_, id_); \
     }
 
 #endif // ACTION_H
