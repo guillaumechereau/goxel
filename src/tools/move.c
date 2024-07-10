@@ -18,11 +18,6 @@
 
 #include "goxel.h"
 
-enum {
-    DRAG_MOVE = 0,
-    DRAG_RESIZE,
-};
-
 typedef struct {
     tool_t tool;
 
@@ -111,7 +106,7 @@ static int iter_selection(tool_move_t *tool, const painter_t *painter,
         tool->start_mask_key = volume_get_key(mask);
     }
 
-    box_edit_state = box_edit(tool->box, DRAG_MOVE, transf);
+    box_edit_state = box_edit(tool->box, GIZMO_TRANSLATION, transf);
     if (!box_edit_state) return 0;
 
     if (box_edit_state == GESTURE3D_STATE_BEGIN) {
@@ -154,7 +149,8 @@ static int iter_shape_layer(
     layer_t *layer = img->active_layer;
 
     normalize_box(layer->mat, tool->box); // Needed?
-    box_edit_state = box_edit(tool->box, DRAG_RESIZE, transf);
+    box_edit_state = box_edit(
+            tool->box, GIZMO_TRANSLATION | GIZMO_GROW, transf);
     if (box_edit_state == 0) return 0;
 
     if (box_edit_state == GESTURE3D_STATE_BEGIN) {
@@ -197,7 +193,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
 
     volume_get_box(goxel.image->active_layer->volume, true, box);
 
-    box_edit_state = box_edit(box, DRAG_MOVE, transf);
+    box_edit_state = box_edit(box, GIZMO_TRANSLATION, transf);
     if (box_edit_state) {
         move(layer, transf);
         if (box_edit_state == GESTURE3D_STATE_END) {

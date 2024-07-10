@@ -19,6 +19,11 @@
 #ifndef GIZMOS_H
 #define GIZMOS_H
 
+enum {
+    GIZMO_TRANSLATION = 1 << 0,
+    GIZMO_GROW        = 1 << 1,
+};
+
 /*
  * box_edit
  * Render a box that can be edited with the mouse.
@@ -28,7 +33,7 @@
  *
  * Parameters:
  *   box    - The box we want to edit.
- *   mode   - 0: move, 1: resize.
+ *   flags  - GIZMO_ enum union.
  *   transf - Receive the output transformation.
  *   first  - Set to true if the edit is the first one.
  *
@@ -38,7 +43,7 @@
  *   GESTURE3D_UPDATE
  *   GESTURE3D_END
  */
-int box_edit(const float box[4][4], int mode, float transf[4][4]);
+int box_edit(const float box[4][4], int flags, float transf[4][4]);
 
 bool box_edit_is_active(void);
 

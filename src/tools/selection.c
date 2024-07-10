@@ -143,7 +143,8 @@ static int iter(tool_t *tool, const painter_t *painter,
     snap_mask |= SNAP_ROUNDED;
     snap_mask &= ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT);
 
-    box_edit_state = box_edit(img->selection_box, 1, transf);
+    box_edit_state = box_edit(
+            img->selection_box, GIZMO_TRANSLATION | GIZMO_GROW, transf);
     if (box_edit_state) {
         mat4_mul(transf, img->selection_box, img->selection_box);
         if (box_edit_state == GESTURE3D_STATE_END) {

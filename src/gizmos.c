@@ -28,13 +28,11 @@ static const uint8_t FACES_COLOR[6][3] = {
 };
 
 enum {
-    FLAG_SNAP_FACE      = 1 << 0,
-    FLAG_SNAP_GIZMO     = 1 << 1,
+    FLAG_SNAP_FACE  = 1 << 8,
+    FLAG_SNAP_GIZMO = 1 << 9,
 };
 
-typedef struct data
-{
-    int mode; // 0: move, 1: resize.
+typedef struct data {
     float box[4][4];
     float start_box[4][4];
     float transf[4][4];
@@ -132,7 +130,7 @@ static int on_drag(gesture3d_t *gest)
     pos[1] = round(pos[1]);
     pos[2] = round(pos[2]);
 
-    if (data->mode == 1) { // Resize
+    if (data->flags & GIZMO_GROW) { // Resize
         box_move_face(data->start_box, data->snap_face, pos, box);
         if (box_get_volume(box) == 0) return 0;
         get_transf(data->box, box, data->transf);
@@ -242,15 +240,14 @@ static void gizmo(const float box[4][4], int face)
     render_gizmo(shape, face, alpha);
 }
 
-int box_edit(const float box[4][4], int mode, float transf[4][4])
+int box_edit(const float box[4][4], int flags, float transf[4][4])
 {
     int i;
 
     if (box_is_null(box)) return 0;
-    g_data.mode = mode;
     mat4_copy(box, g_data.box);
     mat4_set_identity(g_data.transf);
-    g_data.flags = 0;
+    g_data.flags         = flags;
     g_data.gesture_state = 0;
 
     for (i = 0; i < 6; i++) {
