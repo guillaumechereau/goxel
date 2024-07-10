@@ -17,14 +17,15 @@
  */
 
 #include "goxel.h"
-#include "script.h"
-#include "xxhash.h"
+
 #include "file_format.h"
+#include "script.h"
+#include "shader_cache.h"
+#include "xxhash.h"
+
 #include "../ext_src/stb/stb_ds.h"
 
-#include "shader_cache.h"
-
-#include <errno.h>
+#include <errno.h> // IWYU pragma: keep.
 #include <stdarg.h>
 
 // The global goxel instance.
@@ -220,7 +221,7 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
         .view_size = {view_size[0], view_size[1]},
     };
 
-    if (memcmp(&key, &cache_key, sizeof(key_t)) == 0) {
+    if (memcmp((void *)&key, (void *)&cache_key, sizeof(key_t)) == 0) {
         GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel.pick_fbo->framebuffer));
         return;
     }
@@ -574,13 +575,28 @@ static void gesture3ds_iter(void)
     gesture3d_remove_dead(&goxel.gesture3ds_count, goxel.gesture3ds);
 }
 
+static void play_build_sound_if_needed(void)
+{
+    float pitch = 1.2;
+    uint64_t volume_key;
+
+    if (!DEFINED(SOUND)) return;
+    if (goxel.frame_time - goxel.last_click_time <= 0.1) return;
+    volume_key = volume_get_key(goxel_get_render_volume(goxel.image));
+    if (goxel.last_volume_key == volume_key) return;
+    if (goxel.last_volume_key) {
+        if (goxel.painter.mode == MODE_SUB) pitch = 0.5;
+        if (goxel.painter.mode == MODE_OVER) pitch = 1.0;
+        sound_play("build", 0.2, pitch);
+        goxel.last_click_time = goxel.frame_time;
+    }
+    goxel.last_volume_key = volume_key;
+}
 
 KEEPALIVE
 int goxel_iter(const inputs_t *inputs)
 {
-    double time = sys_get_time();
-    uint64_t volume_key;
-    float pitch;
+    double time  = sys_get_time();
     float menu_w = 20;
     int i;
     inputs_t inputs2;
@@ -622,20 +638,7 @@ int goxel_iter(const inputs_t *inputs)
         }
     }
     goxel_mouse_in_view(goxel.gui.viewport, &inputs2, true);
-
-    if (DEFINED(SOUND) && time - goxel.last_click_time > 0.1) {
-        volume_key = volume_get_key(goxel_get_render_volume(goxel.image));
-        if (goxel.last_volume_key != volume_key) {
-            if (goxel.last_volume_key) {
-                pitch = goxel.painter.mode == MODE_OVER ? 1.0 :
-                        goxel.painter.mode == MODE_SUB ? 0.8 : 1.2;
-                sound_play("build", 0.2, pitch);
-                goxel.last_click_time = time;
-            }
-            goxel.last_volume_key = volume_key;
-        }
-    }
-
+    play_build_sound_if_needed();
     gesture3ds_iter();
     sound_iter();
     update_window_title();
@@ -825,10 +828,14 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                  inputs->keys[KEY_CONTROL]);
     }
 
-    painter.box = !box_is_null(goxel.image->active_layer->box) ?
-                         &goxel.image->active_layer->box :
-                         !box_is_null(goxel.image->box) ?
-                         &goxel.image->box : NULL;
+    if (!box_is_null(goxel.image->active_layer->box)) {
+        painter.box = &goxel.image->active_layer->box;
+    } else if (!box_is_null(goxel.image->box)) {
+        painter.box = &goxel.image->box;
+    } else {
+        painter.box = NULL;
+    }
+
     // Only paint mode support alpha.
     if (painter.mode != MODE_PAINT) painter.color[3] = 255;
     // Swap OVER/SUB modes.
@@ -1360,7 +1367,7 @@ int goxel_export_to_file(const char *path, const char *format)
     }
     err = f->export_func(f, goxel.image, path);
     if (err) return err;
-    
+
     // path might be equal to export_path, so we must strdup() it before we
     // free export_path
     new_export_path = strdup(path);
@@ -1785,6 +1792,9 @@ static void toggle_mode(void)
     case MODE_OVER:     mode = MODE_SUB; break;
     case MODE_SUB:      mode = MODE_PAINT; break;
     case MODE_PAINT:    mode = MODE_OVER; break;
+    default:
+        assert(false);
+        break;
     }
     goxel.painter.mode = mode;
 }

@@ -18,6 +18,7 @@ Checks:  >
   -bugprone-sizeof-expression,
   -bugprone-casting-through-void,
   -bugprone-suspicious-realloc-usage,
+  -bugprone-multi-level-implicit-pointer-conversion,
 
   modernize-*,
   -modernize-macro-to-enum,
