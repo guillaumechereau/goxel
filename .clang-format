@@ -6,6 +6,10 @@ BasedOnStyle: LLVM
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: WithoutElse
 
+AlignConsecutiveAssignments: true
+AlignConsecutiveMacros: true
+Cpp11BracedListStyle: false
+
 ColumnLimit: 80
 PenaltyExcessCharacter: 1000
 
