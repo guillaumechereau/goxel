@@ -44,6 +44,7 @@ static const char *get_mode_name(int mode)
         case MODE_OVER: return "Add";
         case MODE_SUB: return "Subtract";
         case MODE_INTERSECT: return "Intersect";
+        case MODE_PAINT: return "Paint";
         default: return "";
     }
 }
@@ -89,7 +90,7 @@ void gui_layers_panel(void)
     int icons_count, icons[8];
     bool current, visible, bounded;
     char buf[256];
-    const int MODES[] = {MODE_OVER, MODE_SUB, MODE_INTERSECT};
+    const int MODES[] = {MODE_OVER, MODE_SUB, MODE_INTERSECT, MODE_PAINT};
 
     gui_group_begin(NULL);
     DL_FOREACH_REVERSE(goxel.image->layers, layer) {
