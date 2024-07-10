@@ -28,6 +28,7 @@ typedef struct {
     volume_t *start_selection;
     float box[4][4];
     float start_box[4][4];
+    float start_mat[4][4];
 } tool_move_t;
 
 static bool layer_is_volume(const layer_t *layer)
@@ -157,12 +158,13 @@ static int iter_shape_layer(
 
     if (box_edit_state == GESTURE3D_STATE_BEGIN) {
         mat4_copy(tool->box, tool->start_box);
+        mat4_copy(layer->mat, tool->start_mat);
     }
 
     mat4_mul(transf, tool->box, tool->box);
     get_transf(tool->start_box, tool->box, transf_tot);
 
-    mat4_mul(transf_tot, tool->start_box, layer->mat);
+    mat4_mul(transf_tot, tool->start_mat, layer->mat);
     layer->base_volume_key = 0; // Mark it as dirty.
 
     if (box_edit_state == GESTURE3D_STATE_END) {
