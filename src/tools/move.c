@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+static const uint8_t ORIGIN_COLOR[4] = { 255, 0, 0, 255 };
+
 typedef struct {
     tool_t tool;
 
@@ -171,25 +173,15 @@ static int iter_shape_layer(
     return 0;
 }
 
-static int iter(tool_t *tool_, const painter_t *painter,
-                const float viewport[4])
+static int iter_volume_layer(
+        tool_move_t *tool, const painter_t *painter, const float viewport[4])
 {
-    tool_move_t *tool = (void*)tool_;
     float transf[4][4];
     float origin_box[4][4] = MAT4_IDENTITY;
-    uint8_t color[4] = {255, 0, 0, 255};
     float box[4][4];
     int box_edit_state;
     image_t *img = goxel.image;
     layer_t *layer = img->active_layer;
-
-    if (layer->shape) {
-        return iter_shape_layer(tool, painter, viewport);
-    }
-
-    if (img->selection_mask && !volume_is_empty(img->selection_mask)) {
-        return iter_selection(tool, painter, viewport);
-    }
 
     volume_get_box(goxel.image->active_layer->volume, true, box);
 
@@ -205,10 +197,30 @@ static int iter(tool_t *tool_, const painter_t *painter,
     if (layer_is_volume(layer)) {
         vec3_copy(layer->mat[3], origin_box[3]);
         mat4_iscale(origin_box, 0.1, 0.1, 0.1);
-        render_box(&goxel.rend, origin_box, color,
-                EFFECT_NO_DEPTH_TEST | EFFECT_NO_SHADING);
+        render_box(&goxel.rend, origin_box, ORIGIN_COLOR,
+                   EFFECT_NO_DEPTH_TEST | EFFECT_NO_SHADING);
     }
+
     return 0;
+}
+
+static int iter(tool_t *tool_,
+                const painter_t *painter,
+                const float viewport[4])
+{
+    tool_move_t *tool = (void *)tool_;
+    image_t *img      = goxel.image;
+    layer_t *layer    = img->active_layer;
+
+    if (layer->shape) {
+        return iter_shape_layer(tool, painter, viewport);
+    }
+
+    if (img->selection_mask && !volume_is_empty(img->selection_mask)) {
+        return iter_selection(tool, painter, viewport);
+    }
+
+    return iter_volume_layer(tool, painter, viewport);
 }
 
 static void center_origin(layer_t *layer)
