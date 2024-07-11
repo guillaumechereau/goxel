@@ -450,6 +450,11 @@ enum {
     SNAP_ROUNDED        = 1 << 10, // Round the result.
 };
 
+typedef struct keymap {
+    int action; // 0: pan, 1: rotate, 2, zoom.
+    int input;  // union of GESTURE enum.
+} keymap_t;
+
 typedef struct goxel
 {
     int        screen_size[2];
@@ -519,9 +524,8 @@ typedef struct goxel
 
     int        view_effects; // EFFECT_WIREFRAME | EFFECT_GRID | EFFECT_EDGES
 
-    // All the gestures we listen to.  Up to 16.
-    gesture_t *gestures[16];
-    int gestures_count;
+    // Stb array of all the gestures we listen to.
+    gesture_t **gestures;
 
     // All the 3d gestures we listen to.
     gesture3d_t gesture3ds[32];
@@ -544,6 +548,9 @@ typedef struct goxel
     char **recent_files; // stb arraw of most recently used files.
 
     const char *lang; // Current set language.
+
+    // Arr array of keymap settings (different from shortcuts).
+    keymap_t *keymaps;
 
 } goxel_t;
 
@@ -654,6 +661,11 @@ void goxel_apply_color_filter(
  * Should be called once per frame for each gesture we are listening to.
  */
 bool goxel_gesture3d(const gesture3d_t *gesture);
+
+/*
+ * Call this if the keymaps array has changed.
+ */
+void goxel_update_keymaps(void);
 
 // Section: tests
 

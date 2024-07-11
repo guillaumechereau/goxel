@@ -389,13 +389,31 @@ static void goxel_init_sound()
 void goxel_add_gesture(int type, int button,
                        int (*fn)(const gesture_t *gest, void *user))
 {
-    goxel.gestures[goxel.gestures_count] = calloc(1, sizeof(gesture_t));
-    *goxel.gestures[goxel.gestures_count] = (gesture_t) {
+    gesture_t *gest;
+
+    gest = calloc(1, sizeof(gesture_t));
+    *gest = (gesture_t){
         .type = type,
         .button = button,
         .callback = fn,
     };
-    goxel.gestures_count++;
+    arrput(goxel.gestures, gest);
+}
+
+static void goxel_remove_gesture(int (*fn)(const gesture_t *gest, void *user))
+{
+    int i;
+    bool keep = true;
+    while (keep) {
+        keep = false;
+        for (i = 0; i < arrlen(goxel.gestures); i++) {
+            if (goxel.gestures[i]->callback == fn) {
+                arrdel(goxel.gestures, i);
+                keep = true;
+                break;
+            }
+        }
+    }
 }
 
 static void goxel_load_recent_files(void)
@@ -444,17 +462,47 @@ void goxel_init(void)
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
 
-    goxel_add_gesture(GESTURE_HOVER, 0, on_hover);
-    goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag_rotate);
-    goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
-    goxel_add_gesture(GESTURE_DRAG, GESTURE_RMB, on_pan);
-    goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_SHIFT, on_pan);
-    goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB | GESTURE_CTRL, on_zoom);
-    goxel_add_gesture(GESTURE_DRAG, GESTURE_MMB, on_rotate);
-
     goxel_load_recent_files();
 
     goxel_reset();
+
+    goxel_add_gesture(GESTURE_HOVER, 0, on_hover);
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag_rotate);
+    goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
+}
+
+void goxel_update_keymaps(void)
+{
+    int i, action, input;
+    typedef int (*fn_t)(const gesture_t *gest, void *user);
+    const fn_t FNS[] = { on_pan, on_rotate, on_zoom };
+    keymap_t keymap;
+
+    // Default keymaps.
+    if (arrlen(goxel.keymaps) == 0) {
+        keymap.action = 0;
+        keymap.input = GESTURE_RMB;
+        arrput(goxel.keymaps, keymap);
+        keymap.action = 0;
+        keymap.input = GESTURE_MMB | GESTURE_SHIFT;
+        arrput(goxel.keymaps, keymap);
+        keymap.action = 2;
+        keymap.input = GESTURE_MMB | GESTURE_CTRL;
+        arrput(goxel.keymaps, keymap);
+        keymap.action = 1;
+        keymap.input = GESTURE_MMB;
+        arrput(goxel.keymaps, keymap);
+    }
+
+    goxel_remove_gesture(on_pan);
+    goxel_remove_gesture(on_rotate);
+    goxel_remove_gesture(on_zoom);
+
+    for (i = 0; i < arrlen(goxel.keymaps); i++) {
+        action = goxel.keymaps[i].action;
+        input = goxel.keymaps[i].input;
+        goxel_add_gesture(GESTURE_DRAG, input, FNS[action]);
+    }
 }
 
 void goxel_reset(void)
@@ -462,7 +510,9 @@ void goxel_reset(void)
     image_delete(goxel.image);
     goxel.image = image_new();
     goxel.lang = "en";
+
     settings_load();
+    goxel_update_keymaps();
 
     // Put plane horizontal at the origin.
     plane_from_vectors(goxel.plane,
@@ -817,8 +867,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     int i;
 
     painter_t painter = goxel.painter;
-    gesture_update(goxel.gestures_count, goxel.gestures,
-                   inputs, viewport, NULL);
+    gesture_update(arrlen(goxel.gestures), goxel.gestures, inputs, viewport,
+                   NULL);
 
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         gest3d = &goxel.gesture3ds[i];

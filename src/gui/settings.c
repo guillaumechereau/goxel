@@ -19,6 +19,8 @@
 #include "goxel.h"
 #include <errno.h> // IWYU pragma: keep.
 
+#include "../ext_src/stb/stb_ds.h"
+
 #include "utils/ini.h"
 
 static int shortcut_callback(action_t *action, void *user)
@@ -37,6 +39,81 @@ static int shortcut_callback(action_t *action, void *user)
     return 0;
 }
 
+static void on_keymap(int idx, keymap_t *keymap)
+{
+    int i;
+    char id[32];
+    bool selected;
+    const char *preview = "";
+
+    const struct {
+        const char *label;
+        int input;
+    } input_choices[] = {
+        { "Right Mouse", GESTURE_RMB },
+        { "Middle Mouse", GESTURE_MMB },
+        { "Ctrl Right Mouse", GESTURE_CTRL | GESTURE_RMB },
+        { "Ctrl Middle Mouse", GESTURE_CTRL | GESTURE_MMB },
+        { "Shift Right Mouse", GESTURE_SHIFT | GESTURE_RMB },
+        { "Shift Middle Mouse", GESTURE_SHIFT | GESTURE_MMB },
+    };
+
+    const char *action_choices[] = { "Pan", "Rotate", "Zoom" };
+
+    if (keymap->action < 0 || keymap->action > 2) {
+        return;
+    }
+
+    snprintf(id, sizeof(id), "keymap_%d", idx);
+    gui_push_id(id);
+
+    if (gui_combo_begin("##action", action_choices[keymap->action])) {
+        for (i = 0; i < ARRAY_SIZE(action_choices); i++) {
+            selected = i == keymap->action;
+            if (gui_combo_item(action_choices[i], selected)) {
+                keymap->action = input_choices[i].input;
+                settings_save();
+            }
+        }
+        gui_combo_end();
+    }
+    gui_next_column();
+
+    for (i = 0; i < ARRAY_SIZE(input_choices); i++) {
+        if (input_choices[i].input == keymap->input) {
+            preview = input_choices[i].label;
+            break;
+        }
+    }
+
+    if (gui_combo_begin("##input", preview)) {
+        for (i = 0; i < ARRAY_SIZE(input_choices); i++) {
+            selected = input_choices[i].input == keymap->input;
+            if (gui_combo_item(input_choices[i].label, selected)) {
+                keymap->input = input_choices[i].input;
+                settings_save();
+            }
+        }
+        gui_combo_end();
+    }
+
+    gui_next_column();
+
+    if (gui_button("Delete", 0, 0)) {
+        arrdel(goxel.keymaps, idx);
+    }
+
+    gui_next_column();
+
+    gui_pop_id();
+}
+
+static void on_add_keymap_button(void)
+{
+    keymap_t keymap = { 0, GESTURE_RMB };
+    arrput(goxel.keymaps, keymap);
+    settings_save();
+}
 
 int gui_settings_popup(void *data)
 {
@@ -92,10 +169,48 @@ int gui_settings_popup(void *data)
         gui_columns(1);
     } gui_section_end();
 
+    if (gui_section_begin("Keymaps", GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        gui_columns(3);
+        gui_separator();
+        for (i = 0; i < arrlen(goxel.keymaps); i++) {
+            on_keymap(i, &goxel.keymaps[i]);
+        }
+        gui_separator();
+        gui_columns(1);
+        if (gui_button(_(ADD), 0, 0)) {
+            on_add_keymap_button();
+        }
+    }
+    gui_section_end();
+
     gui_popup_bottom_begin();
     ret = gui_button(_(OK), 0, 0);
     gui_popup_bottom_end();
     return ret;
+}
+
+static void add_keymap(const char *name, const char *value)
+{
+    keymap_t keymap = {
+        .action = -1,
+        .input = 0,
+    };
+
+    if (strcmp(name, "pan") == 0) keymap.action = 0;
+    if (strcmp(name, "rotate") == 0) keymap.action = 1;
+    if (strcmp(name, "zoom") == 0) keymap.action = 2;
+
+    if (strcasestr(value, "right mouse")) keymap.input |= GESTURE_RMB;
+    if (strcasestr(value, "middle mouse")) keymap.input |= GESTURE_MMB;
+    if (strcasestr(value, "shift")) keymap.input |= GESTURE_SHIFT;
+    if (strcasestr(value, "ctrl")) keymap.input |= GESTURE_CTRL;
+
+    if (keymap.action == -1 || keymap.input == 0) {
+        LOG_W("Cannot parse keymap %s = %s", name, value);
+        return;
+    }
+
+    arrput(goxel.keymaps, keymap);
 }
 
 static int settings_ini_handler(void *user, const char *section,
@@ -120,6 +235,9 @@ static int settings_ini_handler(void *user, const char *section,
             LOG_W("Cannot set shortcut for unknown action '%s'", name);
         }
     }
+    if (strcmp(section, "keymaps") == 0) {
+        add_keymap(name, value);
+    }
     return 0;
 }
 
@@ -128,6 +246,7 @@ void settings_load(void)
     char path[1024];
     snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
     LOG_I("Read settings file: %s", path);
+    arrfree(goxel.keymaps);
     ini_parse(path, settings_ini_handler, NULL);
     actions_check_shortcuts();
 }
@@ -138,6 +257,41 @@ static int shortcut_save_callback(action_t *a, void *user)
     if (strcmp(a->shortcut, a->default_shortcut ?: "") != 0)
         fprintf(file, "%s=%s\n", a->id, a->shortcut);
     return 0;
+}
+
+static void save_keymaps(FILE *file)
+{
+    int i, action, input;
+
+    fprintf(file, "[keymaps]\n");
+    for (i = 0; i < arrlen(goxel.keymaps); i++) {
+        action = goxel.keymaps[i].action;
+        input = goxel.keymaps[i].input;
+        switch (action) {
+        case 0:
+            fprintf(file, "pan=");
+            break;
+        case 1:
+            fprintf(file, "rotate=");
+            break;
+        case 2:
+            fprintf(file, "zoom=");
+            break;
+        }
+        if (input & GESTURE_CTRL) {
+            fprintf(file, "Ctrl ");
+        }
+        if (input & GESTURE_SHIFT) {
+            fprintf(file, "Shift ");
+        }
+        if (input & GESTURE_MMB) {
+            fprintf(file, "Middle Mouse");
+        }
+        if (input & GESTURE_RMB) {
+            fprintf(file, "Right Mouse");
+        }
+        fprintf(file, "\n");
+    }
 }
 
 void settings_save(void)
@@ -156,9 +310,14 @@ void settings_save(void)
     fprintf(file, "[ui]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
     fprintf(file, "language=%s\n", goxel.lang);
+    fprintf(file, "\n");
 
     fprintf(file, "[shortcuts]\n");
     actions_iter(shortcut_save_callback, file);
+
+    fprintf(file, "\n");
+    save_keymaps(file);
+    fprintf(file, "\n");
 
     fclose(file);
 }
