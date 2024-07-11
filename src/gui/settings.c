@@ -200,10 +200,10 @@ static void add_keymap(const char *name, const char *value)
     if (strcmp(name, "rotate") == 0) keymap.action = 1;
     if (strcmp(name, "zoom") == 0) keymap.action = 2;
 
-    if (strcasestr(value, "right mouse")) keymap.input |= GESTURE_RMB;
-    if (strcasestr(value, "middle mouse")) keymap.input |= GESTURE_MMB;
-    if (strcasestr(value, "shift")) keymap.input |= GESTURE_SHIFT;
-    if (strcasestr(value, "ctrl")) keymap.input |= GESTURE_CTRL;
+    if (strstr(value, "right mouse")) keymap.input |= GESTURE_RMB;
+    if (strstr(value, "middle mouse")) keymap.input |= GESTURE_MMB;
+    if (strstr(value, "shift")) keymap.input |= GESTURE_SHIFT;
+    if (strstr(value, "ctrl")) keymap.input |= GESTURE_CTRL;
 
     if (keymap.action == -1 || keymap.input == 0) {
         LOG_W("Cannot parse keymap %s = %s", name, value);
@@ -279,16 +279,16 @@ static void save_keymaps(FILE *file)
             break;
         }
         if (input & GESTURE_CTRL) {
-            fprintf(file, "Ctrl ");
+            fprintf(file, "ctrl ");
         }
         if (input & GESTURE_SHIFT) {
-            fprintf(file, "Shift ");
+            fprintf(file, "shift ");
         }
         if (input & GESTURE_MMB) {
-            fprintf(file, "Middle Mouse");
+            fprintf(file, "middle mouse");
         }
         if (input & GESTURE_RMB) {
-            fprintf(file, "Right Mouse");
+            fprintf(file, "right mouse");
         }
         fprintf(file, "\n");
     }
