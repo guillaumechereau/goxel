@@ -130,12 +130,10 @@ static int update_state(gesture3d_t *gest, int others_mask)
 {
     bool pressed = gest->flags & GESTURE3D_FLAG_PRESSED;
     int r, ret = 0;
-    const int btns_mask = GESTURE3D_FLAG_CTRL | GESTURE3D_FLAG_SHIFT;
     bool btns_match = true;
 
-    if (gest->buttons) {
-        btns_match = (gest->buttons & btns_mask) == (gest->flags & btns_mask);
-    }
+    btns_match = (gest->buttons & gest->buttons_mask) ==
+                 (gest->flags & gest->buttons_mask);
 
     if (gest->state == GESTURE3D_STATE_FAILED && !pressed)
         gest->state = GESTURE3D_STATE_POSSIBLE;

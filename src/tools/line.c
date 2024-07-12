@@ -147,6 +147,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_DRAG,
+        .buttons_mask = GESTURE3D_FLAG_CTRL,
         .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
         .snap_offset = snap_offset,
         .callback = on_drag,
@@ -154,6 +155,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_HOVER,
+        .buttons_mask = GESTURE3D_FLAG_CTRL,
         .snap_mask = goxel.snap_mask | SNAP_ROUNDED,
         .snap_offset = snap_offset,
         .callback = on_hover,

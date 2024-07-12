@@ -85,8 +85,8 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
             .snap_mask = SNAP_VOLUME,
             .snap_offset = -0.5,
             .callback = pick_color_gesture,
-            .buttons = tool->id == TOOL_PICK_COLOR ?
-                        0 : GESTURE3D_FLAG_CTRL,
+            .buttons = tool->id == TOOL_PICK_COLOR ? 0 : GESTURE3D_FLAG_CTRL,
+            .buttons_mask = GESTURE3D_FLAG_CTRL,
         });
     }
 

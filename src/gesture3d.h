@@ -54,6 +54,7 @@ struct gesture3d
 {
     int         type;
     int         buttons; // GESTURE3D_FLAG_SHIFT | GESTURE3D_FLAG_CTRL
+    int         buttons_mask; // GESTURE3D_FLAG_SHIFT | GESTURE3D_FLAG_CTRL
     int         snap_mask;
     float       snap_offset;
     float       snap_shape[4][4]; // Used for plane snapping.

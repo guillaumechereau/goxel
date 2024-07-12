@@ -220,6 +220,7 @@ static void gizmo(const float box[4][4], int face)
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
+        .buttons_mask = GESTURE3D_FLAG_CTRL,
         .snap_mask = SNAP_SHAPE_SEGMENT,
         .snap_shape = MAT4_COPY(shape),
         .callback = on_gizmo_hover,
@@ -228,6 +229,7 @@ static void gizmo(const float box[4][4], int face)
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .buttons_mask = GESTURE3D_FLAG_CTRL,
         .snap_mask = SNAP_SHAPE_SEGMENT,
         .snap_shape = MAT4_COPY(shape),
         .callback = on_gizmo_drag,
@@ -256,6 +258,7 @@ int box_edit(const float box[4][4], int flags, float transf[4][4])
 
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_HOVER,
+        .buttons_mask = GESTURE3D_FLAG_CTRL,
         .snap_mask = SNAP_SHAPE_BOX,
         .snap_shape = MAT4_COPY(box),
         .callback = on_hover,
@@ -263,12 +266,12 @@ int box_edit(const float box[4][4], int flags, float transf[4][4])
     });
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE_DRAG,
+        .buttons_mask = GESTURE3D_FLAG_CTRL,
         .snap_mask = SNAP_SHAPE_BOX,
         .snap_shape = MAT4_COPY(box),
         .callback = on_drag,
         .user = &g_data,
     });
-
 
     render_box(&goxel.rend, box, NULL, EFFECT_STRIP | EFFECT_WIREFRAME);
     if (transf) mat4_copy(g_data.transf, transf);
