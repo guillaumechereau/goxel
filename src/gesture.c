@@ -35,6 +35,11 @@ static bool test_button(const inputs_t *inputs, const touch_t *touch, int mask)
     bool lmb = touch->down[0];
     bool mmb = touch->down[1];
     bool rmb = touch->down[2];
+    bool ctrl;
+    bool shift;
+
+    ctrl = inputs->keys[KEY_LEFT_CONTROL] || inputs->keys[KEY_RIGHT_CONTROL];
+    shift = inputs->keys[KEY_LEFT_SHIFT] || inputs->keys[KEY_RIGHT_SHIFT];
 
     if (g_emulate_three_buttons_mouse &&
         inputs->keys[g_emulate_three_buttons_mouse]) {
@@ -42,8 +47,8 @@ static bool test_button(const inputs_t *inputs, const touch_t *touch, int mask)
         lmb = false;
     }
 
-    if (mask & GESTURE_SHIFT && !inputs->keys[KEY_LEFT_SHIFT]) return false;
-    if (mask & GESTURE_CTRL && !inputs->keys[KEY_CONTROL]) return false;
+    if (mask & GESTURE_SHIFT && !shift) return false;
+    if (mask & GESTURE_CTRL && !ctrl) return false;
     if ((mask & GESTURE_LMB) && !lmb) return false;
     if ((mask & GESTURE_MMB) && !mmb) return false;
     if ((mask & GESTURE_RMB) && !rmb) return false;

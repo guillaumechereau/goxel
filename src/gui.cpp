@@ -629,7 +629,8 @@ static void gui_iter(inputs_t *inputs)
             io.KeysDown[i] = inputs->keys[i];
         io.KeyShift = inputs->keys[KEY_LEFT_SHIFT] ||
                       inputs->keys[KEY_RIGHT_SHIFT];
-        io.KeyCtrl = inputs->keys[KEY_CONTROL];
+        io.KeyCtrl = inputs->keys[KEY_LEFT_CONTROL] ||
+                     inputs->keys[KEY_RIGHT_CONTROL];
         for (i = 0; i < ARRAY_SIZE(inputs->chars); i++) {
             if (!inputs->chars[i]) break;
             io.AddInputCharacter(inputs->chars[i]);

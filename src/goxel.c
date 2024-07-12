@@ -866,17 +866,20 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     camera_t *camera = get_camera();
     gesture3d_t *gest3d;
     int i;
+    bool ctrl;
+    bool shift;
 
     painter_t painter = goxel.painter;
     gesture_update(arrlen(goxel.gestures), goxel.gestures, inputs, viewport,
                    NULL);
 
+    ctrl = inputs->keys[KEY_LEFT_CONTROL] || inputs->keys[KEY_RIGHT_CONTROL];
+    shift = inputs->keys[KEY_LEFT_SHIFT] || inputs->keys[KEY_RIGHT_SHIFT];
+
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         gest3d = &goxel.gesture3ds[i];
-        set_flag(&gest3d->flags, GESTURE3D_FLAG_SHIFT,
-                 inputs->keys[KEY_LEFT_SHIFT]);
-        set_flag(&gest3d->flags, GESTURE3D_FLAG_CTRL,
-                 inputs->keys[KEY_CONTROL]);
+        set_flag(&gest3d->flags, GESTURE3D_FLAG_SHIFT, shift);
+        set_flag(&gest3d->flags, GESTURE3D_FLAG_CTRL, ctrl);
     }
 
     if (!box_is_null(goxel.image->active_layer->box)) {
