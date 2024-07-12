@@ -277,6 +277,9 @@ static void save_keymaps(FILE *file)
         case 2:
             fprintf(file, "zoom=");
             break;
+        default:
+            assert(false);
+            continue;
         }
         if (input & GESTURE_CTRL) {
             fprintf(file, "ctrl ");
