@@ -826,6 +826,7 @@ static int on_zoom(const gesture_t *gest, void *user)
     double zoom;
     camera_t *camera = get_camera();
 
+    if (gui_want_capture_mouse()) return 0;
     zoom = (gest->pos[1] - gest->last_pos[1]) / 10.0;
     mat4_itranslate(camera->mat, 0, 0,
             -camera->dist * (1 - pow(1.1, -zoom)));
@@ -901,7 +902,7 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
         tool_iter(goxel.tool, &painter, viewport);
     }
 
-    if (inputs->mouse_wheel) {
+    if (inputs->mouse_wheel && !gui_want_capture_mouse()) {
         mat4_itranslate(camera->mat, 0, 0,
                 -camera->dist * (1 - pow(1.1, -inputs->mouse_wheel)));
         camera->dist *= pow(1.1, -inputs->mouse_wheel);

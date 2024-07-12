@@ -165,6 +165,7 @@ typedef struct gui_t {
     int     scrolling;
 
     int     can_move_window;
+    bool    want_capture_mouse;
 
     int     is_row;
     float   item_size;
@@ -604,6 +605,7 @@ static void gui_iter(inputs_t *inputs)
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
+    gui->want_capture_mouse = io.WantCaptureMouse;
     io.DisplaySize = ImVec2((float)goxel.screen_size[0],
                             (float)goxel.screen_size[1]);
 
@@ -1928,9 +1930,7 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
 
 bool gui_want_capture_mouse(void)
 {
-    gui_init();
-    ImGuiIO& io = ImGui::GetIO();
-    return io.WantCaptureMouse;
+    return gui && gui->want_capture_mouse;
 }
 
 bool gui_context_menu_begin(const char *label)
