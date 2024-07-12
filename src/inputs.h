@@ -40,6 +40,7 @@ enum {
     KEY_LEFT_SHIFT  = 340,
     KEY_RIGHT_SHIFT = 344,
     KEY_CONTROL     = 341,
+    KEY_LEFT_ALT    = 342,
 };
 
 

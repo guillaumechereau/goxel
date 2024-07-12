@@ -124,6 +124,7 @@ int gui_settings_popup(void *data)
     int ret = 0;
     const tr_lang_t *language;
     const tr_lang_t *languages;
+    bool val;
 
     if (gui_section_begin(_(LANGUAGE), GUI_SECTION_COLLAPSABLE)) {
         language = tr_get_language();
@@ -155,6 +156,16 @@ int gui_settings_popup(void *data)
         }
     } gui_section_end();
 
+    if (gui_section_begin("Inputs", GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        val = goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT;
+        if (gui_checkbox("Emulate 3 buttons with Alt", &val,
+                         "Emulate Middle Mouse with Alt+Left Mouse.")) {
+            goxel.emulate_three_buttons_mouse = val ? KEY_LEFT_ALT : 0;
+            gesture_set_emulate_three_buttons_mouse(
+                    goxel.emulate_three_buttons_mouse);
+            settings_save();
+        }
+    } gui_section_end();
 
     if (gui_section_begin(_(PATHS), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_text("Palettes: %s/palettes", sys_get_user_dir());
@@ -238,6 +249,13 @@ static int settings_ini_handler(void *user, const char *section,
     if (strcmp(section, "keymaps") == 0) {
         add_keymap(name, value);
     }
+    if (strcmp(section, "inputs") == 0) {
+        if (strcmp(name, "emulate_three_buttons_mouse") == 0) {
+            if (strcmp(value, "alt") == 0) {
+                goxel.emulate_three_buttons_mouse = KEY_LEFT_ALT;
+            }
+        }
+    }
     return 0;
 }
 
@@ -247,8 +265,10 @@ void settings_load(void)
     snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
     LOG_I("Read settings file: %s", path);
     arrfree(goxel.keymaps);
+    goxel.emulate_three_buttons_mouse = 0;
     ini_parse(path, settings_ini_handler, NULL);
     actions_check_shortcuts();
+    gesture_set_emulate_three_buttons_mouse(goxel.emulate_three_buttons_mouse);
 }
 
 static int shortcut_save_callback(action_t *a, void *user)
@@ -317,6 +337,12 @@ void settings_save(void)
 
     fprintf(file, "[shortcuts]\n");
     actions_iter(shortcut_save_callback, file);
+
+    if (goxel.emulate_three_buttons_mouse) {
+        assert(goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT);
+        fprintf(file, "[inputs]\n");
+        fprintf(file, "emulate_three_buttons_mouse=alt");
+    }
 
     fprintf(file, "\n");
     save_keymaps(file);

@@ -23,13 +23,30 @@
 // XXX: this value should be set depending on the screen resolution.
 static float g_start_dist = 8;
 
+static int g_emulate_three_buttons_mouse = 0;
+
+void gesture_set_emulate_three_buttons_mouse(int key)
+{
+    g_emulate_three_buttons_mouse = key;
+}
+
 static bool test_button(const inputs_t *inputs, const touch_t *touch, int mask)
 {
+    bool lmb = touch->down[0];
+    bool mmb = touch->down[1];
+    bool rmb = touch->down[2];
+
+    if (g_emulate_three_buttons_mouse &&
+        inputs->keys[g_emulate_three_buttons_mouse]) {
+        mmb = lmb;
+        lmb = false;
+    }
+
     if (mask & GESTURE_SHIFT && !inputs->keys[KEY_LEFT_SHIFT]) return false;
     if (mask & GESTURE_CTRL && !inputs->keys[KEY_CONTROL]) return false;
-    if ((mask & GESTURE_LMB) && !touch->down[0]) return false;
-    if ((mask & GESTURE_MMB) && !touch->down[1]) return false;
-    if ((mask & GESTURE_RMB) && !touch->down[2]) return false;
+    if ((mask & GESTURE_LMB) && !lmb) return false;
+    if ((mask & GESTURE_MMB) && !mmb) return false;
+    if ((mask & GESTURE_RMB) && !rmb) return false;
     return true;
 }
 

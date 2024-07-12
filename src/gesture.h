@@ -110,3 +110,9 @@ struct gesture
 int gesture_update(int nb, gesture_t *gestures[],
                    const inputs_t *inputs, const float viewport[4],
                    void *user);
+
+/*
+ * Set the key used to emulate middle mouse buttons with left click
+ * Set to zero to disable.
+ */
+void gesture_set_emulate_three_buttons_mouse(int key);

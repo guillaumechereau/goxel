@@ -552,6 +552,9 @@ typedef struct goxel
     // Arr array of keymap settings (different from shortcuts).
     keymap_t *keymaps;
 
+    // Can be set to a key code (only KEY_LEFT_ALT is supported for now).
+    int emulate_three_buttons_mouse;
+
 } goxel_t;
 
 // the global goxel instance.
