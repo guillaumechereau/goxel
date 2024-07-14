@@ -16,11 +16,9 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include "goxel.h"
+
 #include "file_format.h"
-#include "utils/color.h"
-#include "utils/json.h"
 #include "utils/vec.h"
 
 #pragma GCC diagnostic push
@@ -118,7 +116,13 @@ static char *data_new(const void *data, uint32_t len, const char *mime)
     size; \
 })
 
-#define ALLOC(array, size) ({ array = calloc(size, sizeof(*(array))); })
+#define ALLOC(array, size_)                                                   \
+    ({                                                                        \
+        int size = size_;                                                     \
+        if (size > 0) {                                                       \
+            (array) = calloc(size, sizeof(*(array)));                         \
+        }                                                                     \
+    })
 
 static void gltf_init(gltf_t *g, const export_options_t *options,
                       const image_t *img)
@@ -153,7 +157,7 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
     ALLOC(g->data->textures, 1);
 }
 
-#define add_item(data, list) ({ &data->list[data->list##_count++]; })
+#define add_item(data, list) ({ &(data)->list[(data)->list##_count++]; })
 
 // Create a buffer view and attribute.
 static void make_attribute(gltf_t *g, cgltf_buffer_view *buffer_view,
