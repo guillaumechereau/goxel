@@ -58,7 +58,7 @@ bool gui_want_capture_mouse(void);
 void gui_release(void);
 void gui_release_graphics(void);
 
-void gui_render(inputs_t *inputs);
+void gui_render(const inputs_t *inputs);
 
 void gui_request_panel_width(float width);
 

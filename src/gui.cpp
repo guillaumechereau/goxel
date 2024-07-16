@@ -598,7 +598,7 @@ bool gui_view_cube(float x, float y, float w, float h)
     return ret;
 }
 
-static void gui_iter(inputs_t *inputs)
+static void gui_iter(const inputs_t *inputs)
 {
     gui_init();
     unsigned int i;
@@ -684,7 +684,7 @@ static void gui_iter(inputs_t *inputs)
     sys_show_keyboard(io.WantTextInput);
 }
 
-void gui_render(inputs_t *inputs)
+void gui_render(const inputs_t *inputs)
 {
     gui_init();
     gui_iter(inputs);
