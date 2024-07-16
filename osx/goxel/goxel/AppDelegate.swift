@@ -280,12 +280,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
 
-            panel.runModal()
-            let ret = panel.url?.path.cString(using: .utf8)
-            if ret == nil {
+            let ret = panel.runModal()
+            if (ret != .OK) {
+                buf?[0] = 0
                 return false
             }
-            strncpy(buf, ret!, bufSize)
+            let val = panel.url?.path.cString(using: .utf8)
+            strncpy(buf, val!, bufSize)
             buf?[bufSize - 1] = 0
             return true
         }
