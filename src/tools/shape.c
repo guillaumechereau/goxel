@@ -48,7 +48,7 @@ static int on_hover(gesture3d_t *gest)
     float box[4][4];
     uint8_t box_color[4] = {255, 255, 0, 255};
 
-    goxel_set_help_text("Click and drag to draw.");
+    goxel_add_hint(0, NULL, "Click and drag to draw");
     get_box(gest->pos, gest->pos, gest->normal, box);
     render_box(&goxel.rend, box, box_color, EFFECT_WIREFRAME);
     return 0;
@@ -71,7 +71,7 @@ static int on_drag(gesture3d_t *gest)
         }
     }
 
-    goxel_set_help_text("Drag.");
+    goxel_add_hint(0, NULL, "Drag");
     get_box(shape->start_pos, gest->pos, gest->normal, box);
     if (!goxel.tool_volume) goxel.tool_volume = volume_new();
     volume_set(goxel.tool_volume, shape->volume_orig);

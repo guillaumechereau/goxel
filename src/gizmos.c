@@ -96,7 +96,7 @@ static int on_hover(gesture3d_t *gest)
     data_t *data = gest->user;;
 
     if (g_data.flags & FLAG_SNAP_GIZMO) return -1;
-    goxel_set_help_text("Drag to move face");
+    goxel_add_hint(0, NULL, "Drag to move face");
     data->flags |= FLAG_SNAP_FACE;
     data->snap_face = get_face(gest->normal);
     highlight_face(data->box, data->snap_face);
@@ -108,7 +108,7 @@ static int on_drag(gesture3d_t *gest)
     data_t *data = gest->user;
     float face_plane[4][4], v[3], pos[3], n[3], d[3], ofs[3], box[4][4];
 
-    goxel_set_help_text("Drag to move face");
+    goxel_add_hint(0, NULL, "Drag to move face");
     data->gesture_state = gest->state;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {
@@ -146,7 +146,7 @@ static int on_drag(gesture3d_t *gest)
 
 static int on_gizmo_hover(gesture3d_t *gest)
 {
-    goxel_set_help_text("Drag to move");
+    goxel_add_hint(0, NULL, "Drag to move");
     g_data.snap_face = gest->user_key;
     g_data.flags |= FLAG_SNAP_GIZMO;
     return 0;
@@ -158,7 +158,7 @@ static int on_gizmo_drag(gesture3d_t *gest)
     int face = gest->user_key;
     float box[4][4];
 
-    goxel_set_help_text("Drag to move");
+    goxel_add_hint(0, NULL, "Drag to move");
     g_data.gesture_state = gest->state;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {

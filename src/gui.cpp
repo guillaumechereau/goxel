@@ -1125,7 +1125,7 @@ bool gui_action_button(int id, const char *label, float size)
     ImGui::PushID(action->id);
     ret = gui_button(label, size, action->icon);
     if (ImGui::IsItemHovered() && action->help)
-        goxel_set_help_text(tr(action->help));
+        goxel_add_hint(0, NULL, tr(action->help));
     if (ret) {
         action_exec(action_get(id, true));
     }
@@ -1190,7 +1190,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     if (ret) *v = !*v;
     if (tooltip && ImGui::IsItemHovered()) {
         gui_tooltip(tooltip);
-        goxel_set_help_text(tooltip);
+        goxel_add_hint(0, NULL, tooltip);
     }
     ImGui::PopID();
     if (gui->is_row) ImGui::SameLine();

@@ -456,6 +456,13 @@ typedef struct keymap {
     int input;  // union of GESTURE enum.
 } keymap_t;
 
+// Represent one hint text to show in the UI.
+typedef struct hint {
+    int flags;
+    char title[128];
+    char msg[128];
+} hint_t;
+
 typedef struct goxel
 {
     int        screen_size[2];
@@ -514,8 +521,6 @@ typedef struct goxel
 
     palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
-    char       *help_text;  // Seen in the bottom of the screen.
-    char       *hint_text;  // Seen in the bottom of the screen.
 
     double     delta_time;  // Elapsed time since last frame (sec)
     int        frame_count; // Global frames counter.
@@ -550,11 +555,14 @@ typedef struct goxel
 
     const char *lang; // Current set language.
 
-    // Arr array of keymap settings (different from shortcuts).
+    // Stb array of keymap settings (different from shortcuts).
     keymap_t *keymaps;
 
     // Can be set to a key code (only KEY_LEFT_ALT is supported for now).
     int emulate_three_buttons_mouse;
+
+    // Stb arrary of hints to show on top of the screen.
+    hint_t *hints;
 
 } goxel_t;
 
@@ -619,8 +627,11 @@ const volume_t *goxel_get_render_volume(const image_t *img);
  */
 const layer_t *goxel_get_render_layers(bool with_tool_preview);
 
-void goxel_set_help_text(const char *msg, ...);
-void goxel_set_hint_text(const char *msg, ...);
+enum {
+    HINT_COORDINATES = 1 << 1,
+};
+
+void goxel_add_hint(int flags, const char *title, const char *msg);
 
 void goxel_import_image_plane(const char *path);
 

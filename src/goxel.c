@@ -688,6 +688,7 @@ int goxel_iter(const inputs_t *inputs)
             inputs2.touches[i].pos[1] = NAN;
         }
     }
+    arrfree(goxel.hints);
     goxel_mouse_in_view(goxel.gui.viewport, &inputs2, true);
     play_build_sound_if_needed();
     gesture3ds_iter();
@@ -707,12 +708,13 @@ int goxel_iter(const inputs_t *inputs)
 
 static void set_cursor_hint(const gesture3d_t *gest)
 {
+    char hint_msg[128];
     if (!gest->snaped) {
-        goxel_set_hint_text(NULL);
         return;
     }
-    goxel_set_hint_text("[%.0f %.0f %.0f]",
-            gest->pos[0] - 0.5, gest->pos[1] - 0.5, gest->pos[2] - 0.5);
+    snprintf(hint_msg, sizeof(hint_msg), "[%.0f %.0f %.0f]",
+             gest->pos[0] - 0.5, gest->pos[1] - 0.5, gest->pos[2] - 0.5);
+    goxel_add_hint(HINT_COORDINATES, NULL, hint_msg);
 }
 
 static int on_drag(const gesture_t *gest, void *user)
@@ -859,6 +861,34 @@ static int on_hover(const gesture_t *gest, void *user)
     return 0;
 }
 
+// Add hints for the current navigation keymaps.
+static void update_keymaps_hints(void)
+{
+    int i, action, input, mask = 0;
+    char title[128];
+    const char *msg = "";
+
+    for (i = 0; i < arrlen(goxel.keymaps); i++) {
+        action = goxel.keymaps[i].action;
+        input = goxel.keymaps[i].input;
+
+        if (action == 2) continue; // Don't show for zoom.
+        // Only show the first keymap per action.
+        if (mask & (1 << action)) continue;
+        mask |= 1 << action;
+
+        title[0] = '\0';
+        if (input & GESTURE_CTRL) strcat(title, "Ctrl+");
+        if (input & GESTURE_SHIFT) strcat(title, "Shift+");
+        if (input & GESTURE_MMB) strcat(title, "\ue661");
+        if (input & GESTURE_RMB) strcat(title, "\ue662");
+        if (action == 0) msg = "Pan View";
+        if (action == 1) msg = "Rotate View";
+        if (action == 2) msg = "Zoom";
+        goxel_add_hint(0, title, msg);
+    }
+}
+
 // XXX: Cleanup this.
 void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
                          bool capture_keys)
@@ -876,6 +906,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
     ctrl = inputs->keys[KEY_LEFT_CONTROL] || inputs->keys[KEY_RIGHT_CONTROL];
     shift = inputs->keys[KEY_LEFT_SHIFT] || inputs->keys[KEY_RIGHT_SHIFT];
+
+    update_keymaps_hints();
 
     for (i = 0; i < goxel.gesture3ds_count; i++) {
         gest3d = &goxel.gesture3ds[i];
@@ -1306,31 +1338,23 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     texture_delete(fbo);
 }
 
-// XXX: we could merge all the set_xxx_text function into a single one.
-void goxel_set_help_text(const char *msg, ...)
+void goxel_add_hint(int flags, const char *title, const char *msg)
 {
-    va_list args;
-    int err __attribute__((unused));
-    free(goxel.help_text);
-    goxel.help_text = NULL;
-    if (!msg) return;
-    va_start(args, msg);
-    err = vasprintf(&goxel.help_text, msg, args);
-    assert(err != -1);
-    va_end(args);
-}
+    hint_t hint;
+    int i;
 
-void goxel_set_hint_text(const char *msg, ...)
-{
-    va_list args;
-    int err __attribute__((unused));
-    free(goxel.hint_text);
-    goxel.hint_text = NULL;
-    if (!msg) return;
-    va_start(args, msg);
-    err = vasprintf(&goxel.hint_text, msg, args);
-    assert(err != -1);
-    va_end(args);
+    // Can only be on coordinates hint.
+    if (flags & HINT_COORDINATES) {
+        for (i = 0; i < arrlen(goxel.hints); i++) {
+            if (goxel.hints[i].flags & HINT_COORDINATES) {
+                return;
+            }
+        }
+    }
+    hint.flags = flags;
+    snprintf(hint.msg, sizeof(hint.msg), "%s", msg);
+    snprintf(hint.title, sizeof(hint.title), "%s", title ?: "");
+    arrput(goxel.hints, hint);
 }
 
 void goxel_import_image_plane(const char *path)

@@ -18,6 +18,8 @@
 
 #include "goxel.h"
 
+#include "../ext_src/stb/stb_ds.h"
+
 #ifndef GUI_HAS_ROTATION_BAR
 #   define GUI_HAS_ROTATION_BAR 0
 #endif
@@ -119,6 +121,29 @@ static void render_left_panel(void)
     }
 }
 
+// Not too sure about this.
+static int hints_cmp(const void *a_, const void *b_)
+{
+    const hint_t *a = a_;
+    const hint_t *b = b_;
+    if (a->flags != b->flags) {
+        return cmp(a->flags, b->flags);
+    }
+    return -strcmp(a->title, b->title);
+}
+
+static void render_hints(const hint_t *hints)
+{
+    int i;
+    for (i = 0; i < arrlen(hints); i++) {
+        if (hints[i].title[0]) {
+            gui_text(hints[i].title);
+        }
+        gui_text(hints[i].msg);
+        gui_text("        ");
+    }
+}
+
 void gui_app(void)
 {
     float x = 0, y = 0;
@@ -136,11 +161,8 @@ void gui_app(void)
 
             // Add the Help test in the top menu.
             gui_menu_begin("      ", false);
-            gui_menu_begin(goxel.hint_text ?: "", false);
-            gui_menu_begin("      ", false);
-            gui_menu_begin(goxel.help_text ?: "", false);
-            goxel_set_help_text(NULL);
-            goxel_set_hint_text(NULL);
+            qsort(goxel.hints, arrlen(goxel.hints), sizeof(hint_t), hints_cmp);
+            render_hints(goxel.hints);
             gui_menu_bar_end();
         }
         y = ITEM_HEIGHT + 2;

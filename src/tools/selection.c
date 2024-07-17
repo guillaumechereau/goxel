@@ -70,7 +70,7 @@ static int on_hover(gesture3d_t *gest)
     if (gest->snaped & (SNAP_SELECTION_OUT | SNAP_SELECTION_IN)) {
         return -1;
     }
-    goxel_set_help_text("Click and drag to set selection.");
+    goxel_add_hint(0, NULL, "Click and drag to set the selection");
     get_rect(gest->pos, gest->normal, rect);
     render_box(&goxel.rend, rect, rect_color, EFFECT_WIREFRAME);
     return 0;
@@ -90,7 +90,7 @@ static int on_drag(gesture3d_t *gest)
     int dir;
     image_t *img = goxel.image;
 
-    goxel_set_help_text("Drag.");
+    goxel_add_hint(0, NULL, "Drag");
 
     get_rect(gest->pos, gest->normal, rect);
     if (gest->state == GESTURE3D_STATE_BEGIN) {

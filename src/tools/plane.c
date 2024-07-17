@@ -38,7 +38,7 @@ static int on_click(gesture3d_t *gest)
 static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
-    goxel_set_help_text("Click on the volume to set plane.");
+    goxel_add_hint(0, NULL, "Click on the volume to set plane");
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_CLICK,
         .snap_mask = SNAP_VOLUME,

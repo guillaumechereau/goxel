@@ -52,17 +52,22 @@ const tool_t *tool_get(int id)
 
 static int pick_color_gesture(gesture3d_t *gest)
 {
+    char hint_msg[128];
     const volume_t *volume = goxel_get_layers_volume(goxel.image);
     int pi[3] = {floor(gest->pos[0]),
                  floor(gest->pos[1]),
                  floor(gest->pos[2])};
     uint8_t color[4];
 
-    goxel_set_help_text("Click on a voxel to pick the color");
-    if (!gest->snaped) return 0;
+    if (!gest->snaped) {
+        goxel_add_hint(0, NULL, "Click on a voxel to pick the color");
+        return 0;
+    }
     volume_get_at(volume, NULL, pi, color);
     color[3] = 255;
-    goxel_set_help_text("pick: %d %d %d", color[0], color[1], color[2]);
+    snprintf(hint_msg, sizeof(hint_msg), "pick: %d %d %d", color[0], color[1],
+             color[2]);
+    goxel_add_hint(0, NULL, hint_msg);
     if (gest->flags & GESTURE3D_FLAG_PRESSED) {
         vec4_copy(color, goxel.painter.color);
     }
@@ -74,7 +79,7 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
     assert(tool);
     if (    (tool->flags & TOOL_REQUIRE_CAN_EDIT) &&
             !image_layer_can_edit(goxel.image, goxel.image->active_layer)) {
-        goxel_set_help_text("Cannot edit this layer");
+        goxel_add_hint(0, NULL, "Cannot edit this layer");
         return 0;
     }
     tool->state = tool->iter_fn(tool, painter, viewport);
