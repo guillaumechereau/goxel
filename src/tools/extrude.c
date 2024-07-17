@@ -77,6 +77,9 @@ static int on_drag(gesture3d_t *gest)
     int pi[3];
     float delta;
 
+    goxel_add_hint(HINT_LARGE, GLYPH_MOUSE_LMB, "Drag a surface to extrude");
+    if (gest->state < GESTURE3D_STATE_BEGIN) return 0;
+
     if (gest->state == GESTURE3D_STATE_BEGIN) {
         tool->snap_face = get_face(gest->normal);
 
@@ -159,6 +162,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
         .snap_mask = goxel.snap_mask & ~SNAP_ROUNDED, // Why?
         .snap_offset = -0.5,
         .callback = on_drag,
+        .flags = GESTURE3D_FLAG_ALWAYS_CALL,
         .user = tool,
     });
     return 0;
@@ -166,7 +170,6 @@ static int iter(tool_t *tool_, const painter_t *painter,
 
 static int gui(tool_t *tool)
 {
-    goxel_add_hint(0, NULL, "Drag a surface to extrude");
     return 0;
 }
 

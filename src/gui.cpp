@@ -1989,3 +1989,13 @@ bool gui_is_item_deactivated(void)
 {
     return gui->item_deactivated;
 }
+
+float gui_get_current_pos_x(void)
+{
+    return ImGui::GetCursorPosX();
+}
+
+void gui_set_current_pos_x(float x)
+{
+    ImGui::SetCursorPosX(x);
+}

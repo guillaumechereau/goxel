@@ -54,12 +54,30 @@ static void apply(const float rect_[4], int mode)
     }
 }
 
+static const char *hint_for_mode(int mode)
+{
+    switch (mode) {
+    case MODE_REPLACE: return "Create Selection";
+    case MODE_OVER: return "Add to Selection";
+    case MODE_SUB: return "Remove from Selection";
+    default: return "";
+    }
+}
+
 static int on_drag(gesture3d_t *gest)
 {
     tool_rect_select_t *tool = gest->user;
     float pos[4];
     const camera_t *cam = goxel.image->active_camera;
     int mode = tool->mode;
+
+    if (gest->flags & GESTURE3D_FLAG_SHIFT)
+        mode = MODE_OVER;
+    else if (gest->flags & GESTURE3D_FLAG_CTRL)
+        mode = MODE_SUB;
+
+    goxel_add_hint(HINT_LARGE, GLYPH_MOUSE_LMB, hint_for_mode(mode));
+    if (gest->state < GESTURE3D_STATE_BEGIN) return 0;
 
     vec4_set(pos, gest->pos[0], gest->pos[1], gest->pos[2], 1.0);
     mat4_mul_vec4(cam->view_mat, pos, pos);
@@ -71,10 +89,6 @@ static int on_drag(gesture3d_t *gest)
     vec2_copy(pos, &tool->rect[2]);
 
     if (gest->state == GESTURE3D_STATE_END) {
-        if (gest->flags & GESTURE3D_FLAG_SHIFT)
-            mode = MODE_OVER;
-        else if (gest->flags & GESTURE3D_FLAG_CTRL)
-            mode = MODE_SUB;
         apply(tool->rect, mode);
         vec4_set(tool->rect, 0, 0, 0, 0);
     }
@@ -98,6 +112,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
         .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = SNAP_CAMERA,
         .callback = on_drag,
+        .flags = GESTURE3D_FLAG_ALWAYS_CALL,
         .user = tool,
     });
 

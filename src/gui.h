@@ -195,4 +195,10 @@ bool gui_context_menu_begin(const char *label);
 void gui_context_menu_end(void);
 void gui_context_menu_button(const char *label, int icon);
 
+/*
+ * to avoid, for manual layout.
+ */
+float gui_get_current_pos_x(void);
+void gui_set_current_pos_x(float x);
+
 #endif // GUI_H

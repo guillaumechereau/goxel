@@ -47,6 +47,7 @@ enum {
     GESTURE3D_FLAG_CTRL         = 1 << 2,
     GESTURE3D_FLAG_OUT          = 1 << 3, // Outside of sensing area.
     GESTURE3D_FLAG_DRAG_DELAY   = 1 << 4, // Don't drag until we move.
+    GESTURE3D_FLAG_ALWAYS_CALL  = 1 << 5, // Allways call the callback.
 };
 
 // #### 3d gestures

@@ -880,8 +880,8 @@ static void update_keymaps_hints(void)
         title[0] = '\0';
         if (input & GESTURE_CTRL) strcat(title, "Ctrl+");
         if (input & GESTURE_SHIFT) strcat(title, "Shift+");
-        if (input & GESTURE_MMB) strcat(title, "\ue661");
-        if (input & GESTURE_RMB) strcat(title, "\ue662");
+        if (input & GESTURE_MMB) strcat(title, GLYPH_MOUSE_MMB);
+        if (input & GESTURE_RMB) strcat(title, GLYPH_MOUSE_RMB);
         if (action == 0) msg = "Pan View";
         if (action == 1) msg = "Rotate View";
         if (action == 2) msg = "Zoom";

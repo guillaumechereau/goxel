@@ -70,7 +70,6 @@ static int on_hover(gesture3d_t *gest)
     if (gest->snaped & (SNAP_SELECTION_OUT | SNAP_SELECTION_IN)) {
         return -1;
     }
-    goxel_add_hint(0, NULL, "Click and drag to set the selection");
     get_rect(gest->pos, gest->normal, rect);
     render_box(&goxel.rend, rect, rect_color, EFFECT_WIREFRAME);
     return 0;
@@ -82,15 +81,32 @@ static int on_click(gesture3d_t *gest)
     return 0;
 }
 
+static const char *hint_for_mode(int mode)
+{
+    switch (mode) {
+    case MODE_REPLACE: return "Create Selection";
+    case MODE_OVER: return "Add to Selection";
+    case MODE_SUB: return "Remove from Selection";
+    default: return "";
+    }
+}
+
 static int on_drag(gesture3d_t *gest)
 {
     tool_selection_t *tool = gest->user;
     float rect[4][4];
     float p[3];
     int dir;
+    int mode = tool->mode;
     image_t *img = goxel.image;
 
-    goxel_add_hint(0, NULL, "Drag");
+    if (gest->flags & GESTURE3D_FLAG_SHIFT)
+        mode = MODE_OVER;
+    else if (gest->flags & GESTURE3D_FLAG_CTRL)
+        mode = MODE_SUB;
+
+    goxel_add_hint(HINT_LARGE, GLYPH_MOUSE_LMB, hint_for_mode(mode));
+    if (gest->state < GESTURE3D_STATE_BEGIN) return 0;
 
     get_rect(gest->pos, gest->normal, rect);
     if (gest->state == GESTURE3D_STATE_BEGIN) {
@@ -99,12 +115,7 @@ static int on_drag(gesture3d_t *gest)
         if (tool->start_mask == NULL) tool->start_mask = volume_new();
         if (img->selection_mask == NULL) img->selection_mask = volume_new();
         volume_set(tool->start_mask, img->selection_mask);
-
-        tool->current_mode = tool->mode;
-        if (gest->flags & GESTURE3D_FLAG_SHIFT)
-            tool->current_mode = MODE_OVER;
-        else if (gest->flags & GESTURE3D_FLAG_CTRL)
-            tool->current_mode = MODE_SUB;
+        tool->current_mode = mode;
     }
 
     box_union(tool->start_rect, rect, img->selection_box);
@@ -174,7 +185,7 @@ static int iter(tool_t *tool, const painter_t *painter,
         .type = GESTURE3D_TYPE_DRAG,
         .snap_mask = snap_mask & ~(SNAP_SELECTION_IN | SNAP_SELECTION_OUT),
         .callback = on_drag,
-        .flags = GESTURE3D_FLAG_DRAG_DELAY,
+        .flags = GESTURE3D_FLAG_DRAG_DELAY | GESTURE3D_FLAG_ALWAYS_CALL,
         .user = selection,
         .name = "Selection Drag",
     });

@@ -121,26 +121,40 @@ static void render_left_panel(void)
     }
 }
 
+// Compute the order to render the hints.
+static int hint_render_priority(const hint_t *hint)
+{
+    if (hint->flags & HINT_COORDINATES) return 100;
+    if (strstr(hint->title, GLYPH_MOUSE_LMB)) return 1;
+    if (strstr(hint->title, GLYPH_MOUSE_MMB)) return 2;
+    if (strstr(hint->title, GLYPH_MOUSE_RMB)) return 3;
+    return 10;
+}
+
 // Not too sure about this.
 static int hints_cmp(const void *a_, const void *b_)
 {
     const hint_t *a = a_;
     const hint_t *b = b_;
-    if (a->flags != b->flags) {
-        return cmp(a->flags, b->flags);
-    }
+    int ret;
+    ret = cmp(hint_render_priority(a), hint_render_priority(b));
+    if (ret) return ret;
     return -strcmp(a->title, b->title);
 }
 
 static void render_hints(const hint_t *hints)
 {
+    const float size = 150; // Size in pixel per hint.
     int i;
+    float pos = gui_get_current_pos_x() + 0.5 * size;
     for (i = 0; i < arrlen(hints); i++) {
+        gui_set_current_pos_x(pos);
         if (hints[i].title[0]) {
             gui_text(hints[i].title);
         }
         gui_text(hints[i].msg);
-        gui_text("        ");
+        pos += size;
+        if (hints[i].flags & HINT_LARGE) pos += 0.5 * size;
     }
 }
 
@@ -160,7 +174,6 @@ void gui_app(void)
             gui_menu();
 
             // Add the Help test in the top menu.
-            gui_menu_begin("      ", false);
             qsort(goxel.hints, arrlen(goxel.hints), sizeof(hint_t), hints_cmp);
             render_hints(goxel.hints);
             gui_menu_bar_end();

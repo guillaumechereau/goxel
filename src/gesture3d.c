@@ -153,7 +153,8 @@ static int update_state(gesture3d_t *gest, int others_mask)
     if (    gest->state == GESTURE3D_STATE_BEGIN ||
             gest->state == GESTURE3D_STATE_UPDATE ||
             gest->state == GESTURE3D_STATE_END ||
-            gest->state == GESTURE3D_STATE_TRIGGERED)
+            gest->state == GESTURE3D_STATE_TRIGGERED ||
+            ((gest->flags & GESTURE3D_FLAG_ALWAYS_CALL) && gest->state >= 0))
     {
         r = gest->callback(gest);
         if (r != 0) {

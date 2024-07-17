@@ -351,6 +351,11 @@ enum {
     DIALOG_FLAG_DIR     = 1 << 2,
 };
 
+// All the glyphs in the goxel texture.
+#define GLYPH_MOUSE_LMB "\ue660"
+#define GLYPH_MOUSE_MMB "\ue661"
+#define GLYPH_MOUSE_RMB "\ue662"
+
 // All the icons positions inside icon.png (as Y*8 + X + 1).
 
 #define X(NAME, x, y, theme) \
@@ -628,7 +633,8 @@ const volume_t *goxel_get_render_volume(const image_t *img);
 const layer_t *goxel_get_render_layers(bool with_tool_preview);
 
 enum {
-    HINT_COORDINATES = 1 << 1,
+    HINT_LARGE = 1 << 2,
+    HINT_COORDINATES = 1 << 3,
 };
 
 void goxel_add_hint(int flags, const char *title, const char *msg);
