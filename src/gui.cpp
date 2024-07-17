@@ -635,7 +635,6 @@ static void gui_iter(const inputs_t *inputs)
             if (!inputs->chars[i]) break;
             io.AddInputCharacter(inputs->chars[i]);
         }
-        memset((void*)inputs->chars, 0, sizeof(inputs->chars));
     }
 
 
