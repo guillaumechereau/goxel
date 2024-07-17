@@ -329,27 +329,40 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
     GL(glDisable(GL_SCISSOR_TEST));
 }
 
+static void add_font(const char *uri, const ImWchar *ranges, bool mergmode)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    float scale = goxel.screen_scale;
+    const void *data;
+    int data_size;
+    ImFontConfig conf;
+
+    conf.FontDataOwnedByAtlas = false;
+    conf.MergeMode = mergmode;
+    data = assets_get(uri, &data_size);
+    assert(data);
+    io.Fonts->AddFontFromMemoryTTF(
+            (void*)data, data_size, 14 * scale, &conf, ranges);
+}
+
 static void load_fonts_texture()
 {
     ImGuiIO& io = ImGui::GetIO();
 
-    float scale = goxel.screen_scale;
     unsigned char* pixels;
     int width, height;
-    const void *data;
-    int data_size;
-    ImFontConfig conf;
     const ImWchar ranges[] = {
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
         0x25A0, 0x25FF, // Geometric shapes
         0
     };
-    conf.FontDataOwnedByAtlas = false;
+    const ImWchar range_user[] = {
+        0xE660, 0xE6FF,
+        0
+    };
 
-    data = assets_get("asset://data/fonts/DejaVuSans.ttf", &data_size);
-    assert(data);
-    io.Fonts->AddFontFromMemoryTTF(
-            (void*)data, data_size, 14 * scale, &conf, ranges);
+    add_font("asset://data/fonts/DejaVuSans.ttf", ranges, false);
+    add_font("asset://data/fonts/goxel-font.ttf", range_user, true);
 
     #if 0
     conf.MergeMode = true;
