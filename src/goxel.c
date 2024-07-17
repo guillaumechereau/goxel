@@ -437,6 +437,7 @@ static void goxel_load_recent_files(void)
         if (strlen(path) < 1) continue;
         if (path[strlen(path) - 1] == '\n')
             path[strlen(path) - 1] = '\0';
+        if (!path_normalize(path)) continue;
         file = fopen(path, "r");
         if (!file) continue;
         fclose(file);

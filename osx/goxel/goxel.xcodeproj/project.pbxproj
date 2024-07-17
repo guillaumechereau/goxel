@@ -71,6 +71,7 @@
 		F07DEA121BD0F31500BAA1AD /* tools.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9FB1BD0F31500BAA1AD /* tools.c */; };
 		F07DEA131BD0F31500BAA1AD /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = F07DE9FC1BD0F31500BAA1AD /* utils.c */; };
 		F07DEA331BD1014800BAA1AD /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F07DEA321BD1014800BAA1AD /* CoreFoundation.framework */; };
+		F0896B252C46E152000B5381 /* path.c in Sources */ = {isa = PBXBuildFile; fileRef = F0896B242C46E152000B5381 /* path.c */; };
 		F09482FE22994752005DE2C5 /* layer.c in Sources */ = {isa = PBXBuildFile; fileRef = F09482FD22994752005DE2C5 /* layer.c */; };
 		F094830022994765005DE2C5 /* material.c in Sources */ = {isa = PBXBuildFile; fileRef = F09482FF22994765005DE2C5 /* material.c */; };
 		F097B3F31F0C97DB00A3622B /* gesture.c in Sources */ = {isa = PBXBuildFile; fileRef = F097B3F11F0C97DB00A3622B /* gesture.c */; };
@@ -214,6 +215,8 @@
 		F07DEA2E1BD0F3D000BAA1AD /* goxel.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = goxel.pch; sourceTree = "<group>"; };
 		F07DEA2F1BD0FB5F00BAA1AD /* goxel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "goxel-Bridging-Header.h"; sourceTree = "<group>"; };
 		F07DEA321BD1014800BAA1AD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		F0896B232C46E152000B5381 /* path.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = path.h; sourceTree = "<group>"; };
+		F0896B242C46E152000B5381 /* path.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = path.c; sourceTree = "<group>"; };
 		F0931E492B3BEBCE00E908FE /* goxel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = goxel.entitlements; sourceTree = "<group>"; };
 		F09482FD22994752005DE2C5 /* layer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = layer.c; sourceTree = "<group>"; };
 		F09482FF22994765005DE2C5 /* material.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = material.c; sourceTree = "<group>"; };
@@ -288,6 +291,8 @@
 		F00FC2F8226B2F7B0002F251 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				F0896B242C46E152000B5381 /* path.c */,
+				F0896B232C46E152000B5381 /* path.h */,
 				F007DFE62C35546700526FA2 /* geometry.c */,
 				F007DFE72C35546700526FA2 /* geometry.h */,
 				F0DC02A222EEE274007E2F17 /* box.c */,
@@ -678,6 +683,7 @@
 				F0A160051E962F1300C6EF33 /* wavefront.c in Sources */,
 				F00FC338226B2FCF0002F251 /* image_panel.c in Sources */,
 				F00FC316226B2F7C0002F251 /* mustache.c in Sources */,
+				F0896B252C46E152000B5381 /* path.c in Sources */,
 				F00FC335226B2FCF0002F251 /* topbar.c in Sources */,
 				F007DFE82C35546700526FA2 /* geometry.c in Sources */,
 				F00FC32D226B2FCF0002F251 /* cameras_panel.c in Sources */,

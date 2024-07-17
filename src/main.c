@@ -20,6 +20,9 @@
 #include "script.h"
 #include <getopt.h>
 
+#include "../ext_src/nfd/nfd.h"
+#include "../ext_src/nfd/nfd_glfw3.h"
+
 #ifdef GLES2
 #   define GLFW_INCLUDE_ES2
 #endif
@@ -286,6 +289,82 @@ static void set_clipboard_text(void *user, const char *text)
     glfwSetClipboardString(window, text);
 }
 
+static void filters_to_nfd_spec(
+        const char *const *filters, char buf[], size_t buf_size)
+{
+    int i;
+    size_t len = 0;
+
+    buf[0] = '\0';
+    for (i = 0; filters[i]; i++) {
+        len += snprintf(buf + len, buf_size - len, "%s", filters[i] + 2);
+    }
+}
+
+static bool open_dialog(
+        void *user,
+        char *buf,
+        size_t buf_size,
+        int flags,
+        const char *title,
+        const char *default_path_and_file,
+        int nb_filters,
+        const char *const *filters,
+        const char *filters_desc)
+{
+    char default_path[1024];
+    char default_name[1024];
+    char nfd_filters_spec[128];
+    char *out_path = NULL;
+    nfdu8filteritem_t filter;
+    nfdwindowhandle_t nfd_window;
+    nfdresult_t err;
+    GLFWwindow *window = user;
+
+    LOG_D("Open Dialog (mode=%s, default_path_and_file=%s)",
+          flags & 1 ? "Save" : "Open", default_path_and_file);
+
+    filters_to_nfd_spec(filters, nfd_filters_spec, sizeof(nfd_filters_spec));
+    filter.name = filters_desc;
+    filter.spec = nfd_filters_spec;
+
+    NFD_Init();
+    NFD_GetNativeWindowFromGLFWWindow(window, &nfd_window);
+
+    if (flags & 1) { // Save dialog.
+        path_dirname(default_path_and_file, default_path,
+                     sizeof(default_path));
+        path_basename(default_path_and_file, default_name,
+                      sizeof(default_name));
+        err = NFD_SaveDialogU8_With(
+                &out_path,
+                &(nfdsavedialogu8args_t){
+                    .filterList = &filter,
+                    .filterCount = 1,
+                    .defaultPath = default_path[0] ? default_path : NULL,
+                    .defaultName = default_name[0] ? default_name : NULL,
+                    .parentWindow = nfd_window,
+                });
+    } else {
+        err = NFD_OpenDialogU8_With(
+                &out_path,
+                &(nfdopendialogu8args_t){
+                    .filterList = &filter,
+                    .filterCount = 1,
+                    .defaultPath = default_path_and_file,
+                    .parentWindow = nfd_window,
+                });
+    }
+    NFD_Quit();
+    if (err == NFD_OKAY) {
+        snprintf(buf, buf_size, "%s", out_path);
+        free(out_path);
+        path_normalize(buf);
+        return true;
+    }
+    return false;
+}
+
 int main(int argc, char **argv)
 {
     args_t args = {.scale = 1};
@@ -300,6 +379,7 @@ int main(int argc, char **argv)
     sys_callbacks.set_window_title = set_window_title;
     sys_callbacks.get_clipboard_text = get_clipboard_text;
     sys_callbacks.set_clipboard_text = set_clipboard_text;
+    sys_callbacks.open_dialog = open_dialog;
     parse_options(argc, argv, &args);
 
     g_scale = args.scale;

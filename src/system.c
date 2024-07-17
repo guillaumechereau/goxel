@@ -19,12 +19,14 @@
 #include "system.h"
 
 #include <assert.h>
-#include <sys/time.h>
-#include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #ifndef PATH_MAX
 #define PATH_MAX 1024
@@ -37,9 +39,6 @@
 
 // The global system instance.
 sys_callbacks_t sys_callbacks = {};
-
-// Directly include the C file!
-#include "../ext_src/tinyfiledialogs/tinyfiledialogs.c"
 
 #if defined(__unix__) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
 #include <pwd.h>
@@ -62,6 +61,8 @@ static const char *get_user_dir(void)
 }
 
 #elif defined(WIN32)
+
+#include <Shlobj.h>
 
 // Defined in utils.
 int utf_16_to_8(const wchar_t *in16, char *out8, size_t size8);
@@ -256,25 +257,28 @@ const char *sys_open_file_dialog(const char *title,
 {
     int nb;
     static char buf[1024];
-    nb = filters_count(filters);
+
     if (sys_callbacks.open_dialog) {
+        nb = filters_count(filters);
         return sys_callbacks.open_dialog(sys_callbacks.user,
                 buf, sizeof(buf), 0, title, default_path_and_file,
                 nb, filters, filters_desc) ? buf : NULL;
     }
-    return tinyfd_openFileDialog(title, default_path_and_file, nb,
-                                 filters, filters_desc, 0);
+    assert(false);
+    return NULL;
 }
 
 const char *sys_open_folder_dialog(const char *title,
                                    const char *default_path)
 {
     static char buf[1024];
+
     if (sys_callbacks.open_dialog) {
         return sys_callbacks.open_dialog(sys_callbacks.user,
                 buf, sizeof(buf), 2, title, NULL, 0, NULL, NULL) ? buf : NULL;
     }
-    return tinyfd_selectFolderDialog(title, default_path);
+    assert(false);
+    return NULL;
 }
 
 const char *sys_save_file_dialog(const char *title,
@@ -284,14 +288,16 @@ const char *sys_save_file_dialog(const char *title,
 {
     int nb;
     static char buf[1024];
-    nb = filters_count(filters);
+
     if (sys_callbacks.open_dialog) {
+        nb = filters_count(filters);
         return sys_callbacks.open_dialog(sys_callbacks.user,
                 buf, sizeof(buf), 1, title, default_path_and_file,
                 nb, filters, filters_desc) ? buf : NULL;
     }
-    return tinyfd_saveFileDialog(title, default_path_and_file, nb,
-                                 filters, filters_desc);
+
+    assert(false);
+    return NULL;
 }
 
 const char *sys_get_save_path(const char *default_name,

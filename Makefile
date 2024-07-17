@@ -31,8 +31,9 @@ format: .FORCE
 
 
 # Generate an AppImage.  Used by github CI.
-appimage:
-	scons mode=release
+appimage: .FORCE
+	scons mode=release nfd_backend=portal
+	rm -rf AppDir
 	mkdir AppDir
 	DESTDIR=AppDir PREFIX=/usr make install
 	curl https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20231206-1/linuxdeploy-x86_64.AppImage \

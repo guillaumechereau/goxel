@@ -31,6 +31,13 @@ vars.AddVariables(
 
 target_os = str(Platform())
 
+if target_os == 'posix':
+    vars.AddVariables(
+        EnumVariable('nfd_backend', 'Native file dialog backend', default='gtk',
+                     allowed_values=('gtk', 'portal')),
+    )
+
+
 env = Environment(variables=vars, ENV=os.environ)
 conf = env.Configure()
 
@@ -94,32 +101,47 @@ if target_os == 'posix':
     # Note: add '--static' to link with all the libs needed by glfw3.
     env.ParseConfig('pkg-config --libs glfw3')
 
+    # Pick the proper native file dialog backend.
+    if env['nfd_backend'] == 'portal':
+        env.ParseConfig('pkg-config --cflags --libs dbus-1')
+        sources.append('ext_src/nfd/nfd_portal.cpp')
+
+    if env['nfd_backend'] == 'gtk':
+        env.ParseConfig('pkg-config --cflags --libs gtk+-3.0')
+        sources.append('ext_src/nfd/nfd_gtk.cpp')
+
+
 # Windows compilation support.
 if target_os == 'msys':
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
                          '-Wno-unused-function'])
     env.Append(CCFLAGS=['-Wno-error=address']) # To remove if possible.
     env.Append(LIBS=['glfw3', 'opengl32', 'z', 'tre', 'gdi32', 'Comdlg32',
-                     'ole32'],
+                     'ole32', 'uuid', 'shell32'],
                LINKFLAGS='--static')
     sources += glob.glob('ext_src/glew/glew.c')
+    sources.append('ext_src/nfd/nfd_win.cpp')
     env.Append(CPPPATH=['ext_src/glew'])
     env.Append(CPPDEFINES=['GLEW_STATIC', 'FREE_WINDOWS'])
 
 # OSX Compilation support.
 if target_os == 'darwin':
     sources += glob.glob('src/*.m')
-    env.Append(FRAMEWORKS=['OpenGL', 'Cocoa'])
+    sources.append('ext_src/nfd/nfd_cocoa.m')
+    env.Append(FRAMEWORKS=[
+        'OpenGL', 'Cocoa', 'AppKit', 'UniformTypeIdentifiers'])
     env.Append(LIBS=['m', 'objc'])
     # Fix warning in noc_file_dialog (the code should be fixed instead).
     env.Append(CCFLAGS=['-Wno-deprecated-declarations'])
     env.ParseConfig('pkg-config --cflags --libs glfw3')
     env['sound'] = False
 
+
 # Add external libs.
 env.Append(CPPPATH=['ext_src'])
 env.Append(CPPPATH=['ext_src/uthash'])
 env.Append(CPPPATH=['ext_src/stb'])
+env.Append(CPPPATH=['ext_src/nfd'])
 env.Append(CPPPATH=['ext_src/noc'])
 env.Append(CPPPATH=['ext_src/xxhash'])
 env.Append(CPPPATH=['ext_src/meshoptimizer'])

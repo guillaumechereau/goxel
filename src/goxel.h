@@ -64,6 +64,7 @@
 #include "utils/geometry.h"
 #include "utils/gl.h"
 #include "utils/img.h"
+#include "utils/path.h"
 #include "utils/plane.h"
 #include "utils/sound.h"
 #include "utils/texture.h"
