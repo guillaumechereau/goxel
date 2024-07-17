@@ -611,7 +611,7 @@ static void gui_iter(const inputs_t *inputs)
 
     io.DisplayFramebufferScale = ImVec2(goxel.screen_scale,
                                         goxel.screen_scale);
-    io.DeltaTime = goxel.delta_time;
+    io.DeltaTime = fmax(goxel.delta_time, 0.01);
     io.ConfigDragClickToInputText = true;
 
     if (inputs) {
