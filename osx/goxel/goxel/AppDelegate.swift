@@ -240,55 +240,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return 0;
         }
 
-        sys_callbacks.open_dialog = {(user, buf, bufSize, flags, title,
-                                      defaultPathAndFile,
-                                      nbFilters, filters, filtersDesc) in
-
-            let panel = flags == 1 ? NSSavePanel() : NSOpenPanel()
-
-            if flags == 2 { // Open directory.
-                if let panel = panel as? NSOpenPanel {
-                    panel.canChooseDirectories = false
-                    panel.canChooseFiles = false
-                }
-            }
-
-            if let defaultPathAndFile {
-                let pathString = String(cString: defaultPathAndFile)
-                if pathString.contains("/") {
-                    let url = URL(fileURLWithPath: pathString)
-                    panel.directoryURL = url.deletingLastPathComponent()
-                    panel.nameFieldStringValue = url.lastPathComponent
-                } else {
-                    panel.directoryURL = FileManager.default.urls(
-                        for: .documentDirectory, in: .userDomainMask).first
-                    panel.nameFieldStringValue = pathString
-                }
-            }
-
-            if (nbFilters > 0) {
-                var fileTypes: [String] = []
-                for i in 0..<Int(nbFilters) {
-                    if let filterCStr = filters?[i] {
-                        let filter = String(cString: filterCStr)
-                            .trimmingCharacters(in: CharacterSet(charactersIn: "*."))
-                        fileTypes.append(filter)
-                    }
-                }
-                if let panel = panel as? NSOpenPanel {
-                    panel.allowedFileTypes = fileTypes
-                }
-            }
-
-            let ret = panel.runModal()
-            if (ret != .OK) {
-                buf?[0] = 0
-                return false
-            }
-            let val = panel.url?.path.cString(using: .utf8)
-            strncpy(buf, val!, bufSize)
-            buf?[bufSize - 1] = 0
-            return true
+        sys_callbacks.open_dialog = {
+                    (user, buf, bufSize, flags, title, defaultPathAndFile,
+                     nbFilters, filters, filtersDesc) in
+            let mySelf = Unmanaged<AppDelegate>.fromOpaque(user!).takeUnretainedValue()
+            return mySelf.openDialog(
+                user, buf, bufSize, flags, title, defaultPathAndFile, nbFilters,
+                filters, filtersDesc);
         }
 
         goxel_init()
@@ -321,6 +279,63 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if r == 1 {
             NSApplication.shared.terminate(nil)
         }
+    }
+
+    func openDialog(_ user: UnsafeMutableRawPointer?,
+                    _ buf: UnsafeMutablePointer<CChar>?,
+                    _ bufSize: Int,
+                    _ flags: Int32, // 1: save, 2: folder.
+                    _ title: UnsafePointer<CChar>?,
+                    _ defaultPathAndFile: UnsafePointer<CChar>?,
+                    _ nbFilters: Int32,
+                    _ filters: UnsafePointer<UnsafePointer<CChar>?>?,
+                    _ filtersDesc: UnsafePointer<CChar>?) -> Bool {
+
+        let panel = flags == 1 ? NSSavePanel() : NSOpenPanel()
+
+        if flags == 2 { // Open directory.
+            if let panel = panel as? NSOpenPanel {
+                panel.canChooseDirectories = false
+                panel.canChooseFiles = false
+            }
+        }
+
+        if let defaultPathAndFile {
+            let pathString = String(cString: defaultPathAndFile)
+            if pathString.contains("/") {
+                let url = URL(fileURLWithPath: pathString)
+                panel.directoryURL = url.deletingLastPathComponent()
+                panel.nameFieldStringValue = url.lastPathComponent
+            } else {
+                panel.directoryURL = FileManager.default.urls(
+                    for: .documentDirectory, in: .userDomainMask).first
+                panel.nameFieldStringValue = pathString
+            }
+        }
+
+        if (nbFilters > 0) {
+            var fileTypes: [String] = []
+            for i in 0..<Int(nbFilters) {
+                if let filterCStr = filters?[i] {
+                    let filter = String(cString: filterCStr)
+                        .trimmingCharacters(in: CharacterSet(charactersIn: "*."))
+                    fileTypes.append(filter)
+                }
+            }
+            if let panel = panel as? NSOpenPanel {
+                panel.allowedFileTypes = fileTypes
+            }
+        }
+
+        let ret = panel.runModal()
+        if (ret != .OK) {
+            buf?[0] = 0
+            return false
+        }
+        let val = panel.url?.path.cString(using: .utf8)
+        strncpy(buf, val!, bufSize)
+        buf?[bufSize - 1] = 0
+        return true
     }
 }
 
