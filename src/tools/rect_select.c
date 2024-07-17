@@ -142,7 +142,7 @@ static int gui(tool_t *tool_)
 }
 
 TOOL_REGISTER(TOOL_RECT_SELECT, rect_select, tool_rect_select_t,
-              .name = STR_RECT_SELECT,
+              .name = N_("Rectangle Select"),
               .init_fn = init,
               .iter_fn = iter,
               .gui_fn = gui,

@@ -855,7 +855,7 @@ static void a_image_clone_layer(void)
 }
 
 ACTION_REGISTER(ACTION_img_clone_layer,
-    .help = STR_ACTION_CLONE_LAYER_HELP,
+    .help = N_("Creates a linked copy of the selected layer"),
     .cfunc = a_image_clone_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -866,7 +866,7 @@ static void a_image_unclone_layer(void)
 }
 
 ACTION_REGISTER(ACTION_img_unclone_layer,
-    .help = STR_ACTION_UNLINK_LAYER_HELP,
+    .help = N_("Unlinks the selected layer from its parent"),
     .cfunc = a_image_unclone_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -953,7 +953,7 @@ static void a_img_image_layer_to_volume(void)
 }
 
 ACTION_REGISTER(ACTION_img_image_layer_to_volume,
-    .help = STR_ACTION_LAYER_TO_VOLUME_HELP,
+    .help = N_("Converts a layer into a volume"),
     .cfunc = a_img_image_layer_to_volume,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -964,7 +964,7 @@ static void a_img_new_shape_layer(void)
 }
 
 ACTION_REGISTER(ACTION_img_new_shape_layer,
-    .help = STR_ACTION_NEW_SHAPE_LAYER_HELP,
+    .help = N_("Creates a shape layer"),
     .cfunc = a_img_new_shape_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -992,7 +992,7 @@ ACTION_REGISTER(ACTION_img_del_material,
 )
 
 ACTION_REGISTER(ACTION_img_auto_resize,
-    .help = STR_ACTION_IMAGE_AUTO_RESIZE_HELP,
+    .help = N_("Resizes the image to fit the layers"),
     .cfunc = a_image_auto_resize,
     .flags = ACTION_TOUCH_IMAGE,
 )

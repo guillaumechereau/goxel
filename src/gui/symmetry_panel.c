@@ -66,9 +66,9 @@ void gui_symmetry_panel(void)
                         0, "%.1f");
     }
 
-    if (gui_section_begin(_(RECENTER), GUI_SECTION_COLLAPSABLE_CLOSED)) {
-        if (gui_button(_(VOLUME), -1, 0)) recenter(0);
-        if (gui_button(_(LAYER), -1, 0)) recenter(1);
-        if (gui_button(_(IMAGE), -1, 0)) recenter(2);
+    if (gui_section_begin(_("Recenter"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_button(_("Volume"), -1, 0)) recenter(0);
+        if (gui_button(_("Layer"), -1, 0)) recenter(1);
+        if (gui_button(_("Image"), -1, 0)) recenter(2);
     } gui_section_end();
 }

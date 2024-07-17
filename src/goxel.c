@@ -1572,7 +1572,7 @@ static void a_cut_as_new_layer(void)
 }
 
 ACTION_REGISTER(ACTION_cut_as_new_layer,
-    .help = STR_ACTION_CUT_AS_NEW_LAYER,
+    .help = N_("Cuts the selected area into a new layer"),
     .cfunc = a_cut_as_new_layer,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -1600,7 +1600,7 @@ static void a_fill_selection_box(void)
 }
 
 ACTION_REGISTER(ACTION_fill_selection_box,
-    .help = STR_ACTION_FILL_SELECTION_BOX_HELP,
+    .help = N_("Fills the selected box with the current color"),
     .cfunc = a_fill_selection_box,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -1615,7 +1615,7 @@ static void a_paint_selection(void)
 }
 
 ACTION_REGISTER(ACTION_paint_selection,
-    .help = STR_ACTION_PAINT_SELECTION_HELP,
+    .help = N_("Fills the selected voxels with the current color"),
     .cfunc = a_paint_selection,
     .flags = ACTION_TOUCH_IMAGE,
 )
@@ -1640,7 +1640,7 @@ static void a_add_selection(void)
 }
 
 ACTION_REGISTER(ACTION_add_selection,
-    .help = STR_ACTION_ADD_SELECTION_HELP,
+    .help = N_("Adds selected area to the mask"),
     .cfunc = a_add_selection,
 )
 
@@ -1660,7 +1660,7 @@ static void a_sub_selection(void)
 }
 
 ACTION_REGISTER(ACTION_sub_selection,
-    .help = STR_ACTION_SUB_SELECTION_HELP,
+    .help = N_("Subtracts selected area from the mask"),
     .cfunc = a_sub_selection,
 )
 
@@ -1783,7 +1783,7 @@ ACTION_REGISTER(ACTION_view_front,
 )
 
 ACTION_REGISTER(ACTION_view_toggle_ortho,
-    .help = STR_ACTION_VIEW_TOGGLE_ORTHO_HELP,
+    .help = N_("Switches the projection (perspective/orthographic)"),
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_view_toggle_ortho,
     .default_shortcut = "5",
@@ -1841,7 +1841,7 @@ static void a_reset(void)
 }
 
 ACTION_REGISTER(ACTION_reset,
-    .help = STR_ACTION_RESET_HELP,
+    .help = N_("Creates a new image (discards the current one)"),
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = a_reset,
     .default_shortcut = "Ctrl N"
@@ -1879,7 +1879,7 @@ static void toggle_mode(void)
 }
 
 ACTION_REGISTER(ACTION_toggle_mode,
-    .help = STR_ACTION_TOGGLE_MODE_HELP,
+    .help = N_("Switches the mode (add/subtract/paint)"),
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc = toggle_mode,
 )
@@ -1891,7 +1891,7 @@ static void a_set_mode(void *data)
 }
 
 ACTION_REGISTER(ACTION_set_mode_add,
-    .help = STR_ACTION_SET_MODE_ADD_HELP,
+    .help = N_("Adds to the voxels"),
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
     .data = (int[]){MODE_OVER},
@@ -1900,7 +1900,7 @@ ACTION_REGISTER(ACTION_set_mode_add,
 )
 
 ACTION_REGISTER(ACTION_set_mode_sub,
-    .help = STR_ACTION_SET_MODE_SUB_HELP,
+    .help = N_("Subtract to the voxels"),
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
     .data = (int[]){MODE_SUB},
@@ -1909,7 +1909,7 @@ ACTION_REGISTER(ACTION_set_mode_sub,
 )
 
 ACTION_REGISTER(ACTION_set_mode_paint,
-    .help = STR_ACTION_SET_MODE_PAINT_HELP,
+    .help = N_("Paints the voxels"),
     .flags = ACTION_CAN_EDIT_SHORTCUT,
     .cfunc_data = a_set_mode,
     .data = (int[]){MODE_PAINT},

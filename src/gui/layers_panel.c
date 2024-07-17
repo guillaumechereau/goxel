@@ -55,28 +55,28 @@ static void layers_context_menu(void)
     bool bounded;
     char buf[256];
 
-    gui_action_button(ACTION_img_duplicate_layer, _(DUPLICATE), 1);
-    gui_action_button(ACTION_img_clone_layer, _(CLONE), 1);
-    gui_action_button(ACTION_img_merge_layer_down, _(MERGE_DOWN), 1);
-    gui_action_button(ACTION_img_merge_visible_layers, _(MERGE_VISIBLE), 1);
+    gui_action_button(ACTION_img_duplicate_layer, _("Duplicate"), 1);
+    gui_action_button(ACTION_img_clone_layer, _("Clone"), 1);
+    gui_action_button(ACTION_img_merge_layer_down, _("Merge Down"), 1);
+    gui_action_button(ACTION_img_merge_visible_layers, _("Merge Visible"), 1);
 
     layer = goxel.image->active_layer;
     bounded = !box_is_null(layer->box);
 
-    if (bounded && gui_button(_(CROP), 1, 0)) {
+    if (bounded && gui_button(_("Crop"), 1, 0)) {
         volume_crop(layer->volume, layer->box);
     }
     if (!box_is_null(goxel.image->box)) {
-        snprintf(buf, sizeof(buf), "%s: %s", _(CROP), _(IMAGE));
+        snprintf(buf, sizeof(buf), "%s: %s", _("Crop"), _("Image"));
         if (gui_button(buf, 1, 0))
             volume_crop(layer->volume, goxel.image->box);
     }
     if (layer->shape) {
-        snprintf(buf, sizeof(buf), "▶ %s", _(VOLUME));
+        snprintf(buf, sizeof(buf), "▶ %s", _("Volume"));
         gui_action_button(ACTION_img_unclone_layer, buf, 1);
     }
 
-    snprintf(buf, sizeof(buf), "%s: %s", _(ADD), _(SHAPE));
+    snprintf(buf, sizeof(buf), "%s: %s", _("Add"), _("Shape"));
     if (gui_action_button(ACTION_img_new_shape_layer, buf, 1)) {
         action_exec2(ACTION_tool_set_move);
     }
@@ -135,15 +135,15 @@ void gui_layers_panel(void)
 
     if (layer->base_id) {
         gui_group_begin(NULL);
-        gui_action_button(ACTION_img_unclone_layer, _(UNLINK), 1);
+        gui_action_button(ACTION_img_unclone_layer, _("Unlink"), 1);
         gui_action_button(ACTION_img_select_parent_layer, "Select parent", 1);
         gui_group_end();
     }
     if (layer->image) {
-        snprintf(buf, sizeof(buf), "-> %s", _(VOLUME));
+        snprintf(buf, sizeof(buf), "-> %s", _("Volume"));
         gui_action_button(ACTION_img_image_layer_to_volume, buf, 1);
     }
-    if (!layer->shape && gui_checkbox(_(BOUNDED), &bounded, NULL)) {
+    if (!layer->shape && gui_checkbox(_("Bounded"), &bounded, NULL)) {
         if (bounded) {
             volume_get_bbox(layer->volume, bbox, true);
             if (bbox[0][0] > bbox[1][0]) memset(bbox, 0, sizeof(bbox));
@@ -160,7 +160,7 @@ void gui_layers_panel(void)
         gui_color("##color", layer->color);
     }
 
-    gui_text(_(MATERIAL));
+    gui_text(_("Material"));
     if (gui_combo_begin("##material",
                         layer->material ? layer->material->name : NULL)) {
         DL_FOREACH(goxel.image->materials, material) {

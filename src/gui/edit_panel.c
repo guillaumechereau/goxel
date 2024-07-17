@@ -24,24 +24,24 @@ void gui_edit_panel(void)
 
     gui_group_begin(NULL);
     gui_enabled_begin(!box_is_null(img->selection_box));
-    gui_action_button(ACTION_fill_selection_box, _(FILL), 1.0);
+    gui_action_button(ACTION_fill_selection_box, _("Fill"), 1.0);
     gui_group_end();
     gui_enabled_end();
 
     gui_group_begin(NULL);
     gui_enabled_begin(!volume_is_empty(goxel.image->selection_mask));
-    gui_action_button(ACTION_layer_clear, _(CLEAR), 1.0);
-    gui_action_button(ACTION_paint_selection, _(PAINT), 1.0);
-    gui_action_button(ACTION_cut_as_new_layer, "Cut as new layer", 1.0);
+    gui_action_button(ACTION_layer_clear, _("Clear"), 1.0);
+    gui_action_button(ACTION_paint_selection, _("Paint"), 1.0);
+    gui_action_button(ACTION_cut_as_new_layer, _("Cut as new layer"), 1.0);
     gui_enabled_end();
     gui_group_end();
 
     gui_group_begin(NULL);
     gui_enabled_begin(!volume_is_empty(goxel.image->selection_mask));
-    gui_action_button(ACTION_copy, _(COPY), 1.0);
+    gui_action_button(ACTION_copy, _("Copy"), 1.0);
     gui_enabled_end();
     gui_enabled_begin(!volume_is_empty(goxel.clipboard.volume));
-    gui_action_button(ACTION_paste, _(PASTE), 1.0);
+    gui_action_button(ACTION_paste, _("Paste"), 1.0);
     gui_enabled_end();
     gui_group_end();
 }

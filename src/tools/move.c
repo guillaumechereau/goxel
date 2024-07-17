@@ -250,7 +250,7 @@ static bool input_tranform(const float mat[4][4], float transf[4][4])
 
     gui_group_begin(NULL);
 
-    gui_group_begin(_(POSITION));
+    gui_group_begin(_("Position"));
     if (gui_input_int("X", &x, 0, 0))
         transf[3][0] = x - (int)round(mat[3][0]);
     if (gui_input_int("Y", &y, 0, 0))
@@ -259,7 +259,7 @@ static bool input_tranform(const float mat[4][4], float transf[4][4])
         transf[3][2] = z - (int)round(mat[3][2]);
     gui_group_end();
 
-    gui_group_begin(_(ROTATION));
+    gui_group_begin(_("Rotation"));
     gui_row_begin(2);
     if (gui_button("-X", 0, 0))
         mat4_irotate(transf, -M_PI / 2, 1, 0, 0);
@@ -280,7 +280,7 @@ static bool input_tranform(const float mat[4][4], float transf[4][4])
     gui_row_end();
     gui_group_end();
 
-    gui_group_begin(_(FLIP));
+    gui_group_begin(_("Flip"));
     gui_row_begin(3);
     if (gui_button("X", -1, 0)) mat4_iscale(transf, -1,  1,  1);
     if (gui_button("Y", -1, 0)) mat4_iscale(transf,  1, -1,  1);
@@ -288,7 +288,7 @@ static bool input_tranform(const float mat[4][4], float transf[4][4])
     gui_row_end();
     gui_group_end();
 
-    gui_group_begin(_(SCALE));
+    gui_group_begin(_("Scale"));
     gui_row_begin(3);
     if (gui_button("x2", -1, 0)) mat4_iscale(transf, 2, 2, 2);
     if (gui_button("x0.5", -1, 0)) mat4_iscale(transf, 0.5, 0.5, 0.5);
@@ -305,7 +305,7 @@ static void gui_origin(layer_t *layer)
     float mat[4][4] = MAT4_IDENTITY;
     float origin[3];
 
-    if (gui_section_begin(_(ORIGIN), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+    if (gui_section_begin(_("Origin"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         vec3_copy(layer->mat[3], origin);
         gui_group_begin(NULL);
         if (gui_input_float("X", &origin[0], 0.5, 0, 0, "%.1f")) {
@@ -317,7 +317,7 @@ static void gui_origin(layer_t *layer)
         if (gui_input_float("Z", &origin[2], 0.5, 0, 0, "%.1f")) {
             mat[3][2] = origin[2] - layer->mat[3][2];
         }
-        if (gui_button(_(RECENTER), -1, 0)) {
+        if (gui_button(_("Recenter"), -1, 0)) {
             center_origin(layer);
         }
         gui_group_end();
@@ -350,7 +350,7 @@ static int gui(tool_t *tool)
 }
 
 TOOL_REGISTER(TOOL_MOVE, move, tool_move_t,
-              .name = STR_MOVE,
+              .name = N_("Move"),
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_MOVE | TOOL_SHOW_MASK,

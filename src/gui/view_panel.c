@@ -23,46 +23,46 @@ void gui_view_panel(void)
     // XXX: I don't like to use this array.
     const struct {
         uint8_t    *color;
-        int        label;
+        const char *label;
     } COLORS[] = {
-        {goxel.back_color, STR_BACKGROUND},
-        {goxel.grid_color, STR_GRID},
-        {goxel.image_box_color, STR_BOX},
+        {goxel.back_color, _("Background")},
+        {goxel.grid_color, _("Grid")},
+        {goxel.image_box_color, _("Box")},
     };
     int i;
 
-    gui_text(_(COLORS));
+    gui_text(_("Colors"));
     for (i = 0; i < (int)ARRAY_SIZE(COLORS); i++) {
         gui_color_small(tr(COLORS[i].label), COLORS[i].color);
     }
-    gui_checkbox(_(HIDE_BOX), &goxel.hide_box, NULL);
+    gui_checkbox(_("Hide Box"), &goxel.hide_box, NULL);
 
-    gui_text(_(EFFECTS));
+    gui_text(_("Effects"));
 
-    if (gui_input_float(_(OCCLUSION), &goxel.rend.settings.occlusion_strength,
+    if (gui_input_float(_("Occlusion"), &goxel.rend.settings.occlusion_strength,
                         0.1, 0, 1, NULL)) {
         goxel.rend.settings.occlusion_strength =
             clamp(goxel.rend.settings.occlusion_strength, 0, 1);
     }
-    if (gui_input_float(_(SMOOTHNESS), &goxel.rend.settings.smoothness,
+    if (gui_input_float(_("Smoothness"), &goxel.rend.settings.smoothness,
                         0.1, 0, 1, NULL)) {
         goxel.rend.settings.smoothness =
             clamp(goxel.rend.settings.smoothness, 0, 1);
     }
 
-    gui_checkbox_flag(_(GRID), &goxel.view_effects, EFFECT_GRID, NULL);
-    gui_checkbox_flag(_(EDGES), &goxel.view_effects, EFFECT_EDGES, NULL);
-    gui_checkbox_flag(_(SHADELESS),
+    gui_checkbox_flag(_("Grid"), &goxel.view_effects, EFFECT_GRID, NULL);
+    gui_checkbox_flag(_("Edges"), &goxel.view_effects, EFFECT_EDGES, NULL);
+    gui_checkbox_flag(_("Shadeless"),
             &goxel.rend.settings.effects, EFFECT_UNLIT, NULL);
-    gui_checkbox_flag(_(BORDER),
+    gui_checkbox_flag(_("Border"),
             &goxel.rend.settings.effects, EFFECT_BORDERS, NULL);
-    gui_checkbox_flag(_(TRANSPARENT),
+    gui_checkbox_flag(_("Transparent"),
             &goxel.rend.settings.effects, EFFECT_SEE_BACK, NULL);
-    gui_checkbox_flag(_(MARCHING_CUBES),
+    gui_checkbox_flag(_("Marching Cubes"),
                 &goxel.rend.settings.effects, EFFECT_MARCHING_CUBES, NULL);
 
     if (goxel.rend.settings.effects & EFFECT_MARCHING_CUBES) {
-        gui_checkbox_flag(_(SMOOTH), &goxel.rend.settings.effects,
+        gui_checkbox_flag(_("Smooth"), &goxel.rend.settings.effects,
                           EFFECT_MC_SMOOTH, NULL);
     }
 }

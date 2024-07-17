@@ -118,9 +118,9 @@ int tool_gui_mask_mode(int *value)
 {
     gui_group_begin(NULL);
     gui_row_begin(3);
-    mask_mode_button(_(SET), value, MODE_REPLACE);
-    mask_mode_button(_(ADD), value, MODE_OVER);
-    mask_mode_button(_(SUB), value, MODE_SUB);
+    mask_mode_button(_("Set"), value, MODE_REPLACE);
+    mask_mode_button(_("Add"), value, MODE_OVER);
+    mask_mode_button(_("Sub"), value, MODE_SUB);
     gui_row_end();
     gui_group_end();
     return 0;
@@ -129,13 +129,13 @@ int tool_gui_mask_mode(int *value)
 int tool_gui_shape(const shape_t **shape)
 {
     const struct {
-        int         name;
+        const char  *name;
         shape_t     *shape;
         int         icon;
     } shapes[] = {
-        {STR_SPHERE, &shape_sphere, ICON_SHAPE_SPHERE},
-        {STR_CUBE, &shape_cube, ICON_SHAPE_CUBE},
-        {STR_CYLINDER, &shape_cylinder, ICON_SHAPE_CYLINDER},
+        {_("Sphere"), &shape_sphere, ICON_SHAPE_SPHERE},
+        {_("Cube"), &shape_cube, ICON_SHAPE_CUBE},
+        {_("Cylinder"), &shape_cylinder, ICON_SHAPE_CYLINDER},
     };
     gui_icon_info_t grid[64] = {};
     shape = shape ?: &goxel.painter.shape;
@@ -143,7 +143,7 @@ int tool_gui_shape(const shape_t **shape)
     int current;
     const int nb = ARRAY_SIZE(shapes);
 
-    if (gui_section_begin(_(SHAPE), true)) {
+    if (gui_section_begin(_("Shape"), true)) {
         for (i = 0; i < nb; i++) {
             grid[i] = (gui_icon_info_t) {
                 .label = tr(shapes[i].name),
@@ -164,7 +164,7 @@ int tool_gui_radius(void)
 {
     int i;
     i = goxel.tool_radius * 2;
-    if (gui_input_int(_(SIZE), &i, 0, 0)) {
+    if (gui_input_int(_("Size"), &i, 0, 0)) {
         i = clamp(i, 1, 128);
         goxel.tool_radius = i / 2.0;
     }
@@ -175,7 +175,7 @@ int tool_gui_smoothness(void)
 {
     bool s;
     s = goxel.painter.smoothness;
-    if (gui_checkbox(_(ANTIALIASING), &s, NULL)) {
+    if (gui_checkbox(_("Antialiasing"), &s, NULL)) {
         goxel.painter.smoothness = s ? 1 : 0;
     }
     return 0;
@@ -184,10 +184,10 @@ int tool_gui_smoothness(void)
 int tool_gui_color(void)
 {
     float alpha;
-    gui_color_small(_(COLOR), goxel.painter.color);
+    gui_color_small(_("Color"), goxel.painter.color);
     if (goxel.painter.mode == MODE_PAINT) {
         alpha = goxel.painter.color[3] / 255.;
-        if (gui_input_float(_(ALPHA), &alpha, 0.1, 0, 1, "%.1f"))
+        if (gui_input_float(_("Alpha"), &alpha, 0.1, 0, 1, "%.1f"))
             goxel.painter.color[3] = alpha * 255;
     }
     return 0;

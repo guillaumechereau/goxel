@@ -76,31 +76,30 @@ enum {
 };
 
 static struct {
-    int name;
+    const char *name;
     int icon;
     void (*fn)(void);
     bool detached;
 } PANELS[] = {
-    [PANEL_TOOLS]       = {STR_TOOLS, ICON_TOOLS, gui_tools_panel},
-    [PANEL_PALETTE]     = {STR_PALETTE, ICON_PALETTE, gui_palette_panel},
-    [PANEL_EDIT]        = {STR_EDIT, ICON_HAMMER, gui_edit_panel},
-    [PANEL_LAYERS]      = {STR_LAYERS, ICON_LAYERS, gui_layers_panel},
-    [PANEL_SNAP]        = {STR_SNAP, ICON_SNAP, gui_snap_panel},
-    [PANEL_SYMMETRY]    = {STR_SYMMETRY, ICON_SYMMETRY, gui_symmetry_panel},
-    [PANEL_VIEW]        = {STR_VIEW, ICON_VIEW, gui_view_panel},
-    [PANEL_MATERIAL]    = {STR_MATERIALS, ICON_MATERIAL, gui_material_panel},
-    [PANEL_LIGHT]       = {STR_LIGHT, ICON_LIGHT, gui_light_panel},
-    [PANEL_CAMERAS]     = {STR_CAMERAS, ICON_CAMERA, gui_cameras_panel},
-    [PANEL_IMAGE]       = {STR_IMAGE, ICON_IMAGE, gui_image_panel},
+    [PANEL_TOOLS]       = {N_("Tools"), ICON_TOOLS, gui_tools_panel},
+    [PANEL_PALETTE]     = {N_("Palette"), ICON_PALETTE, gui_palette_panel},
+    [PANEL_EDIT]        = {N_("Edit"), ICON_HAMMER, gui_edit_panel},
+    [PANEL_LAYERS]      = {N_("Layers"), ICON_LAYERS, gui_layers_panel},
+    [PANEL_SNAP]        = {N_("Snap"), ICON_SNAP, gui_snap_panel},
+    [PANEL_SYMMETRY]    = {N_("Symmetry"), ICON_SYMMETRY, gui_symmetry_panel},
+    [PANEL_VIEW]        = {N_("View"), ICON_VIEW, gui_view_panel},
+    [PANEL_MATERIAL]    = {N_("Materials"), ICON_MATERIAL, gui_material_panel},
+    [PANEL_LIGHT]       = {N_("Light"), ICON_LIGHT, gui_light_panel},
+    [PANEL_CAMERAS]     = {N_("Cameras"), ICON_CAMERA, gui_cameras_panel},
+    [PANEL_IMAGE]       = {N_("Image"), ICON_IMAGE, gui_image_panel},
 #if YOCTO
-    [PANEL_RENDER]      = {STR_RENDER, ICON_RENDER, gui_render_panel},
+    [PANEL_RENDER]      = {N_("Render"), ICON_RENDER, gui_render_panel},
 #endif
-    [PANEL_EXPORT]      = {STR_EXPORT, ICON_EXPORT, gui_export_panel},
+    [PANEL_EXPORT]      = {N_("Export"), ICON_EXPORT, gui_export_panel},
 #if DEBUG
-    [PANEL_DEBUG]       = {STR_DEBUG, ICON_DEBUG, gui_debug_panel},
+    [PANEL_DEBUG]       = {N_("Debug"), ICON_DEBUG, gui_debug_panel},
 #endif
 };
-
 
 static void on_click(void) {
     if (DEFINED(GUI_SOUND))

@@ -157,7 +157,7 @@ static int gui(filter_t *filter_)
         goxel_apply_color_filter(apply_values, filter);
     }
 
-    if (gui_button(_(RESET), -1, 0)) {
+    if (gui_button(_("Reset"), -1, 0)) {
         volume_set(layer->volume, filter->original);
         filter->hue        = 0;
         filter->lightness  = 0;

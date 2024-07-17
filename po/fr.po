@@ -1,0 +1,594 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Goxel 0.15.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-07-18 17:20+0800\n"
+"PO-Revision-Date: 2024-07-18 12:47+0800\n"
+"Last-Translator: Guillaume Chereau <guillaume.chereau@gmail.com>\n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/goxel.c:1575
+msgid "Cuts the selected area into a new layer"
+msgstr "Cuts the selected area into a new layer"
+
+#: src/goxel.c:1603
+msgid "Fills the selected box with the current color"
+msgstr "Remplit la boite sélectionnée avec la couleur actuelle"
+
+#: src/goxel.c:1618
+msgid "Fills the selected voxels with the current color"
+msgstr "Remplit les voxels sélectionnés avec la couleur actuelle"
+
+#: src/goxel.c:1643
+msgid "Adds selected area to the mask"
+msgstr "Ajoute la zone sélectionnée au masque"
+
+#: src/goxel.c:1663
+msgid "Subtracts selected area from the mask"
+msgstr "Soustraire aux voxels"
+
+#: src/goxel.c:1786
+msgid "Switches the projection (perspective/orthographic)"
+msgstr "Change la projection (perspective/orthographique)"
+
+#: src/goxel.c:1844
+msgid "Creates a new image (discards the current one)"
+msgstr "Crée une nouvelle image (rejete l'image actuelle)"
+
+#: src/goxel.c:1882
+msgid "Switches the mode (add/subtract/paint)"
+msgstr "Change le mode (ajouter/soustraire/peindre)"
+
+#: src/goxel.c:1894
+msgid "Adds to the voxels"
+msgstr "Ajoute aux voxels"
+
+#: src/goxel.c:1903
+msgid "Subtract to the voxels"
+msgstr "Soustraire aux voxels"
+
+#: src/goxel.c:1912
+msgid "Paints the voxels"
+msgstr "Peint les voxels"
+
+#: src/image.c:858
+msgid "Creates a linked copy of the selected layer"
+msgstr "Crée une copie liée du calque sélectionné"
+
+#: src/image.c:869
+msgid "Unlinks the selected layer from its parent"
+msgstr "Dissocie le calque sélectionné de son parent"
+
+#: src/image.c:956
+msgid "Converts a layer into a volume"
+msgstr "Convertit un calque en volume"
+
+#: src/image.c:967
+#, fuzzy
+msgid "Creates a shape layer"
+msgstr "Couper vers un nouveau calque"
+
+#: src/image.c:995
+msgid "Resizes the image to fit the layers"
+msgstr "Redimensionne l'image pour l'adapter aux calques"
+
+#: src/tools.c:121
+msgid "Set"
+msgstr "Définir"
+
+#: src/tools.c:122 src/gui/topbar.c:35 src/gui/settings.c:191
+#: src/gui/layers_panel.c:79
+msgid "Add"
+msgstr "Ajouter"
+
+#: src/tools.c:123 src/gui/topbar.c:36
+msgid "Sub"
+msgstr "Soustraire"
+
+#: src/tools.c:136
+msgid "Sphere"
+msgstr "Sphère"
+
+#: src/tools.c:137
+msgid "Cube"
+msgstr "Cube"
+
+#: src/tools.c:138
+msgid "Cylinder"
+msgstr "Cylindre"
+
+#: src/tools.c:146 src/tools/shape.c:138 src/gui/layers_panel.c:79
+msgid "Shape"
+msgstr "Forme"
+
+#: src/tools.c:167 src/formats/png.c:48 src/gui/render_panel.c:33
+msgid "Size"
+msgstr "Taille"
+
+#: src/tools.c:178
+msgid "Antialiasing"
+msgstr "Anti-aliasing"
+
+#: src/tools.c:187 src/gui/render_panel.c:84 src/gui/render_panel.c:101
+msgid "Color"
+msgstr "Couleur"
+
+#: src/tools.c:190
+msgid "Alpha"
+msgstr "Alpha"
+
+#: src/formats/wavefront.c:234
+msgid "Y Up"
+msgstr "Y haut"
+
+#: src/formats/wavefront.c:234
+msgid "Use +Y up convention"
+msgstr "Utilise la convention +Y up"
+
+#: src/formats/gltf.c:447
+msgid "Vertex Color"
+msgstr "Couleur de sommets"
+
+#: src/formats/gltf.c:448
+msgid "Save colors as vertex attribute"
+msgstr "Enregistrer les couleurs en tant qu'attribut de sommet"
+
+#: src/formats/gltf.c:449
+msgid "Simplify"
+msgstr "Simplifier"
+
+#: src/formats/png.c:64
+msgid "Transparent Background"
+msgstr "Arrière-plan transparent"
+
+#: src/filters/colors.c:160 src/gui/cameras_panel.c:63 src/gui/menu.c:149
+msgid "Reset"
+msgstr "Réinitialiser"
+
+#: src/tools/fuzzy_select.c:99 src/gui/view_panel.c:34
+msgid "Colors"
+msgstr "Couleurs"
+
+#: src/tools/fuzzy_select.c:99
+msgid "Select by Color"
+msgstr "Sélection par couleur"
+
+#: src/tools/fuzzy_select.c:103
+msgid "Threshold"
+msgstr "Seuil"
+
+#: src/tools/fuzzy_select.c:113
+msgid "Fuzzy Select"
+msgstr "Sélection contiguë"
+
+#: src/tools/color_picker.c:40
+msgid "Color Picker"
+msgstr "Pipette de couleur"
+
+#: src/tools/move.c:253
+msgid "Position"
+msgstr "Position"
+
+#: src/tools/move.c:262 src/tools/plane.c:99
+msgid "Rotation"
+msgstr "Rotation"
+
+#: src/tools/move.c:283
+msgid "Flip"
+msgstr "Inverser"
+
+#: src/tools/move.c:291
+msgid "Scale"
+msgstr "Redimensionner"
+
+#: src/tools/move.c:308 src/tools/plane.c:94
+msgid "Origin"
+msgstr "Origine"
+
+#: src/tools/move.c:320 src/gui/symmetry_panel.c:69
+msgid "Recenter"
+msgstr "Recentrer"
+
+#: src/tools/move.c:353
+msgid "Move"
+msgstr "Déplacer"
+
+#: src/tools/line.c:178
+msgid "Line"
+msgstr "Ligne"
+
+#: src/tools/extrude.c:177
+msgid "Extrude"
+msgstr "Extruder"
+
+#: src/tools/laser.c:103
+msgid "Laser"
+msgstr "Laser"
+
+#: src/tools/rect_select.c:145
+msgid "Rectangle Select"
+msgstr "Sélection rectangulaire"
+
+#: src/tools/plane.c:87
+msgid "Visible"
+msgstr "Visible"
+
+#: src/tools/plane.c:118 src/gui/snap_panel.c:37 src/gui/render_panel.c:92
+msgid "Plane"
+msgstr "Plan"
+
+#: src/tools/selection.c:258
+#, fuzzy
+msgid "Selection"
+msgstr "Sélection (Int.)"
+
+#: src/tools/brush.c:254
+msgid "Brush"
+msgstr "Brosse"
+
+#: src/gui/snap_panel.c:36 src/gui/symmetry_panel.c:70
+#: src/gui/layers_panel.c:75 src/gui/layers_panel.c:143
+msgid "Volume"
+msgstr "Volume"
+
+#: src/gui/snap_panel.c:40
+msgid "Selection (In)"
+msgstr "Sélection (Int.)"
+
+#: src/gui/snap_panel.c:41
+msgid "Selection (Out)"
+msgstr "Sélection (Ext.)"
+
+#: src/gui/snap_panel.c:44 src/gui/view_panel.c:30
+msgid "Box"
+msgstr "Boîte"
+
+#: src/gui/snap_panel.c:49
+msgid "Offset"
+msgstr "Décalage"
+
+#: src/gui/cameras_panel.c:52
+msgid "Distance"
+msgstr "Distance"
+
+#: src/gui/cameras_panel.c:53 src/gui/menu.c:148
+msgid "Orthographic"
+msgstr "Orthogonale"
+
+#: src/gui/cameras_panel.c:56 src/gui/menu.c:143
+msgid "Left"
+msgstr "Gauche"
+
+#: src/gui/cameras_panel.c:57 src/gui/menu.c:144
+msgid "Right"
+msgstr "Droite"
+
+#: src/gui/cameras_panel.c:60 src/gui/menu.c:145
+msgid "Front"
+msgstr "Avant"
+
+#: src/gui/cameras_panel.c:61 src/gui/menu.c:146
+msgid "Top"
+msgstr "Dessus"
+
+#: src/gui/cameras_panel.c:78 src/gui/light_panel.c:27
+#: src/gui/render_panel.c:118
+msgid "Angle"
+msgstr "Angle"
+
+#: src/gui/image_panel.c:26
+msgid "Fit to Content"
+msgstr "Ajuster au contenu"
+
+#: src/gui/symmetry_panel.c:71
+msgid "Layer"
+msgstr "Calque"
+
+#: src/gui/symmetry_panel.c:72 src/gui/app.c:94 src/gui/layers_panel.c:70
+msgid "Image"
+msgstr "Image"
+
+#: src/gui/topbar.c:37 src/gui/edit_panel.c:34
+msgid "Paint"
+msgstr "Peindre"
+
+#: src/gui/settings.c:129
+msgid "Language"
+msgstr "Langue"
+
+#: src/gui/settings.c:146
+msgid "Theme"
+msgstr "Thème"
+
+#: src/gui/settings.c:170
+msgid "Paths"
+msgstr "Chemins"
+
+#: src/gui/settings.c:175
+msgid "Shortcuts"
+msgstr "Raccourcis"
+
+#: src/gui/settings.c:198
+msgid "OK"
+msgstr "OK"
+
+#: src/gui/light_panel.c:31 src/gui/render_panel.c:82
+#: src/gui/render_panel.c:122
+msgid "Intensity"
+msgstr "Intensité"
+
+#: src/gui/light_panel.c:33 src/gui/render_panel.c:121
+msgid "Fixed"
+msgstr "Fixe"
+
+#: src/gui/light_panel.c:37
+msgid "Shadow"
+msgstr "Ombre"
+
+#: src/gui/light_panel.c:43
+msgid "Environment"
+msgstr "Environnement"
+
+#: src/gui/edit_panel.c:27
+msgid "Fill"
+msgstr "Remplir"
+
+#: src/gui/edit_panel.c:33 src/gui/menu.c:131
+msgid "Clear"
+msgstr "Effacer"
+
+#: src/gui/edit_panel.c:35
+msgid "Cut as new layer"
+msgstr "Couper vers un nouveau calque"
+
+#: src/gui/edit_panel.c:41 src/gui/menu.c:134
+msgid "Copy"
+msgstr "Copier"
+
+#: src/gui/edit_panel.c:44 src/gui/menu.c:135
+msgid "Paste"
+msgstr "Coller"
+
+#: src/gui/render_panel.c:48
+msgid "Samples"
+msgstr "Échantillons"
+
+#: src/gui/render_panel.c:51
+msgid "Start"
+msgstr "Démarrer"
+
+#: src/gui/render_panel.c:53
+msgid "Stop"
+msgstr "Stopper"
+
+#: src/gui/render_panel.c:57
+msgid "Restart"
+msgstr "Redémarrer"
+
+#: src/gui/render_panel.c:67 src/gui/menu.c:98
+msgid "Save"
+msgstr "Enregistrer"
+
+#: src/gui/render_panel.c:72
+msgid "World"
+msgstr "Monde"
+
+#: src/gui/render_panel.c:74 src/gui/render_panel.c:90
+msgid "None"
+msgstr "Aucun"
+
+#: src/gui/render_panel.c:76
+msgid "Uniform"
+msgstr "Uniforme"
+
+#: src/gui/render_panel.c:78
+msgid "Sky"
+msgstr "Ciel"
+
+#: src/gui/render_panel.c:88
+msgid "Floor"
+msgstr "Plancher"
+
+#: src/gui/render_panel.c:103 src/gui/layers_panel.c:163
+msgid "Material"
+msgstr "Matériau"
+
+#: src/gui/render_panel.c:117 src/gui/app.c:92
+msgid "Light"
+msgstr "Éclairage"
+
+#: src/gui/render_panel.c:128 src/gui/app.c:98 src/gui/export_panel.c:73
+#: src/gui/menu.c:123
+msgid "Export"
+msgstr "Exporter"
+
+#: src/gui/render_panel.c:128
+msgid "Success"
+msgstr "Succès"
+
+#: src/gui/view_panel.c:28
+msgid "Background"
+msgstr "Arrière-plan"
+
+#: src/gui/view_panel.c:29 src/gui/view_panel.c:53
+msgid "Grid"
+msgstr "Grille"
+
+#: src/gui/view_panel.c:38
+msgid "Hide Box"
+msgstr "Cacher la Boîte"
+
+#: src/gui/view_panel.c:40
+msgid "Effects"
+msgstr "Effets"
+
+#: src/gui/view_panel.c:42
+msgid "Occlusion"
+msgstr "Occlusion"
+
+#: src/gui/view_panel.c:47
+msgid "Smoothness"
+msgstr "Adoucissement"
+
+#: src/gui/view_panel.c:54
+msgid "Edges"
+msgstr "Arêtes"
+
+#: src/gui/view_panel.c:55
+msgid "Shadeless"
+msgstr "Sans ombrage"
+
+#: src/gui/view_panel.c:57
+msgid "Border"
+msgstr "Bordures"
+
+#: src/gui/view_panel.c:59
+msgid "Transparent"
+msgstr "Transparent"
+
+#: src/gui/view_panel.c:61
+msgid "Marching Cubes"
+msgstr "Marching cubes"
+
+#: src/gui/view_panel.c:65
+msgid "Smooth"
+msgstr "Adoucir"
+
+#: src/gui/app.c:84
+msgid "Tools"
+msgstr "Outils"
+
+#: src/gui/app.c:85
+msgid "Palette"
+msgstr "Palette"
+
+#: src/gui/app.c:86 src/gui/menu.c:130
+msgid "Edit"
+msgstr "Édition"
+
+#: src/gui/app.c:87
+#, fuzzy
+msgid "Layers"
+msgstr "Calque"
+
+#: src/gui/app.c:88
+msgid "Snap"
+msgstr "Aimanter"
+
+#: src/gui/app.c:89
+msgid "Symmetry"
+msgstr "Symétrie"
+
+#: src/gui/app.c:90 src/gui/menu.c:141
+msgid "View"
+msgstr "Vue"
+
+#: src/gui/app.c:91
+#, fuzzy
+msgid "Materials"
+msgstr "Matériau"
+
+#: src/gui/app.c:93
+msgid "Cameras"
+msgstr "Caméras"
+
+#: src/gui/app.c:96
+msgid "Render"
+msgstr "Rendu"
+
+#: src/gui/app.c:100
+msgid "Debug"
+msgstr "Débug"
+
+#: src/gui/export_panel.c:62
+msgid "Format"
+msgstr "Format"
+
+#: src/gui/quit.c:24
+msgid "File Has Unsaved Changes"
+msgstr "Le fichier a des modifications non-enregistrées"
+
+#: src/gui/quit.c:27 src/gui/menu.c:127
+msgid "Quit"
+msgstr "Quitter"
+
+#: src/gui/quit.c:31
+msgid "Cancel"
+msgstr "Annuler"
+
+#: src/gui/menu.c:96
+msgid "File"
+msgstr "Fichier"
+
+#: src/gui/menu.c:97
+msgid "New"
+msgstr "Nouveau"
+
+#: src/gui/menu.c:100
+msgid "Save As"
+msgstr "Enregistrer sous"
+
+#: src/gui/menu.c:101
+msgid "Open"
+msgstr "Ouvrir"
+
+#: src/gui/menu.c:110
+msgid "Import"
+msgstr "Importer"
+
+#: src/gui/menu.c:111
+msgid "2D Image"
+msgstr "Image 2D"
+
+#: src/gui/menu.c:118
+#, c-format
+msgid "Overwrite %s"
+msgstr "Écraser %s"
+
+#: src/gui/menu.c:132
+msgid "Undo"
+msgstr "Annuler"
+
+#: src/gui/menu.c:133
+msgid "Redo"
+msgstr "Refaire"
+
+#: src/gui/menu.c:136 src/gui/menu.c:137
+msgid "Settings"
+msgstr "Réglages"
+
+#: src/gui/menu.c:148
+msgid "Perspective"
+msgstr "Perspective"
+
+#: src/gui/layers_panel.c:58
+msgid "Duplicate"
+msgstr "Dupliquer"
+
+#: src/gui/layers_panel.c:59
+msgid "Clone"
+msgstr "Cloner"
+
+#: src/gui/layers_panel.c:60
+msgid "Merge Down"
+msgstr "Fusionner vers le bas"
+
+#: src/gui/layers_panel.c:61
+msgid "Merge Visible"
+msgstr "Fusionner visibles"
+
+#: src/gui/layers_panel.c:66 src/gui/layers_panel.c:70
+msgid "Crop"
+msgstr "Rogner"
+
+#: src/gui/layers_panel.c:138
+msgid "Unlink"
+msgstr "Dé-lier"
+
+#: src/gui/layers_panel.c:146
+msgid "Bounded"
+msgstr "Bornée"

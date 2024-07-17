@@ -174,7 +174,7 @@ static int gui(tool_t *tool)
 }
 
 TOOL_REGISTER(TOOL_EXTRUDE, extrude, tool_extrude_t,
-              .name = STR_EXTRUDE,
+              .name = N_("Extrude"),
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT,

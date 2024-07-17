@@ -49,18 +49,18 @@ void gui_cameras_panel(void)
     cam = goxel.image->active_camera;
 
     if (gui_section_begin(cam->name, GUI_SECTION_COLLAPSABLE)) {
-        gui_input_float(_(DISTANCE), &cam->dist, 10.0, 0, 0, NULL);
-        gui_checkbox(_(ORTHOGRAPHIC), &cam->ortho, NULL);
+        gui_input_float(_("Distance"), &cam->dist, 10.0, 0, 0, NULL);
+        gui_checkbox(_("Orthographic"), &cam->ortho, NULL);
         gui_group_begin(NULL);
         gui_row_begin(2);
-        gui_action_button(ACTION_view_left, _(LEFT), 1.0);
-        gui_action_button(ACTION_view_right, _(RIGHT), 1.0);
+        gui_action_button(ACTION_view_left, _("Left"), 1.0);
+        gui_action_button(ACTION_view_right, _("Right"), 1.0);
         gui_row_end();
         gui_row_begin(2);
-        gui_action_button(ACTION_view_front, _(FRONT), 1.0);
-        gui_action_button(ACTION_view_top, _(TOP), 1.0);
+        gui_action_button(ACTION_view_front, _("Front"), 1.0);
+        gui_action_button(ACTION_view_top, _("Top"), 1.0);
         gui_row_end();
-        gui_action_button(ACTION_view_default, _(RESET), 1.0);
+        gui_action_button(ACTION_view_default, _("Reset"), 1.0);
         gui_group_end();
 
         // Allow to edit euler angles (Should this be a generic widget?)
@@ -75,7 +75,7 @@ void gui_cameras_panel(void)
         pitch = round(eul[0] * DR2D);
         if (pitch < 0) pitch += 360;
         v = pitch;
-        snprintf(buf, sizeof(buf), "%s: X", _(ANGLE));
+        snprintf(buf, sizeof(buf), "%s: X", _("Angle"));
         if (gui_input_float(buf, &v, 1, -90, 90, "%.0f")) {
             v = (v - pitch) * DD2R;
             camera_turntable(cam, 0, v);

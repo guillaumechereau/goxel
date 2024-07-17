@@ -175,7 +175,7 @@ static int gui(tool_t *tool)
 }
 
 TOOL_REGISTER(TOOL_LINE, line, tool_line_t,
-              .name = STR_LINE,
+              .name = N_("Line"),
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_ALLOW_PICK_COLOR,

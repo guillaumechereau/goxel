@@ -126,7 +126,7 @@ int gui_settings_popup(void *data)
     const tr_lang_t *languages;
     bool val;
 
-    if (gui_section_begin(_(LANGUAGE), GUI_SECTION_COLLAPSABLE)) {
+    if (gui_section_begin(_("Language"), GUI_SECTION_COLLAPSABLE)) {
         language = tr_get_language();
         if (gui_combo_begin("##lang", language->name)) {
             languages = tr_get_supported_languages();
@@ -143,7 +143,7 @@ int gui_settings_popup(void *data)
         }
     } gui_section_end();
 
-    if (gui_section_begin(_(THEME), GUI_SECTION_COLLAPSABLE)) {
+    if (gui_section_begin(_("Theme"), GUI_SECTION_COLLAPSABLE)) {
         DL_COUNT(themes, theme, nb);
         i = 0;
         DL_FOREACH(themes, theme) {
@@ -167,12 +167,12 @@ int gui_settings_popup(void *data)
         }
     } gui_section_end();
 
-    if (gui_section_begin(_(PATHS), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+    if (gui_section_begin(_("Paths"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_text("Palettes: %s/palettes", sys_get_user_dir());
         gui_text("Progs: %s/progs", sys_get_user_dir());
     } gui_section_end();
 
-    if (gui_section_begin(_(SHORTCUTS), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+    if (gui_section_begin(_("Shortcuts"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_columns(2);
         gui_separator();
         actions_iter(shortcut_callback, NULL);
@@ -188,14 +188,14 @@ int gui_settings_popup(void *data)
         }
         gui_separator();
         gui_columns(1);
-        if (gui_button(_(ADD), 0, 0)) {
+        if (gui_button(_("Add"), 0, 0)) {
             on_add_keymap_button();
         }
     }
     gui_section_end();
 
     gui_popup_bottom_begin();
-    ret = gui_button(_(OK), 0, 0);
+    ret = gui_button(_("OK"), 0, 0);
     gui_popup_bottom_end();
     return ret;
 }

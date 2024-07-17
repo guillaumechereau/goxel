@@ -48,7 +48,7 @@ typedef struct action action_t;
 struct action {
     int             idx;
     const char      *id;            // Globally unique id.
-    int             help;           // Help text string id.
+    const char      *help;
     int             flags;
     const char      *default_shortcut;
     char            shortcut[8];    // Can be changed at runtime.

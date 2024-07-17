@@ -84,19 +84,19 @@ static int gui(tool_t *tool_)
 
     tool_plane_t *tool = (tool_plane_t*)tool_;
     v = goxel.snap_mask & SNAP_PLANE;
-    if (gui_checkbox(_(VISIBLE), &v, NULL)) {
+    if (gui_checkbox(_("Visible"), &v, NULL)) {
         set_flag(&goxel.snap_mask, SNAP_PLANE, v);
     }
 
     x = (int)round(goxel.plane[3][0]);
     y = (int)round(goxel.plane[3][1]);
     z = (int)round(goxel.plane[3][2]);
-    gui_group_begin(_(ORIGIN));
+    gui_group_begin(_("Origin"));
     if (gui_input_int("X", &x, 0, 0)) goxel.plane[3][0] = x;
     if (gui_input_int("Y", &y, 0, 0)) goxel.plane[3][1] = y;
     if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
     gui_group_end();
-    gui_group_begin(_(ROTATION));
+    gui_group_begin(_("Rotation"));
     gui_checkbox("Custom", &tool->custom_rotation, NULL);
     if (tool->custom_rotation)
         gui_rotation_mat4(goxel.plane);
@@ -115,7 +115,7 @@ static int gui(tool_t *tool_)
 }
 
 TOOL_REGISTER(TOOL_SET_PLANE, plane, tool_plane_t,
-              .name = STR_PLANE,
+              .name = N_("Plane"),
               .iter_fn = iter,
               .gui_fn = gui,
               .default_shortcut = "P"

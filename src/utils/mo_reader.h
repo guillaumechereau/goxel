@@ -1,6 +1,6 @@
 /* Goxel 3D voxels editor
  *
- * copyright (c) 2019 Guillaume Chereau <guillaume@noctua-software.com>
+ * copyright (c) 2024-Present Guillaume Chereau <guillaume@noctua-software.com>
  *
  * Goxel is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -16,13 +16,16 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "goxel.h"
+/*
+ * Simple interface to read gettext mo files.
+ */
 
-void gui_image_panel(void)
-{
-    image_t *image = goxel.image;
-    float (*box)[4][4] = &image->box;
-    gui_bbox(*box);
-    gui_action_button(ACTION_img_auto_resize, _("Fit to Content"), -1);
-}
+#include <stdbool.h>
 
+typedef struct mo_file mo_file_t;
+
+mo_file_t *mo_open_from_data(void *data, int size, bool free_data);
+
+void mo_close(mo_file_t *mo);
+
+const char *mo_get(mo_file_t *mo, const char *str);

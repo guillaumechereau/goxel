@@ -96,11 +96,11 @@ static int gui(tool_t *tool_)
 
     tool_gui_mask_mode(&tool->mode);
 
-    if (gui_checkbox(_(COLORS), &use_color, _(SELECT_BY_COLOR))) {
+    if (gui_checkbox(_("Colors"), &use_color, _("Select by Color"))) {
         tool->threshold = use_color ? 0 : 255;
     }
     if (use_color) {
-        gui_input_int(_(THRESHOLD), &tool->threshold, 1, 254);
+        gui_input_int(_("Threshold"), &tool->threshold, 1, 254);
     }
 
     if (volume_is_empty(img->selection_mask))
@@ -110,7 +110,7 @@ static int gui(tool_t *tool_)
 }
 
 TOOL_REGISTER(TOOL_FUZZY_SELECT, fuzzy_select, tool_fuzzy_select_t,
-              .name = STR_FUZZY_SELECT,
+              .name = N_("Fuzzy Select"),
               .init_fn = init,
               .iter_fn = iter,
               .gui_fn = gui,

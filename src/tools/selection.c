@@ -255,7 +255,7 @@ static int gui(tool_t *tool_)
 TOOL_REGISTER(TOOL_SELECTION,
               selection,
               tool_selection_t,
-              .name             = STR_SELECTION,
+              .name             = N_("Selection"),
               .init_fn          = init,
               .iter_fn          = iter,
               .gui_fn           = gui,

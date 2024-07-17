@@ -21,14 +21,14 @@
 static int gui_quit_popup(void *data)
 {
     int ret = 0;
-    gui_text(_(FILE_HAS_UNSAVED_CHANGES));
+    gui_text(_("File Has Unsaved Changes"));
 
     gui_row_begin(0);
-    if (gui_button(_(QUIT), 0, 0)) {
+    if (gui_button(_("Quit"), 0, 0)) {
         goxel.quit = true;
         ret = 1;
     }
-    if (gui_button(_(CANCEL), 0, 0)) {
+    if (gui_button(_("Cancel"), 0, 0)) {
         ret = 2;
     }
     gui_row_end();

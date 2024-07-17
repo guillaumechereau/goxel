@@ -33,19 +33,19 @@ void gui_snap_panel(void)
     float v;
     gui_group_begin(NULL);
     gui_row_begin(2);
-    snap_button(_(VOLUME), SNAP_VOLUME);
-    snap_button(_(PLANE), SNAP_PLANE);
+    snap_button(_("Volume"), SNAP_VOLUME);
+    snap_button(_("Plane"), SNAP_PLANE);
     gui_row_end();
     if (!box_is_null(goxel.image->selection_box)) {
-        snap_button(_(SELECTION_IN), SNAP_SELECTION_IN);
-        snap_button(_(SELECTION_OUT), SNAP_SELECTION_OUT);
+        snap_button(_("Selection (In)"), SNAP_SELECTION_IN);
+        snap_button(_("Selection (Out)"), SNAP_SELECTION_OUT);
     }
     if (!box_is_null(goxel.image->box)) {
-        snap_button(_(BOX), SNAP_IMAGE_BOX);
+        snap_button(_("Box"), SNAP_IMAGE_BOX);
     }
     gui_group_end();
 
     v = goxel.snap_offset;
-    if (gui_input_float(_(OFFSET), &v, 0.1, -1, +1, "%.1f"))
+    if (gui_input_float(_("Offset"), &v, 0.1, -1, +1, "%.1f"))
         goxel.snap_offset = clamp(v, -1, +1);
 }
