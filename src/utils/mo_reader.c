@@ -17,7 +17,7 @@
  */
 
 #include "mo_reader.h"
-#include "stb_ds.h"
+#include "../../ext_src/stb/stb_ds.h"
 
 #include <assert.h>
 #include <stdint.h>
