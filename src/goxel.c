@@ -878,10 +878,12 @@ static void update_keymaps_hints(void)
         mask |= 1 << action;
 
         title[0] = '\0';
-        if (input & GESTURE_CTRL) strcat(title, "Ctrl+");
-        if (input & GESTURE_SHIFT) strcat(title, "Shift+");
-        if (input & GESTURE_MMB) strcat(title, GLYPH_MOUSE_MMB);
-        if (input & GESTURE_RMB) strcat(title, GLYPH_MOUSE_RMB);
+        snprintf(title, sizeof(title), "%s%s%s%s",
+                 (input & GESTURE_CTRL) ? "Ctrl+" : "",
+                 (input & GESTURE_SHIFT) ? "Shift+" : "",
+                 (input & GESTURE_MMB) ? GLYPH_MOUSE_MMB : "",
+                 (input & GESTURE_RMB) ? GLYPH_MOUSE_RMB : "");
+
         if (action == 0) msg = "Pan View";
         if (action == 1) msg = "Rotate View";
         if (action == 2) msg = "Zoom";
