@@ -73,7 +73,7 @@ static int on_drag(gesture3d_t *gest)
     volume_t *volume = goxel.image->active_layer->volume;
     volume_t *tmp_volume;
     float face_plane[4][4];
-    float n[3], pos[3], v[3], box[4][4];
+    float pos[3], v[3], box[4][4];
     int pi[3];
     float delta;
 
@@ -94,7 +94,6 @@ static int on_drag(gesture3d_t *gest)
 
         volume_set(tool->volume_orig, volume);
 
-        // XXX: to remove: this is duplicated from selection tool.
         volume_get_box(tool->volume, true, box);
         mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
         vec3_normalize(face_plane[0], v);
@@ -104,24 +103,15 @@ static int on_drag(gesture3d_t *gest)
     }
 
     volume_get_box(tool->volume, true, box);
-
-    // XXX: have some generic way to resize boxes, since we use it all the
-    // time!
     mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
-    vec3_normalize(face_plane[2], n);
-    // XXX: Is there a better way to compute the delta??
-    vec3_sub(gest->pos, gest->snap_shape[3], v);
-    vec3_project(v, n, v);
-    delta = vec3_dot(n, v);
-    // render_box(&goxel.rend, &box, NULL, EFFECT_WIREFRAME);
+    vec3_project(gest->pos, gest->start_normal, pos);
+    vec3_sub(pos, gest->start_pos, v);
+    delta = vec3_dot(gest->start_normal, v);
 
     // Skip if we didn't move.
     if (round(delta) == tool->last_delta) goto end;
     tool->last_delta = round(delta);
 
-    vec3_sub(gest->pos, gest->snap_shape[3], v);
-    vec3_project(v, n, v);
-    vec3_add(gest->snap_shape[3], v, pos);
     pos[0] = round(pos[0]);
     pos[1] = round(pos[1]);
     pos[2] = round(pos[2]);
@@ -130,7 +120,7 @@ static int on_drag(gesture3d_t *gest)
     tmp_volume = volume_copy(tool->volume);
 
     if (delta >= 1) {
-        vec3_iaddk(face_plane[3], n, -0.5);
+        vec3_iaddk(face_plane[3], gest->start_normal, -0.5);
         box_move_face(box, tool->snap_face, pos, box);
         volume_extrude(tmp_volume, face_plane, box);
         volume_merge(volume, tmp_volume, MODE_OVER, NULL);
@@ -138,7 +128,7 @@ static int on_drag(gesture3d_t *gest)
     if (delta < 0.5) {
         box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos, box);
         vec3_imul(face_plane[2], -1.0);
-        vec3_iaddk(face_plane[3], n, -0.5);
+        vec3_iaddk(face_plane[3], gest->start_normal, -0.5);
         volume_extrude(tmp_volume, face_plane, box);
         volume_merge(volume, tmp_volume, MODE_SUB, NULL);
     }
