@@ -64,6 +64,36 @@ static int get_face(const float n[3])
     return -1;
 }
 
+static void extrude(
+        volume_t *volume, const volume_t *selection,
+        const float normal[3], float delta)
+{
+    float box[4][4], pos[3], plane[4][4];
+    int snap_face;
+    volume_t *tmp_volume;
+
+    snap_face = get_face(normal);
+    volume_get_box(selection, true, box);
+    mat4_mul(box, FACES_MATS[snap_face], plane);
+    tmp_volume = volume_copy(selection);
+    vec3_addk(plane[3], normal, delta, pos);
+
+    if (delta >= 1) {
+        vec3_iaddk(plane[3], normal, -0.5);
+        box_move_face(box, snap_face, pos, box);
+        volume_extrude(tmp_volume, plane, box);
+        volume_merge(volume, tmp_volume, MODE_OVER, NULL);
+    }
+    if (delta < 0.5) {
+        box_move_face(box, FACES_OPPOSITES[snap_face], pos, box);
+        vec3_imul(plane[2], -1.0);
+        vec3_iaddk(plane[3], normal, -0.5);
+        volume_extrude(tmp_volume, plane, box);
+        volume_merge(volume, tmp_volume, MODE_SUB, NULL);
+    }
+    volume_delete(tmp_volume);
+}
+
 // XXX: this code is just too ugly.  Needs a lot of cleanup.
 // The problem is that we should use some generic functions to handle
 // box resize, since we do it a lot, and the code is never very clear.
@@ -108,32 +138,14 @@ static int on_drag(gesture3d_t *gest)
     vec3_project(gest->pos, gest->start_normal, pos);
     vec3_sub(pos, gest->start_pos, v);
     delta = vec3_dot(gest->start_normal, v);
+    delta = round(delta);
 
     // Skip if we didn't move.
-    if (round(delta) == tool->last_delta) goto end;
-    tool->last_delta = round(delta);
-
-    pos[0] = round(pos[0]);
-    pos[1] = round(pos[1]);
-    pos[2] = round(pos[2]);
+    if (delta == tool->last_delta) goto end;
+    tool->last_delta = delta;
 
     volume_set(volume, tool->volume_orig);
-    tmp_volume = volume_copy(tool->volume);
-
-    if (delta >= 1) {
-        vec3_iaddk(face_plane[3], gest->start_normal, -0.5);
-        box_move_face(box, tool->snap_face, pos, box);
-        volume_extrude(tmp_volume, face_plane, box);
-        volume_merge(volume, tmp_volume, MODE_OVER, NULL);
-    }
-    if (delta < 0.5) {
-        box_move_face(box, FACES_OPPOSITES[tool->snap_face], pos, box);
-        vec3_imul(face_plane[2], -1.0);
-        vec3_iaddk(face_plane[3], gest->start_normal, -0.5);
-        volume_extrude(tmp_volume, face_plane, box);
-        volume_merge(volume, tmp_volume, MODE_SUB, NULL);
-    }
-    volume_delete(tmp_volume);
+    extrude(volume, tool->volume, gest->start_normal, delta);
 
 end:
     if (gest->state == GESTURE3D_STATE_END) {
