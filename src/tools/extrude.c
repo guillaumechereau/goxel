@@ -93,12 +93,13 @@ static int on_drag(gesture3d_t *gest)
         volume_delete(tmp_volume);
 
         volume_set(tool->volume_orig, volume);
-
         volume_get_box(tool->volume, true, box);
-        mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
-        vec3_normalize(face_plane[0], v);
-        gest->snap_mask = SNAP_SHAPE_PLANE;
-        plane_from_vectors(gest->snap_shape, gest->pos, gest->normal, v);
+
+        // Once we start dragging, snap to a line along the extrude direction.
+        gest->snap_mask = SNAP_SHAPE_LINE;
+        mat4_set_identity(gest->snap_shape);
+        vec3_copy(gest->pos, gest->snap_shape[3]);
+        vec3_copy(gest->normal, gest->snap_shape[2]);
         tool->last_delta = 0;
     }
 
