@@ -23,7 +23,8 @@ typedef struct {
     volume_t *volume_orig;
     volume_t *volume;
     int    snap_face;
-    int    last_delta;
+    float  normal[3];
+    int    delta;
 } tool_extrude_t;
 
 static int select_cond(void *user, const volume_t *volume,
@@ -111,9 +112,11 @@ static int on_drag(gesture3d_t *gest)
     if (gest->state < GESTURE3D_STATE_BEGIN) return 0;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {
+        vec3_copy(gest->normal, tool->normal);
         tool->snap_face = get_face(gest->normal);
 
         tmp_volume = volume_new();
+        volume_delete(tool->volume);
         tool->volume = volume_copy(volume);
         pi[0] = floor(gest->pos[0]);
         pi[1] = floor(gest->pos[1]);
@@ -130,26 +133,24 @@ static int on_drag(gesture3d_t *gest)
         mat4_set_identity(gest->snap_shape);
         vec3_copy(gest->pos, gest->snap_shape[3]);
         vec3_copy(gest->normal, gest->snap_shape[2]);
-        tool->last_delta = 0;
+        tool->delta = 0;
     }
 
     volume_get_box(tool->volume, true, box);
     mat4_mul(box, FACES_MATS[tool->snap_face], face_plane);
     vec3_project(gest->pos, gest->start_normal, pos);
     vec3_sub(pos, gest->start_pos, v);
-    delta = vec3_dot(gest->start_normal, v);
-    delta = round(delta);
+    delta = lround(vec3_dot(gest->start_normal, v));
 
     // Skip if we didn't move.
-    if (delta == tool->last_delta) goto end;
-    tool->last_delta = delta;
+    if (delta == tool->delta) goto end;
+    tool->delta = delta;
 
     volume_set(volume, tool->volume_orig);
     extrude(volume, tool->volume, gest->start_normal, delta);
 
 end:
     if (gest->state == GESTURE3D_STATE_END) {
-        volume_delete(tool->volume);
         image_history_push(goxel.image);
     }
     return 0;
@@ -171,8 +172,20 @@ static int iter(tool_t *tool_, const painter_t *painter,
     return 0;
 }
 
-static int gui(tool_t *tool)
+static int gui(tool_t *tool_)
 {
+    tool_extrude_t *tool = (tool_extrude_t*)tool_;
+    volume_t *volume = goxel.image->active_layer->volume;
+
+    gui_enabled_begin(tool->volume != NULL);
+    if (gui_input_int(_("Delta"), &tool->delta, 0, 0)) {
+        volume_set(volume, tool->volume_orig);
+        extrude(volume, tool->volume, tool->normal, tool->delta);
+    }
+    if (gui_is_item_deactivated()) {
+        image_history_push(goxel.image);
+    }
+    gui_enabled_end();
     return 0;
 }
 
