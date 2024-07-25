@@ -451,15 +451,18 @@ void volume_delete(volume_t *volume)
     free(volume);
 }
 
-volume_t *volume_copy(const volume_t *other)
+volume_t *volume_copy(const volume_t *volume)
 {
-    volume_t *volume = calloc(1, sizeof(*volume));
-    volume->ref = 1;
-    volume->tiles = other->tiles;
-    volume->tiles_ref = other->tiles_ref;
-    volume->key = other->key;
-    (*volume->tiles_ref)++;
-    return volume;
+    volume_t *ret;
+
+    if (!volume) return volume_new();
+    ret = calloc(1, sizeof(*volume));
+    ret->ref = 1;
+    ret->tiles = volume->tiles;
+    ret->tiles_ref = volume->tiles_ref;
+    ret->key = volume->key;
+    (*ret->tiles_ref)++;
+    return ret;
 }
 
 void volume_set(volume_t *volume, const volume_t *other)
