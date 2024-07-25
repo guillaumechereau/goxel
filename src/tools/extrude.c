@@ -71,7 +71,7 @@ static int get_face(const float n[3])
 static void extrude(
         volume_t *volume, const volume_t *origin,
         const volume_t *selection,
-        const float normal[3], float delta)
+        const float normal[3], int delta)
 {
     float box[4][4], pos[3], plane[4][4];
     int snap_face;
@@ -79,6 +79,8 @@ static void extrude(
 
     if (volume_is_empty(origin)) return;
     volume_set(volume, origin);
+
+    if (delta == 0) return;
     snap_face = get_face(normal);
     volume_get_box(selection, true, box);
     mat4_mul(box, FACES_MATS[snap_face], plane);
@@ -91,7 +93,7 @@ static void extrude(
         volume_extrude(tmp_volume, plane, box);
         volume_merge(volume, tmp_volume, MODE_OVER, NULL);
     }
-    if (delta < 0.5) {
+    if (delta < 0) {
         box_move_face(box, FACES_OPPOSITES[snap_face], pos, box);
         vec3_imul(plane[2], -1.0);
         vec3_iaddk(plane[3], normal, -0.5);
