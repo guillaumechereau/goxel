@@ -20,7 +20,10 @@
 
 typedef struct {
     tool_t tool;
+
     volume_t *volume_orig;
+    volume_t *mask_orig;
+
     volume_t *volume;
     int    snap_face;
     float  normal[3];
@@ -66,13 +69,16 @@ static int get_face(const float n[3])
 }
 
 static void extrude(
-        volume_t *volume, const volume_t *selection,
+        volume_t *volume, const volume_t *origin,
+        const volume_t *selection,
         const float normal[3], float delta)
 {
     float box[4][4], pos[3], plane[4][4];
     int snap_face;
     volume_t *tmp_volume;
 
+    if (volume_is_empty(origin)) return;
+    volume_set(volume, origin);
     snap_face = get_face(normal);
     volume_get_box(selection, true, box);
     mat4_mul(box, FACES_MATS[snap_face], plane);
@@ -95,6 +101,12 @@ static void extrude(
     volume_delete(tmp_volume);
 }
 
+static int on_click(gesture3d_t *gest)
+{
+    action_exec2(ACTION_reset_selection);
+    return 0;
+}
+
 // XXX: this code is just too ugly.  Needs a lot of cleanup.
 // The problem is that we should use some generic functions to handle
 // box resize, since we do it a lot, and the code is never very clear.
@@ -102,6 +114,7 @@ static int on_drag(gesture3d_t *gest)
 {
     tool_extrude_t *tool = (tool_extrude_t*)gest->user;
     volume_t *volume = goxel.image->active_layer->volume;
+    volume_t *mask = goxel.image->selection_mask;
     volume_t *tmp_volume;
     float face_plane[4][4];
     float pos[3], v[3], box[4][4];
@@ -118,6 +131,10 @@ static int on_drag(gesture3d_t *gest)
         tmp_volume = volume_new();
         volume_delete(tool->volume);
         tool->volume = volume_copy(volume);
+        if (!volume_is_empty(mask)) {
+            volume_merge(tool->volume, mask, MODE_INTERSECT, NULL);
+        }
+
         pi[0] = floor(gest->pos[0]);
         pi[1] = floor(gest->pos[1]);
         pi[2] = floor(gest->pos[2]);
@@ -125,7 +142,10 @@ static int on_drag(gesture3d_t *gest)
         volume_merge(tool->volume, tmp_volume, MODE_MULT_ALPHA, NULL);
         volume_delete(tmp_volume);
 
-        volume_set(tool->volume_orig, volume);
+        volume_delete(tool->volume_orig);
+        tool->volume_orig = volume_copy(volume);
+        volume_delete(tool->mask_orig);
+        tool->mask_orig = volume_copy(mask);
         volume_get_box(tool->volume, true, box);
 
         // Once we start dragging, snap to a line along the extrude direction.
@@ -146,8 +166,10 @@ static int on_drag(gesture3d_t *gest)
     if (delta == tool->delta) goto end;
     tool->delta = delta;
 
-    volume_set(volume, tool->volume_orig);
-    extrude(volume, tool->volume, gest->start_normal, delta);
+    extrude(volume, tool->volume_orig, tool->volume,
+            gest->start_normal, delta);
+    extrude(mask, tool->mask_orig, tool->volume,
+            gest->start_normal, delta);
 
 end:
     if (gest->state == GESTURE3D_STATE_END) {
@@ -160,15 +182,23 @@ static int iter(tool_t *tool_, const painter_t *painter,
                 const float viewport[4])
 {
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
-    if (!tool->volume_orig) tool->volume_orig = volume_new();
+
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_DRAG,
-        .snap_mask = goxel.snap_mask & ~SNAP_ROUNDED, // Why?
+        .snap_mask = SNAP_VOLUME,
         .snap_offset = -0.5,
         .callback = on_drag,
         .flags = GESTURE3D_FLAG_ALWAYS_CALL,
         .user = tool,
     });
+
+    // Reset selection on single click.
+    goxel_gesture3d(&(gesture3d_t) {
+        .type = GESTURE3D_TYPE_CLICK,
+        .snap_mask = SNAP_CAMERA,
+        .callback = on_click,
+    });
+
     return 0;
 }
 
@@ -179,8 +209,10 @@ static int gui(tool_t *tool_)
 
     gui_enabled_begin(tool->volume != NULL);
     if (gui_input_int(_("Delta"), &tool->delta, 0, 0)) {
-        volume_set(volume, tool->volume_orig);
-        extrude(volume, tool->volume, tool->normal, tool->delta);
+        extrude(volume, tool->volume_orig, tool->volume,
+                tool->normal, tool->delta);
+        extrude(goxel.image->selection_mask, tool->mask_orig, tool->volume,
+                tool->normal, tool->delta);
     }
     if (gui_is_item_deactivated()) {
         image_history_push(goxel.image);
@@ -193,6 +225,6 @@ TOOL_REGISTER(TOOL_EXTRUDE, extrude, tool_extrude_t,
               .name = N_("Extrude"),
               .iter_fn = iter,
               .gui_fn = gui,
-              .flags = TOOL_REQUIRE_CAN_EDIT,
+              .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_SHOW_MASK,
               .default_shortcut = "F"
 )
