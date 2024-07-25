@@ -45,12 +45,16 @@ void tr_set_language(const char *id)
     for (i = 0; i < ARRAY_SIZE(LANGUAGES); i++) {
         if (strcmp(LANGUAGES[i].id, id) == 0) {
             LOG_D("Set lang '%s'", LANGUAGES[i].id);
+            mo_close(mo_file);
+            mo_file = NULL;
             current_lang_idx = i;
+            if (i == 0) { // English: no need for mo file.
+                break;
+            }
             snprintf(uri, sizeof(uri), "asset://data/locale/%s.mo",
                      LANGUAGES[i].id);
             data = assets_get(uri, &size);
             assert(data);
-            mo_close(mo_file);
             mo_file = mo_open_from_data((void *)data, size, false);
             break;
         }
