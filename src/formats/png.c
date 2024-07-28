@@ -79,4 +79,5 @@ FILE_FORMAT_REGISTER(png,
     .exts_desc = "png",
     .export_gui = export_gui,
     .export_func = export_as_png,
+    .priority = 90,
 )

@@ -34,6 +34,7 @@ struct file_format
     int             (*import_func)(const file_format_t *format, image_t *img,
                                    const char *path);
     void            (*import_gui)(file_format_t *format);
+    int             priority; // Specifies the order of file_format_iter.
 };
 
 void file_format_register(file_format_t *format);

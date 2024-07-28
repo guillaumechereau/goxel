@@ -456,4 +456,5 @@ FILE_FORMAT_REGISTER(gltf,
     .exts_desc = "glTF2",
     .export_gui = export_gui,
     .export_func = export_as_gltf,
+    .priority = 100,
 )
