@@ -1,5 +1,13 @@
 #Changelog
 
+## [0.15.1] - 2024-07-28
+
+- Fixed crash when we save on MacOS.
+- Improved extrude tool, with manual delta input.
+- Improved help messages.
+- Added support to emulate middle mouse button with Alt.
+- Allow to configure the navigation mouse buttons.
+
 ## [0.15.0] - 2024-07-08
 
 - Improved the selection tool: the selection mask is now automatically updated
