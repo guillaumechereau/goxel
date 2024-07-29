@@ -343,7 +343,7 @@ void volume_op(volume_t *volume, const painter_t *painter, const float box[4][4]
                      mode == MODE_INTERSECT_FILL;
 
     // for intersection start by deleting all the tiles that are not in
-    // the box.
+    // the box and then iter all the rest.
     if (mode == MODE_INTERSECT || mode == MODE_INTERSECT_FILL) {
         iter = volume_get_iterator(volume, VOLUME_ITER_TILES);
         while (volume_iter(&iter, vp)) {
@@ -351,10 +351,12 @@ void volume_op(volume_t *volume, const painter_t *painter, const float box[4][4]
             if (box_intersect_aabb(box, aabb)) continue;
             volume_clear_tile(volume, &iter, vp);
         }
+        iter = volume_get_iterator(
+                volume, skip_dst_empty ? VOLUME_ITER_SKIP_EMPTY : 0);
+    } else {
+        iter = volume_get_box_iterator(
+                volume, box, skip_dst_empty ? VOLUME_ITER_SKIP_EMPTY : 0);
     }
-
-    iter = volume_get_box_iterator(volume, box,
-                                 skip_dst_empty ? VOLUME_ITER_SKIP_EMPTY : 0);
 
     // XXX: for the moment we cannot use the same accessor for both
     // setting and getting!  Need to fix that!!
