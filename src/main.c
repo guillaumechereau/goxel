@@ -388,16 +388,26 @@ int main(int argc, char **argv)
     glfwInit();
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
-    monitor = glfwGetPrimaryMonitor();
-    mode = glfwGetVideoMode(monitor);
-    if (mode) {
-        width = mode->width ?: 640;
-        height = mode->height ?: 480;
+
+    // Is there a clean way to create a maximized window
+    // that works both on Windows, Mac and Linux?
+    if (!DEFINED(WIN32)) {
+        monitor = glfwGetPrimaryMonitor();
+        mode = glfwGetVideoMode(monitor);
+        if (mode) {
+            width = mode->width ?: 640;
+            height = mode->height ?: 480;
+        }
+        window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
+        assert(window);
+        glfwSetWindowPos(window, 0, 0);
+    } else {
+        glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+	window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
+        assert(window);
     }
-    window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
-    assert(window);
+
     sys_callbacks.user = window;
-    glfwSetWindowPos(window, 0, 0);
     glfwMakeContextCurrent(window);
     if (!DEFINED(EMSCRIPTEN))
         glfwSetScrollCallback(window, on_scroll);
