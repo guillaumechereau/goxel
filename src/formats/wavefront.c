@@ -21,6 +21,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wimplicit-const-int-float-conversion"
+#pragma GCC diagnostic ignored "-Wnan-infinity-disabled"
 #define VOXELIZER_IMPLEMENTATION
 #include "../ext_src/voxelizer/voxelizer.h"
 #pragma GCC diagnostic pop
