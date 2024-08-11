@@ -683,9 +683,10 @@ int goxel_iter(const inputs_t *inputs)
     for (i = 0; i < (int)ARRAY_SIZE(inputs2.touches); i++) {
         inputs2.touches[i].pos[1] =
             inputs->window_size[1] - inputs->touches[i].pos[1];
+        // Move the mouse outside the viewport if the UI captures it.
         if (gui_want_capture_mouse()) {
-            inputs2.touches[i].pos[0] = NAN;
-            inputs2.touches[i].pos[1] = NAN;
+            inputs2.touches[i].pos[0] = -1;
+            inputs2.touches[i].pos[1] = -1;
         }
     }
     arrfree(goxel.hints);
