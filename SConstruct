@@ -73,7 +73,7 @@ if env['werror']:
     env.Append(CCFLAGS='-Werror')
 
 if env['mode'] not in ['debug', 'analyze']:
-    env.Append(CPPDEFINES='NDEBUG', CCFLAGS='-Ofast')
+    env.Append(CPPDEFINES='NDEBUG', CCFLAGS='-O3')
 
 if env['mode'] == 'debug':
     env.Append(CCFLAGS=['-O0'])
