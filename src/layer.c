@@ -57,8 +57,11 @@ uint32_t layer_get_key(const layer_t *layer)
     key = XXH32(&layer->shape, sizeof(layer->shape), key);
     key = XXH32(&layer->color, sizeof(layer->color), key);
     key = XXH32(&mat_key, sizeof(mat_key), key);
-    key = XXH32(&layer->mat, sizeof(layer->mat), key);
     key = XXH32(&layer->mode, sizeof(layer->mode), key);
+
+    // Also hash the material pointer, to avoid some possible crashes with
+    // goxel.render_layers cache.
+    key = XXH32(&layer->material, sizeof(layer->material), key);
     return key;
 }
 
