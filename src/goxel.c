@@ -21,6 +21,7 @@
 #include "file_format.h"
 #include "script.h"
 #include "shader_cache.h"
+#include "system.h"
 #include "utils/box.h"
 #include "volume.h"
 #include "xxhash.h"
@@ -1681,24 +1682,8 @@ static void copy_action(void)
     }
 
     char *encoded_voxels = volume_copy_to_string(goxel.image->active_layer->volume, aabb);
-    printf("%s\n", encoded_voxels);
+    sys_callbacks.set_clipboard_text(sys_callbacks.user, encoded_voxels);
     free(encoded_voxels);
-
-#if 0
-    painter_t painter;
-
-    volume_delete(goxel.clipboard.volume);
-    mat4_copy(img->selection_box, goxel.clipboard.box);
-    goxel.clipboard.volume = volume_copy(goxel.image->active_layer->volume);
-    if (!box_is_null(img->selection_box)) {
-        painter = (painter_t) {
-            .shape = &shape_cube,
-            .mode = MODE_INTERSECT,
-            .color = {255, 255, 255, 255},
-        };
-        volume_op(goxel.clipboard.volume, &painter, img->selection_box);
-    }
-#endif
 }
 
 static void paste_action(void)
