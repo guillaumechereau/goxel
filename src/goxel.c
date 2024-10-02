@@ -1677,8 +1677,11 @@ static void copy_action(void)
 
     if (!box_is_null(img->selection_box)) {
         bbox_to_aabb(img->selection_box, aabb);
-    } else {
+    } else if (!box_is_null(goxel.image->active_layer->box)) {
         bbox_to_aabb(goxel.image->active_layer->box, aabb);
+    }
+    else {
+        volume_get_bbox(goxel.image->active_layer->volume, aabb, true);
     }
 
     char *encoded_voxels = volume_copy_to_string(goxel.image->active_layer->volume, aabb);
@@ -1690,23 +1693,27 @@ static void paste_action(void)
 {
     image_t *img = goxel.image;
     volume_t *volume = img->active_layer->volume;
-    volume_t *tmp;
-    float p1[3], p2[3], mat[4][4];
+    int aabb[2][3];
+    const char *clipboard_text;
 
-    mat4_set_identity(mat);
-    if (!goxel.clipboard.volume) return;
-
-    tmp = volume_copy(goxel.clipboard.volume);
-    if (    !box_is_null(img->selection_box) &&
-            !box_is_null(goxel.clipboard.box)) {
-        vec3_copy(img->selection_box[3], p1);
-        vec3_copy(goxel.clipboard.box[3], p2);
-        mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
-        mat4_itranslate(mat, -p2[0], -p2[1], -p2[2]);
-        volume_move(tmp, mat);
+    clipboard_text = sys_callbacks.get_clipboard_text(sys_callbacks.user);
+    if (clipboard_text == NULL) {
+        return;
     }
-    volume_merge(volume, tmp, MODE_OVER, NULL);
-    volume_delete(tmp);
+
+    if (!box_is_null(img->selection_box)) {
+        bbox_to_aabb(img->selection_box, aabb);
+    } else {
+        aabb[0][0] = 0;
+        aabb[0][1] = 0;
+        aabb[0][2] = 0;
+        
+        if (volume_parse_string_header(clipboard_text, aabb[1]) == NULL) {
+            return;
+        }
+    }
+
+    volume_merge_from_string(volume, aabb, clipboard_text);
 }
 
 ACTION_REGISTER(ACTION_copy,

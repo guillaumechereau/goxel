@@ -250,8 +250,34 @@ void volume_get_global_stats(volume_global_stats_t *stats);
  *
  * Return:
  *   The heap-allocated encoded string.
- *
  */
 char* volume_copy_to_string(const volume_t *volume, const int aabb[2][3]);
+
+/*
+ * Function: volume_parse_string_header
+ *
+ * Parses a voxel encoding string header, as returned by volume_copy_to_string(). 
+ *
+ * Inputs:
+ *   encoded_str - The string with encoded voxels.
+ *   size - If parsed successfully, the size will be written to this array.
+ *
+ * Return:
+ *   The beginning of the hex-encoded voxels if the header is valid,
+ *   NULL otherwise.
+ */
+const char* volume_parse_string_header(const char *encoded_str, int size[3]);
+
+/*
+ * Function: volume_merge_from_string
+ *
+ * Merges the string-encoded voxels into this volume within the specified aabb.
+ *
+ * Inputs:
+ *   volume - The volume.
+ *   aabb - The bounding box within the volume to merge the string into.
+ *   encoded_str - The string with encoded voxels, from volume_copy_to_string().
+ */
+void volume_merge_from_string(volume_t *volume, const int aabb[2][3], const char *encoded_str);
 
 #endif // VOLUME_H
