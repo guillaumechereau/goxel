@@ -18,6 +18,23 @@
 
 #include "goxel.h"
 
+static bool have_volume_to_paste()
+{
+    const char *clipboard_text;
+    int size[3];
+
+    clipboard_text = sys_callbacks.get_clipboard_text(sys_callbacks.user);
+    if (clipboard_text == NULL) {
+        return false;
+    }
+
+    if (volume_parse_string_header(clipboard_text, size) == NULL) {
+        return false;
+    }
+
+    return true;
+}
+
 void gui_edit_panel(void)
 {
     image_t *img = goxel.image;
@@ -40,7 +57,7 @@ void gui_edit_panel(void)
     gui_enabled_begin(!volume_is_empty(goxel.image->selection_mask));
     gui_action_button(ACTION_copy, _("Copy"), 1.0);
     gui_enabled_end();
-    gui_enabled_begin(!volume_is_empty(goxel.clipboard.volume));
+    gui_enabled_begin(have_volume_to_paste());
     gui_action_button(ACTION_paste, _("Paste"), 1.0);
     gui_enabled_end();
     gui_group_end();
