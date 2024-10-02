@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
+#include <stdio.h>
 
 #define min(a, b) ({ \
       __typeof__ (a) _a = (a); \
@@ -827,4 +828,47 @@ int volume_get_tiles_count(const volume_t *volume)
 void volume_get_global_stats(volume_global_stats_t *stats)
 {
     *stats = g_global_stats;
+}
+
+char* volume_copy_to_string(const volume_t *volume, const int aabb[2][3])
+{
+    int pos[3];
+    int volume_pos[3];
+    int size[3];
+    char str_header[256];
+    size_t total_size;
+    char *encoded_str;
+    char *writer;
+    int i;
+    uint8_t voxel[4];
+
+    size[0] = aabb[1][0] - aabb[0][0];
+    size[1] = aabb[1][1] - aabb[0][1];
+    size[2] = aabb[1][2] - aabb[0][2];
+
+    sprintf(str_header, "goxel::voxels::%dx%dx%d::", size[0], size[1], size[2]);
+    total_size = strlen(str_header) + size[0] * size[1] * size[2] * 8 + 1;
+    encoded_str = malloc(total_size);
+    writer = encoded_str + strlen(str_header);
+
+    strcpy(encoded_str, str_header);
+
+    for (pos[2] = 0; pos[2] < size[2]; pos[2]++) {
+        for (pos[1] = 0; pos[1] < size[1]; pos[1]++) {
+            for (pos[0] = 0; pos[0] < size[0]; pos[0]++) {
+                memcpy(volume_pos, pos, sizeof(pos));
+
+                for (i = 0; i < 3; i++) {
+                    volume_pos[i] += aabb[0][i];
+                }
+
+                volume_get_at(volume, NULL, volume_pos, voxel);
+                for (i = 0; i < 4; i++) {
+                    writer += sprintf(writer, "%02hhx", voxel[i]);
+                }
+            }
+        }
+    }
+
+    return encoded_str;
 }

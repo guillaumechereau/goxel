@@ -238,4 +238,20 @@ typedef struct {
 
 void volume_get_global_stats(volume_global_stats_t *stats);
 
+/*
+ * Function: volume_copy_to_string
+ *
+ * Returns a string a box within this volume. The returned string is on the heap and owned
+ * by the caller, you must call free() on it later.
+ *
+ * Inputs:
+ *   volume - The volume.
+ *   aabb - The bounding box within the volume to write to the string.
+ *
+ * Return:
+ *   The heap-allocated encoded string.
+ *
+ */
+char* volume_copy_to_string(const volume_t *volume, const int aabb[2][3]);
+
 #endif // VOLUME_H

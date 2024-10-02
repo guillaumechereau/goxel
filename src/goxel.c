@@ -21,6 +21,8 @@
 #include "file_format.h"
 #include "script.h"
 #include "shader_cache.h"
+#include "utils/box.h"
+#include "volume.h"
 #include "xxhash.h"
 
 #include "../ext_src/stb/stb_ds.h"
@@ -1669,8 +1671,21 @@ ACTION_REGISTER(ACTION_sub_selection,
 
 static void copy_action(void)
 {
-    painter_t painter;
     image_t *img = goxel.image;
+    int aabb[2][3];
+
+    if (!box_is_null(img->selection_box)) {
+        bbox_to_aabb(img->selection_box, aabb);
+    } else {
+        bbox_to_aabb(goxel.image->active_layer->box, aabb);
+    }
+
+    char *encoded_voxels = volume_copy_to_string(goxel.image->active_layer->volume, aabb);
+    printf("%s\n", encoded_voxels);
+    free(encoded_voxels);
+
+#if 0
+    painter_t painter;
 
     volume_delete(goxel.clipboard.volume);
     mat4_copy(img->selection_box, goxel.clipboard.box);
@@ -1683,6 +1698,7 @@ static void copy_action(void)
         };
         volume_op(goxel.clipboard.volume, &painter, img->selection_box);
     }
+#endif
 }
 
 static void paste_action(void)
