@@ -909,7 +909,8 @@ const char* volume_parse_string_header(const char *encoded_str, int size[3])
     return vdata;
 }
 
-void volume_merge_from_string(volume_t *volume, const int aabb[2][3], const char *encoded_str)
+void volume_merge_from_string(volume_t *volume, const int aabb[2][3],
+                              const char *encoded_str)
 {
     const char *reader;
     int pos[3];
@@ -930,7 +931,8 @@ void volume_merge_from_string(volume_t *volume, const int aabb[2][3], const char
     for (pos[2] = 0; pos[2] < size[2]; pos[2]++) {
         for (pos[1] = 0; pos[1] < size[1]; pos[1]++) {
             for (pos[0] = 0; pos[0] < size[0]; pos[0]++) {
-                if (sscanf(reader, "%2hhx%2hhx%2hhx%2hhx", &voxel[0], &voxel[1], &voxel[2], &voxel[3]) != 4) {
+                if (sscanf(reader, "%2hhx%2hhx%2hhx%2hhx", &voxel[0], &voxel[1],
+                    &voxel[2], &voxel[3]) != 4) {
                     continue;
                 }
 
@@ -941,7 +943,11 @@ void volume_merge_from_string(volume_t *volume, const int aabb[2][3], const char
                 for (i = 0; i < 3; i++) {
                     volume_pos[i] += aabb[0][i];
                     
-                    if (volume_pos[i] < aabb[0][i] || volume_pos[i] >= aabb[1][i]) {
+                    if (volume_pos[i] < aabb[0][i]) {
+                        break;
+                    }
+                    
+                    if (volume_pos[i] >= aabb[1][i]) {
                         break;
                     }
                 }

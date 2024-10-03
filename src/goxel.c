@@ -1674,6 +1674,7 @@ static void copy_action(void)
 {
     image_t *img = goxel.image;
     int aabb[2][3];
+    char *encoded_voxels;
 
     if (!box_is_null(img->selection_box)) {
         bbox_to_aabb(img->selection_box, aabb);
@@ -1684,7 +1685,8 @@ static void copy_action(void)
         volume_get_bbox(goxel.image->active_layer->volume, aabb, true);
     }
 
-    char *encoded_voxels = volume_copy_to_string(goxel.image->active_layer->volume, aabb);
+    encoded_voxels = volume_copy_to_string(goxel.image->active_layer->volume,
+                                           aabb);
     sys_callbacks.set_clipboard_text(sys_callbacks.user, encoded_voxels);
     free(encoded_voxels);
 }
