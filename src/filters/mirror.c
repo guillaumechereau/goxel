@@ -142,7 +142,8 @@ static int gui(filter_t *filter)
         bbox_to_aabb(box, aabb);
 
         DL_FOREACH(goxel.image->layers, layer) {
-            if (mirror_props->current_only && layer != goxel.image->active_layer)
+            if (mirror_props->current_only &&
+                layer != goxel.image->active_layer)
                 continue;
 
             volume_mirror(layer->volume, axis, aabb);
