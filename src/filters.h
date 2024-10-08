@@ -19,6 +19,8 @@
 #ifndef FILTERS_H
 #define FILTERS_H
 
+#include <stdbool.h>
+
 typedef struct filter filter_t;
 
 struct filter {
@@ -28,6 +30,7 @@ struct filter {
     const char *name;
     const char *action_id;
     const char *default_shortcut;
+    bool is_open;
 };
 
 #define FILTER_REGISTER(id_, klass_, ...) \
@@ -47,6 +50,6 @@ void filter_register_(filter_t *filter);
  * Iter all the registered filters
  */
 void filters_iter_all(
-        void *arg, void (*f)(void *arg, const filter_t *filter));
+        void *arg, void (*f)(void *arg, filter_t *filter));
 
 #endif // FILTERS_H

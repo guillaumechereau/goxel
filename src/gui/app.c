@@ -16,6 +16,7 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "filters.h"
 #include "goxel.h"
 
 #include "../ext_src/stb/stb_ds.h"
@@ -35,6 +36,9 @@
 #ifndef YOCTO
 #   define YOCTO 1
 #endif
+
+#define INITIAL_FILTER_OFFSET 10
+#define RELATIVE_FILTER_OFFSET 40
 
 // Note: duplicated from gui.cpp!  To remove.
 static const float ITEM_HEIGHT = 18;
@@ -101,6 +105,13 @@ static struct {
 #endif
 };
 
+typedef struct filter_layout_state filter_layout_state_t;
+
+struct filter_layout_state {
+    int next_x;
+    int next_y;
+};
+
 static void on_click(void) {
     if (DEFINED(GUI_SOUND))
         sound_play("click", 1.0, 1.0);
@@ -157,6 +168,29 @@ static void render_hints(const hint_t *hints)
     }
 }
 
+static void gui_filter_window(void *arg, filter_t *filter)
+{
+    filter_layout_state_t *state = arg;
+
+    if (filter->is_open) {
+        gui_window_begin(filter->name, state->next_x, state->next_y,
+                            goxel.gui.panel_width, 0, GUI_WINDOW_MOVABLE);
+
+        if (gui_panel_header(filter->name)) {
+            if (filter->on_close) {
+                filter->on_close(filter);
+            }
+            filter->is_open = false;
+        }
+        filter->gui_fn(filter);
+
+        gui_window_end();
+    }
+
+    state->next_x += RELATIVE_FILTER_OFFSET;
+    state->next_y += RELATIVE_FILTER_OFFSET;
+}
+
 void gui_app(void)
 {
     float x = 0, y = 0;
@@ -164,7 +198,7 @@ void gui_app(void)
     const float spacing = 8;
     int flags;
     int i;
-    filter_t *filter;
+    filter_layout_state_t filter_layout_state;
 
     goxel.show_export_viewport = false;
 
@@ -216,20 +250,10 @@ void gui_app(void)
         gui_window_end();
     }
 
-    filter = goxel.gui.current_filter;
-    if (filter) {
-        // XXX: we should have a way to center the filter window.
-        gui_window_begin(filter->name, 100, 100, goxel.gui.panel_width, 0,
-                         GUI_WINDOW_MOVABLE);
-        if (gui_panel_header(filter->name)) {
-            if (goxel.gui.current_filter->on_close) {
-                goxel.gui.current_filter->on_close(goxel.gui.current_filter);
-            }
-            goxel.gui.current_filter = NULL;
-        }
-        filter->gui_fn(filter);
-        gui_window_end();
-    }
+    filter_layout_state.next_x = x + goxel.gui.panel_width +
+                                    INITIAL_FILTER_OFFSET;
+    filter_layout_state.next_y = y;
+    filters_iter_all(&filter_layout_state, gui_filter_window);
 
     goxel.pathtrace = goxel.pathtracer.status &&
         (goxel.gui.current_panel == PANEL_RENDER ||
