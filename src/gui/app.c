@@ -16,6 +16,7 @@
  * goxel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "filters.h"
 #include "goxel.h"
 
 #include "../ext_src/stb/stb_ds.h"
@@ -157,6 +158,26 @@ static void render_hints(const hint_t *hints)
     }
 }
 
+static void gui_filter_window(void *arg, filter_t *filter)
+{
+    if (!filter->is_open) {
+        return;
+    }
+
+    gui_window_begin(filter->name, 100, 100, goxel.gui.panel_width, 0,
+                        GUI_WINDOW_MOVABLE);
+
+    if (gui_panel_header(filter->name)) {
+        if (filter->on_close) {
+            filter->on_close(filter);
+        }
+        filter->is_open = false;
+    }
+    filter->gui_fn(filter);
+
+    gui_window_end();
+}
+
 void gui_app(void)
 {
     float x = 0, y = 0;
@@ -164,7 +185,6 @@ void gui_app(void)
     const float spacing = 8;
     int flags;
     int i;
-    filter_t *filter;
 
     goxel.show_export_viewport = false;
 
@@ -216,20 +236,7 @@ void gui_app(void)
         gui_window_end();
     }
 
-    filter = goxel.gui.current_filter;
-    if (filter) {
-        // XXX: we should have a way to center the filter window.
-        gui_window_begin(filter->name, 100, 100, goxel.gui.panel_width, 0,
-                         GUI_WINDOW_MOVABLE);
-        if (gui_panel_header(filter->name)) {
-            if (goxel.gui.current_filter->on_close) {
-                goxel.gui.current_filter->on_close(goxel.gui.current_filter);
-            }
-            goxel.gui.current_filter = NULL;
-        }
-        filter->gui_fn(filter);
-        gui_window_end();
-    }
+    filters_iter_all(NULL, gui_filter_window);
 
     goxel.pathtrace = goxel.pathtracer.status &&
         (goxel.gui.current_panel == PANEL_RENDER ||
