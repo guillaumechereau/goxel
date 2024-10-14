@@ -71,7 +71,7 @@ static void on_script(void *user, const char *name)
         script_execute(name);
 }
 
-static void on_filter(void *user, const filter_t *filter)
+static void on_filter(void *user, filter_t *filter)
 {
     const action_t *action;
     if (gui_menu_item(0, filter->name, true)) {
