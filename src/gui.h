@@ -200,5 +200,6 @@ void gui_context_menu_button(const char *label, int icon);
  */
 float gui_get_current_pos_x(void);
 void gui_set_current_pos_x(float x);
+float gui_get_item_height(void);
 
 #endif // GUI_H

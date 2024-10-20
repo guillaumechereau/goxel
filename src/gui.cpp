@@ -1999,3 +1999,9 @@ void gui_set_current_pos_x(float x)
 {
     ImGui::SetCursorPosX(x);
 }
+
+float gui_get_item_height(void)
+{
+    ImGuiStyle& style = ImGui::GetStyle();
+    return style.FramePadding.y * 2 + ImGui::GetFontSize();
+}
