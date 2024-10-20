@@ -48,6 +48,9 @@ typedef struct {
     float w;
 } gui_window_ret_t;
 
+float gui_get_scale(void);
+void gui_set_scale(float s);
+
 int gui_window_begin(const char *label, float x, float y, float w, float h,
                      int flags);
 

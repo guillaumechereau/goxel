@@ -125,6 +125,7 @@ int gui_settings_popup(void *data)
     const tr_lang_t *language;
     const tr_lang_t *languages;
     bool val;
+    float scale;
 
     if (gui_section_begin(_("Language"), GUI_SECTION_COLLAPSABLE)) {
         language = tr_get_language();
@@ -143,17 +144,26 @@ int gui_settings_popup(void *data)
         }
     } gui_section_end();
 
-    if (gui_section_begin(_("Theme"), GUI_SECTION_COLLAPSABLE)) {
+    if (gui_section_begin(_("UI"), GUI_SECTION_COLLAPSABLE)) {
         DL_COUNT(themes, theme, nb);
         i = 0;
         DL_FOREACH(themes, theme) {
             if (strcmp(theme->name, theme_get()->name) == 0) current = i;
             names[i++] = theme->name;
         }
-        if (gui_combo("##themes", &current, names, nb)) {
+        gui_text("Theme");
+        if (gui_combo("#themes", &current, names, nb)) {
             theme_set(names[current]);
             settings_save();
         }
+        scale = gui_get_scale();
+        if (gui_input_float("Scale", &scale, 0.1, 1.0, 2.0, "%.1f")) {
+            gui_set_scale(scale);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
+
     } gui_section_end();
 
     if (gui_section_begin("Inputs", GUI_SECTION_COLLAPSABLE_CLOSED)) {
@@ -236,6 +246,9 @@ static int settings_ini_handler(void *user, const char *section,
         if (strcmp(name, "language") == 0) {
             tr_set_language(value);
             goxel.lang = tr_get_language()->id;
+        }
+        if (strcmp(name, "scale") == 0) {
+            gui_set_scale(atof(value));
         }
     }
     if (strcmp(section, "shortcuts") == 0) {
@@ -333,6 +346,7 @@ void settings_save(void)
     fprintf(file, "[ui]\n");
     fprintf(file, "theme=%s\n", theme_get()->name);
     fprintf(file, "language=%s\n", goxel.lang);
+    fprintf(file, "scale=%f\n", gui_get_scale());
     fprintf(file, "\n");
 
     fprintf(file, "[shortcuts]\n");

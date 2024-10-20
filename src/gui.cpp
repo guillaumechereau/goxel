@@ -155,6 +155,8 @@ static const char *ATTR_NAMES[] = {
 typedef typeof(((inputs_t*)0)->safe_margins) margins_t;
 
 typedef struct gui_t {
+    bool initialized;
+
     gl_shader_t *shader;
     GLuint  array_buffer;
     GLuint  index_buffer;
@@ -195,9 +197,39 @@ typedef struct gui_t {
         bool deactivated;
     } groups[16];
 
+    float scale;
+
 } gui_t;
 
 static gui_t *gui = NULL;
+
+static void gui_create(void)
+{
+    if (gui) return;
+    gui = (gui_t*)calloc(1, sizeof(*gui));
+    gui->scale = 1;
+}
+
+float gui_get_scale(void)
+{
+    gui_create();
+    return gui->scale;
+}
+
+void gui_set_scale(float s)
+{
+    if (s < 1 || s > 2) {
+        LOG_W("Invalid scale value: %f", s);
+        s = 1;
+    }
+    gui_create();
+    gui->scale = s;
+
+    if (gui->initialized) {
+        ImGuiIO& io = ImGui::GetIO();
+        io.Fonts->TexID = NULL; // Note: this leaks the texture.
+    }
+}
 
 static void on_click(void) {
     if (DEFINED(GUI_SOUND))
@@ -336,13 +368,14 @@ static void add_font(const char *uri, const ImWchar *ranges, bool mergmode)
     const void *data;
     int data_size;
     ImFontConfig conf;
+    float size = 14 * gui->scale * scale;
 
     conf.FontDataOwnedByAtlas = false;
     conf.MergeMode = mergmode;
     data = assets_get(uri, &data_size);
     assert(data);
     io.Fonts->AddFontFromMemoryTTF(
-            (void*)data, data_size, 14 * scale, &conf, ranges);
+            (void*)data, data_size, size, &conf, ranges);
 }
 
 static void load_fonts_texture()
@@ -361,6 +394,7 @@ static void load_fonts_texture()
         0
     };
 
+    io.Fonts->Clear();
     add_font("asset://data/fonts/DejaVuSans.ttf", ranges, false);
     add_font("asset://data/fonts/goxel-font.ttf", range_user, true);
 
@@ -425,8 +459,8 @@ static void init_ImGui(void)
 
 static void gui_init(void)
 {
-    if (!gui) {
-        gui = (gui_t*)calloc(1, sizeof(*gui));
+    gui_create();
+    if (!gui->initialized) {
         init_ImGui();
         goxel.gui.panel_width = GUI_PANEL_WIDTH_NORMAL;
     }
@@ -444,6 +478,8 @@ static void gui_init(void)
 
     ImGuiIO& io = ImGui::GetIO();
     if (!io.Fonts->TexID) load_fonts_texture();
+
+    load_fonts_texture();
 }
 
 void gui_release(void)
@@ -661,7 +697,7 @@ static void gui_iter(const inputs_t *inputs)
     style.ChildBorderSize = 0;
     style.SelectableTextAlign = ImVec2(0.5, 0.5);
     style.FramePadding = ImVec2(4,
-            (GUI_ITEM_HEIGHT - ImGui::GetFontSize()) / 2);
+            (GUI_ITEM_HEIGHT * gui->scale - ImGui::GetFontSize()) / 2);
     style.Colors[ImGuiCol_WindowBg] = COLOR(WINDOW, BACKGROUND, false);
     style.Colors[ImGuiCol_ChildBg] = COLOR(SECTION, BACKGROUND, false);
     style.Colors[ImGuiCol_Header] = ImVec4(0, 0, 0, 0);
@@ -960,7 +996,7 @@ bool gui_input_float(const char *label, float *v, float step,
     ImGuiStorage *storage = ImGui::GetStateStorage();
     const ImGuiStyle& style = ImGui::GetStyle();
     const ImVec2 button_size = ImVec2(
-            GUI_ITEM_HEIGHT,
+            gui_get_item_height(),
             ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
     int v_int;
     char v_label[128];
@@ -1042,7 +1078,7 @@ bool gui_input_float(const char *label, float *v, float step,
         } else {
             ret = slider_float(v, minv, maxv, format);
         }
-
+        update_activation_state();
         is_active = ImGui::IsItemActive();
     }
 
@@ -1149,7 +1185,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     v = v ? v : &default_v;
     size = (icon != -1) ?
         ImVec2(GUI_ICON_HEIGHT, GUI_ICON_HEIGHT) :
-        ImVec2(w, GUI_ITEM_HEIGHT);
+        ImVec2(w, gui_get_item_height());
 
     if (!tooltip && icon != -1) {
         tooltip = label;
@@ -1375,7 +1411,7 @@ bool gui_button(const char *label, float size, int icon)
     int w, isize;
 
     button_size = ImVec2(size * ImGui::GetContentRegionAvail().x,
-                         GUI_ITEM_HEIGHT);
+                         gui_get_item_height());
     if (size == -1) button_size.x = ImGui::GetContentRegionAvail().x;
     if (size == 0 && (label == NULL || label[0] == '#')) {
         button_size.x = GUI_ICON_HEIGHT;
@@ -1383,8 +1419,8 @@ bool gui_button(const char *label, float size, int icon)
     }
     if (size == 0 && label && label[0] != '#') {
         w = ImGui::CalcTextSize(label, NULL, true).x + style.FramePadding.x * 2;
-        if (w < GUI_ITEM_HEIGHT)
-            button_size.x = GUI_ITEM_HEIGHT;
+        if (w < gui_get_item_height())
+            button_size.x = gui_get_item_height();
     }
 
     if (gui->item_size) button_size.x = gui->item_size;
@@ -1422,7 +1458,7 @@ bool gui_button_right(const char *label, int icon)
     const ImGuiStyle& style = ImGui::GetStyle();
     float text_size = ImGui::CalcTextSize(label).x;
     float w = text_size + 2 * style.FramePadding.x;
-    w = max(w, GUI_ITEM_HEIGHT);
+    w = max(w, gui_get_item_height());
     w += style.FramePadding.x;
     ImGui::SameLine();
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
@@ -1628,7 +1664,7 @@ void gui_on_popup_closed(void (*func)(int))
 void gui_popup_bottom_begin(void)
 {
     const ImGuiStyle& style = ImGui::GetStyle();
-    float bottom_y = GUI_ITEM_HEIGHT + style.FramePadding.y * 2;
+    float bottom_y = gui_get_item_height() + style.FramePadding.y * 2;
     float w = ImGui::GetContentRegionAvail().y - bottom_y;
     ImGui::Dummy(ImVec2(0, w));
     gui_row_begin(0);
@@ -1831,12 +1867,13 @@ static bool panel_header_close_button(void)
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     bool ret;
 
-    w = GUI_ITEM_HEIGHT + style.FramePadding.x;
+    w = gui_get_item_height() + style.FramePadding.x;
     ImGui::SameLine();
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    ret = ImGui::Button("", ImVec2(GUI_ITEM_HEIGHT, GUI_ITEM_HEIGHT));
+    ret = ImGui::Button("", ImVec2(gui_get_item_height(),
+                                   gui_get_item_height()));
     ImGui::PopStyleColor();
 
     center = ImGui::GetItemRectMin() +
@@ -1855,7 +1892,7 @@ bool gui_panel_header(const char *label)
 {
     bool ret;
     float label_w = ImGui::CalcTextSize(label).x;
-    float w = ImGui::GetContentRegionAvail().x - GUI_ITEM_HEIGHT;
+    float w = ImGui::GetContentRegionAvail().x - gui_get_item_height();
 
     ImGui::PushID("panel_header");
     ImGui::BeginGroup();
@@ -1910,7 +1947,7 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
             size = GUI_ICON_HEIGHT;
             clicked = gui_selectable_icon(label, &v, icon->icon);
         } else { // Color icon.
-            size = GUI_ITEM_HEIGHT;
+            size = gui_get_item_height();
             ImGui::PushStyleColor(ImGuiCol_Button, icon->color);
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, icon->color);
             clicked = ImGui::Button("", ImVec2(size, size));
