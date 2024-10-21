@@ -198,6 +198,20 @@ bool gui_context_menu_begin(const char *label);
 void gui_context_menu_end(void);
 void gui_context_menu_button(const char *label, int icon);
 
+
+/*
+ * Experimental support for list, with drag and drap support.
+ */
+
+typedef struct {
+    void **items;
+    void **current;
+    bool (*render)(void *item, int idx, bool current);
+    bool can_be_null;
+} gui_list_t;
+
+void gui_list(const gui_list_t *list);
+
 /*
  * to avoid, for manual layout.
  */

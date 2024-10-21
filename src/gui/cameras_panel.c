@@ -18,24 +18,24 @@
 
 #include "goxel.h"
 
+static bool render_camera_item(void *item, int idx, bool is_current)
+{
+    camera_t *cam = item;
+    return gui_layer_item(idx, 0, NULL, NULL, &is_current, cam->name,
+                          sizeof(cam->name));
+}
+
 void gui_cameras_panel(void)
 {
     camera_t *cam;
-    int i = 0;
-    bool current;
     float rot[3][3], e1[3], e2[3], eul[3], pitch, yaw, v;
     char buf[256];
 
-    gui_group_begin(NULL);
-    DL_FOREACH(goxel.image->cameras, cam) {
-        current = goxel.image->active_camera == cam;
-        if (gui_layer_item(i, 0, NULL, NULL, &current,
-                           cam->name, sizeof(cam->name))) {
-            goxel.image->active_camera = cam;
-        }
-        i++;
-    }
-    gui_group_end();
+    gui_list(&(gui_list_t) {
+        .items = (void**)&goxel.image->cameras,
+        .current = (void**)&goxel.image->active_camera,
+        .render = render_camera_item,
+    });
 
     gui_row_begin(0);
     gui_action_button(ACTION_img_new_camera, NULL, 0);

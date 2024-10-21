@@ -18,27 +18,24 @@
 
 #include "goxel.h"
 
+static bool render_material_item(void *item, int idx, bool is_current)
+{
+    material_t *mat = item;
+    return gui_layer_item(idx, 0, NULL, NULL, &is_current, mat->name,
+                          sizeof(mat->name));
+}
+
 void gui_material_panel(void)
 {
     material_t *mat = NULL;
-    int i = 0;
-    bool is_current;
     float base_color_e, emission_e, emission;
 
-    gui_group_begin(NULL);
-    DL_FOREACH(goxel.image->materials, mat) {
-        is_current = goxel.image->active_material == mat;
-        if (gui_layer_item(i, 0, NULL, NULL, &is_current, mat->name,
-                           sizeof(mat->name))) {
-            if (is_current) {
-                goxel.image->active_material = mat;
-            } else {
-                goxel.image->active_material = NULL;
-            }
-        }
-        i++;
-    }
-    gui_group_end();
+    gui_list(&(gui_list_t) {
+        .items = (void**)&goxel.image->materials,
+        .current = (void**)&goxel.image->active_material,
+        .render = render_material_item,
+        .can_be_null = true,
+    });
 
     gui_row_begin(0);
     gui_action_button(ACTION_img_new_material, NULL, 0);

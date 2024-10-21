@@ -82,39 +82,43 @@ static void layers_context_menu(void)
     }
 }
 
+static bool render_layer_item(void *item, int idx, bool current)
+{
+    layer_t *layer = item;
+    int icons_count, icons[8];
+    bool visible;
+
+    visible = layer->visible;
+    icons_count = 0;
+    if (layer->base_id) icons[icons_count++] = ICON_LINK;
+    if (layer->shape) icons[icons_count++] = ICON_SHAPE;
+    if (layer->mode == MODE_SUB) icons[icons_count++] = ICON_SUBTRACT;
+    if (layer->mode == MODE_INTERSECT)
+        icons[icons_count++] = ICON_INTERSECT;
+    gui_layer_item(idx, icons_count, icons, &visible, &current,
+                   layer->name, sizeof(layer->name));
+    if (visible != layer->visible) {
+        layer->visible = visible;
+        if (gui_is_key_down(KEY_LEFT_SHIFT))
+            toggle_layer_only_visible(layer);
+    }
+    return current;
+}
+
 void gui_layers_panel(void)
 {
     layer_t *layer;
     material_t *material;
     int i = 0, bbox[2][3];
-    int icons_count, icons[8];
-    bool current, visible, bounded;
+    bool current, bounded;
     char buf[256];
     const int MODES[] = {MODE_OVER, MODE_SUB, MODE_INTERSECT, MODE_PAINT};
 
-    gui_group_begin(NULL);
-    DL_FOREACH_REVERSE(goxel.image->layers, layer) {
-        current = goxel.image->active_layer == layer;
-        visible = layer->visible;
-        icons_count = 0;
-        if (layer->base_id) icons[icons_count++] = ICON_LINK;
-        if (layer->shape) icons[icons_count++] = ICON_SHAPE;
-        if (layer->mode == MODE_SUB) icons[icons_count++] = ICON_SUBTRACT;
-        if (layer->mode == MODE_INTERSECT)
-            icons[icons_count++] = ICON_INTERSECT;
-        gui_layer_item(i, icons_count, icons, &visible, &current,
-                       layer->name, sizeof(layer->name));
-        if (current && goxel.image->active_layer != layer) {
-            goxel.image->active_layer = layer;
-        }
-        if (visible != layer->visible) {
-            layer->visible = visible;
-            if (gui_is_key_down(KEY_LEFT_SHIFT))
-                toggle_layer_only_visible(layer);
-        }
-        i++;
-    }
-    gui_group_end();
+    gui_list(&(gui_list_t) {
+        .items = (void**)&goxel.image->layers,
+        .current = (void**)&goxel.image->active_layer,
+        .render = render_layer_item,
+    });
 
     gui_row_begin(0);
     gui_action_button(ACTION_img_new_layer, NULL, 0);
