@@ -34,6 +34,7 @@ static int shortcut_callback(action_t *action, void *user)
     gui_next_column();
     // XXX: need to check if the inputs are valid!
     gui_input_text("", action->shortcut, sizeof(action->shortcut));
+    if (gui_is_item_deactivated()) settings_save();
     gui_next_column();
     gui_pop_id();
     return 0;

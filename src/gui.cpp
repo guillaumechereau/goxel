@@ -968,6 +968,10 @@ static bool slider_float(float *v, float minv, float maxv, const char *format)
 static void update_activation_state(void)
 {
     int i;
+
+    gui->item_activated = false;
+    gui->item_deactivated = false;
+
     if (ImGui::IsItemActivated()) {
         gui->item_activated = true;
         for (i = 0; i < gui->groups_count; i++) {
@@ -1468,7 +1472,11 @@ bool gui_button_right(const char *label, int icon)
 
 bool gui_input_text(const char *label, char *txt, int size)
 {
-    return ImGui::InputText(label, txt, size);
+    bool ret;
+    ret = ImGui::InputText(label, txt, size);
+    update_activation_state();
+    return ret;
+
 }
 
 bool gui_input_text_multiline(const char *label, char *buf, int size,
