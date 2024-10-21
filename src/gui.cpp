@@ -227,7 +227,7 @@ void gui_set_scale(float s)
 
     if (gui->initialized) {
         ImGuiIO& io = ImGui::GetIO();
-        io.Fonts->TexID = NULL; // Note: this leaks the texture.
+        io.Fonts->TexID = 0; // Note: this leaks the texture.
     }
 }
 
@@ -419,7 +419,7 @@ static void load_fonts_texture()
     GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
                     GL_RGBA, GL_UNSIGNED_BYTE, pixels));
-    io.Fonts->TexID = (void *)(intptr_t)tex_id;
+    io.Fonts->TexID = (intptr_t)tex_id;
 }
 
 static void init_ImGui(void)
@@ -1218,7 +1218,7 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
             center.y += 0.5;
             uv0 = get_icon_uv(icon);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-            window->DrawList->AddImage((void*)(intptr_t)g_tex_icons->tex,
+            window->DrawList->AddImage((intptr_t)g_tex_icons->tex,
                                        center - ImVec2(16, 16),
                                        center + ImVec2(16, 16),
                                        uv0, uv1, get_icon_color(icon, *v));
@@ -1442,7 +1442,7 @@ bool gui_button(const char *label, float size, int icon)
                    ImGui::GetItemRectSize().y / 2);
         uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
-        draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
+        draw_list->AddImage((intptr_t)g_tex_icons->tex,
                             center - ImVec2(isize, isize),
                             center + ImVec2(isize, isize),
                             uv0, uv1, get_icon_color(icon, 0));
@@ -1773,7 +1773,7 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
             uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
             uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
             draw_list->AddImage(
-                    (void*)(intptr_t)g_tex_icons->tex,
+                    (intptr_t)g_tex_icons->tex,
                     center - ImVec2(12, 12),
                     center + ImVec2(12, 12),
                     uv0, uv1, get_icon_color(icon, 0));
@@ -1889,7 +1889,7 @@ static bool panel_header_close_button(void)
                ImGui::GetItemRectSize().y / 2);
     uv0 = get_icon_uv(ICON_CLOSE);
     uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-    draw_list->AddImage((void*)(intptr_t)g_tex_icons->tex,
+    draw_list->AddImage((intptr_t)g_tex_icons->tex,
                             center - ImVec2(12, 12),
                             center + ImVec2(12, 12),
                             uv0, uv1, get_icon_color(ICON_CLOSE, 0));
