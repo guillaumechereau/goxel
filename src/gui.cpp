@@ -463,6 +463,7 @@ static void gui_init(void)
     if (!gui->initialized) {
         init_ImGui();
         goxel.gui.panel_width = GUI_PANEL_WIDTH_NORMAL;
+        gui->initialized = true;
     }
 
     if (!gui->shader) {
@@ -478,8 +479,6 @@ static void gui_init(void)
 
     ImGuiIO& io = ImGui::GetIO();
     if (!io.Fonts->TexID) load_fonts_texture();
-
-    load_fonts_texture();
 }
 
 void gui_release(void)
