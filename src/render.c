@@ -306,6 +306,9 @@ void render_init()
     int i;
 
     LOG_D("render init");
+    LOG_I("OpenGL version: %s", glGetString(GL_VERSION));
+    LOG_I("OpenGL renderer: %s", glGetString(GL_RENDERER));
+
     GL(glGenBuffers(1, &g_index_buffer));
     GL(glGenBuffers(1, &g_background_array_buffer));
 
