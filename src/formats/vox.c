@@ -115,6 +115,8 @@ struct node {
             int rot[3][3];
             bool has_trans;
             int trans[3];
+            char name[256];
+            bool hidden;
         } ntrn;
         struct {
             int id;
@@ -154,6 +156,15 @@ static void read_dict(FILE *file, void *user,
 
 static void on_trn_dict(void *user, const char *key, int size,
                         const char *value)
+{
+    node_t *node = user;
+    if (strcmp(key, "_name") == 0) {
+        snprintf(node->ntrn.name, sizeof(node->ntrn.name), "%.*s", size, value);
+    }
+}
+
+static void on_trn_frame_dict(void *user, const char *key, int size,
+                              const char *value)
 {
     node_t *node = user;
     int v, x, y, z;
@@ -246,7 +257,7 @@ static node_t *read_node(FILE *file)
     }
     else if (strncmp(node->id, "nTRN", 4) == 0) {
         node->node_id = READ(int32_t, file);
-        read_dict(file, NULL, NULL);
+        read_dict(file, node, on_trn_dict);
         node->nb_children = 1;
         node->children_ids = calloc(1, sizeof(int));
         *node->children_ids = READ(int32_t, file);
@@ -254,7 +265,7 @@ static node_t *read_node(FILE *file)
         READ(int32_t, file);
         node->ntrn.nb_frames = READ(int32_t, file);
         for (i = 0; i < node->ntrn.nb_frames; i++) {
-            read_dict(file, node, on_trn_dict);
+            read_dict(file, node, on_trn_frame_dict);
         }
     }
     else if (strncmp(node->id, "nSHP", 4) == 0) {
@@ -339,6 +350,17 @@ static void node_apply_mat(const node_t *node, float mat[4][4])
     }
 }
 
+static const node_t *node_get_ntrn(const node_t *node)
+{
+    if (!node) {
+        return NULL;
+    }
+    if (node_is(node, "nTRN")) {
+        return node;
+    }
+    return node_get_ntrn(node->parent);
+}
+
 static int import_layer(image_t *image,
                         const node_t *size, const node_t *xyzi,
                         const node_t *rgba, const node_t *tree,
@@ -348,7 +370,7 @@ static int import_layer(image_t *image,
     layer_t *layer;
     uint8_t color[4];
     volume_iterator_t iter = {0};
-    const node_t *shape;
+    const node_t *shape, *ntrn;
     float mat[4][4] = MAT4_IDENTITY;
 
     // Use the current layer for first shape, then create new layers.
@@ -379,6 +401,10 @@ static int import_layer(image_t *image,
     if (shape) {
         node_apply_mat(shape, mat);
         volume_move(layer->volume, mat);
+        ntrn = node_get_ntrn(shape);
+        if (*ntrn->ntrn.name) {
+            snprintf(layer->name, sizeof(layer->name), "%s", ntrn->ntrn.name);
+        }
     }
 
     return 0;
