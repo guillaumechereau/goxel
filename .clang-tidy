@@ -9,6 +9,7 @@ Checks:  >
   -readability-uppercase-literal-suffix,
   -readability-avoid-unconditional-preprocessor-if,
   -readability-suspicious-call-argument,
+  -readability-math-missing-parentheses,
 
   bugprone-*,
   -bugprone-narrowing-conversions,
