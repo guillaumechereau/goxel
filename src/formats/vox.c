@@ -116,7 +116,6 @@ struct node {
             bool has_trans;
             int trans[3];
             char name[256];
-            bool hidden;
         } ntrn;
         struct {
             int id;
