@@ -41,6 +41,8 @@ static inline int AT(int x, int y, int z, int d) {
 static int vxl_import(const file_format_t *format, image_t *image,
                       const char *path)
 {
+    if (!path) return -1;
+
     // See https://silverspaceship.com/aosmap/aos_file_format.html
     // for a description of the AOS file format. Note that this import
     // code is different from the one given on that page, however we use
