@@ -27,8 +27,12 @@ typedef struct cache cache_t;
 /*
  * Function: cache_create
  * Create a new cache with a given max size (in byte).
+ *
+ * Parameters:
+ *   name   - A global static string used for debugging only.
+ *   size   - The max size of the cache.
  */
-cache_t *cache_create(int size);
+cache_t *cache_create(const char *name, int size);
 
 /*
  * Function: cache_add

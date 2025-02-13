@@ -334,7 +334,7 @@ void render_init()
     init_bump_texture();
 
     // XXX: pick the proper memory size according to what is available.
-    g_items_cache = cache_create(RENDER_CACHE_SIZE);
+    g_items_cache = cache_create("render_items", RENDER_CACHE_SIZE);
     g_cube_model = model3d_cube();
     g_line_model = model3d_line();
     g_wire_cube_model = model3d_wire_cube();

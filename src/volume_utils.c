@@ -295,7 +295,7 @@ void volume_op(volume_t *volume, const painter_t *painter, const float box[4][4]
     const float *sym_o = painter->symmetry_origin;
 
     // Check if the operation has been cached.
-    if (!cache) cache = cache_create(32);
+    if (!cache) cache = cache_create("volume_op", 32);
     struct {
         uint64_t  id;
         float     box[4][4];
@@ -428,7 +428,7 @@ static void tile_merge(volume_t *volume, const volume_t *other, const int pos[3]
     }
 
     // Check if the merge op has been cached.
-    if (!cache) cache = cache_create(512);
+    if (!cache) cache = cache_create("tile_merge", 512);
     struct {
         uint64_t id1;
         uint64_t id2;
@@ -481,7 +481,7 @@ void volume_merge(volume_t *volume, const volume_t *other, int mode,
     }
 
     // Check if the merge op has been cached.
-    if (!cache) cache = cache_create(512);
+    if (!cache) cache = cache_create("volume_merge", 512);
     id1 = volume_get_key(volume);
     id2 = volume_get_key(other);
     struct {
