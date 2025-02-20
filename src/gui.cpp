@@ -1987,7 +1987,12 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
 
 bool gui_want_capture_mouse(void)
 {
-    return gui && gui->want_capture_mouse;
+    /* Note: we check both gui->want_capture_mouse and
+     * io.WantCaptureMouse otherwise there seems to be some subtle input
+     * errors on mobile */
+    gui_init();
+    ImGuiIO& io = ImGui::GetIO();
+    return (gui && gui->want_capture_mouse) || io.WantCaptureMouse;
 }
 
 bool gui_context_menu_begin(const char *label)
