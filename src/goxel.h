@@ -493,11 +493,6 @@ typedef struct goxel
     layer_t    *render_layers;
     uint32_t   render_layers_hash;
 
-    struct     {
-        volume_t *volume;
-        float  box[4][4];
-    } clipboard;
-
     int        snap_mask;    // Global snap mask (can edit in the GUI).
     float      snap_offset;  // Only for brush tool, remove that?
 
