@@ -44,12 +44,7 @@ goxel.registerScript({
   name: 'FillRandom',
   description: 'Fill selection with random voxels',
   onExecute: function() {
-    let box = goxel.selection
-    if (!box) {
-      // Todo: actually show a popup.
-      console.log('Need a selection')
-      return
-    }
+    let box = goxel.image.selectionBox
     let volume = goxel.image.activeLayer.volume
     box.iterVoxels(function(pos) {
       volume.setAt(pos, getRandomColor())
