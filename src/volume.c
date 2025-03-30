@@ -18,9 +18,11 @@
 
 #include "volume.h"
 #include "uthash.h"
+#include "utils/box.h"
 #include <assert.h>
 #include <limits.h>
 #include <math.h>
+#include <stdio.h>
 
 #define min(a, b) ({ \
       __typeof__ (a) _a = (a); \
@@ -82,7 +84,7 @@ static volume_global_stats_t g_global_stats = {};
 #define DATA_AT(d, x, y, z) (d->voxels[x + y * N + z * N * N])
 #define TILE_AT(c, x, y, z) (DATA_AT(c->data, x, y, z))
 
-static void mat4_mul_vec4(float mat[4][4], const float v[4], float out[4])
+static void mat4_mul_vec4_f(float mat[4][4], const float v[4], float out[4])
 {
     float ret[4] = {0};
     int i, j;
@@ -94,7 +96,7 @@ static void mat4_mul_vec4(float mat[4][4], const float v[4], float out[4])
     memcpy(out, ret, sizeof(ret));
 }
 
-static void box_get_bbox(float box[4][4], int bbox[2][3])
+static void box_get_bbox_f(float box[4][4], int bbox[2][3])
 {
     const float vertices[8][4] = {
         {-1, -1, +1, 1},
@@ -110,7 +112,7 @@ static void box_get_bbox(float box[4][4], int bbox[2][3])
                      {INT_MIN, INT_MIN, INT_MIN}};
     float p[4];
     for (i = 0; i < 8; i++) {
-        mat4_mul_vec4(box, vertices[i], p);
+        mat4_mul_vec4_f(box, vertices[i], p);
         ret[0][0] = min(ret[0][0], (int)floor(p[0]));
         ret[0][1] = min(ret[0][1], (int)floor(p[1]));
         ret[0][2] = min(ret[0][2], (int)floor(p[2]));
@@ -403,7 +405,7 @@ volume_iterator_t volume_get_box_iterator(const volume_t *volume,
         .flags = VOLUME_ITER_BOX | VOLUME_ITER_VOXELS | flags,
     };
     memcpy(iter.box, box, sizeof(iter.box));
-    box_get_bbox(iter.box, iter.bbox);
+    box_get_bbox_f(iter.box, iter.bbox);
 
     if (flags & VOLUME_ITER_SKIP_EMPTY) {
         volume_get_bbox(volume, volume_bbox, false);
@@ -827,4 +829,135 @@ int volume_get_tiles_count(const volume_t *volume)
 void volume_get_global_stats(volume_global_stats_t *stats)
 {
     *stats = g_global_stats;
+}
+
+char* volume_copy_to_string(const volume_t *volume, const int aabb[2][3])
+{
+    int pos[3];
+    int volume_pos[3];
+    int size[3];
+    char str_header[256];
+    size_t total_size;
+    char *encoded_str;
+    char *writer;
+    int i;
+    uint8_t voxel[4];
+
+    size[0] = aabb[1][0] - aabb[0][0];
+    size[1] = aabb[1][1] - aabb[0][1];
+    size[2] = aabb[1][2] - aabb[0][2];
+
+    sprintf(str_header, "goxel::voxels::%dx%dx%d::", size[0], size[1], size[2]);
+    total_size = strlen(str_header) + size[0] * size[1] * size[2] * 8 + 1;
+    encoded_str = malloc(total_size);
+    writer = encoded_str + strlen(str_header);
+
+    strcpy(encoded_str, str_header);
+
+    for (pos[2] = 0; pos[2] < size[2]; pos[2]++) {
+        for (pos[1] = 0; pos[1] < size[1]; pos[1]++) {
+            for (pos[0] = 0; pos[0] < size[0]; pos[0]++) {
+                memcpy(volume_pos, pos, sizeof(pos));
+
+                for (i = 0; i < 3; i++) {
+                    volume_pos[i] += aabb[0][i];
+                }
+
+                volume_get_at(volume, NULL, volume_pos, voxel);
+                for (i = 0; i < 4; i++) {
+                    sprintf(writer, "%02hhx", voxel[i]);
+                    writer += 2;
+                }
+            }
+        }
+    }
+
+    return encoded_str;
+}
+
+const char* volume_parse_string_header(const char *encoded_str, int size[3])
+{
+    int num_parsed;
+    const char* vdata;
+
+    num_parsed = sscanf(encoded_str, "goxel::voxels::%dx%dx%d::", 
+                            &size[0], &size[1], &size[2]);
+    
+    if (num_parsed != 3) {
+        return NULL;
+    }
+
+    vdata = strstr(encoded_str, "::");
+    if (!vdata) {
+        return NULL;
+    }
+
+    vdata = strstr(vdata + 2, "::");
+    if (!vdata) {
+        return NULL;
+    }
+    
+    vdata += 2;
+
+    vdata = strstr(vdata + 2, "::");
+    if (!vdata) {
+        return NULL;
+    }
+    
+    vdata += 2;
+
+    return vdata;
+}
+
+void volume_merge_from_string(volume_t *volume, const int aabb[2][3],
+                              const char *encoded_str)
+{
+    const char *reader;
+    int pos[3];
+    int volume_pos[3];
+    int size[3];
+    int i;
+    uint8_t voxel[4];
+
+    reader = volume_parse_string_header(encoded_str, size);
+    if (reader == NULL) {
+        return;
+    }
+
+    if (strlen(reader) != 8 * size[0] * size[1] * size[2]) {
+        return;
+    }
+
+    for (pos[2] = 0; pos[2] < size[2]; pos[2]++) {
+        for (pos[1] = 0; pos[1] < size[1]; pos[1]++) {
+            for (pos[0] = 0; pos[0] < size[0]; pos[0]++) {
+                if (sscanf(reader, "%2hhx%2hhx%2hhx%2hhx", &voxel[0], &voxel[1],
+                    &voxel[2], &voxel[3]) != 4) {
+                    continue;
+                }
+
+                reader += 8;
+
+                memcpy(volume_pos, pos, sizeof(pos));
+
+                for (i = 0; i < 3; i++) {
+                    volume_pos[i] += aabb[0][i];
+                    
+                    if (volume_pos[i] < aabb[0][i]) {
+                        break;
+                    }
+                    
+                    if (volume_pos[i] >= aabb[1][i]) {
+                        break;
+                    }
+                }
+
+                if (i != 3) {
+                    continue;
+                }
+
+                volume_set_at(volume, NULL, volume_pos, voxel);
+            }
+        }
+    }
 }
