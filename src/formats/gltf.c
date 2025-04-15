@@ -260,6 +260,12 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
 
     if (mesh->vertices_count == 0) return;
 
+    for (int i = 0; i < mesh->vertices_count; i++) {
+        mesh->vertices[i].pos[0] -= layer->mat[3][0];
+        mesh->vertices[i].pos[1] -= layer->mat[3][1];
+        mesh->vertices[i].pos[2] -= layer->mat[3][2];
+    }
+
     gmesh = add_item(g->data, meshes);
     ALLOC(gmesh->primitives, 1);
     primitive = add_item(gmesh, primitives);
@@ -331,6 +337,12 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
     node = add_item(g->data, nodes);
     node->mesh = gmesh;
     node->name = strdup(layer->name);
+
+    for (int i = 0; i < 16; i++) {
+        node->matrix[i] = layer->mat[i / 4][i % 4];
+    }
+    node->has_matrix = true;
+
     *add_item(root_node, children) = node;
 
     volume_mesh_free(mesh);
