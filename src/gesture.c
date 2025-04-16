@@ -171,8 +171,7 @@ static int update(gesture_t *gest, const inputs_t *inputs, int mask)
     if (gest->type == GESTURE_HOVER) {
         switch (gest->state) {
         case GESTURE_POSSIBLE:
-            if (DEFINED(GOXEL_MOBILE)) break; //Workaround.
-            if (nb_ts == 0) {
+            if (nb_ts == 0 && rect_contains(gest->viewport, ts[0].pos)) {
                 vec2_copy(ts[0].pos, gest->pos);
                 if (rect_contains(gest->viewport, gest->pos)) {
                     gest->state = GESTURE_BEGIN;
@@ -248,7 +247,8 @@ int gesture_update(int nb, gesture_t *gestures[],
     }
 
     // If one gesture started, fail all the other gestures.
-    if (triggered && triggered->state == GESTURE_BEGIN) {
+    if (    triggered && triggered->type != GESTURE_HOVER &&
+            triggered->state == GESTURE_BEGIN) {
         for (i = 0; i < nb; i++) {
             gest = gestures[i];
             if (gest != triggered)

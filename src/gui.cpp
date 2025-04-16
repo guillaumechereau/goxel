@@ -653,7 +653,6 @@ static void gui_iter(const inputs_t *inputs)
     ImGuiIO& io = ImGui::GetIO();
     ImGuiStyle& style = ImGui::GetStyle();
 
-    gui->want_capture_mouse = io.WantCaptureMouse;
     io.DisplaySize = ImVec2((float)goxel.screen_size[0],
                             (float)goxel.screen_size[1]);
 
@@ -727,6 +726,7 @@ static void gui_iter(const inputs_t *inputs)
         actions_iter(check_action_shortcut, NULL);
     }
     ImGui::EndFrame();
+    gui->want_capture_mouse = io.WantCaptureMouse;
 
     sys_show_keyboard(io.WantTextInput);
 }
