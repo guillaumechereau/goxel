@@ -93,6 +93,7 @@ static int add_material(pathtracer_t *pt, const material_t *mat)
     const material_t default_mat = MATERIAL_DEFAULT;
     if (!mat) mat = &default_mat;
     pt->p->scene.materials.push_back({
+        .type = material_type::gltfpbr,
         .emission = {mat->emission[0], mat->emission[1], mat->emission[2]},
         .color = {mat->base_color[0], mat->base_color[1], mat->base_color[2]},
         .roughness = mat->roughness,
