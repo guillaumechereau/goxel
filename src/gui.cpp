@@ -2061,31 +2061,13 @@ struct list_item {
     list_item_t *next, *prev;
 };
 
-static void list_move_item(list_item_t **list, list_item_t *item, int d)
-{
-    // XXX: ugly code.
-    list_item_t *other = NULL;
-    assert(d == -1 || d == +1);
-    if (d == -1) {
-        other = item->next;
-        SWAP(other, item);
-    } else if (item != *list) {
-        other = item->prev;
-    }
-    if (!other || !item) return;
-    DL_DELETE(*list, item);
-    DL_PREPEND_ELEM(*list, other, item);
-}
-
 void gui_list(const gui_list_t *list)
 {
     list_item_t **items = (list_item_t**)list->items;
     list_item_t *item;
     bool is_current;
     int i;
-    int move_dir = 0;
     int count;
-    list_item_t *move_item = NULL;
 
     DL_COUNT(*items, item, count);
 
@@ -2099,15 +2081,7 @@ void gui_list(const gui_list_t *list)
                 *list->current = NULL;
             }
         }
-        if (!move_dir && ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
-            move_dir = ImGui::GetMouseDragDelta(0).y < 0.f ? +1 : -1;
-            move_item = item;
-        }
         i++;
     }
     gui_group_end();
-
-    if (move_item) {
-        list_move_item(items, move_item, move_dir);
-    }
 }
