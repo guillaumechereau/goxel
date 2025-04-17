@@ -553,6 +553,7 @@ typedef struct goxel
         int current_panel; // Index of the current visible control panel.
         float panel_width;
         float viewport[4];
+        margins_t safe_margins;
     } gui;
 
     char **recent_files; // stb arraw of most recently used files.
