@@ -31,10 +31,6 @@
 #   define GUI_PANEL_WIDTH_NORMAL 230
 #endif
 
-#ifndef GUI_PANEL_WIDTH_LARGE
-#   define GUI_PANEL_WIDTH_LARGE 400
-#endif
-
 enum {
     GUI_WINDOW_MOVABLE                  = 1 << 0,
     GUI_WINDOW_HORIZONTAL               = 1 << 1, // For scrolling.
