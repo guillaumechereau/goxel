@@ -68,7 +68,7 @@ static int pick_color_gesture(gesture3d_t *gest)
     snprintf(hint_msg, sizeof(hint_msg), "pick: %d %d %d", color[0], color[1],
              color[2]);
     goxel_add_hint(0, NULL, hint_msg);
-    if (gest->flags & GESTURE3D_FLAG_PRESSED) {
+    if (gest->type == GESTURE3D_TYPE_CLICK) {
         vec4_copy(color, goxel.painter.color);
     }
     return 0;
@@ -87,6 +87,14 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
     if (tool->flags & TOOL_ALLOW_PICK_COLOR) {
         goxel_gesture3d(&(gesture3d_t) {
             .type = GESTURE3D_TYPE_HOVER,
+            .snap_mask = SNAP_VOLUME,
+            .snap_offset = -0.5,
+            .callback = pick_color_gesture,
+            .buttons = tool->id == TOOL_PICK_COLOR ? 0 : GESTURE3D_FLAG_CTRL,
+            .buttons_mask = GESTURE3D_FLAG_CTRL,
+        });
+        goxel_gesture3d(&(gesture3d_t) {
+            .type = GESTURE3D_TYPE_CLICK,
             .snap_mask = SNAP_VOLUME,
             .snap_offset = -0.5,
             .callback = pick_color_gesture,
