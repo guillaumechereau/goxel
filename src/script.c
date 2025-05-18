@@ -528,26 +528,18 @@ static JSValue js_palette_get_color(JSContext *ctx, JSValueConst this_val, int m
     js_palette_t *js_palette;
     uint8_t *color;
     
-    LOG_I("palette_get_color called with magic: %d", magic);
-    
     js_palette = JS_GetOpaque2(ctx, this_val, palette_klass.id);
     if (!js_palette) {
         LOG_E("Error in palette_get_color: No palette object found");
         return JS_EXCEPTION;
     }
     
-    LOG_I("Palette object found at %p", (void*)js_palette);
-    
-    // Using goxel.painter.color
-    LOG_I("Using goxel.painter.color as fallback");
     color = goxel.painter.color;
     
     if (!color) {
         LOG_E("Error in palette_get_color: color is NULL");
         return JS_EXCEPTION;
     }
-    
-    LOG_I("Color values: [%d, %d, %d, %d]", color[0], color[1], color[2], color[3]);
     
     // If we already have a color vec, free it first to prevent memory leaks
     if (!JS_IsUndefined(js_palette->color_vec)) {
@@ -557,7 +549,6 @@ static JSValue js_palette_get_color(JSContext *ctx, JSValueConst this_val, int m
     // Create a new vec and store it in our js_palette struct
     js_palette->color_vec = new_js_vec4(ctx, color[0], color[1], color[2], color[3]);
     
-    // Return a duplicate to the caller
     return JS_DupValue(ctx, js_palette->color_vec);
 }
 
@@ -580,7 +571,6 @@ static void js_palette_finalizer(JSRuntime *rt, JSValue this_val)
     js_free_rt(rt, js_palette);
 }
 
-/* Update the palette class constructor function to wrap the palette properly */
 static JSValue js_palette_from_ptr(
         JSContext *ctx, JSValueConst owner, void *ptr, size_t size)
 {
@@ -589,7 +579,7 @@ static JSValue js_palette_from_ptr(
     
     js_palette = js_mallocz(ctx, sizeof(*js_palette));
     js_palette->palette = ptr;
-    js_palette->color_vec = JS_UNDEFINED;  // Initialize the color vector as undefined
+    js_palette->color_vec = JS_UNDEFINED;
     
     ret = JS_NewObjectClass(ctx, palette_klass.id);
     JS_SetOpaque(ret, js_palette);
@@ -599,7 +589,7 @@ static JSValue js_palette_from_ptr(
 static klass_t palette_klass = {
     .def.class_name = "Palette",
     .def.finalizer = js_palette_finalizer,
-    .ctor_from_ptr = js_palette_from_ptr,  // Add the constructor from pointer
+    .ctor_from_ptr = js_palette_from_ptr,
     .attributes = {
         {"color", .get=js_palette_get_color, .set=NULL, .magic=0},
         { .name = NULL }
