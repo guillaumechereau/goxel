@@ -137,14 +137,12 @@
     "    })\n"
     "\n"
     "    if (sphereVoxels === 0) {\n"
-    "      console.log("WARNING: No voxels were selected!")\n"
+    "      console.log(`WARNING: No voxels were selected!`)\n"
     "    }\n"
     "    else {\n"
     "      console.log(`Filled sphere created with ${sphereVoxels} voxels`)\n"
     "    }\n"
     "  }\n"
     "})\n"
+    ""
 },
-
-
-
