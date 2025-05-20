@@ -535,11 +535,6 @@ static JSValue js_palette_get_color(JSContext *ctx, JSValueConst this_val, int m
     
     color = goxel.painter.color;
     
-    if (!color) {
-        LOG_E("Error in palette_get_color: color is NULL");
-        return JS_EXCEPTION;
-    }
-    
     // If we already have a color vec, free it first to prevent memory leaks
     if (!JS_IsUndefined(js_palette->color_vec)) {
         JS_FreeValue(ctx, js_palette->color_vec);
@@ -549,6 +544,34 @@ static JSValue js_palette_get_color(JSContext *ctx, JSValueConst this_val, int m
     js_palette->color_vec = new_js_vec4(ctx, color[0], color[1], color[2], color[3]);
     
     return JS_DupValue(ctx, js_palette->color_vec);
+}
+
+static JSValue js_palette_set_color(JSContext *ctx, JSValueConst this_val, 
+                                    JSValueConst val, int magic)
+{
+    js_palette_t *js_palette;
+    uint8_t new_color_values[4];
+
+    // magic is unused for this specific setter, but part of the signature
+    (void)magic;
+
+    js_palette = JS_GetOpaque2(ctx, this_val, palette_klass.id);
+    if (!js_palette) {
+        LOG_E("Error in palette_set_color: No palette object found");
+        return JS_EXCEPTION;
+    }
+
+    // Parse the incoming JSValue 'val' into a C array of 4 uint8_t
+    // Defaults to 255 for any missing components (e.g. alpha if only RGB provided)
+    get_vec_uint8(ctx, val, 4, new_color_values, 255);
+
+    // Update the actual painter color
+    goxel.painter.color[0] = new_color_values[0];
+    goxel.painter.color[1] = new_color_values[1];
+    goxel.painter.color[2] = new_color_values[2];
+    goxel.painter.color[3] = new_color_values[3];
+
+    return JS_UNDEFINED; // Standard for successful setters
 }
 
 static void js_palette_finalizer(JSRuntime *rt, JSValue this_val)
@@ -568,8 +591,8 @@ static void js_palette_finalizer(JSRuntime *rt, JSValue this_val)
     js_free_rt(rt, js_palette);
 }
 
-static JSValue js_palette_from_ptr(
-        JSContext *ctx, JSValueConst owner, void *ptr, size_t size)
+static JSValue js_palette_from_ptr(JSContext *ctx, JSValueConst owner, 
+                                   void *ptr, size_t size)
 {
     JSValue ret;
     js_palette_t *js_palette;
@@ -588,7 +611,8 @@ static klass_t palette_klass = {
     .def.finalizer = js_palette_finalizer,
     .ctor_from_ptr = js_palette_from_ptr,
     .attributes = {
-        {"color", .get=js_palette_get_color, .set=NULL, .magic=0},
+        {"color", .get=js_palette_get_color, .set=js_palette_set_color, 
+            .magic=0},
         { .name = NULL }
     }
 };
