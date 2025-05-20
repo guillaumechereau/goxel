@@ -517,10 +517,9 @@ static klass_t layer_klass = {
     }
 };
 
-/* Modify the palette struct to store the created vec_value */
 typedef struct {
     palette_t *palette;
-    JSValue color_vec;  // Store the created color vector
+    JSValue color_vec;
 } js_palette_t;
 
 static JSValue js_palette_get_color(JSContext *ctx, JSValueConst this_val, int magic)
@@ -562,12 +561,10 @@ static void js_palette_finalizer(JSRuntime *rt, JSValue this_val)
 
     LOG_I("Palette finalizer called for palette at %p", (void*)js_palette);
     
-    // Free the color vector value if it exists
     if (!JS_IsUndefined(js_palette->color_vec)) {
         JS_FreeValueRT(rt, js_palette->color_vec);
     }
     
-    // Free the wrapper struct
     js_free_rt(rt, js_palette);
 }
 
@@ -690,7 +687,7 @@ static JSValue js_goxel_registerScript(JSContext *ctx, JSValueConst this_val,
                                        int argc, JSValueConst *argv)
 {
     JSValueConst data;
-    script_t script; memset(&script, 0, sizeof(script_t));
+    script_t script = {};
     const char *name;
 
     data = argv[0];
@@ -730,7 +727,7 @@ static JSValue attr_getter(JSContext *ctx, JSValueConst this_val, int magic)
     
     this = JS_GetOpaque(this_val, klass->id);
     JS_FreeValue(ctx, proto);
-   attr = &klass->attributes[magic];
+    attr = &klass->attributes[magic];
 
     if (!this) {
         LOG_E("No object instance found for class %s", klass->def.class_name);
@@ -740,16 +737,14 @@ static JSValue attr_getter(JSContext *ctx, JSValueConst this_val, int magic)
     attr = &klass->attributes[magic];
     
     assert(this);
-
-
     if (attr->klass && attr->klass->ctor_from_ptr && attr->member.size) {
-        ptr = (char*)this + attr->member.offset; // Cast 'this' to char* for pointer arithmetic
+        ptr = (char*)this + attr->member.offset; 
         ret = attr->klass->ctor_from_ptr(ctx, this_val, ptr, attr->member.size);
         return ret;
     }
 
     if (attr->klass && attr->member.size) {
-        ptr = *(void**)((char*)this + attr->member.offset); // Cast 'this' to char* for pointer arithmetic
+        ptr = *(void**)((char*)this + attr->member.offset);
         if (!ptr) return JS_NULL;
         ((obj_t*)ptr)->ref++;
         ret = JS_NewObjectClass(ctx, attr->klass->id);
