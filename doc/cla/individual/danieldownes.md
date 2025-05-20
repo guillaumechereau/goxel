@@ -1,4 +1,4 @@
-<Japan>, <2025-05-20>
+Japan, 2025-05-20
 
 I hereby agree to the terms of the Goxel Individual Contributor License
 Agreement v1.0.
