@@ -226,12 +226,17 @@ static int schematic_export(const file_format_t *format, const image_t *image,
         if (color[3] < 127) continue;  // Skip transparent voxels
         
         voxel_count++;
-        xmin = min(xmin, pos[0]);
-        ymin = min(ymin, pos[1]);
-        zmin = min(zmin, pos[2]);
-        xmax = max(xmax, pos[0] + 1);
-        ymax = max(ymax, pos[1] + 1);
-        zmax = max(zmax, pos[2] + 1);
+        // Apply same coordinate transformation for bounding box
+        int mc_x = pos[1];    // Goxel Y → Minecraft X
+        int mc_y = pos[2];    // Goxel Z → Minecraft Y
+        int mc_z = -pos[0];   // Goxel X → -Minecraft Z
+        
+        xmin = min(xmin, mc_x);
+        ymin = min(ymin, mc_y);
+        zmin = min(zmin, mc_z);
+        xmax = max(xmax, mc_x + 1);
+        ymax = max(ymax, mc_y + 1);
+        zmax = max(zmax, mc_z + 1);
     }
     
     if (voxel_count == 0) {
@@ -259,9 +264,10 @@ static int schematic_export(const file_format_t *format, const image_t *image,
         if (color[3] < 127) continue;
         
         // Convert Goxel coordinates to Minecraft coordinates
-        int mc_x = pos[0] - xmin;
-        int mc_y = pos[2] - zmin;  // Goxel Z -> Minecraft Y
-        int mc_z = pos[1] - ymin;  // Goxel Y -> Minecraft Z
+        // Fix 90-degree rotation: swap X/Z axes and negate one
+        int mc_x = pos[1] - xmin;    // Goxel Y → Minecraft X
+        int mc_y = pos[2] - ymin;    // Goxel Z → Minecraft Y (up axis)
+        int mc_z = -pos[0] - zmin;   // Goxel X → -Minecraft Z
         
         // Calculate index in YZX order for Minecraft schematic format
         int index = mc_y * width * length + mc_z * width + mc_x;
