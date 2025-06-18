@@ -130,7 +130,7 @@ if target_os == 'darwin':
     sources.append('ext_src/nfd/nfd_cocoa.m')
     env.Append(FRAMEWORKS=[
         'OpenGL', 'Cocoa', 'AppKit', 'UniformTypeIdentifiers'])
-    env.Append(LIBS=['m', 'objc'])
+    env.Append(LIBS=['m', 'objc', 'z'])
     # Fix warning in noc_file_dialog (the code should be fixed instead).
     env.Append(CCFLAGS=['-Wno-deprecated-declarations'])
     env.ParseConfig('pkg-config --cflags --libs glfw3')
