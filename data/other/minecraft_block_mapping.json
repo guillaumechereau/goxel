@@ -1,0 +1,7196 @@
+{
+  "description": "Palette index to Minecraft block mapping",
+  "total_blocks": 719,
+  "mapping": {
+    "0": {
+      "block_id": "0",
+      "minecraft_name": "0-0",
+      "display_name": "Air",
+      "rgb": [
+        0,
+        0,
+        0
+      ]
+    },
+    "1": {
+      "block_id": "1",
+      "minecraft_name": "1-0",
+      "display_name": "Stone",
+      "rgb": [
+        86,
+        86,
+        86
+      ]
+    },
+    "2": {
+      "block_id": "1:1",
+      "minecraft_name": "1-1",
+      "display_name": "Granite",
+      "rgb": [
+        69,
+        47,
+        38
+      ]
+    },
+    "3": {
+      "block_id": "1:2",
+      "minecraft_name": "1-2",
+      "display_name": "Polished Granite",
+      "rgb": [
+        101,
+        68,
+        56
+      ]
+    },
+    "4": {
+      "block_id": "1:3",
+      "minecraft_name": "1-3",
+      "display_name": "Diorite",
+      "rgb": [
+        88,
+        88,
+        90
+      ]
+    },
+    "5": {
+      "block_id": "1:4",
+      "minecraft_name": "1-4",
+      "display_name": "Polished Diorite",
+      "rgb": [
+        87,
+        87,
+        89
+      ]
+    },
+    "6": {
+      "block_id": "1:5",
+      "minecraft_name": "1-5",
+      "display_name": "Andesite",
+      "rgb": [
+        57,
+        57,
+        59
+      ]
+    },
+    "7": {
+      "block_id": "1:6",
+      "minecraft_name": "1-6",
+      "display_name": "Polished Andesite",
+      "rgb": [
+        57,
+        57,
+        60
+      ]
+    },
+    "8": {
+      "block_id": "2",
+      "minecraft_name": "2-0",
+      "display_name": "Grass",
+      "rgb": [
+        50,
+        35,
+        24
+      ]
+    },
+    "9": {
+      "block_id": "3",
+      "minecraft_name": "3-0",
+      "display_name": "Dirt",
+      "rgb": [
+        90,
+        63,
+        43
+      ]
+    },
+    "10": {
+      "block_id": "3:1",
+      "minecraft_name": "3-1",
+      "display_name": "Coarse Dirt",
+      "rgb": [
+        52,
+        37,
+        25
+      ]
+    },
+    "11": {
+      "block_id": "3:2",
+      "minecraft_name": "3-2",
+      "display_name": "Podzol",
+      "rgb": [
+        77,
+        54,
+        37
+      ]
+    },
+    "12": {
+      "block_id": "4",
+      "minecraft_name": "4-0",
+      "display_name": "Cobblestone",
+      "rgb": [
+        64,
+        64,
+        64
+      ]
+    },
+    "13": {
+      "block_id": "5",
+      "minecraft_name": "5-0",
+      "display_name": "Oak Wood Plank",
+      "rgb": [
+        139,
+        113,
+        73
+      ]
+    },
+    "14": {
+      "block_id": "5:1",
+      "minecraft_name": "5-1",
+      "display_name": "Spruce Wood Plank",
+      "rgb": [
+        80,
+        59,
+        34
+      ]
+    },
+    "15": {
+      "block_id": "5:2",
+      "minecraft_name": "5-2",
+      "display_name": "Birch Wood Plank",
+      "rgb": [
+        135,
+        127,
+        88
+      ]
+    },
+    "16": {
+      "block_id": "5:3",
+      "minecraft_name": "5-3",
+      "display_name": "Jungle Wood Plank",
+      "rgb": [
+        115,
+        85,
+        63
+      ]
+    },
+    "17": {
+      "block_id": "5:4",
+      "minecraft_name": "5-4",
+      "display_name": "Acacia Wood Plank",
+      "rgb": [
+        76,
+        41,
+        22
+      ]
+    },
+    "18": {
+      "block_id": "5:5",
+      "minecraft_name": "5-5",
+      "display_name": "Dark Oak Wood Plank",
+      "rgb": [
+        30,
+        19,
+        9
+      ]
+    },
+    "19": {
+      "block_id": "6",
+      "minecraft_name": "6-0",
+      "display_name": "Oak Sapling",
+      "rgb": [
+        0,
+        100,
+        0
+      ]
+    },
+    "20": {
+      "block_id": "6:1",
+      "minecraft_name": "6-1",
+      "display_name": "Spruce Sapling",
+      "rgb": [
+        57,
+        90,
+        57
+      ]
+    },
+    "21": {
+      "block_id": "6:2",
+      "minecraft_name": "6-2",
+      "display_name": "Birch Sapling",
+      "rgb": [
+        81,
+        116,
+        45
+      ]
+    },
+    "22": {
+      "block_id": "6:3",
+      "minecraft_name": "6-3",
+      "display_name": "Jungle Sapling",
+      "rgb": [
+        55,
+        128,
+        32
+      ]
+    },
+    "23": {
+      "block_id": "6:4",
+      "minecraft_name": "6-4",
+      "display_name": "Acacia Sapling",
+      "rgb": [
+        103,
+        126,
+        23
+      ]
+    },
+    "24": {
+      "block_id": "6:5",
+      "minecraft_name": "6-5",
+      "display_name": "Dark Oak Sapling",
+      "rgb": [
+        16,
+        82,
+        16
+      ]
+    },
+    "25": {
+      "block_id": "7",
+      "minecraft_name": "7-0",
+      "display_name": "Bedrock",
+      "rgb": [
+        38,
+        38,
+        38
+      ]
+    },
+    "26": {
+      "block_id": "8",
+      "minecraft_name": "8-0",
+      "display_name": "Flowing Water",
+      "rgb": [
+        19,
+        53,
+        160
+      ]
+    },
+    "27": {
+      "block_id": "9",
+      "minecraft_name": "9-0",
+      "display_name": "Still Water",
+      "rgb": [
+        18,
+        52,
+        159
+      ]
+    },
+    "28": {
+      "block_id": "10",
+      "minecraft_name": "10-0",
+      "display_name": "Flowing Lava",
+      "rgb": [
+        106,
+        106,
+        39
+      ]
+    },
+    "29": {
+      "block_id": "11",
+      "minecraft_name": "11-0",
+      "display_name": "Still Lava",
+      "rgb": [
+        105,
+        105,
+        38
+      ]
+    },
+    "30": {
+      "block_id": "12",
+      "minecraft_name": "12-0",
+      "display_name": "Sand",
+      "rgb": [
+        106,
+        103,
+        75
+      ]
+    },
+    "31": {
+      "block_id": "12:1",
+      "minecraft_name": "12-1",
+      "display_name": "Red Sand",
+      "rgb": [
+        73,
+        38,
+        14
+      ]
+    },
+    "32": {
+      "block_id": "13",
+      "minecraft_name": "13-0",
+      "display_name": "Gravel",
+      "rgb": [
+        53,
+        48,
+        48
+      ]
+    },
+    "33": {
+      "block_id": "14",
+      "minecraft_name": "14-0",
+      "display_name": "Gold Ore",
+      "rgb": [
+        59,
+        59,
+        59
+      ]
+    },
+    "34": {
+      "block_id": "15",
+      "minecraft_name": "15-0",
+      "display_name": "Iron Ore",
+      "rgb": [
+        58,
+        58,
+        58
+      ]
+    },
+    "35": {
+      "block_id": "16",
+      "minecraft_name": "16-0",
+      "display_name": "Coal Ore",
+      "rgb": [
+        58,
+        58,
+        59
+      ]
+    },
+    "36": {
+      "block_id": "17",
+      "minecraft_name": "17-0",
+      "display_name": "Oak Wood",
+      "rgb": [
+        180,
+        144,
+        90
+      ]
+    },
+    "37": {
+      "block_id": "17:1",
+      "minecraft_name": "17-1",
+      "display_name": "Spruce Wood",
+      "rgb": [
+        179,
+        143,
+        89
+      ]
+    },
+    "38": {
+      "block_id": "17:2",
+      "minecraft_name": "17-2",
+      "display_name": "Birch Wood",
+      "rgb": [
+        179,
+        143,
+        90
+      ]
+    },
+    "39": {
+      "block_id": "17:3",
+      "minecraft_name": "17-3",
+      "display_name": "Jungle Wood",
+      "rgb": [
+        178,
+        142,
+        89
+      ]
+    },
+    "40": {
+      "block_id": "18",
+      "minecraft_name": "18-0",
+      "display_name": "Oak Leaves",
+      "rgb": [
+        22,
+        55,
+        7
+      ]
+    },
+    "41": {
+      "block_id": "18:1",
+      "minecraft_name": "18-1",
+      "display_name": "Spruce Leaves",
+      "rgb": [
+        21,
+        54,
+        6
+      ]
+    },
+    "42": {
+      "block_id": "18:2",
+      "minecraft_name": "18-2",
+      "display_name": "Birch Leaves",
+      "rgb": [
+        21,
+        54,
+        7
+      ]
+    },
+    "43": {
+      "block_id": "18:3",
+      "minecraft_name": "18-3",
+      "display_name": "Jungle Leaves",
+      "rgb": [
+        19,
+        48,
+        6
+      ]
+    },
+    "44": {
+      "block_id": "19",
+      "minecraft_name": "19-0",
+      "display_name": "Sponge",
+      "rgb": [
+        87,
+        88,
+        39
+      ]
+    },
+    "45": {
+      "block_id": "19:1",
+      "minecraft_name": "19-1",
+      "display_name": "Wet Sponge",
+      "rgb": [
+        67,
+        66,
+        21
+      ]
+    },
+    "46": {
+      "block_id": "20",
+      "minecraft_name": "20-0",
+      "display_name": "Glass",
+      "rgb": [
+        128,
+        128,
+        128
+      ]
+    },
+    "47": {
+      "block_id": "21",
+      "minecraft_name": "21-0",
+      "display_name": "Lapis Lazuli Ore",
+      "rgb": [
+        58,
+        58,
+        60
+      ]
+    },
+    "48": {
+      "block_id": "22",
+      "minecraft_name": "22-0",
+      "display_name": "Lapis Lazuli Block",
+      "rgb": [
+        14,
+        30,
+        65
+      ]
+    },
+    "49": {
+      "block_id": "23",
+      "minecraft_name": "23-0",
+      "display_name": "Dispenser",
+      "rgb": [
+        89,
+        89,
+        89
+      ]
+    },
+    "50": {
+      "block_id": "24",
+      "minecraft_name": "24-0",
+      "display_name": "Sandstone",
+      "rgb": [
+        122,
+        118,
+        94
+      ]
+    },
+    "51": {
+      "block_id": "24:1",
+      "minecraft_name": "24-1",
+      "display_name": "Chiseled Sandstone",
+      "rgb": [
+        138,
+        133,
+        103
+      ]
+    },
+    "52": {
+      "block_id": "24:2",
+      "minecraft_name": "24-2",
+      "display_name": "Smooth Sandstone",
+      "rgb": [
+        137,
+        132,
+        102
+      ]
+    },
+    "53": {
+      "block_id": "25",
+      "minecraft_name": "25-0",
+      "display_name": "Note Block",
+      "rgb": [
+        115,
+        76,
+        56
+      ]
+    },
+    "54": {
+      "block_id": "26",
+      "minecraft_name": "26-0",
+      "display_name": "Bed",
+      "rgb": [
+        108,
+        0,
+        0
+      ]
+    },
+    "55": {
+      "block_id": "27",
+      "minecraft_name": "27-0",
+      "display_name": "Powered Rail",
+      "rgb": [
+        164,
+        164,
+        164
+      ]
+    },
+    "56": {
+      "block_id": "28",
+      "minecraft_name": "28-0",
+      "display_name": "Detector Rail",
+      "rgb": [
+        163,
+        163,
+        163
+      ]
+    },
+    "57": {
+      "block_id": "29",
+      "minecraft_name": "29-0",
+      "display_name": "Sticky Piston",
+      "rgb": [
+        159,
+        132,
+        77
+      ]
+    },
+    "58": {
+      "block_id": "30",
+      "minecraft_name": "30-0",
+      "display_name": "Cobweb",
+      "rgb": [
+        206,
+        206,
+        206
+      ]
+    },
+    "59": {
+      "block_id": "31",
+      "minecraft_name": "31-0",
+      "display_name": "Dead Shrub",
+      "rgb": [
+        148,
+        100,
+        40
+      ]
+    },
+    "60": {
+      "block_id": "31:1",
+      "minecraft_name": "31-1",
+      "display_name": "Grass",
+      "rgb": [
+        41,
+        108,
+        31
+      ]
+    },
+    "61": {
+      "block_id": "31:2",
+      "minecraft_name": "31-2",
+      "display_name": "Fern",
+      "rgb": [
+        44,
+        130,
+        43
+      ]
+    },
+    "62": {
+      "block_id": "32",
+      "minecraft_name": "32-0",
+      "display_name": "Dead Bush",
+      "rgb": [
+        147,
+        99,
+        39
+      ]
+    },
+    "63": {
+      "block_id": "33",
+      "minecraft_name": "33-0",
+      "display_name": "Piston",
+      "rgb": [
+        158,
+        131,
+        76
+      ]
+    },
+    "64": {
+      "block_id": "34",
+      "minecraft_name": "34-0",
+      "display_name": "Piston Head",
+      "rgb": [
+        179,
+        143,
+        91
+      ]
+    },
+    "65": {
+      "block_id": "35",
+      "minecraft_name": "35-0",
+      "display_name": "White Wool",
+      "rgb": [
+        117,
+        117,
+        117
+      ]
+    },
+    "66": {
+      "block_id": "35:1",
+      "minecraft_name": "35-1",
+      "display_name": "Orange Wool",
+      "rgb": [
+        118,
+        63,
+        26
+      ]
+    },
+    "67": {
+      "block_id": "35:2",
+      "minecraft_name": "35-2",
+      "display_name": "Magenta Wool",
+      "rgb": [
+        98,
+        42,
+        103
+      ]
+    },
+    "68": {
+      "block_id": "35:3",
+      "minecraft_name": "35-3",
+      "display_name": "Light Blue Wool",
+      "rgb": [
+        125,
+        155,
+        218
+      ]
+    },
+    "69": {
+      "block_id": "35:4",
+      "minecraft_name": "35-4",
+      "display_name": "Yellow Wool",
+      "rgb": [
+        201,
+        187,
+        29
+      ]
+    },
+    "70": {
+      "block_id": "35:5",
+      "minecraft_name": "35-5",
+      "display_name": "Lime Wool",
+      "rgb": [
+        60,
+        195,
+        48
+      ]
+    },
+    "71": {
+      "block_id": "35:6",
+      "minecraft_name": "35-6",
+      "display_name": "Pink Wool",
+      "rgb": [
+        112,
+        72,
+        83
+      ]
+    },
+    "72": {
+      "block_id": "35:7",
+      "minecraft_name": "35-7",
+      "display_name": "Gray Wool",
+      "rgb": [
+        32,
+        32,
+        32
+      ]
+    },
+    "73": {
+      "block_id": "35:8",
+      "minecraft_name": "35-8",
+      "display_name": "Light Gray Wool",
+      "rgb": [
+        128,
+        133,
+        133
+      ]
+    },
+    "74": {
+      "block_id": "35:9",
+      "minecraft_name": "35-9",
+      "display_name": "Cyan Wool",
+      "rgb": [
+        43,
+        127,
+        162
+      ]
+    },
+    "75": {
+      "block_id": "35:10",
+      "minecraft_name": "35-10",
+      "display_name": "Purple Wool",
+      "rgb": [
+        140,
+        64,
+        207
+      ]
+    },
+    "76": {
+      "block_id": "35:11",
+      "minecraft_name": "35-11",
+      "display_name": "Blue Wool",
+      "rgb": [
+        19,
+        25,
+        75
+      ]
+    },
+    "77": {
+      "block_id": "35:12",
+      "minecraft_name": "35-12",
+      "display_name": "Brown Wool",
+      "rgb": [
+        45,
+        27,
+        15
+      ]
+    },
+    "78": {
+      "block_id": "35:13",
+      "minecraft_name": "35-13",
+      "display_name": "Green Wool",
+      "rgb": [
+        29,
+        40,
+        13
+      ]
+    },
+    "79": {
+      "block_id": "35:14",
+      "minecraft_name": "35-14",
+      "display_name": "Red Wool",
+      "rgb": [
+        86,
+        24,
+        21
+      ]
+    },
+    "80": {
+      "block_id": "35:15",
+      "minecraft_name": "35-15",
+      "display_name": "Black Wool",
+      "rgb": [
+        21,
+        18,
+        18
+      ]
+    },
+    "81": {
+      "block_id": "37",
+      "minecraft_name": "37-0",
+      "display_name": "Dandelion",
+      "rgb": [
+        22,
+        135,
+        0
+      ]
+    },
+    "82": {
+      "block_id": "38",
+      "minecraft_name": "38-0",
+      "display_name": "Poppy",
+      "rgb": [
+        21,
+        134,
+        0
+      ]
+    },
+    "83": {
+      "block_id": "38:1",
+      "minecraft_name": "38-1",
+      "display_name": "Blue Orchid",
+      "rgb": [
+        41,
+        174,
+        251
+      ]
+    },
+    "84": {
+      "block_id": "38:2",
+      "minecraft_name": "38-2",
+      "display_name": "Allium",
+      "rgb": [
+        191,
+        117,
+        251
+      ]
+    },
+    "85": {
+      "block_id": "38:3",
+      "minecraft_name": "38-3",
+      "display_name": "Azure Bluet",
+      "rgb": [
+        85,
+        147,
+        50
+      ]
+    },
+    "86": {
+      "block_id": "38:4",
+      "minecraft_name": "38-4",
+      "display_name": "Red Tulip",
+      "rgb": [
+        65,
+        139,
+        28
+      ]
+    },
+    "87": {
+      "block_id": "38:5",
+      "minecraft_name": "38-5",
+      "display_name": "Orange Tulip",
+      "rgb": [
+        55,
+        127,
+        19
+      ]
+    },
+    "88": {
+      "block_id": "38:6",
+      "minecraft_name": "38-6",
+      "display_name": "White Tulip",
+      "rgb": [
+        50,
+        122,
+        14
+      ]
+    },
+    "89": {
+      "block_id": "38:7",
+      "minecraft_name": "38-7",
+      "display_name": "Pink Tulip",
+      "rgb": [
+        57,
+        126,
+        22
+      ]
+    },
+    "90": {
+      "block_id": "38:8",
+      "minecraft_name": "38-8",
+      "display_name": "Oxeye Daisy",
+      "rgb": [
+        247,
+        247,
+        247
+      ]
+    },
+    "91": {
+      "block_id": "39",
+      "minecraft_name": "39-0",
+      "display_name": "Brown Mushroom",
+      "rgb": [
+        145,
+        109,
+        85
+      ]
+    },
+    "92": {
+      "block_id": "40",
+      "minecraft_name": "40-0",
+      "display_name": "Red Mushroom",
+      "rgb": [
+        154,
+        23,
+        28
+      ]
+    },
+    "93": {
+      "block_id": "41",
+      "minecraft_name": "41-0",
+      "display_name": "Gold Block",
+      "rgb": [
+        189,
+        179,
+        50
+      ]
+    },
+    "94": {
+      "block_id": "42",
+      "minecraft_name": "42-0",
+      "display_name": "Iron Block",
+      "rgb": [
+        120,
+        120,
+        120
+      ]
+    },
+    "95": {
+      "block_id": "43",
+      "minecraft_name": "43-0",
+      "display_name": "Double Stone Slab",
+      "rgb": [
+        162,
+        162,
+        162
+      ]
+    },
+    "96": {
+      "block_id": "43:1",
+      "minecraft_name": "43-1",
+      "display_name": "Double Sandstone Slab",
+      "rgb": [
+        121,
+        117,
+        93
+      ]
+    },
+    "97": {
+      "block_id": "43:2",
+      "minecraft_name": "43-2",
+      "display_name": "Double Wooden Slab",
+      "rgb": [
+        138,
+        112,
+        72
+      ]
+    },
+    "98": {
+      "block_id": "43:3",
+      "minecraft_name": "43-3",
+      "display_name": "Double Cobblestone Slab",
+      "rgb": [
+        63,
+        63,
+        63
+      ]
+    },
+    "99": {
+      "block_id": "43:4",
+      "minecraft_name": "43-4",
+      "display_name": "Double Brick Slab",
+      "rgb": [
+        62,
+        34,
+        27
+      ]
+    },
+    "100": {
+      "block_id": "43:5",
+      "minecraft_name": "43-5",
+      "display_name": "Double Stone Brick Slab",
+      "rgb": [
+        90,
+        90,
+        90
+      ]
+    },
+    "101": {
+      "block_id": "43:6",
+      "minecraft_name": "43-6",
+      "display_name": "Double Nether Brick Slab",
+      "rgb": [
+        30,
+        16,
+        19
+      ]
+    },
+    "102": {
+      "block_id": "43:7",
+      "minecraft_name": "43-7",
+      "display_name": "Double Quartz Slab",
+      "rgb": [
+        153,
+        152,
+        148
+      ]
+    },
+    "103": {
+      "block_id": "44",
+      "minecraft_name": "44-0",
+      "display_name": "Stone Slab",
+      "rgb": [
+        162,
+        162,
+        163
+      ]
+    },
+    "104": {
+      "block_id": "44:1",
+      "minecraft_name": "44-1",
+      "display_name": "Sandstone Slab",
+      "rgb": [
+        121,
+        117,
+        94
+      ]
+    },
+    "105": {
+      "block_id": "44:2",
+      "minecraft_name": "44-2",
+      "display_name": "Wooden Slab",
+      "rgb": [
+        188,
+        152,
+        98
+      ]
+    },
+    "106": {
+      "block_id": "44:3",
+      "minecraft_name": "44-3",
+      "display_name": "Cobblestone Slab",
+      "rgb": [
+        98,
+        98,
+        98
+      ]
+    },
+    "107": {
+      "block_id": "44:4",
+      "minecraft_name": "44-4",
+      "display_name": "Brick Slab",
+      "rgb": [
+        153,
+        85,
+        66
+      ]
+    },
+    "108": {
+      "block_id": "44:5",
+      "minecraft_name": "44-5",
+      "display_name": "Stone Brick Slab",
+      "rgb": [
+        125,
+        125,
+        125
+      ]
+    },
+    "109": {
+      "block_id": "44:6",
+      "minecraft_name": "44-6",
+      "display_name": "Nether Brick Slab",
+      "rgb": [
+        36,
+        20,
+        23
+      ]
+    },
+    "110": {
+      "block_id": "44:7",
+      "minecraft_name": "44-7",
+      "display_name": "Quartz Slab",
+      "rgb": [
+        240,
+        238,
+        232
+      ]
+    },
+    "111": {
+      "block_id": "45",
+      "minecraft_name": "45-0",
+      "display_name": "Bricks",
+      "rgb": [
+        61,
+        33,
+        26
+      ]
+    },
+    "112": {
+      "block_id": "46",
+      "minecraft_name": "46-0",
+      "display_name": "TNT",
+      "rgb": [
+        0,
+        0,
+        1
+      ]
+    },
+    "113": {
+      "block_id": "47",
+      "minecraft_name": "47-0",
+      "display_name": "Bookshelf",
+      "rgb": [
+        158,
+        131,
+        77
+      ]
+    },
+    "114": {
+      "block_id": "48",
+      "minecraft_name": "48-0",
+      "display_name": "Moss Stone",
+      "rgb": [
+        109,
+        109,
+        109
+      ]
+    },
+    "115": {
+      "block_id": "49",
+      "minecraft_name": "49-0",
+      "display_name": "Obsidian",
+      "rgb": [
+        8,
+        8,
+        12
+      ]
+    },
+    "116": {
+      "block_id": "50",
+      "minecraft_name": "50-0",
+      "display_name": "Torch",
+      "rgb": [
+        60,
+        47,
+        28
+      ]
+    },
+    "117": {
+      "block_id": "51",
+      "minecraft_name": "51-0",
+      "display_name": "Fire",
+      "rgb": [
+        255,
+        255,
+        255
+      ]
+    },
+    "118": {
+      "block_id": "52",
+      "minecraft_name": "52-0",
+      "display_name": "Monster Spawner",
+      "rgb": [
+        23,
+        35,
+        44
+      ]
+    },
+    "119": {
+      "block_id": "53",
+      "minecraft_name": "53-0",
+      "display_name": "Oak Wood Stairs",
+      "rgb": [
+        138,
+        112,
+        73
+      ]
+    },
+    "120": {
+      "block_id": "54",
+      "minecraft_name": "54-0",
+      "display_name": "Chest",
+      "rgb": [
+        106,
+        78,
+        21
+      ]
+    },
+    "121": {
+      "block_id": "55",
+      "minecraft_name": "55-0",
+      "display_name": "Redstone Wire",
+      "rgb": [
+        175,
+        0,
+        0
+      ]
+    },
+    "122": {
+      "block_id": "56",
+      "minecraft_name": "56-0",
+      "display_name": "Diamond Ore",
+      "rgb": [
+        58,
+        59,
+        58
+      ]
+    },
+    "123": {
+      "block_id": "57",
+      "minecraft_name": "57-0",
+      "display_name": "Diamond Block",
+      "rgb": [
+        130,
+        228,
+        224
+      ]
+    },
+    "124": {
+      "block_id": "58",
+      "minecraft_name": "58-0",
+      "display_name": "Crafting Table",
+      "rgb": [
+        138,
+        112,
+        74
+      ]
+    },
+    "125": {
+      "block_id": "59",
+      "minecraft_name": "59-0",
+      "display_name": "Wheat Crops",
+      "rgb": [
+        160,
+        184,
+        0
+      ]
+    },
+    "126": {
+      "block_id": "60",
+      "minecraft_name": "60-0",
+      "display_name": "Farmland",
+      "rgb": [
+        89,
+        62,
+        42
+      ]
+    },
+    "127": {
+      "block_id": "61",
+      "minecraft_name": "61-0",
+      "display_name": "Furnace",
+      "rgb": [
+        88,
+        88,
+        88
+      ]
+    },
+    "128": {
+      "block_id": "62",
+      "minecraft_name": "62-0",
+      "display_name": "Burning Furnace",
+      "rgb": [
+        50,
+        50,
+        50
+      ]
+    },
+    "129": {
+      "block_id": "63",
+      "minecraft_name": "63-0",
+      "display_name": "Standing Sign Block",
+      "rgb": [
+        158,
+        131,
+        78
+      ]
+    },
+    "130": {
+      "block_id": "64",
+      "minecraft_name": "64-0",
+      "display_name": "Oak Door Block",
+      "rgb": [
+        158,
+        132,
+        76
+      ]
+    },
+    "131": {
+      "block_id": "65",
+      "minecraft_name": "65-0",
+      "display_name": "Ladder",
+      "rgb": [
+        100,
+        79,
+        42
+      ]
+    },
+    "132": {
+      "block_id": "66",
+      "minecraft_name": "66-0",
+      "display_name": "Rail",
+      "rgb": [
+        163,
+        163,
+        164
+      ]
+    },
+    "133": {
+      "block_id": "67",
+      "minecraft_name": "67-0",
+      "display_name": "Cobblestone Stairs",
+      "rgb": [
+        63,
+        63,
+        64
+      ]
+    },
+    "134": {
+      "block_id": "68",
+      "minecraft_name": "68-0",
+      "display_name": "Wall-mounted Sign Block",
+      "rgb": [
+        158,
+        132,
+        77
+      ]
+    },
+    "135": {
+      "block_id": "69",
+      "minecraft_name": "69-0",
+      "display_name": "Lever",
+      "rgb": [
+        124,
+        98,
+        62
+      ]
+    },
+    "136": {
+      "block_id": "70",
+      "minecraft_name": "70-0",
+      "display_name": "Stone Pressure Plate",
+      "rgb": [
+        127,
+        127,
+        127
+      ]
+    },
+    "137": {
+      "block_id": "71",
+      "minecraft_name": "71-0",
+      "display_name": "Iron Door Block",
+      "rgb": [
+        205,
+        205,
+        205
+      ]
+    },
+    "138": {
+      "block_id": "72",
+      "minecraft_name": "72-0",
+      "display_name": "Wooden Pressure Plate",
+      "rgb": [
+        187,
+        151,
+        97
+      ]
+    },
+    "139": {
+      "block_id": "73",
+      "minecraft_name": "73-0",
+      "display_name": "Redstone Ore",
+      "rgb": [
+        58,
+        59,
+        59
+      ]
+    },
+    "140": {
+      "block_id": "74",
+      "minecraft_name": "74-0",
+      "display_name": "Glowing Redstone Ore",
+      "rgb": [
+        58,
+        59,
+        60
+      ]
+    },
+    "141": {
+      "block_id": "75",
+      "minecraft_name": "75-0",
+      "display_name": "Redstone Torch (off)",
+      "rgb": [
+        72,
+        0,
+        0
+      ]
+    },
+    "142": {
+      "block_id": "76",
+      "minecraft_name": "76-0",
+      "display_name": "Redstone Torch (on)",
+      "rgb": [
+        253,
+        0,
+        0
+      ]
+    },
+    "143": {
+      "block_id": "77",
+      "minecraft_name": "77-0",
+      "display_name": "Stone Button",
+      "rgb": [
+        94,
+        94,
+        94
+      ]
+    },
+    "144": {
+      "block_id": "78",
+      "minecraft_name": "78-0",
+      "display_name": "Snow",
+      "rgb": [
+        176,
+        189,
+        189
+      ]
+    },
+    "145": {
+      "block_id": "79",
+      "minecraft_name": "79-0",
+      "display_name": "Ice",
+      "rgb": [
+        60,
+        85,
+        129
+      ]
+    },
+    "146": {
+      "block_id": "80",
+      "minecraft_name": "80-0",
+      "display_name": "Snow Block",
+      "rgb": [
+        175,
+        188,
+        188
+      ]
+    },
+    "147": {
+      "block_id": "81",
+      "minecraft_name": "81-0",
+      "display_name": "Cactus",
+      "rgb": [
+        0,
+        1,
+        0
+      ]
+    },
+    "148": {
+      "block_id": "82",
+      "minecraft_name": "82-0",
+      "display_name": "Clay",
+      "rgb": [
+        83,
+        85,
+        93
+      ]
+    },
+    "149": {
+      "block_id": "83",
+      "minecraft_name": "83-0",
+      "display_name": "Sugar Canes",
+      "rgb": [
+        130,
+        168,
+        89
+      ]
+    },
+    "150": {
+      "block_id": "84",
+      "minecraft_name": "84-0",
+      "display_name": "Jukebox",
+      "rgb": [
+        116,
+        80,
+        57
+      ]
+    },
+    "151": {
+      "block_id": "85",
+      "minecraft_name": "85-0",
+      "display_name": "Oak Fence",
+      "rgb": [
+        95,
+        77,
+        49
+      ]
+    },
+    "152": {
+      "block_id": "86",
+      "minecraft_name": "86-0",
+      "display_name": "Pumpkin",
+      "rgb": [
+        119,
+        67,
+        8
+      ]
+    },
+    "153": {
+      "block_id": "87",
+      "minecraft_name": "87-0",
+      "display_name": "Netherrack",
+      "rgb": [
+        136,
+        79,
+        79
+      ]
+    },
+    "154": {
+      "block_id": "88",
+      "minecraft_name": "88-0",
+      "display_name": "Soul Sand",
+      "rgb": [
+        25,
+        17,
+        11
+      ]
+    },
+    "155": {
+      "block_id": "89",
+      "minecraft_name": "89-0",
+      "display_name": "Glowstone",
+      "rgb": [
+        58,
+        56,
+        37
+      ]
+    },
+    "156": {
+      "block_id": "90",
+      "minecraft_name": "90-0",
+      "display_name": "Nether Portal",
+      "rgb": [
+        39,
+        1,
+        95
+      ]
+    },
+    "157": {
+      "block_id": "91",
+      "minecraft_name": "91-0",
+      "display_name": "Jack o'Lantern",
+      "rgb": [
+        114,
+        73,
+        15
+      ]
+    },
+    "158": {
+      "block_id": "92",
+      "minecraft_name": "92-0",
+      "display_name": "Cake Block",
+      "rgb": [
+        234,
+        233,
+        235
+      ]
+    },
+    "159": {
+      "block_id": "93",
+      "minecraft_name": "93-0",
+      "display_name": "Redstone Repeater Block (off)",
+      "rgb": [
+        176,
+        176,
+        176
+      ]
+    },
+    "160": {
+      "block_id": "94",
+      "minecraft_name": "94-0",
+      "display_name": "Redstone Repeater Block (on)",
+      "rgb": [
+        175,
+        175,
+        175
+      ]
+    },
+    "161": {
+      "block_id": "95",
+      "minecraft_name": "95-0",
+      "display_name": "White Stained Glass",
+      "rgb": [
+        254,
+        254,
+        254
+      ]
+    },
+    "162": {
+      "block_id": "95:1",
+      "minecraft_name": "95-1",
+      "display_name": "Orange Stained Glass",
+      "rgb": [
+        85,
+        40,
+        0
+      ]
+    },
+    "163": {
+      "block_id": "95:2",
+      "minecraft_name": "95-2",
+      "display_name": "Magenta Stained Glass",
+      "rgb": [
+        57,
+        0,
+        80
+      ]
+    },
+    "164": {
+      "block_id": "95:3",
+      "minecraft_name": "95-3",
+      "display_name": "Light Blue Stained Glass",
+      "rgb": [
+        0,
+        33,
+        73
+      ]
+    },
+    "165": {
+      "block_id": "95:4",
+      "minecraft_name": "95-4",
+      "display_name": "Yellow Stained Glass",
+      "rgb": [
+        255,
+        255,
+        27
+      ]
+    },
+    "166": {
+      "block_id": "95:5",
+      "minecraft_name": "95-5",
+      "display_name": "Lime Stained Glass",
+      "rgb": [
+        48,
+        85,
+        0
+      ]
+    },
+    "167": {
+      "block_id": "95:6",
+      "minecraft_name": "95-6",
+      "display_name": "Pink Stained Glass",
+      "rgb": [
+        255,
+        125,
+        169
+      ]
+    },
+    "168": {
+      "block_id": "95:7",
+      "minecraft_name": "95-7",
+      "display_name": "Gray Stained Glass",
+      "rgb": [
+        0,
+        1,
+        1
+      ]
+    },
+    "169": {
+      "block_id": "95:8",
+      "minecraft_name": "95-8",
+      "display_name": "Light Gray Stained Glass",
+      "rgb": [
+        1,
+        0,
+        0
+      ]
+    },
+    "170": {
+      "block_id": "95:9",
+      "minecraft_name": "95-9",
+      "display_name": "Cyan Stained Glass",
+      "rgb": [
+        0,
+        30,
+        44
+      ]
+    },
+    "171": {
+      "block_id": "95:10",
+      "minecraft_name": "95-10",
+      "display_name": "Purple Stained Glass",
+      "rgb": [
+        35,
+        0,
+        62
+      ]
+    },
+    "172": {
+      "block_id": "95:11",
+      "minecraft_name": "95-11",
+      "display_name": "Blue Stained Glass",
+      "rgb": [
+        0,
+        13,
+        65
+      ]
+    },
+    "173": {
+      "block_id": "95:12",
+      "minecraft_name": "95-12",
+      "display_name": "Brown Stained Glass",
+      "rgb": [
+        27,
+        13,
+        0
+      ]
+    },
+    "174": {
+      "block_id": "95:13",
+      "minecraft_name": "95-13",
+      "display_name": "Green Stained Glass",
+      "rgb": [
+        27,
+        40,
+        0
+      ]
+    },
+    "175": {
+      "block_id": "95:14",
+      "minecraft_name": "95-14",
+      "display_name": "Red Stained Glass",
+      "rgb": [
+        54,
+        0,
+        0
+      ]
+    },
+    "176": {
+      "block_id": "95:15",
+      "minecraft_name": "95-15",
+      "display_name": "Black Stained Glass",
+      "rgb": [
+        1,
+        0,
+        1
+      ]
+    },
+    "177": {
+      "block_id": "96",
+      "minecraft_name": "96-0",
+      "display_name": "Wooden Trapdoor",
+      "rgb": [
+        145,
+        109,
+        56
+      ]
+    },
+    "178": {
+      "block_id": "97",
+      "minecraft_name": "97-0",
+      "display_name": "Stone Monster Egg",
+      "rgb": [
+        85,
+        85,
+        85
+      ]
+    },
+    "179": {
+      "block_id": "97:1",
+      "minecraft_name": "97-1",
+      "display_name": "Cobblestone Monster Egg",
+      "rgb": [
+        63,
+        63,
+        65
+      ]
+    },
+    "180": {
+      "block_id": "97:2",
+      "minecraft_name": "97-2",
+      "display_name": "Stone Brick Monster Egg",
+      "rgb": [
+        89,
+        89,
+        90
+      ]
+    },
+    "181": {
+      "block_id": "97:3",
+      "minecraft_name": "97-3",
+      "display_name": "Mossy Stone Brick Monster Egg",
+      "rgb": [
+        57,
+        57,
+        57
+      ]
+    },
+    "182": {
+      "block_id": "97:4",
+      "minecraft_name": "97-4",
+      "display_name": "Cracked Stone Brick Monster Egg",
+      "rgb": [
+        61,
+        61,
+        61
+      ]
+    },
+    "183": {
+      "block_id": "97:5",
+      "minecraft_name": "97-5",
+      "display_name": "Chiseled Stone Brick Monster Egg",
+      "rgb": [
+        57,
+        57,
+        58
+      ]
+    },
+    "184": {
+      "block_id": "98",
+      "minecraft_name": "98-0",
+      "display_name": "Stone Bricks",
+      "rgb": [
+        89,
+        89,
+        91
+      ]
+    },
+    "185": {
+      "block_id": "98:1",
+      "minecraft_name": "98-1",
+      "display_name": "Mossy Stone Bricks",
+      "rgb": [
+        47,
+        47,
+        47
+      ]
+    },
+    "186": {
+      "block_id": "98:2",
+      "minecraft_name": "98-2",
+      "display_name": "Cracked Stone Bricks",
+      "rgb": [
+        46,
+        46,
+        46
+      ]
+    },
+    "187": {
+      "block_id": "98:3",
+      "minecraft_name": "98-3",
+      "display_name": "Chiseled Stone Bricks",
+      "rgb": [
+        57,
+        58,
+        57
+      ]
+    },
+    "188": {
+      "block_id": "99",
+      "minecraft_name": "99-0",
+      "display_name": "Brown Mushroom Block",
+      "rgb": [
+        60,
+        45,
+        35
+      ]
+    },
+    "189": {
+      "block_id": "100",
+      "minecraft_name": "100-0",
+      "display_name": "Red Mushroom Block",
+      "rgb": [
+        75,
+        12,
+        11
+      ]
+    },
+    "190": {
+      "block_id": "101",
+      "minecraft_name": "101-0",
+      "display_name": "Iron Bars",
+      "rgb": [
+        163,
+        163,
+        165
+      ]
+    },
+    "191": {
+      "block_id": "102",
+      "minecraft_name": "102-0",
+      "display_name": "Glass Pane",
+      "rgb": [
+        253,
+        253,
+        253
+      ]
+    },
+    "192": {
+      "block_id": "103",
+      "minecraft_name": "103-0",
+      "display_name": "Melon Block",
+      "rgb": [
+        131,
+        130,
+        29
+      ]
+    },
+    "193": {
+      "block_id": "104",
+      "minecraft_name": "104-0",
+      "display_name": "Pumpkin Stem",
+      "rgb": [
+        126,
+        190,
+        84
+      ]
+    },
+    "194": {
+      "block_id": "105",
+      "minecraft_name": "105-0",
+      "display_name": "Melon Stem",
+      "rgb": [
+        125,
+        189,
+        83
+      ]
+    },
+    "195": {
+      "block_id": "106",
+      "minecraft_name": "106-0",
+      "display_name": "Vines",
+      "rgb": [
+        24,
+        60,
+        8
+      ]
+    },
+    "196": {
+      "block_id": "107",
+      "minecraft_name": "107-0",
+      "display_name": "Oak Fence Gate",
+      "rgb": [
+        135,
+        112,
+        65
+      ]
+    },
+    "197": {
+      "block_id": "108",
+      "minecraft_name": "108-0",
+      "display_name": "Brick Stairs",
+      "rgb": [
+        92,
+        51,
+        40
+      ]
+    },
+    "198": {
+      "block_id": "109",
+      "minecraft_name": "109-0",
+      "display_name": "Stone Brick Stairs",
+      "rgb": [
+        89,
+        90,
+        89
+      ]
+    },
+    "199": {
+      "block_id": "110",
+      "minecraft_name": "110-0",
+      "display_name": "Mycelium",
+      "rgb": [
+        101,
+        71,
+        48
+      ]
+    },
+    "200": {
+      "block_id": "111",
+      "minecraft_name": "111-0",
+      "display_name": "Lily Pad",
+      "rgb": [
+        12,
+        95,
+        20
+      ]
+    },
+    "201": {
+      "block_id": "112",
+      "minecraft_name": "112-0",
+      "display_name": "Nether Brick",
+      "rgb": [
+        29,
+        15,
+        18
+      ]
+    },
+    "202": {
+      "block_id": "113",
+      "minecraft_name": "113-0",
+      "display_name": "Nether Brick Fence",
+      "rgb": [
+        30,
+        17,
+        19
+      ]
+    },
+    "203": {
+      "block_id": "114",
+      "minecraft_name": "114-0",
+      "display_name": "Nether Brick Stairs",
+      "rgb": [
+        29,
+        15,
+        19
+      ]
+    },
+    "204": {
+      "block_id": "115",
+      "minecraft_name": "115-0",
+      "display_name": "Nether Wart",
+      "rgb": [
+        101,
+        0,
+        0
+      ]
+    },
+    "205": {
+      "block_id": "116",
+      "minecraft_name": "116-0",
+      "display_name": "Enchantment Table",
+      "rgb": [
+        6,
+        6,
+        9
+      ]
+    },
+    "206": {
+      "block_id": "117",
+      "minecraft_name": "117-0",
+      "display_name": "Brewing Stand",
+      "rgb": [
+        33,
+        33,
+        33
+      ]
+    },
+    "207": {
+      "block_id": "118",
+      "minecraft_name": "118-0",
+      "display_name": "Cauldron",
+      "rgb": [
+        31,
+        31,
+        31
+      ]
+    },
+    "208": {
+      "block_id": "119",
+      "minecraft_name": "119-0",
+      "display_name": "End Portal",
+      "rgb": [
+        87,
+        43,
+        165
+      ]
+    },
+    "209": {
+      "block_id": "120",
+      "minecraft_name": "120-0",
+      "display_name": "End Portal Frame",
+      "rgb": [
+        12,
+        29,
+        34
+      ]
+    },
+    "210": {
+      "block_id": "121",
+      "minecraft_name": "121-0",
+      "display_name": "End Stone",
+      "rgb": [
+        122,
+        118,
+        86
+      ]
+    },
+    "211": {
+      "block_id": "122",
+      "minecraft_name": "122-0",
+      "display_name": "Dragon Egg",
+      "rgb": [
+        5,
+        5,
+        8
+      ]
+    },
+    "212": {
+      "block_id": "123",
+      "minecraft_name": "123-0",
+      "display_name": "Redstone Lamp (inactive)",
+      "rgb": [
+        12,
+        8,
+        7
+      ]
+    },
+    "213": {
+      "block_id": "124",
+      "minecraft_name": "124-0",
+      "display_name": "Redstone Lamp (active)",
+      "rgb": [
+        26,
+        22,
+        18
+      ]
+    },
+    "214": {
+      "block_id": "125",
+      "minecraft_name": "125-0",
+      "display_name": "Double Oak Wood Slab",
+      "rgb": [
+        138,
+        113,
+        72
+      ]
+    },
+    "215": {
+      "block_id": "125:1",
+      "minecraft_name": "125-1",
+      "display_name": "Double Spruce Wood Slab",
+      "rgb": [
+        79,
+        58,
+        33
+      ]
+    },
+    "216": {
+      "block_id": "125:2",
+      "minecraft_name": "125-2",
+      "display_name": "Double Birch Wood Slab",
+      "rgb": [
+        134,
+        126,
+        87
+      ]
+    },
+    "217": {
+      "block_id": "125:3",
+      "minecraft_name": "125-3",
+      "display_name": "Double Jungle Wood Slab",
+      "rgb": [
+        114,
+        84,
+        62
+      ]
+    },
+    "218": {
+      "block_id": "125:4",
+      "minecraft_name": "125-4",
+      "display_name": "Double Acacia Wood Slab",
+      "rgb": [
+        75,
+        40,
+        21
+      ]
+    },
+    "219": {
+      "block_id": "125:5",
+      "minecraft_name": "125-5",
+      "display_name": "Double Dark Oak Wood Slab",
+      "rgb": [
+        29,
+        18,
+        8
+      ]
+    },
+    "220": {
+      "block_id": "126",
+      "minecraft_name": "126-0",
+      "display_name": "Oak Wood Slab",
+      "rgb": [
+        187,
+        151,
+        98
+      ]
+    },
+    "221": {
+      "block_id": "126:1",
+      "minecraft_name": "126-1",
+      "display_name": "Spruce Wood Slab",
+      "rgb": [
+        126,
+        93,
+        53
+      ]
+    },
+    "222": {
+      "block_id": "126:2",
+      "minecraft_name": "126-2",
+      "display_name": "Birch Wood Slab",
+      "rgb": [
+        212,
+        201,
+        139
+      ]
+    },
+    "223": {
+      "block_id": "126:3",
+      "minecraft_name": "126-3",
+      "display_name": "Jungle Wood Slab",
+      "rgb": [
+        182,
+        133,
+        99
+      ]
+    },
+    "224": {
+      "block_id": "126:4",
+      "minecraft_name": "126-4",
+      "display_name": "Acacia Wood Slab",
+      "rgb": [
+        184,
+        102,
+        57
+      ]
+    },
+    "225": {
+      "block_id": "126:5",
+      "minecraft_name": "126-5",
+      "display_name": "Dark Oak Wood Slab",
+      "rgb": [
+        29,
+        18,
+        9
+      ]
+    },
+    "226": {
+      "block_id": "127",
+      "minecraft_name": "127-0",
+      "display_name": "Cocoa",
+      "rgb": [
+        125,
+        74,
+        24
+      ]
+    },
+    "227": {
+      "block_id": "128",
+      "minecraft_name": "128-0",
+      "display_name": "Sandstone Stairs",
+      "rgb": [
+        152,
+        146,
+        117
+      ]
+    },
+    "228": {
+      "block_id": "129",
+      "minecraft_name": "129-0",
+      "display_name": "Emerald Ore",
+      "rgb": [
+        53,
+        53,
+        53
+      ]
+    },
+    "229": {
+      "block_id": "130",
+      "minecraft_name": "130-0",
+      "display_name": "Ender Chest",
+      "rgb": [
+        1,
+        6,
+        8
+      ]
+    },
+    "230": {
+      "block_id": "131",
+      "minecraft_name": "131-0",
+      "display_name": "Tripwire Hook",
+      "rgb": [
+        118,
+        95,
+        61
+      ]
+    },
+    "231": {
+      "block_id": "132",
+      "minecraft_name": "132-0",
+      "display_name": "Tripwire",
+      "rgb": [
+        163,
+        164,
+        163
+      ]
+    },
+    "232": {
+      "block_id": "133",
+      "minecraft_name": "133-0",
+      "display_name": "Emerald Block",
+      "rgb": [
+        60,
+        99,
+        71
+      ]
+    },
+    "233": {
+      "block_id": "134",
+      "minecraft_name": "134-0",
+      "display_name": "Spruce Wood Stairs",
+      "rgb": [
+        79,
+        58,
+        34
+      ]
+    },
+    "234": {
+      "block_id": "135",
+      "minecraft_name": "135-0",
+      "display_name": "Birch Wood Stairs",
+      "rgb": [
+        134,
+        126,
+        88
+      ]
+    },
+    "235": {
+      "block_id": "136",
+      "minecraft_name": "136-0",
+      "display_name": "Jungle Wood Stairs",
+      "rgb": [
+        114,
+        84,
+        63
+      ]
+    },
+    "236": {
+      "block_id": "137",
+      "minecraft_name": "137-0",
+      "display_name": "Command Block",
+      "rgb": [
+        83,
+        52,
+        33
+      ]
+    },
+    "237": {
+      "block_id": "138",
+      "minecraft_name": "138-0",
+      "display_name": "Beacon",
+      "rgb": [
+        111,
+        111,
+        111
+      ]
+    },
+    "238": {
+      "block_id": "139",
+      "minecraft_name": "139-0",
+      "display_name": "Cobblestone Wall",
+      "rgb": [
+        62,
+        62,
+        62
+      ]
+    },
+    "239": {
+      "block_id": "139:1",
+      "minecraft_name": "139-1",
+      "display_name": "Mossy Cobblestone Wall",
+      "rgb": [
+        82,
+        82,
+        82
+      ]
+    },
+    "240": {
+      "block_id": "140",
+      "minecraft_name": "140-0",
+      "display_name": "Flower Pot",
+      "rgb": [
+        61,
+        33,
+        27
+      ]
+    },
+    "241": {
+      "block_id": "141",
+      "minecraft_name": "141-0",
+      "display_name": "Carrots",
+      "rgb": [
+        8,
+        196,
+        0
+      ]
+    },
+    "242": {
+      "block_id": "142",
+      "minecraft_name": "142-0",
+      "display_name": "Potatoes",
+      "rgb": [
+        0,
+        138,
+        23
+      ]
+    },
+    "243": {
+      "block_id": "143",
+      "minecraft_name": "143-0",
+      "display_name": "Wooden Button",
+      "rgb": [
+        158,
+        132,
+        78
+      ]
+    },
+    "244": {
+      "block_id": "144",
+      "minecraft_name": "144-0",
+      "display_name": "Mob Head",
+      "rgb": [
+        74,
+        74,
+        74
+      ]
+    },
+    "245": {
+      "block_id": "145",
+      "minecraft_name": "145-0",
+      "display_name": "Anvil",
+      "rgb": [
+        27,
+        27,
+        27
+      ]
+    },
+    "246": {
+      "block_id": "146",
+      "minecraft_name": "146-0",
+      "display_name": "Trapped Chest",
+      "rgb": [
+        105,
+        77,
+        20
+      ]
+    },
+    "247": {
+      "block_id": "147",
+      "minecraft_name": "147-0",
+      "display_name": "Weighted Pressure Plate (light)",
+      "rgb": [
+        162,
+        153,
+        43
+      ]
+    },
+    "248": {
+      "block_id": "148",
+      "minecraft_name": "148-0",
+      "display_name": "Weighted Pressure Plate (heavy)",
+      "rgb": [
+        230,
+        230,
+        230
+      ]
+    },
+    "249": {
+      "block_id": "149",
+      "minecraft_name": "149-0",
+      "display_name": "Redstone Comparator (inactive)",
+      "rgb": [
+        136,
+        135,
+        135
+      ]
+    },
+    "250": {
+      "block_id": "150",
+      "minecraft_name": "150-0",
+      "display_name": "Redstone Comparator (active)",
+      "rgb": [
+        156,
+        156,
+        156
+      ]
+    },
+    "251": {
+      "block_id": "151",
+      "minecraft_name": "151-0",
+      "display_name": "Daylight Sensor",
+      "rgb": [
+        71,
+        61,
+        41
+      ]
+    },
+    "252": {
+      "block_id": "152",
+      "minecraft_name": "152-0",
+      "display_name": "Redstone Block",
+      "rgb": [
+        99,
+        16,
+        5
+      ]
+    },
+    "253": {
+      "block_id": "153",
+      "minecraft_name": "153-0",
+      "display_name": "Nether Quartz Ore",
+      "rgb": [
+        49,
+        25,
+        25
+      ]
+    },
+    "254": {
+      "block_id": "154",
+      "minecraft_name": "154-0",
+      "display_name": "Hopper",
+      "rgb": [
+        93,
+        93,
+        93
+      ]
+    },
+    "255": {
+      "block_id": "155",
+      "minecraft_name": "155-0",
+      "display_name": "Quartz Block",
+      "rgb": [
+        152,
+        151,
+        147
+      ]
+    },
+    "256": {
+      "block_id": "155:1",
+      "minecraft_name": "155-1",
+      "display_name": "Chiseled Quartz Block",
+      "rgb": [
+        145,
+        142,
+        136
+      ]
+    },
+    "257": {
+      "block_id": "155:2",
+      "minecraft_name": "155-2",
+      "display_name": "Pillar Quartz Block",
+      "rgb": [
+        98,
+        96,
+        92
+      ]
+    },
+    "258": {
+      "block_id": "156",
+      "minecraft_name": "156-0",
+      "display_name": "Quartz Stairs",
+      "rgb": [
+        152,
+        151,
+        148
+      ]
+    },
+    "259": {
+      "block_id": "157",
+      "minecraft_name": "157-0",
+      "display_name": "Activator Rail",
+      "rgb": [
+        163,
+        164,
+        164
+      ]
+    },
+    "260": {
+      "block_id": "158",
+      "minecraft_name": "158-0",
+      "display_name": "Dropper",
+      "rgb": [
+        76,
+        76,
+        76
+      ]
+    },
+    "261": {
+      "block_id": "159",
+      "minecraft_name": "159-0",
+      "display_name": "White Hardened Clay",
+      "rgb": [
+        91,
+        77,
+        70
+      ]
+    },
+    "262": {
+      "block_id": "159:1",
+      "minecraft_name": "159-1",
+      "display_name": "Orange Hardened Clay",
+      "rgb": [
+        69,
+        36,
+        16
+      ]
+    },
+    "263": {
+      "block_id": "159:2",
+      "minecraft_name": "159-2",
+      "display_name": "Magenta Hardened Clay",
+      "rgb": [
+        65,
+        38,
+        47
+      ]
+    },
+    "264": {
+      "block_id": "159:3",
+      "minecraft_name": "159-3",
+      "display_name": "Light Blue Hardened Clay",
+      "rgb": [
+        49,
+        47,
+        60
+      ]
+    },
+    "265": {
+      "block_id": "159:4",
+      "minecraft_name": "159-4",
+      "display_name": "Yellow Hardened Clay",
+      "rgb": [
+        80,
+        57,
+        15
+      ]
+    },
+    "266": {
+      "block_id": "159:5",
+      "minecraft_name": "159-5",
+      "display_name": "Lime Hardened Clay",
+      "rgb": [
+        45,
+        51,
+        23
+      ]
+    },
+    "267": {
+      "block_id": "159:6",
+      "minecraft_name": "159-6",
+      "display_name": "Pink Hardened Clay",
+      "rgb": [
+        69,
+        33,
+        33
+      ]
+    },
+    "268": {
+      "block_id": "159:7",
+      "minecraft_name": "159-7",
+      "display_name": "Gray Hardened Clay",
+      "rgb": [
+        37,
+        27,
+        23
+      ]
+    },
+    "269": {
+      "block_id": "159:8",
+      "minecraft_name": "159-8",
+      "display_name": "Light Gray Hardened Clay",
+      "rgb": [
+        59,
+        46,
+        42
+      ]
+    },
+    "270": {
+      "block_id": "159:9",
+      "minecraft_name": "159-9",
+      "display_name": "Cyan Hardened Clay",
+      "rgb": [
+        37,
+        39,
+        39
+      ]
+    },
+    "271": {
+      "block_id": "159:10",
+      "minecraft_name": "159-10",
+      "display_name": "Purple Hardened Clay",
+      "rgb": [
+        75,
+        44,
+        54
+      ]
+    },
+    "272": {
+      "block_id": "159:11",
+      "minecraft_name": "159-11",
+      "display_name": "Blue Hardened Clay",
+      "rgb": [
+        32,
+        26,
+        40
+      ]
+    },
+    "273": {
+      "block_id": "159:12",
+      "minecraft_name": "159-12",
+      "display_name": "Brown Hardened Clay",
+      "rgb": [
+        33,
+        22,
+        15
+      ]
+    },
+    "274": {
+      "block_id": "159:13",
+      "minecraft_name": "159-13",
+      "display_name": "Green Hardened Clay",
+      "rgb": [
+        33,
+        36,
+        18
+      ]
+    },
+    "275": {
+      "block_id": "159:14",
+      "minecraft_name": "159-14",
+      "display_name": "Red Hardened Clay",
+      "rgb": [
+        62,
+        26,
+        20
+      ]
+    },
+    "276": {
+      "block_id": "159:15",
+      "minecraft_name": "159-15",
+      "display_name": "Black Hardened Clay",
+      "rgb": [
+        16,
+        10,
+        7
+      ]
+    },
+    "277": {
+      "block_id": "160",
+      "minecraft_name": "160-0",
+      "display_name": "White Stained Glass Pane",
+      "rgb": [
+        254,
+        254,
+        255
+      ]
+    },
+    "278": {
+      "block_id": "160:1",
+      "minecraft_name": "160-1",
+      "display_name": "Orange Stained Glass Pane",
+      "rgb": [
+        216,
+        127,
+        51
+      ]
+    },
+    "279": {
+      "block_id": "160:2",
+      "minecraft_name": "160-2",
+      "display_name": "Magenta Stained Glass Pane",
+      "rgb": [
+        178,
+        76,
+        216
+      ]
+    },
+    "280": {
+      "block_id": "160:3",
+      "minecraft_name": "160-3",
+      "display_name": "Light Blue Stained Glass Pane",
+      "rgb": [
+        102,
+        153,
+        216
+      ]
+    },
+    "281": {
+      "block_id": "160:4",
+      "minecraft_name": "160-4",
+      "display_name": "Yellow Stained Glass Pane",
+      "rgb": [
+        229,
+        229,
+        51
+      ]
+    },
+    "282": {
+      "block_id": "160:5",
+      "minecraft_name": "160-5",
+      "display_name": "Lime Stained Glass Pane",
+      "rgb": [
+        127,
+        204,
+        25
+      ]
+    },
+    "283": {
+      "block_id": "160:6",
+      "minecraft_name": "160-6",
+      "display_name": "Pink Stained Glass Pane",
+      "rgb": [
+        242,
+        127,
+        165
+      ]
+    },
+    "284": {
+      "block_id": "160:7",
+      "minecraft_name": "160-7",
+      "display_name": "Gray Stained Glass Pane",
+      "rgb": [
+        75,
+        75,
+        75
+      ]
+    },
+    "285": {
+      "block_id": "160:8",
+      "minecraft_name": "160-8",
+      "display_name": "Light Gray Stained Glass Pane",
+      "rgb": [
+        153,
+        153,
+        153
+      ]
+    },
+    "286": {
+      "block_id": "160:9",
+      "minecraft_name": "160-9",
+      "display_name": "Cyan Stained Glass Pane",
+      "rgb": [
+        76,
+        127,
+        153
+      ]
+    },
+    "287": {
+      "block_id": "160:10",
+      "minecraft_name": "160-10",
+      "display_name": "Purple Stained Glass Pane",
+      "rgb": [
+        127,
+        63,
+        178
+      ]
+    },
+    "288": {
+      "block_id": "160:11",
+      "minecraft_name": "160-11",
+      "display_name": "Blue Stained Glass Pane",
+      "rgb": [
+        51,
+        76,
+        178
+      ]
+    },
+    "289": {
+      "block_id": "160:12",
+      "minecraft_name": "160-12",
+      "display_name": "Brown Stained Glass Pane",
+      "rgb": [
+        102,
+        76,
+        51
+      ]
+    },
+    "290": {
+      "block_id": "160:13",
+      "minecraft_name": "160-13",
+      "display_name": "Green Stained Glass Pane",
+      "rgb": [
+        102,
+        127,
+        51
+      ]
+    },
+    "291": {
+      "block_id": "160:14",
+      "minecraft_name": "160-14",
+      "display_name": "Red Stained Glass Pane",
+      "rgb": [
+        153,
+        51,
+        51
+      ]
+    },
+    "292": {
+      "block_id": "160:15",
+      "minecraft_name": "160-15",
+      "display_name": "Black Stained Glass Pane",
+      "rgb": [
+        25,
+        25,
+        25
+      ]
+    },
+    "293": {
+      "block_id": "161",
+      "minecraft_name": "161-0",
+      "display_name": "Acacia Leaves",
+      "rgb": [
+        31,
+        78,
+        11
+      ]
+    },
+    "294": {
+      "block_id": "161:1",
+      "minecraft_name": "161-1",
+      "display_name": "Dark Oak Leaves",
+      "rgb": [
+        30,
+        77,
+        10
+      ]
+    },
+    "295": {
+      "block_id": "162",
+      "minecraft_name": "162-0",
+      "display_name": "Acacia Wood",
+      "rgb": [
+        56,
+        52,
+        47
+      ]
+    },
+    "296": {
+      "block_id": "162:1",
+      "minecraft_name": "162-1",
+      "display_name": "Dark Oak Wood",
+      "rgb": [
+        23,
+        18,
+        10
+      ]
+    },
+    "297": {
+      "block_id": "163",
+      "minecraft_name": "163-0",
+      "display_name": "Acacia Wood Stairs",
+      "rgb": [
+        75,
+        40,
+        22
+      ]
+    },
+    "298": {
+      "block_id": "164",
+      "minecraft_name": "164-0",
+      "display_name": "Dark Oak Wood Stairs",
+      "rgb": [
+        29,
+        18,
+        10
+      ]
+    },
+    "299": {
+      "block_id": "165",
+      "minecraft_name": "165-0",
+      "display_name": "Slime Block",
+      "rgb": [
+        76,
+        101,
+        70
+      ]
+    },
+    "300": {
+      "block_id": "166",
+      "minecraft_name": "166-0",
+      "display_name": "Barrier",
+      "rgb": [
+        227,
+        0,
+        0
+      ]
+    },
+    "301": {
+      "block_id": "167",
+      "minecraft_name": "167-0",
+      "display_name": "Iron Trapdoor",
+      "rgb": [
+        204,
+        204,
+        204
+      ]
+    },
+    "302": {
+      "block_id": "168",
+      "minecraft_name": "168-0",
+      "display_name": "Prismarine",
+      "rgb": [
+        35,
+        65,
+        57
+      ]
+    },
+    "303": {
+      "block_id": "168:1",
+      "minecraft_name": "168-1",
+      "display_name": "Prismarine Bricks",
+      "rgb": [
+        77,
+        115,
+        104
+      ]
+    },
+    "304": {
+      "block_id": "168:2",
+      "minecraft_name": "168-2",
+      "display_name": "Dark Prismarine",
+      "rgb": [
+        16,
+        26,
+        22
+      ]
+    },
+    "305": {
+      "block_id": "169",
+      "minecraft_name": "169-0",
+      "display_name": "Sea Lantern",
+      "rgb": [
+        92,
+        99,
+        96
+      ]
+    },
+    "306": {
+      "block_id": "170",
+      "minecraft_name": "170-0",
+      "display_name": "Hay Bale",
+      "rgb": [
+        46,
+        19,
+        5
+      ]
+    },
+    "307": {
+      "block_id": "171",
+      "minecraft_name": "171-0",
+      "display_name": "White Carpet",
+      "rgb": [
+        241,
+        241,
+        241
+      ]
+    },
+    "308": {
+      "block_id": "171:1",
+      "minecraft_name": "171-1",
+      "display_name": "Orange Carpet",
+      "rgb": [
+        221,
+        133,
+        75
+      ]
+    },
+    "309": {
+      "block_id": "171:2",
+      "minecraft_name": "171-2",
+      "display_name": "Magenta Carpet",
+      "rgb": [
+        189,
+        97,
+        197
+      ]
+    },
+    "310": {
+      "block_id": "171:3",
+      "minecraft_name": "171-3",
+      "display_name": "Light Blue Carpet",
+      "rgb": [
+        126,
+        153,
+        208
+      ]
+    },
+    "311": {
+      "block_id": "171:4",
+      "minecraft_name": "171-4",
+      "display_name": "Yellow Carpet",
+      "rgb": [
+        196,
+        184,
+        46
+      ]
+    },
+    "312": {
+      "block_id": "171:5",
+      "minecraft_name": "171-5",
+      "display_name": "Lime Carpet",
+      "rgb": [
+        73,
+        189,
+        61
+      ]
+    },
+    "313": {
+      "block_id": "171:6",
+      "minecraft_name": "171-6",
+      "display_name": "Pink Carpet",
+      "rgb": [
+        204,
+        120,
+        144
+      ]
+    },
+    "314": {
+      "block_id": "171:7",
+      "minecraft_name": "171-7",
+      "display_name": "Gray Carpet",
+      "rgb": [
+        60,
+        60,
+        60
+      ]
+    },
+    "315": {
+      "block_id": "171:8",
+      "minecraft_name": "171-8",
+      "display_name": "Light Gray Carpet",
+      "rgb": [
+        169,
+        175,
+        175
+      ]
+    },
+    "316": {
+      "block_id": "171:9",
+      "minecraft_name": "171-9",
+      "display_name": "Cyan Carpet",
+      "rgb": [
+        51,
+        120,
+        149
+      ]
+    },
+    "317": {
+      "block_id": "171:10",
+      "minecraft_name": "171-10",
+      "display_name": "Purple Carpet",
+      "rgb": [
+        137,
+        70,
+        194
+      ]
+    },
+    "318": {
+      "block_id": "171:11",
+      "minecraft_name": "171-11",
+      "display_name": "Blue Carpet",
+      "rgb": [
+        50,
+        62,
+        154
+      ]
+    },
+    "319": {
+      "block_id": "171:12",
+      "minecraft_name": "171-12",
+      "display_name": "Brown Carpet",
+      "rgb": [
+        86,
+        56,
+        34
+      ]
+    },
+    "320": {
+      "block_id": "171:13",
+      "minecraft_name": "171-13",
+      "display_name": "Green Carpet",
+      "rgb": [
+        50,
+        66,
+        26
+      ]
+    },
+    "321": {
+      "block_id": "171:14",
+      "minecraft_name": "171-14",
+      "display_name": "Red Carpet",
+      "rgb": [
+        165,
+        58,
+        53
+      ]
+    },
+    "322": {
+      "block_id": "171:15",
+      "minecraft_name": "171-15",
+      "display_name": "Black Carpet",
+      "rgb": [
+        23,
+        19,
+        19
+      ]
+    },
+    "323": {
+      "block_id": "172",
+      "minecraft_name": "172-0",
+      "display_name": "Hardened Clay",
+      "rgb": [
+        64,
+        39,
+        28
+      ]
+    },
+    "324": {
+      "block_id": "173",
+      "minecraft_name": "173-0",
+      "display_name": "Block of Coal",
+      "rgb": [
+        13,
+        13,
+        13
+      ]
+    },
+    "325": {
+      "block_id": "174",
+      "minecraft_name": "174-0",
+      "display_name": "Packed Ice",
+      "rgb": [
+        103,
+        122,
+        155
+      ]
+    },
+    "326": {
+      "block_id": "175",
+      "minecraft_name": "175-0",
+      "display_name": "Sunflower",
+      "rgb": [
+        241,
+        228,
+        36
+      ]
+    },
+    "327": {
+      "block_id": "175:1",
+      "minecraft_name": "175-1",
+      "display_name": "Lilac",
+      "rgb": [
+        159,
+        120,
+        164
+      ]
+    },
+    "328": {
+      "block_id": "175:2",
+      "minecraft_name": "175-2",
+      "display_name": "Double Tallgrass",
+      "rgb": [
+        65,
+        99,
+        56
+      ]
+    },
+    "329": {
+      "block_id": "175:3",
+      "minecraft_name": "175-3",
+      "display_name": "Large Fern",
+      "rgb": [
+        61,
+        93,
+        53
+      ]
+    },
+    "330": {
+      "block_id": "175:4",
+      "minecraft_name": "175-4",
+      "display_name": "Rose Bush",
+      "rgb": [
+        16,
+        99,
+        0
+      ]
+    },
+    "331": {
+      "block_id": "175:5",
+      "minecraft_name": "175-5",
+      "display_name": "Peony",
+      "rgb": [
+        32,
+        67,
+        38
+      ]
+    },
+    "332": {
+      "block_id": "176",
+      "minecraft_name": "176-0",
+      "display_name": "Free-standing Banner",
+      "rgb": [
+        152,
+        152,
+        152
+      ]
+    },
+    "333": {
+      "block_id": "177",
+      "minecraft_name": "177-0",
+      "display_name": "Wall-mounted Banner",
+      "rgb": [
+        152,
+        152,
+        153
+      ]
+    },
+    "334": {
+      "block_id": "178",
+      "minecraft_name": "178-0",
+      "display_name": "Inverted Daylight Sensor",
+      "rgb": [
+        136,
+        151,
+        174
+      ]
+    },
+    "335": {
+      "block_id": "179",
+      "minecraft_name": "179-0",
+      "display_name": "Red Sandstone",
+      "rgb": [
+        72,
+        37,
+        13
+      ]
+    },
+    "336": {
+      "block_id": "179:1",
+      "minecraft_name": "179-1",
+      "display_name": "Chiseled Red Sandstone",
+      "rgb": [
+        73,
+        37,
+        13
+      ]
+    },
+    "337": {
+      "block_id": "179:2",
+      "minecraft_name": "179-2",
+      "display_name": "Smooth Red Sandstone",
+      "rgb": [
+        108,
+        55,
+        20
+      ]
+    },
+    "338": {
+      "block_id": "180",
+      "minecraft_name": "180-0",
+      "display_name": "Red Sandstone Stairs",
+      "rgb": [
+        167,
+        85,
+        30
+      ]
+    },
+    "339": {
+      "block_id": "181",
+      "minecraft_name": "181-0",
+      "display_name": "Double Red Sandstone Slab",
+      "rgb": [
+        71,
+        36,
+        12
+      ]
+    },
+    "340": {
+      "block_id": "182",
+      "minecraft_name": "182-0",
+      "display_name": "Red Sandstone Slab",
+      "rgb": [
+        166,
+        84,
+        29
+      ]
+    },
+    "341": {
+      "block_id": "183",
+      "minecraft_name": "183-0",
+      "display_name": "Spruce Fence Gate",
+      "rgb": [
+        44,
+        34,
+        20
+      ]
+    },
+    "342": {
+      "block_id": "184",
+      "minecraft_name": "184-0",
+      "display_name": "Birch Fence Gate",
+      "rgb": [
+        93,
+        88,
+        61
+      ]
+    },
+    "343": {
+      "block_id": "185",
+      "minecraft_name": "185-0",
+      "display_name": "Jungle Fence Gate",
+      "rgb": [
+        80,
+        59,
+        43
+      ]
+    },
+    "344": {
+      "block_id": "186",
+      "minecraft_name": "186-0",
+      "display_name": "Dark Oak Fence Gate",
+      "rgb": [
+        27,
+        18,
+        8
+      ]
+    },
+    "345": {
+      "block_id": "187",
+      "minecraft_name": "187-0",
+      "display_name": "Acacia Fence Gate",
+      "rgb": [
+        81,
+        45,
+        26
+      ]
+    },
+    "346": {
+      "block_id": "188",
+      "minecraft_name": "188-0",
+      "display_name": "Spruce Fence",
+      "rgb": [
+        43,
+        33,
+        19
+      ]
+    },
+    "347": {
+      "block_id": "189",
+      "minecraft_name": "189-0",
+      "display_name": "Birch Fence",
+      "rgb": [
+        92,
+        87,
+        60
+      ]
+    },
+    "348": {
+      "block_id": "190",
+      "minecraft_name": "190-0",
+      "display_name": "Jungle Fence",
+      "rgb": [
+        79,
+        58,
+        42
+      ]
+    },
+    "349": {
+      "block_id": "191",
+      "minecraft_name": "191-0",
+      "display_name": "Dark Oak Fence",
+      "rgb": [
+        26,
+        17,
+        7
+      ]
+    },
+    "350": {
+      "block_id": "192",
+      "minecraft_name": "192-0",
+      "display_name": "Acacia Fence",
+      "rgb": [
+        80,
+        44,
+        25
+      ]
+    },
+    "351": {
+      "block_id": "193",
+      "minecraft_name": "193-0",
+      "display_name": "Spruce Door Block",
+      "rgb": [
+        122,
+        90,
+        54
+      ]
+    },
+    "352": {
+      "block_id": "194",
+      "minecraft_name": "194-0",
+      "display_name": "Birch Door Block",
+      "rgb": [
+        214,
+        202,
+        140
+      ]
+    },
+    "353": {
+      "block_id": "195",
+      "minecraft_name": "195-0",
+      "display_name": "Jungle Door Block",
+      "rgb": [
+        178,
+        130,
+        94
+      ]
+    },
+    "354": {
+      "block_id": "196",
+      "minecraft_name": "196-0",
+      "display_name": "Acacia Door Block",
+      "rgb": [
+        177,
+        102,
+        64
+      ]
+    },
+    "355": {
+      "block_id": "197",
+      "minecraft_name": "197-0",
+      "display_name": "Dark Oak Door Block",
+      "rgb": [
+        71,
+        46,
+        22
+      ]
+    },
+    "356": {
+      "block_id": "198",
+      "minecraft_name": "198-0",
+      "display_name": "End Rod",
+      "rgb": [
+        160,
+        160,
+        160
+      ]
+    },
+    "357": {
+      "block_id": "199",
+      "minecraft_name": "199-0",
+      "display_name": "Chorus Plant",
+      "rgb": [
+        36,
+        19,
+        36
+      ]
+    },
+    "358": {
+      "block_id": "200",
+      "minecraft_name": "200-0",
+      "display_name": "Chorus Flower",
+      "rgb": [
+        136,
+        127,
+        136
+      ]
+    },
+    "359": {
+      "block_id": "201",
+      "minecraft_name": "201-0",
+      "display_name": "Purpur Block",
+      "rgb": [
+        108,
+        78,
+        108
+      ]
+    },
+    "360": {
+      "block_id": "202",
+      "minecraft_name": "202-0",
+      "display_name": "Purpur Pillar",
+      "rgb": [
+        111,
+        80,
+        111
+      ]
+    },
+    "361": {
+      "block_id": "203",
+      "minecraft_name": "203-0",
+      "display_name": "Purpur Stairs",
+      "rgb": [
+        107,
+        77,
+        107
+      ]
+    },
+    "362": {
+      "block_id": "204",
+      "minecraft_name": "204-0",
+      "display_name": "Purpur Double Slab",
+      "rgb": [
+        107,
+        77,
+        108
+      ]
+    },
+    "363": {
+      "block_id": "205",
+      "minecraft_name": "205-0",
+      "display_name": "Purpur Slab",
+      "rgb": [
+        144,
+        101,
+        144
+      ]
+    },
+    "364": {
+      "block_id": "206",
+      "minecraft_name": "206-0",
+      "display_name": "End Stone Bricks",
+      "rgb": [
+        100,
+        104,
+        75
+      ]
+    },
+    "365": {
+      "block_id": "207",
+      "minecraft_name": "207-0",
+      "display_name": "Beetroot Block",
+      "rgb": [
+        133,
+        111,
+        74
+      ]
+    },
+    "366": {
+      "block_id": "208",
+      "minecraft_name": "208-0",
+      "display_name": "Grass Path",
+      "rgb": [
+        76,
+        53,
+        36
+      ]
+    },
+    "367": {
+      "block_id": "209",
+      "minecraft_name": "209-0",
+      "display_name": "End Gateway",
+      "rgb": [
+        17,
+        13,
+        24
+      ]
+    },
+    "368": {
+      "block_id": "210",
+      "minecraft_name": "210-0",
+      "display_name": "Repeating Command Block",
+      "rgb": [
+        67,
+        60,
+        90
+      ]
+    },
+    "369": {
+      "block_id": "211",
+      "minecraft_name": "211-0",
+      "display_name": "Chain Command Block",
+      "rgb": [
+        70,
+        85,
+        78
+      ]
+    },
+    "370": {
+      "block_id": "212",
+      "minecraft_name": "212-0",
+      "display_name": "Frosted Ice",
+      "rgb": [
+        51,
+        73,
+        110
+      ]
+    },
+    "371": {
+      "block_id": "213",
+      "minecraft_name": "213-0",
+      "display_name": "Magma Block",
+      "rgb": [
+        48,
+        24,
+        20
+      ]
+    },
+    "372": {
+      "block_id": "214",
+      "minecraft_name": "214-0",
+      "display_name": "Nether Wart Block",
+      "rgb": [
+        57,
+        0,
+        10
+      ]
+    },
+    "373": {
+      "block_id": "215",
+      "minecraft_name": "215-0",
+      "display_name": "Red Nether Brick",
+      "rgb": [
+        41,
+        4,
+        10
+      ]
+    },
+    "374": {
+      "block_id": "216",
+      "minecraft_name": "216-0",
+      "display_name": "Bone Block",
+      "rgb": [
+        93,
+        96,
+        82
+      ]
+    },
+    "375": {
+      "block_id": "217",
+      "minecraft_name": "217-0",
+      "display_name": "Structure Void",
+      "rgb": [
+        15,
+        93,
+        100
+      ]
+    },
+    "376": {
+      "block_id": "218",
+      "minecraft_name": "218-0",
+      "display_name": "Observer",
+      "rgb": [
+        68,
+        68,
+        68
+      ]
+    },
+    "377": {
+      "block_id": "219",
+      "minecraft_name": "219-0",
+      "display_name": "White Shulker Box",
+      "rgb": [
+        223,
+        220,
+        220
+      ]
+    },
+    "378": {
+      "block_id": "220",
+      "minecraft_name": "220-0",
+      "display_name": "Orange Shulker Box",
+      "rgb": [
+        208,
+        118,
+        58
+      ]
+    },
+    "379": {
+      "block_id": "221",
+      "minecraft_name": "221-0",
+      "display_name": "Magenta Shulker Box",
+      "rgb": [
+        188,
+        102,
+        196
+      ]
+    },
+    "380": {
+      "block_id": "222",
+      "minecraft_name": "222-0",
+      "display_name": "Light Blue Shulker Box",
+      "rgb": [
+        103,
+        143,
+        204
+      ]
+    },
+    "381": {
+      "block_id": "223",
+      "minecraft_name": "223-0",
+      "display_name": "Yellow Shulker Box",
+      "rgb": [
+        194,
+        184,
+        62
+      ]
+    },
+    "382": {
+      "block_id": "224",
+      "minecraft_name": "224-0",
+      "display_name": "Lime Shulker Box",
+      "rgb": [
+        73,
+        185,
+        61
+      ]
+    },
+    "383": {
+      "block_id": "225",
+      "minecraft_name": "225-0",
+      "display_name": "Pink Shulker Box",
+      "rgb": [
+        209,
+        143,
+        164
+      ]
+    },
+    "384": {
+      "block_id": "226",
+      "minecraft_name": "226-0",
+      "display_name": "Gray Shulker Box",
+      "rgb": [
+        84,
+        82,
+        82
+      ]
+    },
+    "385": {
+      "block_id": "227",
+      "minecraft_name": "227-0",
+      "display_name": "Light Gray Shulker Box",
+      "rgb": [
+        165,
+        162,
+        162
+      ]
+    },
+    "386": {
+      "block_id": "228",
+      "minecraft_name": "228-0",
+      "display_name": "Cyan Shulker Box",
+      "rgb": [
+        69,
+        137,
+        165
+      ]
+    },
+    "387": {
+      "block_id": "229",
+      "minecraft_name": "229-0",
+      "display_name": "Purple Shulker Box",
+      "rgb": [
+        96,
+        67,
+        96
+      ]
+    },
+    "388": {
+      "block_id": "230",
+      "minecraft_name": "230-0",
+      "display_name": "Blue Shulker Box",
+      "rgb": [
+        102,
+        114,
+        202
+      ]
+    },
+    "389": {
+      "block_id": "231",
+      "minecraft_name": "231-0",
+      "display_name": "Brown Shulker Box",
+      "rgb": [
+        142,
+        113,
+        94
+      ]
+    },
+    "390": {
+      "block_id": "232",
+      "minecraft_name": "232-0",
+      "display_name": "Green Shulker Box",
+      "rgb": [
+        112,
+        131,
+        85
+      ]
+    },
+    "391": {
+      "block_id": "233",
+      "minecraft_name": "233-0",
+      "display_name": "Red Shulker Box",
+      "rgb": [
+        195,
+        89,
+        86
+      ]
+    },
+    "392": {
+      "block_id": "234",
+      "minecraft_name": "234-0",
+      "display_name": "Black Shulker Box",
+      "rgb": [
+        58,
+        55,
+        55
+      ]
+    },
+    "393": {
+      "block_id": "235",
+      "minecraft_name": "235-0",
+      "display_name": "White Glazed Terracotta",
+      "rgb": [
+        108,
+        111,
+        110
+      ]
+    },
+    "394": {
+      "block_id": "236",
+      "minecraft_name": "236-0",
+      "display_name": "Orange Glazed Terracotta",
+      "rgb": [
+        18,
+        126,
+        126
+      ]
+    },
+    "395": {
+      "block_id": "237",
+      "minecraft_name": "237-0",
+      "display_name": "Magenta Glazed Terracotta",
+      "rgb": [
+        86,
+        34,
+        82
+      ]
+    },
+    "396": {
+      "block_id": "238",
+      "minecraft_name": "238-0",
+      "display_name": "Light Blue Glazed Terracotta",
+      "rgb": [
+        22,
+        87,
+        126
+      ]
+    },
+    "397": {
+      "block_id": "239",
+      "minecraft_name": "239-0",
+      "display_name": "Yellow Glazed Terracotta",
+      "rgb": [
+        162,
+        150,
+        100
+      ]
+    },
+    "398": {
+      "block_id": "240",
+      "minecraft_name": "240-0",
+      "display_name": "Lime Glazed Terracotta",
+      "rgb": [
+        81,
+        126,
+        20
+      ]
+    },
+    "399": {
+      "block_id": "241",
+      "minecraft_name": "241-0",
+      "display_name": "Pink Glazed Terracotta",
+      "rgb": [
+        155,
+        115,
+        129
+      ]
+    },
+    "400": {
+      "block_id": "242",
+      "minecraft_name": "242-0",
+      "display_name": "Gray Glazed Terracotta",
+      "rgb": [
+        23,
+        25,
+        26
+      ]
+    },
+    "401": {
+      "block_id": "243",
+      "minecraft_name": "243-0",
+      "display_name": "Light Gray Glazed Terracotta",
+      "rgb": [
+        89,
+        90,
+        91
+      ]
+    },
+    "402": {
+      "block_id": "244",
+      "minecraft_name": "244-0",
+      "display_name": "Cyan Glazed Terracotta",
+      "rgb": [
+        13,
+        76,
+        86
+      ]
+    },
+    "403": {
+      "block_id": "245",
+      "minecraft_name": "245-0",
+      "display_name": "Purple Glazed Terracotta",
+      "rgb": [
+        59,
+        22,
+        80
+      ]
+    },
+    "404": {
+      "block_id": "246",
+      "minecraft_name": "246-0",
+      "display_name": "Blue Glazed Terracotta",
+      "rgb": [
+        19,
+        20,
+        62
+      ]
+    },
+    "405": {
+      "block_id": "247",
+      "minecraft_name": "247-0",
+      "display_name": "Brown Glazed Terracotta",
+      "rgb": [
+        83,
+        53,
+        32
+      ]
+    },
+    "406": {
+      "block_id": "248",
+      "minecraft_name": "248-0",
+      "display_name": "Green Glazed Terracotta",
+      "rgb": [
+        32,
+        39,
+        16
+      ]
+    },
+    "407": {
+      "block_id": "249",
+      "minecraft_name": "249-0",
+      "display_name": "Red Glazed Terracotta",
+      "rgb": [
+        112,
+        29,
+        24
+      ]
+    },
+    "408": {
+      "block_id": "250",
+      "minecraft_name": "250-0",
+      "display_name": "Black Glazed Terracotta",
+      "rgb": [
+        1,
+        1,
+        0
+      ]
+    },
+    "409": {
+      "block_id": "251",
+      "minecraft_name": "251-0",
+      "display_name": "White Concrete",
+      "rgb": [
+        90,
+        93,
+        93
+      ]
+    },
+    "410": {
+      "block_id": "251:1",
+      "minecraft_name": "251-1",
+      "display_name": "Orange Concrete",
+      "rgb": [
+        97,
+        42,
+        0
+      ]
+    },
+    "411": {
+      "block_id": "251:2",
+      "minecraft_name": "251-2",
+      "display_name": "Magenta Concrete",
+      "rgb": [
+        107,
+        31,
+        101
+      ]
+    },
+    "412": {
+      "block_id": "251:3",
+      "minecraft_name": "251-3",
+      "display_name": "Light Blue Concrete",
+      "rgb": [
+        15,
+        59,
+        86
+      ]
+    },
+    "413": {
+      "block_id": "251:4",
+      "minecraft_name": "251-4",
+      "display_name": "Yellow Concrete",
+      "rgb": [
+        153,
+        111,
+        13
+      ]
+    },
+    "414": {
+      "block_id": "251:5",
+      "minecraft_name": "251-5",
+      "display_name": "Lime Concrete",
+      "rgb": [
+        40,
+        73,
+        10
+      ]
+    },
+    "415": {
+      "block_id": "251:6",
+      "minecraft_name": "251-6",
+      "display_name": "Pink Concrete",
+      "rgb": [
+        135,
+        64,
+        90
+      ]
+    },
+    "416": {
+      "block_id": "251:7",
+      "minecraft_name": "251-7",
+      "display_name": "Gray Concrete",
+      "rgb": [
+        24,
+        25,
+        27
+      ]
+    },
+    "417": {
+      "block_id": "251:8",
+      "minecraft_name": "251-8",
+      "display_name": "Light Gray Concrete",
+      "rgb": [
+        54,
+        54,
+        50
+      ]
+    },
+    "418": {
+      "block_id": "251:9",
+      "minecraft_name": "251-9",
+      "display_name": "Cyan Concrete",
+      "rgb": [
+        9,
+        52,
+        59
+      ]
+    },
+    "419": {
+      "block_id": "251:10",
+      "minecraft_name": "251-10",
+      "display_name": "Purple Concrete",
+      "rgb": [
+        44,
+        14,
+        68
+      ]
+    },
+    "420": {
+      "block_id": "251:11",
+      "minecraft_name": "251-11",
+      "display_name": "Blue Concrete",
+      "rgb": [
+        18,
+        19,
+        61
+      ]
+    },
+    "421": {
+      "block_id": "251:12",
+      "minecraft_name": "251-12",
+      "display_name": "Brown Concrete",
+      "rgb": [
+        42,
+        26,
+        14
+      ]
+    },
+    "422": {
+      "block_id": "251:13",
+      "minecraft_name": "251-13",
+      "display_name": "Green Concrete",
+      "rgb": [
+        31,
+        38,
+        15
+      ]
+    },
+    "423": {
+      "block_id": "251:14",
+      "minecraft_name": "251-14",
+      "display_name": "Red Concrete",
+      "rgb": [
+        62,
+        14,
+        14
+      ]
+    },
+    "424": {
+      "block_id": "251:15",
+      "minecraft_name": "251-15",
+      "display_name": "Black Concrete",
+      "rgb": [
+        3,
+        4,
+        6
+      ]
+    },
+    "425": {
+      "block_id": "252",
+      "minecraft_name": "252-0",
+      "display_name": "White Concrete Powder",
+      "rgb": [
+        97,
+        98,
+        98
+      ]
+    },
+    "426": {
+      "block_id": "252:1",
+      "minecraft_name": "252-1",
+      "display_name": "Orange Concrete Powder",
+      "rgb": [
+        99,
+        55,
+        10
+      ]
+    },
+    "427": {
+      "block_id": "252:2",
+      "minecraft_name": "252-2",
+      "display_name": "Magenta Concrete Powder",
+      "rgb": [
+        86,
+        39,
+        82
+      ]
+    },
+    "428": {
+      "block_id": "252:3",
+      "minecraft_name": "252-3",
+      "display_name": "Light Blue Concrete Powder",
+      "rgb": [
+        32,
+        79,
+        92
+      ]
+    },
+    "429": {
+      "block_id": "252:4",
+      "minecraft_name": "252-4",
+      "display_name": "Yellow Concrete Powder",
+      "rgb": [
+        99,
+        82,
+        19
+      ]
+    },
+    "430": {
+      "block_id": "252:5",
+      "minecraft_name": "252-5",
+      "display_name": "Lime Concrete Powder",
+      "rgb": [
+        53,
+        81,
+        17
+      ]
+    },
+    "431": {
+      "block_id": "252:6",
+      "minecraft_name": "252-6",
+      "display_name": "Pink Concrete Powder",
+      "rgb": [
+        99,
+        64,
+        77
+      ]
+    },
+    "432": {
+      "block_id": "252:7",
+      "minecraft_name": "252-7",
+      "display_name": "Gray Concrete Powder",
+      "rgb": [
+        32,
+        33,
+        35
+      ]
+    },
+    "433": {
+      "block_id": "252:8",
+      "minecraft_name": "252-8",
+      "display_name": "Light Gray Concrete Powder",
+      "rgb": [
+        66,
+        66,
+        63
+      ]
+    },
+    "434": {
+      "block_id": "252:9",
+      "minecraft_name": "252-9",
+      "display_name": "Cyan Concrete Powder",
+      "rgb": [
+        16,
+        61,
+        67
+      ]
+    },
+    "435": {
+      "block_id": "252:10",
+      "minecraft_name": "252-10",
+      "display_name": "Purple Concrete Powder",
+      "rgb": [
+        56,
+        23,
+        76
+      ]
+    },
+    "436": {
+      "block_id": "252:11",
+      "minecraft_name": "252-11",
+      "display_name": "Blue Concrete Powder",
+      "rgb": [
+        29,
+        30,
+        71
+      ]
+    },
+    "437": {
+      "block_id": "252:12",
+      "minecraft_name": "252-12",
+      "display_name": "Brown Concrete Powder",
+      "rgb": [
+        52,
+        35,
+        22
+      ]
+    },
+    "438": {
+      "block_id": "252:13",
+      "minecraft_name": "252-13",
+      "display_name": "Green Concrete Powder",
+      "rgb": [
+        41,
+        50,
+        19
+      ]
+    },
+    "439": {
+      "block_id": "252:14",
+      "minecraft_name": "252-14",
+      "display_name": "Red Concrete Powder",
+      "rgb": [
+        105,
+        33,
+        32
+      ]
+    },
+    "440": {
+      "block_id": "252:15",
+      "minecraft_name": "252-15",
+      "display_name": "Black Concrete Powder",
+      "rgb": [
+        8,
+        9,
+        12
+      ]
+    },
+    "441": {
+      "block_id": "255",
+      "minecraft_name": "255-0",
+      "display_name": "Structure Block",
+      "rgb": [
+        15,
+        12,
+        17
+      ]
+    },
+    "442": {
+      "block_id": "256",
+      "minecraft_name": "256-0",
+      "display_name": "Iron Shovel",
+      "rgb": [
+        67,
+        67,
+        67
+      ]
+    },
+    "443": {
+      "block_id": "257",
+      "minecraft_name": "257-0",
+      "display_name": "Iron Pickaxe",
+      "rgb": [
+        67,
+        67,
+        68
+      ]
+    },
+    "444": {
+      "block_id": "258",
+      "minecraft_name": "258-0",
+      "display_name": "Iron Axe",
+      "rgb": [
+        67,
+        67,
+        69
+      ]
+    },
+    "445": {
+      "block_id": "259",
+      "minecraft_name": "259-0",
+      "display_name": "Flint and Steel",
+      "rgb": [
+        71,
+        71,
+        71
+      ]
+    },
+    "446": {
+      "block_id": "260",
+      "minecraft_name": "260-0",
+      "display_name": "Apple",
+      "rgb": [
+        255,
+        28,
+        43
+      ]
+    },
+    "447": {
+      "block_id": "261",
+      "minecraft_name": "261-0",
+      "display_name": "Bow",
+      "rgb": [
+        73,
+        54,
+        21
+      ]
+    },
+    "448": {
+      "block_id": "262",
+      "minecraft_name": "262-0",
+      "display_name": "Arrow",
+      "rgb": [
+        137,
+        103,
+        39
+      ]
+    },
+    "449": {
+      "block_id": "263",
+      "minecraft_name": "263-0",
+      "display_name": "Coal",
+      "rgb": [
+        3,
+        3,
+        3
+      ]
+    },
+    "450": {
+      "block_id": "263:1",
+      "minecraft_name": "263-1",
+      "display_name": "Charcoal",
+      "rgb": [
+        8,
+        7,
+        5
+      ]
+    },
+    "451": {
+      "block_id": "264",
+      "minecraft_name": "264-0",
+      "display_name": "Diamond",
+      "rgb": [
+        12,
+        55,
+        48
+      ]
+    },
+    "452": {
+      "block_id": "265",
+      "minecraft_name": "265-0",
+      "display_name": "Iron Ingot",
+      "rgb": [
+        216,
+        216,
+        216
+      ]
+    },
+    "453": {
+      "block_id": "266",
+      "minecraft_name": "266-0",
+      "display_name": "Gold Ingot",
+      "rgb": [
+        255,
+        255,
+        139
+      ]
+    },
+    "454": {
+      "block_id": "267",
+      "minecraft_name": "267-0",
+      "display_name": "Iron Sword",
+      "rgb": [
+        40,
+        40,
+        40
+      ]
+    },
+    "455": {
+      "block_id": "268",
+      "minecraft_name": "268-0",
+      "display_name": "Wooden Sword",
+      "rgb": [
+        43,
+        32,
+        12
+      ]
+    },
+    "456": {
+      "block_id": "269",
+      "minecraft_name": "269-0",
+      "display_name": "Wooden Shovel",
+      "rgb": [
+        55,
+        41,
+        16
+      ]
+    },
+    "457": {
+      "block_id": "270",
+      "minecraft_name": "270-0",
+      "display_name": "Wooden Pickaxe",
+      "rgb": [
+        54,
+        40,
+        15
+      ]
+    },
+    "458": {
+      "block_id": "271",
+      "minecraft_name": "271-0",
+      "display_name": "Wooden Axe",
+      "rgb": [
+        54,
+        40,
+        16
+      ]
+    },
+    "459": {
+      "block_id": "272",
+      "minecraft_name": "272-0",
+      "display_name": "Stone Sword",
+      "rgb": [
+        59,
+        59,
+        60
+      ]
+    },
+    "460": {
+      "block_id": "273",
+      "minecraft_name": "273-0",
+      "display_name": "Stone Shovel",
+      "rgb": [
+        73,
+        73,
+        73
+      ]
+    },
+    "461": {
+      "block_id": "274",
+      "minecraft_name": "274-0",
+      "display_name": "Stone Pickaxe",
+      "rgb": [
+        72,
+        72,
+        72
+      ]
+    },
+    "462": {
+      "block_id": "275",
+      "minecraft_name": "275-0",
+      "display_name": "Stone Axe",
+      "rgb": [
+        72,
+        72,
+        73
+      ]
+    },
+    "463": {
+      "block_id": "276",
+      "minecraft_name": "276-0",
+      "display_name": "Diamond Sword",
+      "rgb": [
+        8,
+        37,
+        32
+      ]
+    },
+    "464": {
+      "block_id": "277",
+      "minecraft_name": "277-0",
+      "display_name": "Diamond Shovel",
+      "rgb": [
+        14,
+        63,
+        54
+      ]
+    },
+    "465": {
+      "block_id": "278",
+      "minecraft_name": "278-0",
+      "display_name": "Diamond Pickaxe",
+      "rgb": [
+        13,
+        62,
+        53
+      ]
+    },
+    "466": {
+      "block_id": "279",
+      "minecraft_name": "279-0",
+      "display_name": "Diamond Axe",
+      "rgb": [
+        13,
+        62,
+        54
+      ]
+    },
+    "467": {
+      "block_id": "280",
+      "minecraft_name": "280-0",
+      "display_name": "Stick",
+      "rgb": [
+        40,
+        30,
+        11
+      ]
+    },
+    "468": {
+      "block_id": "281",
+      "minecraft_name": "281-0",
+      "display_name": "Bowl",
+      "rgb": [
+        31,
+        21,
+        2
+      ]
+    },
+    "469": {
+      "block_id": "282",
+      "minecraft_name": "282-0",
+      "display_name": "Mushroom Stew",
+      "rgb": [
+        30,
+        20,
+        1
+      ]
+    },
+    "470": {
+      "block_id": "283",
+      "minecraft_name": "283-0",
+      "display_name": "Golden Sword",
+      "rgb": [
+        60,
+        61,
+        41
+      ]
+    },
+    "471": {
+      "block_id": "284",
+      "minecraft_name": "284-0",
+      "display_name": "Golden Shovel",
+      "rgb": [
+        61,
+        61,
+        36
+      ]
+    },
+    "472": {
+      "block_id": "285",
+      "minecraft_name": "285-0",
+      "display_name": "Golden Pickaxe",
+      "rgb": [
+        60,
+        60,
+        35
+      ]
+    },
+    "473": {
+      "block_id": "286",
+      "minecraft_name": "286-0",
+      "display_name": "Golden Axe",
+      "rgb": [
+        60,
+        60,
+        36
+      ]
+    },
+    "474": {
+      "block_id": "287",
+      "minecraft_name": "287-0",
+      "display_name": "String",
+      "rgb": [
+        67,
+        68,
+        67
+      ]
+    },
+    "475": {
+      "block_id": "288",
+      "minecraft_name": "288-0",
+      "display_name": "Feather",
+      "rgb": [
+        254,
+        255,
+        254
+      ]
+    },
+    "476": {
+      "block_id": "289",
+      "minecraft_name": "289-0",
+      "display_name": "Gunpowder",
+      "rgb": [
+        114,
+        114,
+        114
+      ]
+    },
+    "477": {
+      "block_id": "290",
+      "minecraft_name": "290-0",
+      "display_name": "Wooden Hoe",
+      "rgb": [
+        54,
+        40,
+        17
+      ]
+    },
+    "478": {
+      "block_id": "291",
+      "minecraft_name": "291-0",
+      "display_name": "Stone Hoe",
+      "rgb": [
+        72,
+        72,
+        74
+      ]
+    },
+    "479": {
+      "block_id": "292",
+      "minecraft_name": "292-0",
+      "display_name": "Iron Hoe",
+      "rgb": [
+        67,
+        68,
+        68
+      ]
+    },
+    "480": {
+      "block_id": "293",
+      "minecraft_name": "293-0",
+      "display_name": "Diamond Hoe",
+      "rgb": [
+        13,
+        62,
+        55
+      ]
+    },
+    "481": {
+      "block_id": "294",
+      "minecraft_name": "294-0",
+      "display_name": "Golden Hoe",
+      "rgb": [
+        60,
+        60,
+        37
+      ]
+    },
+    "482": {
+      "block_id": "295",
+      "minecraft_name": "295-0",
+      "display_name": "Wheat Seeds",
+      "rgb": [
+        46,
+        67,
+        12
+      ]
+    },
+    "483": {
+      "block_id": "296",
+      "minecraft_name": "296-0",
+      "display_name": "Wheat",
+      "rgb": [
+        37,
+        53,
+        9
+      ]
+    },
+    "484": {
+      "block_id": "297",
+      "minecraft_name": "297-0",
+      "display_name": "Bread",
+      "rgb": [
+        144,
+        108,
+        34
+      ]
+    },
+    "485": {
+      "block_id": "298",
+      "minecraft_name": "298-0",
+      "display_name": "Leather Helmet",
+      "rgb": [
+        198,
+        92,
+        53
+      ]
+    },
+    "486": {
+      "block_id": "299",
+      "minecraft_name": "299-0",
+      "display_name": "Leather Tunic",
+      "rgb": [
+        197,
+        91,
+        52
+      ]
+    },
+    "487": {
+      "block_id": "300",
+      "minecraft_name": "300-0",
+      "display_name": "Leather Pants",
+      "rgb": [
+        197,
+        91,
+        53
+      ]
+    },
+    "488": {
+      "block_id": "301",
+      "minecraft_name": "301-0",
+      "display_name": "Leather Boots",
+      "rgb": [
+        84,
+        39,
+        22
+      ]
+    },
+    "489": {
+      "block_id": "302",
+      "minecraft_name": "302-0",
+      "display_name": "Chainmail Helmet",
+      "rgb": [
+        45,
+        45,
+        45
+      ]
+    },
+    "490": {
+      "block_id": "303",
+      "minecraft_name": "303-0",
+      "display_name": "Chainmail Chestplate",
+      "rgb": [
+        108,
+        108,
+        108
+      ]
+    },
+    "491": {
+      "block_id": "304",
+      "minecraft_name": "304-0",
+      "display_name": "Chainmail Leggings",
+      "rgb": [
+        44,
+        44,
+        44
+      ]
+    },
+    "492": {
+      "block_id": "305",
+      "minecraft_name": "305-0",
+      "display_name": "Chainmail Boots",
+      "rgb": [
+        44,
+        44,
+        45
+      ]
+    },
+    "493": {
+      "block_id": "306",
+      "minecraft_name": "306-0",
+      "display_name": "Iron Helmet",
+      "rgb": [
+        44,
+        44,
+        46
+      ]
+    },
+    "494": {
+      "block_id": "307",
+      "minecraft_name": "307-0",
+      "display_name": "Iron Chestplate",
+      "rgb": [
+        198,
+        198,
+        198
+      ]
+    },
+    "495": {
+      "block_id": "308",
+      "minecraft_name": "308-0",
+      "display_name": "Iron Leggings",
+      "rgb": [
+        44,
+        45,
+        44
+      ]
+    },
+    "496": {
+      "block_id": "309",
+      "minecraft_name": "309-0",
+      "display_name": "Iron Boots",
+      "rgb": [
+        44,
+        45,
+        45
+      ]
+    },
+    "497": {
+      "block_id": "310",
+      "minecraft_name": "310-0",
+      "display_name": "Diamond Helmet",
+      "rgb": [
+        44,
+        45,
+        46
+      ]
+    },
+    "498": {
+      "block_id": "311",
+      "minecraft_name": "311-0",
+      "display_name": "Diamond Chestplate",
+      "rgb": [
+        51,
+        235,
+        203
+      ]
+    },
+    "499": {
+      "block_id": "312",
+      "minecraft_name": "312-0",
+      "display_name": "Diamond Leggings",
+      "rgb": [
+        44,
+        46,
+        44
+      ]
+    },
+    "500": {
+      "block_id": "313",
+      "minecraft_name": "313-0",
+      "display_name": "Diamond Boots",
+      "rgb": [
+        44,
+        46,
+        45
+      ]
+    },
+    "501": {
+      "block_id": "314",
+      "minecraft_name": "314-0",
+      "display_name": "Golden Helmet",
+      "rgb": [
+        44,
+        46,
+        46
+      ]
+    },
+    "502": {
+      "block_id": "315",
+      "minecraft_name": "315-0",
+      "display_name": "Golden Chestplate",
+      "rgb": [
+        234,
+        238,
+        87
+      ]
+    },
+    "503": {
+      "block_id": "316",
+      "minecraft_name": "316-0",
+      "display_name": "Golden Leggings",
+      "rgb": [
+        45,
+        44,
+        44
+      ]
+    },
+    "504": {
+      "block_id": "317",
+      "minecraft_name": "317-0",
+      "display_name": "Golden Boots",
+      "rgb": [
+        45,
+        44,
+        45
+      ]
+    },
+    "505": {
+      "block_id": "318",
+      "minecraft_name": "318-0",
+      "display_name": "Flint",
+      "rgb": [
+        39,
+        39,
+        39
+      ]
+    },
+    "506": {
+      "block_id": "319",
+      "minecraft_name": "319-0",
+      "display_name": "Raw Porkchop",
+      "rgb": [
+        1,
+        1,
+        1
+      ]
+    },
+    "507": {
+      "block_id": "320",
+      "minecraft_name": "320-0",
+      "display_name": "Cooked Porkchop",
+      "rgb": [
+        30,
+        25,
+        12
+      ]
+    },
+    "508": {
+      "block_id": "321",
+      "minecraft_name": "321-0",
+      "display_name": "Painting",
+      "rgb": [
+        158,
+        150,
+        139
+      ]
+    },
+    "509": {
+      "block_id": "322",
+      "minecraft_name": "322-0",
+      "display_name": "Golden Apple",
+      "rgb": [
+        233,
+        237,
+        86
+      ]
+    },
+    "510": {
+      "block_id": "322:1",
+      "minecraft_name": "322-1",
+      "display_name": "Enchanted Golden Apple",
+      "rgb": [
+        233,
+        237,
+        87
+      ]
+    },
+    "511": {
+      "block_id": "323",
+      "minecraft_name": "323-0",
+      "display_name": "Sign",
+      "rgb": [
+        158,
+        133,
+        76
+      ]
+    },
+    "512": {
+      "block_id": "324",
+      "minecraft_name": "324-0",
+      "display_name": "Oak Door",
+      "rgb": [
+        158,
+        133,
+        77
+      ]
+    },
+    "513": {
+      "block_id": "325",
+      "minecraft_name": "325-0",
+      "display_name": "Bucket",
+      "rgb": [
+        52,
+        52,
+        52
+      ]
+    },
+    "514": {
+      "block_id": "326",
+      "minecraft_name": "326-0",
+      "display_name": "Water Bucket",
+      "rgb": [
+        52,
+        52,
+        53
+      ]
+    },
+    "515": {
+      "block_id": "327",
+      "minecraft_name": "327-0",
+      "display_name": "Lava Bucket",
+      "rgb": [
+        52,
+        52,
+        54
+      ]
+    },
+    "516": {
+      "block_id": "328",
+      "minecraft_name": "328-0",
+      "display_name": "Minecart",
+      "rgb": [
+        21,
+        22,
+        22
+      ]
+    },
+    "517": {
+      "block_id": "329",
+      "minecraft_name": "329-0",
+      "display_name": "Saddle",
+      "rgb": [
+        53,
+        23,
+        10
+      ]
+    },
+    "518": {
+      "block_id": "330",
+      "minecraft_name": "330-0",
+      "display_name": "Iron Door",
+      "rgb": [
+        204,
+        204,
+        205
+      ]
+    },
+    "519": {
+      "block_id": "331",
+      "minecraft_name": "331-0",
+      "display_name": "Redstone",
+      "rgb": [
+        45,
+        0,
+        0
+      ]
+    },
+    "520": {
+      "block_id": "332",
+      "minecraft_name": "332-0",
+      "display_name": "Snowball",
+      "rgb": [
+        254,
+        255,
+        255
+      ]
+    },
+    "521": {
+      "block_id": "333",
+      "minecraft_name": "333-0",
+      "display_name": "Oak Boat",
+      "rgb": [
+        71,
+        58,
+        36
+      ]
+    },
+    "522": {
+      "block_id": "334",
+      "minecraft_name": "334-0",
+      "display_name": "Leather",
+      "rgb": [
+        197,
+        91,
+        54
+      ]
+    },
+    "523": {
+      "block_id": "335",
+      "minecraft_name": "335-0",
+      "display_name": "Milk Bucket",
+      "rgb": [
+        52,
+        53,
+        52
+      ]
+    },
+    "524": {
+      "block_id": "336",
+      "minecraft_name": "336-0",
+      "display_name": "Brick",
+      "rgb": [
+        127,
+        62,
+        44
+      ]
+    },
+    "525": {
+      "block_id": "337",
+      "minecraft_name": "337-0",
+      "display_name": "Clay",
+      "rgb": [
+        55,
+        57,
+        68
+      ]
+    },
+    "526": {
+      "block_id": "338",
+      "minecraft_name": "338-0",
+      "display_name": "Sugar Canes",
+      "rgb": [
+        43,
+        56,
+        29
+      ]
+    },
+    "527": {
+      "block_id": "339",
+      "minecraft_name": "339-0",
+      "display_name": "Paper",
+      "rgb": [
+        214,
+        214,
+        214
+      ]
+    },
+    "528": {
+      "block_id": "340",
+      "minecraft_name": "340-0",
+      "display_name": "Book",
+      "rgb": [
+        101,
+        75,
+        23
+      ]
+    },
+    "529": {
+      "block_id": "341",
+      "minecraft_name": "341-0",
+      "display_name": "Slimeball",
+      "rgb": [
+        52,
+        83,
+        47
+      ]
+    },
+    "530": {
+      "block_id": "342",
+      "minecraft_name": "342-0",
+      "display_name": "Minecart with Chest",
+      "rgb": [
+        136,
+        102,
+        38
+      ]
+    },
+    "531": {
+      "block_id": "343",
+      "minecraft_name": "343-0",
+      "display_name": "Minecart with Furnace",
+      "rgb": [
+        57,
+        58,
+        58
+      ]
+    },
+    "532": {
+      "block_id": "344",
+      "minecraft_name": "344-0",
+      "display_name": "Egg",
+      "rgb": [
+        223,
+        206,
+        155
+      ]
+    },
+    "533": {
+      "block_id": "345",
+      "minecraft_name": "345-0",
+      "display_name": "Compass",
+      "rgb": [
+        46,
+        46,
+        47
+      ]
+    },
+    "534": {
+      "block_id": "346",
+      "minecraft_name": "346-0",
+      "display_name": "Fishing Rod",
+      "rgb": [
+        67,
+        68,
+        69
+      ]
+    },
+    "535": {
+      "block_id": "347",
+      "minecraft_name": "347-0",
+      "display_name": "Clock",
+      "rgb": [
+        222,
+        222,
+        144
+      ]
+    },
+    "536": {
+      "block_id": "348",
+      "minecraft_name": "348-0",
+      "display_name": "Glowstone Dust",
+      "rgb": [
+        83,
+        83,
+        0
+      ]
+    },
+    "537": {
+      "block_id": "349",
+      "minecraft_name": "349-0",
+      "display_name": "Raw Fish",
+      "rgb": [
+        107,
+        159,
+        147
+      ]
+    },
+    "538": {
+      "block_id": "349:1",
+      "minecraft_name": "349-1",
+      "display_name": "Raw Salmon",
+      "rgb": [
+        171,
+        53,
+        51
+      ]
+    },
+    "539": {
+      "block_id": "349:2",
+      "minecraft_name": "349-2",
+      "display_name": "Clownfish",
+      "rgb": [
+        212,
+        101,
+        35
+      ]
+    },
+    "540": {
+      "block_id": "349:3",
+      "minecraft_name": "349-3",
+      "display_name": "Pufferfish",
+      "rgb": [
+        235,
+        222,
+        57
+      ]
+    },
+    "541": {
+      "block_id": "350",
+      "minecraft_name": "350-0",
+      "display_name": "Cooked Fish",
+      "rgb": [
+        169,
+        152,
+        155
+      ]
+    },
+    "542": {
+      "block_id": "350:1",
+      "minecraft_name": "350-1",
+      "display_name": "Cooked Salmon",
+      "rgb": [
+        186,
+        79,
+        35
+      ]
+    },
+    "543": {
+      "block_id": "351",
+      "minecraft_name": "351-0",
+      "display_name": "Ink Sack",
+      "rgb": [
+        0,
+        0,
+        2
+      ]
+    },
+    "544": {
+      "block_id": "351:1",
+      "minecraft_name": "351-1",
+      "display_name": "Rose Red",
+      "rgb": [
+        122,
+        7,
+        7
+      ]
+    },
+    "545": {
+      "block_id": "351:2",
+      "minecraft_name": "351-2",
+      "display_name": "Cactus Green",
+      "rgb": [
+        34,
+        53,
+        5
+      ]
+    },
+    "546": {
+      "block_id": "351:3",
+      "minecraft_name": "351-3",
+      "display_name": "Coco Beans",
+      "rgb": [
+        65,
+        34,
+        13
+      ]
+    },
+    "547": {
+      "block_id": "351:4",
+      "minecraft_name": "351-4",
+      "display_name": "Lapis Lazuli",
+      "rgb": [
+        10,
+        43,
+        122
+      ]
+    },
+    "548": {
+      "block_id": "351:5",
+      "minecraft_name": "351-5",
+      "display_name": "Purple Dye",
+      "rgb": [
+        81,
+        26,
+        113
+      ]
+    },
+    "549": {
+      "block_id": "351:6",
+      "minecraft_name": "351-6",
+      "display_name": "Cyan Dye",
+      "rgb": [
+        13,
+        67,
+        90
+      ]
+    },
+    "550": {
+      "block_id": "351:7",
+      "minecraft_name": "351-7",
+      "display_name": "Light Gray Dye",
+      "rgb": [
+        61,
+        61,
+        76
+      ]
+    },
+    "551": {
+      "block_id": "351:8",
+      "minecraft_name": "351-8",
+      "display_name": "Gray Dye",
+      "rgb": [
+        65,
+        65,
+        65
+      ]
+    },
+    "552": {
+      "block_id": "351:9",
+      "minecraft_name": "351-9",
+      "display_name": "Pink Dye",
+      "rgb": [
+        128,
+        54,
+        92
+      ]
+    },
+    "553": {
+      "block_id": "351:10",
+      "minecraft_name": "351-10",
+      "display_name": "Lime Dye",
+      "rgb": [
+        61,
+        109,
+        0
+      ]
+    },
+    "554": {
+      "block_id": "351:11",
+      "minecraft_name": "351-11",
+      "display_name": "Dandelion Yellow",
+      "rgb": [
+        142,
+        107,
+        19
+      ]
+    },
+    "555": {
+      "block_id": "351:12",
+      "minecraft_name": "351-12",
+      "display_name": "Light Blue Dye",
+      "rgb": [
+        47,
+        84,
+        136
+      ]
+    },
+    "556": {
+      "block_id": "351:13",
+      "minecraft_name": "351-13",
+      "display_name": "Magenta Dye",
+      "rgb": [
+        107,
+        33,
+        102
+      ]
+    },
+    "557": {
+      "block_id": "351:14",
+      "minecraft_name": "351-14",
+      "display_name": "Orange Dye",
+      "rgb": [
+        146,
+        70,
+        12
+      ]
+    },
+    "558": {
+      "block_id": "351:15",
+      "minecraft_name": "351-15",
+      "display_name": "Bone Meal",
+      "rgb": [
+        84,
+        84,
+        104
+      ]
+    },
+    "559": {
+      "block_id": "352",
+      "minecraft_name": "352-0",
+      "display_name": "Bone",
+      "rgb": [
+        121,
+        120,
+        112
+      ]
+    },
+    "560": {
+      "block_id": "353",
+      "minecraft_name": "353-0",
+      "display_name": "Sugar",
+      "rgb": [
+        83,
+        83,
+        103
+      ]
+    },
+    "561": {
+      "block_id": "354",
+      "minecraft_name": "354-0",
+      "display_name": "Cake",
+      "rgb": [
+        233,
+        232,
+        234
+      ]
+    },
+    "562": {
+      "block_id": "355",
+      "minecraft_name": "355-0",
+      "display_name": "Bed",
+      "rgb": [
+        114,
+        0,
+        0
+      ]
+    },
+    "563": {
+      "block_id": "356",
+      "minecraft_name": "356-0",
+      "display_name": "Redstone Repeater",
+      "rgb": [
+        164,
+        167,
+        161
+      ]
+    },
+    "564": {
+      "block_id": "357",
+      "minecraft_name": "357-0",
+      "display_name": "Cookie",
+      "rgb": [
+        217,
+        131,
+        62
+      ]
+    },
+    "565": {
+      "block_id": "358",
+      "minecraft_name": "358-0",
+      "display_name": "Map",
+      "rgb": [
+        214,
+        214,
+        150
+      ]
+    },
+    "566": {
+      "block_id": "359",
+      "minecraft_name": "359-0",
+      "display_name": "Shears",
+      "rgb": [
+        69,
+        50,
+        43
+      ]
+    },
+    "567": {
+      "block_id": "360",
+      "minecraft_name": "360-0",
+      "display_name": "Melon",
+      "rgb": [
+        132,
+        137,
+        32
+      ]
+    },
+    "568": {
+      "block_id": "361",
+      "minecraft_name": "361-0",
+      "display_name": "Pumpkin Seeds",
+      "rgb": [
+        203,
+        198,
+        141
+      ]
+    },
+    "569": {
+      "block_id": "362",
+      "minecraft_name": "362-0",
+      "display_name": "Melon Seeds",
+      "rgb": [
+        42,
+        34,
+        11
+      ]
+    },
+    "570": {
+      "block_id": "363",
+      "minecraft_name": "363-0",
+      "display_name": "Raw Beef",
+      "rgb": [
+        14,
+        2,
+        1
+      ]
+    },
+    "571": {
+      "block_id": "364",
+      "minecraft_name": "364-0",
+      "display_name": "Steak",
+      "rgb": [
+        11,
+        5,
+        5
+      ]
+    },
+    "572": {
+      "block_id": "365",
+      "minecraft_name": "365-0",
+      "display_name": "Raw Chicken",
+      "rgb": [
+        49,
+        0,
+        0
+      ]
+    },
+    "573": {
+      "block_id": "366",
+      "minecraft_name": "366-0",
+      "display_name": "Cooked Chicken",
+      "rgb": [
+        136,
+        71,
+        33
+      ]
+    },
+    "574": {
+      "block_id": "367",
+      "minecraft_name": "367-0",
+      "display_name": "Rotten Flesh",
+      "rgb": [
+        39,
+        19,
+        15
+      ]
+    },
+    "575": {
+      "block_id": "368",
+      "minecraft_name": "368-0",
+      "display_name": "Ender Pearl",
+      "rgb": [
+        11,
+        54,
+        47
+      ]
+    },
+    "576": {
+      "block_id": "369",
+      "minecraft_name": "369-0",
+      "display_name": "Blaze Rod",
+      "rgb": [
+        185,
+        147,
+        28
+      ]
+    },
+    "577": {
+      "block_id": "370",
+      "minecraft_name": "370-0",
+      "display_name": "Ghast Tear",
+      "rgb": [
+        55,
+        74,
+        74
+      ]
+    },
+    "578": {
+      "block_id": "371",
+      "minecraft_name": "371-0",
+      "display_name": "Gold Nugget",
+      "rgb": [
+        121,
+        121,
+        0
+      ]
+    },
+    "579": {
+      "block_id": "372",
+      "minecraft_name": "372-0",
+      "display_name": "Nether Wart",
+      "rgb": [
+        92,
+        21,
+        26
+      ]
+    },
+    "580": {
+      "block_id": "373",
+      "minecraft_name": "373-0",
+      "display_name": "Potion",
+      "rgb": [
+        186,
+        186,
+        186
+      ]
+    },
+    "581": {
+      "block_id": "374",
+      "minecraft_name": "374-0",
+      "display_name": "Glass Bottle",
+      "rgb": [
+        185,
+        185,
+        185
+      ]
+    },
+    "582": {
+      "block_id": "375",
+      "minecraft_name": "375-0",
+      "display_name": "Spider Eye",
+      "rgb": [
+        42,
+        0,
+        16
+      ]
+    },
+    "583": {
+      "block_id": "376",
+      "minecraft_name": "376-0",
+      "display_name": "Fermented Spider Eye",
+      "rgb": [
+        41,
+        0,
+        15
+      ]
+    },
+    "584": {
+      "block_id": "377",
+      "minecraft_name": "377-0",
+      "display_name": "Blaze Powder",
+      "rgb": [
+        149,
+        51,
+        0
+      ]
+    },
+    "585": {
+      "block_id": "378",
+      "minecraft_name": "378-0",
+      "display_name": "Magma Cream",
+      "rgb": [
+        80,
+        118,
+        40
+      ]
+    },
+    "586": {
+      "block_id": "379",
+      "minecraft_name": "379-0",
+      "display_name": "Brewing Stand",
+      "rgb": [
+        147,
+        147,
+        147
+      ]
+    },
+    "587": {
+      "block_id": "380",
+      "minecraft_name": "380-0",
+      "display_name": "Cauldron",
+      "rgb": [
+        81,
+        81,
+        81
+      ]
+    },
+    "588": {
+      "block_id": "381",
+      "minecraft_name": "381-0",
+      "display_name": "Eye of Ender",
+      "rgb": [
+        18,
+        43,
+        58
+      ]
+    },
+    "589": {
+      "block_id": "382",
+      "minecraft_name": "382-0",
+      "display_name": "Glistering Melon",
+      "rgb": [
+        154,
+        116,
+        24
+      ]
+    },
+    "590": {
+      "block_id": "383:4",
+      "minecraft_name": "383-4",
+      "display_name": "Spawn Elder Guardian",
+      "rgb": [
+        158,
+        163,
+        145
+      ]
+    },
+    "591": {
+      "block_id": "383:5",
+      "minecraft_name": "383-5",
+      "display_name": "Spawn Wither Skeleton",
+      "rgb": [
+        23,
+        23,
+        23
+      ]
+    },
+    "592": {
+      "block_id": "383:6",
+      "minecraft_name": "383-6",
+      "display_name": "Spawn Stray",
+      "rgb": [
+        76,
+        93,
+        94
+      ]
+    },
+    "593": {
+      "block_id": "383:23",
+      "minecraft_name": "383-23",
+      "display_name": "Spawn Husk",
+      "rgb": [
+        93,
+        91,
+        76
+      ]
+    },
+    "594": {
+      "block_id": "383:27",
+      "minecraft_name": "383-27",
+      "display_name": "Spawn Zombie Villager",
+      "rgb": [
+        68,
+        47,
+        40
+      ]
+    },
+    "595": {
+      "block_id": "383:28",
+      "minecraft_name": "383-28",
+      "display_name": "Spawn Skeleton Horse",
+      "rgb": [
+        79,
+        87,
+        63
+      ]
+    },
+    "596": {
+      "block_id": "383:29",
+      "minecraft_name": "383-29",
+      "display_name": "Spawn Zombie Horse",
+      "rgb": [
+        34,
+        72,
+        44
+      ]
+    },
+    "597": {
+      "block_id": "383:31",
+      "minecraft_name": "383-31",
+      "display_name": "Spawn Donkey",
+      "rgb": [
+        66,
+        58,
+        48
+      ]
+    },
+    "598": {
+      "block_id": "383:32",
+      "minecraft_name": "383-32",
+      "display_name": "Spawn Mule",
+      "rgb": [
+        28,
+        8,
+        0
+      ]
+    },
+    "599": {
+      "block_id": "383:34",
+      "minecraft_name": "383-34",
+      "display_name": "Spawn Evoker",
+      "rgb": [
+        117,
+        122,
+        122
+      ]
+    },
+    "600": {
+      "block_id": "383:35",
+      "minecraft_name": "383-35",
+      "display_name": "Spawn Vex",
+      "rgb": [
+        96,
+        114,
+        129
+      ]
+    },
+    "601": {
+      "block_id": "383:36",
+      "minecraft_name": "383-36",
+      "display_name": "Spawn Vindicator",
+      "rgb": [
+        116,
+        121,
+        121
+      ]
+    },
+    "602": {
+      "block_id": "383:50",
+      "minecraft_name": "383-50",
+      "display_name": "Spawn Creeper",
+      "rgb": [
+        0,
+        2,
+        0
+      ]
+    },
+    "603": {
+      "block_id": "383:51",
+      "minecraft_name": "383-51",
+      "display_name": "Spawn Skeleton",
+      "rgb": [
+        151,
+        151,
+        151
+      ]
+    },
+    "604": {
+      "block_id": "383:52",
+      "minecraft_name": "383-52",
+      "display_name": "Spawn Spider",
+      "rgb": [
+        41,
+        35,
+        31
+      ]
+    },
+    "605": {
+      "block_id": "383:54",
+      "minecraft_name": "383-54",
+      "display_name": "Spawn Zombie",
+      "rgb": [
+        0,
+        138,
+        138
+      ]
+    },
+    "606": {
+      "block_id": "383:55",
+      "minecraft_name": "383-55",
+      "display_name": "Spawn Slime",
+      "rgb": [
+        64,
+        126,
+        49
+      ]
+    },
+    "607": {
+      "block_id": "383:56",
+      "minecraft_name": "383-56",
+      "display_name": "Spawn Ghast",
+      "rgb": [
+        196,
+        196,
+        196
+      ]
+    },
+    "608": {
+      "block_id": "383:57",
+      "minecraft_name": "383-57",
+      "display_name": "Spawn Zombie Pigman",
+      "rgb": [
+        184,
+        116,
+        116
+      ]
+    },
+    "609": {
+      "block_id": "383:58",
+      "minecraft_name": "383-58",
+      "display_name": "Spawn Enderman",
+      "rgb": [
+        0,
+        2,
+        2
+      ]
+    },
+    "610": {
+      "block_id": "383:59",
+      "minecraft_name": "383-59",
+      "display_name": "Spawn Cave Spider",
+      "rgb": [
+        9,
+        52,
+        61
+      ]
+    },
+    "611": {
+      "block_id": "383:60",
+      "minecraft_name": "383-60",
+      "display_name": "Spawn Silverfish",
+      "rgb": [
+        87,
+        87,
+        87
+      ]
+    },
+    "612": {
+      "block_id": "383:61",
+      "minecraft_name": "383-61",
+      "display_name": "Spawn Blaze",
+      "rgb": [
+        194,
+        140,
+        1
+      ]
+    },
+    "613": {
+      "block_id": "383:62",
+      "minecraft_name": "383-62",
+      "display_name": "Spawn Magma Cube",
+      "rgb": [
+        41,
+        0,
+        0
+      ]
+    },
+    "614": {
+      "block_id": "383:65",
+      "minecraft_name": "383-65",
+      "display_name": "Spawn Bat",
+      "rgb": [
+        60,
+        49,
+        38
+      ]
+    },
+    "615": {
+      "block_id": "383:66",
+      "minecraft_name": "383-66",
+      "display_name": "Spawn Witch",
+      "rgb": [
+        40,
+        0,
+        0
+      ]
+    },
+    "616": {
+      "block_id": "383:67",
+      "minecraft_name": "383-67",
+      "display_name": "Spawn Endermite",
+      "rgb": [
+        17,
+        17,
+        17
+      ]
+    },
+    "617": {
+      "block_id": "383:68",
+      "minecraft_name": "383-68",
+      "display_name": "Spawn Guardian",
+      "rgb": [
+        71,
+        102,
+        90
+      ]
+    },
+    "618": {
+      "block_id": "383:69",
+      "minecraft_name": "383-69",
+      "display_name": "Spawn Shulker",
+      "rgb": [
+        117,
+        81,
+        117
+      ]
+    },
+    "619": {
+      "block_id": "383:90",
+      "minecraft_name": "383-90",
+      "display_name": "Spawn Pig",
+      "rgb": [
+        189,
+        130,
+        128
+      ]
+    },
+    "620": {
+      "block_id": "383:91",
+      "minecraft_name": "383-91",
+      "display_name": "Spawn Sheep",
+      "rgb": [
+        182,
+        182,
+        182
+      ]
+    },
+    "621": {
+      "block_id": "383:92",
+      "minecraft_name": "383-92",
+      "display_name": "Spawn Cow",
+      "rgb": [
+        54,
+        43,
+        30
+      ]
+    },
+    "622": {
+      "block_id": "383:93",
+      "minecraft_name": "383-93",
+      "display_name": "Spawn Chicken",
+      "rgb": [
+        126,
+        126,
+        126
+      ]
+    },
+    "623": {
+      "block_id": "383:94",
+      "minecraft_name": "383-94",
+      "display_name": "Spawn Squid",
+      "rgb": [
+        27,
+        47,
+        61
+      ]
+    },
+    "624": {
+      "block_id": "383:95",
+      "minecraft_name": "383-95",
+      "display_name": "Spawn Wolf",
+      "rgb": [
+        169,
+        166,
+        166
+      ]
+    },
+    "625": {
+      "block_id": "383:96",
+      "minecraft_name": "383-96",
+      "display_name": "Spawn Mooshroom",
+      "rgb": [
+        126,
+        12,
+        13
+      ]
+    },
+    "626": {
+      "block_id": "383:98",
+      "minecraft_name": "383-98",
+      "display_name": "Spawn Ocelot",
+      "rgb": [
+        188,
+        175,
+        99
+      ]
+    },
+    "627": {
+      "block_id": "383:100",
+      "minecraft_name": "383-100",
+      "display_name": "Spawn Horse",
+      "rgb": [
+        151,
+        125,
+        98
+      ]
+    },
+    "628": {
+      "block_id": "383:101",
+      "minecraft_name": "383-101",
+      "display_name": "Spawn Rabbit",
+      "rgb": [
+        121,
+        75,
+        50
+      ]
+    },
+    "629": {
+      "block_id": "383:102",
+      "minecraft_name": "383-102",
+      "display_name": "Spawn Polar Bear",
+      "rgb": [
+        189,
+        189,
+        189
+      ]
+    },
+    "630": {
+      "block_id": "383:103",
+      "minecraft_name": "383-103",
+      "display_name": "Spawn Llama",
+      "rgb": [
+        151,
+        125,
+        99
+      ]
+    },
+    "631": {
+      "block_id": "383:105",
+      "minecraft_name": "383-105",
+      "display_name": "Spawn Parrot",
+      "rgb": [
+        10,
+        132,
+        9
+      ]
+    },
+    "632": {
+      "block_id": "383:120",
+      "minecraft_name": "383-120",
+      "display_name": "Spawn Villager",
+      "rgb": [
+        67,
+        46,
+        39
+      ]
+    },
+    "633": {
+      "block_id": "384",
+      "minecraft_name": "384-0",
+      "display_name": "Bottle o' Enchanting",
+      "rgb": [
+        81,
+        60,
+        3
+      ]
+    },
+    "634": {
+      "block_id": "385",
+      "minecraft_name": "385-0",
+      "display_name": "Fire Charge",
+      "rgb": [
+        2,
+        0,
+        0
+      ]
+    },
+    "635": {
+      "block_id": "386",
+      "minecraft_name": "386-0",
+      "display_name": "Book and Quill",
+      "rgb": [
+        240,
+        240,
+        240
+      ]
+    },
+    "636": {
+      "block_id": "387",
+      "minecraft_name": "387-0",
+      "display_name": "Written Book",
+      "rgb": [
+        117,
+        50,
+        30
+      ]
+    },
+    "637": {
+      "block_id": "388",
+      "minecraft_name": "388-0",
+      "display_name": "Emerald",
+      "rgb": [
+        0,
+        83,
+        0
+      ]
+    },
+    "638": {
+      "block_id": "389",
+      "minecraft_name": "389-0",
+      "display_name": "Item Frame",
+      "rgb": [
+        90,
+        61,
+        19
+      ]
+    },
+    "639": {
+      "block_id": "390",
+      "minecraft_name": "390-0",
+      "display_name": "Flower Pot",
+      "rgb": [
+        53,
+        23,
+        17
+      ]
+    },
+    "640": {
+      "block_id": "391",
+      "minecraft_name": "391-0",
+      "display_name": "Carrot",
+      "rgb": [
+        172,
+        57,
+        0
+      ]
+    },
+    "641": {
+      "block_id": "392",
+      "minecraft_name": "392-0",
+      "display_name": "Potato",
+      "rgb": [
+        233,
+        186,
+        98
+      ]
+    },
+    "642": {
+      "block_id": "393",
+      "minecraft_name": "393-0",
+      "display_name": "Baked Potato",
+      "rgb": [
+        183,
+        102,
+        15
+      ]
+    },
+    "643": {
+      "block_id": "394",
+      "minecraft_name": "394-0",
+      "display_name": "Poisonous Potato",
+      "rgb": [
+        117,
+        126,
+        10
+      ]
+    },
+    "644": {
+      "block_id": "395",
+      "minecraft_name": "395-0",
+      "display_name": "Empty Map",
+      "rgb": [
+        213,
+        213,
+        149
+      ]
+    },
+    "645": {
+      "block_id": "396",
+      "minecraft_name": "396-0",
+      "display_name": "Golden Carrot",
+      "rgb": [
+        100,
+        70,
+        6
+      ]
+    },
+    "646": {
+      "block_id": "397",
+      "minecraft_name": "397-0",
+      "display_name": "Mob Head (Skeleton)",
+      "rgb": [
+        92,
+        92,
+        92
+      ]
+    },
+    "647": {
+      "block_id": "397:1",
+      "minecraft_name": "397-1",
+      "display_name": "Mob Head (Wither Skeleton)",
+      "rgb": [
+        18,
+        18,
+        18
+      ]
+    },
+    "648": {
+      "block_id": "397:2",
+      "minecraft_name": "397-2",
+      "display_name": "Mob Head (Zombie)",
+      "rgb": [
+        67,
+        105,
+        52
+      ]
+    },
+    "649": {
+      "block_id": "397:3",
+      "minecraft_name": "397-3",
+      "display_name": "Mob Head (Human)",
+      "rgb": [
+        42,
+        29,
+        13
+      ]
+    },
+    "650": {
+      "block_id": "397:4",
+      "minecraft_name": "397-4",
+      "display_name": "Mob Head (Creeper)",
+      "rgb": [
+        2,
+        0,
+        2
+      ]
+    },
+    "651": {
+      "block_id": "397:5",
+      "minecraft_name": "397-5",
+      "display_name": "Mob Head (Dragon)",
+      "rgb": [
+        14,
+        14,
+        14
+      ]
+    },
+    "652": {
+      "block_id": "398",
+      "minecraft_name": "398-0",
+      "display_name": "Carrot on a Stick",
+      "rgb": [
+        67,
+        69,
+        67
+      ]
+    },
+    "653": {
+      "block_id": "399",
+      "minecraft_name": "399-0",
+      "display_name": "Nether Star",
+      "rgb": [
+        85,
+        107,
+        107
+      ]
+    },
+    "654": {
+      "block_id": "400",
+      "minecraft_name": "400-0",
+      "display_name": "Pumpkin Pie",
+      "rgb": [
+        234,
+        158,
+        96
+      ]
+    },
+    "655": {
+      "block_id": "401",
+      "minecraft_name": "401-0",
+      "display_name": "Firework Rocket",
+      "rgb": [
+        190,
+        40,
+        40
+      ]
+    },
+    "656": {
+      "block_id": "402",
+      "minecraft_name": "402-0",
+      "display_name": "Firework Star",
+      "rgb": [
+        113,
+        113,
+        113
+      ]
+    },
+    "657": {
+      "block_id": "403",
+      "minecraft_name": "403-0",
+      "display_name": "Enchanted Book",
+      "rgb": [
+        100,
+        74,
+        22
+      ]
+    },
+    "658": {
+      "block_id": "404",
+      "minecraft_name": "404-0",
+      "display_name": "Redstone Comparator",
+      "rgb": [
+        163,
+        166,
+        160
+      ]
+    },
+    "659": {
+      "block_id": "405",
+      "minecraft_name": "405-0",
+      "display_name": "Nether Brick",
+      "rgb": [
+        48,
+        24,
+        28
+      ]
+    },
+    "660": {
+      "block_id": "406",
+      "minecraft_name": "406-0",
+      "display_name": "Nether Quartz",
+      "rgb": [
+        93,
+        74,
+        63
+      ]
+    },
+    "661": {
+      "block_id": "407",
+      "minecraft_name": "407-0",
+      "display_name": "Minecart with TNT",
+      "rgb": [
+        39,
+        29,
+        10
+      ]
+    },
+    "662": {
+      "block_id": "408",
+      "minecraft_name": "408-0",
+      "display_name": "Minecart with Hopper",
+      "rgb": [
+        16,
+        16,
+        16
+      ]
+    },
+    "663": {
+      "block_id": "409",
+      "minecraft_name": "409-0",
+      "display_name": "Prismarine Shard",
+      "rgb": [
+        127,
+        184,
+        164
+      ]
+    },
+    "664": {
+      "block_id": "410",
+      "minecraft_name": "410-0",
+      "display_name": "Prismarine Crystals",
+      "rgb": [
+        223,
+        233,
+        220
+      ]
+    },
+    "665": {
+      "block_id": "411",
+      "minecraft_name": "411-0",
+      "display_name": "Raw Rabbit",
+      "rgb": [
+        184,
+        132,
+        115
+      ]
+    },
+    "666": {
+      "block_id": "412",
+      "minecraft_name": "412-0",
+      "display_name": "Cooked Rabbit",
+      "rgb": [
+        135,
+        70,
+        32
+      ]
+    },
+    "667": {
+      "block_id": "413",
+      "minecraft_name": "413-0",
+      "display_name": "Rabbit Stew",
+      "rgb": [
+        30,
+        20,
+        2
+      ]
+    },
+    "668": {
+      "block_id": "414",
+      "minecraft_name": "414-0",
+      "display_name": "Rabbit's Foot",
+      "rgb": [
+        199,
+        158,
+        103
+      ]
+    },
+    "669": {
+      "block_id": "415",
+      "minecraft_name": "415-0",
+      "display_name": "Rabbit Hide",
+      "rgb": [
+        114,
+        87,
+        63
+      ]
+    },
+    "670": {
+      "block_id": "416",
+      "minecraft_name": "416-0",
+      "display_name": "Armor Stand",
+      "rgb": [
+        61,
+        48,
+        30
+      ]
+    },
+    "671": {
+      "block_id": "417",
+      "minecraft_name": "417-0",
+      "display_name": "Iron Horse Armor",
+      "rgb": [
+        89,
+        90,
+        90
+      ]
+    },
+    "672": {
+      "block_id": "418",
+      "minecraft_name": "418-0",
+      "display_name": "Golden Horse Armor",
+      "rgb": [
+        124,
+        89,
+        1
+      ]
+    },
+    "673": {
+      "block_id": "419",
+      "minecraft_name": "419-0",
+      "display_name": "Diamond Horse Armor",
+      "rgb": [
+        75,
+        94,
+        103
+      ]
+    },
+    "674": {
+      "block_id": "420",
+      "minecraft_name": "420-0",
+      "display_name": "Lead",
+      "rgb": [
+        118,
+        70,
+        35
+      ]
+    },
+    "675": {
+      "block_id": "421",
+      "minecraft_name": "421-0",
+      "display_name": "Name Tag",
+      "rgb": [
+        54,
+        41,
+        15
+      ]
+    },
+    "676": {
+      "block_id": "422",
+      "minecraft_name": "422-0",
+      "display_name": "Minecart with Command Block",
+      "rgb": [
+        39,
+        29,
+        11
+      ]
+    },
+    "677": {
+      "block_id": "423",
+      "minecraft_name": "423-0",
+      "display_name": "Raw Mutton",
+      "rgb": [
+        173,
+        51,
+        46
+      ]
+    },
+    "678": {
+      "block_id": "424",
+      "minecraft_name": "424-0",
+      "display_name": "Cooked Mutton",
+      "rgb": [
+        42,
+        22,
+        13
+      ]
+    },
+    "679": {
+      "block_id": "425",
+      "minecraft_name": "425-0",
+      "display_name": "Banner",
+      "rgb": [
+        152,
+        152,
+        154
+      ]
+    },
+    "680": {
+      "block_id": "426",
+      "minecraft_name": "426-0",
+      "display_name": "End Crystal",
+      "rgb": [
+        156,
+        189,
+        193
+      ]
+    },
+    "681": {
+      "block_id": "427",
+      "minecraft_name": "427-0",
+      "display_name": "Spruce Door",
+      "rgb": [
+        121,
+        89,
+        53
+      ]
+    },
+    "682": {
+      "block_id": "428",
+      "minecraft_name": "428-0",
+      "display_name": "Birch Door",
+      "rgb": [
+        213,
+        201,
+        139
+      ]
+    },
+    "683": {
+      "block_id": "429",
+      "minecraft_name": "429-0",
+      "display_name": "Jungle Door",
+      "rgb": [
+        177,
+        129,
+        93
+      ]
+    },
+    "684": {
+      "block_id": "430",
+      "minecraft_name": "430-0",
+      "display_name": "Acacia Door",
+      "rgb": [
+        176,
+        101,
+        63
+      ]
+    },
+    "685": {
+      "block_id": "431",
+      "minecraft_name": "431-0",
+      "display_name": "Dark Oak Door",
+      "rgb": [
+        70,
+        45,
+        21
+      ]
+    },
+    "686": {
+      "block_id": "432",
+      "minecraft_name": "432-0",
+      "display_name": "Chorus Fruit",
+      "rgb": [
+        95,
+        57,
+        95
+      ]
+    },
+    "687": {
+      "block_id": "433",
+      "minecraft_name": "433-0",
+      "display_name": "Popped Chorus Fruit",
+      "rgb": [
+        185,
+        147,
+        185
+      ]
+    },
+    "688": {
+      "block_id": "434",
+      "minecraft_name": "434-0",
+      "display_name": "Beetroot",
+      "rgb": [
+        150,
+        56,
+        60
+      ]
+    },
+    "689": {
+      "block_id": "435",
+      "minecraft_name": "435-0",
+      "display_name": "Beetroot Seeds",
+      "rgb": [
+        132,
+        110,
+        73
+      ]
+    },
+    "690": {
+      "block_id": "436",
+      "minecraft_name": "436-0",
+      "display_name": "Beetroot Soup",
+      "rgb": [
+        30,
+        20,
+        3
+      ]
+    },
+    "691": {
+      "block_id": "437",
+      "minecraft_name": "437-0",
+      "display_name": "Dragon's Breath",
+      "rgb": [
+        185,
+        185,
+        186
+      ]
+    },
+    "692": {
+      "block_id": "438",
+      "minecraft_name": "438-0",
+      "display_name": "Splash Potion",
+      "rgb": [
+        44,
+        74,
+        157
+      ]
+    },
+    "693": {
+      "block_id": "439",
+      "minecraft_name": "439-0",
+      "display_name": "Spectral Arrow",
+      "rgb": [
+        2,
+        2,
+        0
+      ]
+    },
+    "694": {
+      "block_id": "440",
+      "minecraft_name": "440-0",
+      "display_name": "Tipped Arrow",
+      "rgb": [
+        136,
+        102,
+        39
+      ]
+    },
+    "695": {
+      "block_id": "441",
+      "minecraft_name": "441-0",
+      "display_name": "Lingering Potion",
+      "rgb": [
+        43,
+        73,
+        156
+      ]
+    },
+    "696": {
+      "block_id": "442",
+      "minecraft_name": "442-0",
+      "display_name": "Shield",
+      "rgb": [
+        109,
+        108,
+        116
+      ]
+    },
+    "697": {
+      "block_id": "443",
+      "minecraft_name": "443-0",
+      "display_name": "Elytra",
+      "rgb": [
+        52,
+        53,
+        53
+      ]
+    },
+    "698": {
+      "block_id": "444",
+      "minecraft_name": "444-0",
+      "display_name": "Spruce Boat",
+      "rgb": [
+        52,
+        40,
+        27
+      ]
+    },
+    "699": {
+      "block_id": "445",
+      "minecraft_name": "445-0",
+      "display_name": "Birch Boat",
+      "rgb": [
+        91,
+        80,
+        56
+      ]
+    },
+    "700": {
+      "block_id": "446",
+      "minecraft_name": "446-0",
+      "display_name": "Jungle Boat",
+      "rgb": [
+        71,
+        47,
+        31
+      ]
+    },
+    "701": {
+      "block_id": "447",
+      "minecraft_name": "447-0",
+      "display_name": "Acacia Boat",
+      "rgb": [
+        86,
+        46,
+        27
+      ]
+    },
+    "702": {
+      "block_id": "448",
+      "minecraft_name": "448-0",
+      "display_name": "Dark Oak Boat",
+      "rgb": [
+        29,
+        19,
+        9
+      ]
+    },
+    "703": {
+      "block_id": "449",
+      "minecraft_name": "449-0",
+      "display_name": "Totem of Undying",
+      "rgb": [
+        105,
+        78,
+        39
+      ]
+    },
+    "704": {
+      "block_id": "450",
+      "minecraft_name": "450-0",
+      "display_name": "Shulker Shell",
+      "rgb": [
+        119,
+        80,
+        119
+      ]
+    },
+    "705": {
+      "block_id": "452",
+      "minecraft_name": "452-0",
+      "display_name": "Iron Nugget",
+      "rgb": [
+        88,
+        95,
+        104
+      ]
+    },
+    "706": {
+      "block_id": "453",
+      "minecraft_name": "453-0",
+      "display_name": "Knowledge Book",
+      "rgb": [
+        86,
+        173,
+        86
+      ]
+    },
+    "707": {
+      "block_id": "2256",
+      "minecraft_name": "2256-0",
+      "display_name": "13 Disc",
+      "rgb": [
+        63,
+        64,
+        63
+      ]
+    },
+    "708": {
+      "block_id": "2257",
+      "minecraft_name": "2257-0",
+      "display_name": "Cat Disc",
+      "rgb": [
+        63,
+        64,
+        64
+      ]
+    },
+    "709": {
+      "block_id": "2258",
+      "minecraft_name": "2258-0",
+      "display_name": "Blocks Disc",
+      "rgb": [
+        63,
+        64,
+        65
+      ]
+    },
+    "710": {
+      "block_id": "2259",
+      "minecraft_name": "2259-0",
+      "display_name": "Chirp Disc",
+      "rgb": [
+        63,
+        65,
+        63
+      ]
+    },
+    "711": {
+      "block_id": "2260",
+      "minecraft_name": "2260-0",
+      "display_name": "Far Disc",
+      "rgb": [
+        63,
+        65,
+        64
+      ]
+    },
+    "712": {
+      "block_id": "2261",
+      "minecraft_name": "2261-0",
+      "display_name": "Mall Disc",
+      "rgb": [
+        63,
+        65,
+        65
+      ]
+    },
+    "713": {
+      "block_id": "2262",
+      "minecraft_name": "2262-0",
+      "display_name": "Mellohi Disc",
+      "rgb": [
+        64,
+        63,
+        63
+      ]
+    },
+    "714": {
+      "block_id": "2263",
+      "minecraft_name": "2263-0",
+      "display_name": "Stal Disc",
+      "rgb": [
+        64,
+        63,
+        64
+      ]
+    },
+    "715": {
+      "block_id": "2264",
+      "minecraft_name": "2264-0",
+      "display_name": "Strad Disc",
+      "rgb": [
+        64,
+        63,
+        65
+      ]
+    },
+    "716": {
+      "block_id": "2265",
+      "minecraft_name": "2265-0",
+      "display_name": "Ward Disc",
+      "rgb": [
+        64,
+        64,
+        63
+      ]
+    },
+    "717": {
+      "block_id": "2266",
+      "minecraft_name": "2266-0",
+      "display_name": "11 Disc",
+      "rgb": [
+        64,
+        64,
+        65
+      ]
+    },
+    "718": {
+      "block_id": "2267",
+      "minecraft_name": "2267-0",
+      "display_name": "Wait Disc",
+      "rgb": [
+        64,
+        65,
+        63
+      ]
+    }
+  }
+}
