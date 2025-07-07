@@ -114,6 +114,11 @@ static void on_click(void) {
         sound_play("click", 1.0, 1.0);
 }
 
+void gui_open_export_panel(void)
+{
+    goxel.gui.current_panel = PANEL_EXPORT;
+}
+
 static void render_left_panel(void)
 {
     int i;
