@@ -1,0 +1,17 @@
+shape main {
+    [antialiased 1]
+    [light 0.5 sat 0.5 s 100]
+    loop 5 [s -0.95 light 0.1 sat 0.01 hue 5] {
+       sphere [light -0.6 hue 30]
+    }
+    loop 30 [wait 1] {
+        sphere [sub rz 0+-180 ry 0+-180
+                z 0.5 s 0.3]
+    }
+    loop 2 [rz 90] {
+        loop 120 [ry 10 wait 1] {
+            sphere [hue 30+-30 light -0.5+-0.4
+                    z 0.5 s 0.05+-0.01 z 4+-0.5]
+        }
+    }
+}

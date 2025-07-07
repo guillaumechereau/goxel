@@ -1,0 +1,25 @@
+shape branch2 {
+    cube[]
+    branch2 [z 0.5 s 0.8 rx 20+-4 z 0.5]
+}
+
+shape branch {
+   [rx 90]
+   branch2[s 2]
+}
+
+shape tree($s) {
+    loop $s [z 1] {
+       cube[s 1 light -0.8+-0.1 sat 0.5]
+    }
+    [z $s]
+    [sat 1 light -0.5 hue 50+-30]
+    loop 6 [rz 360 / 6 rz 0+-10] {
+         branch[light 0+-0.3]
+    }
+}
+
+shape main {
+    [antialiased 0]
+    tree(8+-2)[]
+}

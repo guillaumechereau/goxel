@@ -1,0 +1,30 @@
+
+shape leaf {
+    cube[]
+    leaf[x 0.5 s 0.9 0.9 0.8 ry 25 x 0.4]
+}
+
+shape top {
+    loop 8 [rz 360 / 8] {
+        [life 8 sy 2 z 0+-5]
+        leaf[s 5 light -0.4 sat 0.5 hue 60+-20 ry -45]
+    }
+}
+
+shape part($n) {
+    loop $i = $n [z 1 rz 30+-10 rx 0+-10 wait 1] {
+        cylinder[s 4 x 0.1 light 0+-0.1]
+        if ($i == int($n - 2)) {
+            top[]
+        }
+    }
+}
+
+shape main {
+    [antialiased 1 hue 40 light -0.5 sat 0.5]
+    $n = 40+-10
+    loop 3 [rz 120+-45] {
+        [y 0.5]
+        part($n)[light -0.3+-0.05]
+    }
+}

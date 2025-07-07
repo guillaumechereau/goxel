@@ -1,0 +1,75 @@
+shape main {
+    [seed 4]
+    city[]
+}
+
+shape ground {
+    [s 128 128 1
+     light -0.6 sat 0.2 hue 50]
+    cube[]
+    loop 16 [] {
+       cube[x 0+-0.4 0+-0.4 
+            s 0.2+-0.1 0.2+-0.1 3+-1
+            light -0.3+-0.2]
+    }
+}
+
+shape city {
+    ground[]
+    loop 128 [wait 1] {
+        building[x 0+-58 0+-58 s 2+-0.5
+                 sat 0.2+-0.1 hue 0+-180]
+    }
+}
+
+shape building
+// Tall building
+rule 1 {
+    [s 3]
+    $n = int(10+-5)
+    loop $n [z 1 wait 1] {
+        $s = 2+-0.2
+        floor[s $s $s 1 z 0.5]
+    }
+    [z $n - 0.5]
+    loop 1+-2 [] {
+        antenna[]
+    }
+}
+// Low building
+rule 1 {
+   [s 8+-4 8+-4 4+-2 z 0.5]
+   cube[light -0.3]
+   windows(8)[]
+   loop 2+-1 [] {antenna[]}
+}
+// Tree
+rule 10 {
+   [z 0.5 sn 1 z 0.5]
+   [sat 1 0.5 light 1 0.2 hue 1 20]
+   cube[z 0.5 sz 5]
+   loop 2 [] {
+       sphere[z 4 s 4+-1
+              x 0+-0.1 0+-0.1
+              hue 100+-40]
+   }
+}
+
+shape windows($n) {
+    loop $n [rz 90] {
+       cube[x 0.5 0+-0.4 sn s 1/3 x -0.5
+            light 1 1 light 0+-0.2]
+    }
+}
+
+shape floor {
+    cube[light -0.5+-0.1]
+    windows(8)[]
+}
+
+shape antenna {
+    [z 0.5 x 0+-0.4 0+-0.4
+     sn 1 sz 2+-1 z 0.5
+     light -0.5]
+    cube[]
+}
