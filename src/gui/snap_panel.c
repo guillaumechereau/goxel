@@ -46,20 +46,50 @@ void gui_snap_panel(void)
     gui_group_end();
 
     gui_group_begin(_("Snap Units"));
+    if (gui_checkbox(_("Use Brush Size"), &goxel.use_brush_size, NULL)) {
+        if (goxel.use_brush_size) {
+            goxel.snap_units[0] = goxel.tool_radius * 2;
+            goxel.snap_units[1] = goxel.tool_radius * 2;
+            goxel.snap_units[2] = goxel.tool_radius * 2;
+        }
+    }
+    
+    // Update snap units to match brush size if enabled
+    if (goxel.use_brush_size) {
+        goxel.snap_units[0] = goxel.tool_radius * 2;
+        goxel.snap_units[1] = goxel.tool_radius * 2;
+        goxel.snap_units[2] = goxel.tool_radius * 2;
+    }
+    
     gui_row_begin(3);
+    gui_enabled_begin(!goxel.use_brush_size);
     v = goxel.snap_units[0];
-    if (gui_input_float("X", &v, 0.1, 0.1, 16, "%.1f"))
+    if (gui_input_float("X", &v, 0.1, 0.1, 16, "%.1f") && !goxel.use_brush_size)
         goxel.snap_units[0] = clamp(v, 0.1, 16);
+    
     v = goxel.snap_units[1];
-    if (gui_input_float("Y", &v, 0.1, 0.1, 16, "%.1f"))
+    if (gui_input_float("Y", &v, 0.1, 0.1, 16, "%.1f") && !goxel.use_brush_size)
         goxel.snap_units[1] = clamp(v, 0.1, 16);
+    
     v = goxel.snap_units[2];
-    if (gui_input_float("Z", &v, 0.1, 0.1, 16, "%.1f"))
+    if (gui_input_float("Z", &v, 0.1, 0.1, 16, "%.1f") && !goxel.use_brush_size)
         goxel.snap_units[2] = clamp(v, 0.1, 16);
+    
+    gui_enabled_end();
     gui_row_end();
     gui_group_end();
 
-    v = goxel.snap_offset;
-    if (gui_input_float(_("Offset"), &v, 0.1, -1, +1, "%.1f"))
-        goxel.snap_offset = clamp(v, -1, +1);
+    gui_group_begin(_("Snap Offsets"));
+    gui_row_begin(3);
+    v = goxel.snap_offsets[0];
+    if (gui_input_float("X", &v, 0.1, -1, +1, "%.1f"))
+        goxel.snap_offsets[0] = clamp(v, -1, +1);
+    v = goxel.snap_offsets[1];
+    if (gui_input_float("Y", &v, 0.1, -1, +1, "%.1f"))
+        goxel.snap_offsets[1] = clamp(v, -1, +1);
+    v = goxel.snap_offsets[2];
+    if (gui_input_float("Z", &v, 0.1, -1, +1, "%.1f"))
+        goxel.snap_offsets[2] = clamp(v, -1, +1);
+    gui_row_end();
+    gui_group_end();
 }
