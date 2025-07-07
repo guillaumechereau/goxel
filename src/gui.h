@@ -153,6 +153,8 @@ bool gui_is_item_deactivated(void);
 
 void gui_query_quit(void);
 
+void gui_open_export_panel(void);
+
 enum {
     GUI_POPUP_FULL      = 1 << 0,
     GUI_POPUP_RESIZE    = 1 << 1,

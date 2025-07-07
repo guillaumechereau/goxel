@@ -59,12 +59,6 @@ static void import_menu_callback(void *user, file_format_t *f)
     goxel_import_file(NULL, f->name);
 }
 
-static void export_menu_callback(void *user, file_format_t *f)
-{
-    if (gui_menu_item(0, f->name, true))
-        goxel_export_to_file(NULL, f->name);
-}
-
 static void on_script(void *user, const char *name)
 {
     if (gui_menu_item(0, name, true))
@@ -120,9 +114,8 @@ void gui_menu(void)
             gui_menu_item(ACTION_overwrite_export, overwrite_export_label,
                           true);
         }
-        if (gui_menu_begin(_("Export"), true)) {
-            file_format_iter("w", NULL, export_menu_callback);
-            gui_menu_end();
+        if (gui_menu_item(0, _("Export"), true)) {
+            gui_open_export_panel();
         }
         gui_menu_item(ACTION_quit, _("Quit"), true);
         gui_menu_end();
