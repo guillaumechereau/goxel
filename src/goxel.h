@@ -616,8 +616,7 @@ int goxel_unproject(const float viewport[4],
                     int snap_mask,
                     const float snap_shape[4][4],
                     const float offsets[3],
-                    float out[3],
-                    float normal[3]);
+                    float out[3], float normal[3]);
 
 void goxel_render_view(const float viewport[4], bool render_mode);
 void goxel_render_export_view(const float viewport[4]);

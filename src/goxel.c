@@ -301,12 +301,9 @@ static bool goxel_unproject_on_volume(
 }
 
 int goxel_unproject(const float viewport[4],
-                    const float pos[2],
-                    int snap_mask,
-                    const float snap_shape[4][4],
-                    const float offsets[3],
-                    float out[3],
-                    float normal[3])
+                    const float pos[2], int snap_mask,
+                    const float snap_shape[4][4], const float offsets[3],
+                    float out[3], float normal[3])
 {
     int i, ret = 0;
     bool r = false;
@@ -374,11 +371,8 @@ int goxel_unproject(const float viewport[4],
                 float snap_unit = goxel.snap_units[i];
                 float offset = offsets ? offsets[i] : 0.0f;
                 if (snap_unit > 0) {
-                    out[i] = round((out[i] - 0.5 - offset) / snap_unit) *
-                                     snap_unit +
-                             0.5 + offset;
-                }
-                else {
+                    out[i] = round((out[i] - 0.5 - offset) / snap_unit) * snap_unit + 0.5 + offset;
+                } else {
                     out[i] = round(out[i] - 0.5 - offset) + 0.5 + offset;
                 }
             }
@@ -563,9 +557,9 @@ void goxel_reset(void)
     if (DEFINED(NO_SHADOW)) goxel.rend.settings.shadow = 0;
 
     goxel.snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX;
-    goxel.snap_units[0] = 1.0;   // X axis
-    goxel.snap_units[1] = 1.0;   // Y axis
-    goxel.snap_units[2] = 1.0;   // Z axis
+    goxel.snap_units[0] = 1.0; // X axis
+    goxel.snap_units[1] = 1.0; // Y axis
+    goxel.snap_units[2] = 1.0; // Z axis
     goxel.snap_offsets[0] = 0.0; // X axis offset
     goxel.snap_offsets[1] = 0.0; // Y axis offset
     goxel.snap_offsets[2] = 0.0; // Z axis offset
@@ -758,8 +752,8 @@ static int on_drag(const gesture_t *gest, void *user)
 
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, goxel.snap_offsets, gest3d->pos,
-                gest3d->normal);
+                gest3d->snap_shape, goxel.snap_offsets,
+                gest3d->pos, gest3d->normal);
         // Apply tool-specific offset along the normal if needed
         if (gest3d->snaped && gest3d->snap_offset != 0) {
             vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
@@ -785,9 +779,9 @@ static int on_drag_rotate(const gesture_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN) {
         if (box_edit_is_active()) return 1; // XXX: to remve.
         snap = goxel_unproject(
-                gest->viewport, gest->pos,
-                SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME, NULL,
-                goxel.snap_offsets, pos, normal);
+            gest->viewport, gest->pos,
+            SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME,
+            NULL, goxel.snap_offsets, pos, normal);
         if (snap) return 1;
     }
     return on_rotate(gest, user);
@@ -905,8 +899,8 @@ static int on_hover(const gesture_t *gest, void *user)
         gest3d = &goxel.gesture3ds[i];
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, goxel.snap_offsets, gest3d->pos,
-                gest3d->normal);
+                gest3d->snap_shape, goxel.snap_offsets,
+                gest3d->pos, gest3d->normal);
         // Apply tool-specific offset along the normal if needed
         if (gest3d->snaped && gest3d->snap_offset != 0) {
             vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
