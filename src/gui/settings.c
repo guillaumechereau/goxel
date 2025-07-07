@@ -57,11 +57,19 @@ static void on_keymap(int idx, keymap_t *keymap)
         { "Ctrl Middle Mouse", GESTURE_CTRL | GESTURE_MMB },
         { "Shift Right Mouse", GESTURE_SHIFT | GESTURE_RMB },
         { "Shift Middle Mouse", GESTURE_SHIFT | GESTURE_MMB },
+        { "W Key", 1000 + 'W' },
+        { "A Key", 1000 + 'A' },
+        { "S Key", 1000 + 'S' },
+        { "D Key", 1000 + 'D' },
+        { "Shift Key", 1000 + KEY_LEFT_SHIFT },
     };
 
-    const char *action_choices[] = { "Pan", "Rotate", "Zoom" };
+    const char *action_choices[] = {
+        "Pan",          "Rotate",   "Zoom",      "Fly Forward",
+        "Fly Backward", "Fly Left", "Fly Right", "Fly Sprint"
+    };
 
-    if (keymap->action < 0 || keymap->action > 2) {
+    if (keymap->action < 0 || keymap->action > 7) {
         return;
     }
 
@@ -134,7 +142,8 @@ int gui_settings_popup(void *data)
             languages = tr_get_supported_languages();
             for (i = 0; languages[i].id; i++) {
                 if (gui_combo_item(languages[i].name,
-                            &languages[i] == language)) {
+                                   &languages[i] == language))
+                {
                     // Note: we don't change the language yet, we do it in
                     // goxel_iter so not to mess up the UI render.
                     goxel.lang = languages[i].id;
@@ -143,12 +152,13 @@ int gui_settings_popup(void *data)
             }
             gui_combo_end();
         }
-    } gui_section_end();
+    }
+    gui_section_end();
 
     if (gui_section_begin(_("UI"), GUI_SECTION_COLLAPSABLE)) {
         DL_COUNT(themes, theme, nb);
         i = 0;
-        DL_FOREACH(themes, theme) {
+        DL_FOREACH (themes, theme) {
             if (strcmp(theme->name, theme_get()->name) == 0) current = i;
             names[i++] = theme->name;
         }
@@ -164,24 +174,39 @@ int gui_settings_popup(void *data)
         if (gui_is_item_deactivated()) {
             settings_save();
         }
+    }
+    gui_section_end();
 
-    } gui_section_end();
+    if (gui_section_begin(_("Camera"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_input_float("Field of View", &goxel.camera_fov, 10.0, 30.0,
+                            170.0, "%.0f"))
+        {
+            goxel.camera_fov = clamp(goxel.camera_fov, 30.0, 170.0);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
+    }
+    gui_section_end();
 
     if (gui_section_begin("Inputs", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         val = goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT;
         if (gui_checkbox("Emulate 3 buttons with Alt", &val,
-                         "Emulate Middle Mouse with Alt+Left Mouse.")) {
+                         "Emulate Middle Mouse with Alt+Left Mouse."))
+        {
             goxel.emulate_three_buttons_mouse = val ? KEY_LEFT_ALT : 0;
             gesture_set_emulate_three_buttons_mouse(
                     goxel.emulate_three_buttons_mouse);
             settings_save();
         }
-    } gui_section_end();
+    }
+    gui_section_end();
 
     if (gui_section_begin(_("Paths"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_text("Palettes: %s/palettes", sys_get_user_dir());
         gui_text("Progs: %s/progs", sys_get_user_dir());
-    } gui_section_end();
+    }
+    gui_section_end();
 
     if (gui_section_begin(_("Shortcuts"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_columns(2);
@@ -189,7 +214,8 @@ int gui_settings_popup(void *data)
         actions_iter(shortcut_callback, NULL);
         gui_separator();
         gui_columns(1);
-    } gui_section_end();
+    }
+    gui_section_end();
 
     if (gui_section_begin("Keymaps", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         gui_columns(3);
@@ -221,11 +247,21 @@ static void add_keymap(const char *name, const char *value)
     if (strcmp(name, "pan") == 0) keymap.action = 0;
     if (strcmp(name, "rotate") == 0) keymap.action = 1;
     if (strcmp(name, "zoom") == 0) keymap.action = 2;
+    if (strcmp(name, "fly_forward") == 0) keymap.action = 3;
+    if (strcmp(name, "fly_backward") == 0) keymap.action = 4;
+    if (strcmp(name, "fly_left") == 0) keymap.action = 5;
+    if (strcmp(name, "fly_right") == 0) keymap.action = 6;
+    if (strcmp(name, "fly_sprint") == 0) keymap.action = 7;
 
     if (strstr(value, "right mouse")) keymap.input |= GESTURE_RMB;
     if (strstr(value, "middle mouse")) keymap.input |= GESTURE_MMB;
     if (strstr(value, "shift")) keymap.input |= GESTURE_SHIFT;
     if (strstr(value, "ctrl")) keymap.input |= GESTURE_CTRL;
+    if (strstr(value, "w key")) keymap.input = 1000 + 'W';
+    if (strstr(value, "a key")) keymap.input = 1000 + 'A';
+    if (strstr(value, "s key")) keymap.input = 1000 + 'S';
+    if (strstr(value, "d key")) keymap.input = 1000 + 'D';
+    if (strstr(value, "shift key")) keymap.input = 1000 + KEY_LEFT_SHIFT;
 
     if (keymap.action == -1 || keymap.input == 0) {
         LOG_W("Cannot parse keymap %s = %s", name, value);
@@ -235,9 +271,12 @@ static void add_keymap(const char *name, const char *value)
     arrput(goxel.keymaps, keymap);
 }
 
-static int settings_ini_handler(void *user, const char *section,
-                                const char *name, const char *value,
-                                int lineno)
+static int settings_ini_handler(
+        void *user,
+        const char *section,
+        const char *name,
+        const char *value,
+        int lineno)
 {
     action_t *a;
     if (strcmp(section, "ui") == 0) {
@@ -256,7 +295,8 @@ static int settings_ini_handler(void *user, const char *section,
         a = action_get_by_name(name);
         if (a) {
             strncpy(a->shortcut, value, sizeof(a->shortcut) - 1);
-        } else {
+        }
+        else {
             LOG_W("Cannot set shortcut for unknown action '%s'", name);
         }
     }
@@ -268,6 +308,11 @@ static int settings_ini_handler(void *user, const char *section,
             if (strcmp(value, "alt") == 0) {
                 goxel.emulate_three_buttons_mouse = KEY_LEFT_ALT;
             }
+        }
+    }
+    if (strcmp(section, "camera") == 0) {
+        if (strcmp(name, "fov") == 0) {
+            goxel.camera_fov = clamp(atof(value), 30.0, 170.0);
         }
     }
     return 0;
@@ -311,21 +356,53 @@ static void save_keymaps(FILE *file)
         case 2:
             fprintf(file, "zoom=");
             break;
+        case 3:
+            fprintf(file, "fly_forward=");
+            break;
+        case 4:
+            fprintf(file, "fly_backward=");
+            break;
+        case 5:
+            fprintf(file, "fly_left=");
+            break;
+        case 6:
+            fprintf(file, "fly_right=");
+            break;
+        case 7:
+            fprintf(file, "fly_sprint=");
+            break;
         default:
             assert(false);
             continue;
         }
-        if (input & GESTURE_CTRL) {
-            fprintf(file, "ctrl ");
+        if (input >= 1000) {
+            // Keyboard key
+            int key = input - 1000;
+            if (key == 'W')
+                fprintf(file, "w key");
+            else if (key == 'A')
+                fprintf(file, "a key");
+            else if (key == 'S')
+                fprintf(file, "s key");
+            else if (key == 'D')
+                fprintf(file, "d key");
+            else if (key == KEY_LEFT_SHIFT)
+                fprintf(file, "shift key");
         }
-        if (input & GESTURE_SHIFT) {
-            fprintf(file, "shift ");
-        }
-        if (input & GESTURE_MMB) {
-            fprintf(file, "middle mouse");
-        }
-        if (input & GESTURE_RMB) {
-            fprintf(file, "right mouse");
+        else {
+            // Mouse gesture
+            if (input & GESTURE_CTRL) {
+                fprintf(file, "ctrl ");
+            }
+            if (input & GESTURE_SHIFT) {
+                fprintf(file, "shift ");
+            }
+            if (input & GESTURE_MMB) {
+                fprintf(file, "middle mouse");
+            }
+            if (input & GESTURE_RMB) {
+                fprintf(file, "right mouse");
+            }
         }
         fprintf(file, "\n");
     }
@@ -358,6 +435,11 @@ void settings_save(void)
         fprintf(file, "[inputs]\n");
         fprintf(file, "emulate_three_buttons_mouse=alt");
     }
+
+    fprintf(file, "\n");
+
+    fprintf(file, "[camera]\n");
+    fprintf(file, "fov=%f\n", goxel.camera_fov);
 
     fprintf(file, "\n");
     save_keymaps(file);
