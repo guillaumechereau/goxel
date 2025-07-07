@@ -362,7 +362,12 @@ int goxel_unproject(const float viewport[4],
     if (ret && (snap_mask & SNAP_ROUNDED)) {
         for (i = 0; i < 3; i++) {
             if (normal[i] == 0) {
-                out[i] = round(out[i] - 0.5) + 0.5;
+                float snap_unit = goxel.snap_units[i];
+                if (snap_unit > 0) {
+                    out[i] = round((out[i] - 0.5) / snap_unit) * snap_unit + 0.5;
+                } else {
+                    out[i] = round(out[i] - 0.5) + 0.5;
+                }
             }
         }
     }
@@ -550,6 +555,9 @@ void goxel_reset(void)
         goxel.rend.settings.shadow = 0;
 
     goxel.snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX;
+    goxel.snap_units[0] = 1.0; // X axis
+    goxel.snap_units[1] = 1.0; // Y axis
+    goxel.snap_units[2] = 1.0; // Z axis
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,

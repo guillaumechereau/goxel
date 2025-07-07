@@ -500,6 +500,7 @@ typedef struct goxel
 
     int        snap_mask;    // Global snap mask (can edit in the GUI).
     float      snap_offset;  // Only for brush tool, remove that?
+    float      snap_units[3]; // Custom snap units for X, Y, Z axes.
 
     float      plane[4][4];         // The snapping plane.
     bool       show_export_viewport;
