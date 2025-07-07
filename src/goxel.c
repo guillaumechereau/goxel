@@ -1039,13 +1039,11 @@ void goxel_mouse_in_view(
         }
     }
 
-    // Camera fly mode with WASD movement and FPS-style mouse look
-    bool wasd_pressed = inputs->keys['W'] || inputs->keys['A'] ||
-                        inputs->keys['S'] || inputs->keys['D'];
+    // Camera fly mode with FPS-style mouse look
     bool rmb_held = inputs->touches[0].down[2];
 
-    // Enter fly mode when WASD is pressed while holding right mouse button
-    if (wasd_pressed && rmb_held && !goxel.move_origin.fly_mode) {
+    // Enter fly mode when right mouse button is pressed
+    if (rmb_held && !goxel.move_origin.fly_mode) {
         goxel.move_origin.fly_mode = true;
         goxel.move_origin.fly_mouse_captured = false;
         vec2_copy(inputs->touches[0].pos,

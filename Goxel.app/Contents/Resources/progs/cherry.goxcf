@@ -1,0 +1,27 @@
+shape main {
+    [seed 7]
+    tree(0, 40, 10)[s 10 light -0.9]
+}
+
+shape tree($n, $e, $f)
+rule {
+    cylinder[]
+    if ($n < $e) {
+        tree($n + 1)[rz 0+-10 z 0.5 s 0.95 z 0.5 rx 4]
+    }
+    if (($n >= $e) || ($n > $f && 0+-1 > 0.5)) {
+        flower[]
+    }
+}
+rule 0.1 {
+    tree[rz 180]
+}
+rule 0.08 {
+    tree[]
+    tree($n + 1)[rz 0+-180 rx -45]
+}
+
+shape flower {
+     [light 0.5 sat 0.7 sn 1 s 6 z -0.5 x -1 hue -10]
+     sphere[x 0+-0.5 0+-0.5 light 0+-0.2]
+}

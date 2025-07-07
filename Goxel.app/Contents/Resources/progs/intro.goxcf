@@ -1,0 +1,100 @@
+// The 'main' shape is always the entry point of the program.
+shape main {
+    // Initial random seed of 2.
+    // Remove this line to use different seed each time.
+    [seed 2]
+    // Improves marching cube rendering.
+    [antialiased 1]
+
+    // Render a single white voxel.
+    cube []
+
+    // Put an other cube next to it.
+    // 'x' applies a translation of 1 along x.
+    // Those transformation are only applied
+    // to this cube.
+    cube [x 1]
+
+    // Now render a bigger grey sphere.
+    // light -0.5 move the light value to half
+    // the current value of 1 and the target
+    sphere [s 10 x 1 light -0.5]
+
+    // We can also render cylinders:
+    cylinder [s 10 x -1 light -0.9]
+
+    // This time we use a user defined shape.
+    // And we increase the saturation to give it a color.
+    my_shape [z 20 light -0.5 sat 0.5]
+}
+
+// A user defined shape
+shape my_shape {
+    // s 8 8 1 scales with different values
+    // for each axis.
+    // rx A applies a rotation along z of
+    // 45 deg.
+
+    // Note that the color is red, because we set the
+    // Saturation when we called my_shape.
+    cube [s 8 8 1  z 1  rz 45]
+
+    // Loop 16 time, each time increasing the x
+    // translation and the hue.
+    loop 16 [x 2 hue 10] {
+      cube []
+    }
+    // The loop transformations only affect
+    // the loop block, after it we return to
+    // the previous context.
+    sphere [s 6 z 1]
+
+    // Let's try a recursive shape:
+    tree [x -10 s 4]
+
+    // And an other one with a bit or randomness:
+    tree2 [x 10 s 4 rz 180 hue 180]
+
+    // A shape with several rules:
+    my_other_shape [y 10 rz 90 hue -60 s 3]
+}
+
+// Tree render a cylinder and then call itself.
+// Since we scale down the shape at each iteration
+// at some point it becomes too small, and is
+// then automatically stopped.
+shape tree {
+    cylinder []
+    tree [z 1 s 0.99 ry -6]
+}
+
+shape tree2 {
+    cylinder []
+    // 'A +- B' means that we use a random value in the range
+    // A - B, A + B.  this make the second spiral a bit
+    // messy.
+    tree2 [z 1 s 0.99 ry -6+-6]
+}
+
+// Here 'my_other_shape' defines several rules.  The rule
+// used is picked randomly using the weight.
+shape my_other_shape
+
+// Most of the time, just keep growing in z.
+rule 15 {
+    cube []
+    my_other_shape [z 1]
+}
+
+// Sometime split into two
+rule 1 {
+    my_other_shape [rx 45 s 0.9]
+    my_other_shape [rx -45 s 0.9]
+}
+
+// Some other times render a shpere and stop
+rule 0.5 {
+    // 'hue 1 70' means that we immediately set the hue
+    // to 70 (yellow).
+    sphere [s 3 hue 1 70]
+}

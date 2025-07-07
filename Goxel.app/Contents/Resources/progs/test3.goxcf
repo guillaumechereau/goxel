@@ -1,0 +1,20 @@
+shape main {
+   [antialiased 1]
+   loop 8 [rz 45] {
+       test [s 20 x 2]
+   }
+}
+
+shape test {
+    [sat 0.4 light -0.2 hue 240]
+    sphere[]
+    cube [z 0.5 sub]
+    tige (15) [s 0.5 light -0.5]
+}
+
+shape tige ($n) {
+    cylinder[]
+    if $n {
+        tige($n - 1)[z 0.5 ry $n z 0.5 sat -0.1]
+    }
+}
