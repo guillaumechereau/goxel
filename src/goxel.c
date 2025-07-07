@@ -1124,6 +1124,16 @@ void goxel_mouse_in_view(
             move_delta[2] += camera->mat[0][2] * speed;
         }
 
+        // Space: move up (positive Z direction in world space)
+        if (inputs->keys[' ']) {
+            move_delta[2] += speed;
+        }
+
+        // Left Ctrl: move down (negative Z direction in world space)
+        if (inputs->keys[KEY_LEFT_CONTROL]) {
+            move_delta[2] -= speed;
+        }
+
         // Apply the movement to the camera position
         if (move_delta[0] != 0 || move_delta[1] != 0 || move_delta[2] != 0) {
             camera->mat[3][0] += move_delta[0];
