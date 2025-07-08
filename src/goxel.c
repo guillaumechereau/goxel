@@ -560,7 +560,7 @@ void goxel_reset(void)
     goxel.snap_offsets[0] = 0.0; // X axis offset
     goxel.snap_offsets[1] = 0.0; // Y axis offset
     goxel.snap_offsets[2] = 0.0; // Z axis offset
-    goxel.use_brush_size = true; // Use brush size by default
+    goxel.use_brush_size = false; // Use brush size to determine snap units
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,
