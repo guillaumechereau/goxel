@@ -71,7 +71,7 @@ static float compute_zoom_scale(const float camera_pos[3],
     }
 }
 
-// Helper function to calculate direction from camera to target voxel
+// Helper function to calculate direction from camera to target position
 static bool calculate_target_direction(
         const float camera_pos[3],
         const float viewport[4],
@@ -80,20 +80,20 @@ static bool calculate_target_direction(
         float target_dir[3],
         float *zoom_scale)
 {
-    float voxel_pos[3], normal[3];
+    float target_pos[3], normal[3];
+    int snap_mask = goxel.snap_mask | SNAP_ROUNDED;
 
-    if (!goxel_unproject_on_volume(
-                viewport, cursor_pos, volume, voxel_pos, normal))
+    if (!goxel_unproject(viewport, cursor_pos, snap_mask, NULL, 0, target_pos, normal))
     {
         return false;
     }
 
-    // Calculate direction from camera to target voxel
-    vec3_sub(voxel_pos, camera_pos, target_dir);
+    // Calculate direction from camera to target position
+    vec3_sub(target_pos, camera_pos, target_dir);
     vec3_normalize(target_dir, target_dir);
 
     // Compute distance-based zoom scaling
-    *zoom_scale = compute_zoom_scale(camera_pos, voxel_pos);
+    *zoom_scale = compute_zoom_scale(camera_pos, target_pos);
 
     return true;
 }
@@ -716,7 +716,7 @@ void goxel_reset(void)
     goxel.snap_units[2] = 1.0;   // Z axis
     goxel.snap_offsets[0] = 0.0; // X axis offset
     goxel.snap_offsets[1] = 0.0; // Y axis offset
-    goxel.snap_offsets[2] = 1.0; // Z axis offset
+    goxel.snap_offsets[2] = 0.0; // Z axis offset
     goxel.use_brush_size = true; // Use brush size
 
     // Initialize fly mode state
@@ -1008,26 +1008,26 @@ static int on_rotate(const gesture_t *gest, void *user)
         mat4_copy(camera->mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
 
-        // Try to detect a voxel under the mouse cursor for distance-based
-        // rotation
-        float voxel_pos[3], voxel_normal[3];
-        bool found_voxel = goxel_unproject_on_volume(
-                gest->viewport, gest->pos,
-                goxel_get_layers_volume(goxel.image), voxel_pos, voxel_normal);
+        // Try to determine where a voxel would be placed for distance-based
+        // rotation (same logic as voxel placement)
+        float target_pos[3], target_normal[3];
+        int snap_mask = goxel.snap_mask | SNAP_ROUNDED;
+        bool found_target = goxel_unproject(
+                gest->viewport, gest->pos, snap_mask, NULL, 0, target_pos, target_normal);
 
-        if (found_voxel) {
-            // Found a voxel - calculate pivot point at center of view at same
+        if (found_target) {
+            // Found target position - calculate pivot point at center of view at same
             // distance
-            float camera_pos[3], camera_to_voxel[3];
+            float camera_pos[3], camera_to_target[3];
             float viewport_center[2];
             float ray_origin[3], ray_dir[3];
 
             // Get camera position
             vec3_copy(camera->mat[3], camera_pos);
 
-            // Calculate distance from camera to voxel
-            vec3_sub(voxel_pos, camera_pos, camera_to_voxel);
-            float distance = vec3_norm(camera_to_voxel);
+            // Calculate distance from camera to target position
+            vec3_sub(target_pos, camera_pos, camera_to_target);
+            float distance = vec3_norm(camera_to_target);
 
             // Get viewport center coordinates
             viewport_center[0] = gest->viewport[0] + gest->viewport[2] / 2.0f;
@@ -1044,7 +1044,7 @@ static int on_rotate(const gesture_t *gest, void *user)
             goxel.move_origin.has_pivot_point = true;
         }
         else {
-            // No voxel found - use default rotation
+            // No target found - use default rotation
             goxel.move_origin.has_pivot_point = false;
         }
     }
@@ -1099,16 +1099,16 @@ static int on_zoom(const gesture_t *gest, void *user)
     float target_dir[3];
     float zoom_scale = 1.0f;
 
-    // Try to get target direction towards voxel under cursor
+    // Try to get target direction towards cursor position
     if (calculate_target_direction(camera_pos, gest->viewport, gest->pos,
                                    volume, target_dir, &zoom_scale))
     {
-        // Apply zoom towards the target voxel with collision detection
+        // Apply zoom towards the target position with collision detection
         float zoom_amount = zoom * goxel.zoom_speed * zoom_scale;
         apply_zoom_with_collision(camera, target_dir, zoom_amount, volume);
-    }
-    else {
-        // No target voxel found, use camera forward direction as fallback
+            }
+        else {
+            // No target found, use camera forward direction as fallback
         float forward_dir[3];
         get_camera_forward_direction(camera, forward_dir);
 
@@ -1246,18 +1246,18 @@ void goxel_mouse_in_view(
             float target_dir[3];
             float zoom_scale = 1.0f;
 
-            // Try to get target direction towards voxel under cursor
+            // Try to get target direction towards cursor position
             if (calculate_target_direction(
                         camera_pos, viewport, inputs->touches[0].pos, volume,
                         target_dir, &zoom_scale))
             {
-                // Apply zoom towards the target voxel with collision detection
+                // Apply zoom towards the target position with collision detection
                 zoom_amount *= zoom_scale;
                 apply_zoom_with_collision(
                         camera, target_dir, zoom_amount, volume);
             }
             else {
-                // No target voxel found, use camera forward direction as
+                // No target found, use camera forward direction as
                 // fallback
                 float forward_dir[3];
                 get_camera_forward_direction(camera, forward_dir);
@@ -1300,9 +1300,14 @@ void goxel_mouse_in_view(
 
     // Camera fly mode with FPS-style mouse look
     bool rmb_held = inputs->touches[0].down[2];
+    
+    // Check if any movement keys are pressed
+    bool movement_keys_pressed = inputs->keys['W'] || inputs->keys['S'] ||
+                                inputs->keys['A'] || inputs->keys['D'] ||
+                                inputs->keys[' '] || inputs->keys[KEY_LEFT_CONTROL];
 
-    // Enter fly mode when right mouse button is pressed
-    if (rmb_held && !goxel.move_origin.fly_mode) {
+    // Enter fly mode when right mouse button is pressed AND movement keys are used
+    if (rmb_held && movement_keys_pressed && !goxel.move_origin.fly_mode) {
         goxel.move_origin.fly_mode = true;
         goxel.move_origin.fly_mouse_captured = false;
         vec2_copy(inputs->touches[0].pos,
