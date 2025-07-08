@@ -828,11 +828,11 @@ static int on_rotate(const gesture_t *gest, void *user)
         
         // Try to detect a voxel under the mouse cursor for distance-based rotation
         float voxel_pos[3], voxel_normal[3];
-        int snap_result = goxel_unproject(
-            gest->viewport, gest->pos, SNAP_VOLUME,
-            NULL, goxel.snap_offsets, voxel_pos, voxel_normal);
+        bool found_voxel = goxel_unproject_on_volume(
+            gest->viewport, gest->pos, goxel_get_layers_volume(goxel.image), 
+            voxel_pos, voxel_normal);
         
-        if (snap_result & SNAP_VOLUME) {
+        if (found_voxel) {
             // Found a voxel - calculate pivot point at center of view at same distance
             float camera_pos[3], camera_to_voxel[3];
             float viewport_center[2];
