@@ -54,13 +54,6 @@ void gui_snap_panel(void)
         }
     }
     
-    // Update snap units to match brush size if enabled
-    if (goxel.use_brush_size) {
-        goxel.snap_units[0] = goxel.tool_radius * 2;
-        goxel.snap_units[1] = goxel.tool_radius * 2;
-        goxel.snap_units[2] = goxel.tool_radius * 2;
-    }
-    
     gui_row_begin(3);
     gui_enabled_begin(!goxel.use_brush_size);
     v = goxel.snap_units[0];

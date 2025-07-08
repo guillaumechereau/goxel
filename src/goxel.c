@@ -626,6 +626,13 @@ void goxel_init(void)
     goxel_add_gesture(GESTURE_HOVER, 0, on_hover);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag_rotate);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
+
+    // Update snap units to match brush size if enabled
+    if (goxel.use_brush_size) {
+        goxel.snap_units[0] = goxel.tool_radius * 2;
+        goxel.snap_units[1] = goxel.tool_radius * 2;
+        goxel.snap_units[2] = goxel.tool_radius * 2;
+    }
 }
 
 void goxel_update_keymaps(void)
@@ -710,7 +717,7 @@ void goxel_reset(void)
     goxel.snap_offsets[0] = 0.0; // X axis offset
     goxel.snap_offsets[1] = 0.0; // Y axis offset
     goxel.snap_offsets[2] = 1.0; // Z axis offset
-    goxel.use_brush_size = true; // Use brush size by default
+    goxel.use_brush_size = true; // Use brush size
 
     // Initialize fly mode state
     goxel.move_origin.fly_mode = false;
@@ -863,6 +870,13 @@ int goxel_iter(const inputs_t *inputs)
     gesture3ds_iter();
     sound_iter();
     update_window_title();
+
+    // Update snap units to match brush size if enabled
+    if (goxel.use_brush_size) {
+        goxel.snap_units[0] = goxel.tool_radius * 2;
+        goxel.snap_units[1] = goxel.tool_radius * 2;
+        goxel.snap_units[2] = goxel.tool_radius * 2;
+    }
 
     goxel.frame_count++;
 
