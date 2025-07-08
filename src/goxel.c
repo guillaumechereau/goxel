@@ -707,6 +707,13 @@ int goxel_iter(const inputs_t *inputs)
     sound_iter();
     update_window_title();
 
+    // Update snap units to match brush size if enabled
+    if (goxel.use_brush_size) {
+        goxel.snap_units[0] = goxel.tool_radius * 2;
+        goxel.snap_units[1] = goxel.tool_radius * 2;
+        goxel.snap_units[2] = goxel.tool_radius * 2;
+    }
+
     goxel.frame_count++;
 
     if (goxel.request_test_graphic_release) {
