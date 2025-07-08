@@ -23,8 +23,7 @@ camera_t *camera_new(const char *name)
 {
     camera_t *cam = calloc(1, sizeof(*cam));
     cam->ref = 1;
-    if (name)
-        strncpy(cam->name, name, sizeof(cam->name) - 1);
+    if (name) strncpy(cam->name, name, sizeof(cam->name) - 1);
     mat4_set_identity(cam->mat);
     cam->dist = 128;
     cam->aspect = 1;
@@ -103,19 +102,21 @@ void camera_update(camera_t *camera)
     compute_clip(camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
         size = camera->dist;
-        mat4_ortho(camera->proj_mat,
-                -size, +size,
-                -size / camera->aspect, +size / camera->aspect,
-                clip_near, clip_far);
-    } else {
-        mat4_perspective(camera->proj_mat,
-                camera->fovy, camera->aspect, clip_near, clip_far);
+        mat4_ortho(camera->proj_mat, -size, +size, -size / camera->aspect,
+                   +size / camera->aspect, clip_near, clip_far);
+    }
+    else {
+        mat4_perspective(camera->proj_mat, camera->fovy, camera->aspect,
+                         clip_near, clip_far);
     }
 }
 
 // Get the raytracing ray of the camera at a given screen position.
-void camera_get_ray(const camera_t *camera, const float win[2],
-                    const float viewport[4], float o[3], float d[3])
+void camera_get_ray(const camera_t *camera,
+                    const float win[2],
+                    const float viewport[4],
+                    float o[3],
+                    float d[3])
 {
     float o1[3], o2[3], p[3];
     vec3_set(p, win[0], win[1], 0);
@@ -187,10 +188,38 @@ void camera_turntable(camera_t *camera, float rz, float rx)
     mat4_itranslate(camera->mat, 0, 0, camera->dist);
 }
 
-void camera_project(const camera_t *camera, const float pos[3],
-                    const float viewport[4], float out[3])
+void camera_turntable_around_point(
+        camera_t *camera, float rz, float rx, const float pivot[3])
 {
-    float p[4] = {pos[0], pos[1], pos[2], 1};
+    float mat[4][4] = MAT4_IDENTITY;
+    float camera_to_pivot[3];
+
+    // Calculate vector from camera to pivot point
+    vec3_sub(pivot, camera->mat[3], camera_to_pivot);
+    float new_dist = vec3_norm(camera_to_pivot);
+
+    // Apply horizontal rotation around the pivot point
+    mat4_itranslate(mat, pivot[0], pivot[1], pivot[2]);
+    mat4_irotate(mat, rz, 0, 0, 1);
+    mat4_itranslate(mat, -pivot[0], -pivot[1], -pivot[2]);
+    mat4_imul(mat, camera->mat);
+    mat4_copy(mat, camera->mat);
+
+    // Apply vertical rotation around the pivot point
+    mat4_itranslate(camera->mat, 0, 0, -new_dist);
+    mat4_irotate(camera->mat, rx, 1, 0, 0);
+    mat4_itranslate(camera->mat, 0, 0, new_dist);
+
+    // Update camera distance to match the new distance to pivot
+    camera->dist = new_dist;
+}
+
+void camera_project(const camera_t *camera,
+                    const float pos[3],
+                    const float viewport[4],
+                    float out[3])
+{
+    float p[4] = { pos[0], pos[1], pos[2], 1 };
     mat4_mul_vec4(camera->view_mat, p, p);
     mat4_mul_vec4(camera->proj_mat, p, p);
     vec3_mul(p, 1 / p[3], p);
@@ -198,5 +227,5 @@ void camera_project(const camera_t *camera, const float pos[3],
     // Convert to screen space
     out[0] = (p[0] * 0.5f + 0.5f) * viewport[2] + viewport[0];
     out[1] = (p[1] * 0.5f + 0.5f) * viewport[3] + viewport[1];
-    out[2] = (p[2] * 0.5f + 0.5f);  // Depth value in range [0, 1]
+    out[2] = (p[2] * 0.5f + 0.5f); // Depth value in range [0, 1]
 }

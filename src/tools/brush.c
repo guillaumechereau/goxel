@@ -180,7 +180,7 @@ static int on_hover(gesture3d_t *gest)
     }
 
     // Update snap offset in case we press 'space'.
-    gest->snap_offset = goxel.snap_offset * goxel.tool_radius +
+    gest->snap_offset = goxel.snap_offsets[2] * goxel.tool_radius +
                         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
     if (shift)
@@ -217,7 +217,7 @@ static int iter(tool_t *tool, const painter_t *painter,
     if (!brush->volume)
         brush->volume = volume_new();
 
-    snap_offset = goxel.snap_offset * goxel.tool_radius +
+    snap_offset = goxel.snap_offsets[2] * goxel.tool_radius +
         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
     goxel_gesture3d(&(gesture3d_t) {

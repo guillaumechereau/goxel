@@ -142,7 +142,7 @@ static int iter(tool_t *tool_, const painter_t *painter,
     if (!tool->volume)
         tool->volume = volume_new();
 
-    snap_offset = goxel.snap_offset * goxel.tool_radius +
+    snap_offset = goxel.snap_offsets[2] * goxel.tool_radius +
         ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
     goxel_gesture3d(&(gesture3d_t) {
