@@ -186,6 +186,15 @@ int gui_settings_popup(void *data)
         if (gui_is_item_deactivated()) {
             settings_save();
         }
+        
+        if (gui_input_float("Zoom Speed", &goxel.zoom_speed, 0.1, 0.1,
+                            10.0, "%.1f"))
+        {
+            goxel.zoom_speed = clamp(goxel.zoom_speed, 0.1, 10.0);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
     }
     gui_section_end();
 
@@ -314,6 +323,9 @@ static int settings_ini_handler(
         if (strcmp(name, "fov") == 0) {
             goxel.camera_fov = clamp(atof(value), 30.0, 170.0);
         }
+        if (strcmp(name, "zoom_speed") == 0) {
+            goxel.zoom_speed = clamp(atof(value), 0.1, 10.0);
+        }
     }
     return 0;
 }
@@ -440,6 +452,7 @@ void settings_save(void)
 
     fprintf(file, "[camera]\n");
     fprintf(file, "fov=%f\n", goxel.camera_fov);
+    fprintf(file, "zoom_speed=%f\n", goxel.zoom_speed);
 
     fprintf(file, "\n");
     save_keymaps(file);
