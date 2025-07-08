@@ -301,9 +301,12 @@ static bool goxel_unproject_on_volume(
 }
 
 int goxel_unproject(const float viewport[4],
-                    const float pos[2], int snap_mask,
-                    const float snap_shape[4][4], float offset,
-                    float out[3], float normal[3])
+                    const float pos[2],
+                    int snap_mask,
+                    const float snap_shape[4][4],
+                    float offset,
+                    float out[3],
+                    float normal[3])
 {
     int i, ret = 0;
     bool r = false;
@@ -365,8 +368,7 @@ int goxel_unproject(const float viewport[4],
 
     // Post effects.
     // Note: should probably move outside of this function.
-    if (ret && offset)
-        vec3_iaddk(out, normal, offset);
+    if (ret && offset) vec3_iaddk(out, normal, offset);
     if (ret && (snap_mask & SNAP_ROUNDED)) {
         for (i = 0; i < 3; i++) {
             if (normal[i] == 0) {
@@ -560,6 +562,7 @@ void goxel_reset(void)
 
     // Initialize camera settings
     goxel.camera_fov = 80.0f; // Default FOV to 80 degrees
+    goxel.zoom_speed = 1.0f;  // Default zoom speed
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,
@@ -741,8 +744,8 @@ static int on_drag(const gesture_t *gest, void *user)
 
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, gest3d->snap_offset,
-                gest3d->pos, gest3d->normal);
+                gest3d->snap_shape, gest3d->snap_offset, gest3d->pos,
+                gest3d->normal);
         // Apply tool-specific offset along the normal if needed
         if (gest3d->snaped && gest3d->snap_offset != 0) {
             vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
@@ -769,8 +772,8 @@ static int on_drag_rotate(const gesture_t *gest, void *user)
         if (box_edit_is_active()) return 1; // XXX: to remve.
         snap = goxel_unproject(
                 gest->viewport, gest->pos,
-                SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME, NULL,
-                0, pos, normal);
+                SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME, NULL, 0,
+                pos, normal);
         if (snap) return 1;
     }
     return on_rotate(gest, user);
@@ -853,28 +856,187 @@ static int on_rotate(const gesture_t *gest, void *user)
     return 0;
 }
 
-static int on_zoom(const gesture_t *gest, void *user)
+// Zoom configuration constants
+#define ZOOM_DISTANCE_SCALE_MIN 2.0f  // Distance where slowdown starts
+#define ZOOM_SPEED_SCALE_MIN 0.1f     // Minimum zoom speed (never stops)
+#define ZOOM_COLLISION_SAFE_DIST 3.0f // Minimum safe distance from surfaces
+#define ZOOM_COLLISION_CHECK_START                                            \
+    1.0f // Start distance for collision detection
+#define ZOOM_COLLISION_CHECK_MAX                                              \
+    20.0f // Maximum distance to check for collisions
+#define ZOOM_COLLISION_CHECK_STEP 0.5f // Step size for collision sampling
+
+// Helper function to compute zoom scaling based on distance to surface
+static float compute_zoom_scale(const float camera_pos[3],
+                                const float surface_pos[3])
 {
-    double zoom;
-    camera_t *camera = get_camera();
-    float zoom_speed = 5.0f; // Zoom speed multiplier
+    float dist = vec3_dist(camera_pos, surface_pos);
 
-    if (gui_want_capture_mouse()) return 0;
-    zoom = (gest->pos[1] - gest->last_pos[1]) / 10.0;
+    // Simple linear scaling: close = slow, far = fast
+    if (dist >= ZOOM_DISTANCE_SCALE_MIN) {
+        return 1.0f; // Normal speed when far enough
+    }
+    else {
+        // Linear interpolation from min_scale to 1.0 based on distance
+        return ZOOM_SPEED_SCALE_MIN + (1.0f - ZOOM_SPEED_SCALE_MIN) *
+                                              (dist / ZOOM_DISTANCE_SCALE_MIN);
+    }
+}
 
-    // Move camera forward/backward in world space along its facing direction
-    float zoom_amount = zoom * zoom_speed;
-    float forward_dir[3];
+// Helper function to calculate direction from camera to target voxel
+static bool calculate_target_direction(
+        const float camera_pos[3],
+        const float viewport[4],
+        const float cursor_pos[2],
+        const volume_t *volume,
+        float target_dir[3],
+        float *zoom_scale)
+{
+    float voxel_pos[3], normal[3];
 
+    if (!goxel_unproject_on_volume(
+                viewport, cursor_pos, volume, voxel_pos, normal))
+    {
+        return false;
+    }
+
+    // Calculate direction from camera to target voxel
+    vec3_sub(voxel_pos, camera_pos, target_dir);
+    vec3_normalize(target_dir, target_dir);
+
+    // Compute distance-based zoom scaling
+    *zoom_scale = compute_zoom_scale(camera_pos, voxel_pos);
+
+    return true;
+}
+
+// Helper function to check for collisions along a direction
+static bool check_collision_along_direction(
+        const float camera_pos[3],
+        const float direction[3],
+        const volume_t *volume,
+        float *collision_distance)
+{
+    // Check for collision along the direction
+    for (float test_dist = ZOOM_COLLISION_CHECK_START;
+         test_dist <= ZOOM_COLLISION_CHECK_MAX;
+         test_dist += ZOOM_COLLISION_CHECK_STEP)
+    {
+
+        float test_pos[3];
+        test_pos[0] = camera_pos[0] + direction[0] * test_dist;
+        test_pos[1] = camera_pos[1] + direction[1] * test_dist;
+        test_pos[2] = camera_pos[2] + direction[2] * test_dist;
+
+        // Check if there's a voxel at this position
+        int voxel_coords[3];
+        voxel_coords[0] = (int)floor(test_pos[0]);
+        voxel_coords[1] = (int)floor(test_pos[1]);
+        voxel_coords[2] = (int)floor(test_pos[2]);
+
+        uint8_t voxel_color[4];
+        volume_get_at(volume, NULL, voxel_coords, voxel_color);
+        if (voxel_color[3] > 0) {
+            *collision_distance = test_dist;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Helper function to apply zoom with collision detection
+static void apply_zoom_with_collision(
+        camera_t *camera,
+        const float direction[3],
+        float zoom_amount,
+        const volume_t *volume)
+{
+    float camera_pos[3];
+    vec3_copy(camera->mat[3], camera_pos);
+
+    // Check for collision along the zoom direction
+    float collision_distance;
+    bool found_collision = check_collision_along_direction(
+            camera_pos, direction, volume, &collision_distance);
+
+    // If zooming in and there's a collision ahead, limit the zoom
+    if (zoom_amount > 0 && found_collision) {
+        float available_distance = collision_distance -
+                                   ZOOM_COLLISION_SAFE_DIST;
+        if (available_distance <= 0) {
+            return; // Already too close, block zoom
+        }
+
+        // Limit zoom amount to not exceed safe distance
+        if (zoom_amount > available_distance) {
+            zoom_amount = available_distance;
+        }
+    }
+
+    // Apply the zoom
+    camera->mat[3][0] += direction[0] * zoom_amount;
+    camera->mat[3][1] += direction[1] * zoom_amount;
+    camera->mat[3][2] += direction[2] * zoom_amount;
+}
+
+// Helper function to get camera forward direction
+static void get_camera_forward_direction(const camera_t *camera,
+                                         float forward_dir[3])
+{
     // Camera forward direction is negative Z column of camera matrix
     forward_dir[0] = -camera->mat[2][0];
     forward_dir[1] = -camera->mat[2][1];
     forward_dir[2] = -camera->mat[2][2];
+}
 
-    // Move camera position along forward direction
-    camera->mat[3][0] += forward_dir[0] * zoom_amount;
-    camera->mat[3][1] += forward_dir[1] * zoom_amount;
-    camera->mat[3][2] += forward_dir[2] * zoom_amount;
+static int on_zoom(const gesture_t *gest, void *user)
+{
+    double zoom;
+    camera_t *camera = get_camera();
+
+    if (gui_want_capture_mouse()) return 0;
+    zoom = (gest->pos[1] - gest->last_pos[1]) / 10.0;
+
+    // If in fly mode, use original zoom behavior
+    if (goxel.move_origin.fly_mode) {
+        float forward_dir[3];
+        get_camera_forward_direction(camera, forward_dir);
+
+        float zoom_amount = zoom * goxel.zoom_speed;
+        camera->mat[3][0] += forward_dir[0] * zoom_amount;
+        camera->mat[3][1] += forward_dir[1] * zoom_amount;
+        camera->mat[3][2] += forward_dir[2] * zoom_amount;
+
+        return 0;
+    }
+
+    // For non-fly mode, use target-based zoom with distance scaling
+    const volume_t *volume = goxel_get_layers_volume(goxel.image);
+    float camera_pos[3];
+    vec3_copy(camera->mat[3], camera_pos);
+
+    float target_dir[3];
+    float zoom_scale = 1.0f;
+
+    // Try to get target direction towards voxel under cursor
+    if (calculate_target_direction(camera_pos, gest->viewport, gest->pos,
+                                   volume, target_dir, &zoom_scale))
+    {
+        // Apply zoom towards the target voxel with collision detection
+        float zoom_amount = zoom * goxel.zoom_speed * zoom_scale;
+        apply_zoom_with_collision(camera, target_dir, zoom_amount, volume);
+    }
+    else {
+        // No target voxel found, use camera forward direction as fallback
+        float forward_dir[3];
+        get_camera_forward_direction(camera, forward_dir);
+
+        float zoom_amount = zoom * goxel.zoom_speed;
+        camera->mat[3][0] += forward_dir[0] * zoom_amount;
+        camera->mat[3][1] += forward_dir[1] * zoom_amount;
+        camera->mat[3][2] += forward_dir[2] * zoom_amount;
+    }
 
     return 0;
 }
@@ -888,8 +1050,8 @@ static int on_hover(const gesture_t *gest, void *user)
         gest3d = &goxel.gesture3ds[i];
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, gest3d->snap_offset,
-                gest3d->pos, gest3d->normal);
+                gest3d->snap_shape, gest3d->snap_offset, gest3d->pos,
+                gest3d->normal);
         // Apply tool-specific offset along the normal if needed
         if (gest3d->snaped && gest3d->snap_offset != 0) {
             vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
@@ -984,19 +1146,47 @@ void goxel_mouse_in_view(
     }
 
     if (inputs->mouse_wheel && !gui_want_capture_mouse()) {
-        float zoom_speed = 10.0f; // Mouse wheel zoom speed
-        float zoom_amount = inputs->mouse_wheel * zoom_speed;
-        float forward_dir[3];
+        float zoom_amount = inputs->mouse_wheel * goxel.zoom_speed;
 
-        // Camera forward direction is negative Z column of camera matrix
-        forward_dir[0] = -camera->mat[2][0];
-        forward_dir[1] = -camera->mat[2][1];
-        forward_dir[2] = -camera->mat[2][2];
+        // If in fly mode, use original zoom behavior
+        if (goxel.move_origin.fly_mode) {
+            float forward_dir[3];
+            get_camera_forward_direction(camera, forward_dir);
 
-        // Move camera position along forward direction
-        camera->mat[3][0] += forward_dir[0] * zoom_amount;
-        camera->mat[3][1] += forward_dir[1] * zoom_amount;
-        camera->mat[3][2] += forward_dir[2] * zoom_amount;
+            camera->mat[3][0] += forward_dir[0] * zoom_amount;
+            camera->mat[3][1] += forward_dir[1] * zoom_amount;
+            camera->mat[3][2] += forward_dir[2] * zoom_amount;
+        }
+        else {
+            // For non-fly mode, use target-based zoom with distance scaling
+            const volume_t *volume = goxel_get_layers_volume(goxel.image);
+            float camera_pos[3];
+            vec3_copy(camera->mat[3], camera_pos);
+
+            float target_dir[3];
+            float zoom_scale = 1.0f;
+
+            // Try to get target direction towards voxel under cursor
+            if (calculate_target_direction(
+                        camera_pos, viewport, inputs->touches[0].pos, volume,
+                        target_dir, &zoom_scale))
+            {
+                // Apply zoom towards the target voxel with collision detection
+                zoom_amount *= zoom_scale;
+                apply_zoom_with_collision(
+                        camera, target_dir, zoom_amount, volume);
+            }
+            else {
+                // No target voxel found, use camera forward direction as
+                // fallback
+                float forward_dir[3];
+                get_camera_forward_direction(camera, forward_dir);
+
+                camera->mat[3][0] += forward_dir[0] * zoom_amount;
+                camera->mat[3][1] += forward_dir[1] * zoom_amount;
+                camera->mat[3][2] += forward_dir[2] * zoom_amount;
+            }
+        }
 
         return;
     }
@@ -1081,16 +1271,10 @@ void goxel_mouse_in_view(
 
         // Handle mouse wheel zoom in fly mode
         if (inputs->mouse_wheel) {
-            float zoom_speed = 10.0f; // Mouse wheel zoom speed in fly mode
-            float zoom_amount = inputs->mouse_wheel * zoom_speed;
+            float zoom_amount = inputs->mouse_wheel * goxel.zoom_speed;
             float forward_dir[3];
+            get_camera_forward_direction(camera, forward_dir);
 
-            // Camera forward direction is negative Z column of camera matrix
-            forward_dir[0] = -camera->mat[2][0];
-            forward_dir[1] = -camera->mat[2][1];
-            forward_dir[2] = -camera->mat[2][2];
-
-            // Move camera position along forward direction
             camera->mat[3][0] += forward_dir[0] * zoom_amount;
             camera->mat[3][1] += forward_dir[1] * zoom_amount;
             camera->mat[3][2] += forward_dir[2] * zoom_amount;
