@@ -716,7 +716,7 @@ static void gui_iter(const inputs_t *inputs)
     if (ImGui::IsKeyPressed((ImGuiKey)KEY_DELETE, false))
         action_exec2(ACTION_layer_clear);
 
-    if (!io.WantCaptureKeyboard) {
+    if (!io.WantCaptureKeyboard && !goxel.move_origin.fly_mode) {
         float last_tool_radius = goxel.tool_radius;
         if (isCharPressed('[')) goxel.tool_radius -= 0.5;
         if (isCharPressed(']')) goxel.tool_radius += 0.5;
