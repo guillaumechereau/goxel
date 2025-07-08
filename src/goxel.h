@@ -524,6 +524,13 @@ typedef struct goxel
         float  pos[2];
         float  camera_ofs[3];
         float  camera_mat[4][4];
+        // Camera fly mode state
+        bool   fly_mode;
+        float  fly_last_mouse_pos[2];
+        bool   fly_mouse_captured;
+        // Pivot point for rotation around hovered voxel
+        float  pivot_point[3];
+        bool   has_pivot_point;
     } move_origin;
 
     palette_t  *palettes;   // The list of all the palettes
