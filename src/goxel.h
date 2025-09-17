@@ -524,6 +524,13 @@ typedef struct goxel
         float  camera_mat[4][4];
     } move_origin;
 
+    struct {
+        bool   active;
+        float  last_mouse_pos[2];
+        float  movement_speed;    // Units per second
+        float  mouse_sensitivity; // Radians per pixel
+    } fly_mode;
+
     palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
 

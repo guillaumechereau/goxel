@@ -723,7 +723,8 @@ static void gui_iter(const inputs_t *inputs)
         if (goxel.tool_radius != last_tool_radius) {
             goxel.tool_radius = clamp(goxel.tool_radius, 0.5, 64);
         }
-        actions_iter(check_action_shortcut, NULL);
+        if (!goxel.fly_mode.active)
+            actions_iter(check_action_shortcut, NULL);
     }
     ImGui::EndFrame();
     gui->want_capture_mouse = io.WantCaptureMouse;
