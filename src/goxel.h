@@ -525,7 +525,8 @@ typedef struct goxel
     } move_origin;
 
     struct {
-        bool   active;
+        bool   enabled; // If fly mode is enabled in the settings
+        bool   active;  // If fly mode is currently active
         float  last_mouse_pos[2];
         float  movement_speed;    // Units per second
         float  mouse_sensitivity; // Radians per pixel

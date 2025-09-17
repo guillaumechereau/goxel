@@ -514,8 +514,6 @@ void goxel_reset(void)
     goxel.image = image_new();
     goxel.lang = "en";
     goxel.fly_mode.active = false;
-    goxel.fly_mode.movement_speed = 35.0f;
-    goxel.fly_mode.mouse_sensitivity = 0.001f;
 
     settings_load();
     goxel_update_keymaps();
@@ -1016,7 +1014,8 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     }
 
     // Update fly mode state:
-    if (wasd_pressed && rmb_held && !goxel.fly_mode.active) {
+    if (goxel.fly_mode.enabled && wasd_pressed && rmb_held &&
+        !goxel.fly_mode.active) {
         // Enter fly mode when WASD is pressed while holding right mouse button
         goxel.fly_mode.active = true;
         vec2_copy(inputs->touches[0].pos, goxel.fly_mode.last_mouse_pos);
