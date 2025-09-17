@@ -167,6 +167,16 @@ int gui_settings_popup(void *data)
 
     } gui_section_end();
 
+    if (gui_section_begin(_("Camera"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_input_float("Field of View", &goxel.camera_fov,
+                            10.0, 20.0, 120.0, "%.0f")) {
+            goxel.camera_fov = clamp(goxel.camera_fov, 20.0, 120.0);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
+    } gui_section_end();
+
     if (gui_section_begin("Inputs", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         val = goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT;
         if (gui_checkbox("Emulate 3 buttons with Alt", &val,
@@ -270,6 +280,11 @@ static int settings_ini_handler(void *user, const char *section,
             }
         }
     }
+    if (strcmp(section, "camera") == 0) {
+        if (strcmp(name, "fov") == 0) {
+            goxel.camera_fov = clamp(atof(value), 20.0, 120.0);
+        }
+    }
     return 0;
 }
 
@@ -280,6 +295,7 @@ void settings_load(void)
     LOG_I("Read settings file: %s", path);
     arrfree(goxel.keymaps);
     goxel.emulate_three_buttons_mouse = 0;
+    goxel.camera_fov = 20.0f; // Default FOV to 20 degrees
     ini_parse(path, settings_ini_handler, NULL);
     actions_check_shortcuts();
     gesture_set_emulate_three_buttons_mouse(goxel.emulate_three_buttons_mouse);
@@ -358,8 +374,12 @@ void settings_save(void)
         fprintf(file, "[inputs]\n");
         fprintf(file, "emulate_three_buttons_mouse=alt");
     }
-
     fprintf(file, "\n");
+
+    fprintf(file, "[camera]\n");
+    fprintf(file, "fov=%f\n", goxel.camera_fov);
+    fprintf(file, "\n");
+
     save_keymaps(file);
     fprintf(file, "\n");
 

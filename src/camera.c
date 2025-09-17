@@ -98,7 +98,7 @@ void camera_update(camera_t *camera)
     float size;
     float clip_near, clip_far;
 
-    camera->fovy = 20.;
+    camera->fovy = goxel.camera_fov;
     mat4_invert(camera->mat, camera->view_mat);
     compute_clip(camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {

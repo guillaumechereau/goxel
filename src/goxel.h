@@ -562,6 +562,9 @@ typedef struct goxel
 
     // Stb array of keymap settings (different from shortcuts).
     keymap_t *keymaps;
+    
+    // Camera settings
+    float camera_fov; // Field of view in degrees
 
     // Can be set to a key code (only KEY_LEFT_ALT is supported for now).
     int emulate_three_buttons_mouse;
