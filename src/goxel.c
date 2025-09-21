@@ -28,8 +28,155 @@
 #include <errno.h> // IWYU pragma: keep.
 #include <stdarg.h>
 
+// Include GLFW for cursor management (if available)
+#ifndef EMSCRIPTEN
+#include <GLFW/glfw3.h>
+#endif
+
 // The global goxel instance.
 goxel_t goxel = {};
+
+// Forward declaration for goxel_unproject_on_volume
+bool goxel_unproject_on_volume(
+        const float viewport[4],
+        const float pos[2],
+        const volume_t *volume,
+        float out[3],
+        float normal[3]);
+
+// Zoom configuration constants
+#define ZOOM_DISTANCE_SCALE_MIN 2.0f  // Distance where slowdown starts
+#define ZOOM_SPEED_SCALE_MIN 0.1f     // Minimum zoom speed (never stops)
+#define ZOOM_COLLISION_SAFE_DIST 3.0f // Minimum safe distance from surfaces
+#define ZOOM_COLLISION_CHECK_START                                            \
+    1.0f // Start distance for collision detection
+#define ZOOM_COLLISION_CHECK_MAX                                              \
+    20.0f // Maximum distance to check for collisions
+#define ZOOM_COLLISION_CHECK_STEP 0.5f // Step size for collision sampling
+
+// Helper function to compute zoom scaling based on distance to surface
+static float compute_zoom_scale(const float camera_pos[3],
+                                const float surface_pos[3])
+{
+    float dist = vec3_dist(camera_pos, surface_pos);
+
+    // Simple linear scaling: close = slow, far = fast
+    if (dist >= ZOOM_DISTANCE_SCALE_MIN) {
+        return 1.0f; // Normal speed when far enough
+    }
+    else {
+        // Linear interpolation from min_scale to 1.0 based on distance
+        return ZOOM_SPEED_SCALE_MIN + (1.0f - ZOOM_SPEED_SCALE_MIN) *
+                                              (dist / ZOOM_DISTANCE_SCALE_MIN);
+    }
+}
+
+// Helper function to calculate direction from camera to target position
+static bool calculate_target_direction(
+        const float camera_pos[3],
+        const float viewport[4],
+        const float cursor_pos[2],
+        const volume_t *volume,
+        float target_dir[3],
+        float *zoom_scale)
+{
+    float target_pos[3], normal[3];
+    int snap_mask = goxel.snap_mask | SNAP_ROUNDED;
+
+    if (!goxel_unproject(viewport, cursor_pos, snap_mask, NULL, 0, target_pos, normal))
+    {
+        return false;
+    }
+
+    // Calculate direction from camera to target position
+    vec3_sub(target_pos, camera_pos, target_dir);
+    vec3_normalize(target_dir, target_dir);
+
+    // Compute distance-based zoom scaling
+    *zoom_scale = compute_zoom_scale(camera_pos, target_pos);
+
+    return true;
+}
+
+// Helper function to check for collisions along a direction
+static bool check_collision_along_direction(
+        const float camera_pos[3],
+        const float direction[3],
+        const volume_t *volume,
+        float *collision_distance)
+{
+    // Check for collision along the direction
+    for (float test_dist = ZOOM_COLLISION_CHECK_START;
+         test_dist <= ZOOM_COLLISION_CHECK_MAX;
+         test_dist += ZOOM_COLLISION_CHECK_STEP)
+    {
+
+        float test_pos[3];
+        test_pos[0] = camera_pos[0] + direction[0] * test_dist;
+        test_pos[1] = camera_pos[1] + direction[1] * test_dist;
+        test_pos[2] = camera_pos[2] + direction[2] * test_dist;
+
+        // Check if there's a voxel at this position
+        int voxel_coords[3];
+        voxel_coords[0] = (int)floor(test_pos[0]);
+        voxel_coords[1] = (int)floor(test_pos[1]);
+        voxel_coords[2] = (int)floor(test_pos[2]);
+
+        uint8_t voxel_color[4];
+        volume_get_at(volume, NULL, voxel_coords, voxel_color);
+        if (voxel_color[3] > 0) {
+            *collision_distance = test_dist;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// Helper function to apply zoom with collision detection
+static void apply_zoom_with_collision(
+        camera_t *camera,
+        const float direction[3],
+        float zoom_amount,
+        const volume_t *volume)
+{
+    float camera_pos[3];
+    vec3_copy(camera->mat[3], camera_pos);
+
+    // Check for collision along the zoom direction
+    float collision_distance;
+    bool found_collision = check_collision_along_direction(
+            camera_pos, direction, volume, &collision_distance);
+
+    // If zooming in and there's a collision ahead, limit the zoom
+    if (zoom_amount > 0 && found_collision) {
+        float available_distance = collision_distance -
+                                   ZOOM_COLLISION_SAFE_DIST;
+        if (available_distance <= 0) {
+            return; // Already too close, block zoom
+        }
+
+        // Limit zoom amount to not exceed safe distance
+        if (zoom_amount > available_distance) {
+            zoom_amount = available_distance;
+        }
+    }
+
+    // Apply the zoom
+    camera->mat[3][0] += direction[0] * zoom_amount;
+    camera->mat[3][1] += direction[1] * zoom_amount;
+    camera->mat[3][2] += direction[2] * zoom_amount;
+}
+
+// Helper function to get camera forward direction
+static void get_camera_forward_direction(const camera_t *camera,
+                                         float forward_dir[3])
+{
+    // Camera forward direction is negative Z column of camera matrix
+    forward_dir[0] = -camera->mat[2][0];
+    forward_dir[1] = -camera->mat[2][1];
+    forward_dir[2] = -camera->mat[2][2];
+}
 
 texture_t *texture_new_image(const char *path, int flags)
 {
@@ -41,8 +188,9 @@ texture_t *texture_new_image(const char *path, int flags)
     texture_t *tex;
 
     if (str_startswith(path, "asset://")) {
-        data = (char*)assets_get(path, &size);
-    } else {
+        data = (char *)assets_get(path, &size);
+    }
+    else {
         data = read_file(path, &size);
         need_to_free = true;
     }
@@ -54,8 +202,7 @@ texture_t *texture_new_image(const char *path, int flags)
     return tex;
 }
 
-static void unpack_pos_data(uint32_t v, int pos[3], int *face,
-                            int *cube_id)
+static void unpack_pos_data(uint32_t v, int pos[3], int *face, int *cube_id)
 {
     assert(TILE_SIZE == 16);
     int x, y, z, f, i;
@@ -88,43 +235,47 @@ void inputs_insert_char(inputs_t *inputs, uint32_t c)
 
 static camera_t *get_camera(void)
 {
-    if (!goxel.image->cameras)
-        image_add_camera(goxel.image, NULL);
-    if (goxel.image->active_camera)
-        return goxel.image->active_camera;
+    if (!goxel.image->cameras) image_add_camera(goxel.image, NULL);
+    if (goxel.image->active_camera) return goxel.image->active_camera;
     return goxel.image->cameras;
 }
 
 // XXX: lot of cleanup to do here.
 static bool goxel_unproject_on_plane(
-        const float viewport[4], const float pos[2], const float plane[4][4],
-        float out[3], float normal[3])
+        const float viewport[4],
+        const float pos[2],
+        const float plane[4][4],
+        float out[3],
+        float normal[3])
 {
     // If the angle between the screen and the plane is close to 90 deg,
     // the projection fails.  This prevents projecting too far away.
     const float min_angle_cos = 0.1;
     // XXX: pos should already be in windows coordinates.
-    float wpos[3] = {pos[0], pos[1], 0};
+    float wpos[3] = { pos[0], pos[1], 0 };
     float opos[3], onorm[3];
     camera_t *cam = get_camera();
 
     camera_get_ray(cam, wpos, viewport, opos, onorm);
-    if (fabs(vec3_dot(onorm, plane[2])) <= min_angle_cos)
-        return false;
+    if (fabs(vec3_dot(onorm, plane[2])) <= min_angle_cos) return false;
 
-    if (!plane_line_intersection(plane, opos, onorm, out))
-        return false;
+    if (!plane_line_intersection(plane, opos, onorm, out)) return false;
     mat4_mul_vec3(plane, out, out);
     vec3_copy(plane[2], normal);
     return true;
 }
 
 static bool goxel_unproject_on_line(
-        const float viewport[4], const float pos[2], const float line[4][4],
-        bool bounded, float max_dist_px, float out[3], float normal[3])
+        const float viewport[4],
+        const float pos[2],
+        const float line[4][4],
+        bool bounded,
+        float max_dist_px,
+        float out[3],
+        float normal[3])
 {
     const camera_t *cam = get_camera();
-    float wpos[3] = {pos[0], pos[1], 0};
+    float wpos[3] = { pos[0], pos[1], 0 };
     float opos[3], onorm[3];
     float t1, t2, p1[3], p2[3], w1[3], w2[3];
     camera_get_ray(cam, wpos, viewport, opos, onorm);
@@ -149,12 +300,16 @@ static bool goxel_unproject_on_line(
 }
 
 static bool goxel_unproject_on_box(
-        const float viewport[4], const float pos[2],
-        const float box[4][4], bool inside, float out[3],
-        float normal[3], int *face)
+        const float viewport[4],
+        const float pos[2],
+        const float box[4][4],
+        bool inside,
+        float out[3],
+        float normal[3],
+        int *face)
 {
     int f;
-    float wpos[3] = {pos[0], pos[1], 0};
+    float wpos[3] = { pos[0], pos[1], 0 };
     float opos[3], onorm[3];
     float plane[4][4];
     camera_t *cam = get_camera();
@@ -165,12 +320,9 @@ static bool goxel_unproject_on_box(
         mat4_copy(box, plane);
         mat4_imul(plane, FACES_MATS[f]);
 
-        if (!inside && vec3_dot(plane[2], onorm) >= 0)
-            continue;
-        if (inside && vec3_dot(plane[2], onorm) <= 0)
-            continue;
-        if (!plane_line_intersection(plane, opos, onorm, out))
-            continue;
+        if (!inside && vec3_dot(plane[2], onorm) >= 0) continue;
+        if (inside && vec3_dot(plane[2], onorm) <= 0) continue;
+        if (!plane_line_intersection(plane, opos, onorm, out)) continue;
         if (!(out[0] >= -1 && out[0] < 1 && out[1] >= -1 && out[1] < 1))
             continue;
         if (face) *face = f;
@@ -186,9 +338,9 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
 {
     // TODO: use a cache to avoid calling this twice in the same frame.
 
-    renderer_t rend = {.settings = goxel.rend.settings};
-    uint8_t clear_color[4] = {0, 0, 0, 0};
-    float rect[4] = {0, 0, view_size[0], view_size[1]};
+    renderer_t rend = { .settings = goxel.rend.settings };
+    uint8_t clear_color[4] = { 0, 0, 0, 0 };
+    float rect[4] = { 0, 0, view_size[0], view_size[1] };
 
     typedef struct {
         uint64_t volume_key;
@@ -198,11 +350,12 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
         int view_size[2];
     } key_t;
 
-    key_t key = {0};
-    static key_t cache_key = {0};
+    key_t key = { 0 };
+    static key_t cache_key = { 0 };
 
     if (goxel.pick_fbo && (goxel.pick_fbo->w != view_size[0] ||
-                           goxel.pick_fbo->h != view_size[1])) {
+                           goxel.pick_fbo->h != view_size[1]))
+    {
         texture_delete(goxel.pick_fbo);
         goxel.pick_fbo = NULL;
     }
@@ -210,15 +363,15 @@ static void update_pick_fbo(const int view_size[2], const volume_t *volume)
     if (!goxel.pick_fbo) {
         goxel.pick_fbo = texture_new_buffer(
                 view_size[0], view_size[1], TF_DEPTH);
-        cache_key = (key_t){0};
+        cache_key = (key_t){ 0 };
     }
 
-    key = (key_t) {
+    key = (key_t){
         .volume_key = volume_get_key(volume),
         .rend_settings = goxel.rend.settings,
         .view_mat = MAT4_COPY(goxel.rend.view_mat),
         .proj_mat = MAT4_COPY(goxel.rend.proj_mat),
-        .view_size = {view_size[0], view_size[1]},
+        .view_size = { view_size[0], view_size[1] },
     };
 
     if (memcmp((void *)&key, (void *)&cache_key, sizeof(key_t)) == 0) {
@@ -242,8 +395,8 @@ static void volume_get_tile_pos(const volume_t *volume, int id, int pos[3])
     int tile_id, tile_pos[3];
     volume_iterator_t iter;
     tile_id = 1;
-    iter = volume_get_iterator(volume,
-            VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
+    iter = volume_get_iterator(
+            volume, VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
     while (volume_iter(&iter, tile_pos)) {
         if (tile_id == id) {
             memcpy(pos, tile_pos, sizeof(tile_pos));
@@ -253,11 +406,14 @@ static void volume_get_tile_pos(const volume_t *volume, int id, int pos[3])
     }
 }
 
-static bool goxel_unproject_on_volume(
-        const float view[4], const float pos[2], const volume_t *volume,
-        float out[3], float normal[3])
+bool goxel_unproject_on_volume(
+        const float view[4],
+        const float pos[2],
+        const volume_t *volume,
+        float out[3],
+        float normal[3])
 {
-    int view_size[2] = {view[2], view[3]};
+    int view_size[2] = { view[2], view[3] };
 
     uint32_t pixel;
     int voxel_pos[3];
@@ -269,8 +425,7 @@ static bool goxel_unproject_on_volume(
     x = round(pos[0] - view[0]);
     y = round(pos[1] - view[1]);
     GL(glViewport(0, 0, goxel.pick_fbo->w, goxel.pick_fbo->h));
-    if (x < 0 || x >= view_size[0] ||
-        y < 0 || y >= view_size[1]) return false;
+    if (x < 0 || x >= view_size[0] || y < 0 || y >= view_size[1]) return false;
     GL(glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
@@ -287,11 +442,13 @@ static bool goxel_unproject_on_volume(
     return true;
 }
 
-
 int goxel_unproject(const float viewport[4],
-                    const float pos[2], int snap_mask,
-                    const float snap_shape[4][4], const float offsets[3],
-                    float out[3], float normal[3])
+                    const float pos[2],
+                    int snap_mask,
+                    const float snap_shape[4][4],
+                    float offset,
+                    float out[3],
+                    float normal[3])
 {
     int i, ret = 0;
     bool r = false;
@@ -302,16 +459,14 @@ int goxel_unproject(const float viewport[4],
     for (i = 0; i < 10; i++) {
         if (!(snap_mask & (1 << i))) continue;
         if ((1 << i) == SNAP_VOLUME) {
-            r = goxel_unproject_on_volume(viewport, pos,
-                            goxel_get_layers_volume(goxel.image), p, n);
+            r = goxel_unproject_on_volume(
+                    viewport, pos, goxel_get_layers_volume(goxel.image), p, n);
         }
         if ((1 << i) == SNAP_PLANE) {
-            r = goxel_unproject_on_plane(
-                    viewport, pos, goxel.plane, p, n);
+            r = goxel_unproject_on_plane(viewport, pos, goxel.plane, p, n);
         }
         if ((1 << i) == SNAP_SHAPE_PLANE) {
-            r = goxel_unproject_on_plane(
-                    viewport, pos, snap_shape, p, n);
+            r = goxel_unproject_on_plane(viewport, pos, snap_shape, p, n);
         }
         if ((1 << i) == SNAP_SHAPE_LINE) {
             r = goxel_unproject_on_line(
@@ -322,28 +477,26 @@ int goxel_unproject(const float viewport[4],
                     viewport, pos, snap_shape, true, 8, p, n);
         }
         if ((1 << i) == SNAP_SELECTION_IN)
-            r = goxel_unproject_on_box(viewport, pos,
-                                       goxel.image->selection_box, true,
-                                       p, n, NULL);
+            r = goxel_unproject_on_box(
+                    viewport, pos, goxel.image->selection_box, true, p, n,
+                    NULL);
         if ((1 << i) == SNAP_SELECTION_OUT)
-            r = goxel_unproject_on_box(viewport, pos,
-                                       goxel.image->selection_box, false,
-                                       p, n, NULL);
+            r = goxel_unproject_on_box(
+                    viewport, pos, goxel.image->selection_box, false, p, n,
+                    NULL);
         if ((1 << i) == SNAP_SHAPE_BOX) {
-            r = goxel_unproject_on_box(viewport, pos, snap_shape, false,
-                                       p, n, NULL);
+            r = goxel_unproject_on_box(
+                    viewport, pos, snap_shape, false, p, n, NULL);
         }
         if ((1 << i) == SNAP_IMAGE_BOX)
-            r = goxel_unproject_on_box(viewport, pos,
-                                       goxel.image->box, true,
-                                       p, n, NULL);
+            r = goxel_unproject_on_box(
+                    viewport, pos, goxel.image->box, true, p, n, NULL);
         if ((1 << i) == SNAP_CAMERA) {
             camera_get_ray(cam, pos, viewport, p, n);
             r = true;
         }
 
-        if (!r)
-            continue;
+        if (!r) continue;
 
         mat4_mul_vec3(cam->view_mat, p, v);
         dist = -v[2];
@@ -361,11 +514,13 @@ int goxel_unproject(const float viewport[4],
         for (i = 0; i < 3; i++) {
             if (normal[i] == 0) {
                 float snap_unit = goxel.snap_units[i];
-                float offset = offsets ? offsets[i] : 0.0f;
+                float axis_snap_offset = goxel.snap_offsets[i] * snap_unit;
                 if (snap_unit > 0) {
-                    out[i] = round((out[i] - 0.5 - offset) / snap_unit) * snap_unit + 0.5 + offset;
-                } else {
-                    out[i] = round(out[i] - 0.5 - offset) + 0.5 + offset;
+                    out[i] = floor((out[i] - offset) / snap_unit + 0.5) * snap_unit +
+                             0.5 + offset + axis_snap_offset;
+                }
+                else {
+                    out[i] = floor(out[i] - offset + 0.5) + 0.5 + offset + axis_snap_offset;
                 }
             }
         }
@@ -390,8 +545,8 @@ static void goxel_init_sound()
 #endif
 }
 
-void goxel_add_gesture(int type, int button,
-                       int (*fn)(const gesture_t *gest, void *user))
+void goxel_add_gesture(
+        int type, int button, int (*fn)(const gesture_t *gest, void *user))
 {
     gesture_t *gest;
 
@@ -439,8 +594,7 @@ static void goxel_load_recent_files(void)
 
     while (fgets(path, sizeof(path), listfile)) {
         if (strlen(path) < 1) continue;
-        if (path[strlen(path) - 1] == '\n')
-            path[strlen(path) - 1] = '\0';
+        if (path[strlen(path) - 1] == '\n') path[strlen(path) - 1] = '\0';
         if (!path_normalize(path)) continue;
         file = fopen(path, "r");
         if (!file) continue;
@@ -451,7 +605,6 @@ static void goxel_load_recent_files(void)
     fclose(listfile);
 }
 
-
 KEEPALIVE
 void goxel_init(void)
 {
@@ -461,9 +614,8 @@ void goxel_init(void)
 
     // Load and set default palette.
     palette_load_all(&goxel.palettes);
-    DL_FOREACH(goxel.palettes, goxel.palette) {
-        if (strcmp(goxel.palette->name, "DB32") == 0)
-            break;
+    DL_FOREACH (goxel.palettes, goxel.palette) {
+        if (strcmp(goxel.palette->name, "DB32") == 0) break;
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
 
@@ -474,6 +626,13 @@ void goxel_init(void)
     goxel_add_gesture(GESTURE_HOVER, 0, on_hover);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag_rotate);
     goxel_add_gesture(GESTURE_DRAG, GESTURE_LMB, on_drag);
+
+    // Update snap units to match brush size if enabled
+    if (goxel.use_brush_size) {
+        goxel.snap_units[0] = goxel.tool_radius * 2;
+        goxel.snap_units[1] = goxel.tool_radius * 2;
+        goxel.snap_units[2] = goxel.tool_radius * 2;
+    }
 }
 
 void goxel_update_keymaps(void)
@@ -520,8 +679,7 @@ void goxel_reset(void)
     goxel_update_keymaps();
 
     // Put plane horizontal at the origin.
-    plane_from_vectors(goxel.plane,
-            VEC(0, 0, 0), VEC(1, 0, 0), VEC(0, 1, 0));
+    plane_from_vectors(goxel.plane, VEC(0, 0, 0), VEC(1, 0, 0), VEC(0, 1, 0));
 
     vec4_set(goxel.back_color, 70, 70, 70, 255);
     vec4_set(goxel.grid_color, 255, 255, 255, 127);
@@ -529,38 +687,45 @@ void goxel_reset(void)
 
     action_exec2(ACTION_tool_set_brush);
     goxel.tool_radius = 0.5;
-    goxel.painter = (painter_t) {
+    goxel.painter = (painter_t){
         .shape = &shape_cube,
         .mode = MODE_OVER,
         .smoothness = 0,
-        .color = {255, 255, 255, 255},
+        .color = { 255, 255, 255, 255 },
     };
 
     // Set symmetry origin to the center of the image.
     mat4_mul_vec3(goxel.image->box, VEC(0, 0, 0),
                   goxel.painter.symmetry_origin);
 
-    goxel.rend.light = (typeof(goxel.rend.light)) {
+    goxel.rend.light = (typeof(goxel.rend.light)){
         .pitch = 20 * DD2R,
         .yaw = 120 * DD2R,
         .intensity = 2.0,
     };
-    goxel.rend.settings = (render_settings_t) {
+    goxel.rend.settings = (render_settings_t){
         .occlusion_strength = 0.4,
         .ambient = 0.3,
         .shadow = 0.3,
     };
-    if (DEFINED(NO_SHADOW))
-        goxel.rend.settings.shadow = 0;
+    if (DEFINED(NO_SHADOW)) goxel.rend.settings.shadow = 0;
 
     goxel.snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX;
-    goxel.snap_units[0] = 1.0; // X axis
-    goxel.snap_units[1] = 1.0; // Y axis
-    goxel.snap_units[2] = 1.0; // Z axis
+    goxel.snap_units[0] = 1.0;   // X axis
+    goxel.snap_units[1] = 1.0;   // Y axis
+    goxel.snap_units[2] = 1.0;   // Z axis
     goxel.snap_offsets[0] = 0.0; // X axis offset
     goxel.snap_offsets[1] = 0.0; // Y axis offset
     goxel.snap_offsets[2] = 0.0; // Z axis offset
-    goxel.use_brush_size = false; // Use brush size to determine snap units
+    goxel.use_brush_size = true; // Use brush size
+
+    // Initialize fly mode state
+    goxel.move_origin.fly_mode = false;
+    goxel.move_origin.fly_mouse_captured = false;
+
+    // Initialize camera settings
+    goxel.camera_fov = 80.0f; // Default FOV to 80 degrees
+    goxel.zoom_speed = 1.0f;  // Default zoom speed
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,
@@ -575,9 +740,9 @@ void goxel_reset(void)
         },
     };
 
-    #ifdef AFTER_RESET_FUNC
+#ifdef AFTER_RESET_FUNC
     AFTER_RESET_FUNC();
-    #endif
+#endif
 }
 
 void goxel_release(void)
@@ -658,15 +823,14 @@ static void play_build_sound_if_needed(void)
 KEEPALIVE
 int goxel_iter(const inputs_t *inputs)
 {
-    double time  = sys_get_time();
+    double time = sys_get_time();
     float menu_w = 20;
     int i;
     inputs_t inputs2;
     camera_t *camera = get_camera();
 
     tr_set_language(goxel.lang);
-    if (!goxel.graphics_initialized)
-        goxel_create_graphics();
+    if (!goxel.graphics_initialized) goxel_create_graphics();
 
     goxel.delta_time = time - goxel.frame_time;
     if (goxel.delta_time != 0)
@@ -692,8 +856,8 @@ int goxel_iter(const inputs_t *inputs)
     // Note: the inputs Y coordinates are inverted!
     inputs2 = *inputs;
     for (i = 0; i < (int)ARRAY_SIZE(inputs2.touches); i++) {
-        inputs2.touches[i].pos[1] =
-            inputs->window_size[1] - inputs->touches[i].pos[1];
+        inputs2.touches[i].pos[1] = inputs->window_size[1] -
+                                    inputs->touches[i].pos[1];
         // Move the mouse outside the viewport if the UI captures it.
         if (gui_want_capture_mouse()) {
             inputs2.touches[i].pos[0] = -1;
@@ -750,8 +914,8 @@ static int on_drag(const gesture_t *gest, void *user)
 
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, goxel.snap_offsets,
-                gest3d->pos, gest3d->normal);
+                gest3d->snap_shape, gest3d->snap_offset, gest3d->pos,
+                gest3d->normal);
         // Apply tool-specific offset along the normal if needed
         if (gest3d->snaped && gest3d->snap_offset != 0) {
             vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
@@ -767,22 +931,29 @@ static int on_drag(const gesture_t *gest, void *user)
  */
 static int on_drag_rotate(const gesture_t *gest, void *user)
 {
+    // Disable drag rotation during fly mode
+    if (goxel.move_origin.fly_mode) {
+        return 1; // Fail the gesture
+    }
+
     float pos[3], normal[3];
     bool snap;
     if (gest->state == GESTURE_BEGIN) {
         if (box_edit_is_active()) return 1; // XXX: to remve.
         snap = goxel_unproject(
-            gest->viewport, gest->pos,
-            SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME,
-            NULL, goxel.snap_offsets, pos, normal);
+                gest->viewport, gest->pos,
+                SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME, NULL, 0,
+                pos, normal);
         if (snap) return 1;
     }
     return on_rotate(gest, user);
 }
 
 // XXX: can we merge this with unproject?
-static bool unproject_delta(const float win[3], const float model[4][4],
-                            const float proj[4][4], const float viewport[4],
+static bool unproject_delta(const float win[3],
+                            const float model[4][4],
+                            const float proj[4][4],
+                            const float viewport[4],
                             float out[3])
 {
     float inv[4][4], norm_pos[4];
@@ -800,22 +971,26 @@ static bool unproject_delta(const float win[3], const float model[4][4],
 
 static int on_pan(const gesture_t *gest, void *user)
 {
+    // Disable panning during fly mode
+    if (goxel.move_origin.fly_mode) {
+        return 1; // Fail the gesture
+    }
+
     camera_t *camera = get_camera();
     if (gest->state == GESTURE_BEGIN) {
         mat4_copy(camera->mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
     }
-    float wpos[3] = {gest->pos[0], gest->pos[1], 0};
+    float wpos[3] = { gest->pos[0], gest->pos[1], 0 };
     float worigin_pos[3], wdelta[3], odelta[3];
-    vec3_set(worigin_pos, goxel.move_origin.pos[0],
-                          goxel.move_origin.pos[1], 0);
+    vec3_set(worigin_pos, goxel.move_origin.pos[0], goxel.move_origin.pos[1],
+             0);
     vec3_sub(wpos, worigin_pos, wdelta);
 
-    unproject_delta(wdelta, mat4_identity,
-                    camera->proj_mat, gest->viewport, odelta);
+    unproject_delta(wdelta, mat4_identity, camera->proj_mat, gest->viewport,
+                    odelta);
     vec3_imul(odelta, 2); // XXX: why do I need that?
-    if (!camera->ortho)
-        vec3_imul(odelta, camera->dist);
+    if (!camera->ortho) vec3_imul(odelta, camera->dist);
     mat4_translate(goxel.move_origin.camera_mat, -odelta[0], -odelta[1], 0,
                    camera->mat);
     return 0;
@@ -832,6 +1007,46 @@ static int on_rotate(const gesture_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN) {
         mat4_copy(camera->mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
+
+        // Try to determine where a voxel would be placed for distance-based
+        // rotation (same logic as voxel placement)
+        float target_pos[3], target_normal[3];
+        int snap_mask = goxel.snap_mask | SNAP_ROUNDED;
+        bool found_target = goxel_unproject(
+                gest->viewport, gest->pos, snap_mask, NULL, 0, target_pos, target_normal);
+
+        if (found_target) {
+            // Found target position - calculate pivot point at center of view at same
+            // distance
+            float camera_pos[3], camera_to_target[3];
+            float viewport_center[2];
+            float ray_origin[3], ray_dir[3];
+
+            // Get camera position
+            vec3_copy(camera->mat[3], camera_pos);
+
+            // Calculate distance from camera to target position
+            vec3_sub(target_pos, camera_pos, camera_to_target);
+            float distance = vec3_norm(camera_to_target);
+
+            // Get viewport center coordinates
+            viewport_center[0] = gest->viewport[0] + gest->viewport[2] / 2.0f;
+            viewport_center[1] = gest->viewport[1] + gest->viewport[3] / 2.0f;
+
+            // Get ray from center of viewport
+            camera_get_ray(camera, viewport_center, gest->viewport, ray_origin,
+                           ray_dir);
+
+            // Calculate pivot point at the same distance along the center ray
+            vec3_mul(ray_dir, distance, ray_dir);
+            vec3_add(ray_origin, ray_dir, goxel.move_origin.pivot_point);
+
+            goxel.move_origin.has_pivot_point = true;
+        }
+        else {
+            // No target found - use default rotation
+            goxel.move_origin.has_pivot_point = false;
+        }
     }
 
     x1 = goxel.move_origin.pos[0] / gest->viewport[2];
@@ -842,26 +1057,67 @@ static int on_rotate(const gesture_t *gest, void *user)
     x_rot = (y2 - y1) * 2 * M_PI;
 
     mat4_copy(goxel.move_origin.camera_mat, camera->mat);
-    camera_turntable(camera, z_rot, x_rot);
+
+    // Use pivot-based rotation if we have a voxel under the cursor
+    if (goxel.move_origin.has_pivot_point) {
+        camera_turntable_around_point(
+                camera, z_rot, x_rot, goxel.move_origin.pivot_point);
+    }
+    else {
+        camera_turntable(camera, z_rot, x_rot);
+    }
+
     return 0;
 }
 
 static int on_zoom(const gesture_t *gest, void *user)
 {
-    float p[3], n[3];
     double zoom;
     camera_t *camera = get_camera();
 
     if (gui_want_capture_mouse()) return 0;
     zoom = (gest->pos[1] - gest->last_pos[1]) / 10.0;
-    mat4_itranslate(camera->mat, 0, 0,
-            -camera->dist * (1 - pow(1.1, -zoom)));
-    camera->dist *= pow(1.1, -zoom);
-    // Auto adjust the camera rotation position.
-    if (goxel_unproject_on_volume(gest->viewport, gest->pos,
-                                goxel_get_layers_volume(goxel.image), p, n)) {
-        camera_set_target(camera, p);
+
+    // If in fly mode, use original zoom behavior
+    if (goxel.move_origin.fly_mode) {
+        float forward_dir[3];
+        get_camera_forward_direction(camera, forward_dir);
+
+        float zoom_amount = zoom * goxel.zoom_speed;
+        camera->mat[3][0] += forward_dir[0] * zoom_amount;
+        camera->mat[3][1] += forward_dir[1] * zoom_amount;
+        camera->mat[3][2] += forward_dir[2] * zoom_amount;
+
+        return 0;
     }
+
+    // For non-fly mode, use target-based zoom with distance scaling
+    const volume_t *volume = goxel_get_layers_volume(goxel.image);
+    float camera_pos[3];
+    vec3_copy(camera->mat[3], camera_pos);
+
+    float target_dir[3];
+    float zoom_scale = 1.0f;
+
+    // Try to get target direction towards cursor position
+    if (calculate_target_direction(camera_pos, gest->viewport, gest->pos,
+                                   volume, target_dir, &zoom_scale))
+    {
+        // Apply zoom towards the target position with collision detection
+        float zoom_amount = zoom * goxel.zoom_speed * zoom_scale;
+        apply_zoom_with_collision(camera, target_dir, zoom_amount, volume);
+            }
+        else {
+            // No target found, use camera forward direction as fallback
+        float forward_dir[3];
+        get_camera_forward_direction(camera, forward_dir);
+
+        float zoom_amount = zoom * goxel.zoom_speed;
+        camera->mat[3][0] += forward_dir[0] * zoom_amount;
+        camera->mat[3][1] += forward_dir[1] * zoom_amount;
+        camera->mat[3][2] += forward_dir[2] * zoom_amount;
+    }
+
     return 0;
 }
 
@@ -874,8 +1130,8 @@ static int on_hover(const gesture_t *gest, void *user)
         gest3d = &goxel.gesture3ds[i];
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, goxel.snap_offsets,
-                gest3d->pos, gest3d->normal);
+                gest3d->snap_shape, gest3d->snap_offset, gest3d->pos,
+                gest3d->normal);
         // Apply tool-specific offset along the normal if needed
         if (gest3d->snaped && gest3d->snap_offset != 0) {
             vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
@@ -919,8 +1175,8 @@ static void update_keymaps_hints(void)
 }
 
 // XXX: Cleanup this.
-void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
-                         bool capture_keys)
+void goxel_mouse_in_view(
+        const float viewport[4], const inputs_t *inputs, bool capture_keys)
 {
     float p[3], n[3];
     camera_t *camera = get_camera();
@@ -946,9 +1202,11 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
 
     if (!box_is_null(goxel.image->active_layer->box)) {
         painter.box = &goxel.image->active_layer->box;
-    } else if (!box_is_null(goxel.image->box)) {
+    }
+    else if (!box_is_null(goxel.image->box)) {
         painter.box = &goxel.image->box;
-    } else {
+    }
+    else {
         painter.box = NULL;
     }
 
@@ -968,14 +1226,48 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     }
 
     if (inputs->mouse_wheel && !gui_want_capture_mouse()) {
-        mat4_itranslate(camera->mat, 0, 0,
-                -camera->dist * (1 - pow(1.1, -inputs->mouse_wheel)));
-        camera->dist *= pow(1.1, -inputs->mouse_wheel);
-        // Auto adjust the camera rotation position.
-        if (goxel_unproject_on_volume(viewport, inputs->touches[0].pos,
-                                goxel_get_layers_volume(goxel.image), p, n)) {
-            camera_set_target(camera, p);
+        float zoom_amount = inputs->mouse_wheel * goxel.zoom_speed;
+
+        // If in fly mode, use original zoom behavior
+        if (goxel.move_origin.fly_mode) {
+            float forward_dir[3];
+            get_camera_forward_direction(camera, forward_dir);
+
+            camera->mat[3][0] += forward_dir[0] * zoom_amount;
+            camera->mat[3][1] += forward_dir[1] * zoom_amount;
+            camera->mat[3][2] += forward_dir[2] * zoom_amount;
         }
+        else {
+            // For non-fly mode, use target-based zoom with distance scaling
+            const volume_t *volume = goxel_get_layers_volume(goxel.image);
+            float camera_pos[3];
+            vec3_copy(camera->mat[3], camera_pos);
+
+            float target_dir[3];
+            float zoom_scale = 1.0f;
+
+            // Try to get target direction towards cursor position
+            if (calculate_target_direction(
+                        camera_pos, viewport, inputs->touches[0].pos, volume,
+                        target_dir, &zoom_scale))
+            {
+                // Apply zoom towards the target position with collision detection
+                zoom_amount *= zoom_scale;
+                apply_zoom_with_collision(
+                        camera, target_dir, zoom_amount, volume);
+            }
+            else {
+                // No target found, use camera forward direction as
+                // fallback
+                float forward_dir[3];
+                get_camera_forward_direction(camera, forward_dir);
+
+                camera->mat[3][0] += forward_dir[0] * zoom_amount;
+                camera->mat[3][1] += forward_dir[1] * zoom_amount;
+                camera->mat[3][2] += forward_dir[2] * zoom_amount;
+            }
+        }
+
         return;
     }
 
@@ -998,9 +1290,211 @@ void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
     // C: recenter the view:
     // XXX: this should be an action!
     if (inputs->keys['C']) {
-        if (goxel_unproject_on_volume(viewport, inputs->touches[0].pos,
-                                goxel_get_layers_volume(goxel.image), p, n)) {
+        if (goxel_unproject_on_volume(
+                    viewport, inputs->touches[0].pos,
+                    goxel_get_layers_volume(goxel.image), p, n))
+        {
             camera_set_target(camera, p);
+        }
+    }
+
+    // Camera fly mode with FPS-style mouse look
+    bool rmb_held = inputs->touches[0].down[2];
+    
+    // Check if any movement keys are pressed
+    bool movement_keys_pressed = inputs->keys['W'] || inputs->keys['S'] ||
+                                inputs->keys['A'] || inputs->keys['D'] ||
+                                inputs->keys[' '] || inputs->keys[KEY_LEFT_CONTROL];
+
+    // Enter fly mode when right mouse button is pressed AND movement keys are used
+    if (rmb_held && movement_keys_pressed && !goxel.move_origin.fly_mode) {
+        goxel.move_origin.fly_mode = true;
+        goxel.move_origin.fly_mouse_captured = false;
+        vec2_copy(inputs->touches[0].pos,
+                  goxel.move_origin.fly_last_mouse_pos);
+
+        // Hide cursor when entering fly mode
+#ifndef EMSCRIPTEN
+        GLFWwindow *window = (GLFWwindow *)sys_callbacks.user;
+        if (window) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        }
+#endif
+    }
+
+    // Exit fly mode when right mouse button is released
+    if (!rmb_held && goxel.move_origin.fly_mode) {
+        goxel.move_origin.fly_mode = false;
+        goxel.move_origin.fly_mouse_captured = false;
+
+        // Show cursor when exiting fly mode
+#ifndef EMSCRIPTEN
+        GLFWwindow *window = (GLFWwindow *)sys_callbacks.user;
+        if (window) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+#endif
+    }
+
+    // Handle fly mode
+    if (goxel.move_origin.fly_mode) {
+        float movement_speed = 32.0f;     // Units per second
+        float mouse_sensitivity = 0.001f; // Radians per pixel
+        float move_delta[3] = { 0, 0, 0 };
+
+        // Check if Shift is being held to double the speed
+        bool shift_held = inputs->keys[KEY_LEFT_SHIFT] ||
+                          inputs->keys[KEY_RIGHT_SHIFT];
+        if (shift_held) {
+            movement_speed *= 2.0f; // Double the speed when Shift is held
+        }
+
+        // Apply movement speed based on delta time for smooth movement
+        float speed = movement_speed * goxel.delta_time;
+
+        // Handle mouse wheel zoom in fly mode
+        if (inputs->mouse_wheel) {
+            float zoom_amount = inputs->mouse_wheel * goxel.zoom_speed;
+            float forward_dir[3];
+            get_camera_forward_direction(camera, forward_dir);
+
+            camera->mat[3][0] += forward_dir[0] * zoom_amount;
+            camera->mat[3][1] += forward_dir[1] * zoom_amount;
+            camera->mat[3][2] += forward_dir[2] * zoom_amount;
+        }
+
+        // W: move forward (negative Z direction relative to camera)
+        if (inputs->keys['W']) {
+            move_delta[0] -= camera->mat[2][0] * speed;
+            move_delta[1] -= camera->mat[2][1] * speed;
+            move_delta[2] -= camera->mat[2][2] * speed;
+        }
+
+        // S: move backward (positive Z direction relative to camera)
+        if (inputs->keys['S']) {
+            move_delta[0] += camera->mat[2][0] * speed;
+            move_delta[1] += camera->mat[2][1] * speed;
+            move_delta[2] += camera->mat[2][2] * speed;
+        }
+
+        // A: move left (negative X direction relative to camera)
+        if (inputs->keys['A']) {
+            move_delta[0] -= camera->mat[0][0] * speed;
+            move_delta[1] -= camera->mat[0][1] * speed;
+            move_delta[2] -= camera->mat[0][2] * speed;
+        }
+
+        // D: move right (positive X direction relative to camera)
+        if (inputs->keys['D']) {
+            move_delta[0] += camera->mat[0][0] * speed;
+            move_delta[1] += camera->mat[0][1] * speed;
+            move_delta[2] += camera->mat[0][2] * speed;
+        }
+
+        // Space: move up (positive Z direction in world space)
+        if (inputs->keys[' ']) {
+            move_delta[2] += speed;
+        }
+
+        // Left Ctrl: move down (negative Z direction in world space)
+        if (inputs->keys[KEY_LEFT_CONTROL]) {
+            move_delta[2] -= speed;
+        }
+
+        // Apply the movement to the camera position
+        if (move_delta[0] != 0 || move_delta[1] != 0 || move_delta[2] != 0) {
+            camera->mat[3][0] += move_delta[0];
+            camera->mat[3][1] += move_delta[1];
+            camera->mat[3][2] += move_delta[2];
+        }
+
+        // FPS-style mouse look (fly mode is only active when RMB is held)
+        if (!goxel.move_origin.fly_mouse_captured) {
+            // Use current mouse position as reference - don't center cursor
+            // initially
+            vec2_copy(inputs->touches[0].pos,
+                      goxel.move_origin.fly_last_mouse_pos);
+            goxel.move_origin.fly_mouse_captured = true;
+        }
+        else {
+            // Calculate mouse delta
+            float mouse_delta[2];
+            mouse_delta[0] = inputs->touches[0].pos[0] -
+                             goxel.move_origin.fly_last_mouse_pos[0];
+            mouse_delta[1] = inputs->touches[0].pos[1] -
+                             goxel.move_origin.fly_last_mouse_pos[1];
+
+            // Apply FPS-style rotation (yaw and pitch)
+            if (mouse_delta[0] != 0 || mouse_delta[1] != 0) {
+                float yaw = -mouse_delta[0] *
+                            mouse_sensitivity; // Horizontal mouse movement
+                                               // controls left/right turning
+                float pitch = mouse_delta[1] *
+                              mouse_sensitivity; // Vertical mouse movement
+                                                 // controls up/down looking
+
+                // Save current camera position
+                float cam_pos[3];
+                vec3_copy(camera->mat[3], cam_pos);
+
+                // Apply yaw rotation around world Z axis (like
+                // camera_turntable)
+                if (yaw != 0) {
+                    float yaw_mat[4][4];
+                    mat4_set_identity(yaw_mat);
+                    mat4_itranslate(yaw_mat, cam_pos[0], cam_pos[1],
+                                    cam_pos[2]);
+                    mat4_irotate(yaw_mat, yaw, 0, 0, 1); // World Z axis
+                    mat4_itranslate(yaw_mat, -cam_pos[0], -cam_pos[1],
+                                    -cam_pos[2]);
+                    mat4_imul(yaw_mat, camera->mat);
+                    mat4_copy(yaw_mat, camera->mat);
+                }
+
+                // Apply pitch rotation around camera's local X axis (like
+                // camera_turntable)
+                if (pitch != 0) {
+                    mat4_irotate(camera->mat, pitch, 1, 0,
+                                 0); // Positive for correct direction
+                }
+
+                // Restore camera position (ensure it hasn't shifted)
+                vec3_copy(cam_pos, camera->mat[3]);
+            }
+
+            // Update reference position for next frame
+            vec2_copy(inputs->touches[0].pos,
+                      goxel.move_origin.fly_last_mouse_pos);
+
+            // Optionally recenter cursor if it gets too close to screen edges
+#ifndef EMSCRIPTEN
+            GLFWwindow *window = (GLFWwindow *)sys_callbacks.user;
+            if (window) {
+                int win_width, win_height;
+                glfwGetWindowSize(window, &win_width, &win_height);
+                double cursor_x, cursor_y;
+                glfwGetCursorPos(window, &cursor_x, &cursor_y);
+
+                // Recenter if cursor is near screen edges (with margin)
+                float margin = 50.0f;
+                if (cursor_x < margin || cursor_x > win_width - margin ||
+                    cursor_y < margin || cursor_y > win_height - margin)
+                {
+                    float center_x = win_width / 2.0f;
+                    float center_y = win_height / 2.0f;
+                    glfwSetCursorPos(window, center_x, center_y);
+
+                    // Convert centered cursor position to input coordinate
+                    // system Match the coordinate transformation from main.c
+                    float scaled_x = center_x * inputs->window_size[0] /
+                                     win_width / inputs->scale;
+                    float scaled_y = center_y * inputs->window_size[1] /
+                                     win_height / inputs->scale;
+                    vec2_set(goxel.move_origin.fly_last_mouse_pos, scaled_x,
+                             scaled_y);
+                }
+            }
+#endif
         }
     }
 }
@@ -1012,7 +1506,7 @@ void goxel_render(const inputs_t *inputs)
 
     theme_get_color(THEME_GROUP_BASE, THEME_COLOR_BACKGROUND, false, color);
     GL(glViewport(0, 0, goxel.screen_size[0] * goxel.screen_scale,
-                        goxel.screen_size[1] * goxel.screen_scale));
+                  goxel.screen_size[1] * goxel.screen_scale));
     GL(glBindFramebuffer(GL_FRAMEBUFFER, goxel.rend.fbo));
     GL(glClearColor(color[0] / 255., color[1] / 255., color[2] / 255., 1));
     GL(glStencilMask(0xFF));
@@ -1023,7 +1517,7 @@ void goxel_render(const inputs_t *inputs)
     goxel_render_view(goxel.gui.viewport, goxel.pathtrace);
 
     GL(glViewport(0, 0, goxel.screen_size[0] * goxel.screen_scale,
-                        goxel.screen_size[1] * goxel.screen_scale));
+                  goxel.screen_size[1] * goxel.screen_scale));
     gui_render(inputs);
 }
 
@@ -1032,7 +1526,7 @@ static void render_export_viewport(const float viewport[4])
     // Render the export viewport.
     int w = goxel.image->export_width;
     int h = goxel.image->export_height;
-    float aspect = (float)w/h;
+    float aspect = (float)w / h;
     float plane[4][4];
     camera_t *camera = get_camera();
 
@@ -1041,7 +1535,8 @@ static void render_export_viewport(const float viewport[4])
     mat4_itranslate(plane, 0.5, 0.5, 0);
     if (aspect < camera->aspect) {
         mat4_iscale(plane, aspect / camera->aspect, 1, 1);
-    } else {
+    }
+    else {
         mat4_iscale(plane, 1, camera->aspect / aspect, 1);
     }
     render_rect(&goxel.rend, plane, EFFECT_STRIP);
@@ -1052,9 +1547,9 @@ static void render_pathtrace_view(const float viewport[4])
     pathtracer_t *pt = &goxel.pathtracer;
     float a, mat[4][4];
     // Recreate the buffer if needed.
-    if (    !pt->buf ||
-            pt->w != goxel.image->export_width ||
-            pt->h != goxel.image->export_height) {
+    if (!pt->buf || pt->w != goxel.image->export_width ||
+        pt->h != goxel.image->export_height)
+    {
         free(pt->buf);
         pt->w = goxel.image->export_width;
         pt->h = goxel.image->export_height;
@@ -1079,7 +1574,7 @@ static void render_pathtrace_view(const float viewport[4])
 static void render_axis_arrows(const float viewport[4])
 {
     float rot[4][4], a[3], b[3], l[3];
-    const float AXIS[][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    const float AXIS[][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
     uint8_t color[4];
     int i;
     const float size = 40;
@@ -1090,9 +1585,8 @@ static void render_axis_arrows(const float viewport[4])
 
     vec3_set(a, 50, 50, 0); // Origin pos (viewport coordinates)
     for (i = 0; i < 3; i++) {
-        vec4_set(color, AXIS[i][0] * 255,
-                        AXIS[i][1] * 255,
-                        AXIS[i][2] * 255, 255);
+        vec4_set(color, AXIS[i][0] * 255, AXIS[i][1] * 255, AXIS[i][2] * 255,
+                 255);
         vec3_mul(AXIS[i], size, b);
         mat4_mul_vec3(rot, b, b);
         vec3_add(a, b, b);
@@ -1113,7 +1607,6 @@ static bool is_box_face_visible(const float box[4][4], int f)
     mat4_mul_vec4(cam->view_mat, mat[2], n);
     return (n[2] < 0);
 }
-
 
 static void render_symmetry_axis(
         const float box[4][4], int sym, const float sym_o[3])
@@ -1151,7 +1644,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
 {
     const layer_t *layer;
     renderer_t *rend = &goxel.rend;
-    const uint8_t layer_box_color[4] = {128, 128, 255, 255};
+    const uint8_t layer_box_color[4] = { 128, 128, 255, 255 };
     int effects = 0;
     camera_t *camera = get_camera();
 
@@ -1173,11 +1666,11 @@ void goxel_render_view(const float viewport[4], bool render_mode)
     }
 
     if (!box_is_null(goxel.image->active_layer->box))
-        render_box(rend, goxel.image->active_layer->box,
-                   layer_box_color, EFFECT_WIREFRAME);
+        render_box(rend, goxel.image->active_layer->box, layer_box_color,
+                   EFFECT_WIREFRAME);
 
     // Render all the image layers.
-    DL_FOREACH(goxel.image->layers, layer) {
+    DL_FOREACH (goxel.image->layers, layer) {
         if (layer->visible && layer->image)
             render_img(rend, layer->image, layer->mat, EFFECT_NO_SHADING);
     }
@@ -1226,8 +1719,7 @@ void goxel_render_view(const float viewport[4], bool render_mode)
         render_symmetry_axis(goxel.image->box, goxel.painter.symmetry,
                              goxel.painter.symmetry_origin);
     }
-    if (goxel.show_export_viewport)
-        render_export_viewport(viewport);
+    if (goxel.show_export_viewport) render_export_viewport(viewport);
 
     render_axis_arrows(viewport);
     render_submit(&goxel.rend, viewport, goxel.back_color);
@@ -1240,8 +1732,8 @@ const volume_t *goxel_get_layers_volume(const image_t *img)
     uint32_t key = 0, k;
     layer_t *layer;
 
-    image_update((image_t*)img);
-    DL_FOREACH(img->layers, layer) {
+    image_update((image_t *)img);
+    DL_FOREACH (img->layers, layer) {
         if (!layer->visible) continue;
         if (!layer->volume) continue;
         k = layer_get_key(layer);
@@ -1251,7 +1743,7 @@ const volume_t *goxel_get_layers_volume(const image_t *img)
         goxel.layers_volume_hash = key;
         if (!goxel.layers_volume_) goxel.layers_volume_ = volume_new();
         volume_clear(goxel.layers_volume_);
-        DL_FOREACH(img->layers, layer) {
+        DL_FOREACH (img->layers, layer) {
             if (!layer->visible) continue;
             volume_merge(goxel.layers_volume_, layer->volume, MODE_OVER, NULL);
         }
@@ -1265,8 +1757,7 @@ const volume_t *goxel_get_render_volume(const image_t *img)
     const volume_t *volume;
     layer_t *layer;
 
-    if (!goxel.tool_volume)
-        return goxel_get_layers_volume(img);
+    if (!goxel.tool_volume) return goxel_get_layers_volume(img);
 
     key = volume_get_key(goxel_get_layers_volume(img));
     k = volume_get_key(goxel.tool_volume);
@@ -1276,7 +1767,7 @@ const volume_t *goxel_get_render_volume(const image_t *img)
         goxel.render_volume_hash = key;
         if (!goxel.render_volume_) goxel.render_volume_ = volume_new();
         volume_clear(goxel.render_volume_);
-        DL_FOREACH(goxel.image->layers, layer) {
+        DL_FOREACH (goxel.image->layers, layer) {
             if (!layer->visible) continue;
             volume = layer->volume;
             if (volume == goxel.image->active_layer->volume)
@@ -1303,29 +1794,31 @@ const layer_t *goxel_get_render_layers(bool with_tool_preview)
         goxel.render_layers_hash = hash;
         image_update(goxel.image);
 
-        DL_FOREACH_SAFE(goxel.render_layers, layer, tmp) {
+        DL_FOREACH_SAFE (goxel.render_layers, layer, tmp) {
             DL_DELETE(goxel.render_layers, layer);
             layer_delete(layer);
         }
 
-        DL_FOREACH(goxel.image->layers, l) {
+        DL_FOREACH (goxel.image->layers, l) {
             if (!l->visible) continue;
             if (!l->volume) continue;
             layer = layer_copy(l);
-            if (    with_tool_preview && goxel.tool_volume &&
-                    l->volume == goxel.image->active_layer->volume)
+            if (with_tool_preview && goxel.tool_volume &&
+                l->volume == goxel.image->active_layer->volume)
             {
                 volume_set(layer->volume, goxel.tool_volume);
             }
 
             // Don't merge different materials unless we do a boolean op.
-            no_merge = (goxel.render_layers == NULL) || (
-                (layer->mode == MODE_OVER) &&
-                (goxel.render_layers->prev->material != layer->material));
+            no_merge = (goxel.render_layers == NULL) ||
+                       ((layer->mode == MODE_OVER) &&
+                        (goxel.render_layers->prev->material !=
+                         layer->material));
 
             if (no_merge) {
                 DL_APPEND(goxel.render_layers, layer);
-            } else {
+            }
+            else {
                 volume_merge(goxel.render_layers->prev->volume, layer->volume,
                              layer->mode, NULL);
                 layer_delete(layer);
@@ -1342,7 +1835,7 @@ void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp)
     const volume_t *volume;
     texture_t *fbo;
     renderer_t rend = goxel.rend;
-    float rect[4] = {0, 0, w * 2, h * 2};
+    float rect[4] = { 0, 0, w * 2, h * 2 };
     uint8_t *tmp_buf;
 
     camera->aspect = (float)w / h;
@@ -1396,10 +1889,8 @@ void goxel_import_image_plane(const char *path)
     sprintf(layer->name, "img");
     layer->image = tex;
     // Adjust position for odd sized images.
-    if (tex->w % 2 == 1)
-        mat4_itranslate(layer->mat, 0.5, 0, 0);
-    if (tex->h % 2 == 1)
-        mat4_itranslate(layer->mat, 0, 0.5, 0);
+    if (tex->w % 2 == 1) mat4_itranslate(layer->mat, 0.5, 0, 0);
+    if (tex->h % 2 == 1) mat4_itranslate(layer->mat, 0, 0.5, 0);
     mat4_iscale(layer->mat, layer->image->w, layer->image->h, 1);
     image_history_push(goxel.image);
 }
@@ -1420,7 +1911,8 @@ int goxel_import_file(const char *path, const char *format)
     f = file_format_get(path, format, "r");
     if (str_endswith(path, ".gox")) {
         err = load_from_file(path, false);
-    } else {
+    }
+    else {
         if (!f) return -1;
         if (!path) {
             path = sys_open_file_dialog("Import", NULL, f->exts, f->exts_desc);
@@ -1446,14 +1938,12 @@ static void get_export_path(const file_format_t *f, char *buf, size_t size)
 
     // Use current export path if it exists.
     if (goxel.image->export_path) {
-        if (str_replace_ext(goxel.image->export_path, ext, buf, size))
-            return;
+        if (str_replace_ext(goxel.image->export_path, ext, buf, size)) return;
     }
 
     // Use the current file path if it exists.
     if (goxel.image->path && str_endswith(goxel.image->path, ".gox")) {
-        if (str_replace_ext(goxel.image->path, ext, buf, size))
-            return;
+        if (str_replace_ext(goxel.image->path, ext, buf, size)) return;
     }
 
     snprintf(buf, size, "Untitled.%s", ext);
@@ -1496,9 +1986,8 @@ static void a_overwrite_export(void)
 }
 
 ACTION_REGISTER(ACTION_overwrite_export,
-    .cfunc = a_overwrite_export,
-    .default_shortcut = "Ctrl E"
-)
+                .cfunc = a_overwrite_export,
+                .default_shortcut = "Ctrl E")
 
 void goxel_add_recent_file(const char *path)
 {
@@ -1506,8 +1995,7 @@ void goxel_add_recent_file(const char *path)
     FILE *file;
     int i;
 
-    if (goxel.recent_files && strcmp(goxel.recent_files[0], path) == 0)
-        return;
+    if (goxel.recent_files && strcmp(goxel.recent_files[0], path) == 0) return;
 
     // Remove the path from the list if it exists already.
     for (i = 0; i < arrlen(goxel.recent_files); i++) {
@@ -1535,8 +2023,8 @@ void goxel_add_recent_file(const char *path)
     fclose(file);
 }
 
-void goxel_apply_color_filter(
-        void (*fn)(void *args, uint8_t color[4]), void *args)
+void goxel_apply_color_filter(void (*fn)(void *args, uint8_t color[4]),
+                              void *args)
 {
     layer_t *layer = goxel.image->active_layer;
     volume_t *volume;
@@ -1551,16 +2039,17 @@ void goxel_apply_color_filter(
     volume = volume_copy(layer->volume);
     if (!volume_is_empty(img->selection_mask)) {
         volume_merge(volume, img->selection_mask, MODE_INTERSECT, NULL);
-    } else if (!box_is_null(img->selection_box)) {
-        painter = (painter_t) {
+    }
+    else if (!box_is_null(img->selection_box)) {
+        painter = (painter_t){
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
-            .color = {255, 255, 255, 255},
+            .color = { 255, 255, 255, 255 },
         };
         volume_op(volume, &painter, img->selection_box);
     }
-    iter = volume_get_iterator(volume,
-            VOLUME_ITER_VOXELS | VOLUME_ITER_SKIP_EMPTY);
+    iter = volume_get_iterator(
+            volume, VOLUME_ITER_VOXELS | VOLUME_ITER_SKIP_EMPTY);
     while (volume_iter(&iter, p)) {
         volume_get_at(volume, &iter, p, color);
         fn(args, color);
@@ -1578,22 +2067,22 @@ static void a_cut_as_new_layer(void)
     painter_t painter;
     image_t *img = goxel.image;
     layer_t *layer = img->active_layer;
-    const float (*box)[4][4] = &img->selection_box;
+    const float(*box)[4][4] = &img->selection_box;
 
     new_layer = image_duplicate_layer(img, layer);
 
     // Use the mask in priority.
     if (!volume_is_empty(img->selection_mask)) {
-        volume_merge(new_layer->volume, img->selection_mask,
-                     MODE_INTERSECT, NULL);
-        volume_merge(layer->volume, img->selection_mask , MODE_SUB, NULL);
+        volume_merge(new_layer->volume, img->selection_mask, MODE_INTERSECT,
+                     NULL);
+        volume_merge(layer->volume, img->selection_mask, MODE_SUB, NULL);
         return;
     }
 
-    painter = (painter_t) {
+    painter = (painter_t){
         .shape = &shape_cube,
         .mode = MODE_INTERSECT,
-        .color = {255, 255, 255, 255},
+        .color = { 255, 255, 255, 255 },
     };
     volume_op(new_layer->volume, &painter, *box);
     painter.mode = MODE_SUB;
@@ -1601,10 +2090,9 @@ static void a_cut_as_new_layer(void)
 }
 
 ACTION_REGISTER(ACTION_cut_as_new_layer,
-    .help = N_("Cuts the selected area into a new layer"),
-    .cfunc = a_cut_as_new_layer,
-    .flags = ACTION_TOUCH_IMAGE,
-)
+                .help = N_("Cuts the selected area into a new layer"),
+                .cfunc = a_cut_as_new_layer,
+                .flags = ACTION_TOUCH_IMAGE, )
 
 static void a_reset_selection(void)
 {
@@ -1616,9 +2104,7 @@ static void a_reset_selection(void)
     mat4_copy(mat4_zero, img->selection_box);
 }
 
-ACTION_REGISTER(ACTION_reset_selection,
-    .cfunc = a_reset_selection,
-)
+ACTION_REGISTER(ACTION_reset_selection, .cfunc = a_reset_selection, )
 
 static void a_fill_selection_box(void)
 {
@@ -1629,10 +2115,9 @@ static void a_fill_selection_box(void)
 }
 
 ACTION_REGISTER(ACTION_fill_selection_box,
-    .help = N_("Fills the selected box with the current color"),
-    .cfunc = a_fill_selection_box,
-    .flags = ACTION_TOUCH_IMAGE,
-)
+                .help = N_("Fills the selected box with the current color"),
+                .cfunc = a_fill_selection_box,
+                .flags = ACTION_TOUCH_IMAGE, )
 
 static void a_paint_selection(void)
 {
@@ -1644,10 +2129,9 @@ static void a_paint_selection(void)
 }
 
 ACTION_REGISTER(ACTION_paint_selection,
-    .help = N_("Fills the selected voxels with the current color"),
-    .cfunc = a_paint_selection,
-    .flags = ACTION_TOUCH_IMAGE,
-)
+                .help = N_("Fills the selected voxels with the current color"),
+                .cfunc = a_paint_selection,
+                .flags = ACTION_TOUCH_IMAGE, )
 
 static void a_add_selection(void)
 {
@@ -1656,10 +2140,10 @@ static void a_add_selection(void)
     image_t *img = goxel.image;
 
     if (box_is_null(img->selection_box)) return;
-    painter = (painter_t) {
+    painter = (painter_t){
         .shape = &shape_cube,
         .mode = MODE_INTERSECT_FILL,
-        .color = {255, 255, 255, 255},
+        .color = { 255, 255, 255, 255 },
     };
     tmp = volume_copy(goxel.image->active_layer->volume);
     volume_op(tmp, &painter, img->selection_box);
@@ -1669,29 +2153,26 @@ static void a_add_selection(void)
 }
 
 ACTION_REGISTER(ACTION_add_selection,
-    .help = N_("Adds selected area to the mask"),
-    .cfunc = a_add_selection,
-)
+                .help = N_("Adds selected area to the mask"),
+                .cfunc = a_add_selection, )
 
 static void a_sub_selection(void)
 {
     painter_t painter;
     image_t *img = goxel.image;
 
-    if (img->selection_mask == NULL || box_is_null(img->selection_box))
-        return;
-    painter = (painter_t) {
+    if (img->selection_mask == NULL || box_is_null(img->selection_box)) return;
+    painter = (painter_t){
         .shape = &shape_cube,
         .mode = MODE_SUB,
-        .color = {255, 255, 255, 255},
+        .color = { 255, 255, 255, 255 },
     };
     volume_op(img->selection_mask, &painter, img->selection_box);
 }
 
 ACTION_REGISTER(ACTION_sub_selection,
-    .help = N_("Subtracts selected area from the mask"),
-    .cfunc = a_sub_selection,
-)
+                .help = N_("Subtracts selected area from the mask"),
+                .cfunc = a_sub_selection, )
 
 static void copy_action(void)
 {
@@ -1702,10 +2183,10 @@ static void copy_action(void)
     mat4_copy(img->selection_box, goxel.clipboard.box);
     goxel.clipboard.volume = volume_copy(goxel.image->active_layer->volume);
     if (!box_is_null(img->selection_box)) {
-        painter = (painter_t) {
+        painter = (painter_t){
             .shape = &shape_cube,
             .mode = MODE_INTERSECT,
-            .color = {255, 255, 255, 255},
+            .color = { 255, 255, 255, 255 },
         };
         volume_op(goxel.clipboard.volume, &painter, img->selection_box);
     }
@@ -1722,8 +2203,8 @@ static void paste_action(void)
     if (!goxel.clipboard.volume) return;
 
     tmp = volume_copy(goxel.clipboard.volume);
-    if (    !box_is_null(img->selection_box) &&
-            !box_is_null(goxel.clipboard.box)) {
+    if (!box_is_null(img->selection_box) && !box_is_null(goxel.clipboard.box))
+    {
         vec3_copy(img->selection_box[3], p1);
         vec3_copy(goxel.clipboard.box[3], p2);
         mat4_itranslate(mat, +p1[0], +p1[1], +p1[2]);
@@ -1735,19 +2216,16 @@ static void paste_action(void)
 }
 
 ACTION_REGISTER(ACTION_copy,
-    .cfunc = copy_action,
-    .default_shortcut = "Ctrl C",
-    .flags = 0,
-)
+                .cfunc = copy_action,
+                .default_shortcut = "Ctrl C",
+                .flags = 0, )
 
 ACTION_REGISTER(ACTION_paste,
-    .cfunc = paste_action,
-    .default_shortcut = "Ctrl V",
-    .flags = ACTION_TOUCH_IMAGE,
-)
+                .cfunc = paste_action,
+                .default_shortcut = "Ctrl V",
+                .flags = ACTION_TOUCH_IMAGE, )
 
 #define HS2 (M_SQRT2 / 2.0)
-
 
 static void a_view_default(void)
 {
@@ -1762,8 +2240,8 @@ static void a_view_default(void)
 
 static void a_view_set(void *data)
 {
-    float rz = ((float*)data)[0] / 180 * M_PI;
-    float rx = ((float*)data)[1] / 180 * M_PI;
+    float rz = ((float *)data)[0] / 180 * M_PI;
+    float rx = ((float *)data)[1] / 180 * M_PI;
     camera_t *camera = get_camera();
 
     mat4_set_identity(camera->mat);
@@ -1778,55 +2256,49 @@ static void a_view_toggle_ortho(void)
 }
 
 ACTION_REGISTER(ACTION_view_left,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc_data = a_view_set,
-    .data = (float[]){90, 90},
-    .default_shortcut = "Ctrl 3",
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc_data = a_view_set,
+                .data = (float[]){ 90, 90 },
+                .default_shortcut = "Ctrl 3", )
 
 ACTION_REGISTER(ACTION_view_right,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc_data = a_view_set,
-    .data = (float[]){-90, 90},
-    .default_shortcut = "3",
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc_data = a_view_set,
+                .data = (float[]){ -90, 90 },
+                .default_shortcut = "3", )
 
 ACTION_REGISTER(ACTION_view_top,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc_data = a_view_set,
-    .data = (float[]){0, 0},
-    .default_shortcut = "7",
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc_data = a_view_set,
+                .data = (float[]){ 0, 0 },
+                .default_shortcut = "7", )
 
 ACTION_REGISTER(ACTION_view_default,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc = a_view_default,
-    .default_shortcut = "0",
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc = a_view_default,
+                .default_shortcut = "0", )
 
 ACTION_REGISTER(ACTION_view_front,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc_data = a_view_set,
-    .data = (float[]){0, 90},
-    .default_shortcut = "1",
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc_data = a_view_set,
+                .data = (float[]){ 0, 90 },
+                .default_shortcut = "1", )
 
-ACTION_REGISTER(ACTION_view_toggle_ortho,
-    .help = N_("Switches the projection (perspective/orthographic)"),
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc = a_view_toggle_ortho,
-    .default_shortcut = "5",
-)
+ACTION_REGISTER(
+        ACTION_view_toggle_ortho,
+        .help = N_("Switches the projection (perspective/orthographic)"),
+        .flags = ACTION_CAN_EDIT_SHORTCUT,
+        .cfunc = a_view_toggle_ortho,
+        .default_shortcut = "5", )
 
 static void quit(void)
 {
     gui_query_quit();
 }
 ACTION_REGISTER(ACTION_quit,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc = quit,
-    .default_shortcut = "Ctrl Q",
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc = quit,
+                .default_shortcut = "Ctrl Q", )
 
 static int unsaved_change_popup(void *data)
 {
@@ -1837,7 +2309,8 @@ static int unsaved_change_popup(void *data)
     if (gui_button("Discard", 0, 0)) {
         if (!data) {
             goxel_reset();
-        } else {
+        }
+        else {
             load_from_file((const char *)data, true);
         }
         ret = 1;
@@ -1854,14 +2327,14 @@ void goxel_open_file(const char *path)
     if (image_get_key(goxel.image) == goxel.image->saved_key) {
         if (!path) {
             goxel_reset();
-        } else {
+        }
+        else {
             load_from_file(path, true);
         }
         return;
     }
     gui_open_popup("Unsaved Changes", GUI_POPUP_RESIZE,
-                   path ? strdup(path) : NULL,
-                   unsaved_change_popup);
+                   path ? strdup(path) : NULL, unsaved_change_popup);
 }
 
 static void a_reset(void)
@@ -1870,36 +2343,45 @@ static void a_reset(void)
 }
 
 ACTION_REGISTER(ACTION_reset,
-    .help = N_("Creates a new image (discards the current one)"),
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc = a_reset,
-    .default_shortcut = "Ctrl N"
-)
+                .help = N_("Creates a new image (discards the current one)"),
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc = a_reset,
+                .default_shortcut = "Ctrl N")
 
-static void undo(void) { image_undo(goxel.image); }
-static void redo(void) { image_redo(goxel.image); }
+static void undo(void)
+{
+    image_undo(goxel.image);
+}
+static void redo(void)
+{
+    image_redo(goxel.image);
+}
 
 ACTION_REGISTER(ACTION_undo,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc = undo,
-    .default_shortcut = "Ctrl Z",
-    .icon = ICON_ARROW_BACK,
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc = undo,
+                .default_shortcut = "Ctrl Z",
+                .icon = ICON_ARROW_BACK, )
 
 ACTION_REGISTER(ACTION_redo,
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc = redo,
-    .default_shortcut = "Ctrl Y",
-    .icon = ICON_ARROW_FORWARD,
-)
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc = redo,
+                .default_shortcut = "Ctrl Y",
+                .icon = ICON_ARROW_FORWARD, )
 
 static void toggle_mode(void)
 {
     int mode = goxel.painter.mode;
     switch (mode) {
-    case MODE_OVER:     mode = MODE_SUB; break;
-    case MODE_SUB:      mode = MODE_PAINT; break;
-    case MODE_PAINT:    mode = MODE_OVER; break;
+    case MODE_OVER:
+        mode = MODE_SUB;
+        break;
+    case MODE_SUB:
+        mode = MODE_PAINT;
+        break;
+    case MODE_PAINT:
+        mode = MODE_OVER;
+        break;
     default:
         assert(false);
         break;
@@ -1908,40 +2390,36 @@ static void toggle_mode(void)
 }
 
 ACTION_REGISTER(ACTION_toggle_mode,
-    .help = N_("Switches the mode (add/subtract/paint)"),
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc = toggle_mode,
-)
+                .help = N_("Switches the mode (add/subtract/paint)"),
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc = toggle_mode, )
 
 static void a_set_mode(void *data)
 {
-    int mode = *(int*)data;
+    int mode = *(int *)data;
     goxel.painter.mode = mode;
 }
 
 ACTION_REGISTER(ACTION_set_mode_add,
-    .help = N_("Adds to the voxels"),
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc_data = a_set_mode,
-    .data = (int[]){MODE_OVER},
-    .icon = ICON_MODE_ADD,
-    .default_shortcut = "T",
-)
+                .help = N_("Adds to the voxels"),
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc_data = a_set_mode,
+                .data = (int[]){ MODE_OVER },
+                .icon = ICON_MODE_ADD,
+                .default_shortcut = "T", )
 
 ACTION_REGISTER(ACTION_set_mode_sub,
-    .help = N_("Subtract to the voxels"),
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc_data = a_set_mode,
-    .data = (int[]){MODE_SUB},
-    .icon = ICON_MODE_SUB,
-    .default_shortcut = "R",
-)
+                .help = N_("Subtract to the voxels"),
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc_data = a_set_mode,
+                .data = (int[]){ MODE_SUB },
+                .icon = ICON_MODE_SUB,
+                .default_shortcut = "R", )
 
 ACTION_REGISTER(ACTION_set_mode_paint,
-    .help = N_("Paints the voxels"),
-    .flags = ACTION_CAN_EDIT_SHORTCUT,
-    .cfunc_data = a_set_mode,
-    .data = (int[]){MODE_PAINT},
-    .icon = ICON_MODE_PAINT,
-    .default_shortcut = "G",
-)
+                .help = N_("Paints the voxels"),
+                .flags = ACTION_CAN_EDIT_SHORTCUT,
+                .cfunc_data = a_set_mode,
+                .data = (int[]){ MODE_PAINT },
+                .icon = ICON_MODE_PAINT,
+                .default_shortcut = "G", )

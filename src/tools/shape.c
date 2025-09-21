@@ -98,7 +98,8 @@ static int iter(tool_t *tool, const painter_t *painter,
                    EFFECT_STRIP | EFFECT_WIREFRAME);
     }
 
-    snap_offset = (painter->mode == MODE_OVER) ? 0.5 : -0.5;
+    snap_offset = goxel.snap_offsets[2] * goxel.tool_radius +
+        ((painter->mode == MODE_OVER) ? 0.5 : -0.5);
 
     if (!shape->volume_orig)
         shape->volume_orig = volume_copy(goxel.image->active_layer->volume);
