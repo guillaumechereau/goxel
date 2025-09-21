@@ -1,6 +1,10 @@
 
-Goxel
+Goxel++
 =====
+
+This is a fork from [https://github.com/guillaumechereau/goxel](https://github.com/guillaumechereau/goxel).
+
+Goxel++ includes several QOL improvements such as improved camera controls and additional settings which makes working with Goxel much less cumbersome for more complex builds.
 
 Version 0.15.1
 
