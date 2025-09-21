@@ -514,13 +514,13 @@ int goxel_unproject(const float viewport[4],
         for (i = 0; i < 3; i++) {
             if (normal[i] == 0) {
                 float snap_unit = goxel.snap_units[i];
+                float axis_snap_offset = goxel.snap_offsets[i] * snap_unit;
                 if (snap_unit > 0) {
-                    out[i] = round((out[i] - 0.5 - offset) / snap_unit) *
-                                     snap_unit +
-                             0.5 + offset;
+                    out[i] = floor((out[i] - offset) / snap_unit + 0.5) * snap_unit +
+                             0.5 + offset + axis_snap_offset;
                 }
                 else {
-                    out[i] = round(out[i] - 0.5 - offset) + 0.5 + offset;
+                    out[i] = floor(out[i] - offset + 0.5) + 0.5 + offset + axis_snap_offset;
                 }
             }
         }
