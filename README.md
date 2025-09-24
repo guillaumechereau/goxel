@@ -2,6 +2,8 @@
 Goxel++
 =====
 
+[![Build Status](https://github.com/tatelax/goxelplusplus/actions/workflows/ci.yml/badge.svg)](https://github.com/tatelax/goxelplusplus/actions/workflows/ci.yml)
+
 Goxel++ is a fork of [Goxel](https://github.com/guillaumechereau/goxel). It includes several QOL improvements such as improved camera controls and additional settings which makes working with Goxel much less cumbersome for more complex models.
 
 Original webpage: https://goxel.xyz
@@ -13,6 +15,19 @@ About
 
 You can use Goxel++ to create voxel graphics (3D images formed of cubes).  It
 works on Linux, BSD, Windows and macOS.
+
+Goxel++ features over Goxel
+---------------------------
+
+* Adds camera "fly mode" with controls similar to Unity.
+  * Hold right mouse button and press W, A, S, or D to enter fly mode.
+  * WASD to control camera, Q/E to move up and down or Ctrl/Space.
+  * Left shift to double fly speed
+* Adds ability to set snapping size to match current brush size
+* Adds adjustable camera FOV
+* Adds zoom to cursor position instead of zoom to center of screen
+* Adds zoom collision so zooming stops when close to a voxel
+* Unified two ways of exporting into one
 
 
 Download
@@ -79,7 +94,7 @@ Then to build, run the command:
 
 # Windows
 
-You need to install msys2 mingw, and the following packages:
+You need to install MSYS2 and use the **MSYS2 MINGW64** terminal to install the following packages:
 
     pacman -S mingw-w64-x86_64-gcc
     pacman -S mingw-w64-x86_64-glfw
@@ -90,7 +105,6 @@ You need to install msys2 mingw, and the following packages:
 Then to build:
 
     make release
-
 
 Contributing
 ------------

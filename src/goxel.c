@@ -28,10 +28,7 @@
 #include <errno.h> // IWYU pragma: keep.
 #include <stdarg.h>
 
-// Include GLFW for cursor management (if available)
-#ifndef EMSCRIPTEN
 #include <GLFW/glfw3.h>
-#endif
 
 // The global goxel instance.
 goxel_t goxel = {};
@@ -83,7 +80,8 @@ static bool calculate_target_direction(
     float target_pos[3], normal[3];
     int snap_mask = goxel.snap_mask | SNAP_ROUNDED;
 
-    if (!goxel_unproject(viewport, cursor_pos, snap_mask, NULL, 0, target_pos, normal))
+    if (!goxel_unproject(viewport, cursor_pos, snap_mask, NULL, 0, target_pos,
+                         normal))
     {
         return false;
     }
@@ -516,11 +514,13 @@ int goxel_unproject(const float viewport[4],
                 float snap_unit = goxel.snap_units[i];
                 float axis_snap_offset = goxel.snap_offsets[i] * snap_unit;
                 if (snap_unit > 0) {
-                    out[i] = floor((out[i] - offset) / snap_unit + 0.5) * snap_unit +
+                    out[i] = floor((out[i] - offset) / snap_unit + 0.5) *
+                                     snap_unit +
                              0.5 + offset + axis_snap_offset;
                 }
                 else {
-                    out[i] = floor(out[i] - offset + 0.5) + 0.5 + offset + axis_snap_offset;
+                    out[i] = floor(out[i] - offset + 0.5) + 0.5 + offset +
+                             axis_snap_offset;
                 }
             }
         }
@@ -720,8 +720,7 @@ void goxel_reset(void)
     goxel.use_brush_size = true; // Use brush size
 
     // Initialize fly mode state
-    goxel.move_origin.fly_mode = false;
-    goxel.move_origin.fly_mouse_captured = false;
+    goxel.fly_mode.active = false;
 
     // Initialize camera settings
     goxel.camera_fov = 80.0f; // Default FOV to 80 degrees
@@ -782,7 +781,7 @@ static void update_window_title(void)
     bool changed;
 
     changed = image_get_key(goxel.image) != goxel.image->saved_key;
-    sprintf(buf, "Goxel %s%s %s%s%s",
+    sprintf(buf, "Goxel++ %s%s %s%s%s",
             GOXEL_VERSION_STR,
             DEBUG ? " (debug)" : "",
             changed ? "*" : "",
@@ -900,6 +899,17 @@ static void set_cursor_hint(const gesture3d_t *gest)
     goxel_add_hint(HINT_COORDINATES, NULL, hint_msg);
 }
 
+static void set_fly_mode_hint()
+{
+    if (!goxel.fly_mode.active) {
+        return;
+    }
+    char title[128];
+    title[0] = '\0';
+    snprintf(title, sizeof(title), "W,A,S,D+%s", GLYPH_MOUSE_RMB);
+    goxel_add_hint(0, title, "Fly mode");
+}
+
 static int on_drag(const gesture_t *gest, void *user)
 {
     int i;
@@ -932,7 +942,7 @@ static int on_drag(const gesture_t *gest, void *user)
 static int on_drag_rotate(const gesture_t *gest, void *user)
 {
     // Disable drag rotation during fly mode
-    if (goxel.move_origin.fly_mode) {
+    if (goxel.fly_mode.active) {
         return 1; // Fail the gesture
     }
 
@@ -972,7 +982,7 @@ static bool unproject_delta(const float win[3],
 static int on_pan(const gesture_t *gest, void *user)
 {
     // Disable panning during fly mode
-    if (goxel.move_origin.fly_mode) {
+    if (goxel.fly_mode.active) {
         return 1; // Fail the gesture
     }
 
@@ -1013,11 +1023,12 @@ static int on_rotate(const gesture_t *gest, void *user)
         float target_pos[3], target_normal[3];
         int snap_mask = goxel.snap_mask | SNAP_ROUNDED;
         bool found_target = goxel_unproject(
-                gest->viewport, gest->pos, snap_mask, NULL, 0, target_pos, target_normal);
+                gest->viewport, gest->pos, snap_mask, NULL, 0, target_pos,
+                target_normal);
 
         if (found_target) {
-            // Found target position - calculate pivot point at center of view at same
-            // distance
+            // Found target position - calculate pivot point at center of view
+            // at same distance
             float camera_pos[3], camera_to_target[3];
             float viewport_center[2];
             float ray_origin[3], ray_dir[3];
@@ -1079,7 +1090,7 @@ static int on_zoom(const gesture_t *gest, void *user)
     zoom = (gest->pos[1] - gest->last_pos[1]) / 10.0;
 
     // If in fly mode, use original zoom behavior
-    if (goxel.move_origin.fly_mode) {
+    if (goxel.fly_mode.active) {
         float forward_dir[3];
         get_camera_forward_direction(camera, forward_dir);
 
@@ -1106,9 +1117,9 @@ static int on_zoom(const gesture_t *gest, void *user)
         // Apply zoom towards the target position with collision detection
         float zoom_amount = zoom * goxel.zoom_speed * zoom_scale;
         apply_zoom_with_collision(camera, target_dir, zoom_amount, volume);
-            }
-        else {
-            // No target found, use camera forward direction as fallback
+    }
+    else {
+        // No target found, use camera forward direction as fallback
         float forward_dir[3];
         get_camera_forward_direction(camera, forward_dir);
 
@@ -1174,7 +1185,6 @@ static void update_keymaps_hints(void)
     }
 }
 
-// XXX: Cleanup this.
 void goxel_mouse_in_view(
         const float viewport[4], const inputs_t *inputs, bool capture_keys)
 {
@@ -1184,6 +1194,8 @@ void goxel_mouse_in_view(
     int i;
     bool ctrl;
     bool shift;
+    bool wasd_pressed;
+    bool rmb_held;
 
     painter_t painter = goxel.painter;
     gesture_update(arrlen(goxel.gestures), goxel.gestures, inputs, viewport,
@@ -1191,6 +1203,9 @@ void goxel_mouse_in_view(
 
     ctrl = inputs->keys[KEY_LEFT_CONTROL] || inputs->keys[KEY_RIGHT_CONTROL];
     shift = inputs->keys[KEY_LEFT_SHIFT] || inputs->keys[KEY_RIGHT_SHIFT];
+    wasd_pressed = inputs->keys['W'] || inputs->keys['A'] ||
+                   inputs->keys['S'] || inputs->keys['D'];
+    rmb_held = inputs->touches[0].down[2];
 
     update_keymaps_hints();
 
@@ -1229,7 +1244,7 @@ void goxel_mouse_in_view(
         float zoom_amount = inputs->mouse_wheel * goxel.zoom_speed;
 
         // If in fly mode, use original zoom behavior
-        if (goxel.move_origin.fly_mode) {
+        if (goxel.fly_mode.active) {
             float forward_dir[3];
             get_camera_forward_direction(camera, forward_dir);
 
@@ -1251,7 +1266,8 @@ void goxel_mouse_in_view(
                         camera_pos, viewport, inputs->touches[0].pos, volume,
                         target_dir, &zoom_scale))
             {
-                // Apply zoom towards the target position with collision detection
+                // Apply zoom towards the target position with collision
+                // detection
                 zoom_amount *= zoom_scale;
                 apply_zoom_with_collision(
                         camera, target_dir, zoom_amount, volume);
@@ -1298,69 +1314,53 @@ void goxel_mouse_in_view(
         }
     }
 
-    // Camera fly mode with FPS-style mouse look
-    bool rmb_held = inputs->touches[0].down[2];
-    
-    // Check if any movement keys are pressed
-    bool movement_keys_pressed = inputs->keys['W'] || inputs->keys['S'] ||
-                                inputs->keys['A'] || inputs->keys['D'] ||
-                                inputs->keys[' '] || inputs->keys[KEY_LEFT_CONTROL];
+    // Update fly mode state:
+    if (wasd_pressed && rmb_held && !goxel.fly_mode.active) {
+        // Enter fly mode when WASD is pressed while holding right mouse button
+        goxel.fly_mode.active = true;
+        vec2_copy(inputs->touches[0].pos, goxel.fly_mode.last_mouse_pos);
 
-    // Enter fly mode when right mouse button is pressed AND movement keys are used
-    if (rmb_held && movement_keys_pressed && !goxel.move_origin.fly_mode) {
-        goxel.move_origin.fly_mode = true;
-        goxel.move_origin.fly_mouse_captured = false;
-        vec2_copy(inputs->touches[0].pos,
-                  goxel.move_origin.fly_last_mouse_pos);
-
-        // Hide cursor when entering fly mode
-#ifndef EMSCRIPTEN
+        // Lock cursor when entering fly mode
         GLFWwindow *window = (GLFWwindow *)sys_callbacks.user;
         if (window) {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
-#endif
     }
+    else if (!rmb_held) {
+        // Exit fly mode when right mouse button is released
+        goxel.fly_mode.active = false;
 
-    // Exit fly mode when right mouse button is released
-    if (!rmb_held && goxel.move_origin.fly_mode) {
-        goxel.move_origin.fly_mode = false;
-        goxel.move_origin.fly_mouse_captured = false;
-
-        // Show cursor when exiting fly mode
-#ifndef EMSCRIPTEN
+        // Unlock cursor when exiting fly mode
         GLFWwindow *window = (GLFWwindow *)sys_callbacks.user;
         if (window) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
-#endif
     }
 
     // Handle fly mode
-    if (goxel.move_origin.fly_mode) {
-        float movement_speed = 32.0f;     // Units per second
-        float mouse_sensitivity = 0.001f; // Radians per pixel
+    if (goxel.fly_mode.active) {
+        // Add hint:
+        set_fly_mode_hint();
+
+        float speed = goxel.fly_mode.move_speed;
         float move_delta[3] = { 0, 0, 0 };
 
         // Check if Shift is being held to double the speed
         bool shift_held = inputs->keys[KEY_LEFT_SHIFT] ||
                           inputs->keys[KEY_RIGHT_SHIFT];
+
         if (shift_held) {
-            movement_speed *= 2.0f; // Double the speed when Shift is held
+            speed *= 2.0f; // Double the speed when Shift is held
         }
 
         // Apply movement speed based on delta time for smooth movement
-        float speed = movement_speed * goxel.delta_time;
+        speed = speed * goxel.delta_time;
 
-        // Handle mouse wheel zoom in fly mode
+        // Handle mouse wheel in fly mode to control speed
         if (inputs->mouse_wheel) {
-            float zoom_amount = inputs->mouse_wheel * goxel.zoom_speed;
-            float forward_dir[3];
-            get_camera_forward_direction(camera, forward_dir);
-
-            camera->mat[3][0] += forward_dir[0] * zoom_amount;
-            camera->mat[3][1] += forward_dir[1] * zoom_amount;
-            camera->mat[3][2] += forward_dir[2] * zoom_amount;
+            goxel.fly_mode.move_speed = clamp(
+                    goxel.fly_mode.move_speed + inputs->mouse_wheel * 5.0f,
+                    5.0f, 100.0f);
         }
 
         // W: move forward (negative Z direction relative to camera)
@@ -1391,13 +1391,13 @@ void goxel_mouse_in_view(
             move_delta[2] += camera->mat[0][2] * speed;
         }
 
-        // Space: move up (positive Z direction in world space)
-        if (inputs->keys[' ']) {
+        // Space / E: move up (positive Z direction in world space)
+        if (inputs->keys[' '] || inputs->keys['E']) {
             move_delta[2] += speed;
         }
 
-        // Left Ctrl: move down (negative Z direction in world space)
-        if (inputs->keys[KEY_LEFT_CONTROL]) {
+        // Left Ctrl / Q: move down (negative Z direction in world space)
+        if (inputs->keys[KEY_LEFT_CONTROL] || inputs->keys['Q']) {
             move_delta[2] -= speed;
         }
 
@@ -1406,96 +1406,58 @@ void goxel_mouse_in_view(
             camera->mat[3][0] += move_delta[0];
             camera->mat[3][1] += move_delta[1];
             camera->mat[3][2] += move_delta[2];
+
+            // Apply the movement to the camera rotation distance (for orbit):
+            if (move_delta[2] > 0)
+                camera->dist += speed;
+            else if (move_delta[2] < 0)
+                camera->dist = clamp(camera->dist - speed, 0.0, camera->dist);
         }
 
-        // FPS-style mouse look (fly mode is only active when RMB is held)
-        if (!goxel.move_origin.fly_mouse_captured) {
-            // Use current mouse position as reference - don't center cursor
-            // initially
-            vec2_copy(inputs->touches[0].pos,
-                      goxel.move_origin.fly_last_mouse_pos);
-            goxel.move_origin.fly_mouse_captured = true;
-        }
-        else {
-            // Calculate mouse delta
-            float mouse_delta[2];
-            mouse_delta[0] = inputs->touches[0].pos[0] -
-                             goxel.move_origin.fly_last_mouse_pos[0];
-            mouse_delta[1] = inputs->touches[0].pos[1] -
-                             goxel.move_origin.fly_last_mouse_pos[1];
+        // FPS-style mouse look
+        // Calculate mouse delta
+        float mouse_delta[2];
+        mouse_delta[0] = inputs->touches[0].pos[0] -
+                         goxel.fly_mode.last_mouse_pos[0];
+        mouse_delta[1] = inputs->touches[0].pos[1] -
+                         goxel.fly_mode.last_mouse_pos[1];
 
-            // Apply FPS-style rotation (yaw and pitch)
-            if (mouse_delta[0] != 0 || mouse_delta[1] != 0) {
-                float yaw = -mouse_delta[0] *
-                            mouse_sensitivity; // Horizontal mouse movement
-                                               // controls left/right turning
-                float pitch = mouse_delta[1] *
-                              mouse_sensitivity; // Vertical mouse movement
-                                                 // controls up/down looking
+        // Apply FPS-style rotation (yaw and pitch)
+        if (mouse_delta[0] != 0 || mouse_delta[1] != 0) {
+            // Horizontal mouse movement, controls left/right turning
+            float yaw = -mouse_delta[0] * goxel.fly_mode.look_speed;
+            // Vertical mouse movement, controls up/down looking
+            float pitch = mouse_delta[1] * goxel.fly_mode.look_speed;
 
-                // Save current camera position
-                float cam_pos[3];
-                vec3_copy(camera->mat[3], cam_pos);
+            // Save current camera position
+            float cam_pos[3];
+            vec3_copy(camera->mat[3], cam_pos);
 
-                // Apply yaw rotation around world Z axis (like
-                // camera_turntable)
-                if (yaw != 0) {
-                    float yaw_mat[4][4];
-                    mat4_set_identity(yaw_mat);
-                    mat4_itranslate(yaw_mat, cam_pos[0], cam_pos[1],
-                                    cam_pos[2]);
-                    mat4_irotate(yaw_mat, yaw, 0, 0, 1); // World Z axis
-                    mat4_itranslate(yaw_mat, -cam_pos[0], -cam_pos[1],
-                                    -cam_pos[2]);
-                    mat4_imul(yaw_mat, camera->mat);
-                    mat4_copy(yaw_mat, camera->mat);
-                }
-
-                // Apply pitch rotation around camera's local X axis (like
-                // camera_turntable)
-                if (pitch != 0) {
-                    mat4_irotate(camera->mat, pitch, 1, 0,
-                                 0); // Positive for correct direction
-                }
-
-                // Restore camera position (ensure it hasn't shifted)
-                vec3_copy(cam_pos, camera->mat[3]);
+            // Apply yaw rotation around world Z axis (like camera_turntable)
+            if (yaw != 0) {
+                float yaw_mat[4][4];
+                mat4_set_identity(yaw_mat);
+                mat4_itranslate(yaw_mat, cam_pos[0], cam_pos[1], cam_pos[2]);
+                mat4_irotate(yaw_mat, yaw, 0, 0, 1); // World Z axis
+                mat4_itranslate(yaw_mat, -cam_pos[0], -cam_pos[1],
+                                -cam_pos[2]);
+                mat4_imul(yaw_mat, camera->mat);
+                mat4_copy(yaw_mat, camera->mat);
             }
 
-            // Update reference position for next frame
-            vec2_copy(inputs->touches[0].pos,
-                      goxel.move_origin.fly_last_mouse_pos);
-
-            // Optionally recenter cursor if it gets too close to screen edges
-#ifndef EMSCRIPTEN
-            GLFWwindow *window = (GLFWwindow *)sys_callbacks.user;
-            if (window) {
-                int win_width, win_height;
-                glfwGetWindowSize(window, &win_width, &win_height);
-                double cursor_x, cursor_y;
-                glfwGetCursorPos(window, &cursor_x, &cursor_y);
-
-                // Recenter if cursor is near screen edges (with margin)
-                float margin = 50.0f;
-                if (cursor_x < margin || cursor_x > win_width - margin ||
-                    cursor_y < margin || cursor_y > win_height - margin)
-                {
-                    float center_x = win_width / 2.0f;
-                    float center_y = win_height / 2.0f;
-                    glfwSetCursorPos(window, center_x, center_y);
-
-                    // Convert centered cursor position to input coordinate
-                    // system Match the coordinate transformation from main.c
-                    float scaled_x = center_x * inputs->window_size[0] /
-                                     win_width / inputs->scale;
-                    float scaled_y = center_y * inputs->window_size[1] /
-                                     win_height / inputs->scale;
-                    vec2_set(goxel.move_origin.fly_last_mouse_pos, scaled_x,
-                             scaled_y);
-                }
+            // Apply pitch rotation around camera's local X axis
+            // (like camera_turntable)
+            if (pitch != 0) {
+                // Positive for correct direction
+                mat4_irotate(camera->mat, pitch, 1, 0, 0);
             }
-#endif
+
+            // Restore camera position (ensure it hasn't shifted)
+            vec3_copy(cam_pos, camera->mat[3]);
         }
+
+        // Update reference position for next frame
+        vec2_copy(inputs->touches[0].pos, goxel.fly_mode.last_mouse_pos);
     }
 }
 

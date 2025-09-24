@@ -186,9 +186,9 @@ int gui_settings_popup(void *data)
         if (gui_is_item_deactivated()) {
             settings_save();
         }
-        
-        if (gui_input_float("Zoom Speed", &goxel.zoom_speed, 0.1, 0.1,
-                            10.0, "%.1f"))
+
+        if (gui_input_float("Zoom Speed", &goxel.zoom_speed, 0.1, 0.1, 10.0,
+                            "%.1f"))
         {
             goxel.zoom_speed = clamp(goxel.zoom_speed, 0.1, 10.0);
         }
@@ -206,6 +206,28 @@ int gui_settings_popup(void *data)
             goxel.emulate_three_buttons_mouse = val ? KEY_LEFT_ALT : 0;
             gesture_set_emulate_three_buttons_mouse(
                     goxel.emulate_three_buttons_mouse);
+            settings_save();
+        }
+    }
+    gui_section_end();
+
+    if (gui_section_begin(_("Fly mode"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_input_float("Mouse\nsensitivity", &goxel.fly_mode.look_speed,
+                            0.0001f, 0.0001f, 0.01f, "%.4f"))
+        {
+            goxel.fly_mode.look_speed = clamp(
+                    goxel.fly_mode.look_speed, 0.0001f, 0.01f);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
+        if (gui_input_float("Movement\nspeed", &goxel.fly_mode.move_speed, 5.0,
+                            5.0, 100.0, "%.1f"))
+        {
+            goxel.fly_mode.move_speed = clamp(
+                    goxel.fly_mode.move_speed, 5.0, 100.0);
+        }
+        if (gui_is_item_deactivated()) {
             settings_save();
         }
     }
@@ -327,6 +349,14 @@ static int settings_ini_handler(
             goxel.zoom_speed = clamp(atof(value), 0.1, 10.0);
         }
     }
+    if (strcmp(section, "fly_mode") == 0) {
+        if (strcmp(name, "look_sensitivity") == 0) {
+            goxel.fly_mode.look_speed = clamp(atof(value), 0.0001f, 0.01f);
+        }
+        if (strcmp(name, "speed") == 0) {
+            goxel.fly_mode.move_speed = clamp(atof(value), 5.0, 100.0);
+        }
+    }
     return 0;
 }
 
@@ -337,6 +367,9 @@ void settings_load(void)
     LOG_I("Read settings file: %s", path);
     arrfree(goxel.keymaps);
     goxel.emulate_three_buttons_mouse = 0;
+    goxel.camera_fov = 20.0f; // Default FOV to 20 degrees
+    goxel.fly_mode.look_speed = 0.001f;
+    goxel.fly_mode.move_speed = 35.0f;
     ini_parse(path, settings_ini_handler, NULL);
     actions_check_shortcuts();
     gesture_set_emulate_three_buttons_mouse(goxel.emulate_three_buttons_mouse);
@@ -441,11 +474,13 @@ void settings_save(void)
 
     fprintf(file, "[shortcuts]\n");
     actions_iter(shortcut_save_callback, file);
+    fprintf(file, "\n");
 
     if (goxel.emulate_three_buttons_mouse) {
         assert(goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT);
         fprintf(file, "[inputs]\n");
-        fprintf(file, "emulate_three_buttons_mouse=alt");
+        fprintf(file, "emulate_three_buttons_mouse=alt\n");
+        fprintf(file, "\n");
     }
 
     fprintf(file, "\n");
@@ -453,8 +488,13 @@ void settings_save(void)
     fprintf(file, "[camera]\n");
     fprintf(file, "fov=%f\n", goxel.camera_fov);
     fprintf(file, "zoom_speed=%f\n", goxel.zoom_speed);
-
     fprintf(file, "\n");
+
+    fprintf(file, "[fly_mode]\n");
+    fprintf(file, "look_sensitivity=%f\n", goxel.fly_mode.look_speed);
+    fprintf(file, "fly_speed=%f\n", goxel.fly_mode.move_speed);
+    fprintf(file, "\n");
+
     save_keymaps(file);
     fprintf(file, "\n");
 
