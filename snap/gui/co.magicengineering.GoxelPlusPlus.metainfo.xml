@@ -28,7 +28,7 @@
         <binary>Goxel++</binary>
     </provides>
     <releases>
-        <release version="0.13.0" date="2023-12-27"/>
+        <release version="1.0.1" date="2023-09-24"/>
     </releases>
     <url type="homepage">https://goxel.xyz/</url>
     <url type="bugtracker">https://github.com/tatelax/goxelplusplus/issues</url>

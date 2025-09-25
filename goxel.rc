@@ -11,8 +11,8 @@ GLFW_ICON ICON "goxel.ico"
 
 // Version information
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION 1,0,0,0
-PRODUCTVERSION 1,0,0,0
+FILEVERSION 1,0,1,0
+PRODUCTVERSION 1,0,1,0
 FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 FILEFLAGS 0x0L
 FILEOS VOS__WINDOWS32
@@ -25,12 +25,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Guillaume Chereau"
             VALUE "FileDescription", "Goxel++ 3D Voxel Editor"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "1.0.1.0"
             VALUE "InternalName", "Goxel++"
             VALUE "LegalCopyright", "Copyright © 2018-2024 Guillaume Chereau"
             VALUE "OriginalFilename", "Goxel++.exe"
             VALUE "ProductName", "Goxel++"
-            VALUE "ProductVersion", "1.0.0.0"
+            VALUE "ProductVersion", "1.0.1.0"
         END
     END
     BLOCK "VarFileInfo"
