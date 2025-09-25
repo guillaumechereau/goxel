@@ -126,6 +126,13 @@ if target_os in ['msys', 'cygwin']:
     env.Append(CPPPATH=['ext_src/glew'])
     env.Append(CPPDEFINES=['GLEW_STATIC', 'FREE_WINDOWS'])
 
+    # Add Windows resource compilation for executable icon
+    if os.path.exists('goxel.rc') and env.WhereIs('windres'):
+        res_obj = env.Command('goxel_res.o', 'goxel.rc',
+                             'windres $SOURCE -o $TARGET')
+        sources.append(res_obj)
+        print("Windows resources will be compiled and embedded")
+
 # OSX Compilation support.
 if target_os == 'darwin':
     sources += glob.glob('src/*.m')

@@ -29,7 +29,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win_x86_64_binary
+          name: goxelplusplus_win_x86_64
           path: Goxel++.exe
           if-no-files-found: error
 
@@ -60,7 +60,7 @@ jobs:
     - name: Upload Binary
       uses: actions/upload-artifact@v4
       with:
-        name: linux_x86_64_binary
+        name: goxelplusplus_linux_x86_64
         path: Goxel++
         if-no-files-found: error
 
@@ -114,7 +114,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: macOS_arm64_binary
+        name: goxelplusplus_macOS_arm64
         path: ./Goxel++.zip
         if-no-files-found: error
 
