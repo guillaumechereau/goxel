@@ -176,4 +176,4 @@ try:
 except:
     pass
 
-env.Program(target='Goxel++', source=sorted(sources))
+env.Program(target='Goxel++', source=sources)
