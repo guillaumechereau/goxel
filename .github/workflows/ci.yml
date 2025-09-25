@@ -29,8 +29,8 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win_x86_64_binary
-          path: goxel.exe
+          name: goxelplusplus_win_x86_64
+          path: Goxel++.exe
           if-no-files-found: error
 
   linux_x86_64:
@@ -60,8 +60,8 @@ jobs:
     - name: Upload Binary
       uses: actions/upload-artifact@v4
       with:
-        name: linux_x86_64_binary
-        path: goxel
+        name: goxelplusplus_linux_x86_64
+        path: Goxel++
         if-no-files-found: error
 
     - name: Upload AppImage
@@ -71,15 +71,37 @@ jobs:
         path: Goxel*.AppImage
         if-no-files-found: error
 
-  osx_x86_64:
+  macOS_arm64:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
 
-    - name: Install scons, glfw3 & tre
-      run: brew install scons glfw tre
+    - name: Verify Apple Silicon
+      run: |
+        if [[ $(uname -m) != "arm64" ]]; then
+          echo "Error: This job is configured to run only on Apple Silicon (arm64) architecture"
+          echo "Current architecture: $(uname -m)"
+          exit 1
+        fi
+        echo "Running on Apple Silicon: $(uname -m)"
+
+    - name: Install dependencies
+      run: |
+        # Update Homebrew to ensure we get the latest packages
+        brew update
+        # Install required dependencies
+        brew install scons glfw tre pkg-config
+
+    - name: Set up build environment
+      run: |
+        # Add Homebrew paths to environment for reliable linking
+        echo "PKG_CONFIG_PATH=$(brew --prefix)/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+        echo "LDFLAGS=-L$(brew --prefix)/lib $LDFLAGS" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I$(brew --prefix)/include $CPPFLAGS" >> $GITHUB_ENV
+        # For Apple Silicon Macs, ensure we can find libraries
+        echo "LIBRARY_PATH=$(brew --prefix)/lib:$LIBRARY_PATH" >> $GITHUB_ENV
 
     - name: Build
       run: |
@@ -87,31 +109,42 @@ jobs:
 
     - name: Compress artifact
       run: |
-        zip goxel.zip goxel
+        zip Goxel++.zip Goxel++
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: osx_binary
-        path: ./goxel.zip
+        name: goxelplusplus_macOS_arm64
+        path: ./Goxel++.zip
         if-no-files-found: error
 
     - name: Build with xcode
       run: |
         cd osx/goxel
-        xcodebuild build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+        # Ad-hoc signing - no personal info needed
+        xcodebuild build \
+        CODE_SIGN_IDENTITY="-" \
+        CODE_SIGNING_REQUIRED=YES \
+        ARCHS=arm64 \
+        ONLY_ACTIVE_ARCH=NO
+        
         cd build/Release
-        tar -cvf goxel.app.tar goxel.app
+        
+        # Verify it worked
+        codesign --verify --deep --strict --verbose=2 Goxel++.app
+        
+        # Archive
+        tar -cvf Goxel++.app.tar Goxel++.app
 
     - name: Upload app Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: goxel-mac.app
-        path: ./osx/goxel/build/Release/goxel.app.tar
+        name: goxelplusplus-macOS-arm64.app
+        path: ./osx/goxel/build/Release/Goxel++.app.tar
         if-no-files-found: error
 
-  Success: # Not Neccessary
-    needs: [linux_x86_64, osx_x86_64, windows_x86_64]
+  Success: # Not Necessary
+    needs: [linux_x86_64, macOS_arm64, windows_x86_64]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

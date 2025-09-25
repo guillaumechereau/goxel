@@ -1,0 +1,40 @@
+// Windows Resource file for Goxel++
+// This embeds the application icon into the Windows executable
+
+#include <windows.h>
+
+// Main application icon - shows in File Explorer
+IDI_ICON1 ICON "goxel.ico"
+
+// GLFW automatic icon (GLFW will use this as window icon if present)
+GLFW_ICON ICON "goxel.ico"
+
+// Version information
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION 1,0,1,0
+PRODUCTVERSION 1,0,1,0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEFLAGS 0x0L
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_APP
+FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"  // English (US), Unicode
+        BEGIN
+            VALUE "CompanyName", "Guillaume Chereau"
+            VALUE "FileDescription", "Goxel++ 3D Voxel Editor"
+            VALUE "FileVersion", "1.0.1.0"
+            VALUE "InternalName", "Goxel++"
+            VALUE "LegalCopyright", "Copyright © 2018-2024 Guillaume Chereau"
+            VALUE "OriginalFilename", "Goxel++.exe"
+            VALUE "ProductName", "Goxel++"
+            VALUE "ProductVersion", "1.0.1.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200  // English (US), Unicode
+    END
+END

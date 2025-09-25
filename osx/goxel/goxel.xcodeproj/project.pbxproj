@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		785D7FFD2E826459004A670D /* libglfw3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 785D7FFB2E82643F004A670D /* libglfw3.a */; };
 		F007DFE82C35546700526FA2 /* geometry.c in Sources */ = {isa = PBXBuildFile; fileRef = F007DFE62C35546700526FA2 /* geometry.c */; };
 		F00FC312226B2F7C0002F251 /* ini.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC2FC226B2F7B0002F251 /* ini.c */; };
 		F00FC313226B2F7C0002F251 /* gl.c in Sources */ = {isa = PBXBuildFile; fileRef = F00FC2FD226B2F7B0002F251 /* gl.c */; };
@@ -126,6 +127,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		785D7FE92E825C97004A670D /* glfw3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glfw3.h; sourceTree = "<group>"; };
+		785D7FEA2E825C97004A670D /* glfw3native.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = glfw3native.h; sourceTree = "<group>"; };
+		785D7FFB2E82643F004A670D /* libglfw3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libglfw3.a; sourceTree = "<group>"; };
 		F007DFE62C35546700526FA2 /* geometry.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = geometry.c; sourceTree = "<group>"; };
 		F007DFE72C35546700526FA2 /* geometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geometry.h; sourceTree = "<group>"; };
 		F00FC2F9226B2F7B0002F251 /* sound.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sound.h; sourceTree = "<group>"; };
@@ -192,7 +196,7 @@
 		F06C68391D2EAECC00887FCE /* camera.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = camera.c; sourceTree = "<group>"; };
 		F06C683A1D2EAECC00887FCE /* quantization.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = quantization.c; sourceTree = "<group>"; };
 		F076EA352284162400B74F0C /* light_panel.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = light_panel.c; sourceTree = "<group>"; };
-		F07DE9CF1BD0F03900BAA1AD /* goxel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = goxel.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F07DE9CF1BD0F03900BAA1AD /* Goxel++.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Goxel++.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F07DE9D21BD0F03900BAA1AD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F07DE9D41BD0F03900BAA1AD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F07DE9D71BD0F03900BAA1AD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -289,12 +293,31 @@
 				F0EEB7E81C8EC4D1004AB676 /* libz.tbd in Frameworks */,
 				F07DEA331BD1014800BAA1AD /* CoreFoundation.framework in Frameworks */,
 				F07DE9E01BD0F16300BAA1AD /* OpenGL.framework in Frameworks */,
+				785D7FFD2E826459004A670D /* libglfw3.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		785D7FE62E8253CE004A670D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				785D7FFB2E82643F004A670D /* libglfw3.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		785D7FEB2E825C97004A670D /* GLFW */ = {
+			isa = PBXGroup;
+			children = (
+				785D7FE92E825C97004A670D /* glfw3.h */,
+				785D7FEA2E825C97004A670D /* glfw3native.h */,
+			);
+			name = GLFW;
+			path = glfw/include/GLFW;
+			sourceTree = "<group>";
+		};
 		F00FC2F8226B2F7B0002F251 /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -393,6 +416,7 @@
 				F07DEA321BD1014800BAA1AD /* CoreFoundation.framework */,
 				F07DE9DF1BD0F16300BAA1AD /* OpenGL.framework */,
 				F07DE9D11BD0F03900BAA1AD /* goxel */,
+				785D7FE62E8253CE004A670D /* Frameworks */,
 				F07DE9D01BD0F03900BAA1AD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -400,7 +424,7 @@
 		F07DE9D01BD0F03900BAA1AD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F07DE9CF1BD0F03900BAA1AD /* goxel.app */,
+				F07DE9CF1BD0F03900BAA1AD /* Goxel++.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -476,6 +500,7 @@
 		F07DEA151BD0F33A00BAA1AD /* ext_src */ = {
 			isa = PBXGroup;
 			children = (
+				785D7FEB2E825C97004A670D /* GLFW */,
 				F09A62662B3BB8E6006A4464 /* meshoptimizer */,
 				F05D6E5A29D3E7EC004CA300 /* voxelizer */,
 				F0C37C8D2317CBF2000EF45F /* xxhash */,
@@ -585,7 +610,7 @@
 			);
 			name = goxel;
 			productName = goxel;
-			productReference = F07DE9CF1BD0F03900BAA1AD /* goxel.app */;
+			productReference = F07DE9CF1BD0F03900BAA1AD /* Goxel++.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -599,7 +624,7 @@
 				TargetAttributes = {
 					F07DE9CE1BD0F03900BAA1AD = {
 						CreatedOnToolsVersion = 7.0.1;
-						DevelopmentTeam = VH4XTANA7R;
+						DevelopmentTeam = RXW2CQWZPJ;
 						LastSwiftMigration = 1010;
 						ProvisioningStyle = Automatic;
 					};
@@ -876,24 +901,45 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				AUTOMATION_APPLE_EVENTS = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = goxel/goxel.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = VH4XTANA7R;
+				DEVELOPMENT_TEAM = RXW2CQWZPJ;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/goxel/goxel.pch";
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../src";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../src",
+					"$(SRCROOT)/../../ext_src/**",
+				);
 				INFOPLIST_FILE = goxel/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)";
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.noctuasoftware.goxel;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = co.magicengineering.goxelplusplus;
+				PRODUCT_NAME = "Goxel++";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
+				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
+				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
+				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
+				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
+				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/goxel/goxel-Bridging-Header.h";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.2;
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
@@ -901,24 +947,45 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				AUTOMATION_APPLE_EVENTS = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = goxel/goxel.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = VH4XTANA7R;
+				DEVELOPMENT_TEAM = RXW2CQWZPJ;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SRCROOT)/goxel/goxel.pch";
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/../../src";
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../src",
+					"$(SRCROOT)/../../ext_src/**",
+				);
 				INFOPLIST_FILE = goxel/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)";
 				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.noctuasoftware.goxel;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = co.magicengineering.goxelplusplus;
+				PRODUCT_NAME = "Goxel++";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
+				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
+				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
+				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
+				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
+				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/goxel/goxel-Bridging-Header.h";
 				SWIFT_SWIFT3_OBJC_INFERENCE = On;
 				SWIFT_VERSION = 4.2;
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};

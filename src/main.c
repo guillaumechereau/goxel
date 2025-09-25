@@ -24,12 +24,12 @@
 #include "../ext_src/nfd/nfd_glfw3.h"
 
 #ifdef GLES2
-#   define GLFW_INCLUDE_ES2
+#define GLFW_INCLUDE_ES2
 #endif
 #include <GLFW/glfw3.h>
 
-static inputs_t     *g_inputs = NULL;
-static float        g_scale = 1;
+static inputs_t *g_inputs = NULL;
+static float g_scale = 1;
 
 static void on_glfw_error(int code, const char *msg)
 {
@@ -46,10 +46,10 @@ void on_char(GLFWwindow *win, unsigned int c)
     inputs_insert_char(g_inputs, c);
 }
 
-void on_drop(GLFWwindow* win, int count, const char** paths)
+void on_drop(GLFWwindow *win, int count, const char **paths)
 {
     int i;
-    for (i = 0;  i < count;  i++)
+    for (i = 0; i < count; i++)
         goxel_import_file(paths[i], NULL);
 }
 
@@ -59,8 +59,7 @@ void on_close(GLFWwindow *win)
     gui_query_quit();
 }
 
-typedef struct
-{
+typedef struct {
     char *input;
     char *export;
     float scale;
@@ -83,13 +82,13 @@ typedef struct {
 } gox_option_t;
 
 static const gox_option_t OPTIONS[] = {
-    {"export", 'e', required_argument, "FILENAME",
-        .help="Export the image to a file"},
-    {"scale", 's', required_argument, "FLOAT", .help="Set UI scale"},
-    {"script", OPT_SCRIPT, required_argument, "FILENAME",
-        .help="Run a script and exit"},
-    {"help", OPT_HELP, .help="Give this help list"},
-    {"version", OPT_VERSION, .help="Print program version"},
+    { "export", 'e', required_argument, "FILENAME",
+      .help = "Export the image to a file" },
+    { "scale", 's', required_argument, "FLOAT", .help = "Set UI scale" },
+    { "script", OPT_SCRIPT, required_argument, "FILENAME",
+      .help = "Run a script and exit" },
+    { "help", OPT_HELP, .help = "Give this help list" },
+    { "version", OPT_VERSION, .help = "Print program version" },
     {}
 };
 
@@ -115,7 +114,7 @@ static void print_help(void)
         printf("%-23s %s\n", buf, opt->help);
     }
     printf("\n");
-    printf("Report bugs to <guillaume@noctua-software.com>.\n");
+    printf("Open issues at https://github.com/tatelax/goxelplusplus/\n");
 }
 
 static void parse_options(int argc, char **argv, args_t *args)
@@ -126,7 +125,7 @@ static void parse_options(int argc, char **argv, args_t *args)
 
     for (i = 0; i < ARRAY_SIZE(OPTIONS); i++) {
         opt = &OPTIONS[i];
-        long_options[i] = (struct option) {
+        long_options[i] = (struct option){
             opt->name,
             opt->has_arg,
             NULL,
@@ -160,12 +159,12 @@ static void parse_options(int argc, char **argv, args_t *args)
     if (optind < argc) {
         if (args->script) {
             args->script_args[args->script_args_nb++] = argv[optind];
-        } else {
+        }
+        else {
             args->input = argv[optind];
         }
     }
 }
-
 
 static void loop_function(void *arg)
 {
@@ -177,8 +176,9 @@ static void loop_function(void *arg)
     GLFWmonitor *monitor;
     GLFWwindow *window = arg;
 
-    if (    !glfwGetWindowAttrib(window, GLFW_VISIBLE) ||
-             glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
+    if (!glfwGetWindowAttrib(window, GLFW_VISIBLE) ||
+        glfwGetWindowAttrib(window, GLFW_ICONIFIED))
+    {
         glfwWaitEvents();
         goto end;
     }
@@ -204,11 +204,11 @@ static void loop_function(void *arg)
     vec2_set(g_inputs->touches[0].pos, xpos / g_scale, ypos / g_scale);
 
     g_inputs->touches[0].down[0] =
-        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
     g_inputs->touches[0].down[1] =
-        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
     g_inputs->touches[0].down[2] =
-        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+            glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
 
     goxel_iter(g_inputs);
     goxel_render(g_inputs);
@@ -264,7 +264,8 @@ static void set_window_icon(GLFWwindow *window)
     load_icon(&icons[5], "asset://data/icons/icon128.png");
     load_icon(&icons[6], "asset://data/icons/icon256.png");
     glfwSetWindowIcon(window, 7, icons);
-    for (i = 0; i < 7; i++) free(icons[i].pixels);
+    for (i = 0; i < 7; i++)
+        free(icons[i].pixels);
 }
 
 #else
@@ -339,20 +340,21 @@ static bool open_dialog(
         err = NFD_SaveDialogU8_With(
                 &out_path,
                 &(nfdsavedialogu8args_t){
-                    .filterList = &filter,
-                    .filterCount = 1,
-                    .defaultPath = default_path[0] ? default_path : NULL,
-                    .defaultName = default_name[0] ? default_name : NULL,
-                    .parentWindow = nfd_window,
+                        .filterList = &filter,
+                        .filterCount = 1,
+                        .defaultPath = default_path[0] ? default_path : NULL,
+                        .defaultName = default_name[0] ? default_name : NULL,
+                        .parentWindow = nfd_window,
                 });
-    } else {
+    }
+    else {
         err = NFD_OpenDialogU8_With(
                 &out_path,
                 &(nfdopendialogu8args_t){
-                    .filterList = &filter,
-                    .filterCount = 1,
-                    .defaultPath = default_path_and_file,
-                    .parentWindow = nfd_window,
+                        .filterList = &filter,
+                        .filterCount = 1,
+                        .defaultPath = default_path_and_file,
+                        .parentWindow = nfd_window,
                 });
     }
     NFD_Quit();
@@ -367,7 +369,7 @@ static bool open_dialog(
 
 int main(int argc, char **argv)
 {
-    args_t args = {.scale = 1};
+    args_t args = { .scale = 1 };
     GLFWwindow *window;
     GLFWmonitor *monitor;
     const GLFWvidmode *mode;
@@ -398,19 +400,19 @@ int main(int argc, char **argv)
             width = mode->width ?: 640;
             height = mode->height ?: 480;
         }
-        window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
+        window = glfwCreateWindow(width, height, "Goxel++", NULL, NULL);
         assert(window);
         glfwSetWindowPos(window, 0, 0);
-    } else {
+    }
+    else {
         glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
-	window = glfwCreateWindow(width, height, "Goxel", NULL, NULL);
+        window = glfwCreateWindow(width, height, "Goxel++", NULL, NULL);
         assert(window);
     }
 
     sys_callbacks.user = window;
     glfwMakeContextCurrent(window);
-    if (!DEFINED(EMSCRIPTEN))
-        glfwSetScrollCallback(window, on_scroll);
+    if (!DEFINED(EMSCRIPTEN)) glfwSetScrollCallback(window, on_scroll);
     glfwSwapInterval(1);
     glfwSetDropCallback(window, on_drop);
     glfwSetCharCallback(window, on_char);
@@ -428,11 +430,11 @@ int main(int argc, char **argv)
         tests_run();
     }
 
-    if (args.input)
-        goxel_import_file(args.input, NULL);
+    if (args.input) goxel_import_file(args.input, NULL);
 
     if (args.script) {
-        script_run_from_file(args.script, args.script_args_nb, args.script_args);
+        script_run_from_file(
+                args.script, args.script_args_nb, args.script_args);
         goto end;
     }
 
@@ -440,7 +442,8 @@ int main(int argc, char **argv)
         if (!args.input) {
             LOG_E("trying to export an empty image");
             ret = -1;
-        } else {
+        }
+        else {
             ret = goxel_export_to_file(args.export, NULL);
         }
         goto end;

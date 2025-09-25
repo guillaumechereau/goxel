@@ -24,8 +24,8 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 /* Type: camera_t
  * Camera structure.
@@ -42,20 +42,19 @@
  *   proj_mat   - Projection matrix (auto computed).
  */
 typedef struct camera camera_t;
-struct camera
-{
-    int    ref;
-    camera_t  *next, *prev; // List of camera in an image.
-    char   name[128];  // 127 chars max.
-    bool   ortho; // Set to true for orthographic projection.
-    float  dist;  // Rotation distance.
-    float  fovy;
-    float  aspect;
-    float  mat[4][4];
+struct camera {
+    int ref;
+    camera_t *next, *prev; // List of camera in an image.
+    char name[128];        // 127 chars max.
+    bool ortho;            // Set to true for orthographic projection.
+    float dist;            // Rotation distance.
+    float fovy;
+    float aspect;
+    float mat[4][4];
 
     // Auto computed from other values:
-    float view_mat[4][4];    // Model to view transformation.
-    float proj_mat[4][4];    // Proj transform from camera coordinates.
+    float view_mat[4][4]; // Model to view transformation.
+    float proj_mat[4][4]; // Proj transform from camera coordinates.
 };
 
 /*
@@ -107,8 +106,11 @@ void camera_set_target(camera_t *camera, const float pos[3]);
  *   o     - Output ray origin.
  *   d     - Output ray direction.
  */
-void camera_get_ray(const camera_t *camera, const float win[2],
-                    const float viewport[4], float o[3], float d[3]);
+void camera_get_ray(const camera_t *camera,
+                    const float win[2],
+                    const float viewport[4],
+                    float o[3],
+                    float d[3]);
 
 /*
  * Function: camera_fit_box
@@ -124,10 +126,22 @@ uint32_t camera_get_key(const camera_t *camera);
 
 void camera_turntable(camera_t *camera, float rz, float rx);
 
+void camera_turntable_around_point(
+        camera_t *camera, float rz, float rx, const float pivot[3]);
+
+/*
+ * Function: camera_set_target
+ * Adjust the camera settings so that the rotation works for a given
+ * position.
+ */
+void camera_set_target(camera_t *camera, const float pos[3]);
+
 /*
  * Project a 3d position into screen space.
  */
-void camera_project(const camera_t *camera, const float pos[3],
-                    const float viewport[4], float out[3]);
+void camera_project(const camera_t *camera,
+                    const float pos[3],
+                    const float viewport[4],
+                    float out[3]);
 
 #endif // CAMERA_H

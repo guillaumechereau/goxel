@@ -17,7 +17,7 @@ profile:
 	scons $(JOBS) mode=profile
 
 run:
-	./goxel
+	./Goxel++
 
 clean: .FORCE
 	scons -c
@@ -28,7 +28,6 @@ analyze:
 # For the moment only apply the format to uncommited changes.
 format: .FORCE
 	git clang-format -f
-
 
 # Generate an AppImage.  Used by github CI.
 appimage: .FORCE
@@ -46,29 +45,29 @@ PREFIX ?= /usr/local
 
 .PHONY: install
 install:
-	install -Dm755 goxel $(DESTDIR)$(PREFIX)/bin/goxel
+	install -Dm755 Goxel++ $(DESTDIR)$(PREFIX)/bin/Goxel++
 	for size in 16 24 32 48 64 128 256; do
 	    install -Dm644 data/icons/icon$${size}.png \
 	        $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/icons/hicolor/ \
-	            $${size}x$${size}/apps/goxel.png)
+	            $${size}x$${size}/apps/Goxel++.png)
 	done
-	install -Dm644 snap/gui/goxel.desktop \
-	    $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
+	install -Dm644 snap/gui/Goxel++.desktop \
+	    $(DESTDIR)$(PREFIX)/share/applications/Goxel++.desktop
 	install -Dm644 \
-	    snap/gui/io.github.guillaumechereau.Goxel.metainfo.xml \
+	    snap/gui/co.magicengineering.GoxelPlusPlus.metainfo.xml \
 	    $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	        io.github.guillaumechereau.Goxel.metainfo.xml)
+	        co.magicengineering.GoxelPlusPlus.metainfo.xml)
 
 .PHONY: uninstall
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/goxel
+	rm -f $(DESTDIR)$(PREFIX)/bin/Goxel++
 	for size in 16 24 32 48 64 128 256; do \
 	    rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/icons/hicolor/ \
 	        $${size}x$${size}/apps/goxel.png)
 	done
-	rm -f $(DESTDIR)$(PREFIX)/share/applications/goxel.desktop
+	rm -f $(DESTDIR)$(PREFIX)/share/applications/Goxel++.desktop
 	rm -f $$(printf '%s%s' $(DESTDIR)$(PREFIX)/share/metainfo/ \
-	         io.github.guillaumechereau.Goxel.metainfo.xml)
+	         co.magicengineering.GoxelPlusPlus.metainfo.xml)
 
 .PHONY: all
 

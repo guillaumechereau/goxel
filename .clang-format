@@ -40,7 +40,7 @@ BraceWrapping:
 BinPackParameters: false
 AllowAllArgumentsOnNextLine: true
 
-SortIncludes: true
+SortIncludes: false
 
 PenaltyReturnTypeOnItsOwnLine: 10000
 PenaltyBreakAssignment: 100

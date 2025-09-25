@@ -1,21 +1,8 @@
-# Contributing to Goxel
-
-Please read this file first before making a pull request to Goxel.
-
-
-## CLA
-
-In your first pull request, you must add your name in a CLA file in
-'doc/cla/individual'.  This gives me the right to release special version of
-Goxel under a commercial licence.  It doesn't change the license of the current
-code.  See:
-https://github.com/guillaumechereau/goxel/blob/master/doc/cla/sign-cla.md
-For more information about that.
-
+# Contributing
 
 ## Coding style
 
-Try to follow the code style I used for Goxel, as I am unlikely to merge a pull
+Try to follow the code style originally used for Goxel, as I am unlikely to merge a pull
 request that doesn't.  The coding style is almost the one used by the linux
 kernel, but using four spaces for indentation, and I also accept typedef.  When
 in doubt, just look at other part of the code.  The most important rules are:

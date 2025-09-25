@@ -31,6 +31,8 @@ vars.AddVariables(
 
 target_os = str(Platform())
 
+print(f"Detected platform: {target_os}")
+
 if target_os == 'posix':
     vars.AddVariables(
         EnumVariable('nfd_backend', 'Native file dialog backend', default='gtk',
@@ -112,17 +114,24 @@ if target_os == 'posix':
 
 
 # Windows compilation support.
-if target_os == 'msys':
+if target_os in ['msys', 'cygwin']:
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
-                         '-Wno-unused-function'])
-    env.Append(CCFLAGS=['-Wno-error=address']) # To remove if possible.
+                         '-Wno-unused-function', '-Wno-nontrivial-memcall'])
+    env.Append(CCFLAGS=['-Wno-error=address'])
     env.Append(LIBS=['glfw3', 'opengl32', 'z', 'tre', 'gdi32', 'Comdlg32',
-                     'ole32', 'uuid', 'shell32'],
-               LINKFLAGS='--static')
+                     'ole32', 'uuid', 'shell32', 'pthread'],
+               LINKFLAGS=['--static', '-mwindows'])
     sources += glob.glob('ext_src/glew/glew.c')
     sources.append('ext_src/nfd/nfd_win.cpp')
     env.Append(CPPPATH=['ext_src/glew'])
     env.Append(CPPDEFINES=['GLEW_STATIC', 'FREE_WINDOWS'])
+
+    # Add Windows resource compilation for executable icon
+    if os.path.exists('goxel.rc') and env.WhereIs('windres'):
+        res_obj = env.Command('goxel_res.o', 'goxel.rc',
+                             'windres $SOURCE -o $TARGET')
+        sources.append(res_obj)
+        print("Windows resources will be compiled and embedded")
 
 # OSX Compilation support.
 if target_os == 'darwin':
@@ -132,7 +141,7 @@ if target_os == 'darwin':
         'OpenGL', 'Cocoa', 'AppKit', 'UniformTypeIdentifiers'])
     env.Append(LIBS=['m', 'objc'])
     # Fix warning in noc_file_dialog (the code should be fixed instead).
-    env.Append(CCFLAGS=['-Wno-deprecated-declarations'])
+    env.Append(CCFLAGS=['-Wno-deprecated-declarations', '-Wno-gnu-folding-constant'])
     env.ParseConfig('pkg-config --cflags --libs glfw3')
     env['sound'] = False
 
@@ -167,4 +176,4 @@ try:
 except:
     pass
 
-env.Program(target='goxel', source=sorted(sources))
+env.Program(target='Goxel++', source=sources)

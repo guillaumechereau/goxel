@@ -17,7 +17,7 @@
  */
 
 #ifndef GUI_HAS_SCROLLBARS
-#   define GUI_HAS_SCROLLBARS 1
+#define GUI_HAS_SCROLLBARS 1
 #endif
 
 extern "C" {
@@ -30,21 +30,24 @@ bool gui_pan_scroll_behavior(int dir);
 }
 
 #ifndef typeof
-#   define typeof __typeof__
+#define typeof __typeof__
 #endif
 
-#define IM_VEC4_CLASS_EXTRA \
-        ImVec4(const uint8_t f[4]) { \
-            x = f[0] / 255.; \
-            y = f[1] / 255.; \
-            z = f[2] / 255.; \
-            w = f[3] / 255.; }     \
-        ImVec4(const float f[4]) { \
-            x = f[0]; \
-            y = f[1]; \
-            z = f[2]; \
-            w = f[3]; }     \
-
+#define IM_VEC4_CLASS_EXTRA                                                   \
+    ImVec4(const uint8_t f[4])                                                \
+    {                                                                         \
+        x = f[0] / 255.;                                                      \
+        y = f[1] / 255.;                                                      \
+        z = f[2] / 255.;                                                      \
+        w = f[3] / 255.;                                                      \
+    }                                                                         \
+    ImVec4(const float f[4])                                                  \
+    {                                                                         \
+        x = f[0];                                                             \
+        y = f[1];                                                             \
+        z = f[2];                                                             \
+        w = f[3];                                                             \
+    }
 
 // Prevent warnings with gcc.
 #ifndef __clang__
@@ -58,8 +61,8 @@ bool gui_pan_scroll_behavior(int dir);
 // #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
 #include "../ext_src/imgui/imgui.h"
-#include "../ext_src/imgui/imgui_internal.h"
 #include "../ext_src/imgui/ImGuizmo.h"
+#include "../ext_src/imgui/imgui_internal.h"
 
 #ifndef __clang__
 #pragma GCC diagnostic pop
@@ -69,20 +72,20 @@ bool gui_pan_scroll_behavior(int dir);
 static const float LABEL_SIZE = 90;
 
 #ifndef GUI_ITEM_HEIGHT
-#   define GUI_ITEM_HEIGHT 18
+#define GUI_ITEM_HEIGHT 18
 #endif
 
 #ifndef GUI_ICON_HEIGHT
-#   define GUI_ICON_HEIGHT 32
+#define GUI_ICON_HEIGHT 32
 #endif
 
 static const ImVec2 ITEM_SPACING = ImVec2(8, 4);
 
-#define COL_HEX(x) ImVec4( \
-        ((uint8_t)((x >> 24) & 0xff)) / 255.0, \
-        ((uint8_t)((x >> 16) & 0xff)) / 255.0, \
-        ((uint8_t)((x >> 8) & 0xff)) / 255.0, \
-        ((uint8_t)((x >> 0) & 0xff)) / 255.0)
+#define COL_HEX(x)                                                            \
+    ImVec4(((uint8_t)((x >> 24) & 0xff)) / 255.0,                             \
+           ((uint8_t)((x >> 16) & 0xff)) / 255.0,                             \
+           ((uint8_t)((x >> 8) & 0xff)) / 255.0,                              \
+           ((uint8_t)((x >> 0) & 0xff)) / 255.0)
 
 static inline ImVec4 color_lighten(ImVec4 c, float k = 0.1)
 {
@@ -104,40 +107,38 @@ static inline ImVec4 color_lighten2(ImVec4 v)
 static texture_t *g_tex_icons = NULL;
 
 static const char *VSHADER =
-    "                                                               \n"
-    "attribute vec3 a_pos;                                          \n"
-    "attribute vec2 a_tex_pos;                                      \n"
-    "attribute vec4 a_color;                                        \n"
-    "                                                               \n"
-    "uniform mat4 u_proj_mat;                                       \n"
-    "                                                               \n"
-    "varying vec2 v_tex_pos;                                        \n"
-    "varying vec4 v_color;                                          \n"
-    "                                                               \n"
-    "void main()                                                    \n"
-    "{                                                              \n"
-    "    gl_Position = u_proj_mat * vec4(a_pos, 1.0);               \n"
-    "    v_tex_pos = a_tex_pos;                                     \n"
-    "    v_color = a_color;                                         \n"
-    "}                                                              \n"
-;
+        "                                                               \n"
+        "attribute vec3 a_pos;                                          \n"
+        "attribute vec2 a_tex_pos;                                      \n"
+        "attribute vec4 a_color;                                        \n"
+        "                                                               \n"
+        "uniform mat4 u_proj_mat;                                       \n"
+        "                                                               \n"
+        "varying vec2 v_tex_pos;                                        \n"
+        "varying vec4 v_color;                                          \n"
+        "                                                               \n"
+        "void main()                                                    \n"
+        "{                                                              \n"
+        "    gl_Position = u_proj_mat * vec4(a_pos, 1.0);               \n"
+        "    v_tex_pos = a_tex_pos;                                     \n"
+        "    v_color = a_color;                                         \n"
+        "}                                                              \n";
 
 static const char *FSHADER =
-    "                                                               \n"
-    "#ifdef GL_ES                                                   \n"
-    "precision mediump float;                                       \n"
-    "#endif                                                         \n"
-    "                                                               \n"
-    "uniform sampler2D u_tex;                                       \n"
-    "                                                               \n"
-    "varying vec2 v_tex_pos;                                        \n"
-    "varying vec4 v_color;                                          \n"
-    "                                                               \n"
-    "void main()                                                    \n"
-    "{                                                              \n"
-    "    gl_FragColor = v_color * texture2D(u_tex, v_tex_pos);      \n"
-    "}                                                              \n"
-;
+        "                                                               \n"
+        "#ifdef GL_ES                                                   \n"
+        "precision mediump float;                                       \n"
+        "#endif                                                         \n"
+        "                                                               \n"
+        "uniform sampler2D u_tex;                                       \n"
+        "                                                               \n"
+        "varying vec2 v_tex_pos;                                        \n"
+        "varying vec4 v_color;                                          \n"
+        "                                                               \n"
+        "void main()                                                    \n"
+        "{                                                              \n"
+        "    gl_FragColor = v_color * texture2D(u_tex, v_tex_pos);      \n"
+        "}                                                              \n";
 
 enum {
     A_POS_LOC = 0,
@@ -145,45 +146,40 @@ enum {
     A_COLOR_LOC,
 };
 
-static const char *ATTR_NAMES[] = {
-    "a_pos",
-    "a_tex_pos",
-    "a_color",
-    NULL
-};
+static const char *ATTR_NAMES[] = { "a_pos", "a_tex_pos", "a_color", NULL };
 
-typedef typeof(((inputs_t*)0)->safe_margins) margins_t;
+typedef typeof(((inputs_t *)0)->safe_margins) margins_t;
 
 typedef struct gui_t {
     bool initialized;
 
     gl_shader_t *shader;
-    GLuint  array_buffer;
-    GLuint  index_buffer;
+    GLuint array_buffer;
+    GLuint index_buffer;
     margins_t margins;
 
     // bitmask: 1 - some window is scrolling.
     //          2 - some window was scrolling last frame.
-    int     scrolling;
+    int scrolling;
 
-    int     can_move_window;
-    bool    want_capture_mouse;
+    int can_move_window;
+    bool want_capture_mouse;
 
-    int     is_row;
-    float   item_size;
+    int is_row;
+    float item_size;
 
-    bool    is_context_menu;
-    int     context_menu_row;
+    bool is_context_menu;
+    int context_menu_row;
 
-    int     win_dir; // Store the current window direction (for scrolling).
+    int win_dir; // Store the current window direction (for scrolling).
 
     struct {
         const char *title;
-        int       (*func)(void *data);
-        void      (*on_closed)(int);
-        int         flags;
-        void       *data; // Automatically released when popup close.
-        bool        opened;
+        int (*func)(void *data);
+        void (*on_closed)(int);
+        int flags;
+        void *data; // Automatically released when popup close.
+        bool opened;
     } popup[8]; // Stack of modal popups
     int popup_count;
 
@@ -206,7 +202,7 @@ static gui_t *gui = NULL;
 static void gui_create(void)
 {
     if (gui) return;
-    gui = (gui_t*)calloc(1, sizeof(*gui));
+    gui = (gui_t *)calloc(1, sizeof(*gui));
     gui->scale = 1;
 }
 
@@ -226,28 +222,31 @@ void gui_set_scale(float s)
     gui->scale = s;
 
     if (gui->initialized) {
-        ImGuiIO& io = ImGui::GetIO();
+        ImGuiIO &io = ImGui::GetIO();
         io.Fonts->TexID = 0; // Note: this leaks the texture.
     }
 }
 
-static void on_click(void) {
-    if (DEFINED(GUI_SOUND))
-        sound_play("click", 1.0, 1.0);
+static void on_click(void)
+{
+    if (DEFINED(GUI_SOUND)) sound_play("click", 1.0, 1.0);
 }
 
 static bool isCharPressed(int c)
 {
     // TODO: remove this function if possible.
-    ImGuiContext& g = *GImGui;
+    ImGuiContext &g = *GImGui;
     if (g.IO.InputQueueCharacters.Size == 0) return false;
     return g.IO.InputQueueCharacters[0] == c;
 }
 
-#define COLOR(g, c, s) ({ \
-        uint8_t c_[4]; \
-        theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s), c_); \
-        ImVec4 ret_ = c_; ret_; })
+#define COLOR(g, c, s)                                                        \
+    ({                                                                        \
+        uint8_t c_[4];                                                        \
+        theme_get_color(THEME_GROUP_##g, THEME_COLOR_##c, (s), c_);           \
+        ImVec4 ret_ = c_;                                                     \
+        ret_;                                                                 \
+    })
 
 /*
  * Return the color that should be used to draw an icon depending on the
@@ -260,10 +259,8 @@ static uint32_t get_icon_color(int icon, bool selected)
     uint8_t color[4];
 
     group = icon >> 16;
-    if (group == 0)
-        return ImGui::GetColorU32(COLOR(ICON, TEXT, selected));
-    if (group == THEME_GROUP_ICON)
-        return 0xFFFFFFFF;
+    if (group == 0) return ImGui::GetColorU32(COLOR(ICON, TEXT, selected));
+    if (group == THEME_GROUP_ICON) return 0xFFFFFFFF;
     theme_get_color(group, THEME_COLOR_ITEM, false, color);
     return ImGui::GetColorU32(color);
 }
@@ -276,8 +273,9 @@ static ImVec2 get_icon_uv(int icon)
 
 static void render_prepare_context(void)
 {
-    #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
-    // Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled
+#define OFFSETOF(TYPE, ELEMENT) ((size_t) & (((TYPE *)0)->ELEMENT))
+    // Setup render state: alpha-blending enabled, no face culling, no depth
+    // testing, scissor enabled
     GL(glEnable(GL_BLEND));
     GL(glBlendEquation(GL_FUNC_ADD));
     GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -290,12 +288,11 @@ static void render_prepare_context(void)
     // Setup orthographic projection matrix
     const float width = ImGui::GetIO().DisplaySize.x;
     const float height = ImGui::GetIO().DisplaySize.y;
-    const float ortho_projection[4][4] =
-    {
-        { 2.0f/width,	0.0f,			0.0f,		0.0f },
-        { 0.0f,			2.0f/-height,	0.0f,		0.0f },
-        { 0.0f,			0.0f,			-1.0f,		0.0f },
-        { -1.0f,		1.0f,			0.0f,		1.0f },
+    const float ortho_projection[4][4] = {
+        { 2.0f / width, 0.0f, 0.0f, 0.0f },
+        { 0.0f, 2.0f / -height, 0.0f, 0.0f },
+        { 0.0f, 0.0f, -1.0f, 0.0f },
+        { -1.0f, 1.0f, 0.0f, 1.0f },
     };
     GL(glUseProgram(gui->shader->prog));
     gl_update_uniform(gui->shader, "u_tex", 0);
@@ -307,54 +304,56 @@ static void render_prepare_context(void)
     GL(glEnableVertexAttribArray(A_POS_LOC));
     GL(glEnableVertexAttribArray(A_TEX_POS_LOC));
     GL(glEnableVertexAttribArray(A_COLOR_LOC));
-    GL(glVertexAttribPointer(A_POS_LOC, 2, GL_FLOAT, false,
-                             sizeof(ImDrawVert),
-                             (void*)OFFSETOF(ImDrawVert, pos)));
-    GL(glVertexAttribPointer(A_TEX_POS_LOC, 2, GL_FLOAT, false,
-                             sizeof(ImDrawVert),
-                             (void*)OFFSETOF(ImDrawVert, uv)));
-    GL(glVertexAttribPointer(A_COLOR_LOC, 4, GL_UNSIGNED_BYTE,
-                             true, sizeof(ImDrawVert),
-                             (void*)OFFSETOF(ImDrawVert, col)));
-    #undef OFFSETOF
+    GL(glVertexAttribPointer(A_POS_LOC, 2, GL_FLOAT, false, sizeof(ImDrawVert),
+                             (void *)OFFSETOF(ImDrawVert, pos)));
+    GL(glVertexAttribPointer(
+            A_TEX_POS_LOC, 2, GL_FLOAT, false, sizeof(ImDrawVert),
+            (void *)OFFSETOF(ImDrawVert, uv)));
+    GL(glVertexAttribPointer(
+            A_COLOR_LOC, 4, GL_UNSIGNED_BYTE, true, sizeof(ImDrawVert),
+            (void *)OFFSETOF(ImDrawVert, col)));
+#undef OFFSETOF
 }
 
-static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
+static void ImImpl_RenderDrawLists(ImDrawData *draw_data)
 {
     const float height = ImGui::GetIO().DisplaySize.y;
     const float scale = ImGui::GetIO().DisplayFramebufferScale.y;
     render_prepare_context();
-    for (int n = 0; n < draw_data->CmdListsCount; n++)
-    {
-        const ImDrawList* cmd_list = draw_data->CmdLists[n];
+    for (int n = 0; n < draw_data->CmdListsCount; n++) {
+        const ImDrawList *cmd_list = draw_data->CmdLists[n];
 
         if (cmd_list->VtxBuffer.size())
-            GL(glBufferData(GL_ARRAY_BUFFER,
-                    (GLsizeiptr)cmd_list->VtxBuffer.size() * sizeof(ImDrawVert),
-                    (GLvoid*)&cmd_list->VtxBuffer.front(), GL_DYNAMIC_DRAW));
+            GL(glBufferData(
+                    GL_ARRAY_BUFFER,
+                    (GLsizeiptr)cmd_list->VtxBuffer.size() *
+                            sizeof(ImDrawVert),
+                    (GLvoid *)&cmd_list->VtxBuffer.front(), GL_DYNAMIC_DRAW));
 
         if (cmd_list->IdxBuffer.size())
-            GL(glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+            GL(glBufferData(
+                    GL_ELEMENT_ARRAY_BUFFER,
                     (GLsizeiptr)cmd_list->IdxBuffer.size() * sizeof(ImDrawIdx),
-                    (GLvoid*)&cmd_list->IdxBuffer.front(), GL_DYNAMIC_DRAW));
+                    (GLvoid *)&cmd_list->IdxBuffer.front(), GL_DYNAMIC_DRAW));
 
-        for (const ImDrawCmd* pcmd = cmd_list->CmdBuffer.begin(); pcmd != cmd_list->CmdBuffer.end(); pcmd++)
+        for (const ImDrawCmd *pcmd = cmd_list->CmdBuffer.begin();
+             pcmd != cmd_list->CmdBuffer.end(); pcmd++)
         {
-            if (pcmd->UserCallback)
-            {
+            if (pcmd->UserCallback) {
                 pcmd->UserCallback(cmd_list, pcmd);
                 render_prepare_context(); // Restore context.
             }
-            else
-            {
-                GL(glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID()));
-                GL(glScissor((int)pcmd->ClipRect.x * scale,
-                             (int)(height - pcmd->ClipRect.w) * scale,
-                             (int)(pcmd->ClipRect.z - pcmd->ClipRect.x) * scale,
-                             (int)(pcmd->ClipRect.w - pcmd->ClipRect.y) * scale));
+            else {
+                GL(glBindTexture(GL_TEXTURE_2D,
+                                 (GLuint)(intptr_t)pcmd->GetTexID()));
+                GL(glScissor(
+                        (int)pcmd->ClipRect.x * scale,
+                        (int)(height - pcmd->ClipRect.w) * scale,
+                        (int)(pcmd->ClipRect.z - pcmd->ClipRect.x) * scale,
+                        (int)(pcmd->ClipRect.w - pcmd->ClipRect.y) * scale));
                 GL(glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount,
                                   GL_UNSIGNED_SHORT,
-                                  (void*)(uintptr_t)(pcmd->IdxOffset * 2)));
+                                  (void *)(uintptr_t)(pcmd->IdxOffset * 2)));
             }
         }
     }
@@ -363,7 +362,7 @@ static void ImImpl_RenderDrawLists(ImDrawData* draw_data)
 
 static void add_font(const char *uri, const ImWchar *ranges, bool mergmode)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     float scale = goxel.screen_scale;
     const void *data;
     int data_size;
@@ -375,30 +374,27 @@ static void add_font(const char *uri, const ImWchar *ranges, bool mergmode)
     data = assets_get(uri, &data_size);
     assert(data);
     io.Fonts->AddFontFromMemoryTTF(
-            (void*)data, data_size, size, &conf, ranges);
+            (void *)data, data_size, size, &conf, ranges);
 }
 
 static void load_fonts_texture()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
 
-    unsigned char* pixels;
+    unsigned char *pixels;
     int width, height;
     const ImWchar ranges[] = {
         0x0020, 0x00FF, // Basic Latin + Latin Supplement
         0x25A0, 0x25FF, // Geometric shapes
         0
     };
-    const ImWchar range_user[] = {
-        0xE660, 0xE6FF,
-        0
-    };
+    const ImWchar range_user[] = { 0xE660, 0xE6FF, 0 };
 
     io.Fonts->Clear();
     add_font("asset://data/fonts/DejaVuSans.ttf", ranges, false);
     add_font("asset://data/fonts/goxel-font.ttf", range_user, true);
 
-    #if 0
+#if 0
     conf.MergeMode = true;
     data = assets_get(
             "asset://data/fonts/DroidSansFallbackFull.ttf", &data_size);
@@ -406,7 +402,7 @@ static void load_fonts_texture()
     io.Fonts->AddFontFromMemoryTTF(
             (void*)data, data_size, 14 * scale, &conf,
             io.Fonts->GetGlyphRangesJapanese());
-    #endif
+#endif
     io.Fonts->Build();
 
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
@@ -417,45 +413,44 @@ static void load_fonts_texture()
     GL(glBindTexture(GL_TEXTURE_2D, tex_id));
     GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-                    GL_RGBA, GL_UNSIGNED_BYTE, pixels));
+    GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                    GL_UNSIGNED_BYTE, pixels));
     io.Fonts->TexID = (intptr_t)tex_id;
 }
 
 static void init_ImGui(void)
 {
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.DeltaTime = 1.0f/60.0f;
+    ImGuiIO &io = ImGui::GetIO();
+    io.DeltaTime = 1.0f / 60.0f;
     io.IniFilename = NULL;
 
-    io.KeyMap[ImGuiKey_Tab]         = KEY_TAB;
-    io.KeyMap[ImGuiKey_LeftArrow]   = KEY_LEFT;
-    io.KeyMap[ImGuiKey_RightArrow]  = KEY_RIGHT;
-    io.KeyMap[ImGuiKey_UpArrow]     = KEY_UP;
-    io.KeyMap[ImGuiKey_DownArrow]   = KEY_DOWN;
-    io.KeyMap[ImGuiKey_PageUp]      = KEY_PAGE_UP;
-    io.KeyMap[ImGuiKey_PageDown]    = KEY_PAGE_DOWN;
-    io.KeyMap[ImGuiKey_Home]        = KEY_HOME;
-    io.KeyMap[ImGuiKey_End]         = KEY_END;
-    io.KeyMap[ImGuiKey_Delete]      = KEY_DELETE;
-    io.KeyMap[ImGuiKey_Backspace]   = KEY_BACKSPACE;
-    io.KeyMap[ImGuiKey_Enter]       = KEY_ENTER;
-    io.KeyMap[ImGuiKey_Escape]      = KEY_ESCAPE;
-    io.KeyMap[ImGuiKey_Space]       = ' ';
-    io.KeyMap[ImGuiKey_A]           = 'A';
-    io.KeyMap[ImGuiKey_C]           = 'C';
-    io.KeyMap[ImGuiKey_V]           = 'V';
-    io.KeyMap[ImGuiKey_X]           = 'X';
-    io.KeyMap[ImGuiKey_Y]           = 'Y';
-    io.KeyMap[ImGuiKey_Z]           = 'Z';
+    io.KeyMap[ImGuiKey_Tab] = KEY_TAB;
+    io.KeyMap[ImGuiKey_LeftArrow] = KEY_LEFT;
+    io.KeyMap[ImGuiKey_RightArrow] = KEY_RIGHT;
+    io.KeyMap[ImGuiKey_UpArrow] = KEY_UP;
+    io.KeyMap[ImGuiKey_DownArrow] = KEY_DOWN;
+    io.KeyMap[ImGuiKey_PageUp] = KEY_PAGE_UP;
+    io.KeyMap[ImGuiKey_PageDown] = KEY_PAGE_DOWN;
+    io.KeyMap[ImGuiKey_Home] = KEY_HOME;
+    io.KeyMap[ImGuiKey_End] = KEY_END;
+    io.KeyMap[ImGuiKey_Delete] = KEY_DELETE;
+    io.KeyMap[ImGuiKey_Backspace] = KEY_BACKSPACE;
+    io.KeyMap[ImGuiKey_Enter] = KEY_ENTER;
+    io.KeyMap[ImGuiKey_Escape] = KEY_ESCAPE;
+    io.KeyMap[ImGuiKey_Space] = ' ';
+    io.KeyMap[ImGuiKey_A] = 'A';
+    io.KeyMap[ImGuiKey_C] = 'C';
+    io.KeyMap[ImGuiKey_V] = 'V';
+    io.KeyMap[ImGuiKey_X] = 'X';
+    io.KeyMap[ImGuiKey_Y] = 'Y';
+    io.KeyMap[ImGuiKey_Z] = 'Z';
 
     if (DEFINED(__linux__)) {
         io.SetClipboardTextFn = sys_set_clipboard_text;
         io.GetClipboardTextFn = sys_get_clipboard_text;
     }
 }
-
 
 static void gui_init(void)
 {
@@ -477,7 +472,7 @@ static void gui_init(void)
         GL(glBindTexture(GL_TEXTURE_2D, g_tex_icons->tex));
     }
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     if (!io.Fonts->TexID) load_fonts_texture();
 }
 
@@ -488,7 +483,7 @@ void gui_release(void)
 
 void gui_release_graphics(void)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     gl_shader_delete(gui->shader);
     gui->shader = NULL;
     GL(glDeleteBuffers(1, &gui->array_buffer));
@@ -496,7 +491,7 @@ void gui_release_graphics(void)
     texture_delete(g_tex_icons);
     g_tex_icons = NULL;
 
-    GL(glDeleteTextures(1, (GLuint*)&io.Fonts->TexID));
+    GL(glDeleteTextures(1, (GLuint *)&io.Fonts->TexID));
     io.Fonts->TexID = 0;
     io.Fonts->Clear();
 }
@@ -509,7 +504,7 @@ static int alert_popup(void *data)
 
 static int check_action_shortcut(action_t *action, void *user)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     const char *s = action->shortcut;
     bool check_key = true;
     bool check_char = true;
@@ -530,8 +525,9 @@ static int check_action_shortcut(action_t *action, void *user)
     if (str_startswith(s, "Ctrl")) return 0;
     if (str_startswith(s, "Shift")) return 0;
 
-    if (    (check_char && isCharPressed(s[0])) ||
-            (check_key && ImGui::IsKeyPressed((ImGuiKey)s[0], false))) {
+    if ((check_char && isCharPressed(s[0])) ||
+        (check_key && ImGui::IsKeyPressed((ImGuiKey)s[0], false)))
+    {
         action_exec(action);
         return 1;
     }
@@ -543,7 +539,7 @@ static void render_popups(int index)
     int r;
     int flags;
     typeof(gui->popup[0]) *popup;
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
 
     popup = &gui->popup[index];
     if (!popup->title) return;
@@ -554,9 +550,9 @@ static void render_popups(int index)
     }
     flags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove;
     if (popup->flags & GUI_POPUP_FULL) {
-        ImGui::SetNextWindowSize(ImVec2(io.DisplaySize.x - 40,
-                                        io.DisplaySize.y - 40),
-                (popup->flags & GUI_POPUP_RESIZE) ?  ImGuiCond_Once : 0);
+        ImGui::SetNextWindowSize(
+                ImVec2(io.DisplaySize.x - 40, io.DisplaySize.y - 40),
+                (popup->flags & GUI_POPUP_RESIZE) ? ImGuiCond_Once : 0);
     }
     if (popup->flags & GUI_POPUP_RESIZE) {
         flags &= ~(ImGuiWindowFlags_NoMove |
@@ -592,30 +588,33 @@ static void render_popups(int index)
 
 bool gui_view_cube(float x, float y, float w, float h)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     bool ret = false;
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     camera_t *camera = goxel.image->active_camera;
     float view[4][4];
     float view_prev[4][4];
-    const float *projection= (float*)camera->proj_mat;
+    const float *projection = (float *)camera->proj_mat;
     const float zup2yup[4][4] = {
-        {1, 0, 0, 0},
-        {0, 0, -1, 0},
-        {0, 1, 0, 0},
-        {0, 0, 0, 1},
+        { 1, 0, 0, 0 },
+        { 0, 0, -1, 0 },
+        { 0, 1, 0, 0 },
+        { 0, 0, 0, 1 },
     };
     const float yup2zup[4][4] = {
-        {1, 0, 0, 0},
-        {0, 0, 1, 0},
-        {0, -1, 0, 0},
-        {0, 0, 0, 1},
+        { 1, 0, 0, 0 },
+        { 0, 0, 1, 0 },
+        { 0, -1, 0, 0 },
+        { 0, 0, 0, 1 },
     };
     ImGuizmo::Style &style = ImGuizmo::GetStyle();
 
-    style.Colors[ImGuizmo::DIRECTION_X] = ImVec4(0.666f, 0.000f, 0.000f, 1.000f);
-    style.Colors[ImGuizmo::DIRECTION_Z] = ImVec4(0.000f, 0.666f, 0.000f, 1.000f);
-    style.Colors[ImGuizmo::DIRECTION_Y] = ImVec4(0.000f, 0.000f, 0.666f, 1.000f);
+    style.Colors[ImGuizmo::DIRECTION_X] = ImVec4(
+            0.666f, 0.000f, 0.000f, 1.000f);
+    style.Colors[ImGuizmo::DIRECTION_Z] = ImVec4(
+            0.000f, 0.666f, 0.000f, 1.000f);
+    style.Colors[ImGuizmo::DIRECTION_Y] = ImVec4(
+            0.000f, 0.000f, 0.666f, 1.000f);
 
     // XXX: ImGuizmo is using Y up.
     mat4_mul(zup2yup, camera->mat, view);
@@ -626,15 +625,13 @@ bool gui_view_cube(float x, float y, float w, float h)
     ImGui::SetNextWindowPos(ImVec2(x, y));
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
     ImGui::Begin("Gizmo", NULL, ImGuiWindowFlags_NoDecoration);
-    ImGuizmo::SetDrawlist();
+    ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
 
     ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, w, h);
     ImGuizmo::ViewManipulate(
-           (float*)view, projection,
-           ImGuizmo::ROTATE, ImGuizmo::LOCAL,
-           (float*)&mat4_identity, camera->dist,
-           ImGui::GetWindowPos(),
-           ImVec2(w, h), 0x0);
+            (float *)view, projection, ImGuizmo::ROTATE, ImGuizmo::LOCAL,
+            (float *)&mat4_identity, camera->dist, ImGui::GetWindowPos(),
+            ImVec2(w, h), 0x0);
 
     ret = memcmp(view, view_prev, sizeof(view_prev)) != 0;
     if (ret) {
@@ -650,14 +647,14 @@ static void gui_iter(const inputs_t *inputs)
 {
     gui_init();
     unsigned int i;
-    ImGuiIO& io = ImGui::GetIO();
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiIO &io = ImGui::GetIO();
+    ImGuiStyle &style = ImGui::GetStyle();
 
-    io.DisplaySize = ImVec2((float)goxel.screen_size[0],
-                            (float)goxel.screen_size[1]);
+    io.DisplaySize = ImVec2(
+            (float)goxel.screen_size[0], (float)goxel.screen_size[1]);
 
-    io.DisplayFramebufferScale = ImVec2(goxel.screen_scale,
-                                        goxel.screen_scale);
+    io.DisplayFramebufferScale = ImVec2(
+            goxel.screen_scale, goxel.screen_scale);
     io.DeltaTime = fmax(goxel.delta_time, 0.01);
     io.ConfigDragClickToInputText = true;
 
@@ -684,7 +681,6 @@ static void gui_iter(const inputs_t *inputs)
         }
     }
 
-
     // Setup theme.
     ImGui::StyleColorsDark();
     style.WindowBorderSize = 0;
@@ -694,8 +690,8 @@ static void gui_iter(const inputs_t *inputs)
     style.WindowRounding = 6;
     style.ChildBorderSize = 0;
     style.SelectableTextAlign = ImVec2(0.5, 0.5);
-    style.FramePadding = ImVec2(4,
-            (GUI_ITEM_HEIGHT * gui->scale - ImGui::GetFontSize()) / 2);
+    style.FramePadding = ImVec2(
+            4, (GUI_ITEM_HEIGHT * gui->scale - ImGui::GetFontSize()) / 2);
     style.Colors[ImGuiCol_WindowBg] = COLOR(WINDOW, BACKGROUND, false);
     style.Colors[ImGuiCol_ChildBg] = COLOR(SECTION, BACKGROUND, false);
     style.Colors[ImGuiCol_Header] = ImVec4(0, 0, 0, 0);
@@ -716,14 +712,14 @@ static void gui_iter(const inputs_t *inputs)
     if (ImGui::IsKeyPressed((ImGuiKey)KEY_DELETE, false))
         action_exec2(ACTION_layer_clear);
 
-    if (!io.WantCaptureKeyboard) {
+    if (!io.WantCaptureKeyboard && !goxel.fly_mode.active) {
         float last_tool_radius = goxel.tool_radius;
         if (isCharPressed('[')) goxel.tool_radius -= 0.5;
         if (isCharPressed(']')) goxel.tool_radius += 0.5;
         if (goxel.tool_radius != last_tool_radius) {
             goxel.tool_radius = clamp(goxel.tool_radius, 0.5, 64);
         }
-        actions_iter(check_action_shortcut, NULL);
+        if (!goxel.fly_mode.active) actions_iter(check_action_shortcut, NULL);
     }
     ImGui::EndFrame();
     gui->want_capture_mouse = io.WantCaptureMouse;
@@ -769,16 +765,15 @@ void gui_group_end(void)
 
 bool gui_section_begin(const char *label, int flags)
 {
-    ImGuiChildFlags childflags =
-        ImGuiChildFlags_AutoResizeY |
-        ImGuiChildFlags_AlwaysUseWindowPadding;
+    ImGuiChildFlags childflags = ImGuiChildFlags_AutoResizeY |
+                                 ImGuiChildFlags_AlwaysUseWindowPadding;
     float padding, w;
 
     // We ensure that everything stays aligned with widgets outside a section.
     padding = ImGui::GetStyle().WindowPadding.x;
     w = ImGui::GetContentRegionAvail().x;
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,
-                        ImVec2(padding / 2, padding / 2));
+    ImGui::PushStyleVar(
+            ImGuiStyleVar_WindowPadding, ImVec2(padding / 2, padding / 2));
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() - padding / 2);
     ImGui::BeginChild(label, ImVec2(w + padding, 0), childflags);
 
@@ -786,9 +781,9 @@ bool gui_section_begin(const char *label, int flags)
         ImGui::SetNextItemOpen(
                 !(flags & GUI_SECTION_COLLAPSABLE_CLOSED), ImGuiCond_Once);
         return ImGui::CollapsingHeader(label);
-    } else {
-        if (label && label[0] != '#')
-            ImGui::Text("%s", label);
+    }
+    else {
+        if (label && label[0] != '#') ImGui::Text("%s", label);
         return true;
     }
 }
@@ -820,12 +815,12 @@ void gui_row_end(void)
     gui->item_size = 0;
 }
 
-int gui_window_begin(const char *label, float x, float y, float w, float h,
-                     int flags)
+int gui_window_begin(
+        const char *label, float x, float y, float w, float h, int flags)
 {
-    ImGuiWindowFlags win_flags =
-        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize  |
-        ImGuiWindowFlags_NoDecoration;
+    ImGuiWindowFlags win_flags = ImGuiWindowFlags_NoTitleBar |
+                                 ImGuiWindowFlags_NoResize |
+                                 ImGuiWindowFlags_NoDecoration;
     float max_size;
     ImGuiStorage *storage = ImGui::GetStateStorage();
     ImGuiID key;
@@ -834,15 +829,12 @@ int gui_window_begin(const char *label, float x, float y, float w, float h,
     int dir = (flags & GUI_WINDOW_HORIZONTAL) ? 0 : 1;
 
     ImGui::PushID(label);
-    if (!gui->can_move_window)
-        win_flags |= ImGuiWindowFlags_NoMove;
-    if (gui->scrolling)
-        win_flags |= ImGuiWindowFlags_NoMouseInputs;
-    if (dir == 0)
-        win_flags |= ImGuiWindowFlags_HorizontalScrollbar;
-    ImGui::SetNextWindowPos(ImVec2(x, y),
-            (flags & GUI_WINDOW_MOVABLE) ?
-            ImGuiCond_Appearing : ImGuiCond_Always);
+    if (!gui->can_move_window) win_flags |= ImGuiWindowFlags_NoMove;
+    if (gui->scrolling) win_flags |= ImGuiWindowFlags_NoMouseInputs;
+    if (dir == 0) win_flags |= ImGuiWindowFlags_HorizontalScrollbar;
+    ImGui::SetNextWindowPos(
+            ImVec2(x, y), (flags & GUI_WINDOW_MOVABLE) ? ImGuiCond_Appearing
+                                                       : ImGuiCond_Always);
     ImGui::SetNextWindowSize(ImVec2(w, h));
 
     key = ImGui::GetID("last_pos");
@@ -862,10 +854,9 @@ int gui_window_begin(const char *label, float x, float y, float w, float h,
     ImGui::Begin(label, NULL, win_flags);
 
     if (flags & GUI_WINDOW_MOVABLE) {
-         if (ImGui::GetWindowPos() != ImVec2(x, y))
-             ret |= GUI_WINDOW_MOVED;
-        *last_pos = dir == 0 ? ImGui::GetWindowPos().x :
-                               ImGui::GetWindowPos().y;
+        if (ImGui::GetWindowPos() != ImVec2(x, y)) ret |= GUI_WINDOW_MOVED;
+        *last_pos = dir == 0 ? ImGui::GetWindowPos().x
+                             : ImGui::GetWindowPos().y;
     }
 
     gui->win_dir = dir;
@@ -878,8 +869,7 @@ gui_window_ret_t gui_window_end(void)
     gui_window_ret_t ret = {};
     ImGui::EndGroup();
     if (!GUI_HAS_SCROLLBARS && !gui->can_move_window) {
-        if (gui_pan_scroll_behavior(gui->win_dir))
-            gui->scrolling |= 1;
+        if (gui_pan_scroll_behavior(gui->win_dir)) gui->scrolling |= 1;
     }
     ret.h = ImGui::GetWindowHeight();
     ret.w = ImGui::GetWindowWidth();
@@ -924,7 +914,7 @@ static bool slider_float(float *v, float minv, float maxv, const char *format)
 {
     bool ret;
     float step = (maxv - minv) * 0.008;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
     ImVec2 rmin, rmax;
     float k;
     bool highlighted;
@@ -985,8 +975,12 @@ static void update_activation_state(void)
     }
 }
 
-bool gui_input_float(const char *label, float *v, float step,
-                     float minv, float maxv, const char *format)
+bool gui_input_float(const char *label,
+                     float *v,
+                     float step,
+                     float minv,
+                     float maxv,
+                     const char *format)
 {
     bool ret = false;
     const char *left_utf = "◀";
@@ -997,7 +991,7 @@ bool gui_input_float(const char *label, float *v, float step,
     bool is_active = false;
     ImGuiID key = 0;
     ImGuiStorage *storage = ImGui::GetStateStorage();
-    const ImGuiStyle& style = ImGui::GetStyle();
+    const ImGuiStyle &style = ImGui::GetStyle();
     const ImVec2 button_size = ImVec2(
             gui_get_item_height(),
             ImGui::GetFontSize() + style.FramePadding.y * 2.0f);
@@ -1027,16 +1021,16 @@ bool gui_input_float(const char *label, float *v, float step,
 
     ImGui::PushStyleColor(ImGuiCol_FrameBg, COLOR(NUMBER_INPUT, INNER, false));
     ImGui::PushStyleColor(ImGuiCol_FrameBgHovered,
-                    color_lighten(COLOR(NUMBER_INPUT, INNER, false)));
+                          color_lighten(COLOR(NUMBER_INPUT, INNER, false)));
     ImGui::PushStyleColor(ImGuiCol_FrameBgActive,
-                    color_lighten2(COLOR(NUMBER_INPUT, INNER, false)));
+                          color_lighten2(COLOR(NUMBER_INPUT, INNER, false)));
     ImGui::PushStyleColor(ImGuiCol_Button, COLOR(NUMBER_INPUT, INNER, false));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                    color_lighten(COLOR(NUMBER_INPUT, INNER, false)));
+                          color_lighten(COLOR(NUMBER_INPUT, INNER, false)));
     ImGui::PushStyleColor(ImGuiCol_ButtonActive,
-                    color_lighten2(COLOR(NUMBER_INPUT, INNER, false)));
-    ImGui::PushStyleColor(ImGuiCol_SliderGrab,
-                    COLOR(NUMBER_INPUT, ITEM, false));
+                          color_lighten2(COLOR(NUMBER_INPUT, INNER, false)));
+    ImGui::PushStyleColor(
+            ImGuiCol_SliderGrab, COLOR(NUMBER_INPUT, ITEM, false));
 
     label_aligned(label, LABEL_SIZE);
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
@@ -1059,7 +1053,7 @@ bool gui_input_float(const char *label, float *v, float step,
         ImGui::PushItemWidth(
                 ImGui::GetContentRegionAvail().x - button_size.x - 4);
         if (ImGui::DragInt("", &v_int, v_speed, minv, maxv, v_label)) {
-            *v  = v_int * step;
+            *v = v_int * step;
             ret = true;
         }
         update_activation_state();
@@ -1071,14 +1065,16 @@ bool gui_input_float(const char *label, float *v, float step,
             ret = true;
         }
         update_activation_state();
-    } else {
+    }
+    else {
         ImGui::SetNextItemWidth(-1);
         if (unbounded) {
             if (ImGui::DragInt("", &v_int, step, minv, maxv, v_label)) {
-                *v  = v_int * step;
+                *v = v_int * step;
                 ret = true;
             }
-        } else {
+        }
+        else {
             ret = slider_float(v, minv, maxv, format);
         }
         update_activation_state();
@@ -1144,11 +1140,11 @@ bool gui_angle(const char *id, float *v, int vmin, int vmax)
     ret = gui_input_int(id, &a, vmin, vmax);
     if (ret) {
         if (vmin == 0 && vmax == 360) {
-            while (a < 0) a += 360;
+            while (a < 0)
+                a += 360;
             a %= 360;
         }
-        if (vmin != 0 || vmax != 0)
-            a = clamp(a, vmin, vmax);
+        if (vmin != 0 || vmax != 0) a = clamp(a, vmin, vmax);
         *v = (float)(a * DD2R);
     }
     return ret;
@@ -1173,10 +1169,10 @@ bool gui_action_button(int id, const char *label, float size)
     return ret;
 }
 
-static bool _selectable(const char *label, bool *v, const char *tooltip,
-                        float w, int icon)
+static bool _selectable(
+        const char *label, bool *v, const char *tooltip, float w, int icon)
 {
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    ImGuiWindow *window = ImGui::GetCurrentWindow();
     ImVec2 size;
     ImVec2 center;
     bool ret = false;
@@ -1186,28 +1182,29 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
     if (gui->item_size) w = gui->item_size;
 
     v = v ? v : &default_v;
-    size = (icon != -1) ?
-        ImVec2(GUI_ICON_HEIGHT, GUI_ICON_HEIGHT) :
-        ImVec2(w, gui_get_item_height());
+    size = (icon != -1) ? ImVec2(GUI_ICON_HEIGHT, GUI_ICON_HEIGHT)
+                        : ImVec2(w, gui_get_item_height());
 
     if (!tooltip && icon != -1) {
         tooltip = label;
-        while (*tooltip == '#') tooltip++;
+        while (*tooltip == '#')
+            tooltip++;
     }
 
     ImGui::PushID(label);
     if (icon == -1) {
         ImGui::PushStyleColor(ImGuiCol_Button, COLOR(SELECTABLE, INNER, (*v)));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                color_lighten(COLOR(SELECTABLE, INNER, true)));
+                              color_lighten(COLOR(SELECTABLE, INNER, true)));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive,
-                color_lighten2(COLOR(SELECTABLE, INNER, true)));
-    } else {
+                              color_lighten2(COLOR(SELECTABLE, INNER, true)));
+    }
+    else {
         ImGui::PushStyleColor(ImGuiCol_Button, COLOR(ICON, INNER, (*v)));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-                color_lighten(COLOR(ICON, INNER, true)));
+                              color_lighten(COLOR(ICON, INNER, true)));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive,
-                color_lighten2(COLOR(ICON, INNER, true)));
+                              color_lighten2(COLOR(ICON, INNER, true)));
     }
 
     if (icon != -1) {
@@ -1217,12 +1214,13 @@ static bool _selectable(const char *label, bool *v, const char *tooltip,
             center.y += 0.5;
             uv0 = get_icon_uv(icon);
             uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-            window->DrawList->AddImage((intptr_t)g_tex_icons->tex,
-                                       center - ImVec2(16, 16),
-                                       center + ImVec2(16, 16),
-                                       uv0, uv1, get_icon_color(icon, *v));
+            window->DrawList->AddImage(
+                    (intptr_t)g_tex_icons->tex, center - ImVec2(16, 16),
+                    center + ImVec2(16, 16), uv0, uv1,
+                    get_icon_color(icon, *v));
         }
-    } else {
+    }
+    else {
         ret = ImGui::Button(label, size);
     }
     ImGui::PopStyleColor(3);
@@ -1243,8 +1241,8 @@ bool gui_selectable(const char *name, bool *v, const char *tooltip, float w)
     return _selectable(name, v, tooltip, w, -1);
 }
 
-bool gui_selectable_toggle(const char *name, int *v, int set_v,
-                           const char *tooltip, float w)
+bool gui_selectable_toggle(
+        const char *name, int *v, int set_v, const char *tooltip, float w)
 {
     bool b = *v == set_v;
     if (gui_selectable(name, &b, tooltip, w)) {
@@ -1290,18 +1288,16 @@ void gui_spacing(int w)
 
 static bool color_picker(const char *label, uint8_t color[4])
 {
-    float colorf[4] = {color[0] / 255.f,
-                       color[1] / 255.f,
-                       color[2] / 255.f,
-                       color[3] / 255.f};
+    float colorf[4] = { color[0] / 255.f, color[1] / 255.f, color[2] / 255.f,
+                        color[3] / 255.f };
     static uint8_t backup_color[4];
     bool ret;
 
     if (ImGui::IsWindowAppearing())
         memcpy(backup_color, color, sizeof(backup_color));
     ret = ImGui::ColorPicker4(label, colorf,
-            ImGuiColorEditFlags_NoSidePreview |
-            ImGuiColorEditFlags_NoSmallPreview);
+                              ImGuiColorEditFlags_NoSidePreview |
+                                      ImGuiColorEditFlags_NoSmallPreview);
     if (ret) {
         color[0] = colorf[0] * 255;
         color[1] = colorf[1] * 255;
@@ -1311,11 +1307,12 @@ static bool color_picker(const char *label, uint8_t color[4])
     ImGui::SameLine();
     ImGui::BeginGroup();
     ImGui::Text("Current");
-    ImGui::ColorButton("##current", color,
-            ImGuiColorEditFlags_NoPicker, ImVec2(60, 40));
+    ImGui::ColorButton(
+            "##current", color, ImGuiColorEditFlags_NoPicker, ImVec2(60, 40));
     ImGui::Text("Original");
     if (ImGui::ColorButton("##previous", backup_color,
-                ImGuiColorEditFlags_NoPicker, ImVec2(60, 40))) {
+                           ImGuiColorEditFlags_NoPicker, ImVec2(60, 40)))
+    {
         memcpy(color, backup_color, sizeof(backup_color));
         ret = true;
     }
@@ -1349,10 +1346,8 @@ bool gui_color(const char *label, uint8_t color[4])
 bool gui_color_small(const char *label, uint8_t color[4])
 {
     bool ret;
-    float colorf[4] = {color[0] / 255.f,
-                       color[1] / 255.f,
-                       color[2] / 255.f,
-                       color[3] / 255.f};
+    float colorf[4] = { color[0] / 255.f, color[1] / 255.f, color[2] / 255.f,
+                        color[3] / 255.f };
     ImGui::PushID(label);
     label_aligned(label, LABEL_SIZE);
     ret = ImGui::ColorEdit4("", colorf, ImGuiColorEditFlags_NoInputs);
@@ -1396,59 +1391,61 @@ bool gui_checkbox_flag(const char *label, int *v, int flag, const char *hint)
     b = (*v) & flag;
     ret = gui_checkbox(label, &b, hint);
     if (ret) {
-        if (b) *v |= flag;
-        else   *v &= ~flag;
+        if (b)
+            *v |= flag;
+        else
+            *v &= ~flag;
     }
     return ret;
 }
 
-
 bool gui_button(const char *label, float size, int icon)
 {
     bool ret;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
     ImVec2 uv0, uv1;
     ImVec2 button_size;
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle &style = ImGui::GetStyle();
     ImVec2 center;
     int w, isize;
 
-    button_size = ImVec2(size * ImGui::GetContentRegionAvail().x,
-                         gui_get_item_height());
+    button_size = ImVec2(
+            size * ImGui::GetContentRegionAvail().x, gui_get_item_height());
     if (size == -1) button_size.x = ImGui::GetContentRegionAvail().x;
     if (size == 0 && (label == NULL || label[0] == '#')) {
         button_size.x = GUI_ICON_HEIGHT;
         button_size.y = GUI_ICON_HEIGHT;
     }
     if (size == 0 && label && label[0] != '#') {
-        w = ImGui::CalcTextSize(label, NULL, true).x + style.FramePadding.x * 2;
-        if (w < gui_get_item_height())
-            button_size.x = gui_get_item_height();
+        w = ImGui::CalcTextSize(label, NULL, true).x +
+            style.FramePadding.x * 2;
+        if (w < gui_get_item_height()) button_size.x = gui_get_item_height();
     }
 
     if (gui->item_size) button_size.x = gui->item_size;
 
     isize = (label && label[0] != '#') ? 12 : 16;
-    ImGui::PushStyleColor(ImGuiCol_Button,
-            (label && (label[0] != '#')) ?
-            COLOR(BUTTON, INNER, false) : COLOR(ICON, INNER, false));
+    ImGui::PushStyleColor(
+            ImGuiCol_Button,
+            (label && (label[0] != '#')) ? COLOR(BUTTON, INNER, false)
+                                         : COLOR(ICON, INNER, false));
     ret = ImGui::Button(label ?: "", button_size);
     update_activation_state();
     ImGui::PopStyleColor();
     if (icon) {
         center = ImGui::GetItemRectMin() +
-            ImVec2(ImGui::GetItemRectSize().y / 2,
-                   ImGui::GetItemRectSize().y / 2);
+                 ImVec2(ImGui::GetItemRectSize().y / 2,
+                        ImGui::GetItemRectSize().y / 2);
         uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
         uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
-        draw_list->AddImage((intptr_t)g_tex_icons->tex,
-                            center - ImVec2(isize, isize),
-                            center + ImVec2(isize, isize),
-                            uv0, uv1, get_icon_color(icon, 0));
+        draw_list->AddImage(
+                (intptr_t)g_tex_icons->tex, center - ImVec2(isize, isize),
+                center + ImVec2(isize, isize), uv0, uv1,
+                get_icon_color(icon, 0));
     }
     if (ret) {
         on_click();
-        if (gui->is_context_menu)  {
+        if (gui->is_context_menu) {
             ImGui::CloseCurrentPopup();
         }
     }
@@ -1458,7 +1455,7 @@ bool gui_button(const char *label, float size, int icon)
 
 bool gui_button_right(const char *label, int icon)
 {
-    const ImGuiStyle& style = ImGui::GetStyle();
+    const ImGuiStyle &style = ImGui::GetStyle();
     float text_size = ImGui::CalcTextSize(label).x;
     float w = text_size + 2 * style.FramePadding.x;
     w = max(w, gui_get_item_height());
@@ -1475,17 +1472,16 @@ bool gui_input_text(const char *label, char *txt, int size)
     ret = ImGui::InputText(label, txt, size);
     update_activation_state();
     return ret;
-
 }
 
-bool gui_input_text_multiline(const char *label, char *buf, int size,
-                              float width, float height)
+bool gui_input_text_multiline(
+        const char *label, char *buf, int size, float width, float height)
 {
     // We set the frame color to a semi transparent value, because otherwise
     // we cannot render the error highlight.
     // XXX: fix that.
     bool ret;
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle &style = ImGui::GetStyle();
     ImVec4 col = style.Colors[ImGuiCol_FrameBg];
     style.Colors[ImGuiCol_FrameBg].w = 0.5;
     ret = ImGui::InputTextMultiline(label, buf, size, ImVec2(width, height));
@@ -1534,8 +1530,7 @@ bool gui_combo_item(const char *label, bool is_selected)
 {
     bool ret;
     ret = ImGui::Selectable(label, is_selected);
-    if (is_selected)
-        ImGui::SetItemDefaultFocus();
+    if (is_selected) ImGui::SetItemDefaultFocus();
     return ret;
 }
 
@@ -1546,13 +1541,13 @@ void gui_input_text_multiline_highlight(int line)
     ImVec2 rmax = ImGui::GetItemRectMax();
     rmin.y = rmin.y + line * h + 2;
     rmax.y = rmin.y + h;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
     draw_list->AddRectFilled(rmin, rmax, 0xff0000ff);
 }
 
 void gui_enabled_begin(bool enabled)
 {
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle &style = ImGui::GetStyle();
     ImVec4 color = style.Colors[ImGuiCol_Text];
     if (!enabled) color.w /= 2;
     ImGui::PushStyleColor(ImGuiCol_Text, color);
@@ -1622,12 +1617,12 @@ bool gui_rotation_mat4_axis(float m[4][4])
         const char *label;
         float rot[3][3];
     } axis[] = {
-        {"+X", {{0, 0, -1}, {0, 1, 0}, {1, 0, 0}}},
-        {"-X", {{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}}},
-        {"+Y", {{1, 0, 0}, {0, 0, -1}, {0, 1, 0}}},
-        {"-Y", {{1, 0, 0}, {0, 0, 1}, {-1, 0, 0}}},
-        {"+Z", {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}},
-        {"-Z", {{1, 0, 0}, {0, -1, 0}, {0, 0, -1}}},
+        { "+X", { { 0, 0, -1 }, { 0, 1, 0 }, { 1, 0, 0 } } },
+        { "-X", { { 0, 0, 1 }, { 0, 1, 0 }, { -1, 0, 0 } } },
+        { "+Y", { { 1, 0, 0 }, { 0, 0, -1 }, { 0, 1, 0 } } },
+        { "-Y", { { 1, 0, 0 }, { 0, 0, 1 }, { -1, 0, 0 } } },
+        { "+Z", { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } } },
+        { "-Z", { { 1, 0, 0 }, { 0, -1, 0 }, { 0, 0, -1 } } },
     };
 
     mat4_to_mat3(m, rot);
@@ -1651,8 +1646,8 @@ bool gui_rotation_mat4_axis(float m[4][4])
     return ret;
 }
 
-void gui_open_popup(const char *title, int flags, void *data,
-                    int (*func)(void *data))
+void gui_open_popup(
+        const char *title, int flags, void *data, int (*func)(void *data))
 {
     typeof(gui->popup[0]) *popup;
     popup = &gui->popup[gui->popup_count++];
@@ -1670,7 +1665,7 @@ void gui_on_popup_closed(void (*func)(int))
 
 void gui_popup_bottom_begin(void)
 {
-    const ImGuiStyle& style = ImGui::GetStyle();
+    const ImGuiStyle &style = ImGui::GetStyle();
     float bottom_y = gui_get_item_height() + style.FramePadding.y * 2;
     float w = ImGui::GetContentRegionAvail().y - bottom_y;
     ImGui::Dummy(ImVec2(0, w));
@@ -1689,8 +1684,7 @@ void gui_alert(const char *title, const char *msg)
 
 bool gui_collapsing_header(const char *label, bool default_opened)
 {
-    if (default_opened)
-        ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (default_opened) ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     return ImGui::CollapsingHeader(label);
 }
 
@@ -1724,9 +1718,13 @@ void gui_request_panel_width(float width)
     goxel.gui.panel_width = width;
 }
 
-bool gui_layer_item(int idx, int icons_count, const int *icons,
-                    bool *visible, bool *selected,
-                    char *name, int len)
+bool gui_layer_item(int idx,
+                    int icons_count,
+                    const int *icons,
+                    bool *visible,
+                    bool *selected,
+                    char *name,
+                    int len)
 {
     bool ret = false;
     bool selected_ = *selected;
@@ -1738,16 +1736,18 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
     ImVec2 center;
     ImVec2 uv0, uv1;
     ImVec2 padding;
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
+    ImGuiStyle &style = ImGui::GetStyle();
 
     ImGui::PushID(idx);
     ImGui::PushStyleColor(ImGuiCol_Button, COLOR(WIDGET, INNER, *selected));
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered,
-            color_lighten(COLOR(WIDGET, INNER, *selected)));
+                          color_lighten(COLOR(WIDGET, INNER, *selected)));
     if (visible) {
-        if (gui_selectable_icon("##visible", &selected_,
-                *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF)) {
+        if (gui_selectable_icon(
+                    "##visible", &selected_,
+                    *visible ? ICON_VISIBILITY : ICON_VISIBILITY_OFF))
+        {
             *visible = !*visible;
             ret = true;
         }
@@ -1768,25 +1768,26 @@ bool gui_layer_item(int idx, int icons_count, const int *icons,
         for (i = 0; i < icons_count; i++) {
             icon = icons[i];
             center = ImGui::GetItemRectMin() +
-                ImVec2(GUI_ICON_HEIGHT * 0.75 * (i + 0.5), GUI_ICON_HEIGHT / 2);
+                     ImVec2(GUI_ICON_HEIGHT * 0.75 * (i + 0.5),
+                            GUI_ICON_HEIGHT / 2);
             uv0 = ImVec2(((icon - 1) % 8) / 8.0, ((icon - 1) / 8) / 8.0);
             uv1 = ImVec2(uv0.x + 1. / 8, uv0.y + 1. / 8);
             draw_list->AddImage(
-                    (intptr_t)g_tex_icons->tex,
-                    center - ImVec2(12, 12),
-                    center + ImVec2(12, 12),
-                    uv0, uv1, get_icon_color(icon, 0));
+                    (intptr_t)g_tex_icons->tex, center - ImVec2(12, 12),
+                    center + ImVec2(12, 12), uv0, uv1,
+                    get_icon_color(icon, 0));
         }
         ImGui::PopStyleVar();
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
             edit_name = name;
             start_edit = true;
         }
-    } else {
+    }
+    else {
         if (start_edit) ImGui::SetKeyboardFocusHere();
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
                             ImVec2(style.FramePadding.x,
-                            (GUI_ICON_HEIGHT - font_size) / 2));
+                                   (GUI_ICON_HEIGHT - font_size) / 2));
         ImGui::InputText("##name_edit", name, len,
                          ImGuiInputTextFlags_AutoSelectAll);
         if (!start_edit && !ImGui::IsItemActive()) edit_name = NULL;
@@ -1807,10 +1808,10 @@ bool gui_menu_bar_begin(void)
 {
     bool ret;
     ImGui::PushStyleColor(ImGuiCol_MenuBarBg, COLOR(MENU, BACKGROUND, false));
-    ImGui::PushStyleColor(ImGuiCol_Header,
-            color_lighten(COLOR(MENU, BACKGROUND, false)));
+    ImGui::PushStyleColor(
+            ImGuiCol_Header, color_lighten(COLOR(MENU, BACKGROUND, false)));
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
-            color_lighten(COLOR(MENU, BACKGROUND, false)));
+                          color_lighten(COLOR(MENU, BACKGROUND, false)));
     ImGui::PushStyleColor(ImGuiCol_Text, COLOR(MENU, TEXT, false));
     ImGui::PushStyleColor(ImGuiCol_PopupBg, COLOR(MENU, BACKGROUND, false));
 
@@ -1826,7 +1827,6 @@ void gui_menu_bar_end(void)
     ImGui::PopStyleColor(5);
     ImGui::EndMainMenuBar();
 }
-
 
 bool gui_menu_begin(const char *label, bool enabled)
 {
@@ -1870,8 +1870,8 @@ static bool panel_header_close_button(void)
     float w;
     ImVec2 uv0, uv1;
     ImVec2 center;
-    const ImGuiStyle& style = ImGui::GetStyle();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    const ImGuiStyle &style = ImGui::GetStyle();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
     bool ret;
 
     w = gui_get_item_height() + style.FramePadding.x;
@@ -1879,19 +1879,17 @@ static bool panel_header_close_button(void)
     ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - w, 0));
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-    ret = ImGui::Button("", ImVec2(gui_get_item_height(),
-                                   gui_get_item_height()));
+    ret = ImGui::Button(
+            "", ImVec2(gui_get_item_height(), gui_get_item_height()));
     ImGui::PopStyleColor();
 
-    center = ImGui::GetItemRectMin() +
-        ImVec2(ImGui::GetItemRectSize().y / 2,
-               ImGui::GetItemRectSize().y / 2);
+    center = ImGui::GetItemRectMin() + ImVec2(ImGui::GetItemRectSize().y / 2,
+                                              ImGui::GetItemRectSize().y / 2);
     uv0 = get_icon_uv(ICON_CLOSE);
     uv1 = uv0 + ImVec2(1. / 8, 1. / 8);
-    draw_list->AddImage((intptr_t)g_tex_icons->tex,
-                            center - ImVec2(12, 12),
-                            center + ImVec2(12, 12),
-                            uv0, uv1, get_icon_color(ICON_CLOSE, 0));
+    draw_list->AddImage(
+            (intptr_t)g_tex_icons->tex, center - ImVec2(12, 12),
+            center + ImVec2(12, 12), uv0, uv1, get_icon_color(ICON_CLOSE, 0));
     return ret;
 }
 
@@ -1910,8 +1908,7 @@ bool gui_panel_header(const char *label)
     ret = panel_header_close_button();
     ImGui::EndGroup();
     ImGui::PopID();
-    if (ImGui::IsItemHovered())
-        gui->can_move_window |= 1;
+    if (ImGui::IsItemHovered()) gui->can_move_window |= 1;
     return ret;
 }
 
@@ -1926,7 +1923,7 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
     float next_button_x;
     float max_x;
     const ImGuiStyle &style = ImGui::GetStyle();
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImDrawList *draw_list = ImGui::GetWindowDrawList();
     bool clicked;
     float size;
     bool is_colors_grid;
@@ -1944,16 +1941,18 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
         icon = &icons[i];
         ImGui::PushID(i);
         if (icon->sublabel) {
-            snprintf(label, sizeof(label), "%s (%s)",
-                     icon->label, icon->sublabel);
-        } else {
+            snprintf(label, sizeof(label), "%s (%s)", icon->label,
+                     icon->sublabel);
+        }
+        else {
             snprintf(label, sizeof(label), "%s", icon->label);
         }
         v = (i == *current);
         if (!is_colors_grid) {
             size = GUI_ICON_HEIGHT;
             clicked = gui_selectable_icon(label, &v, icon->icon);
-        } else { // Color icon.
+        }
+        else { // Color icon.
             size = gui_get_item_height();
             ImGui::PushStyleColor(ImGuiCol_Button, icon->color);
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, icon->color);
@@ -1974,11 +1973,9 @@ bool gui_icons_grid(int nb, const gui_icon_info_t *icons, int *current)
         }
         last_button_x = ImGui::GetItemRectMax().x;
         next_button_x = last_button_x + style.ItemSpacing.x + size;
-        if (i + 1 < nb && next_button_x < max_x)
-            ImGui::SameLine();
+        if (i + 1 < nb && next_button_x < max_x) ImGui::SameLine();
 
         ImGui::PopID();
-
     }
     ImGui::PopStyleVar(1);
 
@@ -1991,7 +1988,7 @@ bool gui_want_capture_mouse(void)
      * io.WantCaptureMouse otherwise there seems to be some subtle input
      * errors on mobile */
     gui_init();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     return (gui && gui->want_capture_mouse) || io.WantCaptureMouse;
 }
 
@@ -2051,7 +2048,7 @@ void gui_set_current_pos_x(float x)
 
 float gui_get_item_height(void)
 {
-    ImGuiStyle& style = ImGui::GetStyle();
+    ImGuiStyle &style = ImGui::GetStyle();
     return style.FramePadding.y * 2 + ImGui::GetFontSize();
 }
 
@@ -2063,7 +2060,7 @@ struct list_item {
 
 void gui_list(const gui_list_t *list)
 {
-    list_item_t **items = (list_item_t**)list->items;
+    list_item_t **items = (list_item_t **)list->items;
     list_item_t *item;
     bool is_current;
     int i;
@@ -2073,9 +2070,9 @@ void gui_list(const gui_list_t *list)
 
     gui_group_begin(NULL);
     i = 0;
-    DL_FOREACH(*items, item) {
+    DL_FOREACH (*items, item) {
         is_current = *list->current == item;
-        if (list->render((void*)item, i, is_current)) {
+        if (list->render((void *)item, i, is_current)) {
             *list->current = item;
             if (is_current && list->can_be_null) {
                 *list->current = NULL;
