@@ -499,7 +499,9 @@ typedef struct goxel
     } clipboard;
 
     int        snap_mask;    // Global snap mask (can edit in the GUI).
-    float      snap_offset;  // Only for brush tool, remove that?
+    float      snap_offsets[3]; // Snap offsets for X, Y, Z axes.
+    float      snap_units[3]; // Custom snap units for X, Y, Z axes.
+    bool       use_brush_size; // Use brush size for snap units.
 
     float      plane[4][4];         // The snapping plane.
     bool       show_export_viewport;
@@ -522,6 +524,9 @@ typedef struct goxel
         float  pos[2];
         float  camera_ofs[3];
         float  camera_mat[4][4];
+        // Pivot point for rotation around hovered voxel
+        float  pivot_point[3];
+        bool   has_pivot_point;
     } move_origin;
 
     palette_t  *palettes;   // The list of all the palettes
@@ -604,7 +609,7 @@ void goxel_on_low_memory(void);
 int goxel_unproject(const float viewport[4],
                     const float pos[2], int snap_mask,
                     const float snap_shape[4][4],
-                    float offset,
+                    const float offsets[3],
                     float out[3], float normal[3]);
 
 void goxel_render_view(const float viewport[4], bool render_mode);
