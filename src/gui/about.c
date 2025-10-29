@@ -20,12 +20,12 @@
 
 int gui_about_popup(void *data)
 {
-    gui_text("Goxel " GOXEL_VERSION_STR);
-    gui_text("Copyright © 2015-2022 Guillaume Chereau");
-    gui_text("<guillaume@noctua-software.com>");
+    gui_text("Goxel++ " GOXEL_VERSION_STR);
+    gui_text("Copyright © 2025 Magic Engineering, LLC.");
+    gui_text("<hi@magicengineering.co>");
     gui_text("All right reserved");
     if (!DEFINED(GOXEL_MOBILE)) gui_text("GPL 3 License");
-    gui_text("http://guillaumechereau.github.io/goxel");
+    gui_text("https://github.com/tatelax/goxelplusplus");
 
     if (gui_collapsing_header("Credits", true)) {
         gui_text("Libraries:");
@@ -39,7 +39,8 @@ int gui_about_popup(void *data)
         gui_text("● boostrap icons (https://icons.getbootstrap.com)");
         gui_text("● meshoptimizer (https://github.com/zeux/meshoptimizer)");
         gui_text("● imguizmo (https://github.com/CedricGuillemet/ImGuizmo)");
-        gui_text("● nativefiledialog (https://github.com/btzy/nativefiledialog-extended)");
+        gui_text("● nativefiledialog "
+                 "(https://github.com/btzy/nativefiledialog-extended)");
 
         gui_text("Contributors:");
         gui_text("● Michal (https://github.com/YarlBoro)");
@@ -54,8 +55,8 @@ int gui_about_popup(void *data)
 int gui_about_scripts_popup(void *data)
 {
     char dir[1024] = "";
-    const char *examples_url =
-        "https://github.com/guillaumechereau/goxel/tree/master/data/scripts";
+    const char *examples_url = "https://github.com/tatelax/goxelplusplus"
+                               "tree/master/data/scripts";
 
     if (sys_get_user_dir()) {
         snprintf(dir, sizeof(dir), "%s/scripts", sys_get_user_dir());

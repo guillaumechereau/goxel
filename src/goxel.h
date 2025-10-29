@@ -22,11 +22,11 @@
 #define GOXEL_H
 
 #ifndef _GNU_SOURCE
-#   define _GNU_SOURCE
+#define _GNU_SOURCE
 #endif
 
 #ifndef NOMINMAX
-#   define NOMINMAX
+#define NOMINMAX
 #endif
 
 #include "action.h"
@@ -44,8 +44,6 @@
 #include "layer.h"
 #include "log.h"
 #include "material.h"
-#include "volume.h"
-#include "volume_utils.h"
 #include "model3d.h"
 #include "palette.h"
 #include "pathtracer.h"
@@ -57,6 +55,8 @@
 #include "utarray.h"
 #include "uthash.h"
 #include "utlist.h"
+#include "volume.h"
+#include "volume_utils.h"
 
 #include "utils/box.h"
 #include "utils/cache.h"
@@ -77,27 +77,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GOXEL_VERSION_STR "0.15.2"
+#define GOXEL_VERSION_STR "1.0.1"
 #ifndef GOXEL_DEFAULT_THEME
-#   define GOXEL_DEFAULT_THEME "dark"
+#define GOXEL_DEFAULT_THEME "dark"
 #endif
 
 // #### Set the DEBUG macro ####
 #ifndef DEBUG
-#   if !defined(NDEBUG)
-#       define DEBUG 1
-#   else
-#       define DEBUG 0
-#   endif
+#if !defined(NDEBUG)
+#define DEBUG 1
+#else
+#define DEBUG 0
+#endif
 #endif
 
 #if !DEBUG && !defined(NDEBUG)
-#   define NDEBUG
+#define NDEBUG
 #endif
 #include <assert.h>
 // #############################
-
-
 
 // #### DEFINED macro ##########
 // DEFINE(NAME) returns 1 if NAME is defined to 1, 0 otherwise.
@@ -108,12 +106,11 @@
 #define DEFINED___(_, v, ...) v
 // #############################
 
-
 #ifdef __EMSCRIPTEN__
-#   include <emscripten.h>
-#   define KEEPALIVE EMSCRIPTEN_KEEPALIVE
+#include <emscripten.h>
+#define KEEPALIVE EMSCRIPTEN_KEEPALIVE
 #else
-#   define KEEPALIVE
+#define KEEPALIVE
 #endif
 
 // ####### Section: Utils ################################################
@@ -130,7 +127,12 @@
  * Macro: SWAP
  * Swap two variables
  */
-#define SWAP(x0, x) do {typeof(x0) tmp = x0; x0 = x; x = tmp;} while (0)
+#define SWAP(x0, x)                                                           \
+    do {                                                                      \
+        typeof(x0) tmp = x0;                                                  \
+        x0 = x;                                                               \
+        x = tmp;                                                              \
+    } while (0)
 
 /*
  * Macro: USER_PASS
@@ -142,7 +144,7 @@
  * int x, y;
  * f(USER_PASS(&x, &y));
  */
-#define USER_PASS(...) ((void *)(const void *[]){__VA_ARGS__})
+#define USER_PASS(...) ((void *)(const void *[]){ __VA_ARGS__ })
 
 /*
  * Macro: USER_GET
@@ -154,7 +156,7 @@
  *     int   arg2 = *((int*)USER_GET(user, 1));
  * }
  */
-#define USER_GET(var, n) (((void**)var)[n])
+#define USER_GET(var, n) (((void **)var)[n])
 
 /* Define: DR2D
  * Convertion ratio from radian to degree. */
@@ -180,21 +182,23 @@
  * Macro: min
  * Safe min function.
  */
-#define min(a, b) ({ \
-      __typeof__ (a) _a = (a); \
-      __typeof__ (b) _b = (b); \
-      _a < _b ? _a : _b; \
-      })
+#define min(a, b)                                                             \
+    ({                                                                        \
+        __typeof__(a) _a = (a);                                               \
+        __typeof__(b) _b = (b);                                               \
+        _a < _b ? _a : _b;                                                    \
+    })
 
 /*
  * Macro: max
  * Safe max function.
  */
-#define max(a, b) ({ \
-      __typeof__ (a) _a = (a); \
-      __typeof__ (b) _b = (b); \
-      _a > _b ? _a : _b; \
-      })
+#define max(a, b)                                                             \
+    ({                                                                        \
+        __typeof__(a) _a = (a);                                               \
+        __typeof__(b) _b = (b);                                               \
+        _a > _b ? _a : _b;                                                    \
+    })
 
 /*
  * Macro: max3
@@ -221,11 +225,12 @@
  * Return:
  *   +1 if a > b, -1 if a < b, 0 if a == b.
  */
-#define cmp(a, b) ({ \
-    __typeof__ (a) _a = (a); \
-    __typeof__ (b) _b = (b); \
-    (_a > _b) ? +1 : (_a < _b) ? -1 : 0; \
-})
+#define cmp(a, b)                                                             \
+    ({                                                                        \
+        __typeof__(a) _a = (a);                                               \
+        __typeof__(b) _b = (b);                                               \
+        (_a > _b) ? +1 : (_a < _b) ? -1 : 0;                                  \
+    })
 
 /* Function: smoothstep
  * Perform Hermite interpolation between two values.
@@ -323,9 +328,8 @@ bool str_startswith(const char *s1, const char *s2);
  * Function: str_replace_ext
  * Replace the extension part of a file path with a new one.
  */
-bool str_replace_ext(const char *str, const char *new_ext,
-                     char *out, size_t out_size);
-
+bool str_replace_ext(
+        const char *str, const char *new_ext, char *out, size_t out_size);
 
 /*
  * Function: unproject
@@ -340,15 +344,17 @@ bool str_replace_ext(const char *str, const char *new_ext,
  *   viewport   - Viewport rect (x, y, w, h).
  *   out        - Output of the computed object coordinates.
  */
-void unproject(const float win[3], const float model[4][4],
-               const float proj[4][4], const float viewport[4],
+void unproject(const float win[3],
+               const float model[4][4],
+               const float proj[4][4],
+               const float viewport[4],
                float out[3]);
 
 // #### Dialogs ################
 enum {
-    DIALOG_FLAG_SAVE    = 1 << 0,
-    DIALOG_FLAG_OPEN    = 1 << 1,
-    DIALOG_FLAG_DIR     = 1 << 2,
+    DIALOG_FLAG_SAVE = 1 << 0,
+    DIALOG_FLAG_OPEN = 1 << 1,
+    DIALOG_FLAG_DIR = 1 << 2,
 };
 
 // All the glyphs in the goxel texture.
@@ -358,72 +364,71 @@ enum {
 
 // All the icons positions inside icon.png (as Y*8 + X + 1).
 
-#define X(NAME, x, y, theme) \
-    NAME = (y * 8 + x + 1) | (theme << 16)
+#define X(NAME, x, y, theme) NAME = (y * 8 + x + 1) | (theme << 16)
 
 enum {
     ICON_NULL = 0,
 
-    X(ICON_TOOL_BRUSH,              0, 0, THEME_GROUP_ICON),
-    X(ICON_TOOL_PICK,               1, 0, THEME_GROUP_ICON),
-    X(ICON_TOOL_SHAPE,              2, 0, THEME_GROUP_ICON),
-    X(ICON_TOOL_PLANE,              3, 0, THEME_GROUP_ICON),
-    X(ICON_TOOL_LASER,              4, 0, THEME_GROUP_ICON),
-    X(ICON_TOOL_MOVE,               5, 0, THEME_GROUP_ICON),
-    X(ICON_TOOL_EXTRUDE,            6, 0, THEME_GROUP_ICON),
-    X(ICON_TOOL_FUZZY_SELECT,       7, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_BRUSH, 0, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_PICK, 1, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_SHAPE, 2, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_PLANE, 3, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_LASER, 4, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_MOVE, 5, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_EXTRUDE, 6, 0, THEME_GROUP_ICON),
+    X(ICON_TOOL_FUZZY_SELECT, 7, 0, THEME_GROUP_ICON),
 
-    X(ICON_MODE_ADD,                0, 1, THEME_GROUP_ICON),
-    X(ICON_MODE_SUB,                1, 1, THEME_GROUP_ICON),
-    X(ICON_MODE_PAINT,              2, 1, THEME_GROUP_ICON),
-    X(ICON_SHAPE_CUBE,              3, 1, THEME_GROUP_ICON),
-    X(ICON_SHAPE_SPHERE,            4, 1, THEME_GROUP_ICON),
-    X(ICON_SHAPE_CYLINDER,          5, 1, THEME_GROUP_ICON),
-    X(ICON_TOOL_RECT_SELECTION,     6, 1, THEME_GROUP_ICON),
-    X(ICON_TOOL_LINE,               7, 1, THEME_GROUP_ICON),
+    X(ICON_MODE_ADD, 0, 1, THEME_GROUP_ICON),
+    X(ICON_MODE_SUB, 1, 1, THEME_GROUP_ICON),
+    X(ICON_MODE_PAINT, 2, 1, THEME_GROUP_ICON),
+    X(ICON_SHAPE_CUBE, 3, 1, THEME_GROUP_ICON),
+    X(ICON_SHAPE_SPHERE, 4, 1, THEME_GROUP_ICON),
+    X(ICON_SHAPE_CYLINDER, 5, 1, THEME_GROUP_ICON),
+    X(ICON_TOOL_RECT_SELECTION, 6, 1, THEME_GROUP_ICON),
+    X(ICON_TOOL_LINE, 7, 1, THEME_GROUP_ICON),
 
-    X(ICON_ADD,                     0, 2, 0),
-    X(ICON_REMOVE,                  1, 2, 0),
-    X(ICON_ARROW_BACK,              2, 2, 0),
-    X(ICON_ARROW_FORWARD,           3, 2, 0),
-    X(ICON_LINK,                    4, 2, 0),
-    X(ICON_MENU,                    5, 2, 0),
-    X(ICON_DELETE,                  6, 2, 0),
-    X(ICON_TOOL_PROCEDURAL,         7, 2, 0),
+    X(ICON_ADD, 0, 2, 0),
+    X(ICON_REMOVE, 1, 2, 0),
+    X(ICON_ARROW_BACK, 2, 2, 0),
+    X(ICON_ARROW_FORWARD, 3, 2, 0),
+    X(ICON_LINK, 4, 2, 0),
+    X(ICON_MENU, 5, 2, 0),
+    X(ICON_DELETE, 6, 2, 0),
+    X(ICON_TOOL_PROCEDURAL, 7, 2, 0),
 
-    X(ICON_VISIBILITY,              0, 3, 0),
-    X(ICON_VISIBILITY_OFF,          1, 3, 0),
-    X(ICON_ARROW_DOWNWARD,          2, 3, 0),
-    X(ICON_ARROW_UPWARD,            3, 3, 0),
-    X(ICON_EDIT,                    4, 3, 0),
-    X(ICON_COPY,                    5, 3, 0),
-    X(ICON_GALLERY,                 6, 3, 0),
-    X(ICON_INFO,                    7, 3, 0),
+    X(ICON_VISIBILITY, 0, 3, 0),
+    X(ICON_VISIBILITY_OFF, 1, 3, 0),
+    X(ICON_ARROW_DOWNWARD, 2, 3, 0),
+    X(ICON_ARROW_UPWARD, 3, 3, 0),
+    X(ICON_EDIT, 4, 3, 0),
+    X(ICON_COPY, 5, 3, 0),
+    X(ICON_GALLERY, 6, 3, 0),
+    X(ICON_INFO, 7, 3, 0),
 
-    X(ICON_SETTINGS,                0, 4, 0),
-    X(ICON_CLOUD,                   1, 4, 0),
-    X(ICON_SHAPE,                   2, 4, 0),
-    X(ICON_CLOSE,                   3, 4, 0),
-    X(ICON_THREE_DOTS,              4, 4, 0),
-    X(ICON_HAMMER,                  5, 4, THEME_GROUP_ICON_EDIT),
+    X(ICON_SETTINGS, 0, 4, 0),
+    X(ICON_CLOUD, 1, 4, 0),
+    X(ICON_SHAPE, 2, 4, 0),
+    X(ICON_CLOSE, 3, 4, 0),
+    X(ICON_THREE_DOTS, 4, 4, 0),
+    X(ICON_HAMMER, 5, 4, THEME_GROUP_ICON_EDIT),
 
-    X(ICON_TOOLS,                   0, 5, THEME_GROUP_ICON_EDIT),
-    X(ICON_PALETTE,                 1, 5, THEME_GROUP_ICON_EDIT),
-    X(ICON_LAYERS,                  2, 5, THEME_GROUP_ICON_EDIT),
-    X(ICON_RENDER,                  3, 5, THEME_GROUP_ICON_RENDER),
-    X(ICON_CAMERA,                  4, 5, THEME_GROUP_ICON_VIEW),
-    X(ICON_IMAGE,                   5, 5, THEME_GROUP_ICON_RENDER),
-    X(ICON_EXPORT,                  6, 5, THEME_GROUP_ICON_RENDER),
-    X(ICON_DEBUG,                   7, 5, THEME_GROUP_ICON_OTHER),
+    X(ICON_TOOLS, 0, 5, THEME_GROUP_ICON_EDIT),
+    X(ICON_PALETTE, 1, 5, THEME_GROUP_ICON_EDIT),
+    X(ICON_LAYERS, 2, 5, THEME_GROUP_ICON_EDIT),
+    X(ICON_RENDER, 3, 5, THEME_GROUP_ICON_RENDER),
+    X(ICON_CAMERA, 4, 5, THEME_GROUP_ICON_VIEW),
+    X(ICON_IMAGE, 5, 5, THEME_GROUP_ICON_RENDER),
+    X(ICON_EXPORT, 6, 5, THEME_GROUP_ICON_RENDER),
+    X(ICON_DEBUG, 7, 5, THEME_GROUP_ICON_OTHER),
 
-    X(ICON_VIEW,                    0, 6, THEME_GROUP_ICON_VIEW),
-    X(ICON_MATERIAL,                1, 6, THEME_GROUP_ICON_VIEW),
-    X(ICON_LIGHT,                   2, 6, THEME_GROUP_ICON_VIEW),
-    X(ICON_TOOL_SELECTION,          3, 6, 0),
-    X(ICON_INTERSECT,               4, 6, 0),
-    X(ICON_SUBTRACT,                5, 6, 0),
-    X(ICON_SNAP,                    6, 6, 0),
-    X(ICON_SYMMETRY,                7, 6, 0),
+    X(ICON_VIEW, 0, 6, THEME_GROUP_ICON_VIEW),
+    X(ICON_MATERIAL, 1, 6, THEME_GROUP_ICON_VIEW),
+    X(ICON_LIGHT, 2, 6, THEME_GROUP_ICON_VIEW),
+    X(ICON_TOOL_SELECTION, 3, 6, 0),
+    X(ICON_INTERSECT, 4, 6, 0),
+    X(ICON_SUBTRACT, 5, 6, 0),
+    X(ICON_SNAP, 6, 6, 0),
+    X(ICON_SYMMETRY, 7, 6, 0),
 };
 
 #undef X
@@ -434,26 +439,26 @@ enum {
 #define VOXEL_TEXTURE_SIZE 8
 
 // Generate an optimal palette whith a fixed number of colors from a volume.
-void quantization_gen_palette(const volume_t *volume, int nb,
-                              uint8_t (*palette)[4]);
+void quantization_gen_palette(
+        const volume_t *volume, int nb, uint8_t (*palette)[4]);
 
 // #### Goxel : core object ####
 
 // Flags to set where the mouse snap.  In order of priority.
 enum {
-    SNAP_IMAGE_BOX      = 1 << 0,
-    SNAP_SELECTION_IN   = 1 << 1,
-    SNAP_SELECTION_OUT  = 1 << 2,
-    SNAP_VOLUME         = 1 << 3,
-    SNAP_PLANE          = 1 << 4, // The global plane.
-    SNAP_CAMERA         = 1 << 5, // Used for laser tool.
+    SNAP_IMAGE_BOX = 1 << 0,
+    SNAP_SELECTION_IN = 1 << 1,
+    SNAP_SELECTION_OUT = 1 << 2,
+    SNAP_VOLUME = 1 << 3,
+    SNAP_PLANE = 1 << 4,  // The global plane.
+    SNAP_CAMERA = 1 << 5, // Used for laser tool.
 
-    SNAP_SHAPE_BOX      = 1 << 6, // Snap to custom box.
-    SNAP_SHAPE_PLANE    = 1 << 7, // Snap to custom plane.
-    SNAP_SHAPE_LINE     = 1 << 8, // Snap to custom line.
-    SNAP_SHAPE_SEGMENT  = 1 << 9, // Snap to custom line.
+    SNAP_SHAPE_BOX = 1 << 6,     // Snap to custom box.
+    SNAP_SHAPE_PLANE = 1 << 7,   // Snap to custom plane.
+    SNAP_SHAPE_LINE = 1 << 8,    // Snap to custom line.
+    SNAP_SHAPE_SEGMENT = 1 << 9, // Snap to custom line.
 
-    SNAP_ROUNDED        = 1 << 10, // Round the result.
+    SNAP_ROUNDED = 1 << 10, // Round the result.
 };
 
 typedef struct keymap {
@@ -468,72 +473,84 @@ typedef struct hint {
     char msg[128];
 } hint_t;
 
-typedef struct goxel
-{
-    int        screen_size[2];
-    float      screen_scale;
-    image_t    *image;
+typedef struct goxel {
+    int screen_size[2];
+    float screen_scale;
+    image_t *image;
 
     // Flag so that we reinit OpenGL after the context has been killed.
-    bool       graphics_initialized;
+    bool graphics_initialized;
     // We can't reset the graphics in the middle of the gui, so use this.
     // for testing.
-    bool       request_test_graphic_release;
+    bool request_test_graphic_release;
 
     // Tools can set this volume and it will replace the current layer volume
     // during render.
-    volume_t   *tool_volume;
+    volume_t *tool_volume;
 
-    volume_t   *layers_volume_;
-    uint32_t   layers_volume_hash;
+    volume_t *layers_volume_;
+    uint32_t layers_volume_hash;
 
-    volume_t   *render_volume_; // All the layers + tool volume.
-    uint32_t   render_volume_hash;
+    volume_t *render_volume_; // All the layers + tool volume.
+    uint32_t render_volume_hash;
 
-    layer_t    *render_layers;
-    uint32_t   render_layers_hash;
-
-    struct     {
-        volume_t *volume;
-        float  box[4][4];
-    } clipboard;
-
-    int        snap_mask;    // Global snap mask (can edit in the GUI).
-    float      snap_offset;  // Only for brush tool, remove that?
-
-    float      plane[4][4];         // The snapping plane.
-    bool       show_export_viewport;
-
-    uint8_t    back_color[4];
-    uint8_t    grid_color[4];
-    uint8_t    image_box_color[4];
-    bool       hide_box;
-
-    texture_t  *pick_fbo;
-    painter_t  painter;
-    renderer_t rend;
-
-    tool_t     *tool;
-    float      tool_radius;
-    bool       pathtrace; // Render pathtraced mode.
+    layer_t *render_layers;
+    uint32_t render_layers_hash;
 
     struct {
-        float  rotation[4];
-        float  pos[2];
-        float  camera_ofs[3];
-        float  camera_mat[4][4];
+        volume_t *volume;
+        float box[4][4];
+    } clipboard;
+
+    int snap_mask;         // Global snap mask (can edit in the GUI).
+    float snap_offsets[3]; // Snap offsets for X, Y, Z axes.
+    float snap_units[3];   // Custom snap units for X, Y, Z axes.
+    bool use_brush_size;   // Use brush size for snap units.
+    float snap_offset;     // Only for brush tool, remove that?
+
+    float plane[4][4]; // The snapping plane.
+    bool show_export_viewport;
+
+    uint8_t back_color[4];
+    uint8_t grid_color[4];
+    uint8_t image_box_color[4];
+    bool hide_box;
+
+    texture_t *pick_fbo;
+    painter_t painter;
+    renderer_t rend;
+
+    tool_t *tool;
+    float tool_radius;
+    bool pathtrace; // Render pathtraced mode.
+
+    struct {
+        float rotation[4];
+        float pos[2];
+        float camera_ofs[3];
+        float camera_mat[4][4];
+        // Pivot point for rotation around hovered voxel
+        float pivot_point[3];
+        bool has_pivot_point;
     } move_origin;
 
-    palette_t  *palettes;   // The list of all the palettes
-    palette_t  *palette;    // The current color palette
+    struct {
+        bool active;
+        float move_speed;
+        float look_speed;
+        float last_mouse_pos[2];
+    } fly_mode;
 
-    double     delta_time;  // Elapsed time since last frame (sec)
-    int        frame_count; // Global frames counter.
-    double     frame_time;  // Clock time at beginning of the frame (sec)
-    double     fps;         // Average fps.
-    bool       quit;        // Set to true to quit the application.
+    palette_t *palettes; // The list of all the palettes
+    palette_t *palette;  // The current color palette
 
-    int        view_effects; // EFFECT_WIREFRAME | EFFECT_GRID | EFFECT_EDGES
+    double delta_time; // Elapsed time since last frame (sec)
+    int frame_count;   // Global frames counter.
+    double frame_time; // Clock time at beginning of the frame (sec)
+    double fps;        // Average fps.
+    bool quit;         // Set to true to quit the application.
+
+    int view_effects; // EFFECT_WIREFRAME | EFFECT_GRID | EFFECT_EDGES
 
     // Stb array of all the gestures we listen to.
     gesture_t **gestures;
@@ -545,8 +562,8 @@ typedef struct goxel
     pathtracer_t pathtracer;
 
     // Used to check if the active volume changed to play tick sound.
-    uint64_t    last_volume_key;
-    double      last_click_time;
+    uint64_t last_volume_key;
+    double last_click_time;
 
     // Some stats for the UI.
     struct {
@@ -565,6 +582,10 @@ typedef struct goxel
 
     // Can be set to a key code (only KEY_LEFT_ALT is supported for now).
     int emulate_three_buttons_mouse;
+
+    // Camera settings
+    float camera_fov; // Field of view in degrees
+    float zoom_speed; // Global zoom speed multiplier
 
     // Stb arrary of hints to show on top of the screen.
     hint_t *hints;
@@ -602,18 +623,20 @@ void goxel_release_graphics(void);
 void goxel_on_low_memory(void);
 
 int goxel_unproject(const float viewport[4],
-                    const float pos[2], int snap_mask,
+                    const float pos[2],
+                    int snap_mask,
                     const float snap_shape[4][4],
                     float offset,
-                    float out[3], float normal[3]);
+                    float out[3],
+                    float normal[3]);
 
 void goxel_render_view(const float viewport[4], bool render_mode);
 void goxel_render_export_view(const float viewport[4]);
 // Called by the gui when the mouse hover a 3D view.
 // XXX: change the name since we also call it when the mouse get out of
 // the view.
-void goxel_mouse_in_view(const float viewport[4], const inputs_t *inputs,
-                         bool capture_keys);
+void goxel_mouse_in_view(
+        const float viewport[4], const inputs_t *inputs, bool capture_keys);
 
 const volume_t *goxel_get_layers_volume(const image_t *img);
 const volume_t *goxel_get_render_volume(const image_t *img);
@@ -654,11 +677,10 @@ int load_from_file(const char *path, bool replace);
 
 // Iter info of a gox file, without actually reading it.
 // For the moment only returns the image preview if available.
-int gox_iter_infos(const char *path,
-                   int (*callback)(const char *attr, int size,
-                                   void *value, void *user),
-                   void *user);
-
+int gox_iter_infos(
+        const char *path,
+        int (*callback)(const char *attr, int size, void *value, void *user),
+        void *user);
 
 void settings_load(void);
 void settings_save(void);
@@ -672,8 +694,8 @@ void goxel_add_recent_file(const char *path);
  * This is a conveniance function so that we don't have to handle the case
  * where we have a selection mask or not.
  */
-void goxel_apply_color_filter(
-        void (*fn)(void *args, uint8_t color[4]), void *args);
+void goxel_apply_color_filter(void (*fn)(void *args, uint8_t color[4]),
+                              void *args);
 
 /*
  * Process a 3d gesture.
@@ -693,6 +715,5 @@ void goxel_update_keymaps(void);
 /* Function: tests_run
  * Run all the unit tests */
 void tests_run(void);
-
 
 #endif // GOXEL_H

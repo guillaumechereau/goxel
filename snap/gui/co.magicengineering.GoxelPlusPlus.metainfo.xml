@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>co.magicengineering.GoxelPlusPlus</id>
+    <name>Goxel++</name>
+    <project_license>GPL-3.0-only</project_license>
+    <metadata_license>CC0-1.0</metadata_license>
+    <summary>Open Source 3D voxel editor</summary>
+    <developer_name>Magic Engineering, LLC</developer_name>
+    <description>
+        <p>
+		Goxel++ is a fork of Goxel which is a 3D program that lets you create voxel volumes, a bit similar to minecraft. The code is Open Source and fully available on Github.
+        </p>
+        <p>Features:</p>
+        <ul>
+            <li>Unlimited scene size: You can create voxel images as big as you want.</li>
+            <li>Layers support: Decompose your image into several layers for easy editing.</li>
+            <li>Many export formats: Goxel can export to obj, pyl, magica voxel, png, qubicle, povray, and more.</li>
+        </ul>
+    </description>
+    <launchable type="desktop-id">goxel++.desktop</launchable>
+    <screenshots>
+        <screenshot type="default">
+            <caption>Fisherman house, made with Goxel by Thibault Simar</caption>
+            <image type="source">https://goxel.xyz/gallery/thibault-fisherman-house.jpg</image>
+        </screenshot>
+    </screenshots>
+    <provides>
+        <binary>Goxel++</binary>
+    </provides>
+    <releases>
+        <release version="1.0.1" date="2023-09-24"/>
+    </releases>
+    <url type="homepage">https://goxel.xyz/</url>
+    <url type="bugtracker">https://github.com/tatelax/goxelplusplus/issues</url>
+    <url type="vcs-browser">https://github.com/tatelax/goxelplusplus</url>
+    <url type="contribute">https://github.com/tatelax/goxelplusplus/blob/master/CONTRIBUTING.md</url>
+    <content_rating type="oars-1.1" />
+</component>

@@ -1,15 +1,15 @@
-name: goxel
+name: Goxel++
 version: git
-summary: Goxel. Free and Open Source 3D Voxel Editor
+summary: Free and Open Source 3D Voxel Editor
 description: |
-  You can use goxel to create voxel graphics (3D images formed of cubes). 
+  You can use Goxel++ to create voxel graphics (3D images formed of cubes). 
   It works on Linux, BSD, Windows and macOS.
 
 confinement: strict
 
 apps:
   goxel:
-    command: desktop-launch $SNAP/goxel
+    command: desktop-launch $SNAP/Goxel++
     plugs:
       - x11
       - opengl
@@ -23,7 +23,7 @@ parts:
     build: |
       make release
     install: |
-      cp goxel $SNAPCRAFT_PART_INSTALL
+      cp Goxel++ $SNAPCRAFT_PART_INSTALL
       cp icon.png $SNAPCRAFT_PART_INSTALL
     build-packages:
       - scons
