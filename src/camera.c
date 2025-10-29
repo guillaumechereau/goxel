@@ -23,10 +23,9 @@ camera_t *camera_new(const char *name)
 {
     camera_t *cam = calloc(1, sizeof(*cam));
     cam->ref = 1;
-    if (name)
-        strncpy(cam->name, name, sizeof(cam->name) - 1);
+    if (name) strncpy(cam->name, name, sizeof(cam->name) - 1);
     mat4_set_identity(cam->mat);
-    cam->dist = 128;
+    cam->dist = 48;
     cam->aspect = 1;
     mat4_itranslate(cam->mat, 0, 0, cam->dist);
     camera_turntable(cam, M_PI / 4, M_PI / 4);
@@ -98,24 +97,26 @@ void camera_update(camera_t *camera)
     float size;
     float clip_near, clip_far;
 
-    camera->fovy = 20.;
+    camera->fovy = goxel.camera_fov;
     mat4_invert(camera->mat, camera->view_mat);
     compute_clip(camera->view_mat, &clip_near, &clip_far);
     if (camera->ortho) {
         size = camera->dist;
-        mat4_ortho(camera->proj_mat,
-                -size, +size,
-                -size / camera->aspect, +size / camera->aspect,
-                clip_near, clip_far);
-    } else {
-        mat4_perspective(camera->proj_mat,
-                camera->fovy, camera->aspect, clip_near, clip_far);
+        mat4_ortho(camera->proj_mat, -size, +size, -size / camera->aspect,
+                   +size / camera->aspect, clip_near, clip_far);
+    }
+    else {
+        mat4_perspective(camera->proj_mat, camera->fovy, camera->aspect,
+                         clip_near, clip_far);
     }
 }
 
 // Get the raytracing ray of the camera at a given screen position.
-void camera_get_ray(const camera_t *camera, const float win[2],
-                    const float viewport[4], float o[3], float d[3])
+void camera_get_ray(const camera_t *camera,
+                    const float win[2],
+                    const float viewport[4],
+                    float o[3],
+                    float d[3])
 {
     float o1[3], o2[3], p[3];
     vec3_set(p, win[0], win[1], 0);
@@ -187,10 +188,12 @@ void camera_turntable(camera_t *camera, float rz, float rx)
     mat4_itranslate(camera->mat, 0, 0, camera->dist);
 }
 
-void camera_project(const camera_t *camera, const float pos[3],
-                    const float viewport[4], float out[3])
+void camera_project(const camera_t *camera,
+                    const float pos[3],
+                    const float viewport[4],
+                    float out[3])
 {
-    float p[4] = {pos[0], pos[1], pos[2], 1};
+    float p[4] = { pos[0], pos[1], pos[2], 1 };
     mat4_mul_vec4(camera->view_mat, p, p);
     mat4_mul_vec4(camera->proj_mat, p, p);
     vec3_mul(p, 1 / p[3], p);
@@ -198,5 +201,5 @@ void camera_project(const camera_t *camera, const float pos[3],
     // Convert to screen space
     out[0] = (p[0] * 0.5f + 0.5f) * viewport[2] + viewport[0];
     out[1] = (p[1] * 0.5f + 0.5f) * viewport[3] + viewport[1];
-    out[2] = (p[2] * 0.5f + 0.5f);  // Depth value in range [0, 1]
+    out[2] = (p[2] * 0.5f + 0.5f); // Depth value in range [0, 1]
 }
