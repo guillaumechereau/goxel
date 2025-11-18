@@ -112,7 +112,7 @@ if target_os == 'posix':
 
 
 # Windows compilation support.
-if target_os == 'msys':
+if target_os == 'msys' or target_os == 'cygwin':
     env.Append(CXXFLAGS=['-Wno-attributes', '-Wno-unused-variable',
                          '-Wno-unused-function'])
     env.Append(CCFLAGS=['-Wno-error=address']) # To remove if possible.
