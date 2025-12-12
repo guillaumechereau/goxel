@@ -196,7 +196,7 @@ static float get_border_dist(float x, float y, int mask)
 static void init_occlusion_texture(void)
 {
     const int s = VOXEL_TEXTURE_SIZE;    // the individual tile size.
-    uint8_t data[256 * s * s];
+    uint8_t data[256 * VOXEL_TEXTURE_SIZE * VOXEL_TEXTURE_SIZE];
     int mask, x, y, ax, ay;
     for (mask = 0; mask < 256; mask++) {
         for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
