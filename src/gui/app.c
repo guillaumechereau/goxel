@@ -40,9 +40,6 @@
 #define INITIAL_FILTER_OFFSET 10
 #define RELATIVE_FILTER_OFFSET 40
 
-// Note: duplicated from gui.cpp!  To remove.
-static const float ITEM_HEIGHT = 18;
-
 void gui_edit_panel(void);
 void gui_menu(void);
 void gui_tools_panel(void);
@@ -199,6 +196,7 @@ void gui_app(void)
     int flags;
     int i;
     filter_layout_state_t filter_layout_state;
+    const float item_height = gui_get_item_height();
 
     goxel.show_export_viewport = false;
 
@@ -211,7 +209,7 @@ void gui_app(void)
             render_hints(goxel.hints);
             gui_menu_bar_end();
         }
-        y = ITEM_HEIGHT + 2;
+        y = item_height + 2;
     }
 
     gui_window_begin("Top Bar", x, y, 0, 0, 0);
@@ -259,5 +257,5 @@ void gui_app(void)
         (goxel.gui.current_panel == PANEL_RENDER ||
          PANELS[PANEL_RENDER].detached);
 
-    gui_view_cube(goxel.gui.viewport[2] - 128, ITEM_HEIGHT + 2, 128, 128);
+    gui_view_cube(goxel.gui.viewport[2] - 128, item_height + 2, 128, 128);
 }

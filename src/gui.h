@@ -31,10 +31,6 @@
 #   define GUI_PANEL_WIDTH_NORMAL 230
 #endif
 
-#ifndef GUI_PANEL_WIDTH_LARGE
-#   define GUI_PANEL_WIDTH_LARGE 400
-#endif
-
 enum {
     GUI_WINDOW_MOVABLE                  = 1 << 0,
     GUI_WINDOW_HORIZONTAL               = 1 << 1, // For scrolling.
@@ -47,6 +43,9 @@ typedef struct {
     float h;
     float w;
 } gui_window_ret_t;
+
+float gui_get_scale(void);
+void gui_set_scale(float s);
 
 int gui_window_begin(const char *label, float x, float y, float w, float h,
                      int flags);
@@ -195,10 +194,25 @@ bool gui_context_menu_begin(const char *label);
 void gui_context_menu_end(void);
 void gui_context_menu_button(const char *label, int icon);
 
+
+/*
+ * Experimental support for list, with drag and drap support.
+ */
+
+typedef struct {
+    void **items;
+    void **current;
+    bool (*render)(void *item, int idx, bool current);
+    bool can_be_null;
+} gui_list_t;
+
+void gui_list(const gui_list_t *list);
+
 /*
  * to avoid, for manual layout.
  */
 float gui_get_current_pos_x(void);
 void gui_set_current_pos_x(float x);
+float gui_get_item_height(void);
 
 #endif // GUI_H

@@ -196,7 +196,7 @@ static float get_border_dist(float x, float y, int mask)
 static void init_occlusion_texture(void)
 {
     const int s = VOXEL_TEXTURE_SIZE;    // the individual tile size.
-    uint8_t data[256 * s * s];
+    uint8_t data[256 * VOXEL_TEXTURE_SIZE * VOXEL_TEXTURE_SIZE];
     int mask, x, y, ax, ay;
     for (mask = 0; mask < 256; mask++) {
         for (y = 0; y < s; y++) for (x = 0; x < s; x++) {
@@ -306,6 +306,9 @@ void render_init()
     int i;
 
     LOG_D("render init");
+    LOG_I("OpenGL version: %s", glGetString(GL_VERSION));
+    LOG_I("OpenGL renderer: %s", glGetString(GL_RENDERER));
+
     GL(glGenBuffers(1, &g_index_buffer));
     GL(glGenBuffers(1, &g_background_array_buffer));
 
@@ -331,7 +334,7 @@ void render_init()
     init_bump_texture();
 
     // XXX: pick the proper memory size according to what is available.
-    g_items_cache = cache_create(RENDER_CACHE_SIZE);
+    g_items_cache = cache_create("render_items", RENDER_CACHE_SIZE);
     g_cube_model = model3d_cube();
     g_line_model = model3d_line();
     g_wire_cube_model = model3d_wire_cube();

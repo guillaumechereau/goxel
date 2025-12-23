@@ -28,6 +28,7 @@ typedef struct {
     int    snap_face;
     float  normal[3];
     int    delta;
+    int    threshold;
 } tool_extrude_t;
 
 static int select_cond(void *user, const volume_t *volume,
@@ -35,8 +36,10 @@ static int select_cond(void *user, const volume_t *volume,
                        const int new_pos[3],
                        volume_accessor_t *volume_accessor)
 {
-    int snap_face = *((int*)user);
-    int p[3], n[3];
+    tool_extrude_t *tool = (void*)user;
+    int snap_face = tool->snap_face;
+    int p[3], n[3], color_dist;
+    uint8_t v0[4], v1[4];
 
     // Only consider voxel in the snap plane.
     memcpy(n, FACES_NORMALS[snap_face], sizeof(n));
@@ -50,6 +53,15 @@ static int select_cond(void *user, const volume_t *volume,
     p[1] = new_pos[1] + FACES_NORMALS[snap_face][1];
     p[2] = new_pos[2] + FACES_NORMALS[snap_face][2];
     if (volume_get_alpha_at(volume, volume_accessor, p)) return 0;
+
+    if (tool->threshold < 255) {
+        volume_get_at(volume, volume_accessor, base_pos, v0);
+        volume_get_at(volume, volume_accessor, new_pos, v1);
+        color_dist = max3(abs(v0[0] - v1[0]),
+                          abs(v0[1] - v1[1]),
+                          abs(v0[2] - v1[2]));
+        if (color_dist > tool->threshold) return 0;
+    }
 
     return 255;
 }
@@ -140,7 +152,7 @@ static int on_drag(gesture3d_t *gest)
         pi[0] = floor(gest->pos[0]);
         pi[1] = floor(gest->pos[1]);
         pi[2] = floor(gest->pos[2]);
-        volume_select(volume, pi, select_cond, &tool->snap_face, tmp_volume);
+        volume_select(volume, pi, select_cond, tool, tmp_volume);
         volume_merge(tool->volume, tmp_volume, MODE_MULT_ALPHA, NULL);
         volume_delete(tmp_volume);
 
@@ -180,6 +192,12 @@ end:
     return 0;
 }
 
+static void init(tool_t *tool_)
+{
+    tool_extrude_t *tool = (void*)tool_;
+    tool->threshold = 255;
+}
+
 static int iter(tool_t *tool_, const painter_t *painter,
                 const float viewport[4])
 {
@@ -208,6 +226,14 @@ static int gui(tool_t *tool_)
 {
     tool_extrude_t *tool = (tool_extrude_t*)tool_;
     volume_t *volume = goxel.image->active_layer->volume;
+    bool use_color = tool->threshold < 255;
+
+    if (gui_checkbox(_("Colors"), &use_color, _("Select by Color"))) {
+        tool->threshold = use_color ? 0 : 255;
+    }
+    if (use_color) {
+        gui_input_int(_("Threshold"), &tool->threshold, 0, 255);
+    }
 
     gui_enabled_begin(tool->volume != NULL);
     if (gui_input_int(_("Delta"), &tool->delta, 0, 0)) {
@@ -219,12 +245,14 @@ static int gui(tool_t *tool_)
     if (gui_is_item_deactivated()) {
         image_history_push(goxel.image);
     }
+
     gui_enabled_end();
     return 0;
 }
 
 TOOL_REGISTER(TOOL_EXTRUDE, extrude, tool_extrude_t,
               .name = N_("Extrude"),
+              .init_fn = init,
               .iter_fn = iter,
               .gui_fn = gui,
               .flags = TOOL_REQUIRE_CAN_EDIT | TOOL_SHOW_MASK,

@@ -52,6 +52,13 @@ typedef struct {
     bool    down[3];
 } touch_t;
 
+typedef struct {
+    int top;
+    int bottom;
+    int left;
+    int right;
+} margins_t;
+
 typedef struct inputs
 {
     int         window_size[2];
@@ -63,12 +70,7 @@ typedef struct inputs
     int         framebuffer; // Screen framebuffer
 
     // Screen safe margins, used for iOS only.
-    struct {
-        int top;
-        int bottom;
-        int left;
-        int right;
-    } safe_margins;
+    margins_t safe_margins;
 
 } inputs_t;
 

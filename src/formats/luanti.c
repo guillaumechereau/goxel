@@ -160,7 +160,7 @@ error:
 }
 
 FILE_FORMAT_REGISTER(kv6,
-    .name = "Minetest",
+    .name = "Luanti (Minetest)",
     .exts = {"*.mts"},
     .exts_desc = "mts",
     .import_func = mts_import,

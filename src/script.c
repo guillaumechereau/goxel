@@ -32,6 +32,7 @@ static JSContext *g_ctx = NULL;
 typedef struct klass klass_t;
 typedef struct attribute attribute_t;
 
+
 /*
  * Represent a bound attribute of a class.
  */
@@ -79,6 +80,7 @@ typedef struct {
 static klass_t vec_klass;
 static klass_t box_klass;
 static klass_t image_klass;
+static klass_t palette_klass;
 static klass_t layer_klass;
 static klass_t volume_klass;
 static klass_t goxel_klass;
@@ -251,7 +253,7 @@ static klass_t vec_klass = {
         {"g", .get=js_vec_get, .set=js_vec_set, .magic=1},
         {"b", .get=js_vec_get, .set=js_vec_set, .magic=2},
         {"a", .get=js_vec_get, .set=js_vec_set, .magic=3},
-        {}
+        { .name = NULL }
     },
 };
 
@@ -333,7 +335,7 @@ static klass_t box_klass = {
     .attributes = {
         {"iterVoxels", .fn=js_box_iterVoxels},
         {"worldToLocal", .fn=js_box_worldToLocal},
-        {}
+        { .name = NULL }
     },
 };
 
@@ -447,7 +449,7 @@ static klass_t volume_klass = {
         {"iter", .fn=js_volume_iter},
         {"setAt", .fn=js_volume_setAt},
         {"save", .fn=js_volume_save},
-        {}
+        { .name = NULL }
     }
 };
 
@@ -495,7 +497,7 @@ static klass_t image_klass = {
         {"activeLayer", .klass=&layer_klass, MEMBER(image_t, active_layer)},
         {"getLayersVolume", .fn=js_image_getLayersVolume},
         {"selectionBox", .klass=&box_klass, MEMBER(image_t, selection_box)},
-        {}
+        { .name = NULL }
     }
 };
 
@@ -511,7 +513,107 @@ static klass_t layer_klass = {
     .def.finalizer = js_layer_finalizer,
     .attributes = {
         {"volume", .klass=&volume_klass, MEMBER(layer_t, volume)},
-        {}
+        { .name = NULL }
+    }
+};
+
+typedef struct {
+    palette_t *palette;
+    JSValue color_vec;
+} js_palette_t;
+
+static JSValue js_palette_get_color(JSContext *ctx, JSValueConst this_val, int magic)
+{
+    js_palette_t *js_palette;
+    uint8_t *color;
+    
+    js_palette = JS_GetOpaque2(ctx, this_val, palette_klass.id);
+    if (!js_palette) {
+        LOG_E("Error in palette_get_color: No palette object found");
+        return JS_EXCEPTION;
+    }
+    
+    color = goxel.painter.color;
+    
+    // If we already have a color vec, free it first to prevent memory leaks
+    if (!JS_IsUndefined(js_palette->color_vec)) {
+        JS_FreeValue(ctx, js_palette->color_vec);
+    }
+    
+    // Create a new vec and store it in our js_palette struct
+    js_palette->color_vec = new_js_vec4(ctx, color[0], color[1], color[2], color[3]);
+    
+    return JS_DupValue(ctx, js_palette->color_vec);
+}
+
+static JSValue js_palette_set_color(JSContext *ctx, JSValueConst this_val, 
+                                    JSValueConst val, int magic)
+{
+    js_palette_t *js_palette;
+    uint8_t new_color_values[4];
+
+    // magic is unused for this specific setter, but part of the signature
+    (void)magic;
+
+    js_palette = JS_GetOpaque2(ctx, this_val, palette_klass.id);
+    if (!js_palette) {
+        LOG_E("Error in palette_set_color: No palette object found");
+        return JS_EXCEPTION;
+    }
+
+    // Parse the incoming JSValue 'val' into a C array of 4 uint8_t
+    // Defaults to 255 for any missing components (e.g. alpha if only RGB provided)
+    get_vec_uint8(ctx, val, 4, new_color_values, 255);
+
+    // Update the actual painter color
+    goxel.painter.color[0] = new_color_values[0];
+    goxel.painter.color[1] = new_color_values[1];
+    goxel.painter.color[2] = new_color_values[2];
+    goxel.painter.color[3] = new_color_values[3];
+
+    return JS_UNDEFINED; // Standard for successful setters
+}
+
+static void js_palette_finalizer(JSRuntime *rt, JSValue this_val)
+{
+    js_palette_t *js_palette;
+    
+    js_palette = JS_GetOpaque(this_val, palette_klass.id);
+    if (!js_palette)
+        return;
+
+    LOG_I("Palette finalizer called for palette at %p", (void*)js_palette);
+    
+    if (!JS_IsUndefined(js_palette->color_vec)) {
+        JS_FreeValueRT(rt, js_palette->color_vec);
+    }
+    
+    js_free_rt(rt, js_palette);
+}
+
+static JSValue js_palette_from_ptr(JSContext *ctx, JSValueConst owner, 
+                                   void *ptr, size_t size)
+{
+    JSValue ret;
+    js_palette_t *js_palette;
+    
+    js_palette = js_mallocz(ctx, sizeof(*js_palette));
+    js_palette->palette = ptr;
+    js_palette->color_vec = JS_UNDEFINED;
+    
+    ret = JS_NewObjectClass(ctx, palette_klass.id);
+    JS_SetOpaque(ret, js_palette);
+    return ret;
+}
+
+static klass_t palette_klass = {
+    .def.class_name = "Palette",
+    .def.finalizer = js_palette_finalizer,
+    .ctor_from_ptr = js_palette_from_ptr,
+    .attributes = {
+        {"color", .get=js_palette_get_color, .set=js_palette_set_color, 
+            .magic=0},
+        { .name = NULL }
     }
 };
 
@@ -626,9 +728,10 @@ static klass_t goxel_klass = {
     .def.class_name = "Goxel",
     .attributes = {
         {"image", .klass=&image_klass, MEMBER(goxel_t, image)},
+        {"palette", .klass=&palette_klass, MEMBER(goxel_t, palette)},
         {"registerFormat", .fn=js_goxel_registerFormat},
         {"registerScript", .fn=js_goxel_registerScript},
-        {}
+        { .name = NULL }
     },
 };
 
@@ -641,19 +744,31 @@ static JSValue attr_getter(JSContext *ctx, JSValueConst this_val, int magic)
 
     proto = JS_GetPrototype(ctx, this_val);
     klass = JS_GetOpaque(proto, 1);
+    if (!klass) {
+        JS_FreeValue(ctx, proto);
+        return JS_EXCEPTION;
+    }
+    
     this = JS_GetOpaque(this_val, klass->id);
     JS_FreeValue(ctx, proto);
     attr = &klass->attributes[magic];
 
+    if (!this) {
+        LOG_E("No object instance found for class %s", klass->def.class_name);
+        return JS_EXCEPTION;
+    }
+    
+    attr = &klass->attributes[magic];
+    
     assert(this);
     if (attr->klass && attr->klass->ctor_from_ptr && attr->member.size) {
-        ptr = this + attr->member.offset;
+        ptr = (char*)this + attr->member.offset; 
         ret = attr->klass->ctor_from_ptr(ctx, this_val, ptr, attr->member.size);
         return ret;
     }
 
     if (attr->klass && attr->member.size) {
-        ptr = *(void**)(this + attr->member.offset);
+        ptr = *(void**)((char*)this + attr->member.offset);
         if (!ptr) return JS_NULL;
         ((obj_t*)ptr)->ref++;
         ret = JS_NewObjectClass(ctx, attr->klass->id);
@@ -661,6 +776,7 @@ static JSValue attr_getter(JSContext *ctx, JSValueConst this_val, int magic)
         return ret;
     }
 
+    LOG_E("No attribute handler found for %s", attr->name);
     return JS_EXCEPTION;
 }
 
@@ -732,6 +848,7 @@ static void init_runtime(void)
     init_klass(ctx, &volume_klass);
     init_klass(ctx, &layer_klass);
     init_klass(ctx, &image_klass);
+    init_klass(ctx, &palette_klass);
     init_klass(ctx, &goxel_klass);
 
     // Add global 'goxel' object.

@@ -818,12 +818,12 @@ ACTION_REGISTER(ACTION_img_del_layer,
 
 static void a_image_move_layer_up(void)
 {
-    image_move_layer(goxel.image, goxel.image->active_layer, -1);
+    image_move_layer(goxel.image, goxel.image->active_layer, +1);
 }
 
 static void a_image_move_layer_down(void)
 {
-    image_move_layer(goxel.image, goxel.image->active_layer, +1);
+    image_move_layer(goxel.image, goxel.image->active_layer, -1);
 }
 
 

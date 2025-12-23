@@ -38,131 +38,125 @@ static inline int AT(int x, int y, int z, int d) {
     return x + y * 512 + z * 512 * 512;
 }
 
-static void swap_color(uint32_t v, uint8_t ret[4])
-{
-    uint8_t o[4];
-    memcpy(o, &v, 4);
-    ret[0] = o[2];
-    ret[1] = o[1];
-    ret[2] = o[0];
-    ret[3] = o[3];
-}
-
-/*
- * Get the max height of a vlx file.
- */
-static int vxl_get_d(const uint8_t *data, int size)
-{
-    int w = 512, h = 512, d = 64, x, y;
-    const uint8_t *v;
-    int number_4byte_chunks;
-    int top_color_start;
-    int top_color_end;
-    int len_bottom;
-
-    v = data;
-    for (y = 0; y < h; y++)
-    for (x = 0; x < w; x++) {
-        while (true) {
-            number_4byte_chunks = v[0];
-            top_color_start = v[1];
-            top_color_end = v[2];
-            d = max(d, top_color_end + 1);
-            len_bottom = top_color_end - top_color_start + 1;
-            if (number_4byte_chunks == 0) {
-                v += 4 * (len_bottom + 1);
-                break;
-            }
-            v += v[0] * 4;
-        }
-    }
-
-    return d;
-}
-
 static int vxl_import(const file_format_t *format, image_t *image,
                       const char *path)
 {
-    // The algo is based on
-    // https://silverspaceship.com/aosmap/aos_file_format.html
-    // From Sean Barrett (the same person that wrote the code used in
-    // ext_src/stb!).
-    int ret = 0, size;
-    int w = 512, h = 512, d = 64, x, y, z;
-    uint8_t (*cube)[4] = NULL;
-    uint8_t *data = NULL, *v;
-
-    uint32_t *color;
-    int i;
-    int number_4byte_chunks;
-    int top_color_start;
-    int top_color_end;
-    int bottom_color_start;
-    int bottom_color_end; // exclusive
-    int len_top;
-    int len_bottom;
-
     if (!path) return -1;
 
-    data = (void*)read_file(path, &size);
+    // See https://silverspaceship.com/aosmap/aos_file_format.html
+    // for a description of the AOS file format. Note that this import
+    // code is different from the one given on that page, however we use
+    // some of the same variable names. The importer on silverspaceship.com
+    // contains a bug somewhere, this was known back when AOS was at its
+    // peak in 2012.
 
-    d = vxl_get_d(data, size);
-    cube = calloc(w * h * d, sizeof(*cube));
-    v = data;
+    int width = 512, height = 64, depth = 512;
 
-    for (y = 0; y < h; y++)
-    for (x = 0; x < w; x++) {
+    int ret = 0;
 
-        for (z = 0; z < d; z++)
-            cube[AT(x, y, z, d)][3] = 255;
+    // The variable i here points to the location in the data array we
+    // are reading from
+    int i = 0;
+    int x = 0; // Cursor location x
+    int y = 0; // Cursor location y
+    int columnI = 0; // Which vertical column we are currently on
+    int columnCount = width * depth; // The total number of columns in the map
 
-        z = 0;
-        while (true) {
-            number_4byte_chunks = v[0];
-            top_color_start = v[1];
-            top_color_end = v[2];
+    int size;
+    uint8_t *data = (uint8_t*)read_file(path, &size);
 
-            for (i = z; i < top_color_start; i++)
-                cube[AT(x, y, i, d)][3] = 0;
+    uint8_t (*cube)[4] = NULL;
+    cube = calloc(width * height * depth, sizeof(*cube));
 
-            color = (uint32_t*)(v + 4);
-            for (z = top_color_start; z <= top_color_end; z++) {
-                CHECK(z >= 0 && z < d);
-                swap_color(*color++, cube[AT(x, y, z, d)]);
+    // The general strategy for this loader is to consume data from the input
+    // binary until we've processed all columns in the map.
+    // We will move the cursor (x, y, zz) as we read the voxel data. The cursor
+    // indicates the current location we are modifying
+    while (columnI < columnCount) {
+        // i = span start byte
+        int N = data[i]; // length of span data (N * 4 bytes including span header)
+        int S = data[i + 1]; // Starting height of top colored run
+        int E = data[i + 2]; // Ending height of top colored run
+        int K = E - S + 1;
+        int M, Z, zz, runLength;
+
+        if (N == 0) {
+            Z = 0;
+            M = 64;
+        } else {
+            Z = (N - 1) - K;
+            // A of the next span
+            M = data[i + N * 4 + 3];
+        }
+
+        int colorI = 0;
+        // Execute the following loop twice:
+        // Once for the top run of colors, the second for the bottom run of colors
+        for (int p = 0; p < 2; p++) {
+            // Get top run of colors
+            if (p == 0) {
+                zz = S;
+                runLength = K;
+            } else {
+                // Get bottom run of colors
+                zz = M - Z;
+                runLength = Z;
             }
 
-            len_bottom = top_color_end - top_color_start + 1;
+            for (int j = 0; j < runLength; j++) {
+                uint8_t blue = data[i + 4 + colorI * 4];
+                uint8_t green = data[i + 5 + colorI * 4];
+                uint8_t red = data[i + 6 + colorI * 4];
 
-            // check for end of data marker
-            if (number_4byte_chunks == 0) {
-                // infer ACTUAL number of 4-byte chunks from the length of the
-                // color data
-                v += 4 * (len_bottom + 1);
-                break;
+                int idx = AT(x, y, zz, height);
+                cube[idx][0] = red;
+                cube[idx][1] = green;
+                cube[idx][2] = blue;
+                cube[idx][3] = 255;
+
+                zz++;
+                colorI++;
+            }
+        }
+
+        // Now deal with solid non-surface voxels
+        // No color data is provided for non-surface voxels
+        zz = E + 1;
+        runLength = M - Z - zz;
+        for (int j = 0; j < runLength; j++) {
+            // All other channels should already be 0 due to calloc
+            // Set to brown color. In AOS non-surface blocks became
+            // brown when exposed to the air
+            int idx = AT(x, y, zz, height);
+            cube[idx][0] = 91;
+            cube[idx][1] = 64;
+            cube[idx][2] = 64;
+            cube[idx][3] = 255;
+            zz++;
+        }
+
+        if (N == 0) {
+            // We're done with this column of data, move the cursor
+            // to the next column and increment our column counter
+            columnI++;
+            x++;
+            if (x >= width) {
+                x = 0;
+                y++;
             }
 
-            // infer the number of bottom colors in next span from chunk length
-            len_top = (number_4byte_chunks-1) - len_bottom;
-
-            // now skip the v pointer past the data to the beginning of the
-            // next span
-            v += v[0] * 4;
-
-            bottom_color_end   = v[3]; // aka air start
-            bottom_color_start = bottom_color_end - len_top;
-
-            for(z = bottom_color_start; z < bottom_color_end; z++)
-                swap_color(*color++, cube[AT(x, y, z, d)]);
+            i += 4 * (1 + K);
+        } else {
+            i += N * 4;
         }
     }
 
     volume_blit(image->active_layer->volume, (uint8_t*)cube,
-              -w / 2, -h / 2, -d / 2, w, h, d, NULL);
+          -width / 2, -depth / 2, -height / 2, width, depth, height, NULL);
     if (box_is_null(image->box)) {
-        bbox_from_extents(image->box, vec3_zero, w / 2, h / 2, d / 2);
+        bbox_from_extents(image->box, vec3_zero, width / 2, depth / 2, height / 2);
     }
 
-end:
     free(cube);
     free(data);
     return ret;

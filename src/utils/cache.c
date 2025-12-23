@@ -37,12 +37,14 @@ struct cache {
     uint64_t clock;
     int size;
     int max_size;
+    const char *name; // For debuging only.
 };
 
-cache_t *cache_create(int size)
+cache_t *cache_create(const char *name, int size)
 {
     cache_t *cache = calloc(1, sizeof(*cache));
     cache->max_size = size;
+    cache->name = name;
     return cache;
 }
 

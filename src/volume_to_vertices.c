@@ -326,9 +326,9 @@ static void fill_mesh(volume_mesh_t *mesh,
         vec3_normalize(normal, normal);
         mesh->vertices[idx] = (typeof(*mesh->vertices)) {
             .pos = {
-                verts[i].pos[0] / subdivide + bpos[0],
-                verts[i].pos[1] / subdivide + bpos[1],
-                verts[i].pos[2] / subdivide + bpos[2]},
+                (float)verts[i].pos[0] / subdivide + bpos[0],
+                (float)verts[i].pos[1] / subdivide + bpos[1],
+                (float)verts[i].pos[2] / subdivide + bpos[2]},
             .normal = {normal[0], normal[1], normal[2]},
         };
         if (palette == NULL) {
