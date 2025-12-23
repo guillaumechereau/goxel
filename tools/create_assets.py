@@ -42,6 +42,7 @@ TYPES = {
     "lua":   { "text": True },
     "js":    { "text": True },
     "mo":    { "text": False },
+    "json":  { "text": True },
 }
 GROUPS = ['fonts', 'icons', 'images', 'other', 'palettes', 'progs',
           'shaders', 'sounds', 'themes', 'samples', 'mobile',

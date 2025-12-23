@@ -64,7 +64,9 @@ void gui_top_bar(void)
         gui_row_begin(0); {
             gui_action_button(ACTION_layer_clear, NULL, 0);
             gui_mode_select();
-            gui_color("##color", goxel.painter.color);
+            if (gui_color("##color", goxel.painter.color)) {
+                goxel_add_to_last_used_colors(goxel.painter.color, "Custom color");
+            }
         } gui_row_end();
     } gui_row_end();
 }
