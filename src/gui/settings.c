@@ -167,6 +167,16 @@ int gui_settings_popup(void *data)
 
     } gui_section_end();
 
+    if (gui_section_begin(_("Camera"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_input_float("Field of View", &goxel.camera_fov,
+                            10.0, 20.0, 120.0, "%.0f")) {
+            goxel.camera_fov = clamp(goxel.camera_fov, 20.0, 120.0);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
+    } gui_section_end();
+
     if (gui_section_begin("Inputs", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         val = goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT;
         if (gui_checkbox("Emulate 3 buttons with Alt", &val,
@@ -204,6 +214,31 @@ int gui_settings_popup(void *data)
         }
     }
     gui_section_end();
+
+    if (gui_section_begin(_("Fly mode"), GUI_SECTION_COLLAPSABLE_CLOSED)) {
+        if (gui_checkbox("Enable", &goxel.fly_mode.enabled,
+                         "Enter fly mode by holding RMB and pressing WASD.")) {
+            settings_save();
+        }
+        gui_separator();
+        if (gui_input_float("Mouse\nsensitivity",
+                            &goxel.fly_mode.mouse_sensitivity,
+                            0.0001f, 0.0001f, 0.01f, "%.4f")) {
+            goxel.fly_mode.mouse_sensitivity = clamp(
+                goxel.fly_mode.mouse_sensitivity, 0.0001f, 0.01f);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
+        if (gui_input_float("Movement\nspeed", &goxel.fly_mode.movement_speed,
+                            5.0, 5.0, 100.0, "%.1f")) {
+            goxel.fly_mode.movement_speed = clamp(
+                goxel.fly_mode.movement_speed, 5.0, 100.0);
+        }
+        if (gui_is_item_deactivated()) {
+            settings_save();
+        }
+    } gui_section_end();
 
     gui_popup_bottom_begin();
     ret = gui_button(_("OK"), 0, 0);
@@ -270,6 +305,23 @@ static int settings_ini_handler(void *user, const char *section,
             }
         }
     }
+    if (strcmp(section, "camera") == 0) {
+        if (strcmp(name, "fov") == 0) {
+            goxel.camera_fov = clamp(atof(value), 20.0, 120.0);
+        }
+    }
+    if (strcmp(section, "fly_mode") == 0) {
+        if (strcmp(name, "enabled") == 0) {
+            goxel.fly_mode.enabled = strcmp(value, "1") == 0;
+        }
+        if (strcmp(name, "mouse_sensitivity") == 0) {
+            goxel.fly_mode.mouse_sensitivity = clamp(
+                atof(value), 0.0001f, 0.01f);
+        }
+        if (strcmp(name, "movement_speed") == 0) {
+            goxel.fly_mode.movement_speed = clamp(atof(value), 5.0, 100.0);
+        }
+    }
     return 0;
 }
 
@@ -280,6 +332,10 @@ void settings_load(void)
     LOG_I("Read settings file: %s", path);
     arrfree(goxel.keymaps);
     goxel.emulate_three_buttons_mouse = 0;
+    goxel.camera_fov = 20.0f; // Default FOV to 20 degrees
+    goxel.fly_mode.enabled = true;
+    goxel.fly_mode.mouse_sensitivity = 0.001f;
+    goxel.fly_mode.movement_speed = 35.0f;
     ini_parse(path, settings_ini_handler, NULL);
     actions_check_shortcuts();
     gesture_set_emulate_three_buttons_mouse(goxel.emulate_three_buttons_mouse);
@@ -352,14 +408,25 @@ void settings_save(void)
 
     fprintf(file, "[shortcuts]\n");
     actions_iter(shortcut_save_callback, file);
+    fprintf(file, "\n");
 
     if (goxel.emulate_three_buttons_mouse) {
         assert(goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT);
         fprintf(file, "[inputs]\n");
-        fprintf(file, "emulate_three_buttons_mouse=alt");
+        fprintf(file, "emulate_three_buttons_mouse=alt\n");
+        fprintf(file, "\n");
     }
 
+    fprintf(file, "[camera]\n");
+    fprintf(file, "fov=%f\n", goxel.camera_fov);
     fprintf(file, "\n");
+
+    fprintf(file, "[fly_mode]\n");
+    fprintf(file, "enabled=%d\n", goxel.fly_mode.enabled);
+    fprintf(file, "mouse_sensitivity=%f\n", goxel.fly_mode.mouse_sensitivity);
+    fprintf(file, "movement_speed=%f\n", goxel.fly_mode.movement_speed);
+    fprintf(file, "\n");
+
     save_keymaps(file);
     fprintf(file, "\n");
 

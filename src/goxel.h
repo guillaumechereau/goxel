@@ -524,6 +524,14 @@ typedef struct goxel
         float  camera_mat[4][4];
     } move_origin;
 
+    struct {
+        bool   enabled; // If fly mode is enabled in the settings
+        bool   active;  // If fly mode is currently active
+        float  last_mouse_pos[2];
+        float  movement_speed;    // Units per second
+        float  mouse_sensitivity; // Radians per pixel
+    } fly_mode;
+
     palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
 
@@ -562,6 +570,9 @@ typedef struct goxel
 
     // Stb array of keymap settings (different from shortcuts).
     keymap_t *keymaps;
+    
+    // Camera settings
+    float camera_fov; // Field of view in degrees
 
     // Can be set to a key code (only KEY_LEFT_ALT is supported for now).
     int emulate_three_buttons_mouse;
