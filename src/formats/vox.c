@@ -22,6 +22,7 @@
 #include "goxel.h"
 
 #include <limits.h>
+#include <errno.h>
 
 static const uint32_t VOX_DEFAULT_PALETTE[256];
 
@@ -528,6 +529,12 @@ static int vox_export(const file_format_t *format, const image_t *image,
     volume_iterator_t iter;
     const volume_t *volume;
 
+    file = fopen(path, "wb");
+    if (!file) {
+        LOG_E("Cannot save to %s: %s", path, strerror(errno));
+        return 1;
+    }
+
     volume = goxel_get_layers_volume(image);
     palette = calloc(256, sizeof(*palette));
     for (i = 0; i < 256; i++)
@@ -556,7 +563,6 @@ static int vox_export(const file_format_t *format, const image_t *image,
                     12 + 4 + 4 * nb_vox + // XYZI chunk
                     (use_default_palette ? 0 : (12 + 4 * 256)); // RGBA chunk.
 
-    file = fopen(path, "wb");
     fprintf(file, "VOX ");
     WRITE(uint32_t, 150, file);     // Version
     fprintf(file, "MAIN");
