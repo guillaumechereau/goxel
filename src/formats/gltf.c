@@ -32,6 +32,15 @@ typedef struct {
     cgltf_data *data;
     palette_t palette;
     cgltf_material *default_mat;
+
+    // For binary (.glb) export: all the binary data is packed into a single
+    // buffer (data->buffers[0]) written as the GLB BIN chunk.  For text
+    // (.gltf) export these stay unused and each buffer embeds its own base64
+    // data URI instead.
+    bool binary;
+    uint8_t *bin;
+    size_t bin_size;
+    size_t bin_cap;
 } gltf_t;
 
 typedef struct {
@@ -160,6 +169,45 @@ static void gltf_init(gltf_t *g, const export_options_t *options,
 
 #define add_item(data, list) ({ &(data)->list[(data)->list##_count++]; })
 
+// Add a binary blob (vertices, indices, palette image...) and return a buffer
+// view referencing it.  In binary (.glb) mode the data is packed into the
+// single shared GLB BIN buffer; in text (.gltf) mode a dedicated buffer with a
+// base64 data URI is created instead.  The caller sets stride/type/accessors.
+static cgltf_buffer_view *add_blob(gltf_t *g, const void *data, size_t size,
+                                   const char *mime)
+{
+    cgltf_buffer *buffer;
+    cgltf_buffer_view *view;
+    size_t pad;
+
+    view = add_item(g->data, buffer_views);
+    view->size = size;
+    if (!g->binary) {
+        buffer = add_item(g->data, buffers);
+        buffer->size = size;
+        buffer->uri = data_new(data, size, mime);
+        view->buffer = buffer;
+        return view;
+    }
+    // Pad the current end to a 4 byte boundary: glTF accessors require their
+    // data to be aligned to the component size (at most 4 bytes here).
+    pad = (4 - (g->bin_size % 4)) % 4;
+    if (g->bin_size + pad + size > g->bin_cap) {
+        g->bin_cap = max(g->bin_size + pad + size, g->bin_cap * 2);
+        g->bin = realloc(g->bin, g->bin_cap);
+    }
+    memset(g->bin + g->bin_size, 0, pad);
+    g->bin_size += pad;
+    // The whole BIN chunk is a single buffer, created lazily on first use.
+    buffer = (g->data->buffers_count == 0) ? add_item(g->data, buffers) :
+                                             &g->data->buffers[0];
+    view->buffer = buffer;
+    view->offset = g->bin_size;
+    memcpy(g->bin + g->bin_size, data, size);
+    g->bin_size += size;
+    return view;
+}
+
 // Create a buffer view and attribute.
 static void make_attribute(gltf_t *g, cgltf_buffer_view *buffer_view,
                            cgltf_primitive *primitive,
@@ -251,7 +299,6 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
     cgltf_mesh *gmesh;
     cgltf_node *node;
     cgltf_primitive *primitive;
-    cgltf_buffer *buffer;
     cgltf_buffer_view *buffer_view;
     cgltf_accessor *accessor;
 
@@ -274,12 +321,9 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
     }
 
 
-    buffer = add_item(g->data, buffers);
-    buffer->size = mesh->vertices_count * sizeof(*mesh->vertices);
-    buffer->uri = data_new(mesh->vertices, buffer->size, NULL);
-    buffer_view = add_item(g->data, buffer_views);
-    buffer_view->buffer = buffer;
-    buffer_view->size = buffer->size;
+    buffer_view = add_blob(g, mesh->vertices,
+                           mesh->vertices_count * sizeof(*mesh->vertices),
+                           NULL);
     buffer_view->stride = sizeof(*mesh->vertices);
     buffer_view->type = cgltf_buffer_view_type_vertices;
 
@@ -314,12 +358,9 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
                        NULL, NULL);
     }
 
-    buffer = add_item(g->data, buffers);
-    buffer->size = mesh->indices_count * sizeof(*mesh->indices);
-    buffer->uri = data_new(mesh->indices, buffer->size, NULL);
-    buffer_view = add_item(g->data, buffer_views);
-    buffer_view->buffer = buffer;
-    buffer_view->size = buffer->size;
+    buffer_view = add_blob(g, mesh->indices,
+                           mesh->indices_count * sizeof(*mesh->indices),
+                           NULL);
     buffer_view->type = cgltf_buffer_view_type_indices;
 
     accessor = add_item(g->data, accessors);
@@ -347,7 +388,6 @@ static void create_palette_texture(
     uint8_t c[4];
     uint8_t (*data)[3];
     uint8_t *png;
-    cgltf_buffer *buffer;
     cgltf_buffer_view *buffer_view;
     cgltf_image *image;
     cgltf_texture *texture;
@@ -377,12 +417,7 @@ static void create_palette_texture(
     }
     png = img_write_to_mem((void*)data, s, s, 3, &size);
     free(data);
-    buffer = add_item(g->data, buffers);
-    buffer->size = size;
-    buffer->uri = data_new(png, size, NULL);
-    buffer_view = add_item(g->data, buffer_views);
-    buffer_view->buffer = buffer;
-    buffer_view->size = size;
+    buffer_view = add_blob(g, png, size, NULL);
     image = add_item(g->data, images);
     image->mime_type = strdup("image/png");
     image->buffer_view = buffer_view;
@@ -392,7 +427,7 @@ static void create_palette_texture(
 }
 
 static void gltf_export(const image_t *img, const char *path,
-                        const export_options_t *options)
+                        const export_options_t *options, bool binary)
 {
     gltf_t g = {};
     const layer_t *layer;
@@ -403,6 +438,7 @@ static void gltf_export(const image_t *img, const char *path,
     const palette_t *palette = NULL;
     const int palette_pix_size = 4;
 
+    g.binary = binary;
     gltf_init(&g, options, img);
 
     if (!options->vertex_color) {
@@ -432,15 +468,32 @@ static void gltf_export(const image_t *img, const char *path,
                    palette, palette_pix_size, options);
     }
 
+    if (g.binary) {
+        // Pack everything into a single buffer written as the GLB BIN chunk.
+        if (g.data->buffers_count > 0)
+            g.data->buffers[0].size = g.bin_size;
+        g.data->bin = g.bin;
+        g.data->bin_size = g.bin_size;
+        gltf_options.type = cgltf_file_type_glb;
+    }
+
     cgltf_write_file(&gltf_options, path, g.data);
     cgltf_free(g.data);
+    free(g.bin);
     free(g.palette.entries);
 }
 
 static int export_as_gltf(const file_format_t *format, const image_t *img,
                           const char *path)
 {
-    gltf_export(img, path, &g_export_options);
+    gltf_export(img, path, &g_export_options, false);
+    return 0;
+}
+
+static int export_as_glb(const file_format_t *format, const image_t *img,
+                         const char *path)
+{
+    gltf_export(img, path, &g_export_options, true);
     return 0;
 }
 
@@ -460,5 +513,14 @@ FILE_FORMAT_REGISTER(gltf,
     .exts_desc = "glTF2",
     .export_gui = export_gui,
     .export_func = export_as_gltf,
+    .priority = 100,
+)
+
+FILE_FORMAT_REGISTER(glb,
+    .name = "glb",
+    .exts = {"*.glb"},
+    .exts_desc = "glTF binary",
+    .export_gui = export_gui,
+    .export_func = export_as_glb,
     .priority = 100,
 )
