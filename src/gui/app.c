@@ -149,19 +149,53 @@ static int hints_cmp(const void *a_, const void *b_)
     return -strcmp(a->title, b->title);
 }
 
+static float hint_width(const hint_t *hint)
+{
+    const float sp = 8; // Space between a hint glyph and its text.
+    float w = gui_text_width(hint->msg);
+    if (hint->title[0]) w += gui_text_width(hint->title) + sp;
+    return w;
+}
+
+static void render_hint(const hint_t *hint, float pos)
+{
+    gui_set_current_pos_x(pos);
+    if (hint->title[0]) {
+        gui_text(hint->title);
+    }
+    gui_text(hint->msg);
+}
+
 static void render_hints(const hint_t *hints)
 {
-    const float size = 150; // Size in pixel per hint.
-    int i;
-    float pos = gui_get_current_pos_x() + 0.5 * size;
-    for (i = 0; i < arrlen(hints); i++) {
-        gui_set_current_pos_x(pos);
-        if (hints[i].title[0]) {
-            gui_text(hints[i].title);
+    const float gap = 24; // Space between two hints.
+    int i, nf = 0, n = arrlen(hints);
+    const hint_t *coord = NULL;
+    const hint_t *fixed[64];
+    float fw[64];
+    float total = 0, pos;
+
+    // Split the coordinates hint (whose width varies every frame) from the
+    // fixed hints, so the fixed ones can be right-aligned and stay stable.
+    for (i = 0; i < n && nf < 64; i++) {
+        if (hints[i].flags & HINT_COORDINATES) {
+            coord = &hints[i];
+            continue;
         }
-        gui_text(hints[i].msg);
-        pos += size;
-        if (hints[i].flags & HINT_LARGE) pos += 0.5 * size;
+        fw[nf] = hint_width(&hints[i]);
+        total += fw[nf];
+        fixed[nf++] = &hints[i];
+    }
+    total += gap * (nf > 0 ? nf - 1 : 0);
+    pos = gui_get_window_width() - total - gap;
+
+    // The coordinates hint goes to the left of the fixed block so its varying
+    // width does not push the other hints around.
+    if (coord)
+        render_hint(coord, pos - hint_width(coord) - gap);
+    for (i = 0; i < nf; i++) {
+        render_hint(fixed[i], pos);
+        pos += fw[i] + gap;
     }
 }
 
@@ -173,7 +207,7 @@ static void gui_filter_window(void *arg, filter_t *filter)
         gui_window_begin(filter->name, state->next_x, state->next_y,
                             goxel.gui.panel_width, 0, GUI_WINDOW_MOVABLE);
 
-        if (gui_panel_header(filter->name)) {
+        if (gui_panel_header(tr(filter->name))) {
             if (filter->on_close) {
                 filter->on_close(filter);
             }

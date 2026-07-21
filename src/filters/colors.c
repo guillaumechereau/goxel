@@ -141,10 +141,10 @@ static int gui(filter_t *filter_)
     float contrast          = filter->contrast;
     bool changed;
 
-    gui_input_float("Hue", &hue, 1, -180, +180, "%.1f");
-    gui_input_float("Lightness", &lightness, 1, -100, +100, "%.1f");
-    gui_input_float("Saturation", &saturation, 1, -100, +100, "%.1f");
-    gui_input_float("Contrast", &contrast, 1, -100, +100, "%.1f");
+    gui_input_float(_("Hue"), &hue, 1, -180, +180, "%.1f");
+    gui_input_float(_("Lightness"), &lightness, 1, -100, +100, "%.1f");
+    gui_input_float(_("Saturation"), &saturation, 1, -100, +100, "%.1f");
+    gui_input_float(_("Contrast"), &contrast, 1, -100, +100, "%.1f");
 
     changed = hue != filter->hue || lightness != filter->lightness ||
               saturation != filter->saturation || contrast != filter->contrast;
@@ -168,7 +168,7 @@ static int gui(filter_t *filter_)
 }
 
 FILTER_REGISTER(colors, filter_colors_t,
-    .name = "Adjust Colors",
+    .name = N_("Adjust Colors"),
     .on_open = on_open,
     .on_close = on_close,
     .gui_fn = gui,

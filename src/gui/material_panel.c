@@ -46,8 +46,8 @@ void gui_material_panel(void)
     if (!mat) return;
 
     gui_group_begin(NULL);
-    gui_input_float("Metallic", &mat->metallic, 0.1, 0, 1, NULL);
-    gui_input_float("Roughness", &mat->roughness, 0.1, 0, 1, NULL);
+    gui_input_float(_("Metallic"), &mat->metallic, 0.1, 0, 1, NULL);
+    gui_input_float(_("Roughness"), &mat->roughness, 0.1, 0, 1, NULL);
     gui_group_end();
 
     // Internally the material has an emission color independant of the
@@ -63,9 +63,9 @@ void gui_material_panel(void)
         vec3_mul(mat->base_color, emission, mat->emission);
     }
 
-    if (gui_input_float("Emission", &emission, 0.1, 0, 10, NULL)) {
+    if (gui_input_float(_("Emission"), &emission, 0.1, 0, 10, NULL)) {
         vec3_mul(mat->base_color, emission, mat->emission);
     }
 
-    gui_input_float("Opacity", &mat->base_color[3], 0.1, 0, 1, NULL);
+    gui_input_float(_("Opacity"), &mat->base_color[3], 0.1, 0, 1, NULL);
 }

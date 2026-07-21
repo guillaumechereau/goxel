@@ -57,9 +57,9 @@ static void apply(const float rect_[4], int mode)
 static const char *hint_for_mode(int mode)
 {
     switch (mode) {
-    case MODE_REPLACE: return "Create Selection";
-    case MODE_OVER: return "Add to Selection";
-    case MODE_SUB: return "Remove from Selection";
+    case MODE_REPLACE: return _("Create Selection");
+    case MODE_OVER: return _("Add to Selection");
+    case MODE_SUB: return _("Remove from Selection");
     default: return "";
     }
 }

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Goxel 0.15.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-18 17:20+0800\n"
+"POT-Creation-Date: 2026-07-21 16:19+0200\n"
 "PO-Revision-Date: 2024-07-18 12:47+0800\n"
 "Last-Translator: Guillaume Chereau <guillaume.chereau@gmail.com>\n"
 "Language-Team: French\n"
@@ -10,50 +10,6 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: src/goxel.c:1575
-msgid "Cuts the selected area into a new layer"
-msgstr "Cuts the selected area into a new layer"
-
-#: src/goxel.c:1603
-msgid "Fills the selected box with the current color"
-msgstr "Remplit la boite sélectionnée avec la couleur actuelle"
-
-#: src/goxel.c:1618
-msgid "Fills the selected voxels with the current color"
-msgstr "Remplit les voxels sélectionnés avec la couleur actuelle"
-
-#: src/goxel.c:1643
-msgid "Adds selected area to the mask"
-msgstr "Ajoute la zone sélectionnée au masque"
-
-#: src/goxel.c:1663
-msgid "Subtracts selected area from the mask"
-msgstr "Soustraire aux voxels"
-
-#: src/goxel.c:1786
-msgid "Switches the projection (perspective/orthographic)"
-msgstr "Change la projection (perspective/orthographique)"
-
-#: src/goxel.c:1844
-msgid "Creates a new image (discards the current one)"
-msgstr "Crée une nouvelle image (rejete l'image actuelle)"
-
-#: src/goxel.c:1882
-msgid "Switches the mode (add/subtract/paint)"
-msgstr "Change le mode (ajouter/soustraire/peindre)"
-
-#: src/goxel.c:1894
-msgid "Adds to the voxels"
-msgstr "Ajoute aux voxels"
-
-#: src/goxel.c:1903
-msgid "Subtract to the voxels"
-msgstr "Soustraire aux voxels"
-
-#: src/goxel.c:1912
-msgid "Paints the voxels"
-msgstr "Peint les voxels"
 
 #: src/image.c:858
 msgid "Creates a linked copy of the selected layer"
@@ -68,76 +24,192 @@ msgid "Converts a layer into a volume"
 msgstr "Convertit un calque en volume"
 
 #: src/image.c:967
-#, fuzzy
 msgid "Creates a shape layer"
-msgstr "Couper vers un nouveau calque"
+msgstr "Crée un calque de forme"
 
 #: src/image.c:995
 msgid "Resizes the image to fit the layers"
 msgstr "Redimensionne l'image pour l'adapter aux calques"
 
-#: src/tools.c:121
+#: src/goxel.c:888
+msgid "Pan View"
+msgstr "Déplacer la vue"
+
+#: src/goxel.c:889
+msgid "Rotate View"
+msgstr "Pivoter la vue"
+
+#: src/goxel.c:890 src/gui/settings.c:62
+msgid "Zoom"
+msgstr "Zoom"
+
+#: src/goxel.c:1578
+msgid "Cuts the selected area into a new layer"
+msgstr "Cuts the selected area into a new layer"
+
+#: src/goxel.c:1606
+msgid "Fills the selected box with the current color"
+msgstr "Remplit la boite sélectionnée avec la couleur actuelle"
+
+#: src/goxel.c:1621
+msgid "Fills the selected voxels with the current color"
+msgstr "Remplit les voxels sélectionnés avec la couleur actuelle"
+
+#: src/goxel.c:1646
+msgid "Adds selected area to the mask"
+msgstr "Ajoute la zone sélectionnée au masque"
+
+#: src/goxel.c:1666
+msgid "Subtracts selected area from the mask"
+msgstr "Soustraire aux voxels"
+
+#: src/goxel.c:1789
+msgid "Switches the projection (perspective/orthographic)"
+msgstr "Change la projection (perspective/orthographique)"
+
+#: src/goxel.c:1807
+msgid "Discard current image?"
+msgstr "Abandonner l'image courante ?"
+
+#: src/goxel.c:1811
+msgid "Discard"
+msgstr "Abandonner"
+
+#: src/goxel.c:1819 src/gui/quit.c:31
+msgid "Cancel"
+msgstr "Annuler"
+
+#: src/goxel.c:1847
+msgid "Creates a new image (discards the current one)"
+msgstr "Crée une nouvelle image (rejete l'image actuelle)"
+
+#: src/goxel.c:1885
+msgid "Switches the mode (add/subtract/paint)"
+msgstr "Change le mode (ajouter/soustraire/peindre)"
+
+#: src/goxel.c:1897
+msgid "Adds to the voxels"
+msgstr "Ajoute aux voxels"
+
+#: src/goxel.c:1906
+msgid "Subtract to the voxels"
+msgstr "Soustraire aux voxels"
+
+#: src/goxel.c:1915
+msgid "Paints the voxels"
+msgstr "Peint les voxels"
+
+#: src/tools.c:63
+msgid "Click on a voxel to pick the color"
+msgstr "Cliquer sur un voxel pour choisir la couleur"
+
+#: src/tools.c:82
+msgid "Cannot edit this layer"
+msgstr "Impossible de modifier ce calque"
+
+#: src/tools.c:129
 msgid "Set"
 msgstr "Définir"
 
-#: src/tools.c:122 src/gui/topbar.c:35 src/gui/settings.c:191
-#: src/gui/layers_panel.c:79
+#: src/tools.c:130 src/gui/topbar.c:35 src/gui/layers_panel.c:79
+#: src/gui/settings.c:202
 msgid "Add"
 msgstr "Ajouter"
 
-#: src/tools.c:123 src/gui/topbar.c:36
+#: src/tools.c:131 src/gui/topbar.c:36
 msgid "Sub"
 msgstr "Soustraire"
 
-#: src/tools.c:136
+#: src/tools.c:144
 msgid "Sphere"
 msgstr "Sphère"
 
-#: src/tools.c:137
+#: src/tools.c:145
 msgid "Cube"
 msgstr "Cube"
 
-#: src/tools.c:138
+#: src/tools.c:146
 msgid "Cylinder"
 msgstr "Cylindre"
 
-#: src/tools.c:146 src/tools/shape.c:138 src/gui/layers_panel.c:79
+#: src/tools.c:154 src/gui/layers_panel.c:79 src/tools/shape.c:138
 msgid "Shape"
 msgstr "Forme"
 
-#: src/tools.c:167 src/formats/png.c:48 src/gui/render_panel.c:33
+#: src/tools.c:175 src/formats/png.c:48 src/gui/render_panel.c:33
+#: src/tools/selection.c:233 src/gui.cpp:1133
 msgid "Size"
 msgstr "Taille"
 
-#: src/tools.c:178
+#: src/tools.c:186
 msgid "Antialiasing"
 msgstr "Anti-aliasing"
 
-#: src/tools.c:187 src/gui/render_panel.c:84 src/gui/render_panel.c:101
+#: src/tools.c:195 src/gui/render_panel.c:84 src/gui/render_panel.c:101
 msgid "Color"
 msgstr "Couleur"
 
-#: src/tools.c:190
+#: src/tools.c:198
 msgid "Alpha"
 msgstr "Alpha"
 
-#: src/formats/wavefront.c:234
-msgid "Y Up"
-msgstr "Y haut"
+#: src/gizmos.c:99 src/gizmos.c:111
+msgid "Drag to move face"
+msgstr "Glisser pour déplacer la face"
 
-#: src/formats/wavefront.c:234
-msgid "Use +Y up convention"
-msgstr "Utilise la convention +Y up"
+#: src/gizmos.c:149 src/gizmos.c:161
+msgid "Drag to move"
+msgstr "Glisser pour déplacer"
 
-#: src/formats/gltf.c:447
+#: src/filters/colors.c:144
+msgid "Hue"
+msgstr "Teinte"
+
+#: src/filters/colors.c:145
+msgid "Lightness"
+msgstr "Luminosité"
+
+#: src/filters/colors.c:146
+msgid "Saturation"
+msgstr "Saturation"
+
+#: src/filters/colors.c:147
+msgid "Contrast"
+msgstr "Contraste"
+
+#: src/filters/colors.c:160 src/gui/cameras_panel.c:63 src/gui/menu.c:149
+msgid "Reset"
+msgstr "Réinitialiser"
+
+#: src/filters/colors.c:171
+msgid "Adjust Colors"
+msgstr "Ajuster les couleurs"
+
+#: src/filters/mirror.c:159
+msgid "Mirror"
+msgstr "Miroir"
+
+#: src/filters/wrap.c:187
+msgid "Wrap voxels"
+msgstr "Enrouler les voxels"
+
+#: src/formats/gltf.c:449
 msgid "Vertex Color"
 msgstr "Couleur de sommets"
 
-#: src/formats/gltf.c:448
+#: src/formats/gltf.c:450
 msgid "Save colors as vertex attribute"
 msgstr "Enregistrer les couleurs en tant qu'attribut de sommet"
 
-#: src/formats/gltf.c:449
+#: src/formats/gltf.c:451
+msgid "Visible Only"
+msgstr "Visible uniquement"
+
+#: src/formats/gltf.c:452
+msgid "Exclude hidden layers"
+msgstr "Exclure les calques masqués"
+
+#: src/formats/gltf.c:453
 msgid "Simplify"
 msgstr "Simplifier"
 
@@ -145,111 +217,18 @@ msgstr "Simplifier"
 msgid "Transparent Background"
 msgstr "Arrière-plan transparent"
 
-#: src/filters/colors.c:160 src/gui/cameras_panel.c:63 src/gui/menu.c:149
-msgid "Reset"
-msgstr "Réinitialiser"
+#: src/formats/wavefront.c:235
+msgid "Y Up"
+msgstr "Y haut"
 
-#: src/tools/fuzzy_select.c:99 src/gui/view_panel.c:34
-msgid "Colors"
-msgstr "Couleurs"
+#: src/formats/wavefront.c:235
+msgid "Use +Y up convention"
+msgstr "Utilise la convention +Y up"
 
-#: src/tools/fuzzy_select.c:99
-msgid "Select by Color"
-msgstr "Sélection par couleur"
-
-#: src/tools/fuzzy_select.c:103
-msgid "Threshold"
-msgstr "Seuil"
-
-#: src/tools/fuzzy_select.c:113
-msgid "Fuzzy Select"
-msgstr "Sélection contiguë"
-
-#: src/tools/color_picker.c:40
-msgid "Color Picker"
-msgstr "Pipette de couleur"
-
-#: src/tools/move.c:253
-msgid "Position"
-msgstr "Position"
-
-#: src/tools/move.c:262 src/tools/plane.c:99
-msgid "Rotation"
-msgstr "Rotation"
-
-#: src/tools/move.c:283
-msgid "Flip"
-msgstr "Inverser"
-
-#: src/tools/move.c:291
-msgid "Scale"
-msgstr "Redimensionner"
-
-#: src/tools/move.c:308 src/tools/plane.c:94
-msgid "Origin"
-msgstr "Origine"
-
-#: src/tools/move.c:320 src/gui/symmetry_panel.c:69
-msgid "Recenter"
-msgstr "Recentrer"
-
-#: src/tools/move.c:353
-msgid "Move"
-msgstr "Déplacer"
-
-#: src/tools/line.c:178
-msgid "Line"
-msgstr "Ligne"
-
-#: src/tools/extrude.c:177
-msgid "Extrude"
-msgstr "Extruder"
-
-#: src/tools/laser.c:103
-msgid "Laser"
-msgstr "Laser"
-
-#: src/tools/rect_select.c:145
-msgid "Rectangle Select"
-msgstr "Sélection rectangulaire"
-
-#: src/tools/plane.c:87
-msgid "Visible"
-msgstr "Visible"
-
-#: src/tools/plane.c:118 src/gui/snap_panel.c:37 src/gui/render_panel.c:92
-msgid "Plane"
-msgstr "Plan"
-
-#: src/tools/selection.c:258
-#, fuzzy
-msgid "Selection"
-msgstr "Sélection (Int.)"
-
-#: src/tools/brush.c:254
-msgid "Brush"
-msgstr "Brosse"
-
-#: src/gui/snap_panel.c:36 src/gui/symmetry_panel.c:70
-#: src/gui/layers_panel.c:75 src/gui/layers_panel.c:143
-msgid "Volume"
-msgstr "Volume"
-
-#: src/gui/snap_panel.c:40
-msgid "Selection (In)"
-msgstr "Sélection (Int.)"
-
-#: src/gui/snap_panel.c:41
-msgid "Selection (Out)"
-msgstr "Sélection (Ext.)"
-
-#: src/gui/snap_panel.c:44 src/gui/view_panel.c:30
-msgid "Box"
-msgstr "Boîte"
-
-#: src/gui/snap_panel.c:49
-msgid "Offset"
-msgstr "Décalage"
+#. Just to fix the width.
+#: src/formats/wavefront.c:257
+msgid "Resolution"
+msgstr "Résolution"
 
 #: src/gui/cameras_panel.c:52
 msgid "Distance"
@@ -280,41 +259,42 @@ msgstr "Dessus"
 msgid "Angle"
 msgstr "Angle"
 
-#: src/gui/image_panel.c:26
-msgid "Fit to Content"
-msgstr "Ajuster au contenu"
+#: src/gui/edit_panel.c:27
+msgid "Fill"
+msgstr "Remplir"
 
-#: src/gui/symmetry_panel.c:71
-msgid "Layer"
-msgstr "Calque"
+#: src/gui/edit_panel.c:33 src/gui/menu.c:131
+msgid "Clear"
+msgstr "Effacer"
 
-#: src/gui/symmetry_panel.c:72 src/gui/app.c:94 src/gui/layers_panel.c:70
-msgid "Image"
-msgstr "Image"
-
-#: src/gui/topbar.c:37 src/gui/edit_panel.c:34
+#: src/gui/edit_panel.c:34 src/gui/topbar.c:37
 msgid "Paint"
 msgstr "Peindre"
 
-#: src/gui/settings.c:129
-msgid "Language"
-msgstr "Langue"
+#: src/gui/edit_panel.c:35
+msgid "Cut as new layer"
+msgstr "Couper vers un nouveau calque"
 
-#: src/gui/settings.c:146
-msgid "Theme"
-msgstr "Thème"
+#: src/gui/edit_panel.c:41 src/gui/menu.c:134
+msgid "Copy"
+msgstr "Copier"
 
-#: src/gui/settings.c:170
-msgid "Paths"
-msgstr "Chemins"
+#: src/gui/edit_panel.c:44 src/gui/menu.c:135
+msgid "Paste"
+msgstr "Coller"
 
-#: src/gui/settings.c:175
-msgid "Shortcuts"
-msgstr "Raccourcis"
+#: src/gui/export_panel.c:62
+msgid "Format"
+msgstr "Format"
 
-#: src/gui/settings.c:198
-msgid "OK"
-msgstr "OK"
+#: src/gui/export_panel.c:73 src/gui/render_panel.c:128 src/gui/menu.c:123
+#: src/gui/app.c:99
+msgid "Export"
+msgstr "Exporter"
+
+#: src/gui/image_panel.c:26
+msgid "Fit to Content"
+msgstr "Ajuster au contenu"
 
 #: src/gui/light_panel.c:31 src/gui/render_panel.c:82
 #: src/gui/render_panel.c:122
@@ -333,25 +313,13 @@ msgstr "Ombre"
 msgid "Environment"
 msgstr "Environnement"
 
-#: src/gui/edit_panel.c:27
-msgid "Fill"
-msgstr "Remplir"
+#: src/gui/quit.c:24
+msgid "File Has Unsaved Changes"
+msgstr "Le fichier a des modifications non-enregistrées"
 
-#: src/gui/edit_panel.c:33 src/gui/menu.c:131
-msgid "Clear"
-msgstr "Effacer"
-
-#: src/gui/edit_panel.c:35
-msgid "Cut as new layer"
-msgstr "Couper vers un nouveau calque"
-
-#: src/gui/edit_panel.c:41 src/gui/menu.c:134
-msgid "Copy"
-msgstr "Copier"
-
-#: src/gui/edit_panel.c:44 src/gui/menu.c:135
-msgid "Paste"
-msgstr "Coller"
+#: src/gui/quit.c:27 src/gui/menu.c:127
+msgid "Quit"
+msgstr "Quitter"
 
 #: src/gui/render_panel.c:48
 msgid "Samples"
@@ -393,22 +361,54 @@ msgstr "Ciel"
 msgid "Floor"
 msgstr "Plancher"
 
-#: src/gui/render_panel.c:103 src/gui/layers_panel.c:163
+#: src/gui/render_panel.c:92 src/gui/snap_panel.c:37 src/tools/plane.c:118
+msgid "Plane"
+msgstr "Plan"
+
+#: src/gui/render_panel.c:103 src/gui/layers_panel.c:167
 msgid "Material"
 msgstr "Matériau"
 
-#: src/gui/render_panel.c:117 src/gui/app.c:92
+#: src/gui/render_panel.c:117 src/gui/app.c:93
 msgid "Light"
 msgstr "Éclairage"
-
-#: src/gui/render_panel.c:128 src/gui/app.c:98 src/gui/export_panel.c:73
-#: src/gui/menu.c:123
-msgid "Export"
-msgstr "Exporter"
 
 #: src/gui/render_panel.c:128
 msgid "Success"
 msgstr "Succès"
+
+#: src/gui/snap_panel.c:36 src/gui/symmetry_panel.c:70
+#: src/gui/layers_panel.c:75 src/gui/layers_panel.c:147
+msgid "Volume"
+msgstr "Volume"
+
+#: src/gui/snap_panel.c:40
+msgid "Selection (In)"
+msgstr "Sélection (Int.)"
+
+#: src/gui/snap_panel.c:41
+msgid "Selection (Out)"
+msgstr "Sélection (Ext.)"
+
+#: src/gui/snap_panel.c:44 src/gui/view_panel.c:30
+msgid "Box"
+msgstr "Boîte"
+
+#: src/gui/snap_panel.c:49
+msgid "Offset"
+msgstr "Décalage"
+
+#: src/gui/symmetry_panel.c:69 src/tools/move.c:320
+msgid "Recenter"
+msgstr "Recentrer"
+
+#: src/gui/symmetry_panel.c:71
+msgid "Layer"
+msgstr "Calque"
+
+#: src/gui/symmetry_panel.c:72 src/gui/layers_panel.c:70 src/gui/app.c:95
+msgid "Image"
+msgstr "Image"
 
 #: src/gui/view_panel.c:28
 msgid "Background"
@@ -417,6 +417,10 @@ msgstr "Arrière-plan"
 #: src/gui/view_panel.c:29 src/gui/view_panel.c:53
 msgid "Grid"
 msgstr "Grille"
+
+#: src/gui/view_panel.c:34 src/tools/fuzzy_select.c:99 src/tools/extrude.c:231
+msgid "Colors"
+msgstr "Couleurs"
 
 #: src/gui/view_panel.c:38
 msgid "Hide Box"
@@ -458,112 +462,21 @@ msgstr "Marching cubes"
 msgid "Smooth"
 msgstr "Adoucir"
 
-#: src/gui/app.c:84
-msgid "Tools"
-msgstr "Outils"
+#: src/gui/material_panel.c:49
+msgid "Metallic"
+msgstr "Métallique"
 
-#: src/gui/app.c:85
-msgid "Palette"
-msgstr "Palette"
+#: src/gui/material_panel.c:50
+msgid "Roughness"
+msgstr "Rugosité"
 
-#: src/gui/app.c:86 src/gui/menu.c:130
-msgid "Edit"
-msgstr "Édition"
+#: src/gui/material_panel.c:66
+msgid "Emission"
+msgstr "Émission"
 
-#: src/gui/app.c:87
-#, fuzzy
-msgid "Layers"
-msgstr "Calque"
-
-#: src/gui/app.c:88
-msgid "Snap"
-msgstr "Aimanter"
-
-#: src/gui/app.c:89
-msgid "Symmetry"
-msgstr "Symétrie"
-
-#: src/gui/app.c:90 src/gui/menu.c:141
-msgid "View"
-msgstr "Vue"
-
-#: src/gui/app.c:91
-#, fuzzy
-msgid "Materials"
-msgstr "Matériau"
-
-#: src/gui/app.c:93
-msgid "Cameras"
-msgstr "Caméras"
-
-#: src/gui/app.c:96
-msgid "Render"
-msgstr "Rendu"
-
-#: src/gui/app.c:100
-msgid "Debug"
-msgstr "Débug"
-
-#: src/gui/export_panel.c:62
-msgid "Format"
-msgstr "Format"
-
-#: src/gui/quit.c:24
-msgid "File Has Unsaved Changes"
-msgstr "Le fichier a des modifications non-enregistrées"
-
-#: src/gui/quit.c:27 src/gui/menu.c:127
-msgid "Quit"
-msgstr "Quitter"
-
-#: src/gui/quit.c:31
-msgid "Cancel"
-msgstr "Annuler"
-
-#: src/gui/menu.c:96
-msgid "File"
-msgstr "Fichier"
-
-#: src/gui/menu.c:97
-msgid "New"
-msgstr "Nouveau"
-
-#: src/gui/menu.c:100
-msgid "Save As"
-msgstr "Enregistrer sous"
-
-#: src/gui/menu.c:101
-msgid "Open"
-msgstr "Ouvrir"
-
-#: src/gui/menu.c:110
-msgid "Import"
-msgstr "Importer"
-
-#: src/gui/menu.c:111
-msgid "2D Image"
-msgstr "Image 2D"
-
-#: src/gui/menu.c:118
-#, c-format
-msgid "Overwrite %s"
-msgstr "Écraser %s"
-
-#: src/gui/menu.c:132
-msgid "Undo"
-msgstr "Annuler"
-
-#: src/gui/menu.c:133
-msgid "Redo"
-msgstr "Refaire"
-
-#: src/gui/menu.c:136 src/gui/menu.c:137
-msgid "Settings"
-msgstr "Réglages"
-
-#: src/gui/menu.c:148
-msgid "Perspective"
-msgstr "Perspective"
+#: src/gui/material_panel.c:70
+msgid "Opacity"
+msgstr "Opacité"
 
 #: src/gui/layers_panel.c:58
 msgid "Duplicate"
@@ -585,10 +498,309 @@ msgstr "Fusionner visibles"
 msgid "Crop"
 msgstr "Rogner"
 
-#: src/gui/layers_panel.c:138
+#: src/gui/layers_panel.c:142
 msgid "Unlink"
 msgstr "Dé-lier"
 
-#: src/gui/layers_panel.c:146
+#: src/gui/layers_panel.c:150
 msgid "Bounded"
 msgstr "Bornée"
+
+#: src/gui/layers_panel.c:177
+msgid "Mode"
+msgstr "Mode"
+
+#: src/gui/about.c:30
+msgid "Credits"
+msgstr "Crédits"
+
+#: src/gui/about.c:31
+msgid "Libraries:"
+msgstr "Bibliothèques :"
+
+#: src/gui/about.c:44
+msgid "Contributors:"
+msgstr "Contributeurs :"
+
+#: src/gui/about.c:51 src/gui/about.c:68 src/gui/menu.c:44
+#: src/gui/settings.c:209 src/gui.cpp:517
+msgid "OK"
+msgstr "OK"
+
+#: src/gui/about.c:66
+#, c-format
+msgid ""
+"Add your own scripts in the directory:\n"
+"%s."
+msgstr ""
+
+#: src/gui/about.c:67
+#, c-format
+msgid "See some examples at %s."
+msgstr "Voir des exemples sur %s."
+
+#: src/gui/menu.c:96
+msgid "File"
+msgstr "Fichier"
+
+#: src/gui/menu.c:97
+msgid "New"
+msgstr "Nouveau"
+
+#: src/gui/menu.c:100
+msgid "Save As"
+msgstr "Enregistrer sous"
+
+#: src/gui/menu.c:101
+msgid "Open"
+msgstr "Ouvrir"
+
+#: src/gui/menu.c:102
+msgid "Open Recent"
+msgstr "Ouvrir récent"
+
+#: src/gui/menu.c:110
+msgid "Import"
+msgstr "Importer"
+
+#: src/gui/menu.c:111
+msgid "2D Image"
+msgstr "Image 2D"
+
+#: src/gui/menu.c:118
+#, c-format
+msgid "Overwrite %s"
+msgstr "Écraser %s"
+
+#: src/gui/menu.c:130 src/gui/app.c:87
+msgid "Edit"
+msgstr "Édition"
+
+#: src/gui/menu.c:132
+msgid "Undo"
+msgstr "Annuler"
+
+#: src/gui/menu.c:133
+msgid "Redo"
+msgstr "Refaire"
+
+#: src/gui/menu.c:136 src/gui/menu.c:137
+msgid "Settings"
+msgstr "Réglages"
+
+#: src/gui/menu.c:141 src/gui/app.c:91
+msgid "View"
+msgstr "Vue"
+
+#: src/gui/menu.c:148
+msgid "Perspective"
+msgstr "Perspective"
+
+#: src/gui/menu.c:152
+msgid "Filters"
+msgstr "Filtres"
+
+#: src/gui/menu.c:156
+msgid "Scripts"
+msgstr "Scripts"
+
+#: src/gui/menu.c:157
+msgid "About Scripts"
+msgstr "À propos des scripts"
+
+#: src/gui/menu.c:162
+msgid "Help"
+msgstr "Aide"
+
+#: src/gui/menu.c:163
+msgid "About"
+msgstr "À propos"
+
+#: src/gui/app.c:85
+msgid "Tools"
+msgstr "Outils"
+
+#: src/gui/app.c:86
+msgid "Palette"
+msgstr "Palette"
+
+#: src/gui/app.c:88
+msgid "Layers"
+msgstr "Calques"
+
+#: src/gui/app.c:89
+msgid "Snap"
+msgstr "Aimanter"
+
+#: src/gui/app.c:90
+msgid "Symmetry"
+msgstr "Symétrie"
+
+#: src/gui/app.c:92
+msgid "Materials"
+msgstr "Matériaux"
+
+#: src/gui/app.c:94
+msgid "Cameras"
+msgstr "Caméras"
+
+#: src/gui/app.c:97
+msgid "Render"
+msgstr "Rendu"
+
+#: src/gui/app.c:101
+msgid "Debug"
+msgstr "Débug"
+
+#: src/gui/settings.c:62
+msgid "Pan"
+msgstr "Déplacer"
+
+#: src/gui/settings.c:62
+msgid "Rotate"
+msgstr "Pivoter"
+
+#: src/gui/settings.c:103
+msgid "Delete"
+msgstr "Supprimer"
+
+#: src/gui/settings.c:131
+msgid "Language"
+msgstr "Langue"
+
+#: src/gui/settings.c:148
+msgid "UI"
+msgstr "Interface"
+
+#: src/gui/settings.c:155
+msgid "Theme"
+msgstr "Thème"
+
+#: src/gui/settings.c:161 src/tools/move.c:291
+msgid "Scale"
+msgstr "Redimensionner"
+
+#: src/gui/settings.c:172
+msgid "Emulate 3 buttons with Alt"
+msgstr "Émuler 3 boutons avec Alt"
+
+#: src/gui/settings.c:181
+msgid "Paths"
+msgstr "Chemins"
+
+#: src/gui/settings.c:186
+msgid "Shortcuts"
+msgstr "Raccourcis"
+
+#: src/tools/brush.c:254
+msgid "Brush"
+msgstr "Brosse"
+
+#: src/tools/color_picker.c:40
+msgid "Color Picker"
+msgstr "Pipette de couleur"
+
+#: src/tools/fuzzy_select.c:99 src/tools/extrude.c:231
+msgid "Select by Color"
+msgstr "Sélection par couleur"
+
+#: src/tools/fuzzy_select.c:103 src/tools/extrude.c:235
+msgid "Threshold"
+msgstr "Seuil"
+
+#: src/tools/fuzzy_select.c:113
+msgid "Fuzzy Select"
+msgstr "Sélection contiguë"
+
+#: src/tools/laser.c:103
+msgid "Laser"
+msgstr "Laser"
+
+#: src/tools/line.c:178
+msgid "Line"
+msgstr "Ligne"
+
+#: src/tools/move.c:253
+msgid "Position"
+msgstr "Position"
+
+#: src/tools/move.c:262 src/tools/plane.c:99
+msgid "Rotation"
+msgstr "Rotation"
+
+#: src/tools/move.c:283
+msgid "Flip"
+msgstr "Inverser"
+
+#: src/tools/move.c:308 src/tools/plane.c:94 src/tools/selection.c:224
+#: src/gui.cpp:1128
+msgid "Origin"
+msgstr "Origine"
+
+#: src/tools/move.c:353
+msgid "Move"
+msgstr "Déplacer"
+
+#: src/tools/extrude.c:138
+msgid "Drag a surface to extrude"
+msgstr "Glisser une surface pour extruder"
+
+#: src/tools/extrude.c:239
+msgid "Delta"
+msgstr "Delta"
+
+#: src/tools/extrude.c:254
+msgid "Extrude"
+msgstr "Extruder"
+
+#: src/tools/plane.c:41
+msgid "Set the Plane"
+msgstr "Définir le plan"
+
+#: src/tools/plane.c:87
+msgid "Visible"
+msgstr "Visible"
+
+#: src/tools/plane.c:100
+msgid "Custom"
+msgstr "Personnalisé"
+
+#: src/tools/plane.c:107
+msgid "Cut Above"
+msgstr "Couper au-dessus"
+
+#: src/tools/plane.c:110
+msgid "Cut Below"
+msgstr "Couper en dessous"
+
+#: src/tools/shape.c:51 src/tools/shape.c:74
+msgid "Draw Shape"
+msgstr "Dessiner la forme"
+
+#: src/tools/shape.c:132
+msgid "Planar"
+msgstr "Planaire"
+
+#: src/tools/shape.c:132
+msgid "Stay on original plane"
+msgstr "Rester sur le plan d'origine"
+
+#: src/tools/rect_select.c:60 src/tools/selection.c:87
+msgid "Create Selection"
+msgstr "Créer une sélection"
+
+#: src/tools/rect_select.c:61 src/tools/selection.c:88
+msgid "Add to Selection"
+msgstr "Ajouter à la sélection"
+
+#: src/tools/rect_select.c:62 src/tools/selection.c:89
+msgid "Remove from Selection"
+msgstr "Retirer de la sélection"
+
+#: src/tools/rect_select.c:145
+msgid "Rectangle Select"
+msgstr "Sélection rectangulaire"
+
+#: src/tools/selection.c:258
+msgid "Selection"
+msgstr "Sélection"

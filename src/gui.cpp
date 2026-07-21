@@ -514,7 +514,7 @@ void gui_release_graphics(void)
 static int alert_popup(void *data)
 {
     if (data) gui_text((const char *)data);
-    return gui_button("OK", 0, 0);
+    return gui_button(_("OK"), 0, 0);
 }
 
 static int check_action_shortcut(action_t *action, void *user)
@@ -2063,6 +2063,16 @@ float gui_get_item_height(void)
 {
     ImGuiStyle& style = ImGui::GetStyle();
     return style.FramePadding.y * 2 + ImGui::GetFontSize();
+}
+
+float gui_text_width(const char *txt)
+{
+    return ImGui::CalcTextSize(txt).x;
+}
+
+float gui_get_window_width(void)
+{
+    return ImGui::GetWindowWidth();
 }
 
 typedef struct list_item list_item_t;

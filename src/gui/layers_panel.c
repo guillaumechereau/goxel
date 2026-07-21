@@ -174,7 +174,7 @@ void gui_layers_panel(void)
         gui_combo_end();
     }
 
-    gui_text("Mode");
+    gui_text(_("Mode"));
     if (gui_combo_begin("##mode", get_mode_name(layer->mode))) {
         for (i = 0; i < ARRAY_SIZE(MODES); i++) {
             current = MODES[i] == layer->mode;

@@ -156,6 +156,6 @@ static int gui(filter_t *filter)
 }
 
 FILTER_REGISTER(mirror, filter_mirror_t,
-    .name = "Mirror",
+    .name = N_("Mirror"),
     .gui_fn = gui,
 )

@@ -59,7 +59,7 @@ static void on_keymap(int idx, keymap_t *keymap)
         { "Shift Middle Mouse", GESTURE_SHIFT | GESTURE_MMB },
     };
 
-    const char *action_choices[] = { "Pan", "Rotate", "Zoom" };
+    const char *action_choices[] = { _("Pan"), _("Rotate"), _("Zoom") };
 
     if (keymap->action < 0 || keymap->action > 2) {
         return;
@@ -100,7 +100,7 @@ static void on_keymap(int idx, keymap_t *keymap)
 
     gui_next_column();
 
-    if (gui_button("Delete", 0, 0)) {
+    if (gui_button(_("Delete"), 0, 0)) {
         arrdel(goxel.keymaps, idx);
     }
 
@@ -152,13 +152,13 @@ int gui_settings_popup(void *data)
             if (strcmp(theme->name, theme_get()->name) == 0) current = i;
             names[i++] = theme->name;
         }
-        gui_text("Theme");
+        gui_text(_("Theme"));
         if (gui_combo("#themes", &current, names, nb)) {
             theme_set(names[current]);
             settings_save();
         }
         scale = gui_get_scale();
-        if (gui_input_float("Scale", &scale, 0.1, 1.0, 2.0, "%.1f")) {
+        if (gui_input_float(_("Scale"), &scale, 0.1, 1.0, 2.0, "%.1f")) {
             gui_set_scale(scale);
         }
         if (gui_is_item_deactivated()) {
@@ -169,7 +169,7 @@ int gui_settings_popup(void *data)
 
     if (gui_section_begin("Inputs", GUI_SECTION_COLLAPSABLE_CLOSED)) {
         val = goxel.emulate_three_buttons_mouse == KEY_LEFT_ALT;
-        if (gui_checkbox("Emulate 3 buttons with Alt", &val,
+        if (gui_checkbox(_("Emulate 3 buttons with Alt"), &val,
                          "Emulate Middle Mouse with Alt+Left Mouse.")) {
             goxel.emulate_three_buttons_mouse = val ? KEY_LEFT_ALT : 0;
             gesture_set_emulate_three_buttons_mouse(
