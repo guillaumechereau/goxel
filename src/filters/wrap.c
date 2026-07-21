@@ -184,6 +184,6 @@ static int gui(filter_t *filter)
 }
 
 FILTER_REGISTER(wrap, filter_wrap_t,
-    .name = "Wrap voxels",
+    .name = N_("Wrap voxels"),
     .gui_fn = gui,
 )

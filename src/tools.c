@@ -60,7 +60,7 @@ static int pick_color_gesture(gesture3d_t *gest)
     uint8_t color[4];
 
     if (!gest->snaped) {
-        goxel_add_hint(0, NULL, "Click on a voxel to pick the color");
+        goxel_add_hint(0, NULL, _("Click on a voxel to pick the color"));
         return 0;
     }
     volume_get_at(volume, NULL, pi, color);
@@ -79,7 +79,7 @@ int tool_iter(tool_t *tool, const painter_t *painter, const float viewport[4])
     assert(tool);
     if (    (tool->flags & TOOL_REQUIRE_CAN_EDIT) &&
             !image_layer_can_edit(goxel.image, goxel.image->active_layer)) {
-        goxel_add_hint(0, NULL, "Cannot edit this layer");
+        goxel_add_hint(0, NULL, _("Cannot edit this layer"));
         return 0;
     }
     tool->state = tool->iter_fn(tool, painter, viewport);

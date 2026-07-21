@@ -38,7 +38,7 @@ static int on_click(gesture3d_t *gest)
 static int iter(tool_t *tool, const painter_t *painter,
                 const float viewport[4])
 {
-    goxel_add_hint(HINT_LARGE, GLYPH_MOUSE_LMB, "Set the Plane");
+    goxel_add_hint(HINT_LARGE, GLYPH_MOUSE_LMB, _("Set the Plane"));
     goxel_gesture3d(&(gesture3d_t) {
         .type = GESTURE3D_TYPE_CLICK,
         .snap_mask = SNAP_VOLUME,
@@ -97,17 +97,17 @@ static int gui(tool_t *tool_)
     if (gui_input_int("Z", &z, 0, 0)) goxel.plane[3][2] = z;
     gui_group_end();
     gui_group_begin(_("Rotation"));
-    gui_checkbox("Custom", &tool->custom_rotation, NULL);
+    gui_checkbox(_("Custom"), &tool->custom_rotation, NULL);
     if (tool->custom_rotation)
         gui_rotation_mat4(goxel.plane);
     else
         gui_rotation_mat4_axis(goxel.plane);
     gui_group_end();
 
-    if (gui_button("Cut Above", 1, 0)) {
+    if (gui_button(_("Cut Above"), 1, 0)) {
         cut(true);
     }
-    if (gui_button("Cut Below", 1, 0)) {
+    if (gui_button(_("Cut Below"), 1, 0)) {
         cut(false);
     }
 

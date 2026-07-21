@@ -885,9 +885,9 @@ static void update_keymaps_hints(void)
                  (input & GESTURE_MMB) ? GLYPH_MOUSE_MMB : "",
                  (input & GESTURE_RMB) ? GLYPH_MOUSE_RMB : "");
 
-        if (action == 0) msg = "Pan View";
-        if (action == 1) msg = "Rotate View";
-        if (action == 2) msg = "Zoom";
+        if (action == 0) msg = _("Pan View");
+        if (action == 1) msg = _("Rotate View");
+        if (action == 2) msg = _("Zoom");
         goxel_add_hint(0, title, msg);
     }
 }
@@ -1804,11 +1804,11 @@ ACTION_REGISTER(ACTION_quit,
 
 static int unsaved_change_popup(void *data)
 {
-    gui_text("Discard current image?");
+    gui_text(_("Discard current image?"));
     int ret = 0;
 
     gui_row_begin(0);
-    if (gui_button("Discard", 0, 0)) {
+    if (gui_button(_("Discard"), 0, 0)) {
         if (!data) {
             goxel_reset();
         } else {
@@ -1816,7 +1816,7 @@ static int unsaved_change_popup(void *data)
         }
         ret = 1;
     }
-    if (gui_button("Cancel", 0, 0)) {
+    if (gui_button(_("Cancel"), 0, 0)) {
         ret = 2;
     }
     gui_row_end();

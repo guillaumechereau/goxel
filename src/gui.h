@@ -214,5 +214,7 @@ void gui_list(const gui_list_t *list);
 float gui_get_current_pos_x(void);
 void gui_set_current_pos_x(float x);
 float gui_get_item_height(void);
+float gui_text_width(const char *txt);
+float gui_get_window_width(void);
 
 #endif // GUI_H

@@ -135,7 +135,7 @@ static int on_drag(gesture3d_t *gest)
     int pi[3];
     float delta;
 
-    goxel_add_hint(HINT_LARGE, GLYPH_MOUSE_LMB, "Drag a surface to extrude");
+    goxel_add_hint(HINT_LARGE, GLYPH_MOUSE_LMB, _("Drag a surface to extrude"));
     if (gest->state < GESTURE3D_STATE_BEGIN) return 0;
 
     if (gest->state == GESTURE3D_STATE_BEGIN) {

@@ -84,9 +84,9 @@ static int on_click(gesture3d_t *gest)
 static const char *hint_for_mode(int mode)
 {
     switch (mode) {
-    case MODE_REPLACE: return "Create Selection";
-    case MODE_OVER: return "Add to Selection";
-    case MODE_SUB: return "Remove from Selection";
+    case MODE_REPLACE: return _("Create Selection");
+    case MODE_OVER: return _("Add to Selection");
+    case MODE_SUB: return _("Remove from Selection");
     default: return "";
     }
 }
@@ -221,7 +221,7 @@ static int gui(tool_t *tool_)
     y = round((*box)[3][1] - y_mag);
     z = round((*box)[3][2] - z_mag);
 
-    gui_group_begin("Origin");
+    gui_group_begin(_("Origin"));
     gui_input_int("x", &x, 0, 0);
     deactivated |= gui_is_item_deactivated();
     gui_input_int("y", &y, 0, 0);
@@ -230,7 +230,7 @@ static int gui(tool_t *tool_)
     deactivated |= gui_is_item_deactivated();
     gui_group_end();
 
-    gui_group_begin("Size");
+    gui_group_begin(_("Size"));
     gui_input_int("w", &w, 0, 0);
     deactivated |= gui_is_item_deactivated();
     gui_input_int("h", &h, 0, 0);

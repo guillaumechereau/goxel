@@ -41,7 +41,7 @@ static file_format_t *g_import_format = NULL;
 static int import_gui(void *data)
 {
     g_import_format->import_gui(g_import_format);
-    if (gui_button("OK", 0, 0)) {
+    if (gui_button(_("OK"), 0, 0)) {
         goxel_import_file(NULL, g_import_format->name);
         return 1;
     }
@@ -74,7 +74,7 @@ static void on_script(void *user, const char *name)
 static void on_filter(void *user, filter_t *filter)
 {
     const action_t *action;
-    if (gui_menu_item(0, filter->name, true)) {
+    if (gui_menu_item(0, tr(filter->name), true)) {
         action = action_get_by_name(filter->action_id);
         assert(action);
         action_exec(action);
@@ -99,7 +99,7 @@ void gui_menu(void)
                 image_get_key(goxel.image) != goxel.image->saved_key);
         gui_menu_item(ACTION_save_as, _("Save As"), true);
         gui_menu_item(ACTION_open, _("Open"), true);
-        if (gui_menu_begin("Open Recent", true)) {
+        if (gui_menu_begin(_("Open Recent"), true)) {
             for (i = 0; i < arrlen(goxel.recent_files); i++) {
                 if (gui_menu_item(0, goxel.recent_files[i], true)) {
                     goxel_open_file(goxel.recent_files[i]);
@@ -149,18 +149,18 @@ void gui_menu(void)
         gui_menu_item(ACTION_view_default, _("Reset"), true);
         gui_menu_end();
     }
-    if (gui_menu_begin("Filters", true)) { // Note: to translate.
+    if (gui_menu_begin(_("Filters"), true)) { // Note: to translate.
         filters_iter_all(NULL, on_filter);
         gui_menu_end();
     }
-    if (gui_menu_begin("Scripts", true)) {
-        if (gui_menu_item(0, "About Scripts", true))
+    if (gui_menu_begin(_("Scripts"), true)) {
+        if (gui_menu_item(0, _("About Scripts"), true))
             gui_open_popup("Scripts", 0, NULL, gui_about_scripts_popup);
         script_iter_all(NULL, on_script);
         gui_menu_end();
     }
-    if (gui_menu_begin("Help", true)) {
-        if (gui_menu_item(0, "About", true))
+    if (gui_menu_begin(_("Help"), true)) {
+        if (gui_menu_item(0, _("About"), true))
             gui_open_popup("About", GUI_POPUP_RESIZE, NULL, gui_about_popup);
         gui_menu_end();
     }

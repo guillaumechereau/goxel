@@ -32,7 +32,8 @@ def write_pot(values, path):
 
 
 def update_po_files():
-    sources = glob.glob('src/**/*.c', recursive=True);
+    sources = (glob.glob('src/**/*.c', recursive=True) +
+                glob.glob('src/**/*.cpp', recursive=True))
     subprocess.check_call([
         'xgettext', '-k_', '-kN_', '-c', '--from-code=utf-8',
         '-o', '/tmp/goxel.pot', *sources])

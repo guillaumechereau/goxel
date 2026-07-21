@@ -27,8 +27,8 @@ int gui_about_popup(void *data)
     if (!DEFINED(GOXEL_MOBILE)) gui_text("GPL 3 License");
     gui_text("http://guillaumechereau.github.io/goxel");
 
-    if (gui_collapsing_header("Credits", true)) {
-        gui_text("Libraries:");
+    if (gui_collapsing_header(_("Credits"), true)) {
+        gui_text(_("Libraries:"));
         gui_text("● dear imgui (https://github.com/ocornut/imgui)");
         gui_text("● stb (https://github.com/nothings/stb)");
         gui_text("● yocto-gl (https://github.com/xelatihy/yocto-gl)");
@@ -41,14 +41,14 @@ int gui_about_popup(void *data)
         gui_text("● imguizmo (https://github.com/CedricGuillemet/ImGuizmo)");
         gui_text("● nativefiledialog (https://github.com/btzy/nativefiledialog-extended)");
 
-        gui_text("Contributors:");
+        gui_text(_("Contributors:"));
         gui_text("● Michal (https://github.com/YarlBoro)");
         gui_text("● Dustin Willis Webber <dustin.webber@gmail.com>");
         gui_text("● Pablo Hugo Reda <pabloreda@gmail.com>");
         gui_text("● Othelarian (https://github.com/othelarian)");
         gui_text("● Mariusz Pilipczuk (https://gitlab.com/madd-games)");
     }
-    return gui_button("OK", 0, 0);
+    return gui_button(_("OK"), 0, 0);
 }
 
 int gui_about_scripts_popup(void *data)
@@ -63,7 +63,7 @@ int gui_about_scripts_popup(void *data)
 
     gui_text("Starting from version 0.12.0 Goxel adds experimental support "
              "for javascript plugins.");
-    gui_text("Add your own scripts in the directory:\n%s.", dir);
-    gui_text("See some examples at %s.", examples_url);
-    return gui_button("OK", 0, 0);
+    gui_text(_("Add your own scripts in the directory:\n%s."), dir);
+    gui_text(_("See some examples at %s."), examples_url);
+    return gui_button(_("OK"), 0, 0);
 }

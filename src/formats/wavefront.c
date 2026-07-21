@@ -254,7 +254,7 @@ static float g_resolution = 1.0;
 static void import_gui(file_format_t *format)
 {
     gui_dummy(200, 0); // Just to fix the width.
-    gui_input_float("Resolution", &g_resolution, 0.01, 0, 100000, "%.3f");
+    gui_input_float(_("Resolution"), &g_resolution, 0.01, 0, 100000, "%.3f");
 }
 
 static int wavefront_import(const file_format_t *format, image_t *image,
