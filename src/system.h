@@ -40,6 +40,11 @@ typedef struct {
     const char *(*get_clipboard_text)(void* user);
     void (*set_clipboard_text)(void *user, const char *text);
     void (*show_keyboard)(void *user, bool has_text);
+    // Return the key code (GLFW/USB HID like, indexing inputs_t.keys) whose
+    // printed label matches the given ascii character on the current keyboard
+    // layout, or -1 if unknown.  Lets shortcuts follow the printed label of
+    // the keys instead of their physical position (e.g. Ctrl+Z on AZERTY).
+    int (*get_key_for_char)(void *user, int c);
     void (*save_to_photos)(void *user, const uint8_t *data, int size,
                            void (*on_finished)(int r));
     int (*iter_paths)(void *user, int location, int options, const char *name,
@@ -161,6 +166,15 @@ void sys_set_window_title(const char *title);
  * Show a virtual keyboard if needed.
  */
 void sys_show_keyboard(bool has_text);
+
+/*
+ * Function: sys_get_key_for_char
+ * Return the key code (as used in inputs_t.keys) whose printed label matches
+ * the given ascii character on the current keyboard layout, or the character
+ * itself if the layout mapping is unavailable.  Used to make keyboard
+ * shortcuts follow the label of the keys rather than their physical position.
+ */
+int sys_get_key_for_char(int c);
 
 /*
  * Function: sys_save_to_photo
