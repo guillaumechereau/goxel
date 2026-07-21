@@ -240,6 +240,7 @@ static int settings_ini_handler(void *user, const char *section,
                                 int lineno)
 {
     action_t *a;
+    char buf[256], *tok;
     if (strcmp(section, "ui") == 0) {
         if (strcmp(name, "theme") == 0) {
             theme_set(value);
@@ -268,6 +269,24 @@ static int settings_ini_handler(void *user, const char *section,
             if (strcmp(value, "alt") == 0) {
                 goxel.emulate_three_buttons_mouse = KEY_LEFT_ALT;
             }
+        }
+    }
+    if (strcmp(section, "window") == 0) {
+        if (strcmp(name, "width") == 0)
+            goxel.window_size[0] = atoi(value);
+        if (strcmp(name, "height") == 0)
+            goxel.window_size[1] = atoi(value);
+        if (strcmp(name, "maximized") == 0)
+            goxel.window_maximized = atoi(value);
+    }
+    if (strcmp(section, "layout") == 0) {
+        if (strcmp(name, "panel") == 0) {
+            gui_layout_set_current_panel(value);
+        }
+        if (strcmp(name, "detached") == 0) {
+            snprintf(buf, sizeof(buf), "%s", value);
+            for (tok = strtok(buf, ","); tok; tok = strtok(NULL, ","))
+                gui_layout_set_panel_detached(tok);
         }
     }
     return 0;
@@ -335,6 +354,9 @@ void settings_save(void)
 {
     char path[1024];
     FILE *file;
+    const char *panel;
+    const char *detached[32];
+    int i, n;
 
     snprintf(path, sizeof(path), "%s/settings.ini", sys_get_user_dir());
     LOG_I("Save settings to %s", path);
@@ -348,6 +370,26 @@ void settings_save(void)
     fprintf(file, "theme=%s\n", theme_get()->name);
     fprintf(file, "language=%s\n", goxel.lang);
     fprintf(file, "scale=%f\n", gui_get_scale());
+    fprintf(file, "\n");
+
+    if (goxel.window_size[0] > 0 || goxel.window_maximized) {
+        fprintf(file, "[window]\n");
+        fprintf(file, "width=%d\n", goxel.window_size[0]);
+        fprintf(file, "height=%d\n", goxel.window_size[1]);
+        fprintf(file, "maximized=%d\n", goxel.window_maximized ? 1 : 0);
+        fprintf(file, "\n");
+    }
+
+    panel = gui_layout_current_panel();
+    n = gui_layout_detached_panels(detached, 32);
+    fprintf(file, "[layout]\n");
+    if (panel) fprintf(file, "panel=%s\n", panel);
+    if (n) {
+        fprintf(file, "detached=");
+        for (i = 0; i < n; i++)
+            fprintf(file, "%s%s", i ? "," : "", detached[i]);
+        fprintf(file, "\n");
+    }
     fprintf(file, "\n");
 
     fprintf(file, "[shortcuts]\n");

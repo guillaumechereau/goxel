@@ -147,6 +147,8 @@ void gui_menu(void)
         gui_menu_item(ACTION_view_toggle_ortho,
                 cam->ortho ? _("Perspective") : _("Orthographic"), true);
         gui_menu_item(ACTION_view_default, _("Reset"), true);
+        if (gui_menu_item(0, _("Reset windows"), true))
+            gui_layout_reset();
         gui_menu_end();
     }
     if (gui_menu_begin("Filters", true)) { // Note: to translate.

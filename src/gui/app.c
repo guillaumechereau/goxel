@@ -109,6 +109,87 @@ struct filter_layout_state {
     int next_y;
 };
 
+// --- Layout persistence -----------------------------------------------------
+
+static int panel_index_by_name(const char *name)
+{
+    int i;
+    for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
+        if (PANELS[i].name && strcmp(PANELS[i].name, name) == 0)
+            return i;
+    }
+    return 0;
+}
+
+const char *gui_layout_current_panel(void)
+{
+    if (!goxel.gui.current_panel) return NULL;
+    return PANELS[goxel.gui.current_panel].name;
+}
+
+int gui_layout_detached_panels(const char **out, int max)
+{
+    int i, n = 0;
+    for (i = 1; i < (int)ARRAY_SIZE(PANELS) && n < max; i++) {
+        if (PANELS[i].detached && PANELS[i].name)
+            out[n++] = PANELS[i].name;
+    }
+    return n;
+}
+
+void gui_layout_set_current_panel(const char *name)
+{
+    goxel.gui.current_panel = panel_index_by_name(name);
+}
+
+void gui_layout_set_panel_detached(const char *name)
+{
+    int i = panel_index_by_name(name);
+    if (i) PANELS[i].detached = true;
+}
+
+void gui_layout_reset(void)
+{
+    char path[1024];
+    int i;
+
+    goxel.gui.current_panel = 0;
+    for (i = 0; i < (int)ARRAY_SIZE(PANELS); i++)
+        PANELS[i].detached = false;
+    goxel.gui.reset_layout = true;
+    gui_clear_window_settings();
+    snprintf(path, sizeof(path), "%s/imgui.ini", sys_get_user_dir());
+    remove(path);
+    // settings.ini is rewritten by save_layout_if_changed() at the end of the
+    // frame, once it sees the layout changed.
+}
+
+// Save the layout to settings.ini when it changed since the last frame.
+static void save_layout_if_changed(void)
+{
+    static int last_panel = -1;
+    static uint32_t last_detached = 0;
+    uint32_t detached = 0;
+    int i;
+
+    // The detached state is tracked as a bitmask, one bit per panel.
+    _Static_assert(ARRAY_SIZE(PANELS) <= 32, "too many panels for the bitmask");
+    for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++)
+        if (PANELS[i].detached) detached |= (1u << i);
+
+    if (last_panel == -1) {
+        // First frame: adopt the just-restored state without saving it.
+        last_panel = goxel.gui.current_panel;
+        last_detached = detached;
+        return;
+    }
+    if (goxel.gui.current_panel == last_panel && detached == last_detached)
+        return;
+    last_panel = goxel.gui.current_panel;
+    last_detached = detached;
+    settings_save();
+}
+
 static void on_click(void) {
     if (DEFINED(GUI_SOUND))
         sound_play("click", 1.0, 1.0);
@@ -117,13 +198,26 @@ static void on_click(void) {
 static void render_left_panel(void)
 {
     int i;
-    bool selected;
+    bool active, selected;
 
     for (i = 1; i < (int)ARRAY_SIZE(PANELS); i++) {
-        selected = (goxel.gui.current_panel == i);
+        if (!PANELS[i].name) continue;
+        // A panel is "active" (button highlighted) when it is visible, either
+        // docked or as a detached floating window.
+        active = (goxel.gui.current_panel == i) || PANELS[i].detached;
+        selected = active;
         if (gui_tab(tr(PANELS[i].name), PANELS[i].icon, &selected)) {
             on_click();
-            goxel.gui.current_panel = selected ? i : 0;
+            if (active) {
+                // Toggle off: close the docked panel or the detached window.
+                if (goxel.gui.current_panel == i)
+                    goxel.gui.current_panel = 0;
+                PANELS[i].detached = false;
+            } else {
+                // Open docked, replacing any other docked panel.
+                goxel.gui.current_panel = i;
+                PANELS[i].detached = false;
+            }
         }
     }
 }
@@ -171,7 +265,8 @@ static void gui_filter_window(void *arg, filter_t *filter)
 
     if (filter->is_open) {
         gui_window_begin(filter->name, state->next_x, state->next_y,
-                            goxel.gui.panel_width, 0, GUI_WINDOW_MOVABLE);
+                            goxel.gui.panel_width, 0,
+                            GUI_WINDOW_MOVABLE | GUI_WINDOW_PERSIST);
 
         if (gui_panel_header(filter->name)) {
             if (filter->on_close) {
@@ -195,6 +290,7 @@ void gui_app(void)
     const float spacing = 8;
     int flags;
     int i;
+    char win_id[128];
     filter_layout_state_t filter_layout_state;
     const float item_height = gui_get_item_height();
 
@@ -222,8 +318,12 @@ void gui_app(void)
 
     if (goxel.gui.current_panel) {
         name = tr(PANELS[goxel.gui.current_panel].name);
+        // Use a language independent window id (### suffix) so imgui.ini keeps
+        // matching the window across UI language changes.
+        snprintf(win_id, sizeof(win_id), "%s###%s", name,
+                 PANELS[goxel.gui.current_panel].name);
         flags = gui_window_begin(
-                name, x, y, goxel.gui.panel_width, 0, GUI_WINDOW_MOVABLE);
+                win_id, x, y, goxel.gui.panel_width, 0, GUI_WINDOW_MOVABLE);
         if (gui_panel_header(name))
             goxel.gui.current_panel = 0;
         else
@@ -239,8 +339,9 @@ void gui_app(void)
     for (i = 0; i < ARRAY_SIZE(PANELS); i++) {
         if (!PANELS[i].detached) continue;
         name = tr(PANELS[i].name);
-        gui_window_begin(name, 0, 0, goxel.gui.panel_width, 0,
-                         GUI_WINDOW_MOVABLE);
+        snprintf(win_id, sizeof(win_id), "%s###%s", name, PANELS[i].name);
+        gui_window_begin(win_id, 0, 0, goxel.gui.panel_width, 0,
+                         GUI_WINDOW_MOVABLE | GUI_WINDOW_PERSIST);
         if (gui_panel_header(name)) {
             PANELS[i].detached = false;
         }
@@ -258,4 +359,7 @@ void gui_app(void)
          PANELS[PANEL_RENDER].detached);
 
     gui_view_cube(goxel.gui.viewport[2] - 128, item_height + 2, 128, 128);
+
+    save_layout_if_changed();
+    goxel.gui.reset_layout = false;
 }
