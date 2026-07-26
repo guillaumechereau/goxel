@@ -34,6 +34,9 @@
 enum {
     GUI_WINDOW_MOVABLE                  = 1 << 0,
     GUI_WINDOW_HORIZONTAL               = 1 << 1, // For scrolling.
+    // Persist the window position across sessions (via imgui.ini). Without it
+    // a movable window snaps back to its default position each time it opens.
+    GUI_WINDOW_PERSIST                  = 1 << 3,
 
     // Return flags.
     GUI_WINDOW_MOVED                    = 1 << 2,
@@ -216,5 +219,16 @@ void gui_set_current_pos_x(float x);
 float gui_get_item_height(void);
 float gui_text_width(const char *txt);
 float gui_get_window_width(void);
+
+/*
+ * Layout persistence (saved in settings.ini, [layout] section).
+ * Panel names are the untranslated ids from the PANELS table.
+ */
+const char *gui_layout_current_panel(void);
+int gui_layout_detached_panels(const char **out, int max);
+void gui_layout_set_current_panel(const char *name);
+void gui_layout_set_panel_detached(const char *name);
+void gui_layout_reset(void);
+void gui_clear_window_settings(void);
 
 #endif // GUI_H

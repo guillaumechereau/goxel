@@ -437,7 +437,14 @@ static void init_ImGui(void)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = 1.0f/60.0f;
-    io.IniFilename = NULL;
+
+    // Enable imgui.ini so window state persists across sessions (used for the
+    // detached panels and filter windows).  Windows placed with
+    // ImGuiCond_Always still get their position/size forced every frame, so
+    // the fixed layout is unaffected by the stored values.
+    static char ini_path[1024];
+    snprintf(ini_path, sizeof(ini_path), "%s/imgui.ini", sys_get_user_dir());
+    io.IniFilename = ini_path;
 
     io.KeyMap[ImGuiKey_Tab]         = KEY_TAB;
     io.KeyMap[ImGuiKey_LeftArrow]   = KEY_LEFT;
@@ -850,9 +857,22 @@ int gui_window_begin(const char *label, float x, float y, float w, float h,
         win_flags |= ImGuiWindowFlags_NoMouseInputs;
     if (dir == 0)
         win_flags |= ImGuiWindowFlags_HorizontalScrollbar;
-    ImGui::SetNextWindowPos(ImVec2(x, y),
-            (flags & GUI_WINDOW_MOVABLE) ?
-            ImGuiCond_Appearing : ImGuiCond_Always);
+    // Position handling:
+    //  - reset_layout: force the default (x, y) for one frame.
+    //  - PERSIST windows (detached panels, filters): FirstUseEver so a
+    //    position restored from imgui.ini wins and user moves are kept.
+    //  - other movable windows (docked panel): Appearing, so they snap back
+    //    to their slot each time they open but can still be dragged to detach.
+    ImGuiCond pos_cond;
+    if (goxel.gui.reset_layout)
+        pos_cond = ImGuiCond_Always;
+    else if (flags & GUI_WINDOW_PERSIST)
+        pos_cond = ImGuiCond_FirstUseEver;
+    else if (flags & GUI_WINDOW_MOVABLE)
+        pos_cond = ImGuiCond_Appearing;
+    else
+        pos_cond = ImGuiCond_Always;
+    ImGui::SetNextWindowPos(ImVec2(x, y), pos_cond);
     ImGui::SetNextWindowSize(ImVec2(w, h));
 
     key = ImGui::GetID("last_pos");
@@ -1727,6 +1747,17 @@ void gui_push_id(const char *id)
 void gui_pop_id(void)
 {
     ImGui::PopID();
+}
+
+// Purge all the window positions/sizes remembered by ImGui (both the stored
+// settings and the live windows), so a layout reset does not restore stale
+// positions when windows reopen.
+void gui_clear_window_settings(void)
+{
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    for (int i = 0; i < g.Windows.Size; i++)
+        ImGui::ClearWindowSettings(g.Windows[i]->Name);
+    ImGui::ClearIniSettings();
 }
 
 void gui_request_panel_width(float width)

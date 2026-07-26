@@ -554,9 +554,16 @@ typedef struct goxel
         float panel_width;
         float viewport[4];
         margins_t safe_margins;
+        bool reset_layout; // For one frame: force windows to default position.
     } gui;
 
     char **recent_files; // stb arraw of most recently used files.
+
+    // Persisted OS window geometry (settings.ini [window]).  On Wayland the
+    // position cannot be set by the client, so only size + maximized state
+    // are restored.
+    int window_size[2];     // 0 = not saved yet.
+    bool window_maximized;
 
     const char *lang; // Current set language.
 

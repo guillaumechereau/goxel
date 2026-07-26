@@ -185,6 +185,15 @@ static void loop_function(void *arg)
 
     glfwGetWindowSize(window, &win_size[0], &win_size[1]);
     glfwGetFramebufferSize(window, &fb_size[0], &fb_size[1]);
+
+    // Keep track of the window geometry so it can be persisted on exit. Only
+    // record the size while not maximized, so the maximized state restores to
+    // the previous floating size. Skipped when iconified (handled above).
+    goxel.window_maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
+    if (!goxel.window_maximized) {
+        goxel.window_size[0] = win_size[0];
+        goxel.window_size[1] = win_size[1];
+    }
     monitor = glfwGetPrimaryMonitor();
     glfwGetMonitorContentScale(monitor, &scales[0], &scales[1]);
     scale = g_scale * scales[0];
@@ -226,6 +235,9 @@ static void start_main_loop(void (*func)(void *arg), GLFWwindow *window)
         func(window);
         if (goxel.quit) break;
     }
+    // Persist the window geometry (tracked each frame in loop_function) before
+    // destroying the window.
+    settings_save();
     glfwTerminate();
 }
 #else
@@ -422,6 +434,14 @@ int main(int argc, char **argv)
     glewInit();
 #endif
     goxel_init();
+
+    // Restore the saved window geometry (size + maximized state). The position
+    // is left to the window manager: on Wayland a client cannot set it.
+    if (goxel.window_maximized) {
+        glfwMaximizeWindow(window);
+    } else if (goxel.window_size[0] > 0) {
+        glfwSetWindowSize(window, goxel.window_size[0], goxel.window_size[1]);
+    }
 
     // Run the unit tests in debug.
     if (DEBUG) {
