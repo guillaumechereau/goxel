@@ -540,8 +540,12 @@ static int check_action_shortcut(action_t *action, void *user)
     if (str_startswith(s, "Ctrl")) return 0;
     if (str_startswith(s, "Shift")) return 0;
 
+    // Match by the printed label of the key (layout-aware) rather than its
+    // physical position, so combos like Ctrl+Z land on the key labelled 'Z'
+    // even on non-QWERTY layouts (AZERTY...).
+    int key = sys_get_key_for_char(s[0]);
     if (    (check_char && isCharPressed(s[0])) ||
-            (check_key && ImGui::IsKeyPressed((ImGuiKey)s[0], false))) {
+            (check_key && ImGui::IsKeyPressed((ImGuiKey)key, false))) {
         action_exec(action);
         return 1;
     }

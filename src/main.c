@@ -289,6 +289,37 @@ static void set_clipboard_text(void *user, const char *text)
     glfwSetClipboardString(window, text);
 }
 
+static int get_key_for_char(void *user, int c)
+{
+    // Lazily build a map from printed label to GLFW key code for the current
+    // keyboard layout, so shortcuts follow the labels of the keys (e.g. Ctrl+Z
+    // hits the key printed 'Z', not the physical QWERTY position, on AZERTY).
+    // Note: computed once; a layout change during the session is not picked up.
+    static int char_to_key[128];
+    static bool built = false;
+    int i;
+    const char *name;
+    unsigned char ch;
+
+    if (!built) {
+        for (i = 0; i < 128; i++) char_to_key[i] = -1;
+        // Only the printable ASCII keys (up to the grave accent); this skips
+        // the keypad, so a digit shortcut maps to the main row, not the pad.
+        for (i = GLFW_KEY_SPACE; i <= GLFW_KEY_GRAVE_ACCENT; i++) {
+            name = glfwGetKeyName(i, 0);
+            if (!name || !name[0] || (unsigned char)name[0] >= 128) continue;
+            ch = name[0];
+            if (ch >= 'A' && ch <= 'Z') ch += 'a' - 'A';
+            if (char_to_key[ch] == -1) char_to_key[ch] = i;
+        }
+        built = true;
+    }
+
+    if (c < 0 || c >= 128) return -1;
+    if (c >= 'A' && c <= 'Z') c += 'a' - 'A';
+    return char_to_key[c];
+}
+
 static void filters_to_nfd_spec(
         const char *const *filters, char buf[], size_t buf_size)
 {
@@ -379,6 +410,7 @@ int main(int argc, char **argv)
     sys_callbacks.set_window_title = set_window_title;
     sys_callbacks.get_clipboard_text = get_clipboard_text;
     sys_callbacks.set_clipboard_text = set_clipboard_text;
+    sys_callbacks.get_key_for_char = get_key_for_char;
     sys_callbacks.open_dialog = open_dialog;
     parse_options(argc, argv, &args);
 
