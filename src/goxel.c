@@ -27,6 +27,8 @@
 
 #include <errno.h> // IWYU pragma: keep.
 #include <stdarg.h>
+#include <ctype.h>
+#include <string.h>
 
 // The global goxel instance.
 goxel_t goxel = {};
@@ -462,6 +464,15 @@ void goxel_init(void)
             break;
     }
     goxel.palette = goxel.palette ?: goxel.palettes;
+
+    // Initialize last used colors array
+    goxel.last_used_colors_count = 0;
+    memset(goxel.last_used_colors, 0, sizeof(goxel.last_used_colors));
+
+    // Initialize palette search state
+    goxel.palette_search_query[0] = '\0';
+    goxel.filtered_entries = NULL;
+    goxel.filtered_count = 0;
 
     goxel_load_recent_files();
 
@@ -1910,6 +1921,142 @@ ACTION_REGISTER(ACTION_set_mode_sub,
     .icon = ICON_MODE_SUB,
     .default_shortcut = "R",
 )
+
+// Function to add a color to the last used colors list
+void goxel_add_to_last_used_colors(const uint8_t color[4], const char *name)
+{
+    int i, j;
+    
+    // Default name if none provided
+    if (!name) name = "Unknown color";
+    
+    // Check if the color is already in the list
+    for (i = 0; i < goxel.last_used_colors_count; i++) {
+        if (memcmp(goxel.last_used_colors[i].color, color, 4) == 0) {
+            // Color already exists, move it to the front
+            struct {
+                uint8_t color[4];
+                char    name[256];
+            } temp;
+            
+            memcpy(temp.color, goxel.last_used_colors[i].color, 4);
+            strncpy(temp.name, goxel.last_used_colors[i].name, sizeof(temp.name) - 1);
+            temp.name[sizeof(temp.name) - 1] = '\0';
+            
+            // Shift colors down
+            for (j = i; j > 0; j--) {
+                memcpy(goxel.last_used_colors[j].color, goxel.last_used_colors[j-1].color, 4);
+                strncpy(goxel.last_used_colors[j].name, goxel.last_used_colors[j-1].name, 
+                       sizeof(goxel.last_used_colors[j].name) - 1);
+                goxel.last_used_colors[j].name[sizeof(goxel.last_used_colors[j].name) - 1] = '\0';
+            }
+            
+            // Put the color at the front
+            memcpy(goxel.last_used_colors[0].color, temp.color, 4);
+            strncpy(goxel.last_used_colors[0].name, temp.name, 
+                   sizeof(goxel.last_used_colors[0].name) - 1);
+            goxel.last_used_colors[0].name[sizeof(goxel.last_used_colors[0].name) - 1] = '\0';
+            return;
+        }
+    }
+    
+    // Color not found, add it to the front
+    // Shift existing colors down
+    int count = goxel.last_used_colors_count < 10 ? goxel.last_used_colors_count : 9;
+    for (i = count; i > 0; i--) {
+        memcpy(goxel.last_used_colors[i].color, goxel.last_used_colors[i-1].color, 4);
+        strncpy(goxel.last_used_colors[i].name, goxel.last_used_colors[i-1].name, 
+               sizeof(goxel.last_used_colors[i].name) - 1);
+        goxel.last_used_colors[i].name[sizeof(goxel.last_used_colors[i].name) - 1] = '\0';
+    }
+    
+    // Add new color at the front
+    memcpy(goxel.last_used_colors[0].color, color, 4);
+    strncpy(goxel.last_used_colors[0].name, name, 
+           sizeof(goxel.last_used_colors[0].name) - 1);
+    goxel.last_used_colors[0].name[sizeof(goxel.last_used_colors[0].name) - 1] = '\0';
+    
+    // Update count (max 10)
+    if (goxel.last_used_colors_count < 10) {
+        goxel.last_used_colors_count++;
+    }
+}
+
+// Palette search functions
+void goxel_filter_palette(const char *query)
+{
+    const palette_t *p = goxel.palette;
+    int i, match_count = 0;
+    char query_lower[256];
+    char name_lower[256];
+    
+    // Clear previous results
+    goxel_clear_palette_search();
+    
+    // If no query, don't filter anything
+    if (!query || strlen(query) == 0) {
+        goxel.palette_search_query[0] = '\0';
+        return;
+    }
+    
+    
+    // Store the query
+    strncpy(goxel.palette_search_query, query, sizeof(goxel.palette_search_query) - 1);
+    goxel.palette_search_query[sizeof(goxel.palette_search_query) - 1] = '\0';
+    
+    // Convert query to lowercase for case-insensitive search
+    for (i = 0; query[i] && i < sizeof(query_lower) - 1; i++) {
+        query_lower[i] = tolower(query[i]);
+    }
+    query_lower[i] = '\0';
+    
+    // Count matches first
+    for (i = 0; i < p->size; i++) {
+        // Convert palette entry name to lowercase
+        int j;
+        for (j = 0; p->entries[i].name[j] && j < sizeof(name_lower) - 1; j++) {
+            name_lower[j] = tolower(p->entries[i].name[j]);
+        }
+        name_lower[j] = '\0';
+        
+        // Check if query is a substring of the name
+        if (strstr(name_lower, query_lower) != NULL) {
+            match_count++;
+        }
+    }
+    
+    // Allocate filtered results array
+    if (match_count > 0) {
+        goxel.filtered_entries = calloc(match_count, sizeof(palette_entry_t));
+        goxel.filtered_count = 0;
+        
+        // Copy matching entries
+        for (i = 0; i < p->size; i++) {
+            // Convert palette entry name to lowercase again
+            int j;
+            for (j = 0; p->entries[i].name[j] && j < sizeof(name_lower) - 1; j++) {
+                name_lower[j] = tolower(p->entries[i].name[j]);
+            }
+            name_lower[j] = '\0';
+            
+            // Check if query is a substring of the name
+            if (strstr(name_lower, query_lower) != NULL) {
+                memcpy(&goxel.filtered_entries[goxel.filtered_count], &p->entries[i], sizeof(palette_entry_t));
+                goxel.filtered_count++;
+            }
+        }
+    }
+}
+
+void goxel_clear_palette_search(void)
+{
+    if (goxel.filtered_entries) {
+        free(goxel.filtered_entries);
+        goxel.filtered_entries = NULL;
+    }
+    goxel.filtered_count = 0;
+    goxel.palette_search_query[0] = '\0';
+}
 
 ACTION_REGISTER(ACTION_set_mode_paint,
     .help = N_("Paints the voxels"),

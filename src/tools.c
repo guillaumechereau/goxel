@@ -192,7 +192,9 @@ int tool_gui_smoothness(void)
 int tool_gui_color(void)
 {
     float alpha;
-    gui_color_small(_("Color"), goxel.painter.color);
+    if (gui_color_small(_("Color"), goxel.painter.color)) {
+        goxel_add_to_last_used_colors(goxel.painter.color, "Custom color");
+    }
     if (goxel.painter.mode == MODE_PAINT) {
         alpha = goxel.painter.color[3] / 255.;
         if (gui_input_float(_("Alpha"), &alpha, 0.1, 0, 1, "%.1f"))

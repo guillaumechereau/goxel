@@ -527,6 +527,18 @@ typedef struct goxel
     palette_t  *palettes;   // The list of all the palettes
     palette_t  *palette;    // The current color palette
 
+    // Last used colors for palette panel
+    struct {
+        uint8_t color[4];               // RGBA color values
+        char    name[256];              // Color name for tooltip
+    } last_used_colors[10];
+    int        last_used_colors_count;  // Number of colors currently stored
+
+    // Palette search functionality
+    char       palette_search_query[256];    // Current search string
+    palette_entry_t *filtered_entries;      // Filtered palette results
+    int        filtered_count;               // Number of filtered results
+
     double     delta_time;  // Elapsed time since last frame (sec)
     int        frame_count; // Global frames counter.
     double     frame_time;  // Clock time at beginning of the frame (sec)
@@ -643,6 +655,13 @@ void goxel_import_image_plane(const char *path);
 
 int goxel_import_file(const char *path, const char *format);
 int goxel_export_to_file(const char *path, const char *format);
+
+// Function to add a color to the last used colors list
+void goxel_add_to_last_used_colors(const uint8_t color[4], const char *name);
+
+// Palette search functions
+void goxel_filter_palette(const char *query);
+void goxel_clear_palette_search(void);
 
 // Render the view into an RGB[A] buffer.
 void goxel_render_to_buf(uint8_t *buf, int w, int h, int bpp);
