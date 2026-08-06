@@ -290,7 +290,7 @@ static bool goxel_unproject_on_volume(
 
 int goxel_unproject(const float viewport[4],
                     const float pos[2], int snap_mask,
-                    const float snap_shape[4][4], float offset,
+                    const float snap_shape[4][4], const float offsets[3],
                     float out[3], float normal[3])
 {
     int i, ret = 0;
@@ -357,12 +357,16 @@ int goxel_unproject(const float viewport[4],
 
     // Post effects.
     // Note: should probably move outside of this function.
-    if (ret && offset)
-        vec3_iaddk(out, normal, offset);
     if (ret && (snap_mask & SNAP_ROUNDED)) {
         for (i = 0; i < 3; i++) {
             if (normal[i] == 0) {
-                out[i] = round(out[i] - 0.5) + 0.5;
+                float snap_unit = goxel.snap_units[i];
+                float offset = offsets ? offsets[i] : 0.0f;
+                if (snap_unit > 0) {
+                    out[i] = round((out[i] - 0.5 - offset) / snap_unit) * snap_unit + 0.5 + offset;
+                } else {
+                    out[i] = round(out[i] - 0.5 - offset) + 0.5 + offset;
+                }
             }
         }
     }
@@ -550,6 +554,13 @@ void goxel_reset(void)
         goxel.rend.settings.shadow = 0;
 
     goxel.snap_mask = SNAP_VOLUME | SNAP_IMAGE_BOX;
+    goxel.snap_units[0] = 1.0; // X axis
+    goxel.snap_units[1] = 1.0; // Y axis
+    goxel.snap_units[2] = 1.0; // Z axis
+    goxel.snap_offsets[0] = 0.0; // X axis offset
+    goxel.snap_offsets[1] = 0.0; // Y axis offset
+    goxel.snap_offsets[2] = 0.0; // Z axis offset
+    goxel.use_brush_size = true; // Use brush size by default
 
     goxel.pathtracer = (pathtracer_t) {
         .num_samples = 512,
@@ -732,8 +743,12 @@ static int on_drag(const gesture_t *gest, void *user)
 
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, gest3d->snap_offset,
+                gest3d->snap_shape, goxel.snap_offsets,
                 gest3d->pos, gest3d->normal);
+        // Apply tool-specific offset along the normal if needed
+        if (gest3d->snaped && gest3d->snap_offset != 0) {
+            vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
+        }
         set_cursor_hint(gest3d);
     }
     return 0;
@@ -752,7 +767,7 @@ static int on_drag_rotate(const gesture_t *gest, void *user)
         snap = goxel_unproject(
             gest->viewport, gest->pos,
             SNAP_IMAGE_BOX | SNAP_SELECTION_OUT | SNAP_VOLUME,
-            NULL, 0, pos, normal);
+            NULL, goxel.snap_offsets, pos, normal);
         if (snap) return 1;
     }
     return on_rotate(gest, user);
@@ -810,6 +825,42 @@ static int on_rotate(const gesture_t *gest, void *user)
     if (gest->state == GESTURE_BEGIN) {
         mat4_copy(camera->mat, goxel.move_origin.camera_mat);
         vec2_copy(gest->pos, goxel.move_origin.pos);
+        
+        // Try to detect a voxel under the mouse cursor for distance-based rotation
+        float voxel_pos[3], voxel_normal[3];
+        bool found_voxel = goxel_unproject_on_volume(
+            gest->viewport, gest->pos, goxel_get_layers_volume(goxel.image), 
+            voxel_pos, voxel_normal);
+        
+        if (found_voxel) {
+            // Found a voxel - calculate pivot point at center of view at same distance
+            float camera_pos[3], camera_to_voxel[3];
+            float viewport_center[2];
+            float ray_origin[3], ray_dir[3];
+            
+            // Get camera position
+            vec3_copy(camera->mat[3], camera_pos);
+            
+            // Calculate distance from camera to voxel
+            vec3_sub(voxel_pos, camera_pos, camera_to_voxel);
+            float distance = vec3_norm(camera_to_voxel);
+            
+            // Get viewport center coordinates
+            viewport_center[0] = gest->viewport[0] + gest->viewport[2] / 2.0f;
+            viewport_center[1] = gest->viewport[1] + gest->viewport[3] / 2.0f;
+            
+            // Get ray from center of viewport
+            camera_get_ray(camera, viewport_center, gest->viewport, ray_origin, ray_dir);
+            
+            // Calculate pivot point at the same distance along the center ray
+            vec3_mul(ray_dir, distance, ray_dir);
+            vec3_add(ray_origin, ray_dir, goxel.move_origin.pivot_point);
+            
+            goxel.move_origin.has_pivot_point = true;
+        } else {
+            // No voxel found - use default rotation
+            goxel.move_origin.has_pivot_point = false;
+        }
     }
 
     x1 = goxel.move_origin.pos[0] / gest->viewport[2];
@@ -820,7 +871,14 @@ static int on_rotate(const gesture_t *gest, void *user)
     x_rot = (y2 - y1) * 2 * M_PI;
 
     mat4_copy(goxel.move_origin.camera_mat, camera->mat);
-    camera_turntable(camera, z_rot, x_rot);
+    
+    // Use pivot-based rotation if we have a voxel under the cursor
+    if (goxel.move_origin.has_pivot_point) {
+        camera_turntable_around_point(camera, z_rot, x_rot, goxel.move_origin.pivot_point);
+    } else {
+        camera_turntable(camera, z_rot, x_rot);
+    }
+    
     return 0;
 }
 
@@ -852,8 +910,12 @@ static int on_hover(const gesture_t *gest, void *user)
         gest3d = &goxel.gesture3ds[i];
         gest3d->snaped = goxel_unproject(
                 gest->viewport, gest->pos, gest3d->snap_mask,
-                gest3d->snap_shape, gest3d->snap_offset,
+                gest3d->snap_shape, goxel.snap_offsets,
                 gest3d->pos, gest3d->normal);
+        // Apply tool-specific offset along the normal if needed
+        if (gest3d->snaped && gest3d->snap_offset != 0) {
+            vec3_iaddk(gest3d->pos, gest3d->normal, gest3d->snap_offset);
+        }
         set_cursor_hint(gest3d);
         gest3d->flags &= ~GESTURE3D_FLAG_PRESSED;
         set_flag(&gest3d->flags, GESTURE3D_FLAG_OUT,
