@@ -212,6 +212,19 @@ void sys_show_keyboard(bool has_text)
 }
 
 /*
+ * Function: sys_get_key_for_char
+ * Map a printed character to the key code that produces it on the current
+ * keyboard layout.
+ */
+int sys_get_key_for_char(int c)
+{
+    int ret;
+    if (!sys_callbacks.get_key_for_char) return c;
+    ret = sys_callbacks.get_key_for_char(sys_callbacks.user, c);
+    return ret >= 0 ? ret : c;
+}
+
+/*
  * Function: sys_save_to_photos
  * Save a png file to the system photo album.
  */
