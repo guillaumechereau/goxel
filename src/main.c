@@ -306,6 +306,9 @@ static int get_key_for_char(void *user, int c)
         // Only the printable ASCII keys (up to the grave accent); this skips
         // the keypad, so a digit shortcut maps to the main row, not the pad.
         for (i = GLFW_KEY_SPACE; i <= GLFW_KEY_GRAVE_ACCENT; i++) {
+            // Skip the gaps in the GLFW key codes (no scancode), otherwise
+            // glfwGetKeyName reports an 'Invalid scancode' error.
+            if (glfwGetKeyScancode(i) == -1) continue;
             name = glfwGetKeyName(i, 0);
             if (!name || !name[0] || (unsigned char)name[0] >= 128) continue;
             ch = name[0];
