@@ -103,6 +103,7 @@
 		F0A160051E962F1300C6EF33 /* wavefront.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A15FFB1E962F1300C6EF33 /* wavefront.c */; };
 		F0A160081E962F4600C6EF33 /* marchingcube.c in Sources */ = {isa = PBXBuildFile; fileRef = F0A160061E962F4600C6EF33 /* marchingcube.c */; };
 		F0ACA2A12271ACD400376C82 /* gltf.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A02271ACD300376C82 /* gltf.c */; };
+		F0D17F012EA0000000000001 /* gltf_mesh.c in Sources */ = {isa = PBXBuildFile; fileRef = F0D17F012EA0000000000002 /* gltf_mesh.c */; };
 		F0ACA2A42271ACEA00376C82 /* json.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A32271ACEA00376C82 /* json.c */; };
 		F0ACA2A8227BF2A300376C82 /* shader_cache.c in Sources */ = {isa = PBXBuildFile; fileRef = F0ACA2A7227BF2A300376C82 /* shader_cache.c */; };
 		F0AE90F71C8EE01300C29080 /* assets.c in Sources */ = {isa = PBXBuildFile; fileRef = F0AE90F51C8EE01200C29080 /* assets.c */; };
@@ -254,6 +255,8 @@
 		F0A15FFB1E962F1300C6EF33 /* wavefront.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = wavefront.c; sourceTree = "<group>"; };
 		F0A160061E962F4600C6EF33 /* marchingcube.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = marchingcube.c; sourceTree = "<group>"; };
 		F0ACA2A02271ACD300376C82 /* gltf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltf.c; sourceTree = "<group>"; };
+		F0D17F012EA0000000000002 /* gltf_mesh.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gltf_mesh.c; sourceTree = "<group>"; };
+		F0D17F012EA0000000000003 /* gltf_mesh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gltf_mesh.h; sourceTree = "<group>"; };
 		F0ACA2A22271ACEA00376C82 /* json.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = json.h; sourceTree = "<group>"; };
 		F0ACA2A32271ACEA00376C82 /* json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = json.c; sourceTree = "<group>"; };
 		F0ACA2A6227BF2A300376C82 /* shader_cache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = shader_cache.h; sourceTree = "<group>"; };
@@ -536,6 +539,8 @@
 			isa = PBXGroup;
 			children = (
 				F0ACA2A02271ACD300376C82 /* gltf.c */,
+				F0D17F012EA0000000000002 /* gltf_mesh.c */,
+				F0D17F012EA0000000000003 /* gltf_mesh.h */,
 				F025C7DA1F33239000C52709 /* png_slices.c */,
 				F037D5C21EA6061F00C96D10 /* gox.c */,
 				F0A15FF31E962F1300C6EF33 /* png.c */,
@@ -726,6 +731,7 @@
 				F00FC31A226B2F7C0002F251 /* cache.c in Sources */,
 				F037D5D51EA6069A00C96D10 /* selection.c in Sources */,
 				F0ACA2A12271ACD400376C82 /* gltf.c in Sources */,
+				F0D17F012EA0000000000001 /* gltf_mesh.c in Sources */,
 				F0EDCB752BB272EF00D95B51 /* snap_panel.c in Sources */,
 				F05D6E8229D3EA36004CA300 /* quickjs.c in Sources */,
 				F097B3F41F0C97DB00A3622B /* gesture3d.c in Sources */,

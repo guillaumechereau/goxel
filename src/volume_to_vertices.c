@@ -368,7 +368,7 @@ static void fill_mesh(volume_mesh_t *mesh,
     mesh->vertices_count += nb * size;
 }
 
-static void optimize_mesh(volume_mesh_t *mesh, float simplify)
+void volume_mesh_optimize(volume_mesh_t *mesh, float simplify)
 {
     unsigned int *remap;
     unsigned int *tmp_indices;
@@ -441,7 +441,7 @@ volume_mesh_t *volume_generate_mesh(
     }
     free(verts);
 
-    optimize_mesh(mesh, simplify);
+    volume_mesh_optimize(mesh, simplify);
 
     mesh->pos_min[0] = +FLT_MAX;
     mesh->pos_min[1] = +FLT_MAX;
