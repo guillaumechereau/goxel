@@ -17,6 +17,7 @@
  */
 
 #include "goxel.h"
+#include "mcp_bridge.h"
 #include "script.h"
 #include <getopt.h>
 
@@ -68,11 +69,14 @@ typedef struct
     const char *script;
     int script_args_nb;
     const char *script_args[32];
+
+    const char *mcp_socket;
 } args_t;
 
 #define OPT_HELP 1
 #define OPT_VERSION 2
 #define OPT_SCRIPT 3
+#define OPT_MCP_SOCKET 4
 
 typedef struct {
     const char *name;
@@ -88,6 +92,8 @@ static const gox_option_t OPTIONS[] = {
     {"scale", 's', required_argument, "FLOAT", .help="Set UI scale"},
     {"script", OPT_SCRIPT, required_argument, "FILENAME",
         .help="Run a script and exit"},
+    {"mcp-socket", OPT_MCP_SOCKET, required_argument, "PATH",
+        .help="Listen for external commands on a Unix socket"},
     {"help", OPT_HELP, .help="Give this help list"},
     {"version", OPT_VERSION, .help="Print program version"},
     {}
@@ -153,6 +159,9 @@ static void parse_options(int argc, char **argv, args_t *args)
         case OPT_SCRIPT:
             args->script = optarg;
             break;
+        case OPT_MCP_SOCKET:
+            args->mcp_socket = optarg;
+            break;
         case '?':
             exit(-1);
         }
@@ -177,9 +186,12 @@ static void loop_function(void *arg)
     GLFWmonitor *monitor;
     GLFWwindow *window = arg;
 
+    mcp_bridge_iter();
+
     if (    !glfwGetWindowAttrib(window, GLFW_VISIBLE) ||
              glfwGetWindowAttrib(window, GLFW_ICONIFIED)) {
-        glfwWaitEvents();
+        // Wake up regularly so that bridge requests are still served.
+        glfwWaitEventsTimeout(0.1);
         goto end;
     }
 
@@ -445,7 +457,9 @@ int main(int argc, char **argv)
         }
         goto end;
     }
+    mcp_bridge_init(args.mcp_socket);
     start_main_loop(loop_function, window);
+    mcp_bridge_release();
 end:
     glfwTerminate();
     goxel_release();
