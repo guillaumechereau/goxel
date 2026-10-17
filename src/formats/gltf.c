@@ -19,6 +19,7 @@
 #include "goxel.h"
 
 #include "file_format.h"
+#include "gltf_mesh.h"
 #include "utils/vec.h"
 
 #pragma GCC diagnostic push
@@ -32,6 +33,9 @@ typedef struct {
     cgltf_data *data;
     palette_t palette;
     cgltf_material *default_mat;
+    bool consolidate;
+    gltf_mesh_part_t **layer_meshes;
+    int parts_count;
 
     // For binary (.glb) export: all the binary data is packed into a single
     // buffer (data->buffers[0]) written as the GLB BIN chunk.  For text
@@ -57,6 +61,7 @@ typedef struct {
 typedef struct {
     bool vertex_color;
     bool visible_only;
+    bool consolidate;
     float simplify;
 } export_options_t;
 
@@ -137,34 +142,34 @@ static char *data_new(const void *data, uint32_t len, const char *mime)
 static void gltf_init(gltf_t *g, const export_options_t *options,
                       const image_t *img)
 {
-    const layer_t *layer;
-    volume_iterator_t iter;
-    int bpos[3], nb_blocks = 0;
+    int layers = DL_SIZE(img->layers);
+    int parts = g->consolidate ? g->parts_count : layers;
 
     g->data = calloc(1, sizeof(*g->data));
     g->data->memory.free_func = &cgltf_default_free;
     g->data->asset.version = strdup("2.0");
     g->data->asset.generator = strdup("goxel");
 
-    // Count the total number of blocks.
-    DL_FOREACH(img->layers, layer) {
-        iter = volume_get_iterator(layer->volume,
-                VOLUME_ITER_TILES | VOLUME_ITER_INCLUDES_NEIGHBORS);
-        while (volume_iter(&iter, bpos)) {
-            nb_blocks++;
-        }
-    }
-
-    // Initialize all the gltf base object arrays.
-    ALLOC(g->data->materials, DL_SIZE(img->materials) + 1);
+    // Allocate before wiring pointers: one mesh per layer, one primitive and
+    // material/texture binding per atlas page. Never realloc these arrays.
+    ALLOC(g->data->materials,
+          DL_SIZE(img->materials) + parts + 1);
     ALLOC(g->data->scenes, 1);
-    ALLOC(g->data->nodes, 1 + nb_blocks + DL_SIZE(img->layers));
-    ALLOC(g->data->meshes, nb_blocks);
-    ALLOC(g->data->accessors, nb_blocks * 4);
-    ALLOC(g->data->buffers, nb_blocks * 2 + 1);
-    ALLOC(g->data->buffer_views, nb_blocks * 2 + 1);
-    ALLOC(g->data->images, 1);
-    ALLOC(g->data->textures, 1);
+    ALLOC(g->data->nodes, 1 + layers);
+    ALLOC(g->data->meshes, layers);
+    ALLOC(g->data->accessors, parts * 4);
+    ALLOC(g->data->buffers, parts * 3 + 1);
+    ALLOC(g->data->buffer_views, parts * 3 + 1);
+    ALLOC(g->data->images, parts + 1);
+    ALLOC(g->data->textures, parts + 1);
+    if (g->consolidate && !options->vertex_color) {
+        ALLOC(g->data->samplers, 1);
+        g->data->samplers_count = 1;
+        g->data->samplers[0].mag_filter = cgltf_filter_type_nearest;
+        g->data->samplers[0].min_filter = cgltf_filter_type_nearest;
+        g->data->samplers[0].wrap_s = cgltf_wrap_mode_clamp_to_edge;
+        g->data->samplers[0].wrap_t = cgltf_wrap_mode_clamp_to_edge;
+    }
 }
 
 #define add_item(data, list) ({ &(data)->list[(data)->list##_count++]; })
@@ -289,37 +294,46 @@ static cgltf_material *get_default_mat(
     return g->default_mat;
 }
 
-static void save_layer(gltf_t *g, cgltf_node *root_node,
-                       const image_t *img, const layer_t *layer,
-                       const palette_t *palette,
-                       int palette_pix_size,
-                       const export_options_t *options)
+static cgltf_material *save_atlas_material(
+        gltf_t *g, const layer_t *layer, const export_options_t *options,
+        const uint8_t *pixels, const int size[2])
 {
-    volume_mesh_t *mesh;
-    cgltf_mesh *gmesh;
-    cgltf_node *node;
+    cgltf_texture *texture;
+    cgltf_image *image;
+    cgltf_material *material;
+    uint8_t *png;
+    int png_size;
+    const material_t fallback = {
+        .base_color = {1, 1, 1, 1}, .metallic = 1, .roughness = 1,
+    };
+
+    png = img_write_to_mem(pixels, size[0], size[1], 3, &png_size);
+    image = add_item(g->data, images);
+    image->mime_type = strdup("image/png");
+    image->buffer_view = add_blob(g, png, png_size, NULL);
+    free(png);
+    texture = add_item(g->data, textures);
+    texture->image = image;
+    texture->sampler = &g->data->samplers[0];
+    // Each atlas page needs its own material/texture binding.
+    material = save_material(g, layer->material ? layer->material : &fallback,
+                             options);
+    material->pbr_metallic_roughness.base_color_texture.texture = texture;
+    return material;
+}
+
+static void save_mesh(gltf_t *g, cgltf_mesh *gmesh,
+                      const volume_mesh_t *mesh, cgltf_material *material,
+                      const export_options_t *options)
+{
     cgltf_primitive *primitive;
     cgltf_buffer_view *buffer_view;
     cgltf_accessor *accessor;
 
-    mesh = volume_generate_mesh(
-            layer->volume, goxel.rend.settings.effects, palette,
-            g_export_options.simplify);
-
-    if (mesh->vertices_count == 0) return;
-
-    gmesh = add_item(g->data, meshes);
-    ALLOC(gmesh->primitives, 1);
     primitive = add_item(gmesh, primitives);
     primitive->type = cgltf_primitive_type_triangles;
     ALLOC(primitive->attributes, 3);
-    if (layer->material) {
-        primitive->material = g->data->materials +
-                              get_material_idx(img, layer->material);
-    } else {
-        primitive->material = get_default_mat(g, options);
-    }
-
+    primitive->material = material;
 
     buffer_view = add_blob(g, mesh->vertices,
                            mesh->vertices_count * sizeof(*mesh->vertices),
@@ -369,13 +383,55 @@ static void save_layer(gltf_t *g, cgltf_node *root_node,
     accessor->count = mesh->indices_count;
     accessor->type = cgltf_type_scalar;
     primitive->indices = accessor;
+}
+
+static void save_layer(gltf_t *g, cgltf_node *root_node,
+                       const image_t *img, const layer_t *layer,
+                       const palette_t *palette, gltf_mesh_part_t *parts,
+                       const export_options_t *options)
+{
+    volume_mesh_t *mesh = NULL;
+    gltf_mesh_part_t *part;
+    cgltf_mesh *gmesh;
+    cgltf_node *node;
+    cgltf_material *material;
+    int count = 0;
+
+    if (g->consolidate) {
+        for (part = parts; part; part = part->next) count++;
+        if (!count) return;
+    } else {
+        mesh = volume_generate_mesh(layer->volume, goxel.rend.settings.effects,
+                                    palette, options->simplify);
+        if (!mesh->vertices_count) {
+            volume_mesh_free(mesh);
+            return;
+        }
+        count = 1;
+    }
+    gmesh = add_item(g->data, meshes);
+    ALLOC(gmesh->primitives, count);
+    part = parts;
+    while (count--) {
+        if (part && part->texture) {
+            material = save_atlas_material(g, layer, options, part->texture,
+                                           part->texture_size);
+        } else if (layer->material) {
+            material = g->data->materials +
+                       get_material_idx(img, layer->material);
+        } else {
+            material = get_default_mat(g, options);
+        }
+        save_mesh(g, gmesh, part ? part->mesh : mesh, material, options);
+        if (part) part = part->next;
+    }
 
     node = add_item(g->data, nodes);
     node->mesh = gmesh;
     node->name = strdup(layer->name);
     *add_item(root_node, children) = node;
 
-    volume_mesh_free(mesh);
+    if (mesh) volume_mesh_free(mesh);
 }
 
 static void create_palette_texture(
@@ -426,8 +482,8 @@ static void create_palette_texture(
     free(png);
 }
 
-static void gltf_export(const image_t *img, const char *path,
-                        const export_options_t *options, bool binary)
+static int gltf_export(const image_t *img, const char *path,
+                       const export_options_t *options, bool binary)
 {
     gltf_t g = {};
     const layer_t *layer;
@@ -437,17 +493,37 @@ static void gltf_export(const image_t *img, const char *path,
     material_t *mat;
     const palette_t *palette = NULL;
     const int palette_pix_size = 4;
+    gltf_mesh_part_t *part;
+    cgltf_result result;
+    int i = 0;
 
     g.binary = binary;
+    g.consolidate = options->consolidate &&
+                    !(goxel.rend.settings.effects & EFFECT_MARCHING_CUBES);
+    if (g.consolidate) {
+        ALLOC(g.layer_meshes, DL_SIZE(img->layers));
+        DL_FOREACH(img->layers, layer) {
+            if (!options->visible_only || layer->visible) {
+                g.layer_meshes[i] = gltf_generate_greedy_meshes(
+                        layer->volume, options->vertex_color,
+                        options->simplify, GLTF_ATLAS_SIZE);
+                for (part = g.layer_meshes[i]; part; part = part->next)
+                    g.parts_count++;
+            }
+            i++;
+        }
+    }
     gltf_init(&g, options, img);
 
-    if (!options->vertex_color) {
+    if (!options->vertex_color && !g.consolidate) {
         create_palette_texture(&g, img, palette_pix_size);
         palette = &g.palette;
     }
 
-    DL_FOREACH(img->materials, mat) {
-        save_material(&g, mat, options);
+    if (!g.consolidate || options->vertex_color) {
+        DL_FOREACH(img->materials, mat) {
+            save_material(&g, mat, options);
+        }
     }
 
     root_node = add_item(g.data, nodes);
@@ -462,11 +538,16 @@ static void gltf_export(const image_t *img, const char *path,
     *add_item(scene, nodes) = root_node;
 
     ALLOC(root_node->children, DL_SIZE(img->layers));
+    i = 0;
     DL_FOREACH(img->layers, layer) {
-        if (options->visible_only && !layer->visible) continue;
-        save_layer(&g, root_node, img, layer,
-                   palette, palette_pix_size, options);
+        if (!options->visible_only || layer->visible) {
+            save_layer(&g, root_node, img, layer, palette,
+                       g.layer_meshes ? g.layer_meshes[i] : NULL, options);
+        }
+        if (g.layer_meshes) gltf_mesh_parts_free(g.layer_meshes[i]);
+        i++;
     }
+    free(g.layer_meshes);
 
     if (g.binary) {
         // Pack everything into a single buffer written as the GLB BIN chunk.
@@ -477,24 +558,23 @@ static void gltf_export(const image_t *img, const char *path,
         gltf_options.type = cgltf_file_type_glb;
     }
 
-    cgltf_write_file(&gltf_options, path, g.data);
+    result = cgltf_write_file(&gltf_options, path, g.data);
     cgltf_free(g.data);
     free(g.bin);
     free(g.palette.entries);
+    return result == cgltf_result_success ? 0 : -1;
 }
 
 static int export_as_gltf(const file_format_t *format, const image_t *img,
                           const char *path)
 {
-    gltf_export(img, path, &g_export_options, false);
-    return 0;
+    return gltf_export(img, path, &g_export_options, false);
 }
 
 static int export_as_glb(const file_format_t *format, const image_t *img,
                          const char *path)
 {
-    gltf_export(img, path, &g_export_options, true);
-    return 0;
+    return gltf_export(img, path, &g_export_options, true);
 }
 
 static void export_gui(file_format_t *format)
@@ -503,6 +583,13 @@ static void export_gui(file_format_t *format)
                  _("Save colors as vertex attribute"));
     gui_checkbox(_("Visible Only"), &g_export_options.visible_only,
                  _("Exclude hidden layers"));
+    if (!(goxel.rend.settings.effects & EFFECT_MARCHING_CUBES)) {
+        gui_checkbox(_("Consolidate Faces"), &g_export_options.consolidate,
+                _("Merge coplanar voxel faces and bake a texture atlas; "
+                  "vertex colors only merge matching colors"));
+    } else {
+        gui_text(_("Face consolidation requires Marching Cubes to be off."));
+    }
     gui_input_float(_("Simplify"), &g_export_options.simplify, 0.1,
                     0, 1, "%.1f");
 }

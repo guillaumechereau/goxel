@@ -218,6 +218,9 @@ volume_mesh_t *volume_generate_mesh(
 
 void volume_mesh_free(volume_mesh_t *mesh);
 
+// Merge duplicate vertices and optionally simplify an export mesh.
+void volume_mesh_optimize(volume_mesh_t *mesh, float simplify);
+
 
 // XXX: use int[2][3] for the box?
 void volume_crop(volume_t *volume, const float box[4][4]);
