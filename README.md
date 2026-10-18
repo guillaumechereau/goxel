@@ -66,6 +66,23 @@ Usage
 - Mouse wheel: zoom in and out.
 
 
+External control
+----------------
+
+On Linux, BSD and macOS, Goxel can be controlled by other programs through a
+local command bridge.  Start it with:
+
+    goxel --mcp-socket /path/to/goxel.sock
+
+External tools can then inspect and edit the open scene (layers, voxels,
+colors, undo, save and export) by sending JSON commands to that socket.  The
+protocol is described in [doc/mcp-bridge.md](doc/mcp-bridge.md).
+
+[Goxel-MCP](https://github.com/yberudev/Goxel-MCP) is a Model Context
+Protocol server that uses this bridge, so that MCP clients can create and edit
+voxel models directly in Goxel.
+
+
 Building
 --------
 
